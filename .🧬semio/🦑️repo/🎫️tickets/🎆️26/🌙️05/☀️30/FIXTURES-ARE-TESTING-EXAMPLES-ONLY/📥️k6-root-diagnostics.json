@@ -1,0 +1,290 @@
+[
+  {
+    "code": null,
+    "message": "canonical_json(owner = first_party_path) is required",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔢️set-n/🦀️.rs",
+    "line": 6,
+    "column": 1,
+    "rendered": "error: canonical_json(owner = first_party_path) is required\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔢️set-n/🦀️.rs:6:1\n   |\n 6 | / #[mutation_leaf(contract = ::protocol)]\n 7 | | #[serde(rename_all = \"camelCase\", deny_unknown_fields)]\n 8 | | #[value(rename_all = \"camelCase\", deny_unknown_fields)]\n 9 | | #[dsl(keyword = \"set-n\")]\n10 | | pub struct SetN {\n11 | |     pub n: i32,\n12 | | }\n   | |_^",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔢️set-n/🦀️.rs"
+  },
+  {
+    "code": null,
+    "message": "canonical_json(owner = first_party_path) is required",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🗑️delete-n/🦀️.rs",
+    "line": 6,
+    "column": 1,
+    "rendered": "error: canonical_json(owner = first_party_path) is required\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🗑️delete-n/🦀️.rs:6:1\n   |\n 6 | / #[mutation_leaf(contract = ::protocol)]\n 7 | | #[serde(rename_all = \"camelCase\", deny_unknown_fields)]\n 8 | | #[value(rename_all = \"camelCase\", deny_unknown_fields)]\n 9 | | #[dsl(keyword = \"delete-n\")]\n10 | | pub struct DeleteN {}\n   | |_____________________^",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🗑️delete-n/🦀️.rs"
+  },
+  {
+    "code": null,
+    "message": "canonical_json(owner = first_party_path) is required",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/➕️add-n/🦀️.rs",
+    "line": 6,
+    "column": 1,
+    "rendered": "error: canonical_json(owner = first_party_path) is required\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/➕️add-n/🦀️.rs:6:1\n   |\n 6 | / #[mutation_leaf(contract = ::protocol)]\n 7 | | #[serde(rename_all = \"camelCase\", deny_unknown_fields)]\n 8 | | #[value(rename_all = \"camelCase\", deny_unknown_fields)]\n 9 | | #[dsl(keyword = \"add-n\")]\n10 | | pub struct AddN {\n11 | |     pub delta: i32,\n12 | | }\n   | |_^",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/➕️add-n/🦀️.rs"
+  },
+  {
+    "code": null,
+    "message": "canonical_json(owner = first_party_path) is required",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️assign-n/🦀️.rs",
+    "line": 6,
+    "column": 1,
+    "rendered": "error: canonical_json(owner = first_party_path) is required\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️assign-n/🦀️.rs:6:1\n   |\n 6 | / #[mutation_leaf(contract = ::protocol)]\n 7 | | #[serde(rename_all = \"camelCase\", deny_unknown_fields)]\n 8 | | #[value(rename_all = \"camelCase\", deny_unknown_fields)]\n 9 | | #[dsl(keyword = \"assign-n\")]\n10 | | pub struct AssignN {\n11 | |     pub n: Option<i32>,\n12 | | }\n   | |_^",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️assign-n/🦀️.rs"
+  },
+  {
+    "code": null,
+    "message": "canonical_json(owner = first_party_path) is required",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs",
+    "line": 19,
+    "column": 1,
+    "rendered": "error: canonical_json(owner = first_party_path) is required\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs:19:1\n   |\n19 | / #[serde(tag = \"operation\", rename_all = \"camelCase\", deny_unknown_fields)]\n20 | | #[value(tag = \"operation\", rename_all = \"camelCase\", deny_unknown_fields)]\n21 | | #[mutations(snapshot = DemoSnapshot, diff = DemoDiff, schema = \"demo.doc\")]\n22 | | pub(crate) enum DemoMutation {\n...  |\n26 | |     AssignN(AssignN),\n27 | | }\n   | |_^",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs"
+  },
+  {
+    "code": "E0425",
+    "message": "cannot find type `ArtifactCanonicalJsonNode` in this scope",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 83,
+    "column": 43,
+    "rendered": "error[E0425]: cannot find type `ArtifactCanonicalJsonNode` in this scope\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs:83:43\n   |\n83 |     fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonNode<'_>,ValueError>{Ok(ArtifactCanonicalJsonNode::Object(1))}\n   |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^\n   |\n  ::: 🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/../../🛫️encode/🧭️tree/🦀️.rs:9:1\n   |\n 9 | pub trait ArtifactCanonicalJsonTree: Sync + 'static {\n   | --------------------------------------------------- similarly named trait `ArtifactCanonicalJsonTree` defined here\n   |\nhelp: a trait with a similar name exists\n   |\n83 -     fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonNode<'_>,ValueError>{Ok(ArtifactCanonicalJsonNode::Object(1))}\n83 +     fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonTree<'_>,ValueError>{Ok(ArtifactCanonicalJsonNode::Object(1))}\n   |\nhelp: consider importing one of these enums\n   |\n 1 + use crate::ArtifactCanonicalJsonNode;\n   |\n 1 + use semio_framework_pack_json::ArtifactCanonicalJsonNode;\n   |",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find type `ArtifactCanonicalJsonNode` in this scope",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 83,
+    "column": 88,
+    "rendered": "error[E0433]: cannot find type `ArtifactCanonicalJsonNode` in this scope\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs:83:88\n   |\n83 |     fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonNode<'_>,ValueError>{Ok(ArtifactCanonicalJsonNode::Object(1))}\n   |                                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ use of undeclared type `ArtifactCanonicalJsonNode`\n   |\nhelp: a trait with a similar name exists\n   |\n83 -     fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonNode<'_>,ValueError>{Ok(ArtifactCanonicalJsonNode::Object(1))}\n83 +     fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonNode<'_>,ValueError>{Ok(ArtifactCanonicalJsonTree::Object(1))}\n   |\nhelp: consider importing one of these enums\n   |\n 1 + use crate::ArtifactCanonicalJsonNode;\n   |\n 1 + use semio_framework_pack_json::ArtifactCanonicalJsonNode;\n   |",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 9,
+    "column": 44,
+    "rendered": "error[E0308]: mismatched types\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs:9:44\n   |\n 9 |         actor: crate::os_spr::ids::ActorId(\"actor-1\".to_string()),\n   |                --------------------------- ^^^^^^^^^^^^^^^^^^^^^ expected `SharedUtf8`, found `String`\n   |                |\n   |                arguments to this struct are incorrect\n   |\nnote: tuple struct defined here\n  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🆔️ids/🦀️.rs:20:12\n   |\n20 | pub struct ActorId(pub semio_framework_value::SharedUtf8);\n   |            ^^^^^^^\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n   |\n 9 |         actor: crate::os_spr::ids::ActorId(\"actor-1\".to_string().into()),\n   |                                                                 +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/⌨️cli/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 16,
+    "column": 16,
+    "rendered": "error[E0308]: mismatched types\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/⌨️cli/🧪️tests/🔬️unit/🦀️.rs:16:16\n   |\n16 |         actor: actor.map(str::to_string),\n   |                ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Option<SharedUtf8>`, found `Option<String>`\n   |\n   = note: expected enum `Option<SharedUtf8>`\n              found enum `Option<std::string::String>`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/⌨️cli/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/⌨️cli/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 54,
+    "column": 156,
+    "rendered": "error[E0308]: mismatched types\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/⌨️cli/🧪️tests/🔬️unit/🦀️.rs:54:156\n   |\n54 | ...\"doc-1\".to_string()), &crate::os_spr::ActorId(\"actor-a\".to_string()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: ...\n   |                           ---------------------- ^^^^^^^^^^^^^^^^^^^^^ expected `SharedUtf8`, found `String`\n   |                           |\n   |                           arguments to this struct are incorrect\n   |\nnote: tuple struct defined here\n  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🆔️ids/🦀️.rs:20:12\n   |\n20 | pub struct ActorId(pub semio_framework_value::SharedUtf8);\n   |            ^^^^^^^\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n   |\n54 |             let envelope = crate::os_spr::history_transition_envelope(transition, &crate::os_spr::ArtifactId(\"doc-1\".to_string()), &crate::os_spr::ActorId(\"actor-a\".to_string().into()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: logical as u64 });\n   |                                                                                                                                                                                 +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/⌨️cli/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+    "line": 23,
+    "column": 25,
+    "rendered": "error[E0308]: mismatched types\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs:23:25\n    |\n 23 |             actor: Some(\"actor-1\".to_string()),\n    |                    ---- ^^^^^^^^^^^^^^^^^^^^^ expected `SharedUtf8`, found `String`\n    |                    |\n    |                    arguments to this enum variant are incorrect\n    |\nhelp: the type constructed contains `std::string::String` due to the type of the argument passed\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs:23:20\n    |\n 23 |             actor: Some(\"actor-1\".to_string()),\n    |                    ^^^^^---------------------^\n    |                         |\n    |                         this argument influences the type of `Some`\nnote: tuple variant defined here\n   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-20-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5\n    |\n606 |     Some(#[stable(feature = \"rust1\", since = \"1.0.0\")] T),\n    |     ^^^^\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n    |\n 23 |             actor: Some(\"actor-1\".to_string().into()),\n    |                                              +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs",
+    "line": 143,
+    "column": 67,
+    "rendered": "error[E0308]: mismatched types\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:143:67\n    |\n143 |     transitions.push(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, observed: None, payload: crate::os_spr:...\n    |                                                                   ^^^^^ expected `SharedUtf8`, found `String`\n    |\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n    |\n143 |     transitions.push(crate::os_spr::HistoryTransitionRecord { id, actor: actor.into(), hlt, dependencies, observed: None, payload: crate::os_spr::encode_history_transition(&transition) });\n    |                                                                   ++++++      +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs",
+    "line": 177,
+    "column": 69,
+    "rendered": "error[E0308]: mismatched types\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:177:69\n    |\n177 | ...   edits.push(crate::os_spr::HistoryEdit { line: None, id, actor, started_at, finished_at, verb: None, ops, inverse: Vec::new(),...\n    |                                                               ^^^^^ expected `Option<SharedUtf8>`, found `Option<String>`\n    |\n    = note: expected enum `Option<SharedUtf8>`\n               found enum `Option<std::string::String>`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs",
+    "line": 257,
+    "column": 47,
+    "rendered": "error[E0308]: mismatched types\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs:257:47\n    |\n257 |                 actor: crate::os_spr::ActorId(format!(\"actor-{}\", rng.next_range(4).await)),\n    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `SharedUtf8`, found `String`\n    |\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n    |\n257 |                 actor: crate::os_spr::ActorId(format!(\"actor-{}\", rng.next_range(4).await).into()),\n    |                                                                                           +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs"
+  },
+  {
+    "code": "E0061",
+    "message": "this method takes 1 argument but 2 arguments were supplied",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../../🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
+    "line": 58,
+    "column": 24,
+    "rendered": "error[E0061]: this method takes 1 argument but 2 arguments were supplied\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../../🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs:58:24\n   |\n58 |             retirement.close_step(1, 17).expect(\"retire exact returned owner before assertions\");\n   |                        ^^^^^^^^^^ -  -- unexpected argument #2 of type `{integer}`\n   |                                   |\n   |                                   expected `RetainedCloneGrant`, found integer\n   |\nnote: method defined here\n  --> 🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/../../♻️retirement/🧬️contract/🦀️.rs:12:8\n   |\n12 |     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;\n   |        ^^^^^^^^^^\nhelp: remove the extra argument\n   |\n58 -             retirement.close_step(1, 17).expect(\"retire exact returned owner before assertions\");\n58 +             retirement.close_step(/* semio_framework_value::RetainedCloneGrant */).expect(\"retire exact returned owner before assertions\");\n   |",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs"
+  },
+  {
+    "code": "E0061",
+    "message": "this function takes 2 arguments but 3 arguments were supplied",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../../🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
+    "line": 66,
+    "column": 9,
+    "rendered": "error[E0061]: this function takes 2 arguments but 3 arguments were supplied\n     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/../../🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs:66:9\n      |\n   66 |         SpaceMember::close_owned_step(&mut store, 1, 512).expect(\"close original Store before assertions\");\n      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^             -  --- unexpected argument #3 of type `{integer}`\n      |                                                   |\n      |                                                   expected `RetainedCloneGrant`, found integer\n      |\nnote: method defined here\n     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:27913:8\n      |\n27913 |     fn close_owned_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;\n      |        ^^^^^^^^^^^^^^^^            -----\nhelp: remove the extra argument\n      |\n   66 -         SpaceMember::close_owned_step(&mut store, 1, 512).expect(\"close original Store before assertions\");\n   66 +         SpaceMember::close_owned_step(&mut store, /* semio_framework_value::RetainedCloneGrant */).expect(\"close original Store before assertions\");\n      |",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/../../../../../../🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs",
+    "line": 18,
+    "column": 75,
+    "rendered": "error[E0308]: mismatched types\n     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/../../../../../../🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs:18:75\n      |\n   18 | ...q!(S::decode_sqlite_snapshot_native(&encoded,&mut input_control,&mut semio_framework_value::NativeDecodeControl::new(1<<30,&mut |event|{assert!(event.owned_bytes<=1<<30&&(event.total==0||event.completed<=event.total));true})).u...\n      |       --------------------------------                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&mut NativeSnapshotDecodeOwner<'_, '_>`, found `&mut NativeDecodeControl<'_>`\n      |       |\n      |       arguments to this function are incorrect\n      |\n      = note: expected mutable reference `&mut io::control::NativeSnapshotDecodeOwner<'_, '_>`\n                 found mutable reference `&mut semio_framework_dsl::NativeDecodeControl<'_>`\nnote: associated function defined here\n     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:12216:8\n      |\n12216 | ...fn decode_sqlite_snapshot_native(_payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -...\n      |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                                                                                          ----------------------------------------------------",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs"
+  },
+  {
+    "code": "E0277",
+    "message": "the trait bound `OrderedMap<MapValue>: serde::Serialize` is not satisfied",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+    "line": 36,
+    "column": 17,
+    "rendered": "error[E0277]: the trait bound `OrderedMap<MapValue>: serde::Serialize` is not satisfied\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs:36:17\n   |\n36 | #[derive(Debug, Serialize, Deserialize, semio_framework_value::RetireOwned)]\n   |                 ^^^^^^^^^ the trait `os_vcs::_::_serde::Serialize` is not implemented for `OrderedMap<MapValue>`\n37 | #[serde(transparent)]\n38 | pub(super) struct MapFields(semio_framework_value::ordered::OrderedMap<MapValue>);\n   |                             ---------------------------------------------------- required by a bound introduced by this call\n   |\n   = note: for local types consider adding `#[derive(serde::Serialize)]` to your `OrderedMap<MapValue>` type\n   = note: for types from other crates check whether the crate offers a `serde` feature flag\n   = help: the following other types implement trait `os_vcs::_::_serde::Serialize`:\n             &'a T\n             &'a mut T\n             ()\n             (T,)\n             (T0, T1)\n             (T0, T1, T2)\n             (T0, T1, T2, T3)\n             (T0, T1, T2, T3, T4)\n           and 809 others\n   = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 380,
+    "column": 22,
+    "rendered": "error[E0308]: mismatched types\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs:380:22\n    |\n380 |     original.actor = actor; original.group_id = Some(group); original.stamped_edit_id = Some(edit); original.line = Some(line);\n    |     --------------   ^^^^^ expected `SharedUtf8`, found `String`\n    |     |\n    |     expected due to the type of this binding\n    |\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n    |\n380 |     original.actor = actor.into(); original.group_id = Some(group); original.stamped_edit_id = Some(edit); original.line = Some(line);\n    |                           +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0277",
+    "message": "the trait bound `OrderedMap<MapValue>: serde::Deserialize<'de>` is not satisfied",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+    "line": 36,
+    "column": 28,
+    "rendered": "error[E0277]: the trait bound `OrderedMap<MapValue>: serde::Deserialize<'de>` is not satisfied\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs:36:28\n   |\n36 | #[derive(Debug, Serialize, Deserialize, semio_framework_value::RetireOwned)]\n   |                            ^^^^^^^^^^^ the trait `os_vcs::_::_serde::Deserialize<'_>` is not implemented for `OrderedMap<MapValue>`\n   |\n   = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `OrderedMap<MapValue>` type\n   = note: for types from other crates check whether the crate offers a `serde` feature flag\n   = help: the following other types implement trait `os_vcs::_::_serde::Deserialize<'de>`:\n             &'a Path\n             &'a RawValue\n             &'a [u8]\n             &'a str\n             ()\n             (T,)\n             (T0, T1)\n             (T0, T1, T2)\n           and 825 others\n   = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/debug/build/semio-framework-os-kernel/ac8d941cb10f4294/out/semio_framework_os_kernel-ac8d941cb10f4294.long-type-5596072067936187601.txt'\n   = note: consider using `--verbose` to print the full type name to the console\n   = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs"
+  },
+  {
+    "code": "E0533",
+    "message": "expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Refused`",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 85,
+    "column": 27,
+    "rendered": "error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Refused`\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:85:27\n   |\n85 |             Err(error) => semio_framework_job::InteractiveJobCloseStep::Refused(error.kind),\n   |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not a value\n   |\nhelp: you might have meant to create a new value of the struct\n   |\n85 -             Err(error) => semio_framework_job::InteractiveJobCloseStep::Refused(error.kind),\n85 +             Err(error) => semio_framework_job::InteractiveJobCloseStep::Refused { kind: /* value */, progress: /* value */ },\n   |",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0063",
+    "message": "missing field `retained` in initializer of `BatchDriveConfig`",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 116,
+    "column": 17,
+    "rendered": "error[E0063]: missing field `retained` in initializer of `BatchDriveConfig`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:116:17\n    |\n116 | ...   config: semio_framework_job::BatchDriveConfig { site: \"presence.local.capture\", stage: semio_framework_job::InteractiveStage:...\n    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ missing `retained`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0164",
+    "message": "expected tuple struct or tuple variant, found struct variant `semio_framework_job::WorkerJobCloseStep::Refused`",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 147,
+    "column": 33,
+    "rendered": "error[E0164]: expected tuple struct or tuple variant, found struct variant `semio_framework_job::WorkerJobCloseStep::Refused`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:147:33\n    |\n147 |         assert!(!matches!(step, semio_framework_job::WorkerJobCloseStep::Refused(_)));\n    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not a tuple struct or tuple variant\n    |\nhelp: add the names to match a struct variant's fields\n    |\n147 -         assert!(!matches!(step, semio_framework_job::WorkerJobCloseStep::Refused(_)));\n147 +         assert!(!matches!(step, semio_framework_job::WorkerJobCloseStep::Refused { kind: _, progress: _ }));\n    |",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0277",
+    "message": "the `?` operator can only be applied to values that implement `Try`",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs",
+    "line": 28,
+    "column": 78,
+    "rendered": "error[E0277]: the `?` operator can only be applied to values that implement `Try`\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs:28:78\n   |\n28 | ...{ release_bytes: semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<P>()?, depth: 1, ..Default::defa...\n   |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `usize`\n   |\n   = help: the nightly-only, unstable trait `Try` is not implemented for `usize`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🕰️history/📐️planning/♻️retirement/../🧪️tests/🦀️.rs",
+    "line": 15,
+    "column": 246,
+    "rendered": "error[E0308]: mismatched types\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🕰️history/📐️planning/♻️retirement/../🧪️tests/🦀️.rs:15:246\n   |\n15 | ... {transition_id:text(\"\",337),actor:text(\"actor/🐚\",337),timestamp:HybridLogicalTimestamp::new(7,11),scope:Some(text(\"\",337)),repl...\n   |                                       ^^^^^^^^^^^^^^^^^^^^ expected `SharedUtf8`, found `String`\n   |\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n   |\n15 |     let mut effective=EffectiveSupersessions::new();for row in law[\"drafts\"].as_array().unwrap().iter().take(2){effective.insert(MutationId(text(row[\"id\"].as_str().unwrap(),337)),protocol::EffectiveSupersession {transition_id:text(\"\",337),actor:text(\"actor/🐚\",337).into(),timestamp:HybridLogicalTimestamp::new(7,11),scope:Some(text(\"\",337)),replacement:input(row,law)});}plan.supersessions=effective;plan\n   |                                                                                                                                                                                                                                                                          +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 31,
+    "column": 21,
+    "rendered": "error[E0308]: mismatched types\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/🔬️unit/🦀️.rs:31:21\n   |\n31 |     let _ = ActorId(\"actor-1\".to_string());\n   |             ------- ^^^^^^^^^^^^^^^^^^^^^ expected `SharedUtf8`, found `String`\n   |             |\n   |             arguments to this struct are incorrect\n   |\nnote: tuple struct defined here\n  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🆔️ids/🦀️.rs:20:12\n   |\n20 | pub struct ActorId(pub semio_framework_value::SharedUtf8);\n   |            ^^^^^^^\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n   |\n31 |     let _ = ActorId(\"actor-1\".to_string().into());\n   |                                          +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 44,
+    "column": 25,
+    "rendered": "error[E0308]: mismatched types\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/🔬️unit/🦀️.rs:44:25\n    |\n 44 |             actor: Some(\"actor-1\".to_string()),\n    |                    ---- ^^^^^^^^^^^^^^^^^^^^^ expected `SharedUtf8`, found `String`\n    |                    |\n    |                    arguments to this enum variant are incorrect\n    |\nhelp: the type constructed contains `std::string::String` due to the type of the argument passed\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/🔬️unit/🦀️.rs:44:20\n    |\n 44 |             actor: Some(\"actor-1\".to_string()),\n    |                    ^^^^^---------------------^\n    |                         |\n    |                         this argument influences the type of `Some`\nnote: tuple variant defined here\n   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-20-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5\n    |\n606 |     Some(#[stable(feature = \"rust1\", since = \"1.0.0\")] T),\n    |     ^^^^\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n    |\n 44 |             actor: Some(\"actor-1\".to_string().into()),\n    |                                              +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 51,
+    "column": 92,
+    "rendered": "error[E0308]: mismatched types\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️tests/🔬️unit/🦀️.rs:51:92\n   |\n51 | ...\"transition-1\".to_string(), actor: \"actor-1\".to_string(), hlt: (1, 1_700_000_000_000, 2), dependencies: vec![\"e0\".to_string()], o...\n   |                                       ^^^^^^^^^^^^^^^^^^^^^ expected `SharedUtf8`, found `String`\n   |\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n   |\n51 |         transitions: vec![HistoryTransitionRecord { id: \"transition-1\".to_string(), actor: \"actor-1\".to_string().into(), hlt: (1, 1_700_000_000_000, 2), dependencies: vec![\"e0\".to_string()], observed: Some(\"peer-op\".to_string()), payload: vec![0, 1, 3, 0xff] }],\n   |                                                                                                                 +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+    "line": 237,
+    "column": 156,
+    "rendered": "error[E0308]: mismatched types\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs:237:156\n    |\n237 | ...(\"doc-1\".to_string()), &crate::os_spr::ActorId(\"alice\".to_string()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: ...\n    |                            ---------------------- ^^^^^^^^^^^^^^^^^^^ expected `SharedUtf8`, found `String`\n    |                            |\n    |                            arguments to this struct are incorrect\n    |\nnote: tuple struct defined here\n   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🆔️ids/🦀️.rs:20:12\n    |\n 20 | pub struct ActorId(pub semio_framework_value::SharedUtf8);\n    |            ^^^^^^^\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n    |\n237 |             let envelope = crate::os_spr::history_transition_envelope(transition, &crate::os_spr::ArtifactId(\"doc-1\".to_string()), &crate::os_spr::ActorId(\"alice\".to_string().into()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: logical as u64 });\n    |                                                                                                                                                                               +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+    "line": 245,
+    "column": 26,
+    "rendered": "error[E0308]: mismatched types\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs:245:26\n    |\n245 |             actors: vec![\"alice\".to_string()],\n    |                          ^^^^^^^^^^^^^^^^^^^ expected `SharedUtf8`, found `String`\n    |\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n    |\n245 |             actors: vec![\"alice\".to_string().into()],\n    |                                             +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 186,
+    "column": 145,
+    "rendered": "error[E0308]: mismatched types\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🧪️tests/🔬️unit/🦀️.rs:186:145\n    |\n186 | ...(\"doc-2\".to_string()), &crate::os_spr::ActorId(\"alice\".to_string()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: ...\n    |                            ---------------------- ^^^^^^^^^^^^^^^^^^^ expected `SharedUtf8`, found `String`\n    |                            |\n    |                            arguments to this struct are incorrect\n    |\nnote: tuple struct defined here\n   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🆔️ids/🦀️.rs:20:12\n    |\n 20 | pub struct ActorId(pub semio_framework_value::SharedUtf8);\n    |            ^^^^^^^\nhelp: call `Into::into` on this expression to convert `std::string::String` into `SharedUtf8`\n    |\n186 |     let envelope = crate::os_spr::history_transition_envelope(&commit, &crate::os_spr::ArtifactId(\"doc-2\".to_string()), &crate::os_spr::ActorId(\"alice\".to_string().into()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: 0 });\n    |                                                                                                                                                                    +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/💎️materialize/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0308",
+    "message": "mismatched types",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 963,
+    "column": 66,
+    "rendered": "error[E0308]: mismatched types\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🧪️tests/🔬️unit/🦀️.rs:963:66\n    |\n963 | ...                   assert_eq!(conflicts[0].actors[0].0, \"Aé😀\");\n    |                                                            ^^^^^^ expected `SharedUtf8`, found `&str`\n    |\nhelp: call `Into::into` on this expression to convert `&str` into `SharedUtf8`\n    |\n963 |                             assert_eq!(conflicts[0].actors[0].0, \"Aé😀\".into());\n    |                                                                        +++++++",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🧪️tests/🔬️unit/🦀️.rs"
+  }
+]

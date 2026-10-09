@@ -23,7 +23,7 @@ use std::collections::{HashMap, HashSet};
 pub const S_COLLECTION_SCHEMA: &str = "os.collection";
 
 /// 📁️ One parent-linked folder in a collection's flat tree. `parent_id: None` means root.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 pub struct CollectionFolder {
     pub id: String,
     pub parent_id: Option<String>,
@@ -40,7 +40,7 @@ pub struct CollectionFolder {
 /// `workflow::MediaContract`'s hand-crafted `dsl::DslField` impl for its own foreign sub-values. Since
 /// `ArtifactBody` itself IS local, hand-writing `DslVariants` bridges `BlobRef`'s three fields
 /// (`hash`/`size`/`media_type`) directly to scalar `dsl::FieldValue`s right here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum ArtifactBody {
@@ -224,7 +224,7 @@ impl semio_framework_dsl_record::DslVariants for ArtifactBody {
 
 /// 🧾️ One addressable artifact placed in a collection folder tree. `id == artifact id ==
 /// ArtifactEnvelope.id` for document bodies (see `🔖️Addressing`). `folder_id: None` means root-level.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 pub struct CollectionEntry {
     pub id: String,
     pub folder_id: Option<String>,
@@ -235,7 +235,7 @@ pub struct CollectionEntry {
 }
 
 /// 🗂️ A collection's flat parent-linked folder tree plus its artifact entries.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[artifact(id = "os.collection")]
 pub struct CollectionSnapshot {
     pub schema: String,

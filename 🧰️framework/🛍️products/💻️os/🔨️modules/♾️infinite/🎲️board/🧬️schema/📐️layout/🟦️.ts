@@ -5,8 +5,8 @@ export interface ForceGraphLayoutOptions {
  repulsionStrength?: number;
  springStrength?: number;
  gravity?: number;
- centerX?: number;
- centerY?: number;
+ centerX?: number | null;
+ centerY?: number | null;
  timeStep?: number;
  velocityDamping?: number;
  maxSpeed?: number;
@@ -19,24 +19,24 @@ export interface HierarchicalTreeLayoutOptions {
  layerSpacing?: number;
  siblingGap?: number;
  direction?: string;
- centerX?: number;
- centerY?: number;
+ centerX?: number | null;
+ centerY?: number | null;
  lockedNodeIds?: string[];
 }
 export interface RedrawLayoutOptions {
  mode: string;
- centerX?: number;
- centerY?: number;
- randomSeed?: number;
+ centerX?: number | null;
+ centerY?: number | null;
+ randomSeed?: number | null;
  redrawHandlesAfter?: boolean;
  lockedNodeIds?: string[];
- forceGraph?: ForceGraphLayoutOptions;
- hierarchicalTree?: HierarchicalTreeLayoutOptions;
+ forceGraph?: ForceGraphLayoutOptions | null;
+ hierarchicalTree?: HierarchicalTreeLayoutOptions | null;
 }
 export interface DagLayoutOptions {
  layerSpacing?: number;
  siblingGap?: number;
  orientation?: DagLayoutOrientation;
- centerX?: number;
- centerY?: number;
+ centerX?: number | null;
+ centerY?: number | null;
 }

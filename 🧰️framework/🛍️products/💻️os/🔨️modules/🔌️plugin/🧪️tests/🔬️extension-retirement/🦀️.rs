@@ -269,7 +269,7 @@ mod extension_retirement_tests {
             let mut candidate = Some(bundle);
             assert!(install_extension_bundle(&mut candidate).await.unwrap());
             extension_activate().await.unwrap();
-            let runtime = PluginRuntime::<crate::app::NoPluginApp>::new();
+            let runtime = PluginRuntime::<crate::app::NoPluginApp>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
             let budget = semio_framework::kernel::Budget { fuel: 0, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 };
             for change in fixture["nonClosingChanges"].as_array().unwrap() {
                 use semio_framework::kernel::{BrokerCapabilityGrant, CapabilityChange, CapabilityId, CapabilityToken, Event, QuotaSchema};

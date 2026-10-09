@@ -200,7 +200,13 @@
             "message": "second"
           }
         ],
-        "retryable": true
+        "retryable": true,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       },
       "accepted": true,
       "expected": {
@@ -229,7 +235,13 @@
             "message": "second"
           }
         ],
-        "retryable": true
+        "retryable": true,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       }
     },
     {
@@ -413,7 +425,13 @@
         "scope": null,
         "span": null,
         "causes": null,
-        "retryable": null
+        "retryable": null,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       },
       "accepted": true,
       "expected": {
@@ -422,7 +440,13 @@
         "severity": "error",
         "message": "",
         "scope": {},
-        "retryable": false
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       }
     },
     {
@@ -548,7 +572,13 @@
       "input": {
         "origin": "os",
         "severity": "error",
-        "message": "x"
+        "message": "x",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       },
       "accepted": false
     },
@@ -563,7 +593,13 @@
         "params": {
           "kind": "brep.mesh.translate"
         },
-        "retryable": false
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       },
       "accepted": true,
       "expected": {
@@ -575,7 +611,13 @@
         "params": {
           "kind": "brep.mesh.translate"
         },
-        "retryable": false
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       }
     },
     {
@@ -586,7 +628,13 @@
         "code": "app.refused",
         "severity": "error",
         "message": "",
-        "params": {}
+        "params": {},
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       },
       "accepted": true,
       "expected": {
@@ -595,7 +643,13 @@
         "severity": "error",
         "message": "",
         "scope": {},
-        "retryable": false
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       }
     },
     {
@@ -608,6 +662,12 @@
         "message": "",
         "params": {
           "n": 1
+        },
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
         }
       },
       "accepted": false
@@ -642,6 +702,61 @@
         "expected": []
       },
       "accepted": false
+    },
+    {
+      "id": "Fault actual failed receipt",
+      "owner": "Fault",
+      "accepted": true,
+      "input": {
+        "origin": "framework",
+        "code": "value.refusal",
+        "severity": "error",
+        "message": "original reservation failed",
+        "scope": {},
+        "params": {
+          "refusalKind": "invariantViolated"
+        },
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 1,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 64,
+          "releasedBytes": 0
+        }
+      },
+      "expected": {
+        "origin": "framework",
+        "code": "value.refusal",
+        "severity": "error",
+        "message": "original reservation failed",
+        "scope": {},
+        "params": {
+          "refusalKind": "invariantViolated"
+        },
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 1,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 64,
+          "releasedBytes": 0
+        }
+      }
+    },
+    {
+      "id": "Fault missing physical receipt",
+      "owner": "Fault",
+      "accepted": false,
+      "input": {
+        "origin": "framework",
+        "code": "value.refusal",
+        "severity": "error",
+        "message": "original reservation failed",
+        "scope": {},
+        "params": {
+          "refusalKind": "invariantViolated"
+        },
+        "retryable": false
+      }
     }
   ],
   "stress": {

@@ -600,7 +600,7 @@ fn fem3d_window_config_mounted_close_preserves_foreign_instance_in_same_slot() {
             let mut registry = registry.borrow_mut();
             assert!(registry.pending[slot].is_none());
             registry.pending[slot] = pending.map(|app_instance_id| PendingSnapshot {
-                render: AppRenderOperationContext { app_instance_id, base_revision: RevisionId(1), generation: Generation(1), canonical_base_revision: [1; 32] },
+                render: AppRenderOperationContext { app_instance_id, base_revision: RevisionId(1), generation: Generation(1), canonical_base_revision: [1; 32], mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, maintenance: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, close: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 } } },
                 preflight: SnapshotPreflight::new(),
             });
         });

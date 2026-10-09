@@ -40,6 +40,6 @@ pub mod native_codecs;
 #[path = "../../🦀️.rs"]
 mod plugin;
 pub use plugin::{plugin, VcsApps};
-semio_framework_plugin::plugin_exports!(plugin, VcsApps);
+semio_framework_plugin::plugin_exports!({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }, plugin, VcsApps);
 
 //#endregion 🔖️Plugin

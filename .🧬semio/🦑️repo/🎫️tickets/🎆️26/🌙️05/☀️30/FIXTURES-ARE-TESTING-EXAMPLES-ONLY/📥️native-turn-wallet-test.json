@@ -1,0 +1,12 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json",
+    "before": "cf1c71f6fe39ff6279be861cd34a8c9c81bd44f97a5204f6c862d94c1d07ce1c",
+    "after": "9c92e8702ec8413f28ee10b8ff2f75c272a32d75e77c9854c5b4558ac77df845"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "before": "185b0de870c2e035c40c2c7ab4163a3542859a25ac1acc36071aaf0f73ec1164",
+    "after": "fb5b569a1bc410a3c2afe6afb43092c919eecd5939abd1841516dc0dda8ce945"
+  }
+]

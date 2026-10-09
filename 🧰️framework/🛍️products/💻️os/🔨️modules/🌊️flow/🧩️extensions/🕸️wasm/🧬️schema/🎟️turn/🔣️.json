@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "grant",
+    "mandatoryRequestPolicy",
+    "retainZeroIdentity",
+    "reuseFullWallet",
+    "preserveFailedReceipt",
+    "children",
+    "remaining"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "grant": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 1048576,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 128
+      }
+    },
+    "mandatoryRequestPolicy": {
+      "const": true
+    },
+    "retainZeroIdentity": {
+      "const": true
+    },
+    "reuseFullWallet": {
+      "const": false
+    },
+    "preserveFailedReceipt": {
+      "const": true
+    },
+    "children": {
+      "const": [
+        {
+          "copiedItems": 1,
+          "copiedBytes": 3,
+          "retainedCapacityBytes": 64,
+          "releasedBytes": 0
+        }
+      ]
+    },
+    "remaining": {
+      "const": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 4093,
+        "maximumCapacityBytes": 1048512,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 128
+      }
+    }
+  }
+}

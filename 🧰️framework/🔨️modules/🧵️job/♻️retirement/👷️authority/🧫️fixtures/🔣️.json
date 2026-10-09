@@ -1,0 +1,56 @@
+{
+  "schema": "job-worker-authority-retirement.v1",
+  "policy": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 65536,
+    "release": 262144,
+    "depth": 64
+  },
+  "stages": [
+    "ledger",
+    "authority-backing",
+    "parent-complete"
+  ],
+  "removal": "original-terminal-authority-in-place",
+  "bodyWords": 3,
+  "wordBytes": [
+    4,
+    8
+  ],
+  "ledgerBytes": 128,
+  "authorityBytes": [
+    20960,
+    65536
+  ],
+  "denied": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "jobRemoval": "original-terminal-job-in-place",
+  "jobPresenceBytes": 1,
+  "inlineJobBytes": [
+    0,
+    8192
+  ],
+  "paramsPhases": [
+    "original-params-transfer",
+    "original-cancellation",
+    "terminal-cursor-transfer"
+  ],
+  "paramsRetain": "original-cancel-pointer-and-ancestors",
+  "paramsTerminalDrop": 0,
+  "sessionPhases": [
+    "original-authority-empty",
+    "original-session-arc-release",
+    "original-retirement-slot-release"
+  ],
+  "sessionAliases": [
+    0,
+    1,
+    3
+  ]
+}

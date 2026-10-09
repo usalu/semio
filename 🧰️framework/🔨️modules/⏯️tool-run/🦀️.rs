@@ -634,7 +634,7 @@ impl ToolRunStepArg {
 }
 
 /// 📝️ One step-log entry; plugins send reason codes and arguments, never prose.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct ToolRunStep {
     pub sequence: u64,
     pub kind: ToolRunStepKind,
@@ -658,7 +658,7 @@ impl ToolRunStep {
 }
 
 /// 🎡️ Newest ≤ 64 steps, overwrite-oldest, identical consecutive steps coalesced.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct ToolRunStepRing {
     steps: VecDeque<ToolRunStep>,
 }
@@ -722,7 +722,7 @@ pub struct ToolRunCounter {
 }
 
 /// 📊️ Progress snapshot; status text and percentage are derived by the renderer.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct ToolRunProgress {
     pub identity: ToolRunIdentity,
     pub sequence: u64,
@@ -794,7 +794,7 @@ impl ToolRunTraceOp {
 pub const TOOL_RUN_TRACE_PAGE_OVERHEAD_BYTES: usize = 64;
 
 /// 📃️ One columnar delta page.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct ToolRunTracePage {
     pub identity: ToolRunIdentity,
     pub page: u32,
@@ -857,9 +857,8 @@ impl ToolRunTraceDelta {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunTraceCursor {
-    pub run: u64,
     pub generation: u32,
-    pub page: u32,
+    pub page: u32,    pub run: u64,
 }
 
 /// 🗂️ One resident trace record.
@@ -1164,7 +1163,7 @@ impl std::fmt::Display for ToolRunLimitError {
 impl std::error::Error for ToolRunLimitError {}
 
 /// ✍️ Domain-neutral tick builder for run jobs (§3.7): bytes only, pages split at 4 096 ops.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct ToolRunTickWriter {
     identity: ToolRunIdentity,
     next_sequence: u64,
@@ -2304,3 +2303,6 @@ pub fn tool_run_format(template: &str, value: impl Fn(&str) -> Option<String>) -
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path="♻️retirement/🦀️.rs"]
+mod original_retirement;

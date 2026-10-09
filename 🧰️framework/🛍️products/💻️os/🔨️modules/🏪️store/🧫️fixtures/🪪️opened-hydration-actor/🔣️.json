@@ -6,8 +6,12 @@
   "stored": 4,
   "grant": {
     "items": 1,
-    "bytes": 3
+    "copy": 3,
+    "capacity": 8192,
+    "release": 3,
+    "depth": 64
   },
+  "cleanupGrant": {"items":1,"copy":3,"capacity":8192,"release":65536,"depth":64},
   "maximumTurns": 100000,
   "retiredActors": [
     "actor:opened-loader",

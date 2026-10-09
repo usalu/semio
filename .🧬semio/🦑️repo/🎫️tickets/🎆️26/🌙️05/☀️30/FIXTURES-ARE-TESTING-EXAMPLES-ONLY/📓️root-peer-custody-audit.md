@@ -1,0 +1,11 @@
+# Peer root shared custody distinction
+
+Read-only original Source, no native/compiler evidence. A universal shared-root blocking change is unsafe.
+
+Publication new5541 clones the Store’s immutable base root; Store begin publication6074 leaves original self.peers alive. Publication close5686–5688 intentionally drops its shared base alias, transferring no unique allocation. Rejected commit into_retirement (Presence retirement109) keeps both base_root and candidate root; its close84–85 passes base_root through the same PresencePeersRetirement::from_root used for displaced roots. That base may stay aliased by the live Store for its whole lifetime. Changing from_root’s strong_count branch5761 universally to preserve/block would prevent rejected commit cleanup until Store shutdown and may prevent progress required before shutdown.
+
+Successful publish6077–6088 replaces self.peers, hands the exact previous root to retirement and drops commit.base_root. A stale publication may still capture that displaced root. Existing test290/328 explicitly requires initial blocked observation, then disposes rejected candidate before completing displaced retirement313. That is an external captured-root obligation, distinct from voluntarily releasing an immutable base alias. Define the distinction at constructor/caller ownership transfer, not inferred solely from strong_count or target names.
+
+Per-entry waiting5753–5756 is another axis: current shared waiting entry is dropped5754; unique entry unwrap preserves original on race5756, actor backing paid5746 and presence factory admitted/restored5748. Candidate roots clone aliases to unchanged entries5542, so not every shared entry means externally captured removed-owner obligation. Preserve retained unchanged-entry alias cleanup separately from retired removed-entry lifetime/capture waits. A blanket wait can also deadlock cleanup against a still-live committed root.
+
+Meaningful existing tests should preserve exact pointer/factory identity, stale/foreign commit refusal, captured root blockage until return, shared immutable base cleanup while Store remains live, unchanged committed entry survival, and unique original frame/actor capacity release once. No scalar bridge, raw unique Drop or synthetic release credit. Three observer hashes are in 📥️root-peer-custody.json; Root was notified before changes.

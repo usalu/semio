@@ -1,0 +1,17 @@
+{
+  "kind": "original-same-instance-snapshot-close",
+  "ticket": 1,
+  "sameInstance": true,
+  "firstOwnedBytes": 7,
+  "closeCapacityBytes": 3,
+  "finalOwnedBytes": 10,
+  "refusedReleaseBytes": 0,
+  "wrongTicket": "refuse-with-custody",
+  "pendingOutput": "retain-original-backing",
+  "terminalInstanceDrop": "requires-actual-vm-release-descriptor",
+  "maximumItems": 1,
+  "maximumCopyBytes": 64,
+  "maximumCapacityBytes": 3,
+  "maximumReleaseBytes": 0,
+  "maximumDepth": 8
+}

@@ -1221,7 +1221,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let diagnostic = |code: &'static str| store::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path };
+        let diagnostic = |code: &'static str| store::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1424,7 +1424,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
                     line: 0,
                     column: 0,
                     path: self.path,
-                }
+                 refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
             })? {
                 store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items, released_bytes } => {
                     self.state = Generation2dMutationDecodeState::Closing;
@@ -1780,7 +1780,7 @@ impl Generation2dPackSnapshotAuthority {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
     fn owners_terminal_empty(&self) -> bool {
@@ -1841,7 +1841,7 @@ impl Generation2dMutationDecodeAuthority {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
     fn nibble(value: u8) -> Option<u8> {
@@ -1870,7 +1870,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for Generation2dRejectedConflic
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "generation2d-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: "generation2d-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {

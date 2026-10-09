@@ -441,17 +441,21 @@ impl protocol::value::retirement::RetireOwned for DraftChangesOwner{
 }
 
 /// 📄️ Retains the original typed changes and canonical JSON frontier across caller-controlled frame hops.
-pub struct DraftChangesJsonCursor{writer:semio_framework_pack_json::JsonWriteCursor<DraftChangesOwner>}
+pub struct DraftChangesJsonCursor{writer:semio_framework_pack_json::JsonWriteCursor<DraftChangesOwner>,complete:bool}
 impl DraftChangesJsonCursor{
     /// 🌱️ Moves existing ranges without allocation, refusing structural policy before consuming their owner.
     pub fn new(changes:Vec<DraftChange>,maximum_items:usize,maximum_depth:usize)->Result<Self,(protocol::value::ValueError,Vec<DraftChange>)>{
         use protocol::value::{ValueError,ValueRefusalKind};
         if maximum_depth<if changes.is_empty(){1}else{3}{return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"draft wire exceeds caller depth"),changes));}
         if changes.len()>maximum_items||(!changes.is_empty()&&maximum_items<3){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"draft wire exceeds caller item policy"),changes));}
-        Ok(Self{writer:semio_framework_pack_json::JsonWriteCursor::new(DraftChangesOwner(changes))})
+        Ok(Self{writer:semio_framework_pack_json::JsonWriteCursor::new(DraftChangesOwner(changes)),complete:false})
     }
     /// ⏱️ Uses one cumulative admission for bounded source traversal and physical wire output.
-    pub fn step(&mut self,maximum_units:usize,control:&mut protocol::value::NativeEncodeControl<'_>)->Result<Option<String>,protocol::value::ValueError>{self.writer.step(maximum_units,control)}
+    pub fn step(&mut self,maximum_units:usize,control:&mut protocol::value::NativeEncodeControl<'_>,grant:protocol::value::RetainedCloneGrant)->Result<Option<String>,protocol::value::ValueError>{if self.complete{return Ok(None);}let output=self.writer.step(maximum_units,control,grant)?;self.complete=output.is_some();Ok(output)}
+    /// 🧾️ Returns the original writer's measured receipt without synthesizing progress.
+    pub fn normal_step_progress(&self)->protocol::value::RetainedCloneProgress{self.writer.normal_step_progress()}
+    /// 📏️ Reports the original writer's ownership demand without increasing caller authority.
+    pub fn normal_step_demands(&self)->Result<protocol::value::RetirementDemand,protocol::value::ValueError>{if self.complete{Ok(Default::default())}else{self.writer.normal_step_demands()}}
     /// 📊️ Reports measured or emitted bytes without scanning retained source fields.
     pub fn progress(&self)->(usize,bool){self.writer.progress()}
     /// 📤️ Returns the same typed ranges once the complete wire owner has transferred.

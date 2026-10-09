@@ -6,7 +6,7 @@ async fn sample_envelope(id: &str) -> crate::causal::MutationEnvelope {
     crate::causal::MutationEnvelope {
         mutation_id: crate::ids::MutationId(id.to_string()),
         document_id: crate::ids::ArtifactId("document-1".to_string()),
-        actor: crate::ids::ActorId("actor-1".to_string()),
+        actor: crate::ids::ActorId("actor-1".into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
@@ -371,7 +371,7 @@ async fn artifact_bootstrap_cancellation_is_atomic_and_restartable() {
 
 #[semio_framework_async_macros::async_test]
 async fn server_frame_commands_round_trips() {
-    assert_server_round_trips(&ServerFrame::Commands { envelopes: vec![sample_envelope("op-1").await], origin: crate::ids::ActorId("actor-1".to_string()), frontier: sample_frontier().await }, Lane::Command).await;
+    assert_server_round_trips(&ServerFrame::Commands { envelopes: vec![sample_envelope("op-1").await], origin: crate::ids::ActorId("actor-1".into()), frontier: sample_frontier().await }, Lane::Command).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -383,7 +383,7 @@ async fn server_frame_ack_round_trips_for_every_stage_and_apply_outcome_variant(
 
 #[semio_framework_async_macros::async_test]
 async fn server_frame_preview_round_trips() {
-    assert_server_round_trips(&ServerFrame::Preview { actor: crate::ids::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
+    assert_server_round_trips(&ServerFrame::Preview { actor: crate::ids::ActorId("actor-1".into()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
 }
 
 #[semio_framework_async_macros::async_test]

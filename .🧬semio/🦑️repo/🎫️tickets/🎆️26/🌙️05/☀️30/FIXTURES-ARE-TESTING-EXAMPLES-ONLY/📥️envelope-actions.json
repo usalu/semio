@@ -1,0 +1,58 @@
+{
+  "sourceCopies": false,
+  "actions": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs",
+      "beforeObserverSha256": "97c78dd0ed6725122eb996ba745a48470d58c143b046040b23f723f8d7c6286b",
+      "afterObserverSha256": "4c451497cc49bfe5f3cd1d4aedea7670082bb4137af51546c2b04324fa58df56",
+      "ownedLogicalActions": [
+        {
+          "beforeBlockSha256": "27ee2cc271501e7d834d6141bf70894e3faee9b255f78e708bb75d231e3e8400",
+          "afterBlockSha256": "2e2b848917f3a726ed0f1f8b2dbe6aa0f20d154bbe15b55dfd54175863a17a66"
+        },
+        {
+          "beforeBlockSha256": "96add57831b2250d7c1dc461dbe132fedeb3e089f4ffee69b57351e64da1758c",
+          "afterBlockSha256": "460a90ea6bf6bae697d8ca4741a704c6baa9a87048239ef82d85c3a6724837ea"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeObserverSha256": "d6dd4d157ac677e7957bcf2a4e5bc39c180e5919118090d31d4a5ec8086a8501",
+      "afterObserverSha256": "70843cd8101ec2cf5e580b4feccde7e17033b20a59490de51fddf08302671372",
+      "ownedLogicalActions": [
+        {
+          "beforeBlockSha256": "ab9ccc53e2a7e1eaf9d68058c4e55cb113a668da57b79bd0f71141c9d047e541",
+          "afterBlockSha256": "7de37dc3c34ac98f8ac6e26fe28973c583785a57b09f96d8182b8d1206d99bc6"
+        },
+        {
+          "beforeBlockSha256": "b7237ffc3c447da574a88ac43ae7d429a4b0337256e7a19ca00c6d11970cfe4d",
+          "afterBlockSha256": "7307034b96980a0e6a2f871ed36c4e04011e7d399c1579705811064c72e187e9"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "beforeObserverSha256": "062d4b22f5cac072776985c6e21737b63ea266d3d20f1586f62d6b202dc3ec7b",
+      "afterObserverSha256": "2f203eca54b61314bdbb576a575e33758299ede42c565eb7668b38c161bfa2da",
+      "ownedLogicalActions": [
+        {
+          "beforeBlockSha256": "da57035ef6fc5a96a9e74424a5dc9c28ef47347c95afacf7c3fefd833c3b5eff",
+          "afterBlockSha256": "9d19e9bd62278651c35add3c79835d725b7d7a76bae36e05bdd4dd82ef69aa78"
+        },
+        {
+          "beforeBlockSha256": "e376f68c5d32426a0a280e3f2f09ce3314797c4c1c41a2c2e377ba4f7a186cc2",
+          "afterBlockSha256": "a59ca9666fd3fa1d320af1356e20e041892e25b809162106edd058b885fc9271"
+        },
+        {
+          "beforeBlockSha256": "6180864e3d62a70fa0f975ea8d1abfdbcd6cf0c8efa91d0ed248925836c76d39",
+          "afterBlockSha256": "f9bcae5081882575f3258f12c84430ad90acd396e7979074e2a270c90e23c9ed"
+        },
+        {
+          "beforeBlockSha256": "fea5ad8a697f61a587dfcbba0d25c8c77e4b94ebd3838df80d781beec26de4ef",
+          "afterBlockSha256": "bfbdcef6d9d55c0c31955fa4036445e23a47ddb7368b0a11f2e2be4eec8cc1c7"
+        }
+      ]
+    }
+  ]
+}

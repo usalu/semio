@@ -12,7 +12,7 @@ pub struct DagIntoTxt;
 impl Serializer<DagSnapshot> for DagIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &DagSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &DagSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         serialize_dsl_txt(from)
     }
 }

@@ -1,0 +1,29 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observedAt": "2026-10-09T04:44:14.486068+00:00",
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "a3d5531175e13bc5ae4d00a8d532f630107710ef47dc17b30ea61925a6201614",
+      "mtimeNs": 1791520497779507657
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "7b1eccef7cfc1824c1337a97e599f3aa91587bb6f34ba3fdf1943d9f65b36569",
+      "mtimeNs": 1791521034338503701
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
+      "sha256": "f45659e64e1830d3b50cb5bed5fb3a6d4f53b2ba7fae79a215706bcc21a36b31",
+      "mtimeNs": 1790894372937844630
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "5324f9e12e8bc73a475092cd7a343b8f133f3f42c6add76d5439fb069d2e9e10",
+      "mtimeNs": 1791520655843950135
+    }
+  ],
+  "currentNxName": "@semio-tech/framework-plugin-mounted-owner-rs",
+  "missingGraphIdentity": "semio-framework-plugin-mounted-owner"
+}

@@ -1,0 +1,17 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs",
+      "sha256": "01f4e442b6a9af76ec2d425af36aef7a8bb362b69a8a21db1e9441702e79bd72"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "5c117ea7fac67e3f5425464e5e1111492a52d781ef661e02602811be7e5e2a32"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs",
+      "sha256": "8a42b905cedf9e341fbfb3ec22ccd814703af3c409cd43a1ab679b69410b1a15"
+    }
+  ]
+}

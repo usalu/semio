@@ -2,6 +2,55 @@
 
 use super::*;
 
+fn original_transient_grant() -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 } }
+
+#[test]
+fn window_config_paged_registry_actual_transient_partition_custody() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🎚️config/🗂️registry/🧫️fixtures/🔣️.json")).unwrap();
+    let copies = fixture["owningCopies"].as_u64().unwrap() as usize;
+    let (mut registry, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
+        let mut registry = WindowTransientOwnerRegistry::for_document_generation(9);
+        registry.register::<ReplacementWindow>().unwrap();
+        for address in fixture["addresses"].as_array().unwrap() {
+            for ordinal in 0..copies {
+                let address = format!("{}/{ordinal:06}", address.as_str().unwrap().repeat(fixture["addressRepeat"].as_u64().unwrap() as usize));
+                drop(registry.owners.get_mut(ReplacementWindow::WINDOW_KIND_ID).unwrap().as_mut().unwrap().capture(&address, 9).unwrap());
+            }
+        }
+        registry
+    });
+    let mut allocated = birth.requested_bytes;
+    let mut released = birth.released_bytes;
+    let mut turns = 0;
+    while !registry.terminal_is_empty() {
+        let body = fixture["maximumPageBytes"].as_u64().unwrap() as usize;
+        let demand = registry.retirement_demands(body).unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let mut denied = vec![RetainedCloneGrant { maximum_items: 0, ..grant }];
+        if demand.copy_bytes > 0 { denied.push(RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..grant }); }
+        if demand.capacity_bytes > 0 { denied.push(RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant }); }
+        if demand.release_bytes > 0 { denied.push(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }); }
+        if demand.depth > 0 { denied.push(RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }); }
+        for denied in denied {
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.close_step(denied));
+            assert_eq!(step.unwrap().progress(), Some(RetainedCloneProgress::default()));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        }
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.close_step(grant));
+        let progress = step.unwrap().progress().unwrap();
+        assert!(progress.fits(grant));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+        allocated += heap.requested_bytes;
+        released += heap.released_bytes;
+        turns += 1;
+        assert!(turns < 2_000_000);
+    }
+    assert_eq!(allocated, released);
+    let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(registry));
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, fixture["terminalDropBytes"].as_u64().unwrap() as usize));
+    eprintln!("[DEBUG] actual original transient partitions={} allocation={allocated} release={released} turns={turns} terminalDrop0", copies * 4);
+}
+
 #[test]
 fn retained_window_input_preserves_owner_generation() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
@@ -27,7 +76,7 @@ fn retained_window_input_preserves_owner_generation() {
     assert_eq!(digests.len(), identities.len());
     let mut disposer = transient_store_disposer::<_, crate::publication_fixture::PublicationTransientMutation>(ReplacementWindow::build_owners().state_retirement);
     for _ in 0..128 {
-        if disposer.close_step(&mut owner, 1, 4096).unwrap() == PluginCloseStep::Complete {
+        if matches!(disposer.close_step(&mut owner, original_transient_grant()).unwrap(), PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
@@ -58,7 +107,7 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let mutation = |id: &str, revision| WindowTransientMutation::of::<ReplacementWindow>(id, crate::publication_fixture::ChangePublicationTransient { revision }.into());
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
+    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 };
     for (id, revision) in expected["before"].as_object().unwrap() {
         let authority = old.capture(Some(&view(id))).unwrap().unwrap();
         let mut publication = old.begin(semio_framework_job::OperationId(1), &authority, mutation(id, revision.as_u64().unwrap())).unwrap();
@@ -70,7 +119,7 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
         }
         publication.begin_close();
         for _ in 0..1024 {
-            if publication.close_step(grant).unwrap() == store::SnapshotRetirementStep::Complete {
+            if matches!(publication.close_step(grant.retained_grant()).unwrap(), RetainedCloneStep::Complete(_)) {
                 break;
             }
         }
@@ -84,7 +133,7 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
     assert_eq!(replacement.begin(semio_framework_job::OperationId(3), &authority, mutation("canvas-left", 9)).is_ok(), expected["oldPublicationAccepted"].as_bool().unwrap());
     assert!(replacement.advance(pending.as_mut(), grant).is_err());
     for _ in 0..1024 {
-        if pending.close_step(grant).unwrap() == store::SnapshotRetirementStep::Complete {
+        if matches!(pending.close_step(grant.retained_grant()).unwrap(), RetainedCloneStep::Complete(_)) {
             break;
         }
     }
@@ -102,10 +151,10 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
     assert_eq!(serde_json::Value::Object(actual), expected["after"]);
     drop(authority);
     for registry in [&mut old, &mut replacement] {
-        assert_eq!(registry.close_step(0, 4096).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(registry.close_step(RetainedCloneGrant { maximum_items: 0, ..original_transient_grant() }).unwrap(), PluginLifecycleStep::Progress(Default::default()));
         assert!(!registry.terminal_is_empty());
         for _ in 0..2048 {
-            if registry.close_step(1, 4096).unwrap() == PluginCloseStep::Complete {
+            if matches!(registry.close_step(original_transient_grant()).unwrap(), PluginLifecycleStep::Complete(_)) {
                 break;
             }
         }
@@ -119,12 +168,14 @@ struct PausedPartitionDisposer {
 }
 
 impl ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>> for PausedPartitionDisposer {
-    fn close_step(&mut self, owner: &mut WindowTransientStore<ReplacementWindow>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+    fn close_step(&mut self, owner: &mut WindowTransientStore<ReplacementWindow>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         if self.paused.load(std::sync::atomic::Ordering::Acquire) {
-            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            return Ok(PluginLifecycleStep::AwaitingInput { reason: "original paused transient disposer" });
         }
-        self.inner.close_step(owner, maximum_items, maximum_bytes)
+        self.inner.close_step(owner, grant)
     }
+
+    fn retirement_demands(&self, owner: &WindowTransientStore<ReplacementWindow>, body: usize) -> Result<RetirementDemand, ValueError> { self.inner.retirement_demands(owner, body) }
 
     fn terminal_is_empty(&self, owner: &WindowTransientStore<ReplacementWindow>) -> bool {
         !self.paused.load(std::sync::atomic::Ordering::Acquire) && self.inner.terminal_is_empty(owner)
@@ -136,29 +187,32 @@ fn retained_window_input_retirement_reaches_later_partitions_and_kinds() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();
     let fairness = &fixture["retirementFairness"];
     let paused = Arc::new(std::sync::atomic::AtomicBool::new(true));
-    let mut owner = TypedWindowTransientStoreOwner::<ReplacementWindow> { partitions: BTreeMap::new(), owners: ReplacementWindow::build_owners(), maintenance_cursor: None, retirement_cursor: None };
+    let mut owner = TypedWindowTransientStoreOwner::<ReplacementWindow> { partitions: WindowRegistry::new(), owners: Some(ReplacementWindow::build_owners()), factory_close: [None, None, None], partition_close_cursor: 0, partition_open: 0, partition_address: None };
     for id in fairness["owners"].as_array().unwrap() {
         owner.partition(id.as_str().unwrap());
     }
     owner.partitions.get_mut("first").unwrap().disposer = Some(Box::new(PausedPartitionDisposer { paused: paused.clone(), inner: transient_store_disposer(ReplacementWindow::build_owners().state_retirement) }));
-    assert_eq!(owner.close_step(0, 4096).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-    assert!(owner.retirement_cursor.is_none());
-    for _ in 0..32 {
-        owner.close_step(1, 4096).unwrap();
+    assert_eq!(owner.close_step(RetainedCloneGrant { maximum_items: 0, ..original_transient_grant() }).unwrap(), PluginLifecycleStep::Progress(Default::default()));
+    assert_eq!(owner.partition_close_cursor, 0);
+    for _ in 0..65_536 {
+        owner.close_step(original_transient_grant()).unwrap();
+        if owner.partitions.iter().filter(|(_, partition)| partition.disposer.is_some()).count() == 1 { break; }
     }
-    assert_eq!(serde_json::to_value(owner.partitions.keys().collect::<Vec<_>>()).unwrap(), fairness["expectedSurvivors"]);
+    assert_eq!(serde_json::to_value(owner.partitions.iter().filter(|(_, partition)| partition.disposer.is_some()).map(|(key, _)| key).collect::<Vec<_>>()).unwrap(), fairness["expectedSurvivors"]);
     let mut registry = WindowTransientOwnerRegistry::default();
-    registry.owners.insert("first", Box::new(owner));
-    registry.owners.insert("second", Box::new(TypedWindowTransientStoreOwner::<ReplacementWindow> { partitions: BTreeMap::new(), owners: ReplacementWindow::build_owners(), maintenance_cursor: None, retirement_cursor: None }));
-    assert_eq!(registry.close_step(0, 4096).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-    assert!(registry.retirement_cursor.is_none());
-    for _ in 0..8 {
-        registry.close_step(1, 4096).unwrap();
+    registry.owners.insert("first", Some(Box::new(owner)));
+    registry.owners.insert("second", Some(Box::new(TypedWindowTransientStoreOwner::<ReplacementWindow> { partitions: WindowRegistry::new(), owners: Some(ReplacementWindow::build_owners()), factory_close: [None, None, None], partition_close_cursor: 0, partition_open: 0, partition_address: None })));
+    registry.owner_open = 2;
+    assert_eq!(registry.close_step(RetainedCloneGrant { maximum_items: 0, ..original_transient_grant() }).unwrap(), PluginLifecycleStep::Progress(Default::default()));
+    assert_eq!(registry.owners.len(), 2);
+    for _ in 0..65_536 {
+        registry.close_step(original_transient_grant()).unwrap();
+        if registry.owner_open == 1 { break; }
     }
-    assert_eq!(serde_json::to_value(registry.owners.keys().collect::<Vec<_>>()).unwrap(), fairness["expectedSurvivors"]);
+    assert_eq!(serde_json::to_value(registry.owners.iter().filter(|(_, owner)| owner.is_some()).map(|(key, _)| key).collect::<Vec<_>>()).unwrap(), fairness["expectedSurvivors"]);
     paused.store(false, std::sync::atomic::Ordering::Release);
-    for _ in 0..32 {
-        if registry.close_step(1, 4096).unwrap() == PluginCloseStep::Complete {
+    for _ in 0..65_536 {
+        if matches!(registry.close_step(original_transient_grant()).unwrap(), PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
@@ -177,7 +231,7 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let mutation = |revision| WindowTransientMutation::of::<ReplacementWindow>("canvas-left", crate::publication_fixture::ChangePublicationTransient { revision }.into());
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
+    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 };
     let publish = |registry: &mut WindowTransientOwnerRegistry, authority: &WindowTransientAuthority, revision: u64| {
         let mut publication = registry.begin(semio_framework_job::OperationId(1), authority, mutation(revision)).unwrap();
         for _ in 0..1024 {
@@ -188,7 +242,7 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
         }
         publication.begin_close();
         for _ in 0..1024 {
-            if publication.close_step(grant).unwrap() == store::SnapshotRetirementStep::Complete {
+            if matches!(publication.close_step(grant.retained_grant()).unwrap(), RetainedCloneStep::Complete(_)) {
                 break;
             }
         }
@@ -204,7 +258,7 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
     publish(&mut registry, &live, expected["liveRevision"].as_u64().unwrap());
     drop((captured, live));
     for _ in 0..2048 {
-        if registry.close_step(1, 4096).unwrap() == PluginCloseStep::Complete {
+        if matches!(registry.close_step(original_transient_grant()).unwrap(), PluginLifecycleStep::Complete(_)) {
             break;
         }
     }

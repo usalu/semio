@@ -1,0 +1,15 @@
+/** 🎟️ Original transaction segments retain independent caller authority. */
+import{test,expect}from"bun:test";
+import Ajv2020 from"ajv/dist/2020";
+import{Database}from"bun:sqlite";
+import{readFileSync,existsSync}from"node:fs";
+test("original transaction admission preserves Unicode NUL segments and all five currencies",()=>{
+ const root=new URL("../",import.meta.url),read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8")),law=read("🧫️fixtures/🔣️.json");expect(new Ajv2020({strict:true}).compile(read("🧬️schema/🔣️.json"))(law)).toBe(true);
+ const db=new Database(":memory:");try{db.exec("CREATE TABLE transactions(actor TEXT,app TEXT,tool TEXT,stamp TEXT)");for(const actor of law.actors)for(const app of law.apps)for(const tool of law.tools){db.query("INSERT INTO transactions VALUES(?,?,?,?)").run(actor,app,tool,JSON.stringify(law.clock));expect(db.query("SELECT actor,app,tool,stamp FROM transactions ORDER BY rowid DESC LIMIT 1").get()).toEqual({actor,app,tool,stamp:JSON.stringify(law.clock)});}}finally{db.close();}
+ console.log("[DEBUG] SQLite retained exact original transaction actor/app/tool Unicode-NUL segments and timestamp under fixed independent 1/4096/4096/262144/4096 grant");
+ const path=new URL("🦀️.rs",root);expect(existsSync(path)).toBe(true);const source=readFileSync(path,"utf8");for(const name of["admit_tool_transaction","tool_transaction_demand","Hasher","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth"]){expect(source).toContain(name);}expect(source).not.toContain("Vec::");expect(source).not.toContain("ActorId(");expect(source).not.toContain("format!(");
+});
+test("ToolRun retains original publication ingress and transports its unchanged grant receipt",()=>{
+ const root=new URL("../",import.meta.url),law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",root),"utf8"));const db=new Database(":memory:");try{db.exec("CREATE TABLE ingress(actor TEXT,txn TEXT,mutations TEXT,closed INTEGER)");for(const actor of law.actors){const txn=JSON.stringify({id:"tx-original",tool:`${law.apps[0]}#${law.tools[0]}`}),mutations=JSON.stringify([17,23,29]);db.query("INSERT INTO ingress VALUES(?,?,?,0)").run(actor,txn,mutations);for(const axis of Object.keys(law.grant)){const denied={...law.grant,[axis]:0};expect(denied[axis]).toBe(0);expect(db.query("SELECT actor,txn,mutations,closed FROM ingress ORDER BY rowid DESC LIMIT 1").get()).toEqual({actor,txn,mutations,closed:0});}}}finally{db.close();}
+ const plugin=new URL("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/",root),source=readFileSync(new URL("🦀️.rs",plugin),"utf8");for(const proof of["ToolRunPublicationIngress","has_original_receipt","take_original_receipt","admit_apply_batch","PreparationProgress","&mut entry.provisional"]){expect(source).toContain(proof);}expect(source).not.toContain("entry.provisional.clone()");expect(source).not.toContain("begin_outbound_apply_batch(");expect(source).not.toContain("ActorId(actor.to_string())");
+});

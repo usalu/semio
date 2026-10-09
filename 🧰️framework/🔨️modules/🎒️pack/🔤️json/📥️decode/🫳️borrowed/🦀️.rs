@@ -8,10 +8,9 @@ pub type JsonBorrowedCursor<'source,S,V>=JsonSourceCursor<&'source S,V>;
 /// 🪟️ Retains an immutable first-party source view by value alongside its original grammar owner.
 pub struct JsonSourceCursor<S:JsonReadSource+Copy,V:JsonParsedValue>{source:S,parser:super::JsonGrammarCursor<V>}
 impl<S:JsonReadSource+Copy,V:JsonParsedValue> JsonSourceCursor<S,V>{
-    pub fn new(source:S,policy:super::JsonMemberPolicy)->Self{Self{source,parser:super::JsonGrammarCursor::new(policy)}}
     /// 🛂️ Captures the complete original caller limits before any source read or destination allocation.
-    pub fn new_with_limits(source:S,policy:super::JsonMemberPolicy,limits:JsonReadLimits)->Result<Self,semio_framework_value::ValueError>{
-        if source.byte_len()as u128>u128::from(limits.maximum_bytes){return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"JSON complete source exceeds caller byte limit"));}
+    pub fn new(source:S,policy:super::JsonMemberPolicy,limits:JsonReadLimits)->Result<Self,semio_framework_value::ValueError>{
+        if source.byte_len()as u128>u128::from(limits.maximum_bytes){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"JSON complete source exceeds caller byte limit"));}
         let mut parser=super::JsonGrammarCursor::new(policy);parser.limits=limits;Ok(Self{source,parser})
     }
     pub fn source_ref(&self)->&S{&self.source}
@@ -21,7 +20,9 @@ impl<S:JsonReadSource+Copy,V:JsonParsedValue> JsonSourceCursor<S,V>{
     pub fn from_grammar(source:S,parser:super::JsonGrammarCursor<V>)->Self{Self{source,parser}}
     pub fn position(&self)->usize{self.parser.position()}
     pub fn phase(&self)->&'static str{self.parser.phase()}
-    pub fn step(&mut self,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<V>,JsonError>{self.parser.step_source(&self.source,maximum_units,control)}
+    pub fn normal_step_progress(&self)->super::RetainedCloneProgress{self.parser.normal_step_progress()}
+    pub fn normal_step_demands(&self)->Result<super::RetirementDemand,JsonError>{self.parser.normal_step_demands(&self.source)}
+    pub fn step(&mut self,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:super::RetainedCloneGrant)->Result<Option<V>,JsonError>{self.parser.step_source(&self.source,maximum_units,control,grant,false)}
     /// 🎟️ Admits the native grammar retirement frame before transferring its original owner.
     pub fn retirement_birth_bytes(&self)->usize{semio_framework_value::owned_retirement_birth_bytes::<super::JsonGrammarCursor<V>>()}
     pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Self)>{

@@ -4,7 +4,7 @@ use crate::schema::geometry::editing::PathPoint;
 
 fn paths()->DrawingSnapshot {
     let layers=["first","second"].iter().map(|id| {
-        let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(id,vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]},crate::PathSegment::Line {to:[10.0,10.0]}].into());
+        let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id,vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]},crate::PathSegment::Line {to:[10.0,10.0]}].into());
         crate::schema::layer_base_mut(&mut path).id=(*id).into();path
     }).collect();
     DrawingSnapshot {id:"delete-selection-test".into(),layers,..Default::default()}
@@ -54,7 +54,7 @@ fn deletion_refuses_stale_or_locked_selection_atomically() {
 
 #[test]
 fn layer_deletion_normalizes_ancestors_and_respects_tool_context() {
-    let mut before=paths();let child=before.layers.remove(0);let mut group=crate::schema::create_drawing_group_layer("Group");
+    let mut before=paths();let child=before.layers.remove(0);let mut group=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
     if let DrawingLayerNode::Group(group)=&mut group {group.base.id="group".into();group.children.push(child);}
     before.layers.push(group);
     let ids=vec!["group".into(),"first".into(),"second".into()];

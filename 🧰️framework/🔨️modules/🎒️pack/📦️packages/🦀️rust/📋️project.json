@@ -16,6 +16,15 @@
     ]
   },
   "targets": {
+    "test-occurrence-order-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-occurrence-order-source",
+        "forwardAllArgs": false
+      },
+      "cache": false
+    },
     "build": {
       "executor": "nx:run-commands",
       "options": {

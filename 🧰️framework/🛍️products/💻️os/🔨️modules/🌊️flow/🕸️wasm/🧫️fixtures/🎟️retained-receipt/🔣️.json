@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "axes": [
+    "copiedItems",
+    "copiedBytes",
+    "retainedCapacityBytes",
+    "releasedBytes"
+  ],
+  "cases": [
+    {
+      "name": "pending",
+      "length": 0,
+      "terminal": false,
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 5,
+        "releasedBytes": 7
+      }
+    },
+    {
+      "name": "failed-allocation",
+      "length": -1,
+      "terminal": false,
+      "progress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 0
+      }
+    },
+    {
+      "name": "terminal",
+      "length": -1,
+      "terminal": true,
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 1,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 4096
+      }
+    }
+  ]
+}

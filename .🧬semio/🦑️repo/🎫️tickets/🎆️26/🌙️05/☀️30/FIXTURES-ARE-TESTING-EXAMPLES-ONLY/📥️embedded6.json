@@ -1,0 +1,49 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧬️schema/🔣️.json",
+      "selectors": [
+        "definitions/fixture",
+        "definitions/styleFixtures"
+      ],
+      "formatObservations": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "selectors": [
+        "definitions/fixtures"
+      ],
+      "formatObservations": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "selectors": [
+        "definitions/fixtures"
+      ],
+      "formatObservations": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧬️schema/🔣️.json",
+      "selectors": [
+        "definitions/ownedAdmissionFixtures"
+      ],
+      "formatObservations": []
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧬️schema/🔣️.json",
+      "selectors": [
+        "definitions/fixtures"
+      ],
+      "formatObservations": []
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧬️schema/🔣️.json",
+      "selectors": [
+        "definitions/admissionFixture"
+      ],
+      "formatObservations": []
+    }
+  ]
+}

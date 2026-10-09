@@ -1,0 +1,11 @@
+# Original Metadata Actor Lease Design
+
+The current private parent and child metadata issuers reconstruct actor Strings, while actual Store publication accepts an admitted SharedUtf8 source. A String-to-SharedUtf8 adapter at handoff would allocate an unquoted Arc and change source identity. The new neutral schema and actual native law require the original admitted text pointer, explicit five independent caller currencies, zero-effect denied turns, exact physical receipts and independent Serde text parity.
+
+The intended producer retains borrowed SharedUtf8 at source admission. Each required metadata alias must use the original caller grant through SharedUtf8::admit_clone; the accepted turn returns its actual copied header receipt. Parent publication receives that exact alias. Child opening and child publication receive separately admitted aliases over the same original text allocation. Existing artifact reference, transaction and group identities remain separately bounded string-copy phases.
+
+Retirement must keep every alias until a funded close. Closing the final alias must retain its returned original String allocation for a subsequent funded payload release; it cannot ordinary-drop the returned String. Metadata or issuer final Drop may run only after aliases, retained final text and unrelated string fields are empty. All copy, capacity, release and depth demands must propagate through the actual child/private group receiving callers.
+
+The current native TDD producer is absent. Plugin is a dependency in Flow/Infinite Host compilation, so a dedicated actual Plugin all-targets law command is registered in the existing ticket script and both launch inventories. The initial setup refusal was corrected to the repository's draft-7 schema. The next actual full Plugin compiler attempt is running; source readiness is not native acceptance.
+
+The five old Store foreign_steps calls diagnosed by full Host16 were already replaced concurrently by exact borrowed foreign_step_source(..., 0) queries before Root edits. Root preserved these changes and claims no authorship or runtime acceptance. Original initialization still maps a source refusal into a static diagnostic; preserving richer original error provenance remains an audit consideration.

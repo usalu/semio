@@ -1,10 +1,18 @@
 
 use super::*;
+
+pub(super) fn caller_worker_close_policy(phase:WorkerJobClosePhase)->RetainedCloneGrant{
+    match phase{
+        WorkerJobClosePhase::AuthorityRelease=>RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:0,maximum_release_bytes:65536,maximum_depth:64},
+        _=>RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:16384,maximum_depth:64},
+    }
+}
+
 use std::mem::size_of;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
 
 fn params(operation: OperationId, generation: Generation, cancel: CancelToken) -> BatchJobParams {
-    BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { site: "test.retained-job", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 1_000 }, now_us: default_now_us }
+    BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "test.retained-job", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 1_000 }, now_us: default_now_us }
 }
 
 #[test]
@@ -18,7 +26,7 @@ fn retained_payload_physical_close_preserves_short_pages_until_the_exact_backing
             let generation = Generation(21);
             let ledger = Arc::new(JobPayloadOperationLedger::new(operation, generation));
             let mut sequence = 0;
-            let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
+            let mut actual_retained_progress=RetainedCloneProgress::default();let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger),&mut actual_retained_progress);
             let bytes = vec![42; row["logicalBytes"].as_u64().unwrap() as usize];
             let mut writer = RetainedJobPayloadWriter::new(stream);
             let mut page = writer.admit_page(&mut context).unwrap();
@@ -27,24 +35,24 @@ fn retained_payload_physical_close_preserves_short_pages_until_the_exact_backing
             let mut payload = writer.finish().unwrap();
             let pointer = payload.page(0).unwrap().as_ptr();
             let insufficient_grant = row["insufficientGrant"].as_u64().unwrap() as usize;
-            assert_eq!(payload.close_step(1, 0), JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 }, "a zero-byte grant buys nothing");
+            assert_eq!(payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..Default::default() }), "a zero-byte grant buys nothing");
             assert_eq!(payload.next_close_byte_demand(), JOB_PAYLOAD_PAGE_BYTES);
-            assert_eq!(payload.close_step(0, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!(payload.close_step(RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..Default::default() }));
             for _ in 0..4 {
-                assert_eq!(payload.close_step(1, insufficient_grant), JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                assert_eq!(payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: insufficient_grant, maximum_depth: 64 }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..Default::default() }));
                 assert_eq!(payload.page(0).unwrap().as_ptr(), pointer);
                 assert_eq!(payload.page(0).unwrap(), bytes);
                 assert_eq!(ledger.process_share_bytes(), JOB_PAYLOAD_PAGE_BYTES);
             }
-            let refused = payload.close_step(1, insufficient_grant);
+            let refused = payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: insufficient_grant, maximum_depth: 64 }).unwrap();
             let retained_pointer = payload.page(0).map(|page| page.as_ptr()) == Some(pointer);
-            let released = payload.close_step(1, payload.next_close_byte_demand());
-            assert_eq!(payload.next_close_byte_demand(), 0);
+            let released = payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: payload.next_close_byte_demand(), maximum_depth: 64 }).unwrap();
+            assert_eq!(payload.next_close_byte_demand(), semio_framework_value::shared_retirement_allocation_bytes::<JobPayloadOperationLedger>());
             let remaining_logical_bytes = payload.len();
             let remaining_pages = payload.page_count();
-            while !payload.terminal_is_empty() { payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
-            let (refused_items, refused_bytes) = match refused { JobPayloadCloseStep::Pending { released_items, released_bytes } => (released_items, released_bytes), JobPayloadCloseStep::Complete => (0, 0) };
-            let (released_items, released_bytes) = match released { JobPayloadCloseStep::Pending { released_items, released_bytes } => (released_items, released_bytes), JobPayloadCloseStep::Complete => (0, 0) };
+            while !payload.terminal_is_empty() { payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
+            let (refused_items, refused_bytes) = match refused { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, released_bytes, .. }) => (released_items, released_bytes), RetainedCloneStep::Complete(_) => (0, 0) };
+            let (released_items, released_bytes) = match released { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, released_bytes, .. }) => (released_items, released_bytes), RetainedCloneStep::Complete(_) => (0, 0) };
             assert!(ledger.terminal_is_empty());
             let actual = serde_json::json!({
                 "refusedItems": refused_items, "refusedBytes": refused_bytes, "retainedPointer": retained_pointer,
@@ -65,7 +73,7 @@ fn retained_writer_physical_close_preserves_staged_and_rejected_backing() {
         let generation = Generation(21);
         let ledger = Arc::new(JobPayloadOperationLedger::new(operation, generation));
         let mut sequence = 0;
-        let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
+        let mut actual_retained_progress=RetainedCloneProgress::default();let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger),&mut actual_retained_progress);
         let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::Preview);
         writer.begin_staged_page(&mut context).unwrap();
         writer.write_staged(&vec![42; row["logicalBytes"].as_u64().unwrap() as usize]).unwrap();
@@ -76,23 +84,23 @@ fn retained_writer_physical_close_preserves_staged_and_rejected_backing() {
         for (staged, pointer) in [(true, staged_pointer), (false, rejected_pointer)] {
             assert_eq!(writer.next_close_byte_demand(), JOB_PAYLOAD_PAGE_BYTES);
             for _ in 0..4 {
-                assert_eq!(writer.close_step(1, row["insufficientGrant"].as_u64().unwrap() as usize), JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                assert_eq!(writer.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: row["insufficientGrant"].as_u64().unwrap() as usize, maximum_depth: 64 }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..Default::default() }));
             }
-            let refused = writer.close_step(1, row["insufficientGrant"].as_u64().unwrap() as usize);
+            let refused = writer.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: row["insufficientGrant"].as_u64().unwrap() as usize, maximum_depth: 64 }).unwrap();
             let retained_pointer = if staged {
                 writer.staged.as_ref().map(|(_, source, _)| source.backing_identity()) == Some(pointer)
             } else {
                 writer.rejected.as_ref().map(JobPayloadPageSource::backing_identity) == Some(pointer)
             };
-            let released = writer.close_step(1, writer.next_close_byte_demand());
+            let released = writer.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: writer.next_close_byte_demand(), maximum_depth: 64 }).unwrap();
             observations.push((staged, refused, retained_pointer, released));
         }
-        while !writer.terminal_is_empty() { writer.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
+        while !writer.terminal_is_empty() { writer.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
         assert!(ledger.terminal_is_empty());
         for (staged, refused, retained_pointer, released) in observations {
-            assert_eq!(refused, JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 }, "staged={staged} {}", row["name"]);
+            assert_eq!(refused, RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..Default::default() }), "staged={staged} {}", row["name"]);
             assert!(retained_pointer, "staged={staged} {}", row["name"]);
-            assert_eq!(released, JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES }, "staged={staged} {}", row["name"]);
+            assert_eq!(released, RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES, ..Default::default() }), "staged={staged} {}", row["name"]);
         }
     }
 }
@@ -132,6 +140,9 @@ impl InteractiveJob for ShortGrantCloseJob {
 #[test]
 fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
     let _slots = super::worker_session_slots_shared();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/♻️mounted-close/🔣️.json")).unwrap();
+    let profile=fixture["profiles"].as_array().unwrap().iter().find(|profile|profile["wordBytes"].as_u64()==Some(size_of::<usize>()as u64)).expect("canonical physical layout profile for this native address space");
+    let expected=profile["turns"].as_array().unwrap();
     let grant = 4_096;
     assert!(grant < JOB_PAYLOAD_PAGE_BYTES, "this law is about a grant shorter than one physical page");
     let mut mounted = MountedWorkerJobSession::try_new(ShortGrantCloseJob { backing: Some(Box::new(51)), closing: false }, params(OperationId(90_030), Generation(23), root_cancel_token()))
@@ -150,33 +161,35 @@ fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
             break;
         }
         turns += 1;
-        let release_grant = mounted.next_close_demands(0).map(|demand|demand.maximum_release_bytes).expect("exclusive mounted fixture close query");
-        match mounted.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:release_grant,maximum_depth:64,..RetainedCloneGrant::default()}) {
+        let caller=caller_worker_close_policy(phase);
+        assert_eq!(caller.maximum_items,fixture["perTurnItems"].as_u64().unwrap()as usize);
+        let demand=mounted.retirement_demands(caller.maximum_copy_bytes).expect("exclusive mounted fixture close query");
+        assert!(demand.copy_bytes<=caller.maximum_copy_bytes && demand.capacity_bytes<=caller.maximum_capacity_bytes && demand.release_bytes<=caller.maximum_release_bytes && demand.depth<=caller.maximum_depth);
+        if phase==WorkerJobClosePhase::PreadmittedFault && demand.release_bytes==JOB_PAYLOAD_PAGE_BYTES{let denied=RetainedCloneGrant{maximum_release_bytes:grant,..caller};let step=mounted.close_step(denied);assert_eq!(step.progress(),Default::default());assert_eq!(mounted.close_phase(),phase);}
+        let release_grant=caller.maximum_release_bytes;
+        let step=mounted.close_step(caller);
+        let expected_turn=&expected[turns-1];
+        assert_eq!(format!("{phase:?}"),expected_turn["phase"].as_str().unwrap());
+        assert_eq!(format!("{:?}",mounted.close_phase()),expected_turn["next"].as_str().unwrap());
+        let expected_receipt:RetainedCloneProgress=serde_json::from_value(expected_turn["receipt"].clone()).unwrap();
+        assert_eq!(if matches!(step,WorkerJobCloseStep::Complete{..}){"complete"}else{"pending"},expected_turn["kind"].as_str().unwrap());
+        assert_eq!(step.progress(),expected_receipt,"original exact funded receipt at turn {turns}");
+        assert!(step.progress().fits(caller));
+        match step {
             WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:released_items,released_bytes,..}} => {
                 assert!(released_items <= 1, "a one-item grant releases at most one owner: {released_items}");
                 assert!(released_bytes <= release_grant, "a close turn never spends more than its explicit physical release grant: {released_bytes}");
-                charged += released_bytes;
+                if matches!(phase,WorkerJobClosePhase::PreadmittedFault|WorkerJobClosePhase::Job){charged += released_bytes;}
             }
             WorkerJobCloseStep::Complete {progress} => {}
             WorkerJobCloseStep::Blocked => panic!("a mounted close on a positive grant is never blocked"),
-            WorkerJobCloseStep::Refused(kind)=>panic!("original close grant refused: {kind:?}"),
+            WorkerJobCloseStep::Refused{kind,..}=>panic!("original close grant refused: {kind:?}"),
         }
     }
     assert!(mounted.terminal_is_empty(), "every named phase completes under its exact queried physical release authority");
     assert_eq!(charged, JOB_PAYLOAD_PAGE_BYTES + size_of::<u8>(), "fault page and domain Box each spend their actual allocation extent");
-    assert_eq!(turns, 7, "one fault-page release and the fixed phase ladder remain bounded");
-    assert_eq!(
-        ladder,
-        vec![
-            WorkerJobClosePhase::BeginClose,
-            WorkerJobClosePhase::PreadmittedFault,
-            WorkerJobClosePhase::Job,
-            WorkerJobClosePhase::ParamsRelease,
-            WorkerJobClosePhase::RetirementSlot,
-            WorkerJobClosePhase::Empty,
-        ],
-        "the close cursor walks its named phases in order and never revisits one"
-    );
+    assert_eq!(turns, expected.len(), "canonical original phase and exact physical owner receipts each receive an admitted turn");
+    assert_eq!(ladder.iter().map(|phase|format!("{phase:?}")).collect::<Vec<_>>(),fixture["phases"].as_array().unwrap().iter().map(|phase|phase.as_str().unwrap().to_string()).collect::<Vec<_>>(),"the canonical close cursor walks its named physical phases in order and never revisits one");
 }
 
 /// ⏳️ A liveness bound, not a performance one: the pool worker that owns the step may be
@@ -200,12 +213,12 @@ fn payload_ledger_identity_must_match_the_exact_step_context() {
     let ledger = Arc::new(JobPayloadOperationLedger::new(OperationId(90_000), Generation(6)));
     let operation_mismatch = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let mut sequence = 0;
-        let _ = StepContext::with_payload_ledger(OperationId(90_001), Generation(6), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
+        let mut actual_retained_progress=RetainedCloneProgress::default();let _ = StepContext::with_payload_ledger(OperationId(90_001), Generation(6), StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger),&mut actual_retained_progress);
     }));
     assert!(operation_mismatch.is_err());
     let generation_mismatch = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let mut sequence = 0;
-        let _ = StepContext::with_payload_ledger(OperationId(90_000), Generation(7), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
+        let mut actual_retained_progress=RetainedCloneProgress::default();let _ = StepContext::with_payload_ledger(OperationId(90_000), Generation(7), StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger),&mut actual_retained_progress);
     }));
     assert!(generation_mismatch.is_err());
 }
@@ -219,14 +232,14 @@ fn retained_payload_max_plus_one_zero_grant_nested_and_exact_close_are_owned() {
     let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState);
     for index in 0..JOB_PAYLOAD_OPERATION_PAGES {
         let mut preview_sequence = index as u64;
-        let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut preview_sequence, Arc::clone(&ledger));
+        let mut actual_retained_progress=RetainedCloneProgress::default();let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, ClockStride::new(), &mut preview_sequence, Arc::clone(&ledger),&mut actual_retained_progress);
         let source = JobPayloadPageSource::new();
         let mut page = context.admit_payload_page(&mut writer, source).expect("each fixed payload page is admitted before write");
         page.write(&[index as u8]).expect("one byte fits admitted page");
         page.commit();
     }
     let mut sequence = 0;
-    let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
+    let mut actual_retained_progress=RetainedCloneProgress::default();let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger),&mut actual_retained_progress);
     let plus_one = JobPayloadPageSource::new();
     let plus_one_pointer = plus_one.backing_identity();
     let rejected = match context.admit_payload_page(&mut writer, plus_one) {
@@ -239,10 +252,12 @@ fn retained_payload_max_plus_one_zero_grant_nested_and_exact_close_are_owned() {
     drop(returned);
     let mut payload = writer.finish().expect("full payload has no rejected source retained");
     assert_eq!(payload.page_count(), JOB_PAYLOAD_OPERATION_PAGES);
-    assert_eq!(payload.close_step(0, 0), JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(payload.close_step(RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 0, released_bytes: 0, ..Default::default() }));
     for _ in 0..JOB_PAYLOAD_OPERATION_PAGES {
-        let _ = payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        let _ = payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap();
     }
+    let ledger_step = payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap();
+    assert_eq!(ledger_step.progress().released_bytes, 0);
     assert!(payload.terminal_is_empty());
     assert!(ledger.terminal_is_empty());
     assert_eq!(ledger.process_share_bytes(), 0, "the exact close ladder returns every page this operation took from the process budget");
@@ -256,7 +271,7 @@ fn retained_state_and_output_have_separate_credits_and_close_one_page_per_grant(
     let mut state_writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitState);
     let mut output_writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput);
     let mut sequence = 0;
-    let mut state_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
+    let mut actual_retained_progress=RetainedCloneProgress::default();let mut state_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger),&mut actual_retained_progress);
     let mut state_page = state_context.admit_payload_page(&mut state_writer, JobPayloadPageSource::new()).expect("state page");
     state_page.write(b"state").expect("state bytes");
     state_page.commit();
@@ -264,14 +279,19 @@ fn retained_state_and_output_have_separate_credits_and_close_one_page_per_grant(
     assert_eq!(rejected.fault, JobPayloadAdmissionFault::OpportunityExhausted);
     drop(rejected.into_source());
     assert_eq!(state_writer.page_count(), 1);
-    let mut output_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
+    let mut actual_retained_progress=RetainedCloneProgress::default();let mut output_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger),&mut actual_retained_progress);
     let mut output_page = output_context.admit_payload_page(&mut output_writer, JobPayloadPageSource::new()).expect("separate output page");
     output_page.write(b"output").expect("output bytes");
     output_page.commit();
     let mut terminal = StepOutcome::Complete(CommitCandidate { state: state_writer.finish().expect("state"), output: output_writer.finish().expect("output") });
-    assert_eq!(terminal.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES });
+    assert_eq!(terminal.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES, ..Default::default() }));
     assert!(!terminal.terminal_is_empty());
-    assert_eq!(terminal.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES });
+    let ledger_step=terminal.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap();
+    assert_eq!(ledger_step.progress().released_bytes, 0);
+    assert!(!terminal.terminal_is_empty());
+    assert_eq!(terminal.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES, ..Default::default() }));
+    let ledger_step=terminal.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap();
+    assert_eq!(ledger_step.progress().released_bytes, 0);
     assert!(terminal.terminal_is_empty());
 }
 
@@ -284,13 +304,13 @@ fn retained_writer_and_reader_advance_exactly_one_page_per_opportunity() {
     let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput);
     let mut cursor = 0;
     let mut sequence = 0;
-    let mut zero = StepContext::with_payload_ledger(operation, generation, StepBudget::new(0, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
+    let mut actual_retained_progress=RetainedCloneProgress::default();let mut zero = StepContext::with_payload_ledger(operation, generation, StepBudget::new(0, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger),&mut actual_retained_progress);
     assert_eq!(writer.write_slice_page(&mut zero, &bytes, &mut cursor), Ok(false));
     assert_eq!(cursor, 0);
-    let mut first = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
+    let mut actual_retained_progress=RetainedCloneProgress::default();let mut first = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger),&mut actual_retained_progress);
     assert_eq!(writer.write_slice_page(&mut first, &bytes, &mut cursor), Ok(false));
     assert_eq!(cursor, JOB_PAYLOAD_PAGE_BYTES);
-    let mut second = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger));
+    let mut actual_retained_progress=RetainedCloneProgress::default();let mut second = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, ClockStride::new(), &mut sequence, Arc::clone(&ledger),&mut actual_retained_progress);
     assert_eq!(writer.write_slice_page(&mut second, &bytes, &mut cursor), Ok(true));
     let mut payload = writer.finish().expect("two-page retained payload");
     let mut reader = payload.reader();
@@ -298,9 +318,11 @@ fn retained_writer_and_reader_advance_exactly_one_page_per_opportunity() {
     assert_eq!(reader.read_page(1, JOB_PAYLOAD_PAGE_BYTES).map(|page| page.len()), Some(JOB_PAYLOAD_PAGE_BYTES));
     assert_eq!(reader.read_page(1, JOB_PAYLOAD_PAGE_BYTES).map(|page| page.len()), Some(1));
     assert!(reader.terminal_is_empty());
-    assert_eq!(payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES });
-    assert_eq!(payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES });
-    assert_eq!(payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Complete);
+    assert_eq!(payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES, ..Default::default() }));
+    assert_eq!(payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES, ..Default::default() }));
+    let ledger_step=payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap();
+    assert_eq!(ledger_step.progress().released_bytes, 0);
+    assert_eq!(payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(), RetainedCloneStep::Complete(Default::default()));
     assert!(payload.terminal_is_empty());
 }
 
@@ -319,17 +341,22 @@ impl InteractiveJob for StructuredChildJob {
     }
 
     fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep {
-        let maximum_items=grant.maximum_items;let _maximum_bytes=grant.maximum_release_bytes;
+        let maximum_items=grant.maximum_items;
         self.begin_close();
         if self.backing.is_some() {
-            if maximum_items == 0 {
+            if maximum_items == 0 || grant.maximum_release_bytes < 1 || grant.maximum_depth == 0 {
                 return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}};
             }
             self.backing = None;
-            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:0,..RetainedCloneProgress::default()}};
+            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:1,..RetainedCloneProgress::default()}};
         }
         InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()}
     }
+
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
+    fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.backing.is_some()))}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(1)}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.backing.is_none()
@@ -355,8 +382,10 @@ fn child_registry_max_plus_one_stale_duplicate_exhaustion_and_parent_completion_
     assert_eq!(rejected_child.backing.as_deref().expect("returned structured child backing") as *const u8, plus_one_pointer);
     rejected_child.begin_close();
     assert_eq!(rejected_child.close_step(RetainedCloneGrant{maximum_items:0,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
+    let close_started=Instant::now();let mut close_attempts=0;
     while !rejected_child.terminal_is_empty() {
-        let _ = rejected_child.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()});
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+        let _ = rejected_child.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:1,maximum_depth:64,..RetainedCloneGrant::default()});
     }
     assert_eq!(scope.assert_completable(), Err(JobChildCompletionFault::LiveChildren));
     let token = guards[0].as_ref().expect("first child").token();
@@ -365,10 +394,12 @@ fn child_registry_max_plus_one_stale_duplicate_exhaustion_and_parent_completion_
     let stale = JobChildToken { generation: token.generation + 1, ..token };
     assert_eq!(scope.complete_child(stale), Err(JobChildCompletionFault::Stale));
     drop(guards);
-    assert_eq!(scope.pump_child_close(RetainedCloneGrant::one_release_turn(0,64)), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
-    assert_eq!(scope.pump_child_close(RetainedCloneGrant::one_release_turn(JOB_PAYLOAD_PAGE_BYTES,64)), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}}, "child begin-close transfers control without claiming an owner release");
+    assert_eq!(scope.pump_child_close(RetainedCloneGrant{maximum_items:0,maximum_depth:64,..Default::default()}), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
+    assert_eq!(scope.pump_child_close(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64}), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}}, "child begin-close transfers control without claiming an owner release");
+    let close_started=Instant::now();let mut close_attempts=0;
     while !scope.terminal_is_empty() {
-        let _ = scope.pump_child_close(RetainedCloneGrant::one_release_turn(JOB_PAYLOAD_PAGE_BYTES,64));
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+        let _ = scope.pump_child_close(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64});
     }
     assert!(scope.assert_completable().is_ok());
     for slot in &scope.slots {
@@ -385,8 +416,10 @@ fn child_registry_max_plus_one_stale_duplicate_exhaustion_and_parent_completion_
     assert_eq!(rejected.child().backing.as_deref().expect("exhausted rejected backing") as *const u8, rejected_backing_pointer);
     rejected.begin_close();
     assert_eq!(rejected.close_step(RetainedCloneGrant{maximum_items:0,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
+    let close_started=Instant::now();let mut close_attempts=0;
     while !rejected.terminal_is_empty() {
-        let _ = rejected.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()});
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+        let _ = rejected.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:1,maximum_depth:64,..RetainedCloneGrant::default()});
     }
     scope.begin_close();
     assert!(scope.terminal_is_empty());
@@ -417,19 +450,27 @@ impl InteractiveJob for HostileJob {
     }
 
     fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep {
-        let maximum_items=grant.maximum_items;let _maximum_bytes=grant.maximum_release_bytes;
         self.begin_close();
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}};
+        let copy=self.next_close_copy_byte_demand().expect("declared hostile copy");
+        let release=self.next_close_release_byte_demand().expect("declared hostile release");
+        if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release||grant.maximum_depth<1 {
+            return InteractiveJobCloseStep::Pending{progress:Default::default()};
         }
-        if self.backing.take().is_some() {
-            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:0,..RetainedCloneProgress::default()}};
+        if let Some(backing)=self.backing.take(){
+            drop(backing);
+            return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Box<u8>>(),released_bytes:size_of::<u8>(),..Default::default()}};
         }
-        if self.steps.take().is_some() {
-            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:0,..RetainedCloneProgress::default()}};
+        if let Some(steps)=self.steps.take(){
+            let released_bytes=if let Some(counter)=Arc::into_inner(steps){drop(counter);semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>()}else{0};
+            return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Arc<AtomicUsize>>(),released_bytes,..Default::default()}};
         }
-        InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()}
+        InteractiveJobCloseStep::Complete{progress:Default::default()}
     }
+
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.backing.is_some(){size_of::<Box<u8>>()}else if self.steps.is_some(){size_of::<Arc<AtomicUsize>>()}else{0})}
+    fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.backing.is_some(){size_of::<u8>()}else if self.steps.is_some(){semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>()}else{0})}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.backing.is_some()||self.steps.is_some()))}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.backing.is_none() && self.steps.is_none()
@@ -472,8 +513,10 @@ fn worker_authority_keeps_one_heap_identity_through_mounted_submit_and_checkout(
     let terminal_identity = mounted.checked_out.as_ref().and_then(|outcome| outcome.authority.as_ref()).expect("mounted terminal owns exact authority").0.as_ptr();
     assert_eq!(terminal_identity, admitted_identity, "the caller-run interactive step keeps the same heap authority as the pooled one");
     mounted.begin_close();
+    let close_started=Instant::now();let mut close_attempts=0;
     while !mounted.terminal_is_empty() {
-        let _ = mounted.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+        let _ = mounted.close_step(caller_worker_close_policy(mounted.close_phase()));
     }
     let _ = pool.shutdown();
 }
@@ -503,7 +546,7 @@ fn worker_session_contention_rejection_take_resume_terminal_drop_and_close_are_e
     let operation = OperationId(90_004);
     let generation = Generation(10);
     let steps = Arc::new(AtomicUsize::new(0));
-    let session =
+    let mut session =
         WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(91)), steps: Some(Arc::clone(&steps)), panic: false, closing: false }, params(operation, generation, root_cancel_token())).unwrap_or_else(|_| panic!("worker session slot"));
     let first = admitted(&session, &pool, Lane::Interactive).expect("first opportunity submitted");
     assert!(matches!(session.try_submit_step(&pool, Lane::Interactive), Err(WorkerJobSubmitFault::Contention(WorkerJobContention::Submitted(_)))));
@@ -520,8 +563,10 @@ fn worker_session_contention_rejection_take_resume_terminal_drop_and_close_are_e
     assert_eq!(terminal.job().backing.as_deref().expect("returned hostile backing") as *const u8, terminal_pointer);
     assert_eq!(second.generation, generation);
     terminal.begin_close();
+    let close_started=Instant::now();let mut close_attempts=0;
     while !session.terminal_is_empty() {
-        let _ = session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+        let _ = session.close_step(caller_worker_close_policy(session.close_phase()));
     }
     assert_eq!(steps.load(AtomicOrdering::Acquire), 2);
     pool.shutdown();
@@ -534,7 +579,7 @@ fn worker_pool_rejection_returns_exact_job_before_resume() {
     pool.shutdown();
     let backing = Box::new(33u8);
     let backing_pointer = backing.as_ref() as *const u8;
-    let session = WorkerJobSession::try_new(HostileJob { backing: Some(backing), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_005), Generation(11), root_cancel_token()))
+    let mut session = WorkerJobSession::try_new(HostileJob { backing: Some(backing), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_005), Generation(11), root_cancel_token()))
         .unwrap_or_else(|_| panic!("worker session slot"));
     assert_eq!(session.try_submit_step(&pool, Lane::Interactive), Err(WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Shutdown)));
     let rejected = session.take_rejected().expect("pool rejection retained exact owner");
@@ -542,8 +587,10 @@ fn worker_pool_rejection_returns_exact_job_before_resume() {
     rejected.resume();
     assert_eq!(session.poll(), WorkerJobPoll::Idle);
     session.begin_close();
+    let close_started=Instant::now();let mut close_attempts=0;
     while !session.terminal_is_empty() {
-        let _ = session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+        let _ = session.close_step(caller_worker_close_policy(session.close_phase()));
     }
 }
 
@@ -551,12 +598,12 @@ fn worker_pool_rejection_returns_exact_job_before_resume() {
 fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent() {
     let _slots = super::worker_session_slots_shared();
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
-    let session = WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(1)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: true, closing: false }, params(OperationId(90_006), Generation(12), root_cancel_token()))
+    let mut session = WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(1)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: true, closing: false }, params(OperationId(90_006), Generation(12), root_cancel_token()))
         .unwrap_or_else(|_| panic!("worker session slot"));
     let preadmitted_fault_pointer = unsafe {
         (&*session.inner.authority.get())
             .as_ref()
-            .and_then(|authority| authority.preadmitted_fault.as_ref())
+            .and_then(|authority| authority.preadmitted_fault.original())
             .and_then(|payload| payload.pages[0].as_ref())
             .map(|page| page.source.backing_identity())
             .expect("panic fault backing is admitted before submission")
@@ -575,8 +622,10 @@ fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent() {
     let returned_fault_pointer = fault.detail.pages[0].as_ref().map(|page| page.source.backing_identity()).expect("terminal fault retains exact backing");
     assert_eq!(returned_fault_pointer, preadmitted_fault_pointer);
     terminal.begin_close();
+    let close_started=Instant::now();let mut close_attempts=0;
     while !session.terminal_is_empty() {
-        let _ = session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+        let _ = session.close_step(caller_worker_close_policy(session.close_phase()));
     }
     pool.shutdown();
 }
@@ -584,15 +633,17 @@ fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent() {
 #[test]
 fn worker_quiet_wake_sequence_exhaustion_is_permanent_and_typed() {
     let _slots = super::worker_session_slots_shared();
-    let session = WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(2)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_009), Generation(15), root_cancel_token()))
+    let mut session = WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(2)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_009), Generation(15), root_cancel_token()))
         .unwrap_or_else(|_| panic!("worker session slot"));
     session.inner.wake_sequence.store(u64::MAX, Ordering::Release);
     session.inner.wake_pending.store(false, Ordering::Release);
     session.inner.raise_wake();
     assert_eq!(session.register_wake(Waker::noop()), Err(WorkerJobContention::WakeExhausted(Generation(15))));
     session.begin_close();
+    let close_started=Instant::now();let mut close_attempts=0;
     while !session.terminal_is_empty() {
-        let _ = session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+        let _ = session.close_step(caller_worker_close_policy(session.close_phase()));
     }
 }
 
@@ -608,8 +659,10 @@ fn batch_session_advances_exactly_one_external_opportunity() {
     assert_eq!(steps.load(AtomicOrdering::Acquire), 1, "batch adapter never drains itself to terminal");
     batch.begin_close();
     assert_eq!(batch.close_step(RetainedCloneGrant{maximum_items:0,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()}), WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
+    let close_started=Instant::now();let mut close_attempts=0;
     while !batch.terminal_is_empty() {
-        let _ = batch.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+        let _ = batch.close_step(caller_worker_close_policy(batch.close_phase()));
     }
 }
 
@@ -619,10 +672,15 @@ fn checked_out_and_worker_begin_close_transitions_report_exact_zero_release() {
         .unwrap_or_else(|_| panic!("batch session authority"));
     assert_eq!(batch.step(), Ok(WorkerJobPoll::Outcome));
     assert!(batch.checkout_outcome());
-    assert_eq!(batch.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()}), WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
-    assert_eq!(batch.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()}), WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
+    assert_eq!(batch.close_step(caller_worker_close_policy(batch.close_phase())), WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
+    let header=batch.close_step(caller_worker_close_policy(batch.close_phase()));
+    assert_eq!(header,WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()}});
+    assert_eq!(batch.close_phase(),WorkerJobClosePhase::BeginClose);
+    assert_eq!(batch.close_step(caller_worker_close_policy(batch.close_phase())), WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
+    let close_started=Instant::now();let mut close_attempts=0;
     while !batch.terminal_is_empty() {
-        let _ = batch.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+        let _ = batch.close_step(caller_worker_close_policy(batch.close_phase()));
     }
 }
 
@@ -633,7 +691,7 @@ fn worker_session_slots_max_plus_one_exact_rejection_and_drop_pump_are_owned() {
         if !worker_job_retirements_are_parked() {
             break;
         }
-        let _ = pump_worker_job_retirements(WORKER_JOB_SESSION_SLOTS,RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
+        let _ = pump_worker_job_retirements(WORKER_JOB_SESSION_SLOTS,caller_worker_close_policy(worker_job_retirement_phase(WORKER_JOB_SESSION_SLOTS).expect("parked original owner")));
     }
     assert!(!worker_job_retirements_are_parked(), "earlier tests' dropped sessions retire before this test owns every slot");
     let mut sessions = Vec::with_capacity(WORKER_JOB_SESSION_SLOTS);
@@ -652,22 +710,59 @@ fn worker_session_slots_max_plus_one_exact_rejection_and_drop_pump_are_owned() {
     assert_eq!(rejected.params.as_ref().expect("session max plus one parameters").generation, Generation(500));
     rejected.begin_close();
     assert_eq!(rejected.close_step(RetainedCloneGrant{maximum_items:0,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
+    let close_started=Instant::now();let mut close_attempts=0;
     while !rejected.terminal_is_empty() {
-        let _ = rejected.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+        let _ = rejected.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
     }
     let dropped = sessions.pop().expect("last fixed session");
     drop(dropped);
     assert!(take_worker_job_retirement_wake());
     for _ in 0..8 {
-        let _ = pump_worker_job_retirements(1,RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
+        let _ = pump_worker_job_retirements(1,caller_worker_close_policy(worker_job_retirement_phase(1).expect("parked original owner")));
+    }
+    let close_started=Instant::now();let mut close_attempts=0;
+    while worker_job_retirements_are_parked(){
+        close_attempts+=1;assert!(close_attempts<=65536&&close_started.elapsed()<WORKER_LIVENESS_BOUND,"parked original owner retained beyond finite caller control");
+        let phase=worker_job_retirement_phase(1).expect("parked original owner phase");
+        let step=pump_worker_job_retirements(1,caller_worker_close_policy(phase));
+        assert!(!matches!(step,WorkerJobCloseStep::Refused{..}),"parked original owner refused caller policy: {step:?}");
     }
     let replacement = WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(17)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(92_001), Generation(501), root_cancel_token()))
         .unwrap_or_else(|_| panic!("retirement pump returns exact fixed session slot"));
     sessions.push(replacement);
-    for session in sessions {
+    for mut session in sessions {
         let _ = session.begin_close();
-        while !session.terminal_is_empty() {
-            let _ = session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()});
+        let close_started=Instant::now();let mut close_attempts=0;
+    while !session.terminal_is_empty() {
+        close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
+            let _ = session.close_step(caller_worker_close_policy(session.close_phase()));
         }
     }
+}
+
+#[test]
+fn hostile_retained_box_and_arc_require_complete_independent_physical_grants(){
+    let mut job=HostileJob{backing:Some(Box::new(9)),steps:Some(Arc::new(AtomicUsize::new(0))),panic:false,closing:false};
+    let pointer=job.backing.as_deref().unwrap() as *const u8;
+    let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:64,maximum_depth:64};
+    let denied=RetainedCloneGrant{maximum_release_bytes:0,..grant};
+    assert_eq!(job.close_step(denied).progress(),RetainedCloneProgress::default());
+    assert_eq!(job.backing.as_deref().unwrap() as *const u8,pointer);
+    let box_step=job.close_step(grant);assert!(box_step.progress().fits(grant));
+    assert_eq!(box_step.progress().released_bytes,1);
+    let arc_step=job.close_step(grant);assert!(arc_step.progress().fits(grant));
+    assert_eq!(arc_step.progress().released_bytes,semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>());
+    assert!(matches!(job.close_step(grant),InteractiveJobCloseStep::Complete{..}));assert!(job.terminal_is_empty());
+    let shared=Arc::new(AtomicUsize::new(17));
+    let mut job=HostileJob{backing:None,steps:Some(Arc::clone(&shared)),panic:false,closing:false};
+    let step=job.close_step(grant);assert_eq!(step.progress().released_bytes,0);assert_eq!(shared.load(AtomicOrdering::Acquire),17);
+    assert!(matches!(job.close_step(grant),InteractiveJobCloseStep::Complete{..}));assert!(job.terminal_is_empty());
+}
+
+#[test]
+fn mounted_original_cancel_alias_returns_only_to_its_still_borrowed_matching_root(){
+ let _slots=super::worker_session_slots_shared();let root=root_cancel_token();let mut mounted=MountedWorkerJobSession::try_new(ShortGrantCloseJob{backing:Some(Box::new(51)),closing:false},params(OperationId(90_031),Generation(23),root.clone())).unwrap_or_else(|_|panic!("original witnessed alias fixture admission"));mounted.begin_close();let mut handbacks=0;
+ for _ in 0..64{let phase=mounted.close_phase();if phase==WorkerJobClosePhase::Empty{break;}let grant=caller_worker_close_policy(phase);if let Some(step)=mounted.return_original_cancel_alias_step(&root,grant).unwrap(){let observed=step.progress();assert!(observed.fits(grant));assert_eq!(observed,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<CancelToken>(),..Default::default()});assert!(matches!(step,RetainedCloneStep::Complete(_)));handbacks+=1;}else{let step=mounted.close_step(grant);assert!(step.progress().fits(grant));assert!(!matches!(step,WorkerJobCloseStep::Blocked|WorkerJobCloseStep::Refused{..}));}}
+ assert!(mounted.terminal_is_empty());assert_eq!(handbacks,1);let mut original=semio_framework_async::CancelTokenRetirement::from_token(root);let grant=crate::component::TEST_RETAINED_POLICY;let mut released=0;for _ in 0..4{if original.terminal_is_empty(){break;}released+=original.close_step(grant).unwrap().progress().released_bytes;}assert!(original.terminal_is_empty());assert!(released>0);eprintln!("[DEBUG] actual mounted original cancellation alias returned once to borrowed caller root; mounted fullowner terminal before separate root Arc release");
 }

@@ -144,7 +144,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
         else if let Some(lane) = self.lane.as_ref() { lane.retirement_demands(body)? }
         else if let Some(source) = self.source.as_ref() { source.retirement_demands(body)? }
         else if let Some(member) = self.member.as_ref() { if member.close_owned_terminal_is_empty() { release(member.member_frame_bytes()) } else { member.close_owned_demands(body)? } }
-        else if let Some(raw) = self.raw.as_ref() { release(raw.next_close_byte_demand()) }
+        else if let Some(raw) = self.raw.as_ref() { raw.retirement_demands()? }
         else if self.identity.is_some() { release(0) }
         else if let Some(metadata) = self.metadata.as_ref() { release(metadata.next_close_byte_demand()) }
         else { return Ok(Default::default()); };
@@ -193,7 +193,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
             self.member.take();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty }));
         }
-        if let Some(raw) = self.raw.as_mut() { let step = raw.close_one(1, child.maximum_release_bytes); if step == PluginCloseStep::Complete { self.raw.take(); } return Ok(group_plugin(step)); }
+        if let Some(raw) = self.raw.as_mut() { let step = raw.close_one(child).map_err(ValueError::into_fault)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, raw.terminal_is_empty(), "private row original child").map_err(ValueError::into_fault)?; if raw.terminal_is_empty() { self.raw.take(); } return Ok(RetainedCloneStep::Progress(step.progress())); }
         if self.identity.is_some() { self.metadata.as_mut().and_then(PrivateChildMemberMetadata::parts_mut).unwrap().prepared_identity = self.identity.take().unwrap(); return Ok(group_structural()); }
         if let Some(metadata) = self.metadata.as_mut() { let step = metadata.close_granted(child).map_err(|error| plugin_sdk_fault(error.to_string()))?; if metadata.terminal_is_empty() { self.metadata = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
         Ok(RetainedCloneStep::Complete(empty))
@@ -505,9 +505,9 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
     }
     pub(crate) fn next_displaced_view_release_byte_demand(&self) -> usize { self.displaced.iter().flatten().next().map_or(0, ChildContentView::prepared_structure_close_byte_demand) }
     /// 🪵️ Retires one intermediate frontier against the two known immutable owners without live recapture.
-    pub(crate) fn close_displaced_view_step(&mut self, live: &ChildContentView, grant: RetainedCloneGrant) -> Result<PluginCloseStep, Fault> {
-        if grant.maximum_items == 0 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
-        let Some(view) = self.displaced.iter_mut().flatten().next() else { return Ok(PluginCloseStep::Complete); };
+    pub(crate) fn close_displaced_view_step(&mut self, live: &ChildContentView, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        let Some(view) = self.displaced.iter_mut().flatten().next() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         let future = self.future.as_ref().unwrap_or(live);
         let retained = view.prepared_structure_retainer(live, future).ok_or_else(|| plugin_sdk_fault("private intermediate view lacks its exact known frontier retainer"))?;
         let step = view.close_prepared_structure_step(retained, store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: grant.maximum_copy_bytes, maximum_capacity_bytes: grant.maximum_capacity_bytes, maximum_release_bytes: grant.maximum_release_bytes, maximum_depth: grant.maximum_depth })?;
@@ -580,7 +580,8 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if let Some(future) = self.future.as_ref() {
             if let Some(row) = self.rows[..self.count].iter().flatten().find(|row| row.entry.is_some() || row.slot.is_some()) {
                 if row.slot.is_some() { return nested(RetirementDemand { release_bytes: ChildContentView::prepared_entry_release_bytes(), depth: 3, ..Default::default() }); }
-                return nested(RetirementDemand { release_bytes: row.entry.as_ref().unwrap().next_close_byte_demand(), depth: 2, ..Default::default() });
+                let entry = row.entry.as_ref().unwrap();
+                return if entry.terminal_is_empty() { nested(RetirementDemand { copy_bytes: std::mem::size_of::<Option<PreparedChildContentEntry>>(), depth: 1, ..Default::default() }) } else { nested(nested(row.entry.as_ref().unwrap().retirement_demands())?) };
             }
             return nested(RetirementDemand { release_bytes: future.prepared_structure_close_byte_demand(), depth: future.prepared_structure_close_depth_demand(), ..Default::default() });
         }
@@ -617,25 +618,25 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
                 Err((error, original)) => { *self.parent_read = Some(original); return Err(plugin_sdk_fault(error.to_string())); }
             }
         }
-        if self.displaced.iter().any(Option::is_some) { return self.close_displaced_view_step(live, child).map(group_plugin); }
+        if self.displaced.iter().any(Option::is_some) { return self.close_displaced_view_step(live, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if self.future.is_some() {
             if let Some(row) = self.rows[..self.count].iter_mut().flatten().find(|row| row.entry.is_some() || row.slot.is_some()) {
                 if let Some(slot) = row.slot.as_mut() {
-                    if let Some((entry, step)) = self.future.as_mut().unwrap().take_prepared_entry(slot, item)? { row.entry = Some(entry); row.slot = None; return Ok(group_plugin(step)); }
+                    if let Some((entry, step)) = self.future.as_mut().unwrap().take_prepared_entry(slot, item)? { row.entry = Some(entry); row.slot = None; return Ok(RetainedCloneStep::Progress(step.progress())); }
                     return Ok(RetainedCloneStep::Progress(empty));
                 }
                 let key = row.metadata.as_ref().and_then(PrivateChildMemberMetadata::parts).unwrap().key.borrowed();
                 let member = row.member.as_ref().or_else(|| registry.member(key).map(|entry| &entry.member)).ok_or_else(|| plugin_sdk_fault("private entry cancellation lost exact original member"))?;
                 let entry = row.entry.as_mut().unwrap();
+                if entry.terminal_is_empty() { row.entry = None; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<Option<PreparedChildContentEntry>>(), ..Default::default() })); }
                 let entry_item = store::ArtifactStoreOneItemGrant { maximum_depth: item.maximum_depth - 1, ..item };
-                let step = entry.close_step(member, row.lane.as_mut().unwrap().publication_mut().unwrap(), entry_item)?;
-                if entry.terminal_is_empty() { row.entry = None; }
-                return Ok(group_plugin(step));
+                let step = entry.close_step(member, row.lane.as_mut().unwrap().publication_mut().unwrap(), self.visibility.as_ref().unwrap(), entry_item)?;
+                return Ok(RetainedCloneStep::Progress(step.progress()));
             }
             let future = self.future.as_mut().unwrap();
             let step = future.close_prepared_structure_step(live, item)?;
             if future.root.is_none() { self.future.take(); }
-            return Ok(group_plugin(step));
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(lane) = self.parent_lane.as_mut() {
             let step = lane.close_step(parent, child).map_err(|error| plugin_sdk_fault(error.to_string()))?;
@@ -684,6 +685,5 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
 
 fn group_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant } }
 fn group_take_reference(value: &mut ArtifactRef) -> ArtifactRef { ArtifactRef { artifact_id: std::mem::take(&mut value.artifact_id), dialect: ArtifactDialect { artifact_kind: std::mem::take(&mut value.dialect.artifact_kind), standard: std::mem::take(&mut value.dialect.standard), subset: std::mem::take(&mut value.dialect.subset) } } }
-fn group_plugin(step: PluginCloseStep) -> RetainedCloneStep { match step { PluginCloseStep::Pending { released_items, released_bytes } => RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, released_bytes, ..Default::default() }), PluginCloseStep::Complete => group_structural(), PluginCloseStep::Blocked { .. } | PluginCloseStep::AwaitingInput { .. } => RetainedCloneStep::Progress(Default::default()) } }
 
 impl<M: SpaceMember + MemberFactory> Drop for PrivateChildPublicationGroup<M> { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "private child group retains original sources and staged authorities until bounded terminal close"); } }

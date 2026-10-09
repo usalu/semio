@@ -1,0 +1,14 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json",
+    "before": "25e88a16149c6700f3c51b5d1d4c8ac36624da5e769b71bd5857729ab538b93e",
+    "after": "cf1c71f6fe39ff6279be861cd34a8c9c81bd44f97a5204f6c862d94c1d07ce1c",
+    "originalProjection": "8be50c20c236dcb397a0cee62560a258f234ba9c128008aa83bcd5eba99e86b1"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+    "before": "e8573b6a583a8e4428c1b930d4376ebfba443b9c6efa60299cf445343b52f1f8",
+    "after": "fcad632b1ce7471f76f3d828b30b832f58d0f3ad8b9fd93e9d5fba3815ffbe9e",
+    "scope": "independent positive policy/depth; negative demand reductions and original physical assertions retained"
+  }
+]

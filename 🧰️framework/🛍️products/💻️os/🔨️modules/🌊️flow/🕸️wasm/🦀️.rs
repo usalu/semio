@@ -1,5 +1,6 @@
 //! 🌉️ Flow editor owned byte/message bridge and primitive linear-memory exports.
 
+use crate::infinite::board::io::text::dag_input::selection as dag_selection_io;
 #[path = "📡️protocol/🦀️.rs"]
 pub mod protocol;
 
@@ -10,10 +11,12 @@ use crate::infinite::board::ports::directed_dag as dag;
 use semio_framework_canvas as canvas;
 use crate::vcs::{FlowRetainedVcs, FlowVcsAuthority, FlowVcsClosePhase, FlowVcsFault, FlowVcsGrant, FlowVcsHandle, FlowVcsPage, FlowVcsPoll};
 use protocol::{FlowBridge, FlowDomain, FlowFailure, FlowFeature, FlowFeatureAdmission, FlowFeatureStep, FlowPayloadReader, FlowPayloadWriter};
+use semio_framework_value::{retained_clone::{RetainedCloneStep,RetainedCloneProgress,RetainedCloneGrant,admit_retained_clone_close},retirement::controlled::ControlledRetirement};
+use crate::vcs::FlowVcsCloseDemands;
 use semio_framework::abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
 use serde_json::{json, Value};
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::cell::{Cell,RefCell};
+use std::rc::{Rc,Weak};
 use ui_webgpu::abi::AbiErrorCode as SurfaceAbiErrorCode;
 use ui_webgpu::{CanvasMetrics, SurfaceGeneration, SurfaceId};
 
@@ -36,6 +39,7 @@ struct FlowSurface {
 
 struct FlowDomainAdapter {
     host: FlowDomainHost,
+    dag_read_lease:Weak<FlowDagReadLease>,
     vcs: Option<FlowRetainedVcs>,
     surface: Option<FlowSurface>,
     width: u32,
@@ -43,11 +47,12 @@ struct FlowDomainAdapter {
     dpr: f64,
     /// 🧱️ Retained frame-reply buffer — see `render_frame`.
     frame_payload: String,
+    frame_retirement:Option<ControlledRetirement<String>>,
 }
 
 impl Default for FlowDomainAdapter {
     fn default() -> Self {
-        Self { host: FlowDomainHost::Open(FlowHost::default()), vcs: None, surface: None, width: 1, height: 1, dpr: 1.0, frame_payload: String::new() }
+        Self { host: FlowDomainHost::Open(FlowHost::default()), dag_read_lease:Weak::new(), vcs: None, surface: None, width: 1, height: 1, dpr: 1.0, frame_payload: String::new(),frame_retirement:None }
     }
 }
 
@@ -72,7 +77,7 @@ impl std::ops::DerefMut for FlowDomainHost {
 
 fn flow_vcs_grant(budget: AbiWorkBudget) -> FlowVcsGrant {
     let maximum_deadline = budget.now_ms.saturating_add(protocol::FLOW_DEADLINE_MILLISECONDS);
-    FlowVcsGrant { items: 1, bytes: budget.byte_credit, outputs: 1, events: 1, controls: 1, fuel: 1, now_milliseconds: budget.now_ms, deadline_milliseconds: budget.deadline_ms.unwrap_or(maximum_deadline).min(maximum_deadline), interrupted: budget.interrupted || budget.cancelled }
+    FlowVcsGrant { retained: budget.retained, items: 1, bytes: budget.byte_credit, outputs: 1, events: 1, controls: 1, fuel: 1, now_milliseconds: budget.now_ms, deadline_milliseconds: budget.deadline_ms.unwrap_or(maximum_deadline).min(maximum_deadline), interrupted: budget.interrupted || budget.cancelled }
 }
 
 #[derive(Clone, Copy)]
@@ -237,9 +242,13 @@ fn flow_operation_fields(operation: u16) -> &'static [(&'static str, FlowArgumen
 }
 
 trait FlowActionState {
+    fn retained_receipt(&self)->Option<semio_framework_value::retained_clone::RetainedCloneProgress>{None}
     #[cfg(test)]
     fn operation(&self) -> u16;
     fn advance(&mut self, domain: &mut FlowDomainAdapter, arguments: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep;
+    fn bind_observer(&mut self,_:Rc<FlowOperationObserver>){}
+    fn bind_admission(&mut self,_:FlowFeatureAdmission)->Result<(),FlowFailure>{Ok(())}
+    fn close_step(&mut self,_:&mut FlowArguments,_:AbiWorkBudget)->Result<bool,FlowFailure>{Ok(true)}
 }
 
 macro_rules! flow_result {
@@ -453,7 +462,6 @@ struct FlowProgramState {
     validated_fields: usize,
     domain_cursor: usize,
     encode_cursor: usize,
-    decoded: [Vec<u8>; 8],
     utf8: [FlowUtf8State; 8],
     source_output: Option<Vec<u8>>,
     output: Vec<u8>,
@@ -461,11 +469,7 @@ struct FlowProgramState {
 
 impl FlowProgramState {
     fn new(arguments: &FlowArguments) -> Self {
-        let decoded = std::array::from_fn(|index| {
-            let capacity = arguments.spans.get(index).filter(|_| index < arguments.count).map_or(0, |span| span.end - span.start);
-            Vec::with_capacity(capacity)
-        });
-        Self { phase: FlowProgramPhase::Decode, field_cursor: 0, byte_cursor: 0, validated_fields: 0, domain_cursor: 0, encode_cursor: 0, decoded, utf8: [FlowUtf8State::default(); 8], source_output: None, output: Vec::new() }
+        Self { phase: FlowProgramPhase::Decode, field_cursor: 0, byte_cursor: 0, validated_fields: 0, domain_cursor: 0, encode_cursor: 0, utf8: [FlowUtf8State::default(); 8], source_output: None, output: Vec::new() }
     }
 
     fn decode_step(&mut self, arguments: &FlowArguments) -> FlowFeatureStep {
@@ -487,7 +491,6 @@ impl FlowProgramState {
                 return FlowFeatureStep::Failed(failure);
             }
         }
-        self.decoded[self.field_cursor].push(byte);
         self.byte_cursor += 1;
         let completed = arguments.spans[..self.field_cursor].iter().map(|field| field.end - field.start).sum::<usize>() + self.byte_cursor;
         FlowFeatureStep::Progress { completed: completed as u64, total: arguments.payload.len() as u64 }
@@ -499,10 +502,10 @@ impl FlowProgramState {
             return FlowFeatureStep::Progress { completed: self.validated_fields as u64, total: arguments.count as u64 };
         }
         let span = arguments.spans[self.validated_fields];
-        let bytes = &self.decoded[self.validated_fields];
+        let bytes = &arguments.payload[span.start..span.end];
         let valid = match span.kind {
-            FlowArgumentKind::Number => f64::from_le_bytes(bytes.as_slice().try_into().unwrap_or([0; 8])).is_finite(),
-            FlowArgumentKind::Boolean => matches!(bytes.as_slice(), [0] | [1]),
+            FlowArgumentKind::Number => f64::from_le_bytes(bytes.try_into().unwrap_or([0; 8])).is_finite(),
+            FlowArgumentKind::Boolean => matches!(bytes, [0] | [1]),
             FlowArgumentKind::Text | FlowArgumentKind::OptionalText => self.utf8[self.validated_fields].remaining == 0,
             _ => true,
         };
@@ -642,16 +645,47 @@ fn validate_utf8_byte(state: &mut FlowUtf8State, byte: u8) -> Result<(), FlowFai
     Ok(())
 }
 
+struct FlowDagReadLease {admission:FlowFeatureAdmission,active:Cell<bool>}
+struct FlowOperationObserver {cancelled:Cell<bool>,interrupted:Cell<bool>,deadline_us:Cell<Option<u64>>,failure:Cell<Option<AbiErrorCode>>,bound:Cell<bool>}
+impl FlowOperationObserver {
+    fn new()->Self{Self{cancelled:Cell::new(false),interrupted:Cell::new(false),deadline_us:Cell::new(None),failure:Cell::new(None),bound:Cell::new(false)}}
+    fn check_budget(&self,budget:AbiWorkBudget)->Result<(),FlowFailure>{
+        let code=if self.cancelled.get()||budget.cancelled{Some(AbiErrorCode::Cancelled)}else if self.interrupted.get()||budget.interrupted{Some(AbiErrorCode::Interrupted)}else if budget.deadline_ms.is_some_and(|deadline|budget.now_ms>=deadline){Some(AbiErrorCode::DeadlineExceeded)}else{None};if let Some(code)=code{self.failure.set(Some(code));Err(abi_failure(code))}else{Ok(())}
+    }
+    fn begin_poll(&self,budget:AbiWorkBudget)->Result<(),FlowFailure>{
+        self.interrupted.set(budget.interrupted);self.check_budget(budget)?;
+        let now=semio_framework_job::default_now_us().ok_or_else(||abi_failure(AbiErrorCode::Busy))?;
+        let remaining=budget.deadline_ms.map_or(protocol::FLOW_DEADLINE_MILLISECONDS,|deadline|deadline.saturating_sub(budget.now_ms)).min(protocol::FLOW_DEADLINE_MILLISECONDS);
+        self.deadline_us.set(Some(now.saturating_add(remaining.saturating_mul(1000))));Ok(())
+    }
+    fn observe(&self)->bool{
+        let code=if self.cancelled.get(){Some(AbiErrorCode::Cancelled)}else if self.interrupted.get(){Some(AbiErrorCode::Interrupted)}else{match(semio_framework_job::default_now_us(),self.deadline_us.get()){(Some(now),Some(deadline))if now<deadline=>None,_=>Some(AbiErrorCode::DeadlineExceeded)}};
+        if let Some(code)=code{self.failure.set(Some(code));false}else{true}
+    }
+}
+#[path="🧵️dag-input/🦀️.rs"]
+mod retained_dag_input;
+
+
 struct FlowProgramFeature {
     domain: Rc<RefCell<FlowDomainAdapter>>,
     arguments: FlowArguments,
     action: Box<dyn FlowActionState>,
-    cancelled: bool,
+    observer:Rc<FlowOperationObserver>,
+    admission:FlowFeatureAdmission,
+    operation:u16,
+    dag_read_lease:Option<Rc<FlowDagReadLease>>,
+    terminal_failure:Option<AbiErrorCode>,
 }
 
 impl FlowProgramFeature {
+    fn failed(&mut self,failure:FlowFailure)->FlowFeatureStep{
+        self.terminal_failure=Some(failure.code);
+        if let Some(lease)=self.dag_read_lease.take(){lease.active.set(false);}
+        FlowFeatureStep::Failed(failure)
+    }
     fn guard(&self, budget: AbiWorkBudget) -> Result<(), FlowFailure> {
-        if self.cancelled || budget.cancelled {
+        if self.observer.cancelled.get() || budget.cancelled {
             Err(FlowFailure::new(AbiErrorCode::Cancelled, "Flow feature cancelled"))
         } else if budget.interrupted {
             Err(FlowFailure::new(AbiErrorCode::Interrupted, "Flow feature interrupted"))
@@ -683,14 +717,38 @@ impl FlowFeature for FlowProgramFeature {
     /// carries a payload or ends the operation is ever coalesced away, and the loop is bounded by the
     /// credit whatever the action does.
     fn step(&mut self, budget: AbiWorkBudget) -> FlowFeatureStep {
+        if let Some(code)=self.terminal_failure{return FlowFeatureStep::Failed(abi_failure(code))}
+        if self.dag_read_lease.as_ref().is_some_and(|lease|lease.active.get()==false){return self.failed(abi_failure(AbiErrorCode::StaleGeneration))}
+        if budget.byte_credit==0&&!budget.cancelled&&!budget.interrupted&&budget.deadline_ms.is_none_or(|deadline|budget.now_ms<deadline){return FlowFeatureStep::Yield;}
         if let Err(failure) = self.guard(budget) {
-            return FlowFeatureStep::Failed(failure);
+            return self.failed(failure);
         }
+        if budget.byte_credit==0{return FlowFeatureStep::Yield;}
+        if let Err(failure)=self.observer.begin_poll(budget){return self.failed(failure)}
         let mut domain = self.domain.borrow_mut();
+        if let Some(lease)=domain.dag_read_lease.upgrade().filter(|lease|lease.active.get()){
+            if lease.admission!=self.admission||self.dag_read_lease.as_ref().is_none_or(|owned|!Rc::ptr_eq(owned,&lease)){return FlowFeatureStep::Yield;}
+        }
+        if matches!(self.operation,2514|2515|2518|2519|2520|2522|2523|2525|2528)&&self.dag_read_lease.is_none(){
+            let lease=Rc::new(FlowDagReadLease{admission:self.admission,active:Cell::new(true)});domain.dag_read_lease=Rc::downgrade(&lease);self.dag_read_lease=Some(lease);
+        }
         let mut spent = 0usize;
+        let mut remaining=budget;
         loop {
-            let step = self.action.advance(&mut domain, &self.arguments, budget);
-            let FlowFeatureStep::Progress { completed, total } = step else { return step };
+            if !self.observer.observe(){let code=self.observer.failure.get().unwrap_or(AbiErrorCode::DeadlineExceeded);drop(domain);return self.failed(abi_failure(code))}
+            let before=self.action.retained_receipt();
+            let step = self.action.advance(&mut domain, &self.arguments, remaining);
+            if let(Some(before),Some(after))=(before,self.action.retained_receipt()){
+                let spent=[after.copied_items.checked_sub(before.copied_items),after.copied_bytes.checked_sub(before.copied_bytes),after.retained_capacity_bytes.checked_sub(before.retained_capacity_bytes),after.released_bytes.checked_sub(before.released_bytes)];
+                let available=[remaining.retained.maximum_items,remaining.retained.maximum_copy_bytes,remaining.retained.maximum_capacity_bytes,remaining.retained.maximum_release_bytes];
+                let mut left=[0;4];for index in 0..4{let Some(value)=spent[index].and_then(|spent|available[index].checked_sub(spent))else{drop(domain);return self.failed(abi_failure(AbiErrorCode::NoCredit))};left[index]=value;}
+                remaining.retained.maximum_items=left[0];remaining.retained.maximum_copy_bytes=left[1];remaining.retained.maximum_capacity_bytes=left[2];remaining.retained.maximum_release_bytes=left[3];
+            }
+            let FlowFeatureStep::Progress { completed, total } = step else {
+                if let FlowFeatureStep::Failed(failure)=step{drop(domain);return self.failed(failure)}
+                if matches!(step,FlowFeatureStep::Complete(_)){if let Some(lease)=self.dag_read_lease.take(){lease.active.set(false);}}
+                return step;
+            };
             spent += 1;
             if spent >= budget.byte_credit {
                 return FlowFeatureStep::Progress { completed, total };
@@ -699,9 +757,22 @@ impl FlowFeature for FlowProgramFeature {
     }
 
     fn cancel(&mut self, _: AbiWorkBudget) -> Result<(), FlowFailure> {
-        self.cancelled = true;
+        self.observer.cancelled.set(true);
+        self.terminal_failure=Some(AbiErrorCode::Cancelled);
+        if let Some(lease)=self.dag_read_lease.take(){lease.active.set(false);}
         Ok(())
     }
+    fn close_step(&mut self,budget:AbiWorkBudget)->Result<RetainedCloneStep,FlowFailure>{
+        self.terminal_failure.get_or_insert(AbiErrorCode::Cancelled);
+        if let Some(lease)=self.dag_read_lease.take(){lease.active.set(false);}
+        let before=self.action.retained_receipt();let result=self.action.close_step(&mut self.arguments,budget);let after=self.action.retained_receipt();
+        let progress=match(before,after){
+            (Some(before),Some(after))=>RetainedCloneProgress{copied_items:after.copied_items.checked_sub(before.copied_items).ok_or_else(||flow_close_failure(AbiErrorCode::NoCredit))?,copied_bytes:after.copied_bytes.checked_sub(before.copied_bytes).ok_or_else(||flow_close_failure(AbiErrorCode::NoCredit))?,retained_capacity_bytes:after.retained_capacity_bytes.checked_sub(before.retained_capacity_bytes).ok_or_else(||flow_close_failure(AbiErrorCode::NoCredit))?,released_bytes:after.released_bytes.checked_sub(before.released_bytes).ok_or_else(||flow_close_failure(AbiErrorCode::NoCredit))?},
+            _=>Default::default(),
+        };
+        match result{Ok(true)=>Ok(RetainedCloneStep::Complete(progress)),Ok(false)=>Ok(RetainedCloneStep::Progress(progress)),Err(failure)if failure.retained_progress==RetainedCloneProgress::default()=>Err(failure.with_retained_progress(progress)),Err(failure)=>Err(failure)}
+    }
+
 }
 
 impl FlowDomain for FlowDomainAdapter {
@@ -714,11 +785,16 @@ impl FlowDomain for FlowDomainAdapter {
             return FlowVcsFeature::admit(domain, admission, operation, payload).map(|feature| Box::new(feature) as Box<dyn FlowFeature>);
         }
         let arguments = FlowArguments::preflight(operation, payload)?;
-        let action = flow_action(operation, &arguments).ok_or_else(|| abi_failure(AbiErrorCode::UnknownOperation))?;
-        Ok(Box::new(FlowProgramFeature { domain, arguments, action, cancelled: false }))
+        let observer=Rc::new(FlowOperationObserver::new());
+        let mut action = flow_action(operation, &arguments).ok_or_else(|| abi_failure(AbiErrorCode::UnknownOperation))?;
+        observer.bound.set(true);
+        action.bind_admission(admission)?;
+        action.bind_observer(observer.clone());
+        Ok(Box::new(FlowProgramFeature { domain, arguments, action, observer,admission,operation,dag_read_lease:None,terminal_failure:None }))
     }
 
     fn begin_close(&mut self) {
+        if let Some(lease)=self.dag_read_lease.upgrade(){lease.active.set(false);}
         let previous = std::mem::replace(&mut self.host, FlowDomainHost::Closed);
         self.host = match previous {
             FlowDomainHost::Open(host) => FlowDomainHost::Closing(FlowHostRetirement::new(host)),
@@ -726,123 +802,65 @@ impl FlowDomain for FlowDomainAdapter {
         };
         if let Some(vcs) = self.vcs.as_mut() { vcs.begin_close(); }
         self.surface = None;
+        if self.frame_retirement.is_none(){self.frame_retirement=Some(ControlledRetirement::new(std::mem::take(&mut self.frame_payload)).unwrap_or_else(|_|unreachable!("original String declares controlled retirement")));}
     }
 
-    /// 🪜️ Retires one retained ITEM per close turn, whatever that item weighs.
-    ///
-    /// The retirement ladder had the defect `FlowProgramFeature::step` had one layer down: a turn
-    /// granted 4 096 bytes of credit advanced the ladder by a single rung, so the turn count was
-    /// linear in the retained payload — a 24-row document cost 2 626 turns and a 64-row (~32 KB) one
-    /// 5 718, against the 4 096 its own contract declares
-    /// (`🧫️fixtures/🧹️session-close/🔣️.json` `close.maximumTurns`). Every document over ~20 KB was a
-    /// live contract violation, and the React host's owner ladder answered
-    /// `plugin-ui.owner-close-budget-exhausted` on a converged instance for the same reason
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️flow-surface-followup-2026-09-15.md` §2.4).
-    ///
-    /// A byte credit is the wrong currency for a close: NOTHING crosses the ABI while a session
-    /// retires, so a turn's cost is the round trip the host pays to ask for it, and the quantity
-    /// worth spending a round trip on is a retained ITEM. The turn anchors on the first non-payload
-    /// phase its ladder reports ([`FlowVcsClosePhase`], [`FlowHostClosePhase`]) and runs until the
-    /// ladder reaches a DIFFERENT one, so the frontier drains those rungs feed are spent inside the
-    /// turn that created them. The turn count is then the number of retained items — surfaces,
-    /// history entries, document versions, host owners — and reads the payload nowhere.
-    fn close_step(&mut self, budget: AbiWorkBudget) -> Result<bool, FlowFailure> {
-        protocol::validate_budget(budget).map_err(abi_code_failure)?;
-        let mut anchor: Option<FlowCloseLadderPhase> = None;
-        let mut rungs = 0usize;
-        loop {
-            let phase = self.close_phase();
-            if !phase.is_backing() {
-                match anchor {
-                    None => anchor = Some(phase),
-                    Some(held) if held == phase => {}
-                    Some(_) => return Ok(false),
-                }
-            }
-            rungs += 1;
-            if rungs > FLOW_CLOSE_RUNGS_PER_TURN {
-                return Ok(false);
-            }
-            match self.close_rung(budget)? {
-                FlowCloseRung::Advanced => {}
-                FlowCloseRung::Yielded => return Ok(false),
-                FlowCloseRung::Complete => return Ok(self.terminal_is_empty()),
-            }
+    fn next_close_demands(&self,copy:usize)->Result<FlowVcsCloseDemands,FlowFailure>{
+        if let Some(frame)=self.frame_retirement.as_ref(){
+            if frame.terminal_is_empty(){return Ok(FlowVcsCloseDemands{depth:1,..Default::default()})}
+            return Ok(FlowVcsCloseDemands{copy_bytes:frame.next_copy_byte_demand().map_err(flow_close_value_failure)?,capacity_bytes:frame.next_capacity_byte_demand(copy).map_err(flow_close_value_failure)?,release_bytes:frame.next_release_byte_demand().map_err(flow_close_value_failure)?,depth:frame.next_depth_demand().map_err(flow_close_value_failure)?.checked_add(1).ok_or_else(||flow_close_failure(AbiErrorCode::LimitExceeded))?})
+        }
+        if let Some(vcs)=self.vcs.as_ref(){
+            if vcs.terminal_is_empty(){return Ok(FlowVcsCloseDemands{depth:1,..Default::default()})}
+            let mut demands=vcs.next_close_retired_demands(copy).map_err(flow_vcs_close_failure)?;demands.depth=demands.depth.checked_add(1).ok_or_else(||flow_close_failure(AbiErrorCode::LimitExceeded))?;return Ok(demands)
+        }
+        match &self.host{
+            FlowDomainHost::Open(_)=>Err(flow_close_failure(AbiErrorCode::Busy)),
+            FlowDomainHost::Closing(host)if host.terminal_is_empty()=>Ok(FlowVcsCloseDemands{depth:1,..Default::default()}),
+            FlowDomainHost::Closing(host)=>Ok(FlowVcsCloseDemands{copy_bytes:host.next_close_copy_byte_demand().map_err(flow_close_value_failure)?,capacity_bytes:host.next_close_capacity_byte_demand(copy).map_err(flow_close_value_failure)?,release_bytes:host.next_close_release_byte_demand().map_err(flow_close_value_failure)?,depth:host.next_close_depth_demand().map_err(flow_close_value_failure)?.checked_add(1).ok_or_else(||flow_close_failure(AbiErrorCode::LimitExceeded))?}),
+            FlowDomainHost::Closed=>Ok(Default::default()),
         }
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.vcs.is_none() && self.surface.is_none() && matches!(self.host, FlowDomainHost::Closed)
+    /// 🪜️ One original child receives one incoming wallet and returns its complete actual receipt.
+    fn close_step(&mut self,budget:AbiWorkBudget)->Result<RetainedCloneStep,FlowFailure>{
+        protocol::validate_budget(budget).map_err(flow_close_failure)?;
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+        let demands=self.next_close_demands(budget.retained.maximum_copy_bytes)?;
+        if budget.retained.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if budget.retained.maximum_depth<demands.depth{return Err(flow_close_failure(AbiErrorCode::LimitExceeded))}
+        if budget.retained.maximum_capacity_bytes<demands.capacity_bytes||budget.retained.maximum_release_bytes<demands.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        let inline=RetainedCloneProgress{copied_items:1,..Default::default()};
+        let child=AbiWorkBudget{retained:RetainedCloneGrant{maximum_depth:budget.retained.maximum_depth-1,..budget.retained},..budget};
+        if let Some(frame)=self.frame_retirement.as_mut(){
+            if frame.terminal_is_empty(){self.frame_retirement=None;return Ok(RetainedCloneStep::Progress(inline))}
+            let step=frame.step(child.retained).map_err(flow_close_value_failure)?;
+            let step=admit_retained_clone_close(child.retained,step,frame.terminal_is_empty(),"original Flow domain frame").map_err(flow_close_value_failure)?;
+            return Ok(RetainedCloneStep::Progress(step.progress()))
+        }
+        if let Some(vcs)=self.vcs.as_mut(){
+            if vcs.terminal_is_empty(){self.vcs=None;return Ok(RetainedCloneStep::Progress(inline))}
+            let step=vcs.close_retired_step(flow_vcs_grant(child)).map_err(flow_vcs_close_failure)?;
+            let step=admit_retained_clone_close(child.retained,step,vcs.terminal_is_empty(),"original Flow domain VCS").map_err(flow_close_value_failure)?;
+            return Ok(RetainedCloneStep::Progress(step.progress()))
+        }
+        match &mut self.host{
+            FlowDomainHost::Open(_)=>Err(flow_close_failure(AbiErrorCode::Busy)),
+            FlowDomainHost::Closing(host)=>{
+                if host.terminal_is_empty(){self.host=FlowDomainHost::Closed;return Ok(RetainedCloneStep::Complete(inline))}
+                let step=host.close_step(child.retained).map_err(flow_close_value_failure)?;
+                let step=admit_retained_clone_close(child.retained,step,host.terminal_is_empty(),"original Flow domain host").map_err(flow_close_value_failure)?;
+                Ok(RetainedCloneStep::Progress(step.progress()))
+            }
+            FlowDomainHost::Closed=>Ok(RetainedCloneStep::Complete(Default::default())),
+        }
     }
+
+    fn terminal_is_empty(&self)->bool{self.vcs.is_none()&&self.surface.is_none()&&self.frame_retirement.is_none()&&self.frame_payload.capacity()==0&&matches!(self.host,FlowDomainHost::Closed)}
 }
 
-/// 🪜️ The retained close ladder's current rung, across both stages of a Flow domain.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum FlowCloseLadderPhase {
-    Vcs(FlowVcsClosePhase),
-    Host(FlowHostClosePhase),
-    Terminal,
-}
-
-impl FlowCloseLadderPhase {
-    fn is_backing(self) -> bool {
-        match self {
-            Self::Vcs(phase) => phase.is_backing(),
-            Self::Host(phase) => phase.is_backing(),
-            Self::Terminal => false,
-        }
-    }
-}
-
-/// 🪜️ What one rung of the retained close ladder did.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum FlowCloseRung {
-    Advanced,
-    Yielded,
-    Complete,
-}
-
-/// 🛡️ A per-turn rung ceiling that exists ONLY so a ladder that stops progressing yields the event
-/// loop instead of hanging the worker. It is not the close's bound — the phase count is — and a
-/// turn that hits it is re-entered by the driver with a fresh anchor, never failed
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-const FLOW_CLOSE_RUNGS_PER_TURN: usize = 1 << 20;
-
-impl FlowDomainAdapter {
-    fn close_phase(&self) -> FlowCloseLadderPhase {
-        if let Some(vcs) = self.vcs.as_ref() {
-            return FlowCloseLadderPhase::Vcs(vcs.close_phase());
-        }
-        match &self.host {
-            FlowDomainHost::Closing(host) => FlowCloseLadderPhase::Host(host.close_phase()),
-            _ => FlowCloseLadderPhase::Terminal,
-        }
-    }
-
-    fn close_rung(&mut self, budget: AbiWorkBudget) -> Result<FlowCloseRung, FlowFailure> {
-        if let Some(vcs) = self.vcs.as_mut() {
-            match vcs.close_retired_step(flow_vcs_grant(budget)) {
-                Ok(true) if vcs.terminal_is_empty() => self.vcs = None,
-                Ok(true) => return Ok(FlowCloseRung::Yielded),
-                Ok(false) => {}
-                Err(FlowVcsFault::ClosePending) => return Ok(FlowCloseRung::Yielded),
-                Err(fault) => return Err(flow_vcs_failure(fault)),
-            }
-            return Ok(FlowCloseRung::Advanced);
-        }
-        match &mut self.host {
-            FlowDomainHost::Open(_) => Err(abi_failure(AbiErrorCode::Busy)),
-            FlowDomainHost::Closing(host) => {
-                let complete = host.close_page(1, budget.byte_credit).map_err(|fault| FlowFailure::new(match fault { FlowHostRetirementFault::NoCredit => AbiErrorCode::NoCredit, FlowHostRetirementFault::Failed => AbiErrorCode::Busy }, format!("Flow host retirement: {fault:?}")))?;
-                if !complete { return Ok(FlowCloseRung::Advanced); }
-                if !host.terminal_nonopaque_is_empty() { return Err(abi_failure(AbiErrorCode::Busy)); }
-                self.host = FlowDomainHost::Closed;
-                Ok(FlowCloseRung::Complete)
-            }
-            FlowDomainHost::Closed => Ok(FlowCloseRung::Complete),
-        }
-    }
-}
+fn flow_close_failure(code:AbiErrorCode)->FlowFailure{FlowFailure::new(code,String::new())}
+fn flow_close_value_failure(error:semio_framework_value::ValueError)->FlowFailure{flow_close_failure(AbiErrorCode::Busy).with_retained_progress(error.retained_progress())}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FlowVcsFeaturePhase {
@@ -888,31 +906,18 @@ impl FlowVcsFeature {
         flow_vcs_grant(budget)
     }
 
-    fn close_cursor_step(&mut self, budget: AbiWorkBudget) -> Result<bool, FlowFailure> {
-        let grant = self.grant(budget);
-        let handle = self.handle.expect("admitted Flow VCS handle");
-        let mut domain = self.domain.borrow_mut();
-        let vcs = domain.vcs.as_mut().ok_or_else(|| abi_failure(AbiErrorCode::Closed))?;
-        match self.phase {
-            FlowVcsFeaturePhase::CloseOperation => {
-                if vcs.close_operation_step(handle, grant).map_err(flow_vcs_failure)? {
-                    self.phase = FlowVcsFeaturePhase::CloseRetired;
-                }
-                Ok(false)
-            }
-            FlowVcsFeaturePhase::CloseRetired => {
-                match vcs.close_retired_step(grant) {
-                    Ok(true) => {
-                        self.phase = FlowVcsFeaturePhase::Complete;
-                        return Ok(true);
-                    }
-                    Ok(false) | Err(FlowVcsFault::ClosePending) => {}
-                    Err(fault) => return Err(flow_vcs_failure(fault)),
-                }
-                Ok(false)
-            }
-            FlowVcsFeaturePhase::Complete => Ok(true),
-            _ => Err(abi_failure(AbiErrorCode::Busy)),
+    fn close_cursor_step(&mut self,budget:AbiWorkBudget)->Result<RetainedCloneStep,FlowFailure>{
+        let grant=self.grant(budget);let handle=self.handle.expect("admitted Flow VCS handle");let mut domain=self.domain.borrow_mut();let vcs=domain.vcs.as_mut().ok_or_else(||flow_close_failure(AbiErrorCode::Closed))?;
+        match self.phase{
+            FlowVcsFeaturePhase::CloseOperation=>{let step=vcs.close_operation_step(handle,grant).map_err(flow_vcs_close_failure)?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=FlowVcsFeaturePhase::CloseRetired;}Ok(RetainedCloneStep::Progress(step.progress()))}
+            FlowVcsFeaturePhase::CloseRetired=>match vcs.close_retired_step(grant){
+                Ok(step@RetainedCloneStep::Complete(_))=>{self.phase=FlowVcsFeaturePhase::Complete;Ok(step)}
+                Ok(step)=>Ok(step),
+                Err(failure)if failure.fault==FlowVcsFault::ClosePending&&failure.retained_progress==RetainedCloneProgress::default()=>Ok(RetainedCloneStep::Progress(Default::default())),
+                Err(failure)=>Err(flow_vcs_close_failure(failure)),
+            },
+            FlowVcsFeaturePhase::Complete=>Ok(RetainedCloneStep::Complete(Default::default())),
+            _=>Err(flow_close_failure(AbiErrorCode::Busy)),
         }
     }
 
@@ -962,6 +967,7 @@ impl FlowVcsFeature {
 
 impl FlowFeature for FlowVcsFeature {
     fn step(&mut self, budget: AbiWorkBudget) -> FlowFeatureStep {
+        if self.domain.borrow().dag_read_lease.upgrade().is_some_and(|lease|lease.active.get()){return FlowFeatureStep::Yield;}
         let grant = self.grant(budget);
         match self.phase {
             FlowVcsFeaturePhase::Admit => {
@@ -1090,10 +1096,10 @@ impl FlowFeature for FlowVcsFeature {
         Ok(())
     }
 
-    fn close_step(&mut self, budget: AbiWorkBudget) -> Result<bool, FlowFailure> {
+    fn close_step(&mut self, budget: AbiWorkBudget) -> Result<RetainedCloneStep, FlowFailure> {
         if self.phase == FlowVcsFeaturePhase::Admit {
             self.phase = FlowVcsFeaturePhase::Complete;
-            return Ok(true);
+            return Ok(RetainedCloneStep::Complete(Default::default()));
         }
         if self.phase == FlowVcsFeaturePhase::Poll {
             let grant = self.grant(budget);
@@ -1101,7 +1107,7 @@ impl FlowFeature for FlowVcsFeature {
             match self.domain.borrow_mut().vcs.as_mut().ok_or(FlowVcsFault::Closed).and_then(|vcs| vcs.poll(handle, grant)).map_err(flow_vcs_failure)? {
                 FlowVcsPoll::Terminal => {
                     self.phase = FlowVcsFeaturePhase::CloseOperation;
-                    return Ok(false);
+                    return Ok(RetainedCloneStep::Progress(Default::default()));
                 }
                 _ => return Err(abi_failure(AbiErrorCode::Busy)),
             }
@@ -1114,8 +1120,9 @@ fn abi_code_failure(code: AbiErrorCode) -> FlowFailure {
     abi_failure(code)
 }
 
-fn flow_vcs_failure(fault: FlowVcsFault) -> FlowFailure {
-    let code = match fault {
+fn flow_vcs_close_failure(failure:crate::vcs::FlowVcsCloseFailure)->FlowFailure{flow_close_failure(flow_vcs_fault_code(failure.fault)).with_retained_progress(failure.retained_progress)}
+
+fn flow_vcs_fault_code(fault:FlowVcsFault)->AbiErrorCode{match fault {
         FlowVcsFault::Closed => AbiErrorCode::Closed,
         FlowVcsFault::Full | FlowVcsFault::Limit | FlowVcsFault::Depth => AbiErrorCode::LimitExceeded,
         FlowVcsFault::WrongHandle | FlowVcsFault::StaleHandle => AbiErrorCode::UnknownHandle,
@@ -1124,9 +1131,9 @@ fn flow_vcs_failure(fault: FlowVcsFault) -> FlowFailure {
         FlowVcsFault::InsufficientGrant => AbiErrorCode::NoCredit,
         FlowVcsFault::WrongPage => AbiErrorCode::OutOfOrderPage,
         _ => AbiErrorCode::MalformedTag,
-    };
-    FlowFailure::new(code, format!("Flow VCS {fault:?}"))
+    }
 }
+fn flow_vcs_failure(fault:FlowVcsFault)->FlowFailure{FlowFailure::new(flow_vcs_fault_code(fault),format!("Flow VCS {fault:?}"))}
 
 struct FlowAction2504 {
     program: FlowProgramState,
@@ -1557,111 +1564,12 @@ impl FlowActionState for FlowAction2513 {
     }
 }
 
-struct FlowAction2514 {
-    program: FlowProgramState,
-}
 
-impl FlowActionState for FlowAction2514 {
-    #[cfg(test)]
-    fn operation(&self) -> u16 {
-        2_514
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_514),
-            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
-            FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! {
-                    {
-                        let json = text(args, "json")?;
-                        let value: Value = serde_json::from_str(json).map_err(domain_error)?;
-                        let active = value.get("active").and_then(Value::as_str);
-                        let stale: Vec<String> = value.get("stale").and_then(Value::as_array).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_owned)).collect()).unwrap_or_default();
-                        domain.host.set_computing_progress(active, &stale);
-                        ok()
-                    }
-                };
-                self.program.finish_domain(result)
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_514),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
-
-fn dag_input_decode<T>(budget:AbiWorkBudget,operation:impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>)->Result<T,semio_framework_value::ValueError>)->Result<T,FlowFailure>{
-    let mut observe=|progress:semio_framework_value::NativeDecodeProgress|!budget.cancelled&&!budget.interrupted&&budget.deadline_ms.is_none_or(|deadline|budget.now_ms<deadline)&&progress.owned_bytes<=budget.byte_credit;
-    operation(&mut semio_framework_value::NativeDecodeControl::new(budget.byte_credit,&mut observe)).map_err(dag_input_failure)
-}
-fn dag_input_encode<T>(budget:AbiWorkBudget,operation:impl FnOnce(&mut semio_framework_value::NativeEncodeControl<'_>)->Result<T,semio_framework_value::ValueError>)->Result<T,FlowFailure>{
-    let mut observe=|progress:semio_framework_value::NativeEncodeProgress|!budget.cancelled&&!budget.interrupted&&budget.deadline_ms.is_none_or(|deadline|budget.now_ms<deadline)&&progress.owned_bytes<=budget.byte_credit;
-    operation(&mut semio_framework_value::NativeEncodeControl::new(budget.byte_credit,&mut observe)).map_err(dag_input_failure)
-}
 fn dag_input_failure(error:semio_framework_value::ValueError)->FlowFailure{
     let code=match error.kind{semio_framework_value::ValueRefusalKind::Canceled=>AbiErrorCode::Cancelled,semio_framework_value::ValueRefusalKind::OwnershipLimit=>AbiErrorCode::NoCredit,_=>AbiErrorCode::MalformedTag};
-    FlowFailure::new(code,error.to_string())
+    flow_close_failure(code).with_retained_progress(error.retained_progress())
 }
 
-struct FlowAction2515 {
-    program: FlowProgramState,
-}
-
-impl FlowActionState for FlowAction2515 {
-    #[cfg(test)]
-    fn operation(&self) -> u16 {
-        2_515
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_515),
-            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
-            FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! {
-                    {
-                        let statuses=dag_input_decode(budget,|control|crate::infinite::board::io::text::dag_input::decode_dag_node_statuses_json(text(args,"json").map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))?,control))?;
-                        domain.host.set_node_statuses(&statuses);
-                        ok()
-                    }
-                };
-                self.program.finish_domain(result)
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_515),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
 
 struct FlowAction2516 {
     program: FlowProgramState,
@@ -1746,149 +1654,6 @@ impl FlowActionState for FlowAction2517 {
     }
 }
 
-struct FlowAction2518 {
-    program: FlowProgramState,
-    selection: dag::DagSelectedNodesJsonCursor,
-}
-
-impl FlowActionState for FlowAction2518 {
-    #[cfg(test)]
-    fn operation(&self) -> u16 {
-        2_518
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_518),
-            FlowProgramPhase::Domain => {
-                self.program.domain_cursor += 1;
-                let grant = dag::DagCursorGrant { fuel: 1, now_milliseconds: budget.now_ms, deadline_milliseconds: budget.deadline_ms.unwrap_or(u64::MAX), cancelled: budget.cancelled, interrupted: budget.interrupted };
-                match self.selection.step(&domain.host.dag, grant) {
-                    Ok(dag::DagCursorStep::Census { bytes }) => match self.program.begin_incremental_output(bytes) {
-                        Ok(()) => FlowFeatureStep::Progress { completed: 0, total: bytes as u64 },
-                        Err(failure) => FlowFeatureStep::Failed(failure),
-                    },
-                    Ok(dag::DagCursorStep::Byte(byte)) => {
-                        self.program.output.push(byte);
-                        FlowFeatureStep::Progress { completed: self.program.output.len() as u64, total: self.program.output.capacity() as u64 }
-                    }
-                    Ok(dag::DagCursorStep::Progress { completed, total }) => FlowFeatureStep::Progress { completed: completed as u64, total: total as u64 },
-                    Ok(dag::DagCursorStep::Complete) => self.program.finish_incremental_output(),
-                    Err(fault) => FlowFeatureStep::Failed(dag_cursor_failure(fault)),
-                }
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_518),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
-
-struct FlowAction2519 {
-    program: FlowProgramState,
-    selection: dag::DagSelectedNodesJsonCursor,
-}
-
-impl FlowActionState for FlowAction2519 {
-    #[cfg(test)]
-    fn operation(&self) -> u16 {
-        2_519
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_519),
-            FlowProgramPhase::Domain => {
-                self.program.domain_cursor += 1;
-                let grant = dag::DagCursorGrant { fuel: 1, now_milliseconds: budget.now_ms, deadline_milliseconds: budget.deadline_ms.unwrap_or(u64::MAX), cancelled: budget.cancelled, interrupted: budget.interrupted };
-                match self.selection.step(&domain.host.dag, grant) {
-                    Ok(dag::DagCursorStep::Census { bytes }) => match self.program.begin_incremental_output(bytes) {
-                        Ok(()) => FlowFeatureStep::Progress { completed: 0, total: bytes as u64 },
-                        Err(failure) => FlowFeatureStep::Failed(failure),
-                    },
-                    Ok(dag::DagCursorStep::Byte(byte)) => {
-                        self.program.output.push(byte);
-                        FlowFeatureStep::Progress { completed: self.program.output.len() as u64, total: self.program.output.capacity() as u64 }
-                    }
-                    Ok(dag::DagCursorStep::Progress { completed, total }) => FlowFeatureStep::Progress { completed: completed as u64, total: total as u64 },
-                    Ok(dag::DagCursorStep::Complete) => self.program.finish_incremental_output(),
-                    Err(fault) => FlowFeatureStep::Failed(dag_cursor_failure(fault)),
-                }
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_519),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
-
-struct FlowAction2520 {
-    program: FlowProgramState,
-}
-
-impl FlowActionState for FlowAction2520 {
-    #[cfg(test)]
-    fn operation(&self) -> u16 {
-        2_520
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_520),
-            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
-            FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { Ok(dag_input_encode(budget,|control|crate::infinite::board::io::text::dag_input::encode_dag_selection_json(&domain.host.selection_domains(),control))?.into_bytes()) };
-                self.program.finish_domain(result)
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_520),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
-
 struct FlowAction2521 {
     program: FlowProgramState,
 }
@@ -1928,83 +1693,7 @@ impl FlowActionState for FlowAction2521 {
     }
 }
 
-struct FlowAction2522 {
-    program: FlowProgramState,
-}
 
-impl FlowActionState for FlowAction2522 {
-    #[cfg(test)]
-    fn operation(&self) -> u16 {
-        2_522
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_522),
-            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
-            FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { Ok(domain.host.hovered_channel_json().into_bytes()) };
-                self.program.finish_domain(result)
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_522),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
-
-struct FlowAction2523 {
-    program: FlowProgramState,
-}
-
-impl FlowActionState for FlowAction2523 {
-    #[cfg(test)]
-    fn operation(&self) -> u16 {
-        2_523
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_523),
-            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
-            FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { Ok(dag_input_encode(budget,|control|crate::infinite::board::io::text::dag_input::encode_dag_channels_json(&domain.host.selected_channels(),control))?.into_bytes()) };
-                self.program.finish_domain(result)
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_523),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
 
 struct FlowAction2524 {
     program: FlowProgramState,
@@ -2057,50 +1746,6 @@ impl FlowActionState for FlowAction2524 {
     }
 }
 
-struct FlowAction2525 {
-    program: FlowProgramState,
-}
-
-impl FlowActionState for FlowAction2525 {
-    #[cfg(test)]
-    fn operation(&self) -> u16 {
-        2_525
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_525),
-            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
-            FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! {
-                    {
-                        let selection=dag_input_decode(budget,|control|crate::infinite::board::io::text::dag_input::decode_dag_selection_json(text(args,"json").map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))?,control))?;
-                        domain.host.set_selection_domains(&selection);
-                        ok()
-                    }
-                };
-                self.program.finish_domain(result)
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_525),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
 
 struct FlowAction2526 {
     program: FlowProgramState,
@@ -2190,50 +1835,6 @@ impl FlowActionState for FlowAction2527 {
     }
 }
 
-struct FlowAction2528 {
-    program: FlowProgramState,
-}
-
-impl FlowActionState for FlowAction2528 {
-    #[cfg(test)]
-    fn operation(&self) -> u16 {
-        2_528
-    }
-
-    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
-        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
-            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
-                AbiErrorCode::Cancelled
-            } else if budget.interrupted {
-                AbiErrorCode::Interrupted
-            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
-                AbiErrorCode::DeadlineExceeded
-            } else {
-                AbiErrorCode::NoCredit
-            }));
-        }
-        match self.program.phase {
-            FlowProgramPhase::Decode => self.program.decode_step(args),
-            FlowProgramPhase::Validate => self.program.validate_step(args),
-            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_528),
-            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
-            FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! {
-                    {
-                        let channels=dag_input_decode(budget,|control|crate::infinite::board::io::text::dag_input::decode_dag_channels_json(text(args,"json").map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))?,control))?;
-                        domain.host.set_selected_channels(&channels);
-                        ok()
-                    }
-                };
-                self.program.finish_domain(result)
-            }
-            FlowProgramPhase::Encode => self.program.encode_step(),
-            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_528),
-            FlowProgramPhase::Complete => self.program.complete_step(),
-            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
-        }
-    }
-}
 
 struct FlowAction2529 {
     program: FlowProgramState,
@@ -5556,21 +5157,21 @@ fn flow_action(operation: u16, arguments: &FlowArguments) -> Option<Box<dyn Flow
         2_511 => Some(Box::new(FlowAction2511 { program: FlowProgramState::new(arguments) })),
         2_512 => Some(Box::new(FlowAction2512 { program: FlowProgramState::new(arguments) })),
         2_513 => Some(Box::new(FlowAction2513 { program: FlowProgramState::new(arguments) })),
-        2_514 => Some(Box::new(FlowAction2514 { program: FlowProgramState::new(arguments) })),
-        2_515 => Some(Box::new(FlowAction2515 { program: FlowProgramState::new(arguments) })),
+        2_514 => Some(Box::new(retained_dag_input::FlowDagAction::new(operation,arguments))),
+        2_515 => Some(Box::new(retained_dag_input::FlowDagAction::new(operation,arguments))),
         2_516 => Some(Box::new(FlowAction2516 { program: FlowProgramState::new(arguments) })),
         2_517 => Some(Box::new(FlowAction2517 { program: FlowProgramState::new(arguments) })),
-        2_518 => Some(Box::new(FlowAction2518 { program: FlowProgramState::new(arguments), selection: dag::DagSelectedNodesJsonCursor::default() })),
-        2_519 => Some(Box::new(FlowAction2519 { program: FlowProgramState::new(arguments), selection: dag::DagSelectedNodesJsonCursor::edges() })),
-        2_520 => Some(Box::new(FlowAction2520 { program: FlowProgramState::new(arguments) })),
+        2_518 => Some(Box::new(retained_dag_input::FlowDagAction::new(operation,arguments))),
+        2_519 => Some(Box::new(retained_dag_input::FlowDagAction::new(operation,arguments))),
+        2_520 => Some(Box::new(retained_dag_input::FlowDagAction::new(operation,arguments))),
         2_521 => Some(Box::new(FlowAction2521 { program: FlowProgramState::new(arguments) })),
-        2_522 => Some(Box::new(FlowAction2522 { program: FlowProgramState::new(arguments) })),
-        2_523 => Some(Box::new(FlowAction2523 { program: FlowProgramState::new(arguments) })),
+        2_522 => Some(Box::new(retained_dag_input::FlowDagAction::new(operation,arguments))),
+        2_523 => Some(Box::new(retained_dag_input::FlowDagAction::new(operation,arguments))),
         2_524 => Some(Box::new(FlowAction2524 { program: FlowProgramState::new(arguments), items: FlowStringArrayCursor::default() })),
-        2_525 => Some(Box::new(FlowAction2525 { program: FlowProgramState::new(arguments) })),
+        2_525 => Some(Box::new(retained_dag_input::FlowDagAction::new(operation,arguments))),
         2_526 => Some(Box::new(FlowAction2526 { program: FlowProgramState::new(arguments) })),
         2_527 => Some(Box::new(FlowAction2527 { program: FlowProgramState::new(arguments) })),
-        2_528 => Some(Box::new(FlowAction2528 { program: FlowProgramState::new(arguments) })),
+        2_528 => Some(Box::new(retained_dag_input::FlowDagAction::new(operation,arguments))),
         2_529 => Some(Box::new(FlowAction2529 { program: FlowProgramState::new(arguments) })),
         2_530 => Some(Box::new(FlowAction2530 { program: FlowProgramState::new(arguments) })),
         2_531 => Some(Box::new(FlowAction2531 { program: FlowProgramState::new(arguments) })),
@@ -5854,14 +5455,14 @@ fn abi_failure(code: AbiErrorCode) -> FlowFailure {
     FlowFailure::new(code, code.to_string())
 }
 
-fn dag_cursor_failure(fault: dag::DagCursorFault) -> FlowFailure {
+fn dag_cursor_failure(fault: dag_selection_io::DagSelectionTextFault) -> FlowFailure {
     abi_failure(match fault {
-        dag::DagCursorFault::Cancelled => AbiErrorCode::Cancelled,
-        dag::DagCursorFault::Interrupted => AbiErrorCode::Interrupted,
-        dag::DagCursorFault::Deadline => AbiErrorCode::DeadlineExceeded,
-        dag::DagCursorFault::NoFuel => AbiErrorCode::NoCredit,
-        dag::DagCursorFault::Limit => AbiErrorCode::LimitExceeded,
-        dag::DagCursorFault::Sealed => AbiErrorCode::Sealed,
+        dag_selection_io::DagSelectionTextFault::Cancelled => AbiErrorCode::Cancelled,
+        dag_selection_io::DagSelectionTextFault::Interrupted => AbiErrorCode::Interrupted,
+        dag_selection_io::DagSelectionTextFault::Deadline => AbiErrorCode::DeadlineExceeded,
+        dag_selection_io::DagSelectionTextFault::NoFuel => AbiErrorCode::NoCredit,
+        dag_selection_io::DagSelectionTextFault::Limit => AbiErrorCode::LimitExceeded,
+        dag_selection_io::DagSelectionTextFault::Sealed => AbiErrorCode::Sealed,
     })
 }
 
@@ -5910,7 +5511,7 @@ fn surface_abi_failure(code: SurfaceAbiErrorCode) -> FlowFailure {
 mod surface_canvas {
     use crate::canvas::{self, gpu_session::CanvasGpuSession, Color, Scene};
     use semio_framework_async::browser::future_to_promise;
-    use std::cell::RefCell;
+    use std::cell::{Cell,RefCell};
     use std::collections::BTreeMap;
     use wasm_bindgen::prelude::*;
     use web_sys::HtmlCanvasElement;
@@ -6044,25 +5645,26 @@ pub unsafe extern "C" fn flow_bridge_release(pointer: *mut u8, capacity: usize) 
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn flow_bridge_send(pointer: *const u8, length: usize, byte_credit: usize, now_ms: u64, deadline_ms: u64) -> i32 {
+pub unsafe extern "C" fn flow_bridge_send(pointer: *const u8, length: usize, byte_credit: usize, maximum_items: usize, maximum_copy_bytes: usize, maximum_capacity_bytes: usize, maximum_release_bytes: usize, maximum_depth: usize, now_ms: u64, deadline_ms: u64) -> i32 {
     if pointer.is_null() || length == 0 || length > protocol::FLOW_MAX_REQUEST_BYTES + 32 || !flow_bridge_clock_ready() {
         return -1;
     }
     let Ok(message) = decode_abi_message(unsafe { std::slice::from_raw_parts(pointer, length) }) else {
         return -1;
     };
-    let budget = AbiWorkBudget { byte_credit, now_ms, deadline_ms: (deadline_ms != 0).then_some(deadline_ms), cancelled: false, interrupted: false };
+    let budget = AbiWorkBudget { byte_credit, retained:semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items,maximum_copy_bytes,maximum_capacity_bytes,maximum_release_bytes,maximum_depth}, now_ms, deadline_ms: (deadline_ms != 0).then_some(deadline_ms), cancelled: false, interrupted: false };
     BRIDGE.with(|bridge| bridge.borrow_mut().try_send(message, budget).map(|_| 1).unwrap_or(-1))
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn flow_bridge_poll(pointer: *mut u8, capacity: usize, byte_credit: usize, now_ms: u64, deadline_ms: u64) -> i32 {
+pub unsafe extern "C" fn flow_bridge_poll(pointer: *mut u8, capacity: usize, byte_credit: usize, maximum_items: usize, maximum_copy_bytes: usize, maximum_capacity_bytes: usize, maximum_release_bytes: usize, maximum_depth: usize, now_ms: u64, deadline_ms: u64) -> i32 {
+    BRIDGE.with(|bridge|bridge.borrow_mut().clear_step_progress());
     if pointer.is_null() || capacity == 0 || capacity > protocol::FLOW_MAX_REQUEST_BYTES + 32 || !flow_bridge_clock_ready() {
         return -1;
     }
     RETAINED.with(|retained| {
         if retained.borrow().is_none() {
-            let budget = AbiWorkBudget { byte_credit, now_ms, deadline_ms: (deadline_ms != 0).then_some(deadline_ms), cancelled: false, interrupted: false };
+            let budget = AbiWorkBudget { byte_credit, retained:semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items,maximum_copy_bytes,maximum_capacity_bytes,maximum_release_bytes,maximum_depth}, now_ms, deadline_ms: (deadline_ms != 0).then_some(deadline_ms), cancelled: false, interrupted: false };
             match BRIDGE.with(|bridge| bridge.borrow_mut().poll(budget)) {
                 Ok(AbiPortPoll::Message(message)) => *retained.borrow_mut() = Some(RetainedMessage { bytes: encode_abi_message(&message), _message: message }),
                 Ok(AbiPortPoll::Pending) => return 0,
@@ -6079,6 +5681,13 @@ pub unsafe extern "C" fn flow_bridge_poll(pointer: *mut u8, capacity: usize, byt
         retained.take();
         i32::try_from(length).unwrap_or(-1)
     })
+}
+
+/// 🧾️ Reads one exact original Bridge receipt axis from the latest poll, including refusal.
+#[unsafe(no_mangle)]
+pub extern "C" fn flow_bridge_step_progress(axis:u32)->u64{
+    if axis>3{return u64::MAX;}
+    BRIDGE.with(|bridge|{let progress=bridge.borrow().step_progress();match axis{0=>progress.copied_items as u64,1=>progress.copied_bytes as u64,2=>progress.retained_capacity_bytes as u64,3=>progress.released_bytes as u64,_=>unreachable!()}})
 }
 
 #[unsafe(no_mangle)]

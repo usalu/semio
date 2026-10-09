@@ -1,0 +1,22 @@
+{
+  "session": 29580,
+  "exitCode": 1,
+  "durationMs": 209000,
+  "actualLocatedCompilerErrors": 212,
+  "compilerReportedErrors": 212,
+  "nativeAssertions": 0,
+  "distinctSourceFiles": 22,
+  "codes": {
+    "E0433": 62,
+    "E0425": 16,
+    "E0308": 127,
+    "E0593": 1,
+    "E0277": 1,
+    "E0599": 5
+  },
+  "rootNamespaceErrors": 62,
+  "otherDiagnostics": 150,
+  "observedSourceFiles": 79838,
+  "sourceDrifts": 62,
+  "qualification": "Actual original Kernel compilation RED before selected29 assertions; no compiler/runtime closure. Finite own holds were observed; peer/root non-Rust source drifts remain cut qualifications."
+}

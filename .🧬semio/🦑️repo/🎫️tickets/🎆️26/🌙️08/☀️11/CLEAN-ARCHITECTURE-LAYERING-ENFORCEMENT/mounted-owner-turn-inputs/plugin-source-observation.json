@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "id": "whole-plugin-source-observation-v1",
+  "selectedRoots": [
+    "🧰️framework/🔨️modules",
+    "🧰️framework/📦️packages",
+    "🧰️framework/🛍️products/💻️os",
+    "✏️s/🔌️plugins/🏗️fem",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"
+  ],
+  "maximumCumulativeReadBytes": 805306368,
+  "maximumReadChunkBytes": 1048576,
+  "maximumObservationMs": 60000,
+  "maximumClaims": 20000,
+  "maximumMetadataOutputBytes": 33554432,
+  "maximumPathChars": 256,
+  "maximumUTF16PathUnits": 256
+}

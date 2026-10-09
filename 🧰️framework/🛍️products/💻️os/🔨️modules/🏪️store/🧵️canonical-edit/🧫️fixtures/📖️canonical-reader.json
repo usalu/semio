@@ -25,5 +25,12 @@
     "unclosed-drop",
     "double-panic"
   ],
-  "expectedRootDrops": 1
+  "expectedRootDrops": 1,
+  "retirementGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 64
+  }
 }

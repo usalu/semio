@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { Script, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import { runTool } from "../../📦️dependencies/📜️script.ts";
+import {repositoryCargoPreparationStorageV1, runTool } from "../../📦️dependencies/📜️script.ts";
 import binaryenManifest from "./🔣️.json";
 
 export type BinaryenDistribution = { readonly platform: string; readonly architecture: string; readonly archive: string; readonly bytes: number; readonly sha256: string };
@@ -95,18 +95,18 @@ export async function prepareBinaryen(workspace: string, signal: AbortSignal): P
         }
       } catch (error) { await reader.cancel().catch(() => undefined); throw error; } finally { await file.close(); }
       if (bytes !== row.bytes || hash.digest("hex") !== row.sha256) throw new Error("Binaryen archive checksum mismatch");
-      const members = (await runTool("tar", ["-tzf", archive], temporary, signal, true)).trim().split(/\r?\n/);
+      const members = (await runTool("tar",["-tzf", archive],temporary,signal,true,process.env,repositoryCargoPreparationStorageV1(process.cwd()))).trim().split(/\r?\n/);
       const selected = binaryenMembers(members, process.platform), prefix = `binaryen-version_${manifest.version}`;
       const executable = `bin/wasm-opt${process.platform === "win32" ? ".exe" : ""}`;
       if (!selected.includes(executable)) throw new Error("Binaryen archive has no optimizer");
-      await runTool("tar", ["-xzf", archive, "-C", temporary, ...selected.map(path => `${prefix}/${path}`)], temporary, signal);
+      await runTool("tar",["-xzf", archive, "-C", temporary, ...selected.map(path => `${prefix}/${path}`)],temporary,signal,false,process.env,repositoryCargoPreparationStorageV1(process.cwd()));
       const payload = join(temporary, prefix), files: Record<string, string> = {};
       for (const name of selected) {
         const path = join(payload, name); regularDirectory(dirname(path));
         if (!lstatSync(path).isFile() || lstatSync(path).isSymbolicLink()) throw new Error(`Invalid Binaryen payload: ${name}`);
         files[name] = digest(path);
       }
-      const version = await runTool(join(payload, executable), ["--version"], temporary, signal, true);
+      const version = await runTool(join(payload, executable),["--version"],temporary,signal,true,process.env,repositoryCargoPreparationStorageV1(process.cwd()));
       if (version.trim() !== `wasm-opt version ${manifest.version} (version_${manifest.version})`) throw new Error(`Binaryen version mismatch: ${version.trim()}`);
       writeFileSync(join(payload, ".toolchain.json"), JSON.stringify({ owner, identity: binaryenIdentity(), files }) + "\n");
       signal.throwIfAborted(); renameSync(payload, directory);
@@ -139,7 +139,7 @@ class FingerprintScript extends Script {
         if (tool === "wasm-opt" && !override) { versions[tool] = binaryenIdentity(); continue; }
         const path = override ? resolve(this.root, override) : Bun.which(tool, { PATH: process.env.PATH });
         if (!path) { versions[tool] = "unavailable"; continue; }
-        const version = (await runTool(path, ["--version"], this.root, AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]), true)).trim();
+        const version = (await runTool(path,["--version"],this.root,AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]),true,process.env,repositoryCargoPreparationStorageV1(process.cwd()))).trim();
         if (!version) throw new Error(`Cannot fingerprint ${tool}`);
         versions[tool] = version;
       }

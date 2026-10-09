@@ -1,15 +1,167 @@
 {
   "why": "The agent lane's preview verdict is written once and read by the Rust driver law and an AJV TypeScript oracle. A script lists progress, checkpoint, yield, complete, cancelled, or a fault carrying either a canonical typed Fault object or foreign raw detail bytes. Typed Fault fields survive the bounded result carrier; foreign bytes remain interactive-job.app-owned-output. The first terminal entry wins and a script without one reaches the bounded preview refusal.",
-  "budget": { "wallMicros": 2000000, "turns": 65536 },
+  "budget": {
+    "wallMicros": 2000000,
+    "turns": 65536
+  },
   "cases": [
-    { "name": "a job that completes after its own progress answers every outcome up to its completion", "clockMicrosPerRead": 1, "script": ["progress", "checkpoint", "yield", "progress", "complete"], "verdict": { "steps": 5 } },
-    { "name": "a job that completes on its first step answers one step", "clockMicrosPerRead": 1, "script": ["complete"], "verdict": { "steps": 1 } },
-    { "name": "a job fault keeps the job's own detail under the app-owned output code", "clockMicrosPerRead": 1, "script": ["progress", { "fault": "puzzle command reducer rejected the admitted operation" }], "verdict": { "fault": { "code": "interactive-job.app-owned-output", "message": "puzzle command reducer rejected the admitted operation" } } },
-    { "name": "a typed job fault answers its frozen code", "clockMicrosPerRead": 1, "script": [{ "fault": { "origin": "app", "code": "toolRun.busy", "severity": "error", "message": "the fill run is busy", "scope": {}, "retryable": false } }], "verdict": { "fault": { "code": "toolRun.busy", "message": "the fill run is busy" } } },
-    { "name": "a retained reducer refusal preserves its span and named path in canonical fault wire", "clockMicrosPerRead": 1, "script": ["progress", { "fault": { "origin": "app", "code": "snapshot-edit.invalid-source", "severity": "error", "message": "unexpected byte", "scope": {}, "span": { "line": 3, "column": 3, "length": 1 }, "params": { "path": "/rows/2/name" }, "retryable": false } }], "verdict": { "fault": { "code": "snapshot-edit.invalid-source", "message": "unexpected byte" } } },
-    { "name": "a job that cancels itself is refused as cancelled", "clockMicrosPerRead": 1, "script": ["progress", "cancelled"], "verdict": { "fault": { "code": "interactive-job.cancelled" } } },
-    { "name": "a lease cancelled before the run cancels it before the job's first step", "clockMicrosPerRead": 1, "cancelled": true, "script": ["complete"], "verdict": { "fault": { "code": "interactive-job.cancelled" } } },
-    { "name": "a job still running past the wall budget is refused by name", "clockMicrosPerRead": 100, "script": ["progress"], "verdict": { "fault": { "code": "interactive-job.preview-budget" } } },
-    { "name": "a job still yielding when the turn budget ends is refused by name", "clockMicrosPerRead": 0, "script": ["yield"], "verdict": { "fault": { "code": "interactive-job.preview-budget" } } }
-  ]
+    {
+      "name": "a job that completes after its own progress answers every outcome up to its completion",
+      "clockMicrosPerRead": 1,
+      "script": [
+        "progress",
+        "checkpoint",
+        "yield",
+        "progress",
+        "complete"
+      ],
+      "verdict": {
+        "steps": 5
+      }
+    },
+    {
+      "name": "a job that completes on its first step answers one step",
+      "clockMicrosPerRead": 1,
+      "script": [
+        "complete"
+      ],
+      "verdict": {
+        "steps": 1
+      }
+    },
+    {
+      "name": "a job fault keeps the job's own detail under the app-owned output code",
+      "clockMicrosPerRead": 1,
+      "script": [
+        "progress",
+        {
+          "fault": "puzzle command reducer rejected the admitted operation"
+        }
+      ],
+      "verdict": {
+        "fault": {
+          "code": "interactive-job.app-owned-output",
+          "message": "puzzle command reducer rejected the admitted operation"
+        }
+      }
+    },
+    {
+      "name": "a typed job fault answers its frozen code",
+      "clockMicrosPerRead": 1,
+      "script": [
+        {
+          "fault": {
+            "origin": "app",
+            "code": "toolRun.busy",
+            "severity": "error",
+            "message": "the fill run is busy",
+            "scope": {},
+            "retryable": false
+          }
+        }
+      ],
+      "verdict": {
+        "fault": {
+          "code": "toolRun.busy",
+          "message": "the fill run is busy"
+        }
+      }
+    },
+    {
+      "name": "a retained reducer refusal preserves its span and named path in canonical fault wire",
+      "clockMicrosPerRead": 1,
+      "script": [
+        "progress",
+        {
+          "fault": {
+            "origin": "app",
+            "code": "snapshot-edit.invalid-source",
+            "severity": "error",
+            "message": "unexpected byte",
+            "scope": {},
+            "span": {
+              "line": 3,
+              "column": 3,
+              "length": 1
+            },
+            "params": {
+              "path": "/rows/2/name"
+            },
+            "retryable": false
+          }
+        }
+      ],
+      "verdict": {
+        "fault": {
+          "code": "snapshot-edit.invalid-source",
+          "message": "unexpected byte"
+        }
+      }
+    },
+    {
+      "name": "a job that cancels itself is refused as cancelled",
+      "clockMicrosPerRead": 1,
+      "script": [
+        "progress",
+        "cancelled"
+      ],
+      "verdict": {
+        "fault": {
+          "code": "interactive-job.cancelled"
+        }
+      }
+    },
+    {
+      "name": "a lease cancelled before the run cancels it before the job's first step",
+      "clockMicrosPerRead": 1,
+      "cancelled": true,
+      "script": [
+        "complete"
+      ],
+      "verdict": {
+        "fault": {
+          "code": "interactive-job.cancelled"
+        }
+      }
+    },
+    {
+      "name": "a job still running past the wall budget is refused by name",
+      "clockMicrosPerRead": 100,
+      "script": [
+        "progress"
+      ],
+      "verdict": {
+        "fault": {
+          "code": "interactive-job.preview-budget"
+        }
+      }
+    },
+    {
+      "name": "a job still yielding when the turn budget ends is refused by name",
+      "clockMicrosPerRead": 0,
+      "script": [
+        "yield"
+      ],
+      "verdict": {
+        "fault": {
+          "code": "interactive-job.preview-budget"
+        }
+      }
+    }
+  ],
+  "retirement": {
+    "grantIssuer": "original runtime lifecycle policy",
+    "separateCurrencies": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "zeroItem": "retain original emission, ephemeral state and completion",
+    "shortBirth": "retain original complete payload",
+    "refusedCompletion": "retain original rejection and fault",
+    "childComplete": "retain admitted outer retirement frame until separate whole release",
+    "terminal": "all original owners empty"
+  }
 }

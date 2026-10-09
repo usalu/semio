@@ -1,0 +1,59 @@
+{
+  "sourceCopies": false,
+  "paths": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+      "sha256": "bd8b18a0706429905adb39ff9c7d299054fdda39d13889c488c38ad4b47d70df",
+      "bytes": 16714,
+      "role": "planned-test-route-action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/📬️test-body/🔣️.json",
+      "sha256": "cc7968981d220eda0bac78d99d40d044b93b6125cb4ebcd10ce90917bc13142f",
+      "bytes": 7743,
+      "role": "planned-test-route-action"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "sha256": "d50caced59322f6f56051af8b085ecb59271a1f015c2a1af6b4ceae7fc7b112c",
+      "bytes": 92377,
+      "role": "planned-test-route-action"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
+      "sha256": "114cdbca6e746f5fc44f39987596c17bb62ac634579eadef5fa001296f2be0f7",
+      "bytes": 69219,
+      "role": "planned-test-route-action"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "49120167133f99d763cf728f6a77758f87b5c6146879b9327de4aad08affa32a",
+      "bytes": 5555320,
+      "role": "planned-test-route-action"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "sha256": "25ed40f2cb5af46df8e0784daeac70b2c0c9a685f121f2cd8c74cc62999f2c3c",
+      "bytes": 4608350,
+      "role": "planned-test-route-action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+      "sha256": "fdc59cbaa311e1093c8ffc2193816521c036ad2bf789df89f8fe6ec81efb63c9",
+      "bytes": 15321,
+      "role": "observer"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "sha256": "aa19527b69830d3472ebd6c4743ea9deff399b239ec428cd29ea6ca777324886",
+      "bytes": 33387,
+      "role": "observer"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+      "sha256": "16298eeef1d22fe280945f3dafe6fa13bee759c9c6cb3e1d44dfa7a134b0544c",
+      "bytes": 9027,
+      "role": "observer"
+    }
+  ]
+}

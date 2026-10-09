@@ -1,6 +1,12 @@
 {
   "copyBytes": 64,
-  "closeGrant": { "copyBytes": 0, "capacityBytes": 0, "release": "exact-original-ledger-birth", "depth": 1, "terminalReceipt": "complete-original-progress" },
+  "closeGrant": {
+    "copyBytes": 0,
+    "capacityBytes": 0,
+    "release": "exact-original-ledger-birth",
+    "depth": 1,
+    "terminalReceipt": "complete-original-progress"
+  },
   "cases": [
     {
       "operation": 91001,
@@ -24,5 +30,23 @@
     "unfundedBirthBytes": 0,
     "unfundedReleaseBytes": 0,
     "externalAliasBlocks": true
+  },
+  "birthGrant": {
+    "copyBytes": 0,
+    "capacity": "exact-original-ledger-birth",
+    "releaseBytes": 0,
+    "depth": 1,
+    "receipt": "same-actual-allocator-birth",
+    "deniedAxes": [
+      "items",
+      "capacity",
+      "depth"
+    ]
+  },
+  "failedCloseReceipt": {
+    "copiedItems": 1,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 64,
+    "releasedBytes": 0
   }
 }

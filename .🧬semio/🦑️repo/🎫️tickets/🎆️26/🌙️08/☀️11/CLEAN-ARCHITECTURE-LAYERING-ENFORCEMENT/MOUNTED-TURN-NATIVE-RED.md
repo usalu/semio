@@ -1,0 +1,9 @@
+# Mounted Turn Native Red
+
+Native1 physically closed with outer Nx/Bun exit 1 and Cargo exit 101. The actual compiler reached the new neutral mounted owner package and refused its imports of RetainedCloneGrant and RetainedCloneProgress from the Value root. Their canonical namespace is retained_clone. That narrow import correction is now in place. No native portable vector or independent artifact assertion executed in this interval.
+
+The in-place custody cut observed 1,350 defining, dependent and producer source files. After physical closure, 1,341 hashes remained exact; nine peer source advances and seven born files are qualified in generated/mn1/closure.json. The peer Job, Value, GenericPlugin and RepoLib changes remain current. No tracked source was copied, mirrored or restored.
+
+The registered row requested the short private mn/t deliverable root. Actual compiled intermediates use the existing sanctioned shared Cargo build root, 64 UTF16 units. Read-only inventory of all 33 lock-selected package directories observed 3,314 existing entries, maximum path 195 UTF16 units and maximum suffix 131; no selected compiler entry exceeded 256. Those entries include earlier/shared builds and establish observed path bounds, not exclusive ownership or platform acceptance. The private requested target contained six lock/control entries, maximum 157. All shared outputs remain untouched.
+
+Workspace preparation printed an index update before leaf Cargo --offline. The next exact row input, mounted-owner-turn-inputs/native-offline.json, adds CARGO_NET_OFFLINE=true across preparation and compilation. No further native dispatch occurs before registry closure and fresh current source admission. The complete mounted runtime, all constructor receivers, funded FEM preparation and both export leaves remain unaccepted.

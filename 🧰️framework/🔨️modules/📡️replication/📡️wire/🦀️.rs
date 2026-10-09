@@ -1059,9 +1059,9 @@ pub async fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), cr
         },
         1 => ServerFrame::SnapshotChunk { seq: crate::wire::read_varint_u64(bytes, &mut pos)? as u32, bytes: read_snapshot_chunk_bytes(bytes, &mut pos)? },
         2 => ServerFrame::SnapshotDone { seq_count: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
-        3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?), frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
+        3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?.into()), frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
         4 => ServerFrame::Ack { batch_id: crate::wire::read_varint_u64(bytes, &mut pos)?, stages: read_vec_ack_stage(bytes, &mut pos).await?, frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
-        5 => ServerFrame::Preview { actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?), key: crate::read_str(bytes, &mut pos)?, seq: crate::wire::read_varint_u64(bytes, &mut pos)?, payload: crate::read_bytes(bytes, &mut pos)? },
+        5 => ServerFrame::Preview { actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?.into()), key: crate::read_str(bytes, &mut pos)?, seq: crate::wire::read_varint_u64(bytes, &mut pos)?, payload: crate::read_bytes(bytes, &mut pos)? },
         6 => ServerFrame::Presence { peers: read_vec_bytes(bytes, &mut pos).await? },
         7 => ServerFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
         8 => ServerFrame::Error { code: crate::read_str(bytes, &mut pos)?, message: crate::read_str(bytes, &mut pos)? },
@@ -3186,7 +3186,7 @@ pub async fn validate_state(defs: &[InteractionOutline], topo: &InteractionTopol
 /// (bit 5) on the heartbeat — typed (not app-opaque `presence_pack`) so the Shell renders every peer's
 /// selection/hover generically. Only explicit ids broadcast; receivers expand transitive closures via
 /// their own topology.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct PresenceInteraction {
     pub app_id: String,
     pub domains: Vec<PresenceDomain>,
@@ -3219,7 +3219,7 @@ impl crate::value::FromValue for PresenceInteraction {
 
 /// 📡️ One domain's broadcast slice of `PresenceInteraction` — the peer-facing mirror of a domain's
 /// `DomainSelection`/`DomainHover`, flattened to raw explicit ids (no transitive expansion on the wire).
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct PresenceDomain {
     pub domain: String,
     pub granularity: String,

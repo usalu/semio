@@ -163,7 +163,7 @@ pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bo
 
 /// 🧮️ ONE evaluation hop over `host_snapshot` into `session`, for the window it names. `retained_eval` is
 /// the evaluation text the caller already published, so an unmoved evaluation republishes nothing.
-pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &mut FlowEvalSession, retained_eval: Option<&str>) -> FlowEvalTickOutcome {
+pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &mut FlowEvalSession, retained_eval: Option<&str>, retained_grant: semio_framework_value::RetainedCloneGrant) -> FlowEvalTickOutcome {
     session.begin_window_tick(window_id);
     let mut host = flow_host_with_session(host_snapshot, session);
     let more = session.tick(&mut host, None);
@@ -175,6 +175,7 @@ pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semi
         .into_iter()
         .map(|pending| {
             let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
+                ("retained".to_string(), semio_framework_value::ToValue::to_value(&retained_grant)),
                 ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
                 ("inputJson".to_string(), semio_framework_value::DslValue::String(pending.input_json.clone())),
                 ("nodeHash".to_string(), semio_framework_value::DslValue::uint(pending.node_hash)),

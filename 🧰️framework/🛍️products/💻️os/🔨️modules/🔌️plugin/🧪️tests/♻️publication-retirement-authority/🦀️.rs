@@ -173,8 +173,11 @@ impl WindowConfigOwner for RetirementWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 1_024;
     type State = TestConfig;
     type Mutation = TestConfigMutation;
+    type Edit=crate::component::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit;
+    const MAXIMUM_PREPARATION_DEPTH:usize=64;
+    fn build_retained_edit()->std::sync::Arc<Self::Edit>{std::sync::Arc::new(crate::component::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit)}
 
-    fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> {
+    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         crate::app::bounded_window_config_store_owners::<Self>()
     }
 
@@ -494,8 +497,8 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
             }
             "windowConfig" => {
                 let mutation = |value: &str| WindowConfigMutation::of::<RetirementWindowConfigOwner>("publication-retirement-window-left", config_mutation(value));
-                let mut publication = app.window_config_store.begin(operation, "fixture".into(), &window_config_authority, mutation("first")).expect("window config publication admitted");
-                let mut superseding = app.window_config_store.begin(operation, "fixture".into(), &window_config_authority, mutation("superseding")).expect("superseding window config publication admitted");
+                let mut publication = app.window_config_store.begin(operation, app.window_config_store.local_actor_id().0.admit_clone(grant.retained_grant()).unwrap().0, &window_config_authority, mutation("first")).expect("window config publication admitted");
+                let mut superseding = app.window_config_store.begin(operation, app.window_config_store.local_actor_id().0.admit_clone(grant.retained_grant()).unwrap().0, &window_config_authority, mutation("superseding")).expect("superseding window config publication admitted");
                 for _ in 0..4_096 {
                     if matches!(app.window_config_store.advance(superseding.as_mut(), grant).expect("superseding window config advances"), store::ArtifactStoreOneItemAdvance::Published(_)) {
                         assert!(superseding.acknowledge());
@@ -637,7 +640,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None,
         output_chunks: None,
         cancellation_lease: Some(lease),
-        terminal_outcome: None,
+        terminal_outcome: semio_framework_job::JobOutcomeSlot::empty(),
         terminal_seen: true,
         publication: Some(crate::app::ArtifactToolCompletionValue::Emit(Ok(crate::app::Emit::default()), crate::app::EphemeralEmit { window_transient: vec![misaddressed], ..Default::default() })),
         pending_artifact_publication: None,
@@ -651,7 +654,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         result_page_presented: false,
         result_sequence: 0,
         publication_progress: 0,
-        publication_checkpoint: None,
+        publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None,
         publication_attempt: 0,
         ui_pending: true,
         progress: None,
@@ -666,7 +669,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         stage: crate::app::MountedTypedCommandFullOperationStage::Publishing,
     };
     for attempt in 0..3 {
-        let refused = app.publish_mounted_typed_operation_unit(&mut mounted).await.expect_err("a misaddressed window transient is refused");
+        let refused = app.publish_mounted_typed_operation_unit(&mut mounted).expect_err("a misaddressed window transient is refused");
         assert_eq!(refused.code.0, "window-transient.address", "attempt {attempt}: the refusal is the registry's typed fault");
         let Some(crate::app::ArtifactToolCompletionValue::Emit(Ok(_), ephemeral)) = mounted.publication.as_ref() else { panic!("the emit stays installed") };
         assert_eq!(ephemeral.window_transient.iter().map(WindowTransientMutation::window_id).collect::<Vec<_>>(), ["publication-retirement-window-right"], "attempt {attempt}: the refused mutation is kept, never dropped");

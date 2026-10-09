@@ -609,7 +609,7 @@ impl DrawingInstanceOperationOwner {
         Self { operations: semio_framework_job::FixedOperationRegistry::new(DRAWING_GESTURE_OPERATION_SLOTS * DRAWING_GESTURE_RETAINED_BYTES), active: None, closing: false, close_begun: false }
     }
 
-    fn dispatch(&mut self, payload: &DrawingGestureOperationPayload) -> Result<Option<(Emit<DrawingMutation, NoConfigMutation, NoDraftMutation>, DrawingCanvasWindowTransient)>, Fault> {
+    fn dispatch(&mut self, payload: &DrawingGestureOperationPayload, context:&mut semio_framework_job::StepContext<'_>) -> Result<Option<(Emit<DrawingMutation, NoConfigMutation, NoDraftMutation>, DrawingCanvasWindowTransient)>, Fault> {
         let key = semio_framework_job::FixedOperationKey::new(semio_framework_job::OperationId(payload.operation_context.operation_id), semio_framework_job::Generation(payload.operation_context.generation));
         let source_identity = payload.source_identity;
         let command = &payload.command;
@@ -654,6 +654,7 @@ impl DrawingInstanceOperationOwner {
         }
         let retained = self.operations.get_mut(live_key).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the exact Drawing gesture owner changed before its bounded reducer step"))?;
         let session = retained.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the Drawing gesture session is already closing"))?;
+        session.identity_cancel=Some(context.cancel_token());
         session.source_identity=Some(source_identity);
         session.window_config = payload.window_config.clone();
         session.window_transient = payload.window_transient.clone();
@@ -973,7 +974,7 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
         }
         if !self.completed {
             let Some(payload) = self.payload.as_ref() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
-            let emit = payload.instance_owner.with_mut::<DrawingInstanceOperationOwner, _>(|owner| owner.dispatch(payload));
+            let emit = payload.instance_owner.with_mut::<DrawingInstanceOperationOwner, _>(|owner| owner.dispatch(payload,context));
             let (emit, transient) = match emit {
                 Ok(Some(output)) => output,
                 Ok(None) => {
@@ -1296,7 +1297,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<DrawingPlayApp>>,
-    _cx: &mut semio_framework_job::StepContext<'_>,
+    cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<DrawingPlayApp>>, Fault> {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("drawing-window-work-terminal")); }
@@ -1304,6 +1305,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
         let active_utility = input.context.and_then(|context| context.view_state.as_ref()).map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility);
         let mut session = DrawingSession::new(active_utility, &input.operation.authoring_seed);
+        session.identity_cancel=Some(cx.cancel_token());
         session.interaction.ids = input.interaction.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
         session.interaction.points = input.interaction.selection.get(DRAWING_POINT_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
         session.window_config = canvas_window::config::from_snapshot(input.context.and_then(|context| context.window_config.as_ref()));
@@ -1334,6 +1336,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
             }
             _ => emit = input.command.dispatch(&doc, &cfg, &mut session)?,
         }
+        cx.consume_fuel(session.identity_checkpoints);
+        session.identity_cancel=None;
         self.completed = true;
         Ok(match transient {
             Some(mutation) => ArtifactCommandWorkStep::CompleteWithEphemeral {
@@ -1912,10 +1916,6 @@ impl ArtifactEditor for DrawingPlayApp {
         clipboard::cut(doc.snapshot,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids).unwrap_or_default()
     }
 
-    fn paste_operations(doc:&ArtifactView<'_,DrawingSnapshot>,fragment:&semio_framework_plugin::ClipboardFragment,placement:&semio_framework_plugin::kernel::PastePlacement)->Result<Vec<DrawingMutation>,semio_framework_plugin::ClipboardError>{
-        clipboard::paste(doc.snapshot,clipboard::decode(fragment)?,placement,None).map(|(mutations,_)|mutations)
-    }
-
     fn build_reserved_tool_job(request:semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<Self>>)->Result<Option<semio_framework_plugin::ArtifactReservedToolJob>,Fault>{
         if !DRAWING_CLIPBOARD_RESERVED_IDS.contains(&request.tool_id.as_str()){return Ok(None);}
         Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(clipboard::job::DrawingClipboardJob::new(request)?)))
@@ -2475,3 +2475,7 @@ pub fn drawing_fault_notices() -> &'static [(&'static str, semio_framework_ui_lo
     });
     &*NOTICES
 }
+
+#[cfg(test)]
+#[path="🧪️tests/🪪️identity/🦀️.rs"]
+pub(crate) mod identity_test;

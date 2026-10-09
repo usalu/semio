@@ -631,7 +631,9 @@ fn retained_paged_list_refuses_over_budget_child_before_owner_placement() {
             Err(error) => break error,
         }
     };
-    assert!(error.message.contains("exceeded its retained clone"));
+    assert_eq!(error.kind,crate::ValueRefusalKind::InvariantViolated);
+    assert_eq!(error.message.as_ref(),"original retained turn exceeded its item, copy, capacity, or release grant");
+    assert!(matches!(error.message,std::borrow::Cow::Borrowed(_)));
     assert_eq!(cursor.index, 0);
     assert_eq!(cursor.values.len(), 0);
     assert!(cursor.child_value.is_none());
@@ -661,7 +663,9 @@ fn retained_paged_list_refuses_over_budget_child_retirement_before_owner_placeme
             Ok(RetainedCloneStep::Progress(_)) => {}
             Ok(RetainedCloneStep::Complete(_)) => panic!("over-budget child retirement must be refused before completion"),
             Err(error) => {
-                assert!(error.message.contains("exceeded its retained clone"));
+                assert_eq!(error.kind,crate::ValueRefusalKind::InvariantViolated);
+                assert_eq!(error.message.as_ref(),"original retained turn exceeded its item, copy, capacity, or release grant");
+                assert!(matches!(error.message,std::borrow::Cow::Borrowed(_)));
                 break;
             }
         }

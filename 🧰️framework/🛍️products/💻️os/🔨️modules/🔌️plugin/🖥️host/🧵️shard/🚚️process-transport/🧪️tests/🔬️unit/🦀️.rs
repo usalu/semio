@@ -223,8 +223,8 @@ async fn process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_s
     };
     let shard_bin = std::env::var("CARGO_BIN_EXE_semio-shard").expect("cargo test sets CARGO_BIN_EXE_semio-shard for this package's own [[bin]] target");
 
-    let shard_a = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path.clone(), "scale-fixture-a".to_string(), "1".to_string()]).await.expect("spawn shard a");
-    let shard_b = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path.clone(), "scale-fixture-b".to_string(), "2".to_string()]).await.expect("spawn shard b");
+    let shard_a = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path.clone(), "scale-fixture-a".to_string(), "1".to_string(),Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧵️shard/🪪️identity/⚙️configuration/🔣️.json").to_string_lossy().into_owned()]).await.expect("spawn shard a");
+    let shard_b = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path.clone(), "scale-fixture-b".to_string(), "2".to_string(),Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧵️shard/🪪️identity/⚙️configuration/🔣️.json").to_string_lossy().into_owned()]).await.expect("spawn shard b");
 
     semio_framework_async::block_on(shard_a.send(&instance_open_envelope(1, 1, "idle").await));
     semio_framework_async::block_on(shard_b.send(&instance_open_envelope(2, 1, "idle").await));
@@ -249,7 +249,7 @@ async fn process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_s
     }
     assert!(lost, "the watchdog must detect shard a as lost after the external kill -9");
 
-    let shard_a2 = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path, "scale-fixture-a".to_string(), "3".to_string()]).await.expect("rebuild shard a");
+    let shard_a2 = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path, "scale-fixture-a".to_string(), "3".to_string(),Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧵️shard/🪪️identity/⚙️configuration/🔣️.json").to_string_lossy().into_owned()]).await.expect("rebuild shard a");
     semio_framework_async::block_on(shard_a2.send(&instance_open_envelope(3, 1, "idle").await));
     let outcome_a2 = recv_outcome(&shard_a2, 400).await.expect("rebuilt shard a must reply");
     assert!(matches!(outcome_a2, crate::shard::ShardOutcome::Turn { actor: 3, .. }), "rebuilt shard a: expected ShardOutcome::Turn, got {outcome_a2:?}");

@@ -92,7 +92,7 @@ fn drive_writer_edit_tokens(
                 store::OwnedSchemaRecordStep::Pending => continue,
                 store::OwnedSchemaRecordStep::FieldToken { field_id: 1, token, terminal } => (token, terminal),
                 store::OwnedSchemaRecordStep::Fault(diagnostic) => return Err(diagnostic),
-                store::OwnedSchemaRecordStep::Cancelled => return Err(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-source-cancelled", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT }),
+                store::OwnedSchemaRecordStep::Cancelled => return Err(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-source-cancelled", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }),
                 store::OwnedSchemaRecordStep::Complete => break,
                 store::OwnedSchemaRecordStep::FieldToken { .. } => unreachable!("single Writer wrapper field"),
             },
@@ -101,13 +101,13 @@ fn drive_writer_edit_tokens(
             Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending) => pending = Some(field),
             Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete) => {}
             Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete) => {
-                return authority.take_value().ok_or(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-value-missing", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT });
+                return authority.take_value().ok_or(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-value-missing", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
             }
             Ok(store::ArtifactEnvelopeFieldDecodeStep::RecordComplete) => unreachable!("entry authority never owns the wrapper record"),
             Err(diagnostic) => return Err(diagnostic),
         }
     }
-    Err(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-did-not-complete", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })
+    Err(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-did-not-complete", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
 }
 
 #[semio_framework_async_macros::async_test]

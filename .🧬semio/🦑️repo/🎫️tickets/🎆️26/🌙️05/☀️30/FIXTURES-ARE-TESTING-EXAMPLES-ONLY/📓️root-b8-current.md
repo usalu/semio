@@ -1,0 +1,9 @@
+# Current Recreated Corpus Authority Retirement
+
+Root retired the five currently inspected entire test collection schemas for Geometry work, Flow host/session, Infinite source and Validator retirement. Original independent Unicode/Buffer, Set, JSONPatch/stable JSON, accepted/rejected production Schema parser values, SQLite custody and transitive native owner Source assertions are preserved. Exact reader admission and mirrored collection-schema negatives were removed. A narrow ancestor inertSchemaData declaration names only the genuine original validator parser specimen; its bytes remain unchanged.
+
+All five original plain input hashes were stable through Root edits and are observations, not Root authorship. Exact11 actions are in 📥️root-b8-actions.json, guarded from fresh before observations. Original boundary8203 Nx1 supplies four reported roots; the current session whole schema was separately inspected directly. No recreation writer, native execution or global positive is inferred. Actual original three reader files completed Nx0/126ms:2 Bun tests,76 assertions,80ms; Validator genuine Ajv Schema parser/SQLite, Geometry all three independent DEBUG witnesses, and original Session JSONPatch/UTF8 law executed. Export-only Host/DAG helpers were not invoked by this selection and get no coverage credit. Fresh entire boundary renewal and original helper route remain pending.
+
+## Original Registered Helper Renewal
+
+The original Flow core test-host-source49183 completed Nx0/1.9s and invoked the exported helper with actual DEBUG for35 original fields, JSONPatch and UTF8. Original test-dag-source6526 completed Nx0/5.1s and invoked the exported helper with actual DEBUG for47 DAG and27 engine fields, JSONPatch and UTF8. These renew the helper coverage explicitly absent from the earlier private reader selection; neither executes native Rust.

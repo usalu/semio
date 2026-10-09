@@ -181,7 +181,7 @@ impl semio_framework_plugin::WindowConfigOwner for ArchitectRegisterWindowConfig
     type State = ArchitectRegisterWindowConfig;
     type Mutation = ArchitectRegisterWindowConfigMutation;
 
-    fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> {
+    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()
     }
 

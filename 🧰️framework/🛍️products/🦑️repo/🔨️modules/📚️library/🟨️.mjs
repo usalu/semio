@@ -88,6 +88,7 @@ const libraryBootstrap = (loadedCommandInputs.sourceHash === commandInputHash ? 
 });
 
 const POLICY = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json")).toString("utf8"));
+const EXAMPLE_COLLECTIONS = POLICY.exampleCollections.names;
 const TAXONOMY = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "🔣️taxonomy.json")).toString("utf8"));
 const IMPLEMENTATION_REVISION = new URL(import.meta.url).searchParams.get("revision") ?? implementationRevision();
 const nxPath = (path) => path.split("\\").join("/");
@@ -776,6 +777,18 @@ function workspaceNegationClosed(inputs) {
   return inputs.some((input) => typeof input === "string" && input.startsWith("{workspaceRoot}/")) ? inputs : inputs.filter((input) => typeof input !== "string" || !input.startsWith("!{workspaceRoot}/"));
 }
 
+/** 🧫️ Exact example ancestry preserves a genuine module name and refuses nested collections. */
+function exampleCollectionPath(path) {
+  const parts = nxPath(path).split("/");
+  return parts.some((part, index) => EXAMPLE_COLLECTIONS.includes(part) && parts[index - 1] !== POLICY.exampleCollections.moduleMember);
+}
+
+/** 🧮️ Nx minimatch exclusions carry the same exact collection and module ancestry. */
+function exampleCollectionInputs(root) {
+  const names = `{${EXAMPLE_COLLECTIONS.join(",")}}`;
+  return [`!${root}/${names}/**/*`, `!${root}/**/!(${POLICY.exampleCollections.moduleMember})/${names}/**/*`];
+}
+
 /** 📥️ Shared command implementation and host identity are inputs of every script-backed task. */
 function projectInputs(json, root, workspaceRoot, facts, scripts) {
   const nativeRoot = json.metadata?.nativeRoot ?? root;
@@ -812,8 +825,9 @@ function projectInputs(json, root, workspaceRoot, facts, scripts) {
     if (owner !== root) inputs.push(`!{workspaceRoot}/${owner}/**/${directory}/**/*`);
   }
   if (owner !== runner) inputs.push(`!{workspaceRoot}/${runner}/**/🧪️tests/**/*`);
-  const production = ["!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/🧫️fixtures/**/*", "!{workspaceRoot}/**/🧫️fixtures/**/*", "!{projectRoot}/**/*.feature", "!{projectRoot}/**/*.stories.{ts,tsx}"];
-  if (owner !== root) production.push(`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`, `!{workspaceRoot}/${owner}/**/🧫️fixtures/**/*`);
+  const examples = [...exampleCollectionInputs("{projectRoot}"), ...exampleCollectionInputs("{workspaceRoot}")];
+  const production = ["!{projectRoot}/**/🧪️tests/**/*", ...examples, "!{projectRoot}/**/*.feature", "!{projectRoot}/**/*.stories.{ts,tsx}"];
+  if (owner !== root) production.push(`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`);
   const declarations = json.namedInputs ?? {};
   const exclusions = [];
   for (const target of Object.values(json.targets ?? {})) for (const output of target.outputs ?? []) {
@@ -832,7 +846,7 @@ function projectInputs(json, root, workspaceRoot, facts, scripts) {
       exclusions.push(`!{workspaceRoot}/${owner}/${glob}`, `!{workspaceRoot}/${owner}/${glob}/**/*`);
     }
   }
-  const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${nativeRoot}/Cargo.toml`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/🧫️fixtures/**/*", "!{workspaceRoot}/**/🧫️fixtures/**/*", ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
+  const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${nativeRoot}/Cargo.toml`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", ...examples, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript") && owner !== root && existsSync(join(workspaceRoot, root, SCRIPT_BASENAME));
   const artifactSource = join(workspaceRoot, owner, "🟦️.ts");
   const artifactSources = artifactTypeScript ? [...relativeScriptInputs([artifactSource], workspaceRoot, scripts), "{projectRoot}/package.json", ...exclusions] : [];
@@ -1298,7 +1312,7 @@ function inferenceCandidates(configFiles, workspaceRoot) {
   for (const supplied of configFiles) {
     if (typeof supplied !== "string" || !supplied || supplied.includes("\0") || supplied.includes("\uFFFD")) continue;
     const path = nxPath(supplied), parts = path.split("/");
-    if (isAbsolute(path) || /^[A-Za-z]:/u.test(path) || parts.some(part => !part || part === "." || part === ".." || part === ".🧬semio" || POLICY.generatedDirectories.includes(part)) || path.startsWith("compose/") || path.startsWith("temp/compose/")) continue;
+    if (exampleCollectionPath(path) || isAbsolute(path) || /^[A-Za-z]:/u.test(path) || parts.some(part => !part || part === "." || part === ".." || part === ".🧬semio" || POLICY.generatedDirectories.includes(part)) || path.startsWith("compose/") || path.startsWith("temp/compose/")) continue;
     let directory = root, admitted = true;
     for (const part of parts.slice(0, -1)) {
       directory = join(directory, part);
@@ -1393,7 +1407,8 @@ function workspaceDataDirectory(workspaceRoot) {
 
 /** 🧬️ Keeps parser revisions and source identities apart from resolved project authority. */
 function moduleSourceFactCacheRoot(workspaceRoot) {
-  return join(workspaceDataDirectory(workspaceRoot), "emoji-module-source-facts", commandInputHash);
+  const root = resolve(workspaceDataDirectory(workspaceRoot), "mf");
+  return join(root, "0".repeat(64) + ".json").length <= 256 ? root : undefined;
 }
 
 const MODULE_FACT_BYTES = 1024 * 1024;
@@ -1406,6 +1421,7 @@ function moduleSourceFactIdentity(file, hash) {
 
 /** 📥️ Admits a bounded closed source fact record without granting any project target authority. */
 function readCachedModuleImports(cacheRoot, identity) {
+  if (!cacheRoot) return undefined;
   try {
     const path = join(cacheRoot, `${identity.key}.json`);
     if (statSync(path).size > MODULE_FACT_BYTES) return undefined;
@@ -1419,7 +1435,7 @@ function readCachedModuleImports(cacheRoot, identity) {
 
 /** 📤️ Persists only bounded source facts; partial cache reads simply cause a fresh parse. */
 function writeCachedModuleImports(cacheRoot, identity, imports) {
-  if (imports.length > 16384) return;
+  if (!cacheRoot || imports.length > 16384) return;
   const value = JSON.stringify({ parser: identity.parser, file: identity.file, hash: identity.hash, imports });
   if (Buffer.byteLength(value) > MODULE_FACT_BYTES) return;
   mkdirSync(cacheRoot, { recursive: true });
@@ -1657,4 +1673,4 @@ export default {
 
 export { libraryBootstrap };
 
-export const cacheInternals = { async declaredSourceInputs(...args) { await libraryBootstrap; return declaredSourceInputs(...args); }, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, async componentTargets(...args) { await libraryBootstrap; return componentTargets(...args); }, async playgroundSessionTargets(...args) { await libraryBootstrap; return playgroundSessionTargets(...args); }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets, createDependenciesImplementation, importTargetsFromSource, collectImportEdges, projectFilesToProcess, moduleSourceFactCacheRoot, nxTrackedSourceFile, walkCargoToml };
+export const cacheInternals = { inferenceCandidates, async declaredSourceInputs(...args) { await libraryBootstrap; return declaredSourceInputs(...args); }, nativeLockInputs, withWasmTooling, get runtimeComponentClosure() { return runtimeComponentClosure; }, async componentTargets(...args) { await libraryBootstrap; return componentTargets(...args); }, async playgroundSessionTargets(...args) { await libraryBootstrap; return playgroundSessionTargets(...args); }, playgroundPreparationTargets, collectPlaygroundCatalog, pluginSiteTargetsForCrate, bunLockGraph, printDocumentTargets, targetPolicy, matchesUncached, cacheableFamily, mutatingName, liveName, verifyCommand, nativeDependencies, nativeDependencyRoots, nativePreparation, withNativePreparation, cargoTargets, goDependencies, rustSourceFiles, createRustSourceCache, relativeScriptInputs, nativeTargetCommandInputs, targetScriptClosure, genericTargetCommandInputs, genericCommandFallbackInputs, generatorContractInputs, outputRootInputs, resolveOutputPath, generatorOutputCouplingInputs, projectInputs, rootCommandTargets, createDependenciesImplementation, importTargetsFromSource, collectImportEdges, projectFilesToProcess, moduleSourceFactCacheRoot, nxTrackedSourceFile, walkCargoToml };

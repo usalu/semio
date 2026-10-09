@@ -185,6 +185,7 @@ struct OperationWirePreparationFactory<P, M> {
 }
 
 impl<P: 'static, M: 'static> super::ArtifactStoreOneItemPreparationFactory<P, M> for OperationWirePreparationFactory<P, M> {
+    fn begin_batch_digest(&self,edit:&mut Option<Box<crate::os_spr::Edit<M>>>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Box<dyn super::ArtifactStoreBatchDigest<M>>,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{self.factory.begin_batch_digest(edit,grant)}
     fn operation_wire_source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> { (self.source)(mutation) }
     fn operation_schema_parts<'a>(&'a self, mutation: &'a M) -> Option<(&'a str, &'a str)> { (self.schema)(mutation) }
     fn preflight(&self, mutation: &M, lane: super::HistoryLane) -> Result<super::ArtifactStoreOneItemFootprint, String> { self.factory.preflight(mutation, lane) }

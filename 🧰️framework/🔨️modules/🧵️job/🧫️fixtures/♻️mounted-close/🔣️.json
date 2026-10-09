@@ -1,0 +1,199 @@
+{
+  "contract": "semio.job.mounted-physical-close.v1",
+  "maximumTurns": 64,
+  "perTurnItems": 1,
+  "livenessMilliseconds": 30000,
+  "phases": [
+    "BeginClose",
+    "PreadmittedFault",
+    "Job",
+    "JobRelease",
+    "ParamsRelease",
+    "PayloadLedger",
+    "AuthorityRelease",
+    "SessionArc",
+    "RetirementSlot",
+    "Empty"
+  ],
+  "profiles": [
+    {
+      "wordBytes": 8,
+      "turns": [
+        {
+          "phase": "BeginClose",
+          "next": "PreadmittedFault",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "PreadmittedFault",
+          "next": "PreadmittedFault",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 16384
+          }
+        },
+        {
+          "phase": "PreadmittedFault",
+          "next": "PreadmittedFault",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "PreadmittedFault",
+          "next": "Job",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 1,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "Job",
+          "next": "Job",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 1
+          }
+        },
+        {
+          "phase": "Job",
+          "next": "JobRelease",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "JobRelease",
+          "next": "ParamsRelease",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 1,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "ParamsRelease",
+          "next": "ParamsRelease",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 176,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "ParamsRelease",
+          "next": "ParamsRelease",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 56,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 64
+          }
+        },
+        {
+          "phase": "ParamsRelease",
+          "next": "ParamsRelease",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 56,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "ParamsRelease",
+          "next": "PayloadLedger",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 64,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        {
+          "phase": "PayloadLedger",
+          "next": "AuthorityRelease",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 8,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 128
+          }
+        },
+        {
+          "phase": "AuthorityRelease",
+          "next": "SessionArc",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 24,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 21080
+          }
+        },
+        {
+          "phase": "SessionArc",
+          "next": "RetirementSlot",
+          "kind": "pending",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 96,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 104
+          }
+        },
+        {
+          "phase": "RetirementSlot",
+          "next": "Empty",
+          "kind": "complete",
+          "receipt": {
+            "copiedItems": 1,
+            "copiedBytes": 16,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 40
+          }
+        }
+      ],
+      "totalReceipt": {
+        "copiedItems": 13,
+        "copiedBytes": 498,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 37801
+      }
+    }
+  ],
+  "authority": "independentCallerWorkerClosePolicy",
+  "deniedFaultReleaseBytes": 4096,
+  "faultPlusDomainReleaseBytes": 16385
+}

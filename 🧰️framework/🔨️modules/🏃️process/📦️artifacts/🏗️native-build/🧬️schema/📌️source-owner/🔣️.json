@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/native-build/source-owner-fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact",
+    "source",
+    "package",
+    "current",
+    "foreign",
+    "units"
+  ],
+  "properties": {
+    "artifact": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "package": {
+      "type": "string",
+      "minLength": 1
+    },
+    "current": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+\\.rs$"
+    },
+    "foreign": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+\\.rs$"
+    },
+    "units": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "current",
+          "historical"
+        ]
+      }
+    }
+  }
+}

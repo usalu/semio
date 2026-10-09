@@ -1,0 +1,21 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/📤️schema-export-entries/🦀️.rs",
+      "sha256": "2254d9524628b544e94aa3ffb6d6a3844431d5be3495a63be0633e06fee1d1b9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/📤️schema-export-entries-dump.json",
+      "sha256": "12f1b5e0e2d32f472b96901d955c65ed2672072fca5832d7d1da2d42ae34cc02"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs",
+      "sha256": "a2ea738562c7941c9fbe74050567c2afaeecce0ed47112aecc0a7b23780ff2a1"
+    },
+    {
+      "path": "📜️script.ts",
+      "sha256": "953194226790749673069f04a000449066091ed54bf5a1330dd7df006bfd481b"
+    }
+  ]
+}

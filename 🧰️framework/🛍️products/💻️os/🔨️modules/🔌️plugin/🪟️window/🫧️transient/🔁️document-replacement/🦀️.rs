@@ -23,39 +23,42 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.cache = None;
     }
 
-    /// ♻️ A CLOSING app hands the displaced registries the caller's whole page grant; a LIVE one hands
-    /// them one owner per step.
-    ///
-    /// The asymmetry is the measurement, not a preference. Live: a displaced generation still backs the
-    /// preview an example switch is reading through, and retiring a whole registry in one maintenance
-    /// step empties it — `switching_active_example_changes_preview_meshes` goes red with `[]` meshes
-    /// (measured 2026-09-12, ticket 26/09/09). Closing: nothing reads it any more, and one item per
-    /// step is both a browser worker round trip per retained window transient AND a ladder that answers
-    /// `Pending { 0, 0 }` whenever the next owner needs more than one item — eight of those in a row and
-    /// the structural accountant kills the close with `plugin.internal.zero-progress`, which is exactly
-    /// what the close-cost fixture's eight-document session reproduces.
-    fn retire_document_windows_step(&mut self, maximum_items: usize, maximum_bytes: usize, closing: bool) -> Result<PluginCloseStep, Fault> {
+    /// 🪟️ Preserves the caller's original full policy through every displaced document generation.
+    fn retire_document_windows_step(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
         let cursor = if closing { &mut self.close_window_retirement_cursor } else { &mut self.maintenance_window_retirement_cursor };
-        let grant = if closing { maximum_items } else { maximum_items.min(1) };
-        retire_document_window_registry_step(&mut self.retired_window_transient_stores, cursor, grant, maximum_bytes)
+        retire_document_window_registry_step(&mut self.retired_window_transient_stores, cursor, grant, closing)
     }
 }
 
 /// ♻️ Advances one displaced document's windows fairly even while another owner is blocked.
-fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: &mut usize, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-    if maximum_items == 0 {
-        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+    let demand=retire_document_window_registry_demands(registries,*cursor,grant.maximum_copy_bytes,closing).map_err(|error|plugin_sdk_fault(error.into_message()))?;
+    if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
+    let Some((index,generation))=registries.next_id_from(*cursor)else{
+        if demand.release_bytes==0{return Ok(PluginLifecycleStep::Complete(Default::default()));}
+        registries.slots=Box::default();registries.allocation_admitted=false;
+        return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}));
+    };
+    let retired=registries.get_mut(generation).expect("selected original window transient generation remains owned");
+    if retired.terminal_is_empty(){
+        drop(registries.remove(generation));*cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
+        return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));
     }
-    let Some((index, generation)) = registries.next_id_from(*cursor) else { return Ok(PluginCloseStep::Complete) };
-    *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-    let retired = registries.get_mut(generation).expect("selected window transient retirement remains owned");
-    let step = retired.close_step(maximum_items, maximum_bytes)?;
-    if step != PluginCloseStep::Complete {
-        return Ok(step);
+    let step=retired.close_step(grant)?;
+    if step.progress().is_some_and(|progress|!progress.fits(grant))||matches!(step,PluginLifecycleStep::Complete(_))&&!retired.terminal_is_empty(){return Err(plugin_sdk_fault("displaced window transient violated its original grant or terminal ownership"));}
+    if step.progress().is_none_or(|progress|progress==RetainedCloneProgress::default()){
+        let bytes=std::mem::size_of::<usize>();
+        if grant.maximum_copy_bytes<bytes{return Ok(step);}
+        *cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
+        return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
     }
-    if !retired.terminal_is_empty() {
-        return Err(plugin_sdk_fault("document window transient retirement reported complete with live owners"));
-    }
-    drop(registries.remove(generation));
-    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+    *cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
+    Ok(match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step})
+}
+
+/// 📏️ Borrows one original generation or its exact final empty registry allocation.
+fn retire_document_window_registry_demands(registries:&ArtifactFixedRegistry<WindowTransientOwnerRegistry>,cursor:usize,body:usize,closing:bool)->Result<RetirementDemand,ValueError>{
+    if let Some((_,generation))=registries.next_id_from(cursor){let original=registries.get(generation).expect("selected original window transient generation remains owned");return if original.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<WindowTransientOwnerRegistry>(),depth:1,..Default::default()})}else{original.retirement_demands(body)};}
+    let release_bytes=if closing{registries.empty_backing_byte_demand().unwrap_or(0)}else{0};
+    Ok(RetirementDemand{release_bytes,depth:usize::from(release_bytes!=0),..Default::default()})
 }

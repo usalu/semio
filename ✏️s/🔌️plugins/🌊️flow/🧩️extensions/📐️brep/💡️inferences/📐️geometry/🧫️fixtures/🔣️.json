@@ -9,7 +9,14 @@
     "budget": 1,
     "wallMicros": 1,
     "dependencyJson": "{\"widgets\":{\"box\":{\"operatorId\":\"brep.prim3d.box\",\"params\":{\"width\":{\"$schema\":\"number\",\"value\":2},\"depth\":{\"$schema\":\"number\",\"value\":3},\"height\":{\"$schema\":\"number\",\"value\":4}}}},\"synapses\":{}}",
-    "operatorVersion": "1"
+    "operatorVersion": "1",
+    "retained": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 128,
+      "maximumCapacityBytes": 67108864,
+      "maximumReleaseBytes": 67108864,
+      "maximumDepth": 256
+    }
   },
   "expected": {
     "done": true,
@@ -24,7 +31,14 @@
   "changedDependencies": {
     "dependencyJson": "{\"widgets\":{\"box\":{\"operatorId\":\"brep.prim3d.box\",\"params\":{\"width\":{\"$schema\":\"number\",\"value\":5},\"depth\":{\"$schema\":\"number\",\"value\":3},\"height\":{\"$schema\":\"number\",\"value\":4}}}},\"synapses\":{}}"
   },
-  "replacement": {"pendingPhases":["retire-invalidated","restart-admission"],"outputJson":"","initialUnits":1},
+  "replacement": {
+    "pendingPhases": [
+      "retire-invalidated",
+      "restart-admission"
+    ],
+    "outputJson": "",
+    "initialUnits": 1
+  },
   "expectedVolume": 24,
   "changedVolume": 60
 }

@@ -1,0 +1,63 @@
+{
+  "executed": false,
+  "authored": false,
+  "references": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "8e1f3b5472c209a987cc42f0fc8f6cd33212aba5a53bbde96134679db8dc53ba",
+      "authored": false,
+      "oldReferences": 0,
+      "currentReferences": 8,
+      "testPath": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "3a27be8be4fffe18f2275062b81ce6cb352a74473a5f9dba6be0cda28a4d133d",
+      "authored": false,
+      "oldReferences": 0,
+      "currentReferences": 3,
+      "testPath": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "248afaed3e89d75b4f1b07dc8606d4e7e5375116c15dc3e86bc663bb84e9c158",
+      "authored": false,
+      "oldReferences": 0,
+      "currentReferences": 11,
+      "testPath": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+      "sha256": "60c3efca80e90e4ad1e344c3aaacdee3a18d63e6ce263cfb807be88adb6ac91f",
+      "authored": false,
+      "oldReferences": 0,
+      "currentReferences": 24,
+      "testPath": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+      "sha256": "6c020b0dab74b57b9bf1f6aabe2cdb6077972136fdf602b3a1bf1f4f48415077",
+      "authored": false,
+      "oldReferences": 0,
+      "currentReferences": 10,
+      "testPath": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "4c93909ef3a155b544a62f931a6e75d9b75502eec217aa84141244c5e222dd4a",
+      "authored": false,
+      "oldReferences": 0,
+      "currentReferences": 6,
+      "testPath": true
+    }
+  ],
+  "policy": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  },
+  "fixturePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json",
+  "fixtureSha256": "a652fe434b049aef56ce3b927d4e97b4c0f3246f13f0caefe7062812c4242904"
+}

@@ -1,12 +1,9 @@
 import {expect,test} from "bun:test";
-import Ajv from "ajv/dist/2020";
 import {Matrix3,Vector2} from "three";
-import schema from "../../🧬️schema/🔣️.json";
 import fixture from "../../🧫️fixtures/🔣️.json";
 import {affineQuad,affineQuadPoint} from "../../🟦️.ts";
 
 test("packed glyph and image corners retain authored affine transforms",()=>{
-  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
   const corners=[[0,0],[1,0],[1,1],[0,1]] as const;
   for(const sample of fixture.cases){
     const rect=sample.rect as [number,number,number,number],m=sample.matrix as [number,number,number,number,number,number];

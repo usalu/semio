@@ -1,0 +1,7 @@
+# Staged Publisher Law Review
+
+At this Source cut the actual publisher and policy property are absent; the new original test is staged. No RED/GREEN result is inferred. The language-neutral collection vectors feed actual Nx hasher and independent minimatch; core publisher law uses installed ignore and genuine cache policy Ajv. It proves pattern selection, not a newly executed core graph.
+
+Existing coverage checks required policy fields, invalid names, all three actual manifest basenames, exact module/nested collection vectors, unrelated ignore prefix, idempotence, progress callback and pre-aborted no-write. Required next precise cases: mid-scan cancellation leaves bytes unchanged; symlinked ancestor/file excluded; stale exception removed after original manifest removal; gitignore metacharacter literal paths escaped; concurrent user ignore modification detected before publication. None requires an example Schema authority.
+
+Publisher should run inside NxScript.run before provision and every own graph/watch child spawn; import.meta.main-only publication leaves imported callers unguarded. Direct Node/private helper invocation is scoped independently. Schema-first fixed names/moduleMember/manifestBasenames belongs to genuine NxCachePolicy, not plain corpus definition. Preserve original ignore section and deterministic real-file ancestry/current hash publication. These are planned requirements until actual Source/receipts settle.

@@ -554,6 +554,12 @@ impl BezPath {
     pub fn elements(&self) -> Vec<PathEl> {
         self.elements.clone()
     }
+    /// 🫴️ Borrows the original path storage without allocating an element copy.
+    pub fn elements_slice(&self) -> &[PathEl] { &self.elements }
+    /// 📥️ Retains the supplied original element allocation without rebuilding it.
+    pub fn from_elements(elements: Vec<PathEl>) -> Self { Self { elements } }
+    /// 📤️ Transfers the exact original allocation with its pointer, capacity and order intact.
+    pub fn into_elements(self) -> Vec<PathEl> { self.elements }
     /// 🧮️ Tight bounding box — the union of every [`PathSeg::tight_bounds`] (analytic per-axis
     /// extrema, not the loose control-point box), matching `kurbo::Shape::bounding_box`'s own
     /// exactness for the element kinds [`PathEl`] can hold. See `bezpath_tests`'s differential

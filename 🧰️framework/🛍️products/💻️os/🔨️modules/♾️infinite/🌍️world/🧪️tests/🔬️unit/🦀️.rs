@@ -4,7 +4,7 @@ use ui_wgpu::wgpu::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene,
 impl Drop for World3dState {
     fn drop(&mut self) {
         for _ in 0..16_384 {
-            if !step_world3d_scene_bridge_close(self) { return; }
+            if !with_world_step_context(1,|context|step_world3d_scene_bridge_close(self,context)) { return; }
         }
         assert!(std::thread::panicking(), "test fixture retained an original scene bridge owner after its close ceiling");
     }
@@ -117,15 +117,20 @@ fn assert_send<T: Send>() {}
 
 pub(super) fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
     let mut sequence = 0;
+    let grant=world_original_fixture_grant();
+    let mut receipt=semio_framework_value::RetainedCloneProgress::default();
     let mut context = semio_framework_job::StepContext::new(
         semio_framework_job::OperationId(1),
         semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX),
+        semio_framework_job::StepBudget::new(fuel, u64::MAX,grant),
         semio_framework_job::root_cancel_token(),
         semio_framework_job::default_now_us,
         &mut sequence,
+        &mut receipt,
     );
-    step(&mut context)
+    let result=step(&mut context);
+    assert!(context.retained_progress().fits(grant));
+    result
 }
 
 #[test]
@@ -1940,22 +1945,23 @@ fn an_appended_world_scene_raster_keeps_its_exact_pool_lease() {
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     let mut job = ui_wgpu::wgpu::PreparedRenderJob::try_new(input).ok().expect("prepared job admitted");
     let mut preview = 0;
-    let outcome = semio_framework_job::drive_step(
+    let (outcome,receipt) = semio_framework_job::drive_step(
         &mut job,
         "world.prepare",
         semio_framework_job::OperationId(1),
         semio_framework_job::Generation(2),
         semio_framework_job::InteractiveStage::BackgroundStep,
-        semio_framework_job::StepBudget::new(4, u64::MAX),
+        semio_framework_job::StepBudget::new(4, u64::MAX,world_original_fixture_grant()),
         semio_framework_job::root_cancel_token(),
         semio_framework_job::default_now_us,
         &mut preview,
         &mut None,
     );
+    assert!(receipt.fits(world_original_fixture_grant()));
     assert!(matches!(outcome, semio_framework_job::StepOutcome::Yield), "a bound producer keeps the preparation alive");
     assert_eq!(job.fault(), None, "the prepared job never refuses this lane's own producer");
     job.begin_close();
-    while !matches!(InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {}
+    while !matches!(InteractiveJob::close_step(&mut job, world_original_fixture_grant()), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {}
 }
 
 /// 🖼️ The reference underlay is OFFERED, never given away, and a refused admission is back-pressure
@@ -2029,7 +2035,7 @@ fn six_reference_gpu_residents_progress_through_two_cpu_slots_and_a_lost_texture
         drop(input);
         let mut retired = false;
         for _ in 0..64 {
-            if ui_wgpu::wgpu::PreparedRenderInput::close_abandoned_step() {
+            if matches!(ui_wgpu::wgpu::PreparedRenderInput::close_abandoned_step(world_original_fixture_grant()),semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
                 retired = true;
                 break;
             }
@@ -4597,7 +4603,7 @@ pub(super) fn drive_scene_bridge(state: &mut World3dState, scene: &UiComponentSc
         assert_ne!(draw_step, WorldDrawRebuildStep::Fault, "draw retirement faulted on turn {turn}");
         let bridge_step = with_world_step_context(64, |context| step_world3d_scene_bridge(state, context));
         assert_ne!(bridge_step, World3dSceneBridgeStep::Fault, "bridge retirement faulted on turn {turn}");
-        if world3d_draw_rebuild_terminal_is_empty(state) && state.scene_bridge_retired.is_none() {
+        if world3d_draw_rebuild_terminal_is_empty(state) && state.scene_bridge_retired.is_none() && state.scene_bridge_close.is_none() && state.scene_bridge.is_none() {
             break;
         }
         assert!(turn < 4_095, "scene bridge retirement did not complete within its turn ceiling");
@@ -7416,13 +7422,13 @@ fn render_on_gpu(scene: &UiComponentSceneNode, state: &mut World3dState, theme: 
             mut outcome @ StepOutcome::Complete(_) => {
                 packet = job.take_packet();
                 InteractiveJob::begin_close(&mut job);
-                while outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) != semio_framework_job::JobPayloadCloseStep::Complete {}
+                while !outcome.terminal_is_empty(){let step=outcome.close_step(world_original_fixture_grant()).expect("original prepared outcome close");assert!(step.progress().fits(world_original_fixture_grant()));}
                 break;
             }
             other => panic!("prepared job ended in {other:?}: {:?}", job.fault()),
         }
     }
-    while !PreparedRenderJob::close_step(&mut job) {}
+    while !matches!(PreparedRenderJob::close_step(&mut job,world_original_fixture_grant()),semio_framework_job::InteractiveJobCloseStep::Complete{..}) {}
     let mut packet = packet.expect("a prepared packet");
     let mut gpu = source.offscreen(size, size).expect("offscreen target");
     gpu.begin_prepared(&UiPresentToken::mint_for_current_thread(), &PreparedRenderGate::default(), &packet, packet.scene_revision(), packet.preview_generation()).expect("packet admitted");
@@ -7456,7 +7462,7 @@ fn render_on_gpu(scene: &UiComponentSceneNode, state: &mut World3dState, theme: 
     while !gpu.close_mesh_upload_step() {}
     while !gpu.close_raster_table_step().expect("raster table") {}
     while !gpu.close_mesh_table_step() {}
-    while !packet.retire_step() {}
+    while !packet.retirement_is_empty(){let step=packet.close_step(world_original_fixture_grant());assert!(step.progress().fits(world_original_fixture_grant()));}
     Some(rgba)
 }
 
@@ -7619,4 +7625,80 @@ fn terrain_retirement_zero_grant_preserves_original_owner_without_bool_bridge() 
     begin_world3d_dynamic_retirement(&mut state);
     for _ in 0..8192 {if with_world_step_context(1,|context|terrain_test_retire_then_dynamic(&mut state,context)){break;}}
     assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
+}
+
+#[test]
+fn scalar_attribute_slot_retirement_keeps_original_backing_until_mesh_owner_close(){
+    use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
+    use crate::os_spr::causal::transition::HistoryFoldIndex;
+    use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️retained-attributes.json")).unwrap();
+    let reference:Vec<(String,String)>=serde_json::from_value(law["input"].clone()).unwrap();
+    let(mut original,birth)=observe(||HistoryFoldIndex::<String,String>::from_iter(reference.iter().cloned()));
+    assert_eq!(birth.released_bytes,0);
+    assert!(birth.requested_bytes<=world_original_fixture_grant().maximum_capacity_bytes);
+    let pointers:Vec<_>=original.slot_entries_mut().map(|(key,value)|(key.as_ptr(),value.as_ptr())).collect();
+    let mut independent=std::collections::BTreeMap::from_iter(reference);
+    independent.retain(|_,value|value.starts_with("keep"));
+    let grant=world_original_fixture_grant();
+    for slot in 0..original.slot_count(){
+        let remove=!original.slot_entry(slot).unwrap().1.starts_with("keep");
+        let mut denied=vec![RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}];
+        if remove{denied.push(RetainedCloneGrant{maximum_copy_bytes:std::mem::size_of::<(String,String)>()-1,..grant});}
+        for denied in denied{let(receipt,heap)=observe(||original.retire_slot_if(slot,|_,value|value.starts_with("keep"),denied).unwrap());assert_eq!(receipt,RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+        let(receipt,heap)=observe(||original.retire_slot_if(slot,|_,value|value.starts_with("keep"),grant).unwrap());assert!(receipt.fits(grant));assert_eq!(receipt.copied_bytes,if remove{std::mem::size_of::<(String,String)>()}else{0});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        if remove{let(receipt,heap)=observe(||original.retire_slot_if(slot,|_,_|false,grant).unwrap());assert_eq!(receipt,RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+    }
+    let active:Vec<_>=original.iter().map(|(key,value)|(key,value)).collect();
+    assert_eq!(serde_json::to_value(&active).unwrap(),law["active"]);
+    assert_eq!(serde_json::to_value(&active).unwrap(),serde_json::to_value(independent.into_iter().collect::<Vec<_>>()).unwrap());
+    assert_eq!((0..original.slot_count()).map(|slot|{let(key,value)=original.retained_slot_entry(slot).unwrap();(key.as_ptr(),value.as_ptr())}).collect::<Vec<_>>(),pointers);
+    let slots=original.slot_count();
+    let((key,value),incoming)=observe(||(String::from("e"),String::from("keep-e")));
+    let(reservation,backing)=observe(||original.reserve_insert_step(&key,grant).unwrap());assert!(reservation.fits(grant));assert_eq!((backing.requested_bytes,backing.released_bytes),(reservation.retained_capacity_bytes,reservation.released_bytes));
+    let((previous,receipt),movement)=observe(||original.insert_reserved(key,value,grant).unwrap_or_else(|_|panic!("original admitted append")));assert!(previous.is_none());assert!(receipt.fits(grant));assert_eq!((movement.requested_bytes,movement.released_bytes),(0,0));assert_eq!(original.slot_count(),slots+1);
+    assert_eq!((0..slots).map(|slot|{let(key,value)=original.retained_slot_entry(slot).unwrap();(key.as_ptr(),value.as_ptr())}).collect::<Vec<_>>(),pointers);
+    let(mut owner,handoff)=observe(||ControlledRetirement::new(original).unwrap_or_else(|_|panic!("original native attribute index has controlled authority")));
+    assert_eq!((handoff.requested_bytes,handoff.released_bytes),(law["handoffBirthBytes"].as_u64().unwrap()as usize,law["handoffReleaseBytes"].as_u64().unwrap()as usize));
+    let(mut born,mut released,mut turns)=(birth.requested_bytes+incoming.requested_bytes+backing.requested_bytes,incoming.released_bytes+backing.released_bytes,0);
+    while !owner.terminal_is_empty(){let(step,heap)=observe(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<16384);}
+    assert_eq!(born,released);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    eprintln!("[DEBUG] original retained attribute slots preserved all pointers and funded teardown conserved {born} bytes in {turns} turns");
+}
+
+fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️retained-attributes.json")).unwrap();let axes=&law["grant"];
+    semio_framework_value::RetainedCloneGrant{maximum_items:axes["items"].as_u64().unwrap()as usize,maximum_copy_bytes:axes["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:axes["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:axes["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:axes["depth"].as_u64().unwrap()as usize}
+}
+
+fn world3d_apply_scalar_field(data:&mut WorldMeshBuffers,field:&ui_wgpu::wgpu::World3dScalarField)->bool{
+    if !world3d_scalar_field_fits(data,field){return false;}
+    for slot in 0..data.attributes.slot_count(){let progress=data.attributes.retire_slot_if(slot,|_,attribute|attribute.semantic!=semio_framework::MeshAttributeSemantic::Color,world_original_fixture_grant()).unwrap();assert_eq!(progress.copied_items,1);}
+    world3d_apply_scalar_field_colors(data,field);true
+}
+
+#[test]
+fn scene_bridge_cursor_close_preserves_original_mesh_attribute_custody_and_physical_receipts(){
+    use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+    let mut state=World3dState::new("surface".into(),"controller".into());
+    let(cursor,birth)=observe(||{
+        let mut mesh=WorldMeshBuffers::default();
+        mesh.attributes.insert("original-color".into(),semio_framework::MeshAttribute{domain:semio_framework::MeshAttributeDomain::Vertex,semantic:semio_framework::MeshAttributeSemantic::Color,interpolation:semio_framework::MeshAttributeInterpolation::Linear,values:vec![semio_framework_value::DslValue::String("original native payload".into())],indices:Some(vec![0])});
+        World3dSceneBridgeCursor{digest:1,camera_digest:1,meshes_json:"original wire".into(),instances_json:"[]".into(),camera_json:"{}".into(),camera_changed:false,phase:World3dSceneBridgePhase::ScalarAttributes,meshes:vec![World3dSceneMeshEntry{id:"mesh".into(),data:mesh,url:None,kind:None}],instances:Vec::new(),camera:None,mesh_cursor:0,scalar_mesh_cursor:0,scalar_slot_cursor:0,retiring_mesh:false,mesh_digest:None,scalar_field:None}
+    });
+    assert_eq!(birth.released_bytes,0);
+    assert!(birth.requested_bytes<=world_original_fixture_grant().maximum_capacity_bytes);
+    let pointer=cursor.meshes[0].data.attributes.slot_entry(0).unwrap().1.values.as_ptr();state.scene_bridge=Some(cursor);
+    let grant=world_original_fixture_grant();
+    let(progress,removal)=observe(||state.scene_bridge.as_mut().unwrap().meshes[0].data.attributes.retire_slot_if(0,|_,_|false,grant).unwrap());assert_eq!(progress.copied_bytes,std::mem::size_of::<(String,semio_framework::MeshAttribute)>());assert_eq!((removal.requested_bytes,removal.released_bytes),(0,0));
+    assert_eq!(state.scene_bridge.as_ref().unwrap().meshes[0].data.attributes.retained_slot_entry(0).unwrap().1.values.as_ptr(),pointer);
+    let mut zero=semio_framework_value::RetainedCloneProgress::default();let mut sequence=0;
+    let mut context=semio_framework_job::StepContext::new(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX,semio_framework_value::RetainedCloneGrant::default()),semio_framework_job::root_cancel_token(),semio_framework_job::default_now_us,&mut sequence,&mut zero);
+    let(_,heap)=observe(||step_world3d_scene_bridge_close(&mut state,&mut context));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(state.scene_bridge.is_some());assert!(state.scene_bridge_close.is_none());
+    let(mut born,mut released,mut turns)=(birth.requested_bytes,0,0);
+    while state.scene_bridge.is_some()||state.scene_bridge_close.is_some(){
+        let(receipt,heap)=with_world_step_context(1,|context|{let(_,heap)=observe(||step_world3d_scene_bridge_close(&mut state,context));(context.retained_progress(),heap)});
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<16384);
+    }
+    assert_eq!(born,released);eprintln!("[DEBUG] original scene cursor funded close conserves {born} physical bytes and original mesh attribute backing in {turns} turns");
 }

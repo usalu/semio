@@ -1,0 +1,29 @@
+{
+  "path": "📥️isolated-verification/📜️script.ts",
+  "beforeSha256": "437a19c7ffb42fbb6be01ae84b24b5b8c78c8c274df4652dd2fe8156eed42fc0",
+  "afterSha256": "7f7be404901fb0be26e72ba0e7223b860feffd4ec0d263c4909450a7d119a768",
+  "wholeTrialPaths": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🔐️lifecycle/🔣️.json",
+    "🧫️fixtures/🧫️diff-only-law-gate/🫧️lanes/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️schema/🧺️heap.json",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/📦️full-receipt/🔣️.json",
+    "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🧮️expression/📏️kinds/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🧮️expression/🕸️parameters/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🧮️expression/🧮️evaluation/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🧵️job/🧬️schema/📇️fixed-operation/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧬️schema/♻️retirement/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-allocation-close/🔣️.json"
+  ],
+  "action": "Extend only existing current physical guard before retiring exact whole-trial authorities; preserve original behavior dispatcher."
+}

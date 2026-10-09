@@ -1,0 +1,40 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧪️tests/🧪️cold-pair-loading/🟦️.ts",
+      "beforeSHA": "3c8bf2413638f9862d7362aa7c6d78efb49d747e20700a98c2e34f95727df477",
+      "recordedAfterSHA": "0f73061514eeba4094157ffa4a7f93ba76d1bbbdd54202343ddf841deb33a767",
+      "logicalActions": [
+        "Use genuine static plain-example JSON module import in test registration; remove file-only Node IO applied to Vite transformed asset URL. Preserve all transport dependencies, cases and independent fast-check laws."
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️backbone-parity/🟦️.ts",
+      "beforeSHA": "be71e837d09063c0e9bc857cc0c82a15772772171d0c5d4ea25635f16177d0b8",
+      "recordedAfterSHA": "140eccd9fe9014446ff09d1c13ad860438573cdc8ac1a612b0cb2b07253f5f62",
+      "logicalActions": [
+        "Use actual explicitly owned parity plain-example JSON module instead of file-only URL and directory-name search during Vitest registration. Preserve all transport/protocol tests.",
+        "Remove unused test-only source URL parameter; caller updated directly without compatibility API."
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+      "beforeSHA": "0935dd2136883f976c720fee92cd07a3570d0976a12ae31dbeb2cfe86568ff85",
+      "recordedAfterSHA": "2642ab290d3e31dc0070aebd0ae13d3afe488d3ac714146993c12b6f87635c5e",
+      "logicalActions": [
+        "Remove unused source URL argument from exact test-only parity registration call; no production worker body changes."
+      ]
+    }
+  ],
+  "plainFixtureObservation": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧫️fixtures/🧫️cold-pair-loading/🔣️.json",
+    "sha256": "7f335ad355cb89d1f8b416909d4f090bee924e5cd9389f869a4ddfd74385abb3"
+  },
+  "sourceCopiesAdded": false,
+  "actualRed": "74679 normal artifact-creation-progress-check Nx1/12.6s ERR_INVALID_URL_SCHEME cold pair test registration; selected opening3 laws pass",
+  "parityPlainFixtureObservation": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚖️parity/🧫️fixtures/🔣️.json",
+    "sha256": "b4a8666229ced80dc0cb291929fd2bf51aa3ee2e5bb3f05cd6b31e34c3ce20b6"
+  },
+  "followupActualRed": "11486 Nx1/9.4s at next real registerBackboneParityTests fileURLToPath(http asset URL), after original creation/opening3laws pass"
+}

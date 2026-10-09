@@ -1,0 +1,15 @@
+{
+  "command": "bun nx run @semio-tech/framework-time-travel-rs:test --skip-nx-cache --skip-remote-cache --excludeTaskDependencies -- long --lib --filter-expr \"test(time_travel_session_retirement)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+  "environment": {
+    "NX_DAEMON": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "NX_CACHE_PROJECT_GRAPH": "false",
+    "SEMIO_TEST_LEVEL": "quick",
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/tt-native",
+    "SEMIO_TEST_RETAIN_ARTIFACTS": "true",
+    "NEXTEST_SUCCESS_OUTPUT": "immediate",
+    "RUST_BACKTRACE": "1"
+  }
+}

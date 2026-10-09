@@ -1,0 +1,37 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+    "beforeSha256": "450f9308ef0629e2cb7b61bc0afadaf27b4a962e855c66c5ecd7de3b7e10879e",
+    "afterSha256": "94c845a5c79cc2648b0d0d8d832e95d8879b19b496371595d15695c5fbfb026e",
+    "beforeBlock": "    pub fn elements(&self) -> Vec<PathEl> {\n        self.elements.clone()\n    }",
+    "afterBlock": "    pub fn elements(&self) -> Vec<PathEl> {\n        self.elements.clone()\n    }\n    /// 🫴️ Borrows the original path storage without allocating an element copy.\n    pub fn elements_slice(&self) -> &[PathEl] { &self.elements }\n    /// 📥️ Retains the supplied original element allocation without rebuilding it.\n    pub fn from_elements(elements: Vec<PathEl>) -> Self { Self { elements } }\n    /// 📤️ Transfers the exact original allocation with its pointer, capacity and order intact.\n    pub fn into_elements(self) -> Vec<PathEl> { self.elements }",
+    "action": "Genuine first-party original owned vector ingress/borrow/transfer, existing geometry behavior preserved"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖼️canvas/♻️retirement/➰️path/🦀️.rs",
+    "action": "Created exact paid original path owner under canonical full physical contract",
+    "afterSha256": "7fee3bf98df2ed143b80021e9b07800a247c247e6e8d18bace76e43e655b146b"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+    "beforeSha256": "b5e081fdcf0077058db4dbdac9580396df26b87a335b109d0aa45f9c7783d29a",
+    "afterSha256": "1c1bfcbb18264a642a43060fa22afb8aed3ed44aa21caff5f2fcb2b151815838",
+    "beforeBlock": "pub use renderer::draw_list;",
+    "afterBlock": "pub use renderer::draw_list;\n#[path = \"♻️retirement/➰️path/🦀️.rs\"]\nmod path_retirement;\npub use path_retirement::CanvasPathRetirement;",
+    "action": "Expose genuine first-party leaf without changing Scene/Frame/backend APIs"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🦀️.rs",
+    "beforeSha256": "2d6789e0ec288b51f2ca4296a4bcaf368ec8d1d08a00579ffb3a96fa33debf34",
+    "afterSha256": "54d67c20039907b0e88aaed65545c4abd0bf8445262ac0c452883769620b68ef",
+    "beforeBlock": "pub use component::*;",
+    "afterBlock": "pub use component::*;\n#[cfg(test)]\n#[path = \"../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs\"]\nmod test_allocation;\n#[cfg(test)]\n#[global_allocator]\nstatic TEST_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;",
+    "action": "Original test binary gets single real first-party System/HeapWitness allocator"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/Cargo.toml",
+    "beforeSha256": "27f0abbfac482ace88d8f84cc0ab9d64e493a43bcf7acdd4073c8169ecd8f1c6",
+    "afterSha256": "fdd9f8bd596373ea30154729a6b3cc476908ae201f49a6286d3a0f4c26a520ad",
+    "action": "Existing first-party Trace dev dependency only; production dependencies unchanged"
+  }
+]

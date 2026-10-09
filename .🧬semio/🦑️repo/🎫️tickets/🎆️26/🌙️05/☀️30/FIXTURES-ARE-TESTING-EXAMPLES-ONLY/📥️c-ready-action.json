@@ -1,0 +1,21 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83c\udf9a\ufe0fconfig/\ud83d\udce5\ufe0fretained/\ud83e\udd80\ufe0f.rs",
+  "before": "a7ff8f6f0b64dd7152645f0be82a624c7082f7548118c8351aaed234e1d0570c",
+  "after": "9b0b40c09428fcf3686c1d801f048a9f862da1d6f2dce49ee5881f747597b73a",
+  "blocks": [
+    {
+      "before": "81623238dcfd499e94d3025bbbeea44ccd6589a0255d747c66ac718111ff720a",
+      "after": "d2683a525905be22346413e590e2e7cf859774c995938f167f4f745cdc8e28b9"
+    },
+    {
+      "before": "b951fdaff380afe4c621e421925369f87d989135c077bd3c993c70e5d5811c12",
+      "after": "95862bafe2f181b37263cb95e7beae093fe0ebf92098793dff167c428b61ea4c"
+    },
+    {
+      "before": "1627127ea35e01819ed93477f293f2d98174c23562f8b353223bce963b827a2d",
+      "after": "e146a106bb37f77d7184b0b29b6d8766cf0ea5f230f5346687616bba4fdcc344",
+      "occurrences": 2
+    }
+  ],
+  "change": "ready auxiliary String requires capacity zero; only original catalog-backed retained children require catalog before transfer; original close order preserved"
+}

@@ -5,15 +5,15 @@ use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding a
 use semio_framework_value::native_decoding::NativeDecodeControl;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
-pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SemioModelSnapshot,ValueError>{
+pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<SemioModelSnapshot,ValueError>{
  let limits=control.limits();crate::standards::v1::subsets::model::io::sqlite::snapshot::admit_layout(limits)?;
  let size=match payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Model native input exceeds file limit"))}
- control.allocation_stage(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-  let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_control=NativeDecodeControl::new(remaining,&mut callback);
+ control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
+  let native_before=native_control.owned_bytes();let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?,|native_control|{
   let result=(||->Result<SemioModelSnapshot,ValueError>{let result=match payload{
-   store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;binary(body,&mut native_control,limits)?},
-   store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,&mut native_control,limits)?}
-  };let result=native::Owned::new(result);native_control.checkpoint()?;Ok(result.take())})();(result,native_control.owned_bytes())
+   store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control).map_err(store::semio_format::SemioError::into_value_error)?;binary(body,native_control,limits)?},
+   store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,native_control,limits)?}
+  };let result=native::Owned::new(result);native_control.checkpoint()?;Ok(result.take())})();result});(result,native_control.owned_bytes().saturating_sub(native_before))
  })?
 }
 fn f64(reader:&mut store::ByteReader<'_>)->Result<f64,ValueError>{reader.read_f64_le().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))}

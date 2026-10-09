@@ -1,0 +1,11 @@
+{
+  "session": 64107,
+  "nxExit": 1,
+  "duration": "1m8s",
+  "actualGate": "workspace:runtime-fixture-graph",
+  "failure": "Prepared manifest changed: original UI Rust Cargo.toml",
+  "compilerArtifacts": null,
+  "graphs": [],
+  "runtimePurity": false,
+  "nativeAssertionsCredit": 0
+}

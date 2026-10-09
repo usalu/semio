@@ -10,10 +10,6 @@ fn copy_grant(bytes: usize) -> crate::os_store::ArtifactStoreOneItemGrant {
     crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
 }
 
-fn demanded_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
-    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
-}
-
 fn hex(value: &str) -> Vec<u8> {
     value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
 }
@@ -53,7 +49,7 @@ fn member(value: &serde_json::Value) -> DurableOwnedGroupMemberV1 {
 }
 
 fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_revision: [u8; 32], ordinal: u64) -> (ArtifactStoreOneItemPrepared<DslValue, String>, DurableStorePreparedOutcomeV1) {
-    let actor = format!("map-owner-{role}");
+    let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{role}"), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
     let next_clock = HybridLogicalTimestamp { actor: ordinal, physical_ms: 1_000 + ordinal, logical: ordinal + 1 };
     let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
         operation: semio_framework_job::OperationId(100 + ordinal),
@@ -134,7 +130,7 @@ async fn owned_store(id: &str, dialect: semio_framework_artifact_reference::Arti
 }
 
 fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u64, next: i32) -> ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation> {
-    let actor = format!("map-owner-{ordinal}");
+    let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal}"), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
     let next_clock = HybridLogicalTimestamp { actor: ordinal, physical_ms: 2_000 + ordinal, logical: ordinal + 1 };
     let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
         operation: semio_framework_job::OperationId(200 + ordinal),
@@ -189,7 +185,7 @@ async fn owned_three_stores() -> (ArtifactStore<DemoSnapshot, DemoMutation>, Art
 
 fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
     for _ in 0..4_096 {
-        let grant = demanded_grant(crate::os_store::SpaceMember::close_owned_demands(store, 512).expect("durable group fixture Store quotes its bounded owner demand"));
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: 512, ..crate::os_store::component::tests::physical_test_close_grant() };
         let step = crate::os_store::SpaceMember::close_owned_step(store, grant).expect("durable group fixture Store closes under its bounded owner grant");
         if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             assert!(crate::os_store::SpaceMember::close_owned_terminal_is_empty(store));
@@ -210,8 +206,7 @@ async fn assert_erased_snapshot_authority(store: &mut ArtifactStore<DemoSnapshot
     let (retirement, _) = crate::os_store::SpaceMember::retire_snapshot_read_erased(store, &mut read, birth).unwrap_or_else(|_| panic!("erased group read returns to its exact Store"));
     let mut retirement = retirement.expect("erased group read retirement is born under its funded grant");
     for _ in 0..64 {
-        let demand = semio_framework_value::RetirementDemand { copy_bytes: retirement.next_copy_byte_demand().unwrap(), capacity_bytes: retirement.next_capacity_byte_demand(4096).unwrap(), release_bytes: retirement.next_release_byte_demand().unwrap(), depth: retirement.next_depth_demand().unwrap() };
-        if matches!(retirement.close_step(demanded_grant(demand)).expect("erased group read retirement remains infallible"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+        if matches!(retirement.close_step(crate::os_store::component::tests::physical_test_close_grant()).expect("erased group read retirement remains infallible"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             assert!(retirement.terminal_is_empty());
             return;
         }
@@ -255,7 +250,7 @@ struct FakeJournalSink {
 
 struct FakeJournalCommit {
     resolution: FakeJournalResolution,
-    state: Arc<std::sync::Mutex<FakeJournalState>>,
+    state: Option<Arc<std::sync::Mutex<FakeJournalState>>>,
     decision_sha256: String,
     anchor_sha256: String,
     close_started: bool,
@@ -269,7 +264,7 @@ impl DurableOwnedGroupJournalSinkV1 for FakeJournalSink {
         state.begins += 1;
         state.decision_pack = decision_pack;
         drop(state);
-        Box::new(FakeJournalCommit { resolution: self.resolution, state: Arc::clone(&self.state), decision_sha256, anchor_sha256: decision.anchor_sha256, close_started: false })
+        Box::new(FakeJournalCommit { resolution: self.resolution, state: Some(Arc::clone(&self.state)), decision_sha256, anchor_sha256: decision.anchor_sha256, close_started: false })
     }
 }
 
@@ -278,7 +273,7 @@ impl DurableOwnedGroupJournalCommitV1 for FakeJournalCommit {
         if !grant.permits_one() {
             return Ok(DurableOwnedGroupJournalAdvanceV1::Pending);
         }
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.as_ref().unwrap().lock().unwrap();
         state.advances += 1;
         if state.advances == 1 {
             return Ok(DurableOwnedGroupJournalAdvanceV1::Pending);
@@ -304,23 +299,91 @@ impl DurableOwnedGroupJournalCommitV1 for FakeJournalCommit {
     }
 
     fn cancel(&mut self) {
-        self.state.lock().unwrap().cancelled = true;
+        self.state.as_ref().unwrap().lock().unwrap().cancelled = true;
     }
 
     fn begin_close(&mut self) {
-        self.state.lock().unwrap().close_count += 1;
+        self.state.as_ref().unwrap().lock().unwrap().close_count += 1;
         self.close_started = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
-        if !self.close_started || grant.maximum_items == 0 {
-            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
-        }
-        Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))
+    fn retirement_demands(&self, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let release_bytes = if self.decision_sha256.capacity() != 0 { self.decision_sha256.capacity() } else if self.anchor_sha256.capacity() != 0 { self.anchor_sha256.capacity() } else if self.state.as_ref().is_some_and(|state| Arc::strong_count(state) < 2) { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "journal fixture retains its original observer authority")); } else { 0 };
+        Ok(semio_framework_value::RetirementDemand { release_bytes, depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.close_started
+ }
+
+impl semio_framework_value::ErasedSnapshotRetirement for FakeJournalCommit {
+    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.depth) }
+
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if !self.close_started || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if self.decision_sha256.capacity() != 0 { drop(std::mem::take(&mut self.decision_sha256)); }
+        else if self.anchor_sha256.capacity() != 0 { drop(std::mem::take(&mut self.anchor_sha256)); }
+        else { drop(self.state.take()); }
+        let progress = RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() };
+        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+    }
+
+    fn terminal_is_empty(&self) -> bool { self.close_started && self.decision_sha256.capacity() == 0 && self.anchor_sha256.capacity() == 0 && self.state.is_none() }
+
+}
+
+#[test]
+fn durable_journal_close_preserves_original_capacities_and_exact_receipts() {
+    use semio_framework_value::{RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../♻️journal/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
+        let mut decision = String::with_capacity(row["decisionCapacity"].as_u64().unwrap() as usize);
+        decision.push_str(row["decision"].as_str().unwrap());
+        let mut anchor = String::with_capacity(row["anchorCapacity"].as_u64().unwrap() as usize);
+        anchor.push_str(row["anchor"].as_str().unwrap());
+        let original = (decision.as_ptr(), anchor.as_ptr());
+        let physical = decision.capacity() + anchor.capacity() + std::mem::size_of::<FakeJournalCommit>();
+        let mut owner: Option<Box<dyn DurableOwnedGroupJournalCommitV1>> = Some(Box::new(FakeJournalCommit { resolution: FakeJournalResolution::Commit, state: Some(Arc::clone(&state)), decision_sha256: decision, anchor_sha256: anchor, close_started: false }));
+        owner.as_mut().unwrap().begin_close();
+        let frame_pointer = owner.as_ref().unwrap().as_ref() as *const dyn DurableOwnedGroupJournalCommitV1 as *const ();
+        let mut released = 0;
+        for _ in 0..fixture["maximumTurns"].as_u64().unwrap() {
+            let Some(journal) = owner.as_ref() else { break; };
+            let demand = if journal.terminal_is_empty() { RetirementDemand { release_bytes: std::mem::size_of_val(journal.as_ref()), depth: 1, ..Default::default() } } else { journal.retirement_demands(4096).unwrap() };
+            let grant = RetainedCloneGrant { maximum_copy_bytes: fixture["maximumBodyBytes"].as_u64().unwrap() as usize, ..crate::os_store::component::tests::physical_test_close_grant() };
+            let (quote, born, freed) = crate::test_allocation::observe_backing(|| journal.retirement_demands(grant.maximum_copy_bytes).unwrap());
+            assert_eq!((born, freed), (0, 0));
+            for denial in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }] {
+                let (step, born, freed) = crate::test_allocation::observe_backing(|| close_journal_owner(&mut owner, denial).unwrap());
+                assert_eq!(step.progress(), Default::default());
+                assert_eq!((born, freed), (0, 0));
+                assert_eq!(owner.as_ref().unwrap().as_ref() as *const dyn DurableOwnedGroupJournalCommitV1 as *const (), frame_pointer);
+            }
+            if demand.release_bytes != 0 {
+                let (step, born, freed) = crate::test_allocation::observe_backing(|| close_journal_owner(&mut owner, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }).unwrap());
+                assert_eq!(step.progress(), Default::default());
+                assert_eq!((born, freed), (0, 0));
+                assert_eq!(owner.as_ref().unwrap().retirement_demands(grant.maximum_copy_bytes).unwrap(), quote);
+            }
+            let (step, born, freed) = crate::test_allocation::observe_backing(|| close_journal_owner(&mut owner, grant).unwrap());
+            assert!(step.progress().fits(grant));
+            assert_eq!(born, 0);
+            assert_eq!(freed, step.progress().released_bytes);
+            released += freed;
+            if matches!(step, RetainedCloneStep::Complete(_)) { assert!(owner.is_none()); }
+        }
+        assert!(owner.is_none());
+        assert_eq!(released, physical);
+        assert_eq!(state.lock().unwrap().close_count, 1);
+        let (_, born, freed) = crate::test_allocation::observe_backing(|| drop(owner));
+        assert_eq!((born, freed), (0, 0));
+        println!("[DEBUG] durable journal case={} original-string-pointers={original:?} physical={physical} actual-release={released} zero/one-below/depth-refusal=0 new-birth=0 terminalDrop=0", row["id"]);
     }
 }
 
@@ -331,7 +394,7 @@ fn map_member_admission(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordin
         semio_framework_job::OperationId(300 + ordinal),
         store.generation_now() + u64::from(stale),
         store.content_revision_now(),
-        format!("map-owner-{ordinal}"),
+        semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal}"), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0,
         DemoMutation::SetN(SetN { n: next }),
     )
 }
@@ -809,7 +872,7 @@ async fn durable_store_group_journal_commit_flips_one_shared_root_then_adopts_ex
         let read = capture_store_owned_three_snapshot(&parent, &drawing, &value).expect("one captured group read");
         if coordinator.phase() == DurableOwnedThreeStoreCommitPhaseV1::Journal {
             assert_eq!([read.parent.n, read.drawing.n, read.value.n], [Some(0), Some(0), Some(0)]);
-            assert_eq!(parent.local_actor_id().0, fixture()["openedActor"].as_str().expect("declared opened group actor"));
+            assert_eq!(parent.local_actor_id().0.as_str(), fixture()["openedActor"].as_str().expect("declared opened group actor"));
             assert!(drawing.invalidate_after_replay().is_err());
             observed_pending = true;
         }

@@ -1,0 +1,7 @@
+# Current VCS Projection Consumer
+
+Actual original Kernel66763 failed with E0599 at current VCS test23 before native assertions. Fresh current producer now defines project_retirement_charge as a checked borrowed OriginalOperationProjection, with tagged measurement serialization. Its original source conservation and original maximum bound are checked; consuming scalar receipt rejects the projection kind. These producer/module/schema changes are observed concurrent sources, not authored or attributed here. No alias or compatibility API was created. The original failed test call now matches that genuine defining API, so no VCS Rust test mutation is needed.
+
+Added original-source/per-produced measurement oracle ran82041 Nx0/853ms1law16 assertions plus unchanged depth612. Genuine measurement and receipt schemas were compiled with Ajv2020; JSONPatch preserved original actual3 versus proposed10 without moving the original4096 ceiling. The projected DTO is rejected as a consuming receipt. Current producer/measurement/test original Rustfmt2s checks executed. Seven fresh direct observations and the single OTS action are retained; no Source copies.
+
+The previous compiler RED remains qualified to its actual source epoch. No native VCS assertion has passed in this lane; its exact original named law should join the next body/field/Root six renewal. No mutation to the current producer, test, schemas or plain fixture was performed.

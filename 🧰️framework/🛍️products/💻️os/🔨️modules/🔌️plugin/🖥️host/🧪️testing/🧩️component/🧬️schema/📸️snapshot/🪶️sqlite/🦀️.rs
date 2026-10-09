@@ -47,14 +47,15 @@ impl store::ArtifactSqliteSnapshot for Snapshot {
         let count=i32::try_from(row.integer(1)?).map_err(|_|invalid("Count is outside the authored i32 domain"))?;
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?; Ok(Self{count})
     }
-    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {
+    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError> {
+ let original=native_owner.native();
         control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1)?; control.check_rows(1)?; control.check_value_bytes(8)?;
         let length=match payload{store::io::IoPayload::Text(text)=>text.len(),store::io::IoPayload::Binary(bytes)=>bytes.len()};
         if length>control.limits().max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Count native input exceeds the file ceiling"));}
-        control.allocation_stage(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
+        control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
             let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
-            let mut native=NativeDecodeControl::new(remaining,&mut progress);
-            let result=(||{
+            let before=original.owned_bytes();let maximum_owned=before.checked_add(remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture native cumulative allowance overflow"));
+            let result=maximum_owned.and_then(|maximum|original.scoped_maximum(maximum,|native|native.scoped_observer(&mut progress,|native|{
                 match payload {
                     store::io::IoPayload::Text(text)=>{
                         let empty=native.scoped_stage(|native|{
@@ -63,24 +64,25 @@ impl store::ArtifactSqliteSnapshot for Snapshot {
                             Ok::<_,ValueError>(empty)
                         })?;
                         if empty { Ok(Self::default()) }
-                        else { semio_framework_pack_json::from_json_str_controlled(text,semio_framework_pack_json::JsonMemberPolicy::Reject,&mut native) }
+                        else { semio_framework_pack_json::from_json_str_controlled(text,semio_framework_pack_json::JsonMemberPolicy::Reject,native) }
                     }
                     store::io::IoPayload::Binary(bytes)=>{
-                        let spec=Self::__dsl_spec_producer().decode(&mut native)?;
-                        let (record,_)=pack::decode_document_controlled(bytes,&spec,&store::PackDecodeOptions::default(),&mut native).map_err(store::PackRefusal::into_value_error)?;
-                        Self::__dsl_from_record_controlled(&record,&mut native)
+                        let spec=Self::__dsl_spec_producer().decode(native)?;
+                        let (record,_)=pack::decode_document_controlled(bytes,&spec,&store::PackDecodeOptions::default(),native).map_err(store::PackRefusal::into_value_error)?;
+                        Self::__dsl_from_record_controlled(&record,native)
                     }
                 }
-            })();
-            (result,native.owned_bytes())
+            })));
+            (result,original.owned_bytes()-before)
         })?
     }
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io::IoPayload,ValueError>{
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{
         bound(self,encoding,control)?;
-        control.allocation_stage(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
+        let original=owner.native();
+        control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
             let mut progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total);
-            let mut native=NativeEncodeControl::new(remaining,&mut progress);
-            let result=(||{
+            let before=original.owned_bytes();let maximum_owned=before.checked_add(remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture native cumulative allowance overflow"));
+            let result=maximum_owned.and_then(|maximum|original.scoped_maximum(maximum,|native|native.scoped_observer(&mut progress,|native|{
                 match encoding{
                     SnapshotEncoding::Text=>{
                         let mut digits=[0;11];let digits=decimal(self.count,&mut digits);let length=10+digits.len();
@@ -90,13 +92,13 @@ impl store::ArtifactSqliteSnapshot for Snapshot {
                         Ok(store::io::IoPayload::Text(output))
                     }
                     SnapshotEncoding::Binary=>{
-                        let spec=Self::__dsl_spec_producer().encode(&mut native)?;
-                        let record=semio_framework_dsl_record::native_encoding::EncodedRecord::from_record(self.__dsl_to_record_controlled(&mut native)?);
-                        pack::encode_document_controlled(&spec,record.as_record(),&store::PackEncodeOptions::default(),&mut native).map(store::io::IoPayload::Binary).map_err(store::PackRefusal::into_value_error)
+                        let spec=Self::__dsl_spec_producer().encode(native)?;
+                        let record=semio_framework_dsl_record::native_encoding::EncodedRecord::from_record(self.__dsl_to_record_controlled(native)?);
+                        pack::encode_document_controlled(&spec,record.as_record(),&store::PackEncodeOptions::default(),native).map(store::io::IoPayload::Binary).map_err(store::PackRefusal::into_value_error)
                     }
                 }
-            })();
-            (result,native.owned_bytes())
+            })));
+            (result,original.owned_bytes()-before)
         })?
     }
     fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{bound(self,encoding,control)}

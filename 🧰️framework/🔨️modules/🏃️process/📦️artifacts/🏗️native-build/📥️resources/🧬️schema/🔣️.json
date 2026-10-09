@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/native-build/resource-read/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "path",
+    "bytes",
+    "sha256",
+    "operation"
+  ],
+  "properties": {
+    "kind": {
+      "const": "read"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "line",
+        "name"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "const": "read"
+        }
+      }
+    },
+    "callsite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "line"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

@@ -75,6 +75,17 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 🪶️ Runs the original raw-text Socket snapshot and independent physical SQLite laws. */
+class SocketSnapshotSqliteScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!["source","native"].includes(segments[0]))throw Error("test-socket-snapshot-sqlite requires source or native");
+  if(segments[0]==="native"){await runRepositoryCargoTests([crateName],this.repoRoot,["--lib","native_socket_sqlite_snapshot_","--","--nocapture"]);return;}
+  const file=resolve(this.root,"../../🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts");
+  await runRepositoryTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:120000});
+  await runRepositoryTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],{cwd:this.repoRoot,budgetMs:120000});
+ }
+}
+
 /** 🦀️ Runs the existing budgeted Cargo tests without invoking browser tests. */
 class NativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -461,6 +472,7 @@ const router = new ScriptRouter(import.meta.dir)
     },
   )
   .register("test", TestScript)
+  .register("test-socket-snapshot-sqlite",SocketSnapshotSqliteScript)
   .register("test-native", NativeTestScript)
   .register("test-wgpu-unit", WgpuUnitTestScript)
   .register("test-media-slots", MediaSlotContractTestScript)

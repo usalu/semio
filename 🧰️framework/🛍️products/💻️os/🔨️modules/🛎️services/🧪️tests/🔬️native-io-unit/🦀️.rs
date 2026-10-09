@@ -1,14 +1,28 @@
 use super::*;
 
+fn fixture_compute_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
+
+fn fixture_io_retirement_permits(demand:semio_framework_value::RetirementDemand,grant:RetainedCloneGrant){
+    assert!(demand.copy_bytes<=grant.maximum_copy_bytes);
+    assert!(demand.capacity_bytes<=grant.maximum_capacity_bytes);
+    assert!(demand.release_bytes<=grant.maximum_release_bytes);
+    assert!(demand.depth<=grant.maximum_depth);
+}
+
 fn payload_vec(mut payload: semio_framework_job::RetainedJobPayload) -> Vec<u8> {
     let mut bytes = Vec::with_capacity(payload.len());
     let mut reader = payload.reader();
     while let Some(page) = reader.read_page(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
         bytes.extend_from_slice(page);
     }
-    while !payload.terminal_is_empty() {
-        let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    for _ in 0..10_000 {
+        if payload.terminal_is_empty() { break; }
+        let grant = fixture_compute_grant();
+        fixture_io_retirement_permits(payload.retirement_demands().expect("original payload demand"), grant);
+        let step = payload.close_step(grant).expect("admitted payload close");
+        assert!(step.progress().fits(grant));
     }
+    assert!(payload.terminal_is_empty());
     bytes
 }
 
@@ -50,6 +64,7 @@ fn run(request: NativeIoRequest) -> Result<TestNativeIoValue, String> {
         generation: semio_framework_job::Generation(1),
         cancel: semio_framework_job::root_cancel_token(),
         config: semio_framework_job::BatchDriveConfig {
+            retained: fixture_compute_grant(),
             site: "native_io_test",
             stage: semio_framework_job::InteractiveStage::InteractiveStep,
             fuel_per_step: semio_framework_job::INTERACTIVE_LANE_FUEL,
@@ -68,9 +83,14 @@ fn run(request: NativeIoRequest) -> Result<TestNativeIoValue, String> {
         let terminal_result = job.take_result();
         let Some(mut outcome) = session.take_outcome() else { panic!("native I/O retained outcome") };
         let terminal = outcome.is_terminal();
-        while !outcome.terminal_is_empty() {
-            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        for _ in 0..10_000 {
+            if outcome.terminal_is_empty() { break; }
+            let grant = fixture_compute_grant();
+            fixture_io_retirement_permits(outcome.retirement_demands().expect("original outcome demand"), grant);
+            let step = outcome.close_step(grant).expect("admitted outcome close");
+            assert!(step.progress().fits(grant));
         }
+        assert!(outcome.terminal_is_empty());
         if terminal {
             result = terminal_result.unwrap_or_else(|| panic!("native I/O terminal result")).map(materialize_test_value);
             break;
@@ -80,9 +100,15 @@ fn run(request: NativeIoRequest) -> Result<TestNativeIoValue, String> {
         }
     }
     session.begin_close();
-    while !session.terminal_is_empty() {
-        let _ = session.close_step(session.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).expect("original session demand"));
+    for _ in 0..10_000 {
+        if session.terminal_is_empty() { break; }
+        let grant = fixture_compute_grant();
+        fixture_io_retirement_permits(session.retirement_demands(grant.maximum_copy_bytes).expect("original session demand"), grant);
+        let step = session.close_step(grant);
+        assert!(step.progress().fits(grant));
+        assert!(!matches!(step, semio_framework_job::WorkerJobCloseStep::Refused{..}));
     }
+    assert!(session.terminal_is_empty());
     result
 }
 
@@ -111,7 +137,7 @@ fn path_set_max_plus_one_identity_zero_grant_and_job_close_are_exact() {
     drop(returned);
     let mut job = NativeIoJob::new(NativeIoRequest::Modified(paths));
     job.begin_close();
-    assert_eq!(job.close_step(RetainedCloneGrant::default()), InteractiveJobCloseStep::Refused(ValueRefusalKind::WorkLimit));
+    assert_eq!(job.close_step(RetainedCloneGrant::default()), InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::WorkLimit,progress:Default::default()});
     let mut released = 0;
     while !job.terminal_is_empty() {
         if let InteractiveJobCloseStep::Pending { progress } = job.close_step(native_io_close_grant()) {
@@ -157,8 +183,10 @@ fn close_preserves_original_empty_path_and_error_backing_until_exact_release() {
     job.begin_close();
     assert_eq!(job.next_close_release_byte_demand().unwrap(), capacity);
     let granted = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: capacity, maximum_depth: 1, ..RetainedCloneGrant::default() };
-    for denied in [RetainedCloneGrant { maximum_items: 0, ..granted }, RetainedCloneGrant { maximum_release_bytes: capacity - 1, ..granted }, RetainedCloneGrant { maximum_depth: 0, ..granted }] {
-        assert_eq!(job.close_step(denied), InteractiveJobCloseStep::Refused(ValueRefusalKind::WorkLimit));
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();
+    for (index,denied) in [RetainedCloneGrant { maximum_items: 0, ..granted }, RetainedCloneGrant { maximum_release_bytes: capacity - 1, ..granted }, RetainedCloneGrant { maximum_depth: 0, ..granted }].into_iter().enumerate() {
+        let refusal=match fixture["nativeIoDenials"][index]["refusal"].as_str().unwrap(){"WorkLimit"=>ValueRefusalKind::WorkLimit,"OwnershipLimit"=>ValueRefusalKind::OwnershipLimit,"DepthLimit"=>ValueRefusalKind::DepthLimit,_=>panic!("canonical Native I/O denial class")};
+        assert_eq!(job.close_step(denied), InteractiveJobCloseStep::Refused{kind:refusal,progress:Default::default()});
         assert_eq!(job.retained_request_backing_identity(), Some(pointer));
         assert_eq!(job.next_close_release_byte_demand().unwrap(), capacity);
     }
@@ -167,7 +195,7 @@ fn close_preserves_original_empty_path_and_error_backing_until_exact_release() {
     let capacity = error.capacity();let pointer = error.as_ptr();
     job.state = NativeIoState::Finished;job.result = Some(Err(error));
     let denied = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: capacity - 1, maximum_depth: 1, ..RetainedCloneGrant::default() };
-    assert_eq!(job.close_step(denied), InteractiveJobCloseStep::Refused(ValueRefusalKind::WorkLimit));
+    assert_eq!(job.close_step(denied), InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::OwnershipLimit,progress:Default::default()});
     assert_eq!(job.result.as_ref().unwrap().as_ref().unwrap_err().as_ptr(), pointer);
     let step = job.close_step(RetainedCloneGrant { maximum_release_bytes: capacity, ..denied });
     assert_eq!(step.progress().released_bytes, capacity);

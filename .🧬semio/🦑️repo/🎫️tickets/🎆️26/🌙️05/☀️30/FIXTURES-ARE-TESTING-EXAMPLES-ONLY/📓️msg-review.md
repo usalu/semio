@@ -1,0 +1,7 @@
+# Current message and envelope source review
+
+Read-only original blocks, hash observations in `📥️msg-review.json`; no native execution. Message directory is inline128 optional pages, each page64 actual slots, preserving8192 ticket bounds/hash/generation authority. Supplied item/capacity/depth checks precede a single slot-page or original metadata-array birth; admitted allocation stays installed before receipt validation. Page release waits for complete original physical extent and depth, removes one retained page and returns actual release progress. Parent retires live entries before slot backing, then six metadata arrays; partial admitted arrays/pages remain original owners.
+
+Envelope admission delegates one backing per supplied grant to four ledgers/two cursor stacks/message pages/metadata arrays, and readiness joins all. Hydration retains the partial envelope while admitting, checks actual child receipt, and transitions only after readiness. No new concrete blocker found in the bounded original admission/retirement blocks. The older cold constructors still allocate outside this funded path; this review does not certify all callsites or public whole-turn MemberOpen receipts.
+
+Native allocator/pointer/cancel-cut laws remain unrun; Source/grammar proof does not establish allocation equality. Shared whole-file drift, if recorded, is distinct from exact logical block ownership. Ticket/hash authority and per-entry order were not changed by this review.

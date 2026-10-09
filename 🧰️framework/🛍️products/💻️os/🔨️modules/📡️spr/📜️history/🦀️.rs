@@ -64,7 +64,7 @@ pub struct HistoryLog {
 #[derive(Clone, Debug, PartialEq)]
 pub struct HistoryTransitionRecord {
     pub id: String,
-    pub actor: String,
+    pub actor: semio_framework_value::SharedUtf8,
     pub hlt: (u64, u64, u64),
     pub dependencies: Vec<String>,
     pub observed: Option<String>,
@@ -96,7 +96,7 @@ pub struct HistoryConflict {
     pub id: String,
     pub kind: u8,
     pub status: u8,
-    pub actors: Vec<String>,
+    pub actors: Vec<semio_framework_value::SharedUtf8>,
     /// ⏰️ `(actor, physical_ms, logical)` — field order/types mirror
     /// `crate::os_spr::ids::HybridLogicalTimestamp` exactly.
     pub hlt: (u64, u64, u64),
@@ -122,7 +122,7 @@ pub struct HistoryMessage {
 #[derive(Clone, Debug, PartialEq)]
 pub struct HistoryEdit {
     pub id: String,
-    pub actor: Option<String>,
+    pub actor: Option<semio_framework_value::SharedUtf8>,
     pub started_at: String,
     pub finished_at: Option<String>,
     /// 🏷️ The id of the action or command that authored this edit (mirrors `crate::os_spr::command::Edit::verb`).
@@ -166,7 +166,7 @@ pub struct HistoryOpMeta {
     pub op_id: Option<String>,
     pub dependencies: Vec<String>,
     pub base_version: u64,
-    pub author_id: Option<String>,
+    pub author_id: Option<semio_framework_value::SharedUtf8>,
     pub hlt: Option<(u64, i64, u64)>,
     pub undo_policy: u8,
     pub payload_hash: Option<[u8; 32]>,
@@ -361,7 +361,7 @@ fn text_error_to_protocol(err: semio_framework_diagnostic::TextError) -> Protoco
 pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     struct PendingEdit {
         id: String,
-        actor: Option<String>,
+        actor: Option<semio_framework_value::SharedUtf8>,
         started_at: String,
         finished_at: Option<String>,
         verb: Option<String>,
@@ -410,7 +410,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                 pending = Some(PendingEdit {
                     id: required_text(&record, F_EDIT_ID, "edit id")?,
                     started_at: required_text(&record, F_EDIT_STARTED, "edit started")?,
-                    actor: field_text(&record, F_EDIT_ACTOR),
+                    actor: field_text(&record, F_EDIT_ACTOR).map(Into::into),
                     finished_at: field_text(&record, F_EDIT_FINISHED),
                     verb: field_text(&record, F_EDIT_VERB),
                     line: match record.get(F_EDIT_LINE) {
@@ -424,7 +424,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                 let record = semio_framework_dsl_record::parse(trimmed, &transition_spec(), &opts).map_err(text_error_to_protocol)?;
                 log.transitions.push(HistoryTransitionRecord {
                     id: required_text(&record, F_TRANSITION_ID, "transition id")?,
-                    actor: required_text(&record, F_TRANSITION_ACTOR, "transition actor")?,
+                    actor: required_text(&record, F_TRANSITION_ACTOR, "transition actor")?.into(),
                     hlt: field_hlc(&record, F_TRANSITION_HLC)?,
                     dependencies: field_text_list(&record, F_TRANSITION_DEPENDENCIES),
                     observed: field_text(&record, F_TRANSITION_OBSERVED),
@@ -454,7 +454,7 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     for edit in &log.edits {
         let mut fields = vec![(F_EDIT_ID, FieldValue::Text(edit.id.clone())), (F_EDIT_STARTED, FieldValue::Text(edit.started_at.clone())), (F_EDIT_LINE, FieldValue::List(edit.line.iter().cloned().map(FieldValue::Text).collect()))];
         if let Some(actor) = &edit.actor {
-            fields.push((F_EDIT_ACTOR, semio_framework_dsl_record::FieldValue::Text(actor.clone())));
+            fields.push((F_EDIT_ACTOR, semio_framework_dsl_record::FieldValue::Text(actor.as_str().to_owned())));
         }
         if let Some(finished) = &edit.finished_at {
             fields.push((F_EDIT_FINISHED, semio_framework_dsl_record::FieldValue::Text(finished.clone())));
@@ -477,7 +477,7 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     for transition in &log.transitions {
         let mut fields = vec![
             (F_TRANSITION_ID, FieldValue::Text(transition.id.clone())),
-            (F_TRANSITION_ACTOR, FieldValue::Text(transition.actor.clone())),
+            (F_TRANSITION_ACTOR, FieldValue::Text(transition.actor.as_str().to_owned())),
             (F_TRANSITION_HLC, FieldValue::Tuple(vec![FieldValue::UInt(transition.hlt.0), FieldValue::UInt(transition.hlt.1), FieldValue::UInt(transition.hlt.2)])),
             (F_TRANSITION_DEPENDENCIES, FieldValue::List(transition.dependencies.iter().map(|s| FieldValue::Text(s.clone())).collect())),
             (F_TRANSITION_PAYLOAD, FieldValue::Bytes64(transition.payload.clone())),
@@ -753,7 +753,7 @@ async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordi
         dependencies.push(read_id_field(input, dict, ordinal_to_id)?);
     }
     let base_version = input.read_varint_u64()?;
-    let author_id = if presence & (1 << 1) != 0 { Some(read_id_field(input, dict, ordinal_to_id)?) } else { None };
+    let author_id = if presence & (1 << 1) != 0 { Some(read_id_field(input, dict, ordinal_to_id)?.into()) } else { None };
     let hlt = if presence & (1 << 2) != 0 {
         let actor = input.read_varint_u64()?;
         let physical_ms = input.read_varint_i64()?;
@@ -862,7 +862,7 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
     let presence = input.read_u8()?;
     let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
     let (started_at, mut prev_epoch_ms) = crate::os_spr::scalar::read_timestamp(&mut input, None)?;
-    let actor = if presence & (1 << 0) != 0 { Some(read_id_field(&mut input, dict, ordinal_to_id)?) } else { None };
+    let actor = if presence & (1 << 0) != 0 { Some(read_id_field(&mut input, dict, ordinal_to_id)?.into()) } else { None };
     let finished_at = if presence & (1 << 1) != 0 {
         let (s, p) = crate::os_spr::scalar::read_timestamp(&mut input, prev_epoch_ms)?;
         prev_epoch_ms = p;
@@ -956,7 +956,7 @@ pub async fn decode_transition(payload: &[u8], dict: &DictReader) -> Result<Hist
         return Err(malformed_fmt("transition", format).await);
     }
     let id = read_id_field(&mut input, dict, miss)?;
-    let actor = read_id_field(&mut input, dict, miss)?;
+    let actor = read_id_field(&mut input, dict, miss)?.into();
     let hlt = (input.read_varint_u64()?, input.read_varint_u64()?, input.read_varint_u64()?);
     let dependency_count = input.read_varint_u64()?;
     let mut dependencies = Vec::with_capacity(dependency_count.min(input.remaining() as u64) as usize);
@@ -1078,7 +1078,7 @@ async fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ord
     let actor_count = input.read_varint_u64()?;
     let mut actors = Vec::with_capacity(actor_count as usize);
     for _ in 0..actor_count {
-        actors.push(read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?);
+        actors.push(read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?.into());
     }
     let hlt = (input.read_varint_u64()?, input.read_varint_u64()?, input.read_varint_u64()?);
     let edit_id_count = input.read_varint_u64()?;

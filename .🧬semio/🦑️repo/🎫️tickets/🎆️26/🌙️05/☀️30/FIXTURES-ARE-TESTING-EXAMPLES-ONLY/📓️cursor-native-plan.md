@@ -1,0 +1,9 @@
+# Cursor Native Assertion Plan
+
+No tests executed. Add native_snapshot_paid_wallet_preserves_all_axes_and_refused_receipt and native_snapshot_cursor_retains_paid_original_on_cancellation_and_commits_same_output to the original Kernel19-name nextest union; exact combined selection is retained in the input. Preserve original test-native profile/features/budgets. Wallet law checks every axis, unchanged denied cumulative receipt and original grant; cursor law checks cancellation-retained recipient, actual paid frontier, exact successful output pointer and independent Serde bytes. The semantic borrowed source remains in the synchronous closure rather than the retained static owner.
+
+Pack borrowed_json_writer_preserves_actual_post_birth_cancellation_receipt is in separate semio-framework-pack-json unit tests. Kernel dependency compilation does not execute dependency unit tests. It compares actual allocation with post-birth cancellation receipt, original frames/path pointers under zero-item denial, independent Serde output and original funded cleanup. It needs its genuine Pack native owner selection separately. Current Pack project JSON test-native/test-ownership objects are under namedInputs rather than targets; this is a concrete metadata blocker, not proof of a registered executable. Preserve existing values and correct genuine defining ownership before dispatch.
+
+Inspected test calls match current explicit five-axis grants, NativeEncodeControl and retained recipient APIs at Source level. This is not Rust typecheck or runtime proof; no unsupported compile claim is made. The new tests do not provide whole cold Snapshot public receipt completion.
+
+Current reread correction: Pack project now has test-native/test-ownership correctly under targets and namedInputs only default. The prior misplaced-object observation is historical and no longer a current blocker; no mutation was made by this audit. Separate Pack unit execution is still necessary.

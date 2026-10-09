@@ -398,6 +398,7 @@ pub fn is_fault_param_name(name: &str) -> bool {
 /// Scope metadata and notice params own separate allocations to keep error return values compact.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Fault {
+    pub retained_progress:semio_framework_value::RetainedCloneProgress,
     pub origin: FaultOrigin,
     pub code: FaultCode,
     pub severity: Severity,
@@ -536,6 +537,7 @@ impl ToValue for Fault {
             ("severity".to_string(), self.severity.to_value()),
             ("message".to_string(), DslValue::String(self.message.clone())),
             ("scope".to_string(), self.scope.to_value()),
+            ("retainedProgress".to_string(), self.retained_progress.to_value()),
         ];
         if let Some(span) = &self.span {
             entries.push(("span".to_string(), span.to_value()));
@@ -590,6 +592,7 @@ impl FromValue for Fault {
             other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for Fault.message, found {other:?}"))),
         };
         Ok(Fault {
+            retained_progress:semio_framework_value::RetainedCloneProgress::from_value(required("retainedProgress")?)?,
             origin: FaultOrigin::from_value(required("origin")?)?,
             code: FaultCode::from_value(required("code")?)?,
             severity: Severity::from_value(required("severity")?)?,
@@ -633,8 +636,14 @@ impl From<String> for Fault {
 }
 
 impl Fault {
+    /// 🏷️ Borrows an existing canonical Value refusal cause while preserving its original diagnostic receipt.
+    pub fn value_refusal_kind(&self)->Option<ValueRefusalKind>{self.param("refusalKind").and_then(ValueRefusalKind::from_wire)}
+    /// 🧾️ Reads the exact original failed producer receipt carried through this diagnostic.
+    pub fn retained_progress(&self)->semio_framework_value::RetainedCloneProgress{self.retained_progress}
+    /// 🫴️ Attaches the same original receipt before crossing a diagnostic boundary.
+    pub fn with_retained_progress(mut self,progress:semio_framework_value::RetainedCloneProgress)->Self{self.retained_progress=progress;self}
     pub fn new(origin: FaultOrigin, code: impl Into<FaultCode>, message: impl Into<String>) -> Self {
-        Self { origin, code: code.into(), severity: Severity::Error, message: message.into(), scope: Box::default(), span: None, causes: Vec::new(), params: None, retryable: false }
+        Self { retained_progress:Default::default(),origin, code: code.into(), severity: Severity::Error, message: message.into(), scope: Box::default(), span: None, causes: Vec::new(), params: None, retryable: false }
     }
 
     /// 🔣️ Names one placeholder value of this fault's localized notice (`{name}`, design §20.12); a later value for the
@@ -700,7 +709,7 @@ pub trait FaultFrom {
     /// 👁️ Builds a diagnostic while the original typed refusal remains with its owner.
     fn to_fault(&self) -> Fault {
         let params = Some(self.fault_params()).filter(|params| !params.0.is_empty()).map(Box::new);
-        Fault { origin: self.fault_origin(), code: self.fault_code(), severity: self.fault_severity(), message: self.fault_message(), scope: Box::new(self.fault_scope()), span: self.fault_span(), causes: self.fault_causes(), params, retryable: self.fault_retryable() }
+        Fault { retained_progress:Default::default(),origin: self.fault_origin(), code: self.fault_code(), severity: self.fault_severity(), message: self.fault_message(), scope: Box::new(self.fault_scope()), span: self.fault_span(), causes: self.fault_causes(), params, retryable: self.fault_retryable() }
     }
 
     fn into_fault(self)->Fault where Self:Sized{self.to_fault()}
@@ -729,6 +738,7 @@ impl FaultFrom for TextError {
 }
 
 impl FaultFrom for ValueError {
+    fn to_fault(&self)->Fault{Fault::new(self.fault_origin(),self.fault_code(),self.fault_message()).with_param("refusalKind",self.kind.as_str()).with_retained_progress(self.retained_progress())}
     fn fault_origin(&self) -> FaultOrigin {
         FaultOrigin::Framework
     }
@@ -904,3 +914,7 @@ mod text_error_refusal_tests;
 #[path="📦️close/🦀️.rs"]
 mod owned_close;
 pub use owned_close::{FaultCloseOwner,FaultCloseStep};
+
+#[cfg(test)]
+#[path="🧾️retained/🧪️tests/🦀️.rs"]
+mod retained_fault_tests;

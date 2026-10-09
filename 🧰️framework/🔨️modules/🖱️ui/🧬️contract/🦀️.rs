@@ -56,6 +56,10 @@ mod surface;
 #[path = "🪢️text-edit/🦀️.rs"]
 mod text_edit;
 
+#[path = "♻️retirement/👷️worker/🦀️.rs"]
+mod worker_retirement;
+pub use worker_retirement::{ui_worker_retirement_admission,ui_worker_retirement_permits,UI_WORKER_RETIREMENT_POLICY};
+
 pub use accessibility::*;
 pub use number_format::*;
 pub use action::*;

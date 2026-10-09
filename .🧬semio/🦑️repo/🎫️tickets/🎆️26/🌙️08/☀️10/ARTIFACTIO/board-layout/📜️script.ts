@@ -1,0 +1,25 @@
+import {resolve,join} from "node:path";
+import {readFileSync,mkdirSync,writeFileSync} from "node:fs";
+import {createHash} from "node:crypto";
+const root=resolve(import.meta.dir,"../../../../../../../..");
+const ticket=resolve(import.meta.dir,"..");
+if(process.argv[2]==="source"){
+ const p=Bun.spawn(["bun","test",resolve(import.meta.dir,"🟦️.ts")],{cwd:root,stdout:"inherit",stderr:"inherit"});
+ if(await p.exited!==0)throw Error("Board layout ownership/refusal law failed");
+ const owners=JSON.parse(readFileSync(join(import.meta.dir,"🔣️owners.json"),"utf8")).rustOwners as string[];
+ for(const owner of owners){const parser=Bun.spawn(["rustfmt","--emit","stdout","--config","skip_children=true","--edition","2021",join(root,owner)],{cwd:root,stdout:"ignore",stderr:"inherit"});if(await parser.exited!==0)throw Error("Board layout Rust syntax refused "+owner);}
+ console.log(`[DEBUG] Board layout actual Rust syntax owners=${owners.length}; source syntax only`);
+}else if(process.argv[2]==="native"){
+ const{runCargoTestsV1,readCargoTestPolicyV1}=await import("../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts");
+ const manifest=join(import.meta.dir,"Cargo.toml");
+ const policy={version:1,manifestPath:manifest,targetDirectory:join(ticket,"🗑️generated/bl/t"),buildDirectory:join(ticket,"🗑️generated"),leaseDirectory:join(ticket,"🗑️generated/bl/l"),nextest:false,configPath:join(root,".config/nextest.toml"),level:"long",assertionBudgets:{fundamental:60000,quick:60000,long:60000,exhaustive:60000},buildBudgetMs:600000,assertionThreads:1,artifactDirectory:join(ticket,"🗑️generated/bl/r"),retainArtifacts:true,coverageEnabled:false,coveragePath:null,rustMinStack:"67108864"};
+ Object.assign(process.env,{CARGO_INCREMENTAL:"0",CARGO_PROFILE_DEV_DEBUG:"0",CARGO_PROFILE_TEST_DEBUG:"0",CARGO_PROFILE_DEV_CODEGEN_UNITS:"1",CARGO_PROFILE_TEST_CODEGEN_UNITS:"1"});
+ process.env.SEMIO_CARGO_TEST_POLICY=JSON.stringify(policy);process.env.SEMIO_TEST_LEVEL="long";
+ const files=["🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/📸️snapshot/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/📐️layout/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/💡️inferences/📐️layout/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/💡️inferences/📐️layout/🔁️redraw/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/💡️inferences/📐️layout/⚛️force/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/💡️inferences/📐️layout/🌳️hierarchical/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/💡️inferences/📐️layout/🕸️layered/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/📐️layout/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/📸️snapshot/🦀️.rs", "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📐️layout/🧪️tests/🔬️unit/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/💡️inferences/📐️layout/🧫️fixtures/🔣️.json", "🧰️framework/🔨️modules/🕸️graph/🖊️drawing/🦀️.rs", "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/💡️inferences/📐️layout/🕸️layered/🧪️tests/🔬️tidy-tree/🦀️.rs", ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/board-boundary/🦀️.rs", ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/board-boundary/🧪️tests/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎨️palette/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/👁️visibility/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/🧬️schema/🦀️.rs",manifest,join(import.meta.dir,"🦀️.rs"),import.meta.path];
+ files.push("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/💡️inferences/📐️layout/🧫️fixtures/🔣️nullable.json");
+ const before=files.map(file=>({file:resolve(root,file),sha256:createHash("sha256").update(readFileSync(resolve(root,file))).digest("hex")}));
+ const custody=join(ticket,"🗑️generated/bl/c");mkdirSync(custody,{recursive:true});
+ const receipt=join(custody,`owners-${Date.now()}.json`);writeFileSync(receipt,JSON.stringify({before,terminal:false}));
+ await runCargoTestsV1({manifestPath:manifest,packages:[],cwd:import.meta.dir,extraArgs:["--lib","--offline","--","--nocapture"]},readCargoTestPolicyV1(process.env));
+ const exact=before.every(owner=>createHash("sha256").update(readFileSync(owner.file)).digest("hex")===owner.sha256);writeFileSync(receipt,JSON.stringify({before,terminal:true,exact}));if(!exact)throw Error("Board layout native source/producer interval advanced");console.log(`[DEBUG] Board layout native actual defining sources/fixture/driver/producer exact=${exact}; owners=${before.length}`);
+}else throw Error("Expected source or native");

@@ -17,7 +17,7 @@ pub fn dsl_text(from: &Fem3dSnapshot) -> String {
 impl Serializer<Fem3dSnapshot> for Fem3dIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Fem3dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &Fem3dSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         serialize_dsl_txt(from)
     }
 }

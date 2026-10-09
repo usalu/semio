@@ -59,6 +59,16 @@
       "options": {
         "command": "bun ./📜️script.ts test mounted-owner"
       }
+    },
+    "test-lifecycle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test lifecycle"
+      }
     }
   },
   "namedInputs": {

@@ -1,0 +1,50 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
+      "beforeSha256": "e0028ec9305e5da09e031cbe7e311144cf467bbec5ded59e8d5c7b7c39a3eeb1",
+      "afterSha256": null,
+      "action": "Remove only whole trial schema/admission/schema-only mirror mutants; actual affine/Three, UTF8/Buffer/JSONPatch and plain/native example behavior retained."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "41d9a2b27023e22efd3221be015b96376d6a366847ca582c366f145ea258baeb",
+      "afterSha256": "61ec2e7957d432cfa013321ee1aaf0b47ea02ef8398da641d37b5976b44024ff",
+      "action": "Remove only whole trial schema/admission/schema-only mirror mutants; actual affine/Three, UTF8/Buffer/JSONPatch and plain/native example behavior retained."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "beforeSha256": "ee2ccbe8513ad9e7ba0f2644d0f02f31af09a3a8d3e1f827310821a57105b7d5",
+      "afterSha256": null,
+      "action": "Remove only whole trial schema/admission/schema-only mirror mutants; actual affine/Three, UTF8/Buffer/JSONPatch and plain/native example behavior retained."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "beforeSha256": "061bde56c3cdf7287742727fe065247bad1f2436223610c4d4951cb883d4ce0d",
+      "afterSha256": "3a7d9b9a116fbaafaae47ec3604ccac7c0ad2766e99dfcde510c9c55e06d3216",
+      "action": "Remove only whole trial schema/admission/schema-only mirror mutants; actual affine/Three, UTF8/Buffer/JSONPatch and plain/native example behavior retained."
+    }
+  ],
+  "observerPathsUnchanged": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧫️fixtures/🔣️.json",
+      "sha256": "be5fd4ba0f2b6421317a4b3ec8426c67d8921497b7e73122dd3eb8b437a77666"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🟦️.ts",
+      "sha256": "91c22808102ec4ed1870e23da05d7e06e355890ae06f17d16b78ea9280447a7b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+      "sha256": "032fb7c1ee75e599681b4dbb1f673977c4613774d1b779e83eab93b24ef3e238"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧹️retirement/🦀️.rs",
+      "sha256": "dcc3e604b8d2b852fed65cd0804be6dfa8d34c8b45753c5d0aa16bdb99e035e7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+      "sha256": "3f782cf4b1c4ebf9ddfe06814d15ef1556506b87895dad65cf5f9cafd5457e57"
+    }
+  ]
+}

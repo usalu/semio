@@ -46,13 +46,13 @@ fn admit_snapshot(value:&ZipSnapshot,control:&mut SqliteSnapshotControl<'_>,phas
  }
  census.control.checkpoint(phase,census.rows,census.rows)
 }
-pub(super) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<ZipSnapshot,ValueError>{
+pub(super) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<ZipSnapshot,ValueError>{
  extent(control.limits())?;let limits=control.limits();
- let snapshot=store::decode_sqlite_snapshot_record_native(payload,"stdio.zip",ZipSnapshot::__dsl_spec_producer(),|record,native|{admit_record(record,limits,native)?;ZipSnapshot::__dsl_from_record_controlled(record,native)},control)?;admit_snapshot(&snapshot,control,SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)
+ let snapshot=store::decode_sqlite_snapshot_record_native(payload,"stdio.zip",ZipSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {admit_record(record,limits,native)?;ZipSnapshot::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;admit_snapshot(&snapshot,control,SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)
 }
-pub(super) fn encode(snapshot:&ZipSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
+pub(super) fn encode(snapshot:&ZipSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
  admit_snapshot(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;
- store::encode_sqlite_snapshot_record_native(encoding,"stdio.zip",ZipSnapshot::__dsl_spec_producer(),|native|snapshot.__dsl_to_record_controlled(native),control)
+ store::encode_sqlite_snapshot_record_native(encoding,"stdio.zip",ZipSnapshot::__dsl_spec_producer(),|native|snapshot.__dsl_to_record_controlled(native),control,native_owner)
 }
 
 pub(super) fn preflight(snapshot:&ZipSnapshot,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{admit_snapshot(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;let mut bound=store::sqlite_snapshot::artifact::NativeEncodingBound::file_only(control)?;bound.add(4096)?;bound.repeated(snapshot.schema.len(),6)?;bound.repeated(snapshot.comment.len(),6)?;for entry in &snapshot.entries{bound.add(1024)?;bound.repeated(entry.name.len(),6)?;bound.repeated(entry.data.len(),2)?;let local=&entry.metadata.local;let central=&entry.metadata.central;bound.repeated(central.comment.len(),6)?;for bytes in[local.unicode_path_legacy_name.as_deref(),central.unicode_path_legacy_name.as_deref(),central.unicode_comment_legacy.as_deref()].into_iter().flatten(){bound.repeated(bytes.len(),16)?;}for field in local.extra_fields.iter().chain(&central.extra_fields){bound.add(128)?;bound.repeated(field.data.len(),2)?;}}bound.finish()}

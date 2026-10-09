@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "pages",
+    "variants",
+    "ledgerAliases",
+    "pageBytes",
+    "cancellationCuts",
+    "separateLedgerTurn",
+    "originalPointerOnRefusal",
+    "receiptPhysicalEqualsActual",
+    "slotStages",
+    "slotHeaderRemoval",
+    "slotPresenceBytes",
+    "faultSlotHeaderRemoval",
+    "faultSlotPresenceBytes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "framework.job.payload-retirement"
+    },
+    "pages": {
+      "type": "array",
+      "const": [
+        0,
+        1,
+        3
+      ]
+    },
+    "variants": {
+      "type": "array",
+      "const": [
+        "yield",
+        "preview",
+        "checkpoint",
+        "complete",
+        "cancelled",
+        "fault"
+      ]
+    },
+    "ledgerAliases": {
+      "type": "array",
+      "const": [
+        "sole",
+        "shared"
+      ]
+    },
+    "pageBytes": {
+      "const": 16384
+    },
+    "cancellationCuts": {
+      "type": "array",
+      "const": [
+        0,
+        1,
+        2
+      ]
+    },
+    "separateLedgerTurn": {
+      "const": true
+    },
+    "originalPointerOnRefusal": {
+      "const": true
+    },
+    "slotStages": {
+      "type": "array",
+      "const": [
+        "payload",
+        "metadata",
+        "parent-complete"
+      ]
+    },
+    "slotHeaderRemoval": {
+      "const": "in-place"
+    },
+    "slotPresenceBytes": {
+      "const": 1
+    },
+    "receiptPhysicalEqualsActual": {
+      "const": true
+    },
+    "faultSlotHeaderRemoval": {
+      "const": "in-place"
+    },
+    "faultSlotPresenceBytes": {
+      "const": 1
+    }
+  }
+}

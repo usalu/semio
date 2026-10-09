@@ -1,0 +1,20 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧫️fixtures/🔣️.json",
+    "action": "update",
+    "beforeSha256": "7620dffca847c9ff585cfc0bff838006a65c3e01118b9ed7e36e33e4ddf46079",
+    "afterSha256": "c7edbcc161433a0dd7dfc7008d9effa44864734ab96a6930a98c007d72482091"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
+    "action": "update",
+    "beforeSha256": "e5cc24d3166ebde0d274cf07cb07bb00d90116f8b78455aa3cdb1cfa875b1c22",
+    "afterSha256": "ac6cb5dee42ccc3964fa0a2da967d99d794fa5eae76fb29f7117d3ccd08e7454"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔗️backbone-detach/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "b7285e54ad54420f8b25ca2c0cf73767d4ed054eec8fb93b1ddb6a30fa3b54a0",
+    "afterSha256": "1477bb54efed42676937a9bce3974fdddb93c378afb31cd68355216bcffeb4b1"
+  }
+]

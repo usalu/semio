@@ -1,0 +1,36 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🔣️.json",
+      "beforeSha256": "ac7db6c3a55588b52646980f95563e96c62ac3c930c015b1939e51f179f21241",
+      "currentSha256": "1daa5b2a4be0b3785bde3561cf18a708d7b876e5c5b018aba4d7dfa18dd4878c",
+      "scope": "Schema-first async expression flags, namespace constructor, asserted expression and semantic escaped template bindings; bounded unsupported statement rejection. Genuine original Source/range TypeScript oracle."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🟦️.ts",
+      "beforeSha256": "1d7b9feea66e989a065c8c6e227a63202dd88bd716bf87f71d42073b40422ff4",
+      "currentSha256": "11ecc306fe475b6e20fcef0c84b0306826b7ce70430e513e0660c43b35711860",
+      "scope": "Schema-first async expression flags, namespace constructor, asserted expression and semantic escaped template bindings; bounded unsupported statement rejection. Genuine original Source/range TypeScript oracle."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧫️fixtures/🔣️.json",
+      "beforeSha256": "560f8b50a8b0d06a5c254f901f2ce1c13e860008647ee7c798241e6a5f10f3cb",
+      "currentSha256": "9938a8ceea5cd1545c33939bc2566b1cde85710189a09708d76e99ef501a2bcc",
+      "scope": "Schema-first async expression flags, namespace constructor, asserted expression and semantic escaped template bindings; bounded unsupported statement rejection. Genuine original Source/range TypeScript oracle."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧪️tests/🟦️.ts",
+      "beforeSha256": "e763b2420f7906540b68d465f1264a173a62a617667bc44f01ea88983740c5d5",
+      "currentSha256": "b098fe519439314fffb32a34176c8120d64767eba35c62b5352c582dde2c106f",
+      "scope": "Schema-first async expression flags, namespace constructor, asserted expression and semantic escaped template bindings; bounded unsupported statement rejection. Genuine original Source/range TypeScript oracle."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+      "beforeSha256": "b8505d4abc25451995f65717108622ca4223997807d0a2b1188387a4c8771b37",
+      "currentSha256": "4e1cc15199b3205f25efdfa2685dbf8578bf8674f37e4b9025960b553d03cac0",
+      "scope": "Schema-first async expression flags, namespace constructor, asserted expression and semantic escaped template bindings; bounded unsupported statement rejection. Genuine original Source/range TypeScript oracle."
+    }
+  ],
+  "sourceCopies": false,
+  "qualification": "Endpoint hashes describe shared current files. Only named logical actions are Root-authored; surrounding peer changes are not adopted."
+}

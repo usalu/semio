@@ -130,7 +130,7 @@
       "pack_schema_hash": "bacf1eb3e87697fa0d2dd1659effaf97aaba8f9496877c9b072a0e96151c683c",
       "runtime_capability_id": "s.stdio.jpg.standard.jfif-1-01.codec.codec-stdio-jpg-extension-jpg.v1",
       "descriptor_codec_id": "s.stdio.jpg.standard.jfif-1-01.codec.native-document.v1",
-      "protocol_source_sha256": "0d32030c224fda4733dc23733130d50931413bba28c83168817f294c8d1943c8",
+      "protocol_source_sha256": "65fe81f12ad7c4f2d39e9d3f43cb69f147ef60960beb1e5976c065b587ed5c55",
       "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📜️artifact-definition.json"
     },
@@ -182,7 +182,7 @@
       "pack_schema_hash": "ae9079830ec7750ec2b14255aee530d3ff3b6529e9a07f96289c7118ccb297d0",
       "runtime_capability_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.codec-stdio-mp3-extension-semio.v1",
       "descriptor_codec_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1",
-      "protocol_source_sha256": "3e0e4f0f7a7a5f4c49e4e8fde430e147871218245700eaab0107b4958c24e9e0",
+      "protocol_source_sha256": "29b5d10c2e992ce46edd6e5b77df15a41a09ad79341541a12eba3c6beffed49c",
       "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📜️artifact-definition.json"
     },
@@ -234,7 +234,7 @@
       "pack_schema_hash": "a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e",
       "runtime_capability_id": "s.stdio.pdf.standard.1-7.codec.codec-stdio-pdf-1-7-extension-pdf.v1",
       "descriptor_codec_id": "s.stdio.pdf.standard.1-7.codec.native-document.v1",
-      "protocol_source_sha256": "b92db22ccdb887e23b1e41c86071a9d236ed8415fede659200494c6b45472355",
+      "protocol_source_sha256": "9c3f260b792c2d71461d6f46b493c17da850403061808e00ab7eedabaef9e7b8",
       "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📜️artifact-definition.json"
     },

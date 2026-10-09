@@ -1,0 +1,661 @@
+{
+  "originalKernelSession": 77921,
+  "originalKernelExitCode": 1,
+  "diagnostics": [
+    {
+      "code": "E0425",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 16,
+      "column": 85
+    },
+    {
+      "code": "E0425",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 83,
+      "column": 69
+    },
+    {
+      "code": "E0050",
+      "message": "method `retire` has 2 parameters but the declaration in trait `semio_framework_value::SnapshotRetirementFactory::retire` has 3",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 10,
+      "column": 15
+    },
+    {
+      "code": "E0050",
+      "message": "method `close_step` has 3 parameters but the declaration in trait `semio_framework_value::ErasedSnapshotRetirement::close_step` has 2",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 16,
+      "column": 19
+    },
+    {
+      "code": "E0046",
+      "message": "not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 15,
+      "column": 1
+    },
+    {
+      "code": "E0050",
+      "message": "method `retire` has 2 parameters but the declaration in trait `semio_framework_value::SnapshotRetirementFactory::retire` has 3",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 77,
+      "column": 15
+    },
+    {
+      "code": "E0050",
+      "message": "method `close_step` has 3 parameters but the declaration in trait `semio_framework_value::ErasedSnapshotRetirement::close_step` has 2",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 83,
+      "column": 19
+    },
+    {
+      "code": "E0046",
+      "message": "not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 82,
+      "column": 1
+    },
+    {
+      "code": "E0050",
+      "message": "method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 112,
+      "column": 19
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 26,
+      "column": 12
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 87,
+      "column": 60
+    },
+    {
+      "code": "E0559",
+      "message": "variant `InteractiveJobCloseStep::Pending` has no field named `released_items`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 114,
+      "column": 76
+    },
+    {
+      "code": "E0559",
+      "message": "variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 114,
+      "column": 95
+    },
+    {
+      "code": "E0559",
+      "message": "variant `InteractiveJobCloseStep::Pending` has no field named `released_items`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 118,
+      "column": 76
+    },
+    {
+      "code": "E0559",
+      "message": "variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 118,
+      "column": 95
+    },
+    {
+      "code": "E0559",
+      "message": "variant `InteractiveJobCloseStep::Pending` has no field named `released_items`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 122,
+      "column": 80
+    },
+    {
+      "code": "E0559",
+      "message": "variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 122,
+      "column": 99
+    },
+    {
+      "code": "E0559",
+      "message": "variant `InteractiveJobCloseStep::Pending` has no field named `released_items`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 125,
+      "column": 76
+    },
+    {
+      "code": "E0559",
+      "message": "variant `InteractiveJobCloseStep::Pending` has no field named `released_bytes`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 125,
+      "column": 95
+    },
+    {
+      "code": "E0533",
+      "message": "expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Complete`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 127,
+      "column": 9
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 47,
+      "column": 19
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 47,
+      "column": 51
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 0 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 54,
+      "column": 33
+    },
+    {
+      "code": "E0599",
+      "message": "no method named `next_close_byte_demand` found for struct `MountedWorkerJobSession<J>` in the current scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 166,
+      "column": 30
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 170,
+      "column": 66
+    },
+    {
+      "code": "E0026",
+      "message": "variant `semio_framework_job::WorkerJobCloseStep::Pending` does not have fields named `released_items`, `released_bytes`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 171,
+      "column": 68
+    },
+    {
+      "code": "E0027",
+      "message": "pattern does not mention field `progress`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 171,
+      "column": 17
+    },
+    {
+      "code": "E0599",
+      "message": "no method named `next_close_byte_demand` found for struct `MountedWorkerJobSession<J>` in the current scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 176,
+      "column": 32
+    },
+    {
+      "code": "E0599",
+      "message": "no method named `close_step` found for enum `Result<T, E>` in the current scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 56,
+      "column": 21
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 56,
+      "column": 50
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 179,
+      "column": 25
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 180,
+      "column": 15
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 192,
+      "column": 18
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 192,
+      "column": 50
+    },
+    {
+      "code": "E0609",
+      "message": "no field `state` on type `ManuallyDrop<Option<SnapshotReadRegistryHandle>>`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 225,
+      "column": 35
+    },
+    {
+      "code": "E0061",
+      "message": "this function takes 4 arguments but 5 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 226,
+      "column": 16
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 229,
+      "column": 18
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 229,
+      "column": 68
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 239,
+      "column": 18
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 239,
+      "column": 50
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 250,
+      "column": 26
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 290,
+      "column": 60
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 290,
+      "column": 92
+    },
+    {
+      "code": "E0599",
+      "message": "no method named `terminal_is_empty` found for enum `Result<T, E>` in the current scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 60,
+      "column": 22
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 305,
+      "column": 35
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 305,
+      "column": 67
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 64,
+      "column": 18
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 64,
+      "column": 50
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 319,
+      "column": 26
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 319,
+      "column": 58
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 85,
+      "column": 32
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 85,
+      "column": 64
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 355,
+      "column": 18
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 355,
+      "column": 50
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 0 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 118,
+      "column": 45
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 410,
+      "column": 30
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 410,
+      "column": 60
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 422,
+      "column": 22
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 422,
+      "column": 54
+    },
+    {
+      "code": "E0599",
+      "message": "no method named `try_take_one_returned` found for struct `snapshot_read_registry_handle::SnapshotReadRegistryHandle` in the current scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 457,
+      "column": 46
+    },
+    {
+      "code": "E0599",
+      "message": "no method named `close_step` found for enum `Result<T, E>` in the current scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 119,
+      "column": 37
+    },
+    {
+      "code": "E0599",
+      "message": "no method named `try_take_one_returned` found for struct `snapshot_read_registry_handle::SnapshotReadRegistryHandle` in the current scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 487,
+      "column": 26
+    },
+    {
+      "code": "E0599",
+      "message": "no method named `try_take_one_returned` found for struct `snapshot_read_registry_handle::SnapshotReadRegistryHandle` in the current scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 494,
+      "column": 38
+    },
+    {
+      "code": "E0609",
+      "message": "no field `returned` on type `&SnapshotReadLease`",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 516,
+      "column": 43
+    },
+    {
+      "code": "E0599",
+      "message": "no method named `close_step` found for enum `Result<T, E>` in the current scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 121,
+      "column": 36
+    },
+    {
+      "code": "E0599",
+      "message": "no method named `try_take_one_returned` found for struct `snapshot_read_registry_handle::SnapshotReadRegistryHandle` in the current scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 524,
+      "column": 48
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 575,
+      "column": 26
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 580,
+      "column": 25
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 637,
+      "column": 26
+    },
+    {
+      "code": "E0599",
+      "message": "no method named `terminal_is_empty` found for enum `Result<T, E>` in the current scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 130,
+      "column": 34
+    },
+    {
+      "code": "E0061",
+      "message": "this method takes 1 argument but 2 arguments were supplied",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 135,
+      "column": 31
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 18,
+      "column": 23
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 24,
+      "column": 23
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 119,
+      "column": 67
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 122,
+      "column": 25
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 126,
+      "column": 25
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 127,
+      "column": 25
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 136,
+      "column": 17
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 140,
+      "column": 17
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 141,
+      "column": 17
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 85,
+      "column": 23
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 91,
+      "column": 12
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 226,
+      "column": 153
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 251,
+      "column": 13
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 255,
+      "column": 13
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 259,
+      "column": 13
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 575,
+      "column": 56
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 581,
+      "column": 17
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 585,
+      "column": 17
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 597,
+      "column": 17
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 638,
+      "column": 17
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 639,
+      "column": 17
+    },
+    {
+      "code": "E0433",
+      "message": "cannot find type `SnapshotRetirementStep` in this scope",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 639,
+      "column": 51
+    }
+  ],
+  "pathCounts": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs": 29,
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs": 64
+  }
+}

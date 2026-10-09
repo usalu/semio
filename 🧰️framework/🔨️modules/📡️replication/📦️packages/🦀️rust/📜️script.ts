@@ -29,9 +29,15 @@ class BuildScript extends BundleScript {
   }
 }
 
+/** 🧯️ Validates closed original conflict custody with independent JSON Patch and UTF8. */
+class OriginalConflictSourceScript extends BundleScript {
+ async run():Promise<void>{const{testOriginalConflictSource}=await import("../../⚔️conflict/♻️retirement/🧪️tests/🟦️.ts");testOriginalConflictSource();}
+}
+
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
     await import("../../🚪️io/🧪️tests/🏛️ownership/🟦️.ts");
+    await import("../../🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts");
     await import("../../../🌱️value/🗂️ordered/🧪️tests/🧪️source-contract/🟦️.ts");
   }
 }
@@ -395,6 +401,7 @@ class CommandIngressNativeScript extends BundleScript {
  }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-command-ingress-ownership", CommandIngressOwnershipScript).register("test-command-ingress-native", CommandIngressNativeScript).register("test", TestScript).register("build", BuildScript).register("test-source", SourceTestScript).register("test-local-interaction-source", LocalInteractionSourceTestScript).register("test-local-interaction-native", LocalInteractionNativeTestScript).register("retained-verification-check", RetainedVerificationScript).register("retained-record-observation-check", RetainedRecordObservationScript).register("presence-peer-codec-check", PresencePeerCodecScript);
+const router = new ScriptRouter(import.meta.dir).register("test-command-ingress-ownership", CommandIngressOwnershipScript).register("test-command-ingress-native", CommandIngressNativeScript).register("test", TestScript)
+  .register("test-original-conflict-source",OriginalConflictSourceScript).register("build", BuildScript).register("test-source", SourceTestScript).register("test-local-interaction-source", LocalInteractionSourceTestScript).register("test-local-interaction-native", LocalInteractionNativeTestScript).register("retained-verification-check", RetainedVerificationScript).register("retained-record-observation-check", RetainedRecordObservationScript).register("presence-peer-codec-check", PresencePeerCodecScript);
 
 if (import.meta.main) await runScriptMain(router, { defaultCommand: "test" });

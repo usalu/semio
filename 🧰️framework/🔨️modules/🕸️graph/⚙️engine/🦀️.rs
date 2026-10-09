@@ -1734,6 +1734,20 @@ pub struct Handle {
 
 /// 🪢️ Retained edge with typed endpoints.
 pub type GraphEdge<E> = CoreEdge<E>;
+semio_framework_value::artifact_retire_leaf!(NodeShape,HandleRole);
+semio_framework_value::artifact_retire_struct!(ElementSemantics {kind,properties});
+semio_framework_value::artifact_retire_struct!(Handle {angle,id,node_id,radius,role,kind,value_types,properties});
+impl<E:Copy+Send+'static> semio_framework_value::retirement::RetireOwned for CoreEdge<E>{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
+ fn controlled_retirement_supported()->bool{true}
+ fn retirement_element_copy_bytes()->usize{std::mem::size_of::<Self>()}
+}
+impl semio_framework_value::retirement::RetireOwned for Node{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{sequence,deferred};let Self{id,center,radius,width,height,shape,draggable,kind,label,properties}=self;sequence(vec![deferred(id),deferred((center.x,center.y)),deferred(radius),deferred(width),deferred(height),deferred(shape),deferred(draggable),deferred(kind),deferred(label),deferred(properties)])}
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.id),deferred_birth_bytes_for(&(self.center.x,self.center.y)),deferred_birth_bytes_for(&self.radius),deferred_birth_bytes_for(&self.width),deferred_birth_bytes_for(&self.height),deferred_birth_bytes_for(&self.shape),deferred_birth_bytes_for(&self.draggable),deferred_birth_bytes_for(&self.kind),deferred_birth_bytes_for(&self.label),deferred_birth_bytes_for(&self.properties)])}
+ fn controlled_retirement_supported()->bool{true}
+}
 // #endregion 🔖️Kinds
 
 // #region 🔖️MaxFlow

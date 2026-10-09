@@ -1,10 +1,12 @@
 import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
+import {homedir} from "node:os";
+import {CurrentPhysicalOwnerV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 import { basename, delimiter, dirname, join, relative, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { stageRepositoryArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import { runTool } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts";
+import {repositoryCargoPreparationStorageV1, runTool } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts";
 import { preparedBinaryen } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
 
 import { CARGO_RELAY_SCRIPT } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
@@ -43,9 +45,9 @@ export async function buildTrunkRenderer(options: TrunkRendererBuild): Promise<v
   for (const key of Object.keys(environment)) if (key.toUpperCase().startsWith("TRUNK_") || ["NO_COLOR", "FORCE_COLOR"].includes(key.toUpperCase())) delete environment[key];
   const pathKey = Object.keys(environment).find(key => key.toUpperCase() === "PATH") ?? "PATH";
   environment[pathKey] = `${dirname(optimizer)}${delimiter}${environment[pathKey] ?? ""}`;
-  const version = await runTool("wasm-bindgen", ["--version"], root, signal, true, environment);
+  const version = await runTool("wasm-bindgen", ["--version"], root, signal, true, environment,repositoryCargoPreparationStorageV1(process.cwd()));
   if (version.trim() !== `wasm-bindgen ${bindgen[0]}`) throw new Error(`Prepared wasm-bindgen must match Cargo.lock: ${bindgen[0]}`);
-  const binaryenVersion=(await runTool(optimizer,["--version"],root,signal,true,environment)).trim(),trunkVersion=(await runTool("trunk",["--version"],root,signal,true,environment)).trim(),ownerSha256=hash(import.meta.path);
+  const binaryenVersion=(await runTool(optimizer,["--version"],root,signal,true,environment,repositoryCargoPreparationStorageV1(process.cwd()))).trim(),trunkVersion=(await runTool("trunk",["--version"],root,signal,true,environment,repositoryCargoPreparationStorageV1(process.cwd()))).trim(),ownerSha256=hash(import.meta.path);
   const staging = join(resolve(workspace, options.stateRoot ?? repoCacheDirectory(workspace, "trunk")), "staging");
   mkdirSync(staging, { recursive: true });
   const temporary = mkdtempSync(join(staging, `${profile}-`)), dist = join(temporary, "dist");
@@ -54,19 +56,19 @@ export async function buildTrunkRenderer(options: TrunkRendererBuild): Promise<v
     writeFileSync(join(temporary, "index.html"), `<!doctype html><html><head><link data-trunk rel="rust" href="${href}" data-wasm-opt="z" data-type="worker" data-bindgen-target="web" /></head><body></body></html>\n`);
     writeFileSync(join(temporary, "Trunk.toml"), `required_version = "=0.21.14"\noffline = true\n[build]\nlocked = true\nfrozen = true\ntarget = "index.html"\ndist = "dist"\nfilehash = false\nrelease = ${profile === "release"}\n[tools]\nwasm_bindgen = ${JSON.stringify(bindgen[0])}\nwasm_opt = "version_130"\n`);
     environment.CARGO_TARGET_DIR = join(temporary, "target");
-    await runTool("cargo", ["metadata", "--locked", "--offline", "--format-version=1", "--manifest-path", join(root, "Cargo.toml")], root, signal, "ignore", environment);
-    await runTool("trunk", ["build", "--config", join(temporary, "Trunk.toml"), "--skip-version-check", "--offline", "true", "--color", "never"], root, signal, false, environment);
+    await runTool("cargo", ["metadata", "--locked", "--offline", "--format-version=1", "--manifest-path", join(root, "Cargo.toml")], root, signal, "ignore", environment,repositoryCargoPreparationStorageV1(process.cwd()));
+    await runTool("trunk", ["build", "--config", join(temporary, "Trunk.toml"), "--skip-version-check", "--offline", "true", "--color", "never"], root, signal, false, environment,repositoryCargoPreparationStorageV1(process.cwd()));
     const rawSource=join(temporary,"target","wasm32-unknown-unknown",profile==="release"?"release":"debug",manifest.package.name.replaceAll("-","_")+".wasm"),rawSha256=hash(rawSource);
     const ledger=join(cargoDirectories(workspace,environment).build,"semio-cargo-provenance"),before=new Set(existsSync(ledger)?readdirSync(ledger):[]);
     const queryArgs=["build","--target=wasm32-unknown-unknown","--manifest-path",join(root,"Cargo.toml"),...(profile==="release"?["--release"]:[]),"--offline","--frozen","--locked","--message-format=json"];
-    await runTool(process.execPath,[CARGO_RELAY_SCRIPT,"relay",...queryArgs],temporary,signal,false,{...environment,SEMIO_TEST_ARTIFACT_DIR:undefined});
-    const captured=readdirSync(ledger).filter(name=>!before.has(name)).map(name=>JSON.parse(readFileSync(join(ledger,name),"utf8"))).filter(row=>row.status===0&&!row.cancelled&&resolve(row.manifest)===join(root,"Cargo.toml")&&resolve(row.cwd)===temporary&&JSON.stringify(row.args)===JSON.stringify(queryArgs));
-    if(captured.length!==1||hash(rawSource)!==rawSha256||!captured[0].units.some((unit:any)=>unit.message.filenames.includes(rawSource)&&unit.artifacts.some((artifact:any)=>artifact.path===rawSource&&artifact.sha256===rawSha256)))throw Error("Trunk output lacks the identical unchanged actual Cargo compiler artifact query");
-    const capture=captured[0],observationRoot=join(cargoDirectories(workspace,environment).build,"semio-trunk-provenance",randomUUID());mkdirSync(observationRoot,{recursive:true});
+    await runTool(process.execPath,[CARGO_RELAY_SCRIPT,"relay",...queryArgs],temporary,signal,false,{...environment,SEMIO_TEST_ARTIFACT_DIR:undefined},repositoryCargoPreparationStorageV1(process.cwd()));
+    const captured=readdirSync(ledger).filter(name=>!before.has(name)).map(name=>({path:join(ledger,name),receipt:JSON.parse(readFileSync(join(ledger,name),"utf8"))})).filter(({receipt:row})=>row.status===0&&!row.cancelled&&resolve(row.manifest)===join(root,"Cargo.toml")&&resolve(row.cwd)===temporary&&JSON.stringify(row.args)===JSON.stringify(queryArgs));
+    if(captured.length!==1||hash(rawSource)!==rawSha256||!captured[0].receipt.units.some((unit:any)=>unit.message.filenames.includes(rawSource)&&unit.artifacts.some((artifact:any)=>artifact.path===rawSource&&artifact.sha256===rawSha256)))throw Error("Trunk output lacks the identical unchanged actual Cargo compiler artifact query");
+    const {receipt:capture,path:producer}=captured[0],producerSha256=hash(producer),observationRoot=join(cargoDirectories(workspace,environment).build,"semio-trunk-provenance",randomUUID());mkdirSync(observationRoot,{recursive:true});
     const raw=join(observationRoot,"raw.wasm");copyFileSync(rawSource,raw);
     const staged=new Map<string,string>([[rawSource,raw]]);
     for(const unit of capture.units)for(const artifact of unit.artifacts)if(artifact.path.replaceAll("\\","/").startsWith(temporary.replaceAll("\\","/")+"/")&&!staged.has(artifact.path)){const path=join(observationRoot,"compiler",relative(temporary,artifact.path));mkdirSync(dirname(path),{recursive:true});copyFileSync(artifact.path,path);staged.set(artifact.path,path);}
-    const compiler=join(observationRoot,"cargo-unit-provenance-trunk-"+basename(observationRoot)+".json");writeCompletedCargoInvocationProvenanceV1(compiler,capture,staged,environment.CARGO_HOME);
+    const compiler=join(observationRoot,"cargo-unit-provenance-trunk-"+basename(observationRoot)+".json");const observedAt=performance.now(),physical=new CurrentPhysicalOwnerV1(workspace,{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>signal.aborted,remainingMs:()=>60000-(performance.now()-observedAt),onProgress:row=>console.log("[cargo-provenance] "+JSON.stringify(row))});await writeCompletedCargoInvocationProvenanceV1(compiler,{...capture,units:capture.units.map((unit:any,index:number)=>({...unit,evidence:{version:1,kind:"received",paths:unit.depInfo.map((row:any)=>row.path),producer:{path:producer,sha256:producerSha256,unit:index}}}))},staged,resolve(environment.CARGO_HOME??join(homedir(),".cargo")),physical);
     const files = new Map<string, string>();
     for (const entry of readdirSync(dist, { recursive: true, withFileTypes: true })) if (entry.isFile() && entry.name !== "index.html") {
       const path = join(entry.parentPath, entry.name);

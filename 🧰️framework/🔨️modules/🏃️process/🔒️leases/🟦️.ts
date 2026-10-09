@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { lstatSync, mkdirSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
+import queueSchema from "./🧬️schema/📜️ticket.json" with { type: "json" };
 
 export type ResourceAccess = { readonly resource: string; readonly mode: "shared" | "exclusive" };
 export type LeaseWait = ResourceAccess & { readonly elapsedMs: number };
@@ -111,6 +112,14 @@ export async function acquireResourceLease(options: LeaseOptions): Promise<Resou
 /** 🚦️ One waiter's place in a resource's arrival queue: `<directory>/<resource-hash>.queue/<arrivedAtMs>-<pid>-<owner>`. */
 export type QueuedLeaseOptions = LeaseOptions & { readonly owner: string };
 
+/** 🎟️ Names one live request using the exact production ticket contract. */
+export function resourceQueueTicketV1(request:{readonly arrivedAtMs:number;readonly pid:number;readonly owner:string}):string{
+  if(!Number.isSafeInteger(request.arrivedAtMs)||request.arrivedAtMs<queueSchema.properties.arrivedAtMs.minimum||request.arrivedAtMs>queueSchema.properties.arrivedAtMs.maximum||!Number.isSafeInteger(request.pid)||request.pid<queueSchema.properties.pid.minimum||request.pid>queueSchema.properties.pid.maximum||!new RegExp(queueSchema.properties.owner.pattern,"u").test(request.owner))throw Error("Invalid lease queue ticket");
+  const rule=queueSchema.definitions.Protocol.const;return `${request.arrivedAtMs.toString(rule.arrivalBase).padStart(rule.arrivalDigits,"0")}-${String(request.pid).padStart(rule.pidDigits,"0")}-${request.owner}`;
+}
+
+function arrival(name:string):number{const field=name.split("-")[0]!;return field.length===queueSchema.definitions.Protocol.const.arrivalDigits?Number.parseInt(field,queueSchema.definitions.Protocol.const.arrivalBase):Number(field);}
+
 /** 🔁️ Retries an interrupted filesystem read while preserving cancellation and original permanent errors. */
 export async function retryInterruptedFilesystemRead<T>(signal: AbortSignal, read: () => T): Promise<T> {
   for (;;) {
@@ -142,15 +151,16 @@ export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): P
   options.signal.throwIfAborted();
   if (!/^[A-Za-z0-9._-]{1,64}$/u.test(options.owner)) throw new Error("Invalid lease queue owner");
   const queue = databasePath(options.directory, options.resource).replace(/\.sqlite$/u, ".queue");
+  const ticket = resourceQueueTicketV1({arrivedAtMs:Date.now(),pid:process.pid,owner:options.owner});
+  if(join(queue,ticket).length>queueSchema.definitions.Protocol.const.maximumAbsolutePathUtf16)throw Error("Lease queue absolute path exceeds 256 UTF-16 units");
   mkdirSync(queue, { recursive: true });
-  const ticket = `${String(Date.now()).padStart(15, "0")}-${String(process.pid).padStart(10, "0")}-${options.owner}`;
   writeFileSync(join(queue, ticket), `${process.pid}\n`, { flag: "wx" });
   const started = Date.now();
   let nextProgress = 0;
   try {
     for (;;) {
       options.signal.throwIfAborted();
-      const live = (await retryInterruptedFilesystemRead(options.signal, () => readdirSync(queue))).sort().filter((name) => {
+      const live = (await retryInterruptedFilesystemRead(options.signal, () => readdirSync(queue))).sort((left,right)=>arrival(left)-arrival(right)||left.localeCompare(right,"en")).filter((name) => {
         const pid = Number(name.split("-")[1]);
         if (name === ticket || ticketAlive(pid)) return true;
         rmSync(join(queue, name), { force: true });

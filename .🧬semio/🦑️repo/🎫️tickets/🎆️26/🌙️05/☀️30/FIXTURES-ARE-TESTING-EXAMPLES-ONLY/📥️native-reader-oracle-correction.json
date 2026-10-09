@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+  "before": "f1959aeae6325c8f4cbc04809ac6bae3c8129ba2d6c60cee285a95f4cf51c9b3",
+  "after": "b5724337738f2a798d391b63fd288af3a42f703aef1ac805755ed6cffcc84427",
+  "reason": "remove unnecessary wrong edit-envelope projection; original UTF8 Buffer/hash oracle retained"
+}

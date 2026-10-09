@@ -1,0 +1,2886 @@
+{
+  "observations": [
+    {
+      "path": "oct9-root-follow-data/project-graph.json",
+      "bytes": 175232853
+    },
+    {
+      "path": "b11-data/project-graph.json",
+      "bytes": 175084942
+    },
+    {
+      "path": "k6d/project-graph.json",
+      "bytes": 175022937
+    },
+    {
+      "path": "pw-data/project-graph.json",
+      "bytes": 174728592
+    },
+    {
+      "path": "md/project-graph.json",
+      "bytes": 174721846
+    },
+    {
+      "path": "b10n-data/project-graph.json",
+      "bytes": 174710212
+    },
+    {
+      "path": "oct8-member-native-nx-data/project-graph.json",
+      "bytes": 174545127
+    },
+    {
+      "path": "nb8-data/project-graph.json",
+      "bytes": 174294263
+    },
+    {
+      "path": "g2n-data/project-graph.json",
+      "bytes": 174027031
+    },
+    {
+      "path": "g5n-data/project-graph.json",
+      "bytes": 173286505
+    },
+    {
+      "path": "oct9-runtime-graph-data/project-graph.json",
+      "bytes": 173279588
+    },
+    {
+      "path": "g12-normal-data/project-graph.json",
+      "bytes": 173278988
+    },
+    {
+      "path": "g5b-data/project-graph.json",
+      "bytes": 173270068
+    },
+    {
+      "path": "k3-data/project-graph.json",
+      "bytes": 173270068
+    },
+    {
+      "path": "g10-e-data/project-graph.json",
+      "bytes": 173270068
+    },
+    {
+      "path": "k2-data/project-graph.json",
+      "bytes": 173264336
+    },
+    {
+      "path": "k-data/project-graph.json",
+      "bytes": 173229165
+    },
+    {
+      "path": "f-native3-data/project-graph.json",
+      "bytes": 173220939
+    },
+    {
+      "path": "f-native2-data/project-graph.json",
+      "bytes": 173216353
+    },
+    {
+      "path": "oct8-scoped-preparation-nx-data/project-graph.json",
+      "bytes": 170090846
+    },
+    {
+      "path": "oct8-workspace-contract-nx-data/project-graph.json",
+      "bytes": 169794858
+    },
+    {
+      "path": "oct8-queued-contract-nx-data/project-graph.json",
+      "bytes": 169736370
+    },
+    {
+      "path": "oct8-current-wgpu-nx-data/project-graph.json",
+      "bytes": 169554490
+    },
+    {
+      "path": "oct8-s-browser-inventory-red-nx/project-graph.json",
+      "bytes": 169264256
+    },
+    {
+      "path": "oct8-s-browser-inventory-green-nx/project-graph.json",
+      "bytes": 169264171
+    },
+    {
+      "path": "f-native-data/project-graph.json",
+      "bytes": 167286269
+    },
+    {
+      "path": "oct8-root-nx/project-graph.json",
+      "bytes": 167286269
+    },
+    {
+      "path": "oct8-runtime-native-nx/project-graph.json",
+      "bytes": 160976566
+    },
+    {
+      "path": "oct8-runtime-workspace-data/project-graph.json",
+      "bytes": 159745489
+    },
+    {
+      "path": "oct8-runtime-graph-nx/project-graph.json",
+      "bytes": 159631101
+    },
+    {
+      "path": "oct9-root-follow-data/file-map.json",
+      "bytes": 28480354
+    },
+    {
+      "path": "b11-data/file-map.json",
+      "bytes": 28470632
+    },
+    {
+      "path": "k6d/file-map.json",
+      "bytes": 28464698
+    },
+    {
+      "path": "pw-data/file-map.json",
+      "bytes": 28459755
+    },
+    {
+      "path": "md/file-map.json",
+      "bytes": 28455758
+    },
+    {
+      "path": "b10n-data/file-map.json",
+      "bytes": 28445850
+    },
+    {
+      "path": "nb8-data/file-map.json",
+      "bytes": 28425703
+    },
+    {
+      "path": "g2n-data/file-map.json",
+      "bytes": 28412933
+    },
+    {
+      "path": "g5n-data/file-map.json",
+      "bytes": 28407406
+    },
+    {
+      "path": "oct9-runtime-graph-data/file-map.json",
+      "bytes": 28403001
+    },
+    {
+      "path": "g12-normal-data/file-map.json",
+      "bytes": 28402251
+    },
+    {
+      "path": "k2-data/file-map.json",
+      "bytes": 28399513
+    },
+    {
+      "path": "k3-data/file-map.json",
+      "bytes": 28398430
+    },
+    {
+      "path": "g10-e-data/file-map.json",
+      "bytes": 28397388
+    },
+    {
+      "path": "k-data/file-map.json",
+      "bytes": 28393941
+    },
+    {
+      "path": "f-native3-data/file-map.json",
+      "bytes": 28384776
+    },
+    {
+      "path": "f-native2-data/file-map.json",
+      "bytes": 28381804
+    },
+    {
+      "path": "oct8-root-nx/file-map.json",
+      "bytes": 28356509
+    },
+    {
+      "path": "oct8-member-native-nx-data/file-map.json",
+      "bytes": 26593107
+    },
+    {
+      "path": "oct8-scoped-preparation-nx-data/file-map.json",
+      "bytes": 26353245
+    },
+    {
+      "path": "oct8-workspace-contract-nx-data/file-map.json",
+      "bytes": 26315333
+    },
+    {
+      "path": "oct8-queued-contract-nx-data/file-map.json",
+      "bytes": 26314328
+    },
+    {
+      "path": "oct8-current-wgpu-nx-data/file-map.json",
+      "bytes": 26304088
+    },
+    {
+      "path": "oct8-s-browser-inventory-red-nx/file-map.json",
+      "bytes": 26253329
+    },
+    {
+      "path": "oct8-s-browser-inventory-green-nx/file-map.json",
+      "bytes": 26251426
+    },
+    {
+      "path": "oct8-runtime-native-nx/file-map.json",
+      "bytes": 24670854
+    },
+    {
+      "path": "oct8-runtime-workspace-data/file-map.json",
+      "bytes": 24625684
+    },
+    {
+      "path": "oct8-runtime-graph-nx/file-map.json",
+      "bytes": 24621335
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/oversized-input/Cargo.lock",
+      "bytes": 4194305
+    },
+    {
+      "path": "oct8-root-private-nx/project-graph.json",
+      "bytes": 91871
+    },
+    {
+      "path": "nr-data/project-graph.json",
+      "bytes": 91871
+    },
+    {
+      "path": "p-data/project-graph.json",
+      "bytes": 91871
+    },
+    {
+      "path": "pu-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "snap-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "pc-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-remodel-relocated/nx-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-hub-wgpu-corpus-nx-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-post-corpus-three/nx-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "pch3-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "pf-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-session-owner/nx-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-protected-post-identity-verification-private-nx/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "g2-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "g12-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-descriptor-contract-repair/neutral-nx-workspace/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "pch-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "pch4-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "g10-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-box-source-nx-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-wgpu-third-corpus/private-nx/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "pk5-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-maintenance-nx-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "pch2-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "pf4-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final-controlled-route/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-adapter/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final-controlled-system/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "g10-guard-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "pu4-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-controlled-system/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "g5-private-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-controlled/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-root-resumed-corpus-nx/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "pcm-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-protected-neutral-renewal-private-nx/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-session-progress-renewal/nx-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-mounted-adapter/nx-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-post-session-four/nx-data/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-lease-corpus-injected-identity/private-nx/project-graph.json",
+      "bytes": 91538
+    },
+    {
+      "path": "oct8-plugin-finish-browser-private-nx/project-graph.json",
+      "bytes": 91231
+    },
+    {
+      "path": "oct8-scanner-nx-data/project-graph.json",
+      "bytes": 91231
+    },
+    {
+      "path": "oct8-plugin-finish-source-nx/project-graph.json",
+      "bytes": 91231
+    },
+    {
+      "path": "oct8-plugin-facet-outer-nx/project-graph.json",
+      "bytes": 91231
+    },
+    {
+      "path": "oct8-root-lifecycle-nx/project-graph.json",
+      "bytes": 91231
+    },
+    {
+      "path": "oct8-root-restored-lifecycle-nx/project-graph.json",
+      "bytes": 91231
+    },
+    {
+      "path": "private-runtime-nx/project-graph.json",
+      "bytes": 90914
+    },
+    {
+      "path": "oct8-plugin-outer-nx/project-graph.json",
+      "bytes": 87784
+    },
+    {
+      "path": "oct8-plugin-facet-test-current-nx/project-graph.json",
+      "bytes": 80401
+    },
+    {
+      "path": "oct8-runtime-source-nx-data/project-graph.json",
+      "bytes": 79493
+    },
+    {
+      "path": "oct8-runtime-nx-data/project-graph.json",
+      "bytes": 77590
+    },
+    {
+      "path": "oct7-runtime-nx-data/project-graph.json",
+      "bytes": 75458
+    },
+    {
+      "path": "oct7-finish-plugin-nx/project-graph.json",
+      "bytes": 75458
+    },
+    {
+      "path": "oct7-root-derived-nx/project-graph.json",
+      "bytes": 74933
+    },
+    {
+      "path": "oct8-scoped-preparation-final-artifacts/native-sync-hMxIJL/.nx/data/file-map.json",
+      "bytes": 6744
+    },
+    {
+      "path": "oct8-scoped-preparation-final2-artifacts/native-sync-20OG5l/.nx/data/file-map.json",
+      "bytes": 6744
+    },
+    {
+      "path": "oct8-native-preparation-red/native-sync-BPK3V0/.nx/data/file-map.json",
+      "bytes": 6423
+    },
+    {
+      "path": "oct8-native-preparation-green/native-sync-xsvgR8/.nx/data/file-map.json",
+      "bytes": 6422
+    },
+    {
+      "path": "oct8-scoped-preparation-red-artifacts/native-sync-UODh9i/.nx/data/file-map.json",
+      "bytes": 6421
+    },
+    {
+      "path": "oct8-native-preparation-expanded-fixed/native-sync-TUjtk7/.nx/data/file-map.json",
+      "bytes": 6421
+    },
+    {
+      "path": "oct8-native-ancestor-red/native-sync-FxXAmO/.nx/data/file-map.json",
+      "bytes": 6420
+    },
+    {
+      "path": "oct8-native-recipe-coverage-red/native-sync-Smiv8P/.nx/data/file-map.json",
+      "bytes": 6419
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-AFgf0j/.nx/data/file-map.json",
+      "bytes": 6324
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-uP0sY3/.nx/data/file-map.json",
+      "bytes": 6323
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-nCMqDs/.nx/data/file-map.json",
+      "bytes": 6322
+    },
+    {
+      "path": "oct8-native-preparation-expanded/native-sync-538chz/.nx/data/file-map.json",
+      "bytes": 5610
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-qndnKH/.nx/data/file-map.json",
+      "bytes": 5511
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-8Wn0H2/.nx/data/file-map.json",
+      "bytes": 4480
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-wwWXLg/.nx/data/file-map.json",
+      "bytes": 4266
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/actual-trunk-neutral/owner/Cargo.lock",
+      "bytes": 2994
+    },
+    {
+      "path": "oct8-root-dev-service/actual-trunk-neutral/owner/Cargo.lock",
+      "bytes": 2994
+    },
+    {
+      "path": "oct8-native-ancestor-red/native-sync-FxXAmO/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-scoped-preparation-final-artifacts/native-sync-hMxIJL/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-scoped-preparation-final2-artifacts/native-sync-20OG5l/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-native-preparation-expanded/native-sync-538chz/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-native-preparation-green/native-sync-xsvgR8/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-8Wn0H2/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-wwWXLg/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-scoped-preparation-red-artifacts/native-sync-UODh9i/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-native-preparation-expanded-fixed/native-sync-TUjtk7/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-native-recipe-coverage-red/native-sync-Smiv8P/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-qndnKH/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-nCMqDs/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-uP0sY3/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-AFgf0j/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-native-preparation-red/native-sync-BPK3V0/.nx/data/project-graph.json",
+      "bytes": 1506
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-preparation-diagnostics-b2i0GM/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-1ss9Bz/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/cargo-development-closure-iYK2le/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract-artifacts/cargo-development-closure-cfQXyj/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract-artifacts/cargo-development-closure-IIFx3g/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract-artifacts/cargo-development-closure-VmkOBi/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract-artifacts/cargo-development-closure-0b9L4A/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract-artifacts/cargo-preparation-diagnostics-vdqeyO/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/cargo-development-closure-ifpOII/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/cargo-development-closure-4h3cQY/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract-artifacts/cargo-development-closure-i0uobs/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-c8Z5wA/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/cargo-preparation-diagnostics-dKnclE/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-EyzllA/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/cargo-development-closure-JS5i9u/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/cargo-development-closure-z642Kn/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/cargo-development-closure-2uPem5/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/cargo-development-closure-4YITzx/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-YucXR5/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-rI5GAj/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/cargo-development-closure-iLQ0IK/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-oVy53V/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-enr05u/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/cargo-development-closure-DsA3s6/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-WamDcs/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-MX7F7W/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/cargo-preparation-diagnostics-olmtOR/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/cargo-development-closure-k2aJnN/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-preparation-diagnostics-Bst7Gr/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-BMugTa/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-preparation-diagnostics-BRymPz/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-w7XZe4/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-wd5uJg/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-nBD5ae/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-0OLQTc/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-Ev15Ya/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-preparation-diagnostics-Tl2xlo/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-preparation-diagnostics-8dcVu9/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-z1RjuP/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-uGryFc/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-InYhw1/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-preparation-diagnostics-c2o3LG/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-aNM2kO/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-MOTITB/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-j3hlVN/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-HjgGGc/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-2zhWel/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-Z5gWHg/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-MhFJI7/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-preparation-diagnostics-SoI36i/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-QBBLAO/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-MZ5sGT/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-XNMsxq/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-FuZHTL/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-oUiiIU/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-FIN4MC/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-veeGrB/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-cePKCH/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-ZoyeD7/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-z3oKc2/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-preparation-diagnostics-0hqV54/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-c4FtdG/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-h59Qua/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-DkRHh3/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-Kzf6it/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-pYuyZ8/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-r0JtJ6/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-YnP7qq/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-bic2M2/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-preparation-diagnostics-iKa0Um/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-83d1Jp/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-jkFc5w/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-n4l2sc/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-3hN0ET/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-preparation-diagnostics-9bPxYH/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-Gn0Kni/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-cV5pWl/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract2-artifacts/cargo-development-closure-8KCI1o/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract2-artifacts/cargo-development-closure-vM8Tkl/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract2-artifacts/cargo-preparation-diagnostics-E84O7r/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract2-artifacts/cargo-development-closure-Wsum1F/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract2-artifacts/cargo-development-closure-uKM4Ob/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract2-artifacts/cargo-development-closure-7RLwoD/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/cargo-development-closure-e6QagD/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/cargo-development-closure-YaoCFu/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/cargo-development-closure-YuPuzI/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/cargo-development-closure-NYEKFG/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-development-closure-aCtKVY/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/cargo-preparation-diagnostics-4Y2ZhA/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/cargo-development-closure-YrEWtk/Cargo.lock",
+      "bytes": 686
+    },
+    {
+      "path": "snap-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "oct8-remodel-relocated/nx-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "pch3-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "oct8-session-owner/nx-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "g12-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "pch-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "pch4-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "pk5-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "pch2-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "pu4-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "pcm-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "oct8-session-progress-renewal/nx-data/file-map.json",
+      "bytes": 589
+    },
+    {
+      "path": "pu-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "pc-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-hub-wgpu-corpus-nx-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-post-corpus-three/nx-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "pf-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-plugin-finish-browser-private-nx/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-scanner-nx-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-protected-post-identity-verification-private-nx/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "g2-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-descriptor-contract-repair/neutral-nx-workspace/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "g10-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-box-source-nx-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-plugin-finish-source-nx/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-wgpu-third-corpus/private-nx/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-plugin-facet-outer-nx/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-maintenance-nx-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "pf4-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-root-lifecycle-nx/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-root-restored-lifecycle-nx/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final-controlled-route/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-adapter/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final-controlled-system/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "g10-guard-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-controlled-system/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "g5-private-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-controlled/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-root-resumed-corpus-nx/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-protected-neutral-renewal-private-nx/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-plugin-outer-nx/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-mounted-adapter/nx-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-post-session-four/nx-data/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct8-lease-corpus-injected-identity/private-nx/file-map.json",
+      "bytes": 588
+    },
+    {
+      "path": "oct7-runtime-nx-data/file-map.json",
+      "bytes": 587
+    },
+    {
+      "path": "oct8-root-private-nx/file-map.json",
+      "bytes": 587
+    },
+    {
+      "path": "nr-data/file-map.json",
+      "bytes": 587
+    },
+    {
+      "path": "oct8-runtime-nx-data/file-map.json",
+      "bytes": 587
+    },
+    {
+      "path": "oct7-root-derived-nx/file-map.json",
+      "bytes": 587
+    },
+    {
+      "path": "oct8-runtime-source-nx-data/file-map.json",
+      "bytes": 587
+    },
+    {
+      "path": "oct8-plugin-facet-test-current-nx/file-map.json",
+      "bytes": 587
+    },
+    {
+      "path": "oct7-finish-plugin-nx/file-map.json",
+      "bytes": 587
+    },
+    {
+      "path": "private-runtime-nx/file-map.json",
+      "bytes": 587
+    },
+    {
+      "path": "p-data/file-map.json",
+      "bytes": 586
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-83e04f8e-e575-451a-ad84-34a7b101514a/Cargo.lock",
+      "bytes": 393
+    },
+    {
+      "path": "oct8-root-dev-service/compiler-resource-cargo-91d9dd3a-0eee-4d77-bc37-60216738a8cf/Cargo.lock",
+      "bytes": 393
+    },
+    {
+      "path": "oct8-workspace-contract-artifacts/cargo-selected-preparation-go4ksA/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-lVVVfE/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/cargo-selected-preparation-t1uxnJ/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-pOahiP/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/cargo-selected-preparation-Rim9RN/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/cargo-selected-preparation-lq6LwK/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-J2KVxE/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/cargo-selected-preparation-1vQmmO/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/cargo-selected-preparation-vEdIlg/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/cargo-selected-preparation-eyIpqN/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-2vpqvl/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-qUvcOW/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-9TwXtY/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-06xoj9/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-x8CHlk/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-CyUCYp/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-N0awcW/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-utbXyK/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-ZwC8yH/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-BUycKB/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-EN3zES/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-fQDLfu/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-8UpfRG/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-yzDlEj/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-xLpGAx/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-xzFK0R/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-1nAiqG/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-8Kn45h/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-eXpLyw/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-y3SfYz/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-R8UY7I/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-aiVATy/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-sddQ69/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-i9oVRn/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-xAULty/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-VovZ2y/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/cargo-selected-preparation-I5wwbc/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-workspace-contract2-artifacts/cargo-selected-preparation-iDwzOW/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/cargo-selected-preparation-Q9Xxrh/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/cargo-selected-preparation-Z3WzAG/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/cargo-selected-preparation-lw97d5/specific/Cargo.lock",
+      "bytes": 369
+    },
+    {
+      "path": "oct8-scoped-preparation-final-artifacts/native-sync-hMxIJL/Cargo.lock",
+      "bytes": 364
+    },
+    {
+      "path": "oct8-scoped-preparation-final2-artifacts/native-sync-20OG5l/Cargo.lock",
+      "bytes": 364
+    },
+    {
+      "path": "oct8-scoped-preparation-red-artifacts/native-sync-UODh9i/Cargo.lock",
+      "bytes": 364
+    },
+    {
+      "path": "oct8-native-recipe-coverage-red/native-sync-Smiv8P/Cargo.lock",
+      "bytes": 364
+    },
+    {
+      "path": "oct8-native-ancestor-red/native-sync-FxXAmO/Cargo.lock",
+      "bytes": 337
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-8a1678db-8bed-4b04-8763-7eb2fb4d35ff/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-9e7a4b20-cbdd-4be8-b91e-5cde8b8bedd0/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-7cf80c1f-d355-47f4-98d1-298a8eed356a/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-a579febe-75dd-45b2-942c-165b7be6335b/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-a960160a-3394-49d8-9584-cd68c71cf78c/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-51cce8a0-3167-453e-9bb0-294b3d80f30c/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-d3829b5a-950a-4708-9086-49a434e16b4e/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-7b3bc475-820e-4f7d-85b9-757d9276e927/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-802d6f77-233c-4d88-be82-805e1b996bed/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-2830c16e-adb5-4ff6-9293-4c04c6f8876a/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-83e732b1-42e4-4b26-b44f-ac06cde252d8/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-f9af6319-c441-49e8-86c3-5b0c068811ee/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-1302481b-1f1f-4c83-a610-c3eff58084d2/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-f42c88d3-5612-4004-8a7f-f307040e2ad7/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-0f3b9216-f12b-4089-83b1-3137013681fb/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-1726862f-a26b-4b11-8ece-da17d6872503/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-1a6516e6-1c49-4f4f-8cd0-d62292b4bec0/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-b71db86c-2e58-4a1a-b4e8-5e1ac0d070e5/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-820a9563-7c95-4b6f-8286-9d7f8f5c9793/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-7f1a8753-9eba-49c6-8d19-03efb0787120/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-1b81fdef-65bd-4d36-81aa-0609927fc490/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-5e0e12e2-9f24-4ef3-84b4-fe1da5014828/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-6486f279-1822-4361-b718-98197041dc58/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-f1e0a412-e168-4e12-9c7c-cd7fd13f5889/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-5092de1f-193f-4765-ad0b-4433aa3dc4dc/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-0bcbb1b2-4ded-46c5-ac0e-e0969a71d977/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/compiler-resource-cargo-3a97f9f9-ecff-4a2c-ae02-0e89b00d7d98/Cargo.lock",
+      "bytes": 288
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-SDtiUd/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-jm1OzI/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-7wQJ6p/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-EFsRxq/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-dBeEiI/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-NXjx6r/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-8CEdZh/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-shO0S7/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-YNQA7h/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-f4qaLd/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-MzQywh/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-64bb50/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-dCvE2u/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-1eL1Xt/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-TuVfyl/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-gRB7No/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-Gzn9Qf/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-ADIZ7n/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-Zjpf6K/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-f3HP5L/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-eUgWR1/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-mvCTBg/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-qbBM30/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-lSbvtq/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-jDwZN7/owner/Cargo.lock",
+      "bytes": 287
+    },
+    {
+      "path": "oct8-native-preparation-green/native-sync-xsvgR8/Cargo.lock",
+      "bytes": 274
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-8Wn0H2/Cargo.lock",
+      "bytes": 274
+    },
+    {
+      "path": "oct8-native-preparation-expanded-fixed/native-sync-TUjtk7/Cargo.lock",
+      "bytes": 274
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-nCMqDs/Cargo.lock",
+      "bytes": 274
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-uP0sY3/Cargo.lock",
+      "bytes": 274
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-AFgf0j/Cargo.lock",
+      "bytes": 274
+    },
+    {
+      "path": "oct8-native-preparation-red/native-sync-BPK3V0/Cargo.lock",
+      "bytes": 274
+    },
+    {
+      "path": "oct8-workspace-contract-artifacts/workspace-prepare-reachable-oQZZDg/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-workspace-contract-artifacts/workspace-prepare-nested-QWiUIG/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/workspace-prepare-nested-cYFnR1/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/workspace-prepare-reachable-PlWg9t/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/workspace-prepare-nested-FQDE59/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/workspace-prepare-reachable-lcv9om/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/workspace-prepare-nested-2h4ePU/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/workspace-prepare-nested-ErLmiI/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/workspace-prepare-nested-DIZElL/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/workspace-prepare-reachable-DOMYZ9/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-workspace-contract2-artifacts/workspace-prepare-nested-KrzM7n/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/workspace-prepare-nested-BgDMSH/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-workspace-contract2-artifacts/workspace-prepare-reachable-V7t44s/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/workspace-prepare-nested-fGsX2q/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/workspace-prepare-reachable-Obq1VS/Cargo.lock",
+      "bytes": 248
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/workspace-ghost-QhPvBf/Cargo.lock",
+      "bytes": 211
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/workspace-ghost-YzfP8D/Cargo.lock",
+      "bytes": 211
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/workspace-ghost-DsK5rE/Cargo.lock",
+      "bytes": 211
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/workspace-ghost-XWVjJx/Cargo.lock",
+      "bytes": 209
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/workspace-ghost-gF9R3g/Cargo.lock",
+      "bytes": 209
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/workspace-ghost-DRKKlG/Cargo.lock",
+      "bytes": 209
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/fresh-process-laws-EPvA1b/actual-selected-package-owner/nested/Cargo.lock",
+      "bytes": 170
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/fresh-process-laws-Ax9j2f/actual-selected-package-owner/nested/Cargo.lock",
+      "bytes": 170
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/fresh-process-laws-URtryd/actual-selected-package-owner/nested/Cargo.lock",
+      "bytes": 170
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/fresh-process-laws-dM9ICi/actual-selected-package-owner/nested/Cargo.lock",
+      "bytes": 170
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-process-laws-B32Yau/actual-selected-package-owner/nested/Cargo.lock",
+      "bytes": 170
+    },
+    {
+      "path": "oct8-scoped-preparation-green-artifacts/native-sync-HcSYMw/Cargo.lock",
+      "bytes": 169
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/runtime-cargo-currentness-oracle/owner/Cargo.lock",
+      "bytes": 169
+    },
+    {
+      "path": "oct8-root-dev-service/runtime-cargo-currentness-oracle/owner/Cargo.lock",
+      "bytes": 169
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/fresh-process-laws-EPvA1b/actual-cargo-provenance/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/fresh-process-laws-Ax9j2f/actual-cargo-provenance/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-hdyMFH/owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-j8XxP8/owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-process-laws-IErhMw/actual-cargo-provenance/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-process-laws-NSOsbu/actual-cargo-provenance/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/fresh-process-laws-dM9ICi/actual-cargo-provenance/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-process-laws-2Veipv/actual-cargo-provenance/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-cu10mz/owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-6Mt2YZ/owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-process-laws-B32Yau/actual-cargo-provenance/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-jmikHB/owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-TYZlFc/owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-AGh4yv/owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-process-laws-FjGmSM/actual-cargo-provenance/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-oqHgdB/owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-ZC1K1Z/owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-CDSI7v/owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-process-laws-qQ5ItC/actual-cargo-provenance/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-process-laws-nP4G0l/actual-cargo-provenance/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/real-cargo-capture-HJk4VC/owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-process-laws-6FX7zy/actual-selected-package-owner/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-process-laws-0H1UR0/actual-cargo-provenance/Cargo.lock",
+      "bytes": 168
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-4c382cd8-84be-4520-b00c-fedf60f3ff3e/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-5c9da37a-eb38-493e-8a59-7156205db228/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-ea6fe6bc-324b-4b9a-8815-c0dce284f843/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-e9a9d131-254a-48c1-b15f-04244500b8ea/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-15f1d995-d8d7-4e19-91a1-4c1f7399d9ea/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-4274f087-38cc-490e-b947-dfd11ae09311/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-70657325-d82c-4e86-b17a-ab1072b94f7f/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-50f67286-5a5a-4db9-aa4c-179711f17d24/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-72b756d8-97dc-4c2a-a1f9-46fed6d58a46/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-50535645-afe7-4b30-9e00-123539a4e271/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-677174c3-8e89-4d81-a978-3b8ea6335460/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-3cd8ed51-6134-4293-bf47-cbcdc08372ff/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-f3619017-1d7b-4475-bc64-912bf12a664a/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-a222be74-3f1f-444f-a31f-4292d414a678/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-root-dev-service/build-read-cargo-8c815085-d069-4a0a-86e1-ad8e57aeb326/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-ed07513b-67ca-4fcb-8d58-dd5bf205736d/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-b84febe8-857d-4e9f-aaa5-f163ecc108d1/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-root-dev-service/native/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-08e9cfbf-3599-4b3d-b144-41175485c17e/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-955ad1df-d29b-4c08-bd57-461c17cd42f0/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/build-read-cargo-b6b2bc72-9b48-4dea-b566-ca0f3efc6bec/Cargo.lock",
+      "bytes": 161
+    },
+    {
+      "path": "oct8-workspace-contract3-artifacts/cargo-machine-output-EaWBZn/Cargo.lock",
+      "bytes": 158
+    },
+    {
+      "path": "oct8-workspace-planner-final-artifacts/cargo-machine-output-bsRJGh/Cargo.lock",
+      "bytes": 158
+    },
+    {
+      "path": "oct8-workspace-contract4-artifacts/cargo-machine-output-OWrq3P/Cargo.lock",
+      "bytes": 158
+    },
+    {
+      "path": "oct8-queue-planner-final-artifacts/cargo-queued-preparation-begwPP/Cargo.lock",
+      "bytes": 157
+    },
+    {
+      "path": "oct8-queued-contract-artifacts/cargo-queued-preparation-gMqa6L/Cargo.lock",
+      "bytes": 157
+    },
+    {
+      "path": "oct8-native-preparation-expanded/native-sync-538chz/Cargo.lock",
+      "bytes": 78
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-wwWXLg/Cargo.lock",
+      "bytes": 78
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-qndnKH/Cargo.lock",
+      "bytes": 78
+    },
+    {
+      "path": "oct8-scoped-preparation-final-artifacts/native-sync-hMxIJL/foreign/Cargo.lock",
+      "bytes": 49
+    },
+    {
+      "path": "oct8-scoped-preparation-final2-artifacts/native-sync-20OG5l/foreign/Cargo.lock",
+      "bytes": 49
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/incomplete-finish/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/changed-between-legs/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/linked-parent/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/closed-owner/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/cancelled/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/changed-after-last/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/deadline/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/changed-environment/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/changed-arguments/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/shared-epoch/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/duplicate-leg-completion/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/same-bytes-name-replacement/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/unknown-compiler-input/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/out-of-order-leg/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct8-plugin-artifacts/fresh-source-epoch-YUdNPp/changed-before-first/Cargo.lock",
+      "bytes": 12
+    },
+    {
+      "path": "oct7-runtime-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct7-runtime-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pu-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pu-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "snap-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "snap-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-root-private-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-root-private-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pc-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pc-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "nr-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "nr-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-member-native-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-remodel-relocated/nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-remodel-relocated/nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "nb8-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "nb8-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-wgpu-corpus-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-wgpu-corpus-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-post-corpus-three/nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-post-corpus-three/nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "b11-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "b11-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pch3-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pch3-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pf-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pf-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-session-owner/nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-session-owner/nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-ancestor-red/native-sync-FxXAmO/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-ancestor-red/native-sync-FxXAmO/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "f-native-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "k6ad/project-graph.json~24351f25",
+      "bytes": 0
+    },
+    {
+      "path": "k6ad/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "k6ad/project-graph.json~bd0ecddb",
+      "bytes": 0
+    },
+    {
+      "path": "k6ad/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "k6ad/project-graph.json~1a1aec25",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-plugin-finish-browser-private-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-plugin-finish-browser-private-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct7-root-derived-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct7-root-derived-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-source-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-source-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-scanner-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-scanner-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct9-root-follow-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct9-root-follow-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-protected-post-identity-verification-private-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-protected-post-identity-verification-private-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct9-runtime-graph-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct9-runtime-graph-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g2-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g2-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g12-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g12-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "k6ad/project-graph.json~2b823a20",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-scoped-preparation-final-artifacts/native-sync-hMxIJL/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-scoped-preparation-final-artifacts/native-sync-hMxIJL/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-plugin-finish-source-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-descriptor-contract-repair/neutral-nx-workspace/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-descriptor-contract-repair/neutral-nx-workspace/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-surface-source-nx-data/project-graph.json~9c2d9827",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-surface-source-nx-data/project-graph.json~d58521ee",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-surface-source-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "k-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "k-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pch-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pch-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-scoped-preparation-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-member-native-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g12-normal-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g12-normal-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pch4-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pch4-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g10-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g10-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-box-source-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-box-source-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g5b-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-plugin-finish-source-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-plugin-facet-outer-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-surface-source-nx-data/project-graph.json~5a2cb730",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-surface-source-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-wgpu-third-corpus/private-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-wgpu-third-corpus/private-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g5n-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g5n-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pk5-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pk5-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-workspace-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-s-browser-inventory-red-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-scoped-preparation-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g5b-data/project-graph.json~d3475dc4",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-root-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-plugin-facet-outer-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-maintenance-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-maintenance-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-s-browser-inventory-red-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-scoped-preparation-final2-artifacts/native-sync-20OG5l/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-scoped-preparation-final2-artifacts/native-sync-20OG5l/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-root-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-workspace-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-plugin-facet-test-current-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-plugin-facet-test-current-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pch2-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pch2-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct7-finish-plugin-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct7-finish-plugin-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g2n-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g2n-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pf4-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pf4-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "k6d/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-root-lifecycle-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-root-lifecycle-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-preparation-expanded/native-sync-538chz/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-preparation-expanded/native-sync-538chz/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g5p-data/project-graph.json~3e387240",
+      "bytes": 0
+    },
+    {
+      "path": "g5p-data/project-graph.json~804944e1",
+      "bytes": 0
+    },
+    {
+      "path": "g5p-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-s-browser-inventory-green-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-root-restored-lifecycle-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-root-restored-lifecycle-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final-controlled-route/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final-controlled-route/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "k3-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "k3-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-native-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-adapter/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-adapter/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-current-wgpu-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final-controlled-system/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-final-controlled-system/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g10-guard-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g10-guard-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "b10-data/project-graph.json~c670cab8",
+      "bytes": 0
+    },
+    {
+      "path": "b10-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "b10-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-s-browser-inventory-green-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "md/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "md/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-current-wgpu-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-native-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pu4-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pu4-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-controlled-system/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g5r-data/project-graph.json~e396b220",
+      "bytes": 0
+    },
+    {
+      "path": "b10-data/project-graph.json~d3d5b5eb",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-controlled-system/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "b10-data/project-graph.json~4994b147",
+      "bytes": 0
+    },
+    {
+      "path": "g5-private-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g5-private-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g5r-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g5r-data/project-graph.json~4d20fadd",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-controlled/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-hub-fresh-consumption/nx-data-controlled/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-preparation-green/native-sync-xsvgR8/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-preparation-green/native-sync-xsvgR8/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-8Wn0H2/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-8Wn0H2/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-root-resumed-corpus-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-root-resumed-corpus-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-wwWXLg/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-wwWXLg/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-scoped-preparation-red-artifacts/native-sync-UODh9i/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-scoped-preparation-red-artifacts/native-sync-UODh9i/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-preparation-expanded-fixed/native-sync-TUjtk7/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-preparation-expanded-fixed/native-sync-TUjtk7/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pcm-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pcm-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-recipe-coverage-red/native-sync-Smiv8P/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-recipe-coverage-red/native-sync-Smiv8P/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-protected-neutral-renewal-private-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-protected-neutral-renewal-private-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g10-e-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "g10-e-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-qndnKH/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-qndnKH/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "f-native3-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "f-native3-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pw-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-nCMqDs/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-nCMqDs/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "pw-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-uP0sY3/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-uP0sY3/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-AFgf0j/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-artifacts/native-sync-AFgf0j/.nx/data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "p-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "p-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-plugin-outer-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-plugin-outer-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "b10n-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "b10n-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-session-progress-renewal/nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-session-progress-renewal/nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "k2-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "k2-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-runtime-graph-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-mounted-adapter/nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-mounted-adapter/nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-queued-contract-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-queued-contract-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-workspace-contract-nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-workspace-contract-nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "private-runtime-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "private-runtime-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "f-native2-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "f-native2-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-post-session-four/nx-data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-post-session-four/nx-data/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-lease-corpus-injected-identity/private-nx/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-lease-corpus-injected-identity/private-nx/project-graph.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-preparation-red/native-sync-BPK3V0/.nx/data/0B594BC0-4DEC-536E-A1D7-2342AD79AE2D-v3.lock",
+      "bytes": 0
+    },
+    {
+      "path": "oct8-native-preparation-red/native-sync-BPK3V0/.nx/data/project-graph.lock",
+      "bytes": 0
+    }
+  ],
+  "authorship": false,
+  "performedRemoval": false
+}

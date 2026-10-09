@@ -45,6 +45,7 @@ semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framew
 pack = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 csv = "1.4.0"
 semio-framework-async-macros = { workspace = true }

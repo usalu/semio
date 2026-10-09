@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { inflateRawSync } from "node:zlib";
-import { runTool } from "../../📦️dependencies/📜️script.ts";
+import {repositoryCargoPreparationStorageV1, runTool } from "../../📦️dependencies/📜️script.ts";
 import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 
 type BunDistribution = { platform: string; arch: string; musl: boolean; archive: string; bytes: number; sha256: string };
@@ -55,7 +55,7 @@ export async function prepareBun(workspace: string, version: string, signal: Abo
     const validate = async (): Promise<string> => {
       const stat = lstatSync(executable), receipt = JSON.parse(readFileSync(join(directory, ".toolchain.json"), "utf8"));
       if (!stat.isFile() || stat.isSymbolicLink() || lstatSync(directory).isSymbolicLink() || receipt.archive !== row.sha256 || receipt.executable !== createHash("sha256").update(readFileSync(executable)).digest("hex")) throw new Error("Bun installation checksum mismatch");
-      if ((await runTool(executable, ["--version"], directory, signal, true)).trim() !== version) throw new Error("Bun executable version mismatch");
+      if ((await runTool(executable,["--version"],directory,signal,true,process.env,repositoryCargoPreparationStorageV1(process.cwd()))).trim() !== version) throw new Error("Bun executable version mismatch");
       return executable;
     };
     try { lstatSync(directory); return await validate(); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
@@ -70,7 +70,7 @@ export async function prepareBun(workspace: string, version: string, signal: Abo
       if (size !== row.bytes || hash.digest("hex") !== row.sha256) throw new Error("Bun archive checksum mismatch");
       const payload = bunArchiveExecutable(Buffer.concat(chunks), `${row.archive.slice(0, -4)}/bun${process.platform === "win32" ? ".exe" : ""}`), staged = join(staging, process.platform === "win32" ? "bun.exe" : "bun");
       writeFileSync(staged, payload, { flag: "wx" }); chmodSync(staged, 0o755);
-      if ((await runTool(staged, ["--version"], staging, signal, true)).trim() !== version) throw new Error("Bun release version mismatch");
+      if ((await runTool(staged,["--version"],staging,signal,true,process.env,repositoryCargoPreparationStorageV1(process.cwd()))).trim() !== version) throw new Error("Bun release version mismatch");
       writeFileSync(join(staging, ".toolchain.json"), JSON.stringify({ archive: row.sha256, executable: createHash("sha256").update(payload).digest("hex") }));
       signal.throwIfAborted(); renameSync(staging, directory); return executable;
     } finally { clearInterval(progress); rmSync(staging, { recursive: true, force: true }); }

@@ -47,7 +47,7 @@ impl Deserializer<Block3dSnapshot> for ZipIntoBlock3d {
             _ => Confidence::None,
         }
     }
-    async fn deserialize(payload: &IoPayload) -> IoResult<Block3dSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<Block3dSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "zip→block3d: expected a binary zip payload".to_string())));
         };

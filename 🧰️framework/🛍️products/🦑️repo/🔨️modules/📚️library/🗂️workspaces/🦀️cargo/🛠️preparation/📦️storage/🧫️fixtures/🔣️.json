@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "accepted": [
+    {
+      "version": 1,
+      "directory": "/a"
+    },
+    {
+      "version": 1,
+      "directory": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "version": 1,
+      "directory": "C:\\a"
+    }
+  ],
+  "rejected": [
+    {
+      "version": 1
+    },
+    {
+      "directory": "a"
+    },
+    {
+      "version": 2,
+      "directory": "a"
+    },
+    {
+      "version": 1,
+      "directory": ""
+    },
+    {
+      "version": 1,
+      "directory": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "version": 1,
+      "directory": "a",
+      "unknown": true
+    },
+    {
+      "version": 1,
+      "directory": "relative"
+    }
+  ]
+}

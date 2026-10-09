@@ -52,7 +52,7 @@ export function admitPluginCatalogV1(input: unknown, control: PluginCatalogAdmis
   if (root.version !== 1) return refused("version");
   const groups = [root.targets, root.hosts, root.playgrounds];
   if (groups.some(group => !Array.isArray(group) || group.length > control.maxRows)) return refused("row count");
-  const total = groups.reduce((count, group) => count + (group as unknown[]).length, 0);
+  const total = groups.reduce<number>((count, group) => count + (group as unknown[]).length, 0);
   if (total > control.maxRows) return refused("row credits");
   const next = () => { check(); control.progress({ completed: ++completed, total, work }); check(); };
   const identities = new Set<string>(), urls = new Set<string>();

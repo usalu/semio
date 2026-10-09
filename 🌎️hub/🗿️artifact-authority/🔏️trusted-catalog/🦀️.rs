@@ -5,6 +5,7 @@ use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, Au
 use directory::os_directory::{DocumentDescriptor, DocumentExecutionProtocolV1, DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1};
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use directory::os_store::{self, ArtifactCodec};
+use directory::io::{ArtifactAssemblyRegistryPlan,ArtifactCodecBinding,ArtifactCatalogBinding,ArtifactCatalogCapability,ArtifactCatalogTarget};
 use semio_framework::{DslValue, PackageDescriptor, Version};
 use semio_framework_hash::{Hasher, Sha256};
 use semio_framework_plugin_host::{PackageHash, PackageId, PackageRef};
@@ -132,13 +133,14 @@ pub struct NativeCodecBinding {
     plugin_id: String,
     package_id: String,
     artifact_kind: String,
+    factory_id: Option<String>,
     codec: ArtifactCodec,
 }
 
 impl NativeCodecBinding {
     /// 🪢️ Binds a native executable without deriving package identity from plugin identity.
-    pub fn new(plugin_id: impl Into<String>, package_id: impl Into<String>, artifact_kind: impl Into<String>, codec: ArtifactCodec) -> Self {
-        Self { plugin_id: plugin_id.into(), package_id: package_id.into(), artifact_kind: artifact_kind.into(), codec }
+    pub fn new(plugin_id: impl Into<String>, package_id: impl Into<String>, artifact_kind: impl Into<String>, factory_id: Option<String>, codec: ArtifactCodec) -> Self {
+        Self { plugin_id: plugin_id.into(), package_id: package_id.into(), artifact_kind: artifact_kind.into(), factory_id, codec }
     }
 
     pub(super) fn plugin_id(&self) -> &str {
@@ -156,6 +158,9 @@ impl NativeCodecBinding {
     pub(super) fn codec(&self) -> &ArtifactCodec {
         &self.codec
     }
+
+    /// 🪪️ Returns only factory identity retained from an actual verified native receipt.
+    pub(super) fn factory_id(&self)->Option<&str>{self.factory_id.as_deref()}
 }
 
 /// 🪪️ Borrowed immutable package identity passed from the trusted loader to one native provider.
@@ -1049,6 +1054,12 @@ pub struct VerifiedNativeArtifactCodec {
     identity: TrustedArtifactIdentity,
     codec: Option<ArtifactCodec>,
     guest: GuestArtifactCodecBinding,
+    owner_declaration: ArtifactCatalogBinding,
+}
+
+impl VerifiedNativeArtifactCodec {
+    /// 🏛️ Returns the exact original codec-owner declaration, including for hosted aliases.
+    pub fn owner_declaration(&self)->&ArtifactCatalogBinding{&self.owner_declaration}
 }
 
 impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
@@ -1071,13 +1082,16 @@ impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
 
     async fn apply_operation(&self, pair: ArtifactPair, operation: &AcceptedArtifactOperation, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         context.checkpoint()?;
-        let encoded = directory::os_spr::encode_ops_vec(std::slice::from_ref(&operation.encoded));
+        let maximum=usize::try_from(context.limits().max_pair_bytes).ok().and_then(|bytes|bytes.checked_mul(16)).and_then(|bytes|bytes.checked_add(operation.encoded.len().checked_mul(16)?)).ok_or(AuthorityError::ResourceLimit("identity source capacity"))?;
+        let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|{context.report(super::AuthorityProgress{stage:super::AuthorityProgressStage::ApplyingOperations,completed_units:operation.sequence,total_units:context.limits().max_operations as u64}).is_ok()};
+        let mut identity=directory::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum,&mut observer).map_err(|error|AuthorityError::Codec{stage:ArtifactValidationStage::Input,message:bounded_message(error)})?;
+        let encoded=identity.encode(|control|directory::os_spr::io::binary::operation_sequence::encode(std::slice::from_ref(&operation.encoded),control)).map_err(|error|AuthorityError::Codec{stage:ArtifactValidationStage::Input,message:bounded_message(error)})?;
         let Some(codec) = &self.codec else {
             let next = self.guest.apply_ops(pair, encoded, context).await?;
             context.checkpoint()?;
             return Ok(next);
         };
-        let (pack, spr, ops) = (codec.apply_ops_binary)(&pair.pack, &pair.spr, &encoded).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
+        let (pack, spr, ops) = (codec.apply_ops_binary)(&pair.pack, &pair.spr, &encoded, &mut identity).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
         if ops.len() > AUTHORITY_MAX_CODEC_TEXT_BYTES {
             return Err(AuthorityError::ResourceLimit("codec text byte"));
         }
@@ -1516,11 +1530,13 @@ impl TrustedCatalogLoader {
         verifications: &GuestCodecVerificationCacheV1,
         context: &OperationContext<'_>,
     ) -> Result<VerifiedTrustedCatalog, AuthorityError> {
-        let (catalog, registration_codecs) = Self::verify_selected(root, bundle_path, bundle_bytes, profile_id, providers, verifications, context).await?;
+        let (catalog, registration) = Self::verify_selected(root, bundle_path, bundle_bytes, profile_id, providers, verifications, context).await?;
         let assembly = semio_framework_schema_registry::assembly::begin().map_err(catalog_error)?;
-        os_store::preflight_document_codecs_in_assembly(&assembly, &registration_codecs).map_err(catalog_error)?;
+        os_store::preflight_document_codecs_in_assembly(&assembly, &registration.document_codecs).map_err(catalog_error)?;
+        directory::io::preflight_artifact_codec_bindings_in_assembly(&assembly,&registration.document_bindings,&registration.document_codecs).map_err(catalog_error)?;
+        directory::io::preflight_artifact_catalog_bindings_in_assembly(&assembly,&registration.catalog_bindings,&registration.document_codecs).map_err(catalog_error)?;
         context.checkpoint()?;
-        os_store::register_document_codecs_in_assembly(&assembly, registration_codecs).map_err(catalog_error)?;
+        directory::io::commit_artifact_assembly_registry_plan(&assembly, registration).map_err(catalog_error)?;
         Ok(catalog)
     }
 
@@ -1536,7 +1552,7 @@ impl TrustedCatalogLoader {
         providers: &dyn NativeCodecProviderSourceV1,
         verifications: &GuestCodecVerificationCacheV1,
         context: &OperationContext<'_>,
-    ) -> Result<(VerifiedTrustedCatalog, Vec<ArtifactCodec>), AuthorityError> {
+    ) -> Result<(VerifiedTrustedCatalog, ArtifactAssemblyRegistryPlan), AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
         let guest_runtime = Arc::new(semio_framework_plugin_host::OwnedRuntime::new());
         let residency = GuestResidencyLedgerV1::new(TRUSTED_CATALOG_GUEST_RESIDENCY);
@@ -1571,7 +1587,7 @@ impl TrustedCatalogLoader {
         let mut packages = Vec::with_capacity(order.len());
         let mut codecs = Vec::new();
         let mut open_targets = Vec::new();
-        let mut registration_codecs = Vec::new();
+        let mut registration = ArtifactAssemblyRegistryPlan::default();
         let mut resolved_paths = BTreeSet::from([bundle_path]);
 
         struct StagedTrustedPackage<'a> {
@@ -1685,6 +1701,7 @@ impl TrustedCatalogLoader {
 
         for (stage, native_bindings) in staged.into_iter().zip(previews) {
             let StagedTrustedPackage { position, record, component, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_asset, plugin_module } = stage;
+            let catalog_package=DocumentOpenPackageV1{plugin_id:record.plugin_id.clone(),package_id:record.package_id.clone(),version:record.version.clone(),component_sha256:hex_lower(&component_sha256),component_blake3:hex_lower(&component_blake3),descriptor_byte_sha256:hex_lower(&descriptor_sha256),execution_protocol:DocumentExecutionProtocolV1{app_channel_version:descriptor.execution_protocol.app_channel_version}};
             context.checkpoint()?;
             let binding_map = validate_native_bindings(&native_bindings)?;
             let mut consumed_bindings = BTreeSet::new();
@@ -1732,12 +1749,15 @@ impl TrustedCatalogLoader {
                     return Err(catalog("duplicate exact trusted artifact identity"));
                 }
                 if let Some(binding) = binding {
-                    registration_codecs.push(binding.codec.clone());
+                    registration.document_codecs.push(binding.codec.clone());
                 }
+                let owner_declaration=ArtifactCatalogBinding{contributor:catalog_package.clone(),owner:catalog_package.clone(),artifact:DocumentOpenArtifactV1{kind:expected.artifact_kind.clone(),schema:expected.artifact_schema.clone(),pack_schema_hash:expected.pack_schema_hash.clone()},target:None,capability:binding.map_or(ArtifactCatalogCapability::UnlinkedGuest,|binding|ArtifactCatalogCapability::linked(&binding.codec,binding.factory_id.clone()))};
+                registration.catalog_bindings.push(owner_declaration.clone());
                 codecs.push(VerifiedNativeArtifactCodec {
                     identity,
                     codec: binding.map(|binding| binding.codec.clone()),
                     guest: GuestArtifactCodecBinding { component: Arc::clone(&guest), artifact_schema: expected.artifact_schema.clone() },
+                    owner_declaration,
                 });
             }
             if consumed_bindings.len() != binding_map.len() {
@@ -1783,6 +1803,8 @@ impl TrustedCatalogLoader {
                 if open_targets.iter().any(|existing| document_open_target_sort_key(existing) == document_open_target_sort_key(&selection)) {
                     return Err(catalog("document-open target identity is duplicated"));
                 }
+                let owned=codecs.iter().find(|entry|entry.identity.plugin_id==bound.plugin_id&&entry.identity.package_id==bound.package_id&&entry.identity.version==bound.version&&entry.identity.artifact_kind==target.artifact_kind&&entry.identity.artifact_schema==target.artifact_schema&&entry.identity.pack_schema_hash==target.pack_schema_hash).ok_or_else(||catalog("document-open target's exact codec owner is not verified before selection"))?;
+                registration.catalog_bindings.push(ArtifactCatalogBinding{contributor:selection.package.clone(),owner:owned.owner_declaration.owner.clone(),artifact:selection.artifact.clone(),target:Some(ArtifactCatalogTarget{parent_dialect:selection.parent_dialect.clone(),surface:selection.surface.clone(),grant:selection.grant,browser_actor:selection.browser_actor.clone()}),capability:owned.owner_declaration.capability.clone()});
                 open_targets.push(selection);
             }
             for (owner, target) in hosted_codec_targets(&bundle.packages, record, |target| selected(record, target))? {
@@ -1803,10 +1825,11 @@ impl TrustedCatalogLoader {
                     .find(|entry| entry.identity.plugin_id == owner.plugin_id && entry.identity.package_id == owner.package_id && entry.identity.version == owner.version && entry.identity.artifact_kind == identity.artifact_kind && entry.identity.artifact_schema == identity.artifact_schema && entry.identity.pack_schema_hash == identity.pack_schema_hash)
                     .ok_or_else(|| catalog("hosted document-open target's owner codec is not verified before its host"))?;
                 let codec = owned.codec.clone();
+                let owner_declaration=owned.owner_declaration.clone();
                 if codecs.iter().any(|entry| entry.identity == identity) {
                     return Err(catalog("duplicate exact trusted artifact identity"));
                 }
-                codecs.push(VerifiedNativeArtifactCodec { identity, codec, guest: GuestArtifactCodecBinding { component: Arc::clone(&guest), artifact_schema: target.artifact_schema.clone() } });
+                codecs.push(VerifiedNativeArtifactCodec { identity, codec, guest: GuestArtifactCodecBinding { component: Arc::clone(&guest), artifact_schema: target.artifact_schema.clone() },owner_declaration });
             }
             report_package_progress(context, position, 4, total_units)?;
             packages.push(VerifiedTrustedPackage {
@@ -1848,7 +1871,8 @@ impl TrustedCatalogLoader {
         };
         let catalog = VerifiedTrustedCatalog { residency, guests: guests.into_boxed_slice(), progress, packages: packages.into_boxed_slice(), codecs: codecs.into_boxed_slice(), artifact_kind_count, open_targets: open_targets.into_boxed_slice(), generation_id };
         context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogResolved, completed_units: total_units, total_units })?;
-        Ok((catalog, registration_codecs))
+        for codec in &registration.document_codecs{let binding=ArtifactCodecBinding::schema_only(codec);if !registration.document_bindings.contains(&binding){registration.document_bindings.push(binding);}}
+        Ok((catalog, registration))
     }
 }
 

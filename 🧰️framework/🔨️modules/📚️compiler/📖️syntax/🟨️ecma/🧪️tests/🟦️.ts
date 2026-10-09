@@ -90,6 +90,15 @@ test("ECMA binding identities and original syntax-tree call ranges match indepen
     };
     for (const statement of program!) expect(admitStatement(statement), row.id + JSON.stringify(admitStatement.errors)).toBe(true);
     inspect(program);
+    if (row.id === "escaped-template-binding") {
+      const template = program![1]!.declarations![0]!.initializer, call = template.expressions![0]!;
+      expect(call.callee!.name).toBe(((file.statements[1] as ts.VariableStatement).declarationList.declarations[0]!.initializer as ts.TemplateExpression).templateSpans[0]!.expression.getText(file).startsWith("\\u0072ead") ? "read" : "unresolved");
+    }
+    if (row.id === "async-test-callback") expect(program![0]!.expression!.arguments![1]!.async).toBe(true);
+    if (row.id === "selected-local-ref") {
+      const call = program![0]!.expression!.callee!.arguments![0]!.properties![0]!.value;
+      expect(row.source.slice(call.start, call.end)).toBe(call.value!);
+    }
     expect(actual.sort((a, b) => a.start - b.start || b.end - a.end), row.id).toEqual(expected.sort((a, b) => a.start - b.start || b.end - a.end));
   }
   console.log("[DEBUG] original ECMA syntax-tree call spans and decoded escaped binding identities match independent TypeScript");
@@ -108,7 +117,10 @@ test("ECMA first-party parser and defining syntax formats satisfy strict indepen
 test("ECMA parser preserves original statement boundaries and refuses malformed bindings", () => {
   for (const row of examples.syntaxBoundaries) {
     const file = ts.createSourceFile("boundary.ts", row.source, ts.ScriptTarget.Latest, true), diagnostics = (file as ts.SourceFile & { parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics, program = ecmaProgram(row.source);
-    expect(diagnostics.length === 0, row.id).toBe(row.valid);
+    const options = { noLib: true, noResolve: true, noEmit: true }, host = ts.createCompilerHost(options);
+    host.getSourceFile = path => path === "boundary.ts" ? file : undefined;
+    const oracle = ts.createProgram(["boundary.ts"], options, host), grammar = oracle.getSemanticDiagnostics(file).filter(diagnostic => diagnostic.code === 1142);
+    expect(diagnostics.length + grammar.length === 0, row.id).toBe(row.valid);
     if (!row.valid) { expect(program, row.id).toBeNull(); continue; }
     expect(program, row.id).not.toBeNull();
     if (row.id === "return-line") {

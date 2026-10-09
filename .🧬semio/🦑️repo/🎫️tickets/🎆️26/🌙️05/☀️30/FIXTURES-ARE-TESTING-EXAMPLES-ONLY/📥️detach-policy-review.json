@@ -1,0 +1,25 @@
+{
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
+      "sha256": "e5cc24d3166ebde0d274cf07cb07bb00d90116f8b78455aa3cdb1cfa875b1c22",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/♻️retirement/🦀️.rs",
+      "sha256": "c1018c6a5bb07385f590eb6256dc85ff45cf7e3424e7feadda6a960c97c581dd",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧫️fixtures/🔣️.json",
+      "sha256": "7620dffca847c9ff585cfc0bff838006a65c3e01118b9ed7e36e33e4ddf46079",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "d3037a99236cedabdd53af2d6153e16c58f0edea82f4cdf93c3fbdb0cda154d3",
+      "authored": false
+    }
+  ]
+}

@@ -994,7 +994,7 @@ mod native {
             match event {
                 HostUserEvent::RuntimeReady { runtime, presenter } => {
                     crate::log_debug_diagnostic("[TRACE] native renderer boot ready");
-                    let mut host = OsHost::new(runtime, presenter);
+                    let mut host = OsHost::new(runtime, presenter, crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
                     let proxy = self.proxy.clone();
                     #[cfg(not(target_arch = "wasm32"))]
                     host.runtime.set_waker(Arc::new(move || {

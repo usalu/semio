@@ -6,7 +6,9 @@
 // of this crate. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
+#[cfg(test)]
+use std::collections::HashSet;
 
 #[path = "🛠️modeling/🦀️.rs"]
 mod modeling;
@@ -20,17 +22,14 @@ pub use quality::{analyze_polygon_soup, MeshBounds, MeshMassProperties, MeshQual
 mod surface;
 pub use surface::MeshSurfaceJob;
 
-/// 🌉️ `HashSet<u32>` has no `ToValue`/`FromValue` blanket impl (`🌱️value/🔁️codec` only covers
-/// `Vec`/`BTreeMap<String,_>`/`HashMap<K:ToString,_>`/`Option`/arrays) — `HalfedgeMesh::uv_seams`
-/// names this bridge via `#[value(with = "u32_hashset_bridge")]`. Encodes as a `DslValue::Array`,
-/// the same shape `serde_json` gives a `HashSet` by default.
-mod u32_hashset_bridge {
-    pub fn to_value(set: &super::HashSet<u32>) -> dsl_core::value::DslValue {
+/// 🌉️ Encodes original ordered UV membership as the declared array of vertex ids.
+mod u32_membership_bridge {
+    pub fn to_value(set: &super::HistoryFoldSet<u32>) -> dsl_core::value::DslValue {
         let mut ids: Vec<&u32> = set.iter().collect();
         ids.sort_unstable();
         dsl_core::value::DslValue::Array(ids.into_iter().map(dsl_core::value::ToValue::to_value).collect())
     }
-    pub fn from_value(value: dsl_core::value::DslValue) -> Result<super::HashSet<u32>, dsl_core::value::ValueError> {
+    pub fn from_value(value: dsl_core::value::DslValue) -> Result<super::HistoryFoldSet<u32>, dsl_core::value::ValueError> {
         <Vec<u32> as dsl_core::value::FromValue>::from_value(value).map(|items| items.into_iter().collect())
     }
 }
@@ -143,7 +142,7 @@ pub enum WeldMode {
     ByDistance,
 }
 
-pub use semio_framework_mesh_engine::{HistoryFoldIndex, MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation, MeshTexture};
+pub use semio_framework_mesh_engine::{HistoryFoldIndex,HistoryFoldSet, MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation, MeshTexture};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
@@ -155,15 +154,14 @@ pub enum MirrorAxis {
 
 //#region ⚠️ Errors
 /// ⚠️ Half-edge mesh kernel operation failure.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `WeldMode` above.
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[derive(Debug, Clone, PartialEq)]
 pub enum MeshKernelError {
     InvalidHandle,
     NonManifold,
     DegenerateOperation,
     EmptySelection,
     InvalidInput(String),
+    Retained(protocol::value::ValueError),
 }
 
 impl std::fmt::Display for MeshKernelError {
@@ -174,6 +172,7 @@ impl std::fmt::Display for MeshKernelError {
             Self::DegenerateOperation => formatter.write_str("degenerate operation"),
             Self::EmptySelection => formatter.write_str("empty selection"),
             Self::InvalidInput(detail) => write!(formatter, "invalid input: {detail}"),
+            Self::Retained(error) => std::fmt::Display::fmt(error,formatter),
         }
     }
 }
@@ -275,8 +274,8 @@ pub struct HalfedgeMesh {
     halfedges: Vec<HalfEdge>,
     faces: Vec<MeshFace>,
     #[cfg_attr(test, serde(default))]
-    #[value(default, with = "u32_hashset_bridge")]
-    uv_seams: HashSet<u32>,
+    #[value(default, with = "u32_membership_bridge")]
+    uv_seams: HistoryFoldSet<u32>,
     #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
     #[value(default)]
     attributes: HistoryFoldIndex<String,MeshAttribute>,
@@ -317,11 +316,11 @@ impl protocol::value::retirement::RetireOwned for MeshTransfer {
 
 impl HalfedgeMesh {
     /// 🧩️ Transfer all seven kernel owners directly to an individually typed persisted model.
-    pub fn into_owned_parts(self)->(Vec<MeshVertex>,Vec<HalfEdge>,Vec<MeshFace>,HashSet<u32>,HistoryFoldIndex<String,MeshAttribute>,HistoryFoldIndex<String,protocol::value::DslValue>,HistoryFoldIndex<String,MeshTexture>){(self.vertices,self.halfedges,self.faces,self.uv_seams,self.attributes,self.materials,self.textures)}
+    pub fn into_owned_parts(self)->(Vec<MeshVertex>,Vec<HalfEdge>,Vec<MeshFace>,HistoryFoldSet<u32>,HistoryFoldIndex<String,MeshAttribute>,HistoryFoldIndex<String,protocol::value::DslValue>,HistoryFoldIndex<String,MeshTexture>){(self.vertices,self.halfedges,self.faces,self.uv_seams,self.attributes,self.materials,self.textures)}
     /// 🥽️ Editable literal topology enters the kernel without a serialized mesh document.
-    pub fn from_owned_parts(vertices:Vec<MeshVertex>,halfedges:Vec<HalfEdge>,faces:Vec<MeshFace>,uv_seams:HashSet<u32>,attributes:HistoryFoldIndex<String,MeshAttribute>,materials:HistoryFoldIndex<String,protocol::value::DslValue>,textures:HistoryFoldIndex<String,MeshTexture>)->Self{Self{vertices,halfedges,faces,uv_seams,attributes,materials,textures}}
+    pub fn from_owned_parts(vertices:Vec<MeshVertex>,halfedges:Vec<HalfEdge>,faces:Vec<MeshFace>,uv_seams:HistoryFoldSet<u32>,attributes:HistoryFoldIndex<String,MeshAttribute>,materials:HistoryFoldIndex<String,protocol::value::DslValue>,textures:HistoryFoldIndex<String,MeshTexture>)->Self{Self{vertices,halfedges,faces,uv_seams,attributes,materials,textures}}
     pub fn empty() -> Self {
-        Self { vertices: Vec::new(), halfedges: Vec::new(), faces: Vec::new(), uv_seams: HashSet::new(), attributes: HistoryFoldIndex::new(), materials:HistoryFoldIndex::new(),textures:HistoryFoldIndex::new() }
+        Self { vertices: Vec::new(), halfedges: Vec::new(), faces: Vec::new(), uv_seams: HistoryFoldSet::new(), attributes: HistoryFoldIndex::new(), materials:HistoryFoldIndex::new(),textures:HistoryFoldIndex::new() }
     }
 
     /// 🏷️ Authored channels are read from the same mesh value consumed by retained jobs.
@@ -753,7 +752,7 @@ impl HalfedgeMesh {
     }
 
     pub fn merge_coplanar_faces(&mut self) -> MeshResult<usize> {
-        let mut job=self.merge_coplanar_faces_job()?;loop {match job.step(256)? {MeshModelingStep::Done(mesh)=>{let count=job.coplanar_merge_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh coplanar merge cancelled".into()))}}
+        let mut job=self.merge_coplanar_faces_job()?;loop {match job.step(256,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.coplanar_merge_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh coplanar merge cancelled".into()))}}
     }
 
     /// Unifies every group of vertices at (nearly) the same position — as commonly produced by importers
@@ -761,14 +760,14 @@ impl HalfedgeMesh {
     /// shared boundaries — into a single vertex id per position, so the halfedge topology (twins, boundary
     /// detection) reflects the true geometric connectivity. Returns the number of vertices removed.
     pub fn weld_coincident_vertices(&mut self,precision:f32)->MeshResult<usize> {
-        let mut job=self.weld_coincident_vertices_job(precision)?;loop {match job.step(256)? {MeshModelingStep::Done(mesh)=>{let count=job.welded_vertex_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh weld cancelled".into()))}}
+        let mut job=self.weld_coincident_vertices_job(precision)?;loop {match job.step(256,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.welded_vertex_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh weld cancelled".into()))}}
     }
 
     /// Flips faces so every undirected edge is traversed in opposite directions by its two incident faces.
     /// CAD imports often leave inconsistently oriented face wires; without this pass, halfedge twins are
     /// missing even though the undirected mesh is closed. Returns the number of faces flipped.
     pub fn orient_faces_consistently(&mut self) -> MeshResult<usize> {
-        let mut job=self.orient_faces_job()?;loop {match job.step(256)? {MeshModelingStep::Done(mesh)=>{let count=job.orientation_flip_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh orientation cancelled".into()))}}
+        let mut job=self.orient_faces_job()?;loop {match job.step(256,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.orientation_flip_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh orientation cancelled".into()))}}
     }
 
     /// Finds every closed boundary loop (a chain of edges with no opposite face on the other side) in the
@@ -777,7 +776,7 @@ impl HalfedgeMesh {
     /// this will also "cap" seams that are actually already shared with a differently-indexed neighbor.
     /// Returns the number of holes filled.
     pub fn fill_holes(&mut self) -> MeshResult<usize> {
-        let mut job=self.fill_holes_job()?;loop {match job.step(256)? {MeshModelingStep::Done(mesh)=>{let count=job.filled_hole_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh hole filling cancelled".into()))}}
+        let mut job=self.fill_holes_job()?;loop {match job.step(256,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.filled_hole_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh hole filling cancelled".into()))}}
     }
 
     /// 🪞 Reflects geometry on one side of the axis plane and welds its seam.
@@ -1090,12 +1089,36 @@ fn merge_face_loops(a:&[u32],b:&[u32])->Option<Vec<u32>> {
     if a.len()<3 || b.len()<3 {return None;}
     let ai=(0..a.len()).find(|&index|find_edge_position(b,a[(index+1)%a.len()],a[index]).is_some())?;let bi=find_edge_position(b,a[(ai+1)%a.len()],a[ai])?;
     if (0..a.len()).any(|index|index!=ai && find_edge_position(b,a[(index+1)%a.len()],a[index]).is_some()) {return None;}
-    let mut merged=vec![a[ai]];merged.extend((2..b.len()).map(|index|b[(bi+index)%b.len()]));merged.extend((1..a.len()).map(|index|a[(ai+index)%a.len()]));let mut seen=HashSet::new();if merged.iter().any(|&id|!seen.insert(id)) {None}else {Some(merged)}
+    let mut merged=vec![a[ai]];merged.extend((2..b.len()).map(|index|b[(bi+index)%b.len()]));merged.extend((1..a.len()).map(|index|a[(ai+index)%a.len()]));let mut seen=HistoryFoldSet::new();if merged.iter().any(|&id|!seen.insert(id)) {None}else {Some(merged)}
 }
 
 //#endregion Polygon
 
 //#region Export
+
+#[path="🧩️tessellation/🎟️reservation/🦀️.rs"]
+mod tessellation_buffer_reservation;
+
+#[path="🧩️tessellation/🎨️metadata/🦀️.rs"]
+mod tessellation_metadata_capture;
+
+#[path="🧩️tessellation/📤️corner/🦀️.rs"]
+mod tessellation_corner_emission;
+
+#[path="🧩️tessellation/📤️edge/🦀️.rs"]
+mod tessellation_edge_emission;
+
+#[path="🧩️tessellation/📤️triangle/🦀️.rs"]
+mod tessellation_triangle_emission;
+
+#[path="🧩️tessellation/🎨️projection/🦀️.rs"]
+mod tessellation_attribute_projection;
+
+#[path="🧩️tessellation/🧭️face/🦀️.rs"]
+mod tessellation_face_preparation;
+
+#[path="🧩️tessellation/⏱️normal/🦀️.rs"]
+mod tessellation_normal_work;
 
 /// ⏱️ Retained corner, ear-test and preview emission cursor; each unit visits at most one corner.
 pub struct MeshTessellationJob {
@@ -1121,16 +1144,35 @@ pub struct MeshTessellationJob {
     probe: usize,
     candidates: usize,
     base: u32,
-    edge_seen: HashSet<(u32, u32)>,
+    edge_seen: HistoryFoldSet<(u32, u32)>,
     done: usize,
     cancelled: bool,
     maximum_preview_bytes: usize,
-    selected_faces: Option<HashSet<u32>>,
+    selected_faces: Option<HistoryFoldSet<u32>>,
     corner_ids:Vec<u32>,
     attribute_name:Option<String>,
     attribute_indices:Vec<u32>,
     attribute_cursor:usize,
     metadata_done:bool,
+    buffer_reservation:u8,
+    buffer_receipt:tessellation_buffer_reservation::MeshBufferReceipt,
+    metadata_cursor:usize,
+    semantic_slots:[Option<usize>;3],
+    metadata_receipt:tessellation_metadata_capture::MeshMetadataReceipt,
+    corner_receipt:tessellation_corner_emission::MeshCornerReceipt,
+    edge_pending:Option<usize>,
+    edge_receipt:tessellation_edge_emission::MeshEdgeReceipt,
+    triangle_receipt:tessellation_triangle_emission::MeshTriangleReceipt,
+    attribute_slot:usize,
+    attribute_stage:u8,
+    attribute_pending:Option<(String,MeshAttribute)>,
+    attribute_original_indices:Option<protocol::value::retirement::controlled::ControlledRetirement<Option<Vec<u32>>>>,
+    attribute_receipt:tessellation_attribute_projection::MeshAttributeReceipt,
+    face_receipt:tessellation_face_preparation::MeshFaceReceipt,
+    triangle_pending:Option<tessellation_normal_work::TriangleFrame>,
+    normal_metadata_phase:u8,
+    normal_output_bytes:usize,
+    normal_receipt:tessellation_normal_work::MeshNormalReceipt,
 }
 
 /// 🧵️ Tessellation yields retain ownership; completed buffers transfer once.
@@ -1138,34 +1180,27 @@ pub enum MeshTessellationStep { Working(MeshModelingProgress), Done(MeshTransfer
 
 impl MeshTessellationJob {
     pub fn new(mesh: HalfedgeMesh) -> Self {
-        Self { mesh, output: Some(MeshTransfer { colors:Vec::new(),attributes:Default::default(),materials:Default::default(),textures:Default::default(),positions: Vec::new(), normals: Vec::new(), indices: Vec::new(), edge_positions: Vec::new(), face_ids: Vec::new(), vertex_ids: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), edge_uvs: Vec::new(), edge_is_seam: Vec::new() }), face: 0, phase: 0, cursor: 0, start: 0, next_he: 0, hes: Vec::new(), points: Vec::new(), normal_sum: [0.0; 3], normal: Vec3::ZERO, basis: ((0.0,0.0,0.0),(0.0,0.0,0.0)), projected: Vec::new(), scale: 0.0, area: 0.0, links: Vec::new(), head: 0, remaining: 0, ear: 0, probe: 0, candidates: 0, base: 0, edge_seen: HashSet::new(), done: 0, cancelled: false, maximum_preview_bytes: usize::MAX, selected_faces: None,corner_ids:Vec::new(),attribute_name:None,attribute_indices:Vec::new(),attribute_cursor:0,metadata_done:false }
+        Self { mesh, output: Some(MeshTransfer { colors:Vec::new(),attributes:Default::default(),materials:Default::default(),textures:Default::default(),positions: Vec::new(), normals: Vec::new(), indices: Vec::new(), edge_positions: Vec::new(), face_ids: Vec::new(), vertex_ids: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), edge_uvs: Vec::new(), edge_is_seam: Vec::new() }), face: 0, phase: 0, cursor: 0, start: 0, next_he: 0, hes: Vec::new(), points: Vec::new(), normal_sum: [0.0; 3], normal: Vec3::ZERO, basis: ((0.0,0.0,0.0),(0.0,0.0,0.0)), projected: Vec::new(), scale: 0.0, area: 0.0, links: Vec::new(), head: 0, remaining: 0, ear: 0, probe: 0, candidates: 0, base: 0, edge_seen: HistoryFoldSet::new(), done: 0, cancelled: false, maximum_preview_bytes: usize::MAX, selected_faces: None,corner_ids:Vec::new(),attribute_name:None,attribute_indices:Vec::new(),attribute_cursor:0,metadata_done:false,buffer_reservation:0,buffer_receipt:Default::default(),metadata_cursor:0,semantic_slots:[None;3],metadata_receipt:Default::default(),corner_receipt:Default::default(),edge_pending:None,edge_receipt:Default::default(),triangle_receipt:Default::default(),attribute_slot:0,attribute_stage:0,attribute_pending:None,attribute_original_indices:None,attribute_receipt:Default::default(),face_receipt:Default::default(),triangle_pending:None,normal_metadata_phase:0,normal_output_bytes:0,normal_receipt:Default::default() }
     }
     pub fn with_preview_capacity(mesh: HalfedgeMesh, maximum_preview_bytes: usize) -> Self { let mut job = Self::new(mesh); job.maximum_preview_bytes = maximum_preview_bytes; job }
-    pub(super) fn selected(mesh: HalfedgeMesh, faces: HashSet<u32>) -> Self { let mut job = Self::new(mesh); job.selected_faces = Some(faces); job }
+    pub(super) fn selected(mesh: HalfedgeMesh, faces: HistoryFoldSet<u32>) -> Self { let mut job = Self::new(mesh); job.selected_faces = Some(faces); job }
     /// 🧹️ Transfers the existing tessellation payload to its shared typed retirement authority.
     pub fn retirement_birth_bytes(&self)->usize {protocol::value::retirement::owned_retirement_birth_bytes::<Self>()}
     pub fn into_retirement(self,grant:protocol::value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn protocol::value::ErasedSnapshotRetirement>,protocol::value::retained_clone::RetainedCloneProgress),(protocol::value::ValueError,Self)> {
         protocol::value::retirement::admit_owned_retirement(self,grant)
     }
     pub fn source(&self) -> &HalfedgeMesh { &self.mesh }
-    pub(super) fn into_source(self)->HalfedgeMesh { self.mesh }
+    pub(super) fn take_source(&mut self)->HalfedgeMesh { std::mem::take(&mut self.mesh) }
     pub fn progress(&self) -> MeshModelingProgress { MeshModelingProgress { units_done: self.done, units_total: self.done.saturating_add(self.mesh.face_count().saturating_sub(self.face)), phase: if self.face==self.mesh.face_count() {"tessellate-attributes"} else {"tessellate"} } }
-    pub fn cancel(&mut self) { self.cancelled = true; self.output = None; }
+    pub fn cancel(&mut self) { self.cancelled = true; }
     fn halfedge(&self, local: usize) -> u32 { self.hes[if self.mesh.faces[self.face].flipped { self.hes.len() - 1 - local } else { local }] }
     fn corner_uv(&self,id:u32)->[f64;2] {
         let edge=&self.mesh.halfedges[id as usize];
         self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Uv).and_then(|attribute|attribute.value_at(match attribute.domain {MeshAttributeDomain::Corner=>id as usize,MeshAttributeDomain::Face=>self.face,MeshAttributeDomain::Vertex=>edge.vertex as usize,MeshAttributeDomain::Edge=>id as usize})).and_then(protocol::value::DslValue::as_array).map_or(edge.uv.map(f64::from),|value|[0,1].map(|axis|value[axis].as_f64().unwrap()))
     }
     fn corner(&mut self, local: usize) {
-        let he = &self.mesh.halfedges[self.halfedge(local) as usize];
-        let vertex = &self.mesh.vertices[he.vertex as usize];
-        let sample=|semantic|self.mesh.attributes.values().find(|attribute|attribute.semantic==semantic).and_then(|attribute|attribute.value_at(match attribute.domain {MeshAttributeDomain::Corner=>self.halfedge(local) as usize,MeshAttributeDomain::Face=>self.face,MeshAttributeDomain::Vertex=>he.vertex as usize,MeshAttributeDomain::Edge=>self.halfedge(local) as usize})).and_then(protocol::value::DslValue::as_array);
-        let normal=sample(MeshAttributeSemantic::Normal).map(|value|Vec3([0,1,2].map(|axis|value[axis].as_f64().unwrap() as f32))).unwrap_or_else(||if self.mesh.faces[self.face].smooth {vertex.normal.map(Vec3).unwrap_or(self.normal)}else {self.normal});
-        let uv=sample(MeshAttributeSemantic::Uv).map(|value|[0,1].map(|axis|value[axis].as_f64().unwrap() as f32)).unwrap_or(he.uv);
-        let color=sample(MeshAttributeSemantic::Color).map(|value|[0,1,2,3].map(|axis|value[axis].as_f64().unwrap() as f32));
-        self.corner_ids.push(self.halfedge(local));
-        let out = self.output.as_mut().unwrap();
-        out.positions.extend_from_slice(&vertex.position); out.normals.extend_from_slice(&normal.0); out.vertex_ids.push(he.vertex); out.uvs.extend_from_slice(&uv);if let Some(color)=color {out.colors.extend_from_slice(&color);}
+        let data=self.corner_data(local,[self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Normal),self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Uv),self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Color)]);
+        self.append_corner_data(data);
     }
     fn triangle(&mut self, triangle: [usize; 3]) {
         let indices = if self.mesh.faces[self.face].smooth { triangle.map(|local| self.base + local as u32) } else {
@@ -1173,7 +1208,7 @@ impl MeshTessellationJob {
             for local in triangle { self.corner(local); }
             [base, base + 1, base + 2]
         };
-        let out = self.output.as_mut().unwrap(); out.indices.extend_from_slice(&indices); out.face_ids.push(self.face as u32);
+        self.append_triangle_indices(indices);
     }
     fn advance(&mut self) -> MeshResult<()> {
         let n = self.hes.len();
@@ -1199,9 +1234,9 @@ impl MeshTessellationJob {
                 self.cursor += 1;
                 if self.cursor == n {
                     let length = self.normal_sum[0].hypot(self.normal_sum[1]).hypot(self.normal_sum[2]);
-                    self.normal = if length == 0.0 { Vec3::ZERO } else { Vec3(self.normal_sum.map(|value| (value/length) as f32)) };
-                    self.basis = plane_basis(normalize3((self.normal.x() as f64,self.normal.y() as f64,self.normal.z() as f64)));
-                    self.normal = self.normal.normalize();
+                    let normal = if length == 0.0 { Vec3::ZERO } else { Vec3(self.normal_sum.map(|value| (value/length) as f32)) };
+                    self.basis = plane_basis(normalize3((normal.x() as f64,normal.y() as f64,normal.z() as f64)));
+                    self.normal = normal.normalize();
                     self.phase = 4; self.cursor = 0;
                 }
             }
@@ -1224,30 +1259,7 @@ impl MeshTessellationJob {
                 if self.mesh.faces[self.face].smooth { self.corner(self.cursor); self.cursor += 1; }
                 if !self.mesh.faces[self.face].smooth || self.cursor == n { self.phase = if n == 3 || self.normal.length() < 1e-8 || self.scale == 0.0 || self.area.abs() < 1e-14 { 10 } else { 8 }; self.ear = self.head; self.cursor = self.links[self.head].1; }
             }
-            8 => {
-                if self.remaining == 3 { self.triangle([self.head,self.links[self.head].1,self.links[self.head].0]); self.phase = 11; self.cursor = 0; }
-                else {
-                    let (prev,next) = self.links[self.ear]; let cross = cross2(self.projected[prev],self.projected[self.ear],self.projected[next]);
-                    if if self.area > 0.0 { cross > 1e-14 } else { cross < -1e-14 } { self.probe = self.head; self.phase = 9; }
-                    else { self.reject_ear(); }
-                }
-            }
-            9 => {
-                let (prev,next) = self.links[self.ear]; let k = self.probe;
-                if k != prev && k != self.ear && k != next && point_in_triangle(self.projected[k],self.projected[prev],self.projected[self.ear],self.projected[next]) { self.reject_ear(); }
-                else {
-                    self.probe = self.links[k].1;
-                    if self.probe == self.head {
-                        self.triangle([prev,self.ear,next]); self.links[prev].1 = next; self.links[next].0 = prev;
-                        if self.ear == self.head { self.head = next; }
-                        self.remaining -= 1; self.ear = self.head; self.candidates = 0; self.phase = 8;
-                    }
-                }
-            }
-            10 => {
-                let next = self.links[self.cursor].1; self.triangle([self.head,self.cursor,next]); self.cursor = next;
-                if self.links[self.cursor].1 == self.head { self.phase = 11; self.cursor = 0; }
-            }
+            8..=10 => {if let Some((finish,locals))=self.choose_triangle(){self.triangle(locals);self.finish_triangle(finish,locals);}}
             11 => {
                 let he_id = self.hes[self.cursor]; let he = &self.mesh.halfedges[he_id as usize]; let next = &self.mesh.halfedges[he.next as usize];
                 let key = (he.vertex.min(next.vertex),he.vertex.max(next.vertex));
@@ -1280,18 +1292,7 @@ impl MeshTessellationJob {
         self.candidates += 1; self.ear = self.links[self.ear].1;
         self.phase = if self.candidates == self.remaining { self.cursor = self.links[self.head].1; 10 } else { 8 };
     }
-    pub fn step(&mut self, budget: usize) -> MeshResult<MeshTessellationStep> {
-        if self.cancelled { return Ok(MeshTessellationStep::Cancelled(self.progress())); }
-        if self.output.is_none() { return Err(MeshKernelError::InvalidInput("tessellation job is retired".into())); }
-        for _ in 0..budget {
-            if self.metadata_done {return Ok(MeshTessellationStep::Done(self.output.take().unwrap()));}
-            let next = self.done.checked_add(1).ok_or_else(|| MeshKernelError::InvalidInput("tessellation progress overflow".into()))?; if self.face==self.mesh.face_count() {self.advance_attributes()?;}else {self.advance()?;} self.done = next;
-            let out = self.output.as_ref().unwrap();
-            let scalars = out.colors.len().saturating_add(out.attributes.values().map(|attribute|attribute.indices.as_ref().map_or(0,Vec::len)).sum::<usize>()).saturating_add(out.positions.len()).saturating_add(out.normals.len()).saturating_add(out.indices.len()).saturating_add(out.edge_positions.len()).saturating_add(out.face_ids.len()).saturating_add(out.vertex_ids.len()).saturating_add(out.edge_ids.len()).saturating_add(out.uvs.len()).saturating_add(out.edge_uvs.len());
-            if scalars.saturating_mul(4).saturating_add(out.edge_is_seam.len()) > self.maximum_preview_bytes { return Err(MeshKernelError::InvalidInput(format!("mesh preview exceeds {} bytes",self.maximum_preview_bytes))); }
-        }
-        if budget > 0 && self.metadata_done { Ok(MeshTessellationStep::Done(self.output.take().unwrap())) } else { Ok(MeshTessellationStep::Working(self.progress())) }
-    }
+
 }
 
 impl HalfedgeMesh {
@@ -1339,7 +1340,7 @@ impl HalfedgeMesh {
 
     pub fn tessellate(&self) -> MeshResult<MeshTransfer> {
         let mut job=MeshTessellationJob::new(self.clone());
-        loop {match job.step(4096)? {MeshTessellationStep::Done(transfer)=>return Ok(transfer),MeshTessellationStep::Working(_)=>{},MeshTessellationStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh tessellation cancelled".into()))}}
+        loop {let grant=protocol::value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:128,maximum_capacity_bytes:job.next_normal_capacity_byte_demand(128).map_err(MeshKernelError::Retained)?,maximum_release_bytes:job.next_normal_release_byte_demand().map_err(MeshKernelError::Retained)?,maximum_depth:job.next_normal_depth_demand().map_err(MeshKernelError::Retained)?};match job.step(grant).map_err(MeshKernelError::Retained)?.0 {MeshTessellationStep::Done(transfer)=>return Ok(transfer),MeshTessellationStep::Working(_)=>{},MeshTessellationStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh tessellation cancelled".into()))}}
     }
 
     /// 🧵 Reads one authored UV sample through its canonical corner identity.
@@ -1469,9 +1470,49 @@ mod tests;
 #[path = "🧪️tests/🔬️modeling/🦀️.rs"]
 mod modeling_tests;
 
+#[cfg(test)]
+#[path="🧪️tests/🔬️tessellation/🎟️reservation/🦀️.rs"]
+mod tessellation_reservation_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️tessellation/🎨️metadata/🦀️.rs"]
+mod tessellation_metadata_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️tessellation/📤️corner/🦀️.rs"]
+mod tessellation_corner_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️tessellation/📤️edge/🦀️.rs"]
+mod tessellation_edge_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️tessellation/📤️triangle/🦀️.rs"]
+mod tessellation_triangle_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️tessellation/🎨️projection/🦀️.rs"]
+mod tessellation_projection_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️tessellation/🧭️face/🦀️.rs"]
+mod tessellation_face_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️tessellation/⏱️normal/🦀️.rs"]
+mod tessellation_normal_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️tessellation/⏱️polygons/🦀️.rs"]
+mod tessellation_polygon_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️tessellation/🎨️channels/🦀️.rs"]
+mod tessellation_channel_tests;
+
 protocol::value::artifact_retire_leaf!(VertexId,EdgeId,FaceId);
 impl protocol::value::retirement::RetireOwned for MeshTessellationJob {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.mesh),protocol::value::retirement::deferred(self.output),protocol::value::retirement::deferred(self.hes),protocol::value::retirement::deferred(self.points),protocol::value::retirement::deferred(self.projected),protocol::value::retirement::deferred(self.links),protocol::value::retirement::deferred(self.edge_seen),protocol::value::retirement::deferred(self.selected_faces),protocol::value::retirement::deferred(self.corner_ids),protocol::value::retirement::deferred(self.attribute_name),protocol::value::retirement::deferred(self.attribute_indices)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.mesh),protocol::value::retirement::deferred_birth_bytes_for(&self.output),protocol::value::retirement::deferred_birth_bytes_for(&self.hes),protocol::value::retirement::deferred_birth_bytes_for(&self.points),protocol::value::retirement::deferred_birth_bytes_for(&self.projected),protocol::value::retirement::deferred_birth_bytes_for(&self.links),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_seen),protocol::value::retirement::deferred_birth_bytes_for(&self.selected_faces),protocol::value::retirement::deferred_birth_bytes_for(&self.corner_ids),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_name),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_indices)])}
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.mesh),protocol::value::retirement::deferred(self.output),protocol::value::retirement::deferred(self.hes),protocol::value::retirement::deferred(self.points),protocol::value::retirement::deferred(self.projected),protocol::value::retirement::deferred(self.links),protocol::value::retirement::deferred(self.edge_seen),protocol::value::retirement::deferred(self.selected_faces),protocol::value::retirement::deferred(self.corner_ids),protocol::value::retirement::deferred(self.attribute_name),protocol::value::retirement::deferred(self.attribute_indices),protocol::value::retirement::deferred(self.attribute_pending),protocol::value::retirement::deferred(self.attribute_original_indices)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.mesh),protocol::value::retirement::deferred_birth_bytes_for(&self.output),protocol::value::retirement::deferred_birth_bytes_for(&self.hes),protocol::value::retirement::deferred_birth_bytes_for(&self.points),protocol::value::retirement::deferred_birth_bytes_for(&self.projected),protocol::value::retirement::deferred_birth_bytes_for(&self.links),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_seen),protocol::value::retirement::deferred_birth_bytes_for(&self.selected_faces),protocol::value::retirement::deferred_birth_bytes_for(&self.corner_ids),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_name),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_indices),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_pending),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_original_indices)])}
     fn controlled_retirement_supported()->bool {true}
 }

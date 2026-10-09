@@ -1,0 +1,9 @@
+# Canonical Viewport Wire
+
+Read-only2026-10-09. Global Rust search found exactly one Viewport2d owner struct (plus local Serde visitor): UI `🪟️viewport/◻️2d/🧬️schema/🦀️.rs`:5. Fields are x:f64,y:f64,zoom:f64. Current Serialize derive emits named object; Deserialize:18 requires a Viewport2d object and validates exact fields. ToValue:65 explicitly emits object keys x,y,zoom; FromValue:71 uses those exact fields then validate. Default is{x:0,y:0,zoom:1}. A three-f64 array is not canonical wire.
+
+Borrowed DSL native binding UI viewport `🪆️binding/🦀️.rs`:9 declares named record fields1=x,2=y,3=zoom with Float shape. Actual canonical native tree projection should derive/implement named-object behavior from the same owner, not invent array projection based on its three numeric fields. Reconstruction must preserve original semantic validate, including finite coordinates/positive zoom policy, rather than merely deriving structural values.
+
+Actual Surface node graph imports this same first-party Viewport2d at node-graph root:3 and embeds Option<Viewport2d> in ScenePayload:87. SceneDecodeCursor viewport:86 requires object entries x/y/zoom, rejects duplicates/unknowns, exact mask7 and constructs original owner then validate. Surface neutral ports test:11 binds{x:-12.5,y:8,zoom:1.25} to fixture.viewport against independent Serde and ToValue. Scene physical test:21 asserts{x:8.5,y:-0.25,zoom:2}. Both source authorities reject an array interpretation.
+
+The UI viewport owner needs genuine native-tree trait support for its actual consumers; Surface payload's own native-tree projection should delegate to that original owner. This read did not identify the newly mounted camera-law file by exact name, so no guessed fixture path is supplied. Original current canonical evidence is sufficient to choose named object and independent Serde oracle. No runtime executed.

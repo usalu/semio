@@ -28,7 +28,7 @@ async fn reexported_types_match_sibling_crate_shapes() {
     assert!(limits.max_file_len > 0);
     let hlt = HybridLogicalTimestamp::new(1, 1000);
     assert_eq!(hlt.physical_ms, 1000);
-    let _ = ActorId("actor-1".to_string());
+    let _ = ActorId("actor-1".into());
     let _ = ArtifactId("doc-1".to_string());
 }
 //#endregion 🔖️Reexports
@@ -41,14 +41,14 @@ async fn compile_ops_decompile_ops_round_trip() {
         schema: "schema-1".to_string(),
         edits: vec![HistoryEdit { line: None,
             id: "e0".to_string(),
-            actor: Some("actor-1".to_string()),
+            actor: Some("actor-1".into()),
             started_at: "2026-07-27T00:00:00Z".to_string(),
             finished_at: Some("2026-07-27T00:00:01Z".to_string()), verb: None,
             ops: vec![OpPayload { text: Some("set foo = 1".to_string()), binary: None }],
             inverse: Vec::new(),
             meta: None, lane: None,
         }],
-        transitions: vec![HistoryTransitionRecord { id: "transition-1".to_string(), actor: "actor-1".to_string(), hlt: (1, 1_700_000_000_000, 2), dependencies: vec!["e0".to_string()], observed: Some("peer-op".to_string()), payload: vec![0, 1, 3, 0xff] }],
+        transitions: vec![HistoryTransitionRecord { id: "transition-1".to_string(), actor: "actor-1".into(), hlt: (1, 1_700_000_000_000, 2), dependencies: vec!["e0".to_string()], observed: Some("peer-op".to_string()), payload: vec![0, 1, 3, 0xff] }],
         composition: None,
         conflicts: Vec::new(),
         viewer_line: None,

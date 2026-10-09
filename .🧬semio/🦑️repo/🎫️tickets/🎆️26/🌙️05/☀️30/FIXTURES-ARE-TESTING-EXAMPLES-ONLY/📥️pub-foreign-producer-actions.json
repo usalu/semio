@@ -1,0 +1,117 @@
+{
+  "sourceCopies": false,
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+      "afterSha256": "5f094af5efc4ad6d5951bdc3ccaec43b9c440eb8173ee91b68cff5e5dcd308aa",
+      "scope": "canonical borrowed original foreign source API; exact replacements fresh-guarded; no allocating fallback",
+      "beforeSha256": "d6474ff5e085932a4f89511632bb4d51166b95928c9cc64a64d6f73a23796e1e",
+      "qualification": "before whole hash retained in read-only producer-cut; first routine aborted on next hostile leaf before mutation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs",
+      "afterSha256": "0860b1599f1a265572067d1345cf667628bf241a5006f84851de3e67bf71b965",
+      "scope": "canonical borrowed original foreign source API; exact replacements fresh-guarded; no allocating fallback",
+      "beforeSha256": "bb7db96c10e7f12d31b1649ffdecde562c150ba59bc4ea8ef30544a0b6f1c9d7",
+      "qualification": "before whole hash retained in read-only producer-cut; first routine aborted on next hostile leaf before mutation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+      "afterSha256": "dc56ed84b82e329a33c352f24ffc701f7496263301dc65db15f04f81c3f005e4",
+      "scope": "canonical borrowed original foreign source API; exact replacements fresh-guarded; no allocating fallback",
+      "beforeSha256": "5ada0676cd9ece42dd3099a73402daa22e7e48d672967056cfd507902b51c369",
+      "qualification": "before whole hash retained in read-only producer-cut; first routine aborted on next hostile leaf before mutation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
+      "afterSha256": "2576f63d106cde3d5eb508383ababc922046e0c4848540f876f4d0f01594473e",
+      "scope": "canonical borrowed original foreign source API; exact replacements fresh-guarded; no allocating fallback",
+      "reconstructedBeforeSha256": "f0dcadb0f7539a54ff58d9f94c2675850028dbe4ca985b7c7997d172b15990e0",
+      "qualification": "facade before whole hash reconstructed from two exact inverse reexport edits; no retained original whole hash, no peer adoption"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📣️set-transaction/🦀️.rs",
+      "afterSha256": "55f39a5ad8a5f80d348a684addc8bb1ac33c3cc6538426150cc8946a0d1b2608",
+      "scope": "canonical borrowed original foreign source API; exact replacements fresh-guarded; no allocating fallback",
+      "beforeSha256": "5ab27b4172bd7396cbe80e1cf66ab660d919d04dcd922ea337bac8fea010d694",
+      "qualification": "before whole hash retained in read-only producer-cut; first routine aborted on next hostile leaf before mutation"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/⏩️set-transaction/🦀️.rs",
+      "beforeSha256": "bd0a033b5242a3d7752a762f16298e0cc843d51ddbbad2bdaa38495518bfec3e",
+      "afterSha256": "305636cf9c14037d61416f01f4ae2acbbf7eab3c8ebfaddd5488e9664c3d8a39",
+      "logicalBeforeSha256": "bb4a1cdd55eb0f4e98407728980fd8d0444dc18644ea626d62b1dc81c9f270a9",
+      "scope": "canonical borrowed original source; original behavior preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/🦀️.rs",
+      "beforeSha256": "21b62589497db266e627eee1a84e619599d9c5a94c82b8b020fcb9ff200e56ca",
+      "afterSha256": "a705db2d1ed0764377440b91b1b126e9a3056a5fee2a2b29c5e2ac327590fa18",
+      "logicalBeforeSha256": "67c46f30533b3f15f2d4eca49d05f8b32c8089391059f710369e47ee7471f978",
+      "scope": "canonical borrowed original source; original behavior preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify/🦀️.rs",
+      "beforeSha256": "110562d9996aa927665b5017abe1573e41e951b24037bd5c4dd3228c5349de2e",
+      "afterSha256": "03d6f6ae86b6e8660efe7df698c069431dad3d6542acb839e701cf476caa91b1",
+      "logicalBeforeSha256": "ada915dd97bea07d199eb723b6db51fd98e607e8a9f16db3c29631c844c342f5",
+      "scope": "actual composite original output roster borrowed without running/allocating plan; typed original depth refusal"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "169460ee50357303d2c4e91d391e46b491381dcf5948ace323bccc139ecb48c4",
+      "afterSha256": "6c76d35e235aad98b445cd0ebacbe818fb4e32c1829a6fc1859dc02c1eab8a23",
+      "logicalBeforeSha256": "6823c5b72eebceb43ce10211757ca83e0c38fb781ce7af7086cef49d322c27cf",
+      "scope": "canonical original local source absence"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "6c76d35e235aad98b445cd0ebacbe818fb4e32c1829a6fc1859dc02c1eab8a23",
+      "afterSha256": "62ea1907d5a3ff1ca991d096a1e7a5bb555693ca877dafbcd8e9eb8c0943b574",
+      "logicalBeforeSha256": "c3b5ea152170f709a4761186b420ebed04280f9faa97893629c5ee45c10662ef",
+      "scope": "preserve original fold and cold-plan oracle; assert actual indexed borrowed discovery zero System allocation and typed depth refusal"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "62ea1907d5a3ff1ca991d096a1e7a5bb555693ca877dafbcd8e9eb8c0943b574",
+      "afterSha256": "4f8ad31e15c6236f57451014871826725950d02f4068e3ed70b7d38a26054541",
+      "logicalBeforeSha256": "1808f45abf1636c58e318ad9ccecf9f6de854f6ff90ecf73b517808ab6542aa3",
+      "scope": "borrowed refusal match requires no synthetic Debug owner interface"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSha256": "7f5e1ea13b96479efc525c172307e0aeddbccc73ba7b61b872956b1088ddb220",
+      "afterSha256": "26698bf516a74ca6dea4379c0e31735fec2551c05089f5e6cd1cbb0707329bf3",
+      "logicalBeforeHashes": [
+        "9679320472ce5e68d46e29c20b186615c956b4a87f2a87480bf279f21215d12d",
+        "ae143787b6cdcfd3a1c9ce55a2d6146778db1aed670ec7ec21d87bce0ab1d967",
+        "37844737ae836a3162d6eddc516358903f74e8ec5f95fdadee44280d5968b299",
+        "ca97d587d557ee9b8911cf9acf8050a7b6fc9225fbc046b38d322a0e49e1b531"
+      ],
+      "scope": "only original foreign-presence query edges; actual borrowed source refusal propagates, no empty fallback"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs",
+      "beforeSha256": "b079806d44a6b33f886c1b48f522ed177c4751645daad8322fe3bd8fb7f3bf53",
+      "afterSha256": "1ae9cbb21f8d25252e37ae916ca86362beed38f82f72d3be8a98bc8de2e60770",
+      "logicalBeforeHashes": [
+        "34dae180ce04d20f332b344ee3c8aff5e4232dcd62a7408d37f479ec015fec79"
+      ],
+      "scope": "only original foreign-presence query edges; actual borrowed source refusal propagates, no empty fallback"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts",
+      "beforeSha256": "34ea36b89970bc5e5a1d4c1a6931980ac106c0a9d2a3ac0506f543220aa66537",
+      "afterSha256": "0894d6d8d51dbdcd5e9affcbfbf58fd9e6f635cf3b2506c0a7befb7bf398b44f",
+      "scope": "original borrowed producer and derive source law preserves existing parser/Ajv/JSON/UTF8 and original grammar; forbids paired allocating fallback"
+    }
+  ],
+  "qualifiedState": "producer API changing; original Plugin collector and decision callers pending; no compiler/native success claimed",
+  "sourceGreen": {
+    "session": 17641,
+    "nxExit": 0,
+    "duration": "2.2s",
+    "log": "🗑️generated/pub-foreign-borrowed-green.log",
+    "qualification": "producer source/grammar only; three Plugin collectors pending; native borrowed composite law UNRUN"
+  }
+}

@@ -70,6 +70,7 @@ fn performance_now_ms() -> f64 {
 
 /// 🏠️ Owns presentation, scheduling and host lifecycle around the worker-owned runtime.
 pub struct OsHost {
+    retained: semio_framework_job::RetainedCloneGrant,
     pub(crate) animation_clock: crate::deadlines::AcceptedAnimationClock,
     pub(crate) runtime: RuntimeMailbox,
     pub(crate) presenter: AppPresenter,
@@ -113,6 +114,8 @@ pub(crate) struct BrowserRedrawOutcome {
 }
 
 struct OsHostRetirementState {
+    retained: semio_framework_job::RetainedCloneGrant,
+    camera_progress: semio_framework_job::RetainedCloneProgress,
     runtime: Option<RuntimeMailbox>,
     presenter: Option<AppPresenter>,
     scheduler: Option<FrameScheduler>,
@@ -624,8 +627,10 @@ impl PairedEngineSurfaceClose {
 
 impl OsHost {
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub(crate) fn new(runtime: RuntimeMailbox, presenter: AppPresenter) -> Self {
+    pub(crate) fn new(runtime: RuntimeMailbox, presenter: AppPresenter, retained: semio_framework_job::RetainedCloneGrant) -> Self {
+        crate::scenes::install_scene_camera_authority(retained).expect("host retains the same camera bootstrap authority");
         Self {
+            retained,
             animation_clock: crate::deadlines::AcceptedAnimationClock::default(),
             runtime,
             presenter,
@@ -640,7 +645,7 @@ impl OsHost {
             events: ui_host::EventQueue::new(),
             ui_token: ui_host::UiThreadToken::mint_for_host(),
             snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, CursorRequest::Default, ui_wgpu::wgpu::SemioCursor::Default, false, None)),
-            frame_build: crate::frame_job::FrameBuildHandle::new(),
+            frame_build: crate::frame_job::FrameBuildHandle::new(retained),
             surface_resize: crate::surface_lane::SurfaceResizeAuthority::new(semio_framework_trace::allocate_operation_id()),
             component_surface_close: None,
         }
@@ -660,6 +665,7 @@ impl OsHost {
             return Err(self);
         };
         let Self {
+            retained,
             animation_clock: _,
             runtime,
             presenter,
@@ -679,6 +685,8 @@ impl OsHost {
             component_surface_close: _,
         } = self;
         let state = OsHostRetirementState {
+            retained,
+            camera_progress: Default::default(),
             runtime: Some(runtime),
             presenter: Some(presenter),
             scheduler: Some(scheduler),
@@ -761,6 +769,16 @@ impl OsHostRetirementState {
                 return false;
             }
             self.frame_build = None;
+            return false;
+        }
+        if !crate::scenes::scene_camera_storage_is_empty() {
+            let step = match crate::scenes::close_scene_camera_storage(self.retained) { Ok(step) => step, Err(_) => return false };
+            let receipt = step.progress();
+            assert!(receipt.fits(self.retained));
+            self.camera_progress.copied_items = self.camera_progress.copied_items.checked_add(receipt.copied_items).expect("host camera item receipt overflow");
+            self.camera_progress.copied_bytes = self.camera_progress.copied_bytes.checked_add(receipt.copied_bytes).expect("host camera copy receipt overflow");
+            self.camera_progress.retained_capacity_bytes = self.camera_progress.retained_capacity_bytes.checked_add(receipt.retained_capacity_bytes).expect("host camera birth receipt overflow");
+            self.camera_progress.released_bytes = self.camera_progress.released_bytes.checked_add(receipt.released_bytes).expect("host camera release receipt overflow");
             return false;
         }
         if let Some(raster_uploads) = self.raster_uploads.as_mut() {
@@ -851,6 +869,7 @@ impl OsHostRetirementState {
             && self.frame_build.is_none()
             && self.surface_resize.is_none()
             && self.raster_uploads.is_none()
+            && crate::scenes::scene_camera_storage_is_empty()
             && self.engine_surfaces.terminal_is_empty()
             && self.cursor_wake_requested.is_none()
             && {

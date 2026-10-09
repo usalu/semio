@@ -335,8 +335,10 @@ fn the_host_file_open_import_decodes_one_chunk_and_refuses_more() {
 /// 🔁️ A studio's own `.os` export (`export-studio-dsl`) imports back as a new catalog studio under the same name.
 #[semio_framework_async_macros::async_test]
 async fn a_studio_dsl_export_imports_back_under_its_name() {
+    let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     let name = "SH2 round trip law";
-    let space_id = semio_s_space_core::create_and_register_ephemeral_studio(name, "u1", "Ada").await;
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio(name, "u1", "Ada", &mut authoring).await.expect("observed studio fixture");
     let document = semio_s_space_core::resolve_studio_document(&space_id).await.expect("the fresh studio resolves");
     let exported = semio_framework_os::host::export_os_space_dsl(&document).expect("studio dsl export");
     let snapshot = catalog_home();
@@ -353,13 +355,15 @@ async fn a_studio_dsl_export_imports_back_under_its_name() {
 /// file, re-lists it as a file-backed catalog studio and bumps the catalog generation.
 #[semio_framework_async_macros::async_test]
 async fn the_bind_job_validates_then_writes_the_studio_file_once() {
+    let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     let snapshot = catalog_home();
     let history = empty_history();
     let doc = ArtifactView::new(&snapshot, &history);
     let bind = |space_id: &str, file_path: &str| HomeCommand::BindSpaceFile(bind_space_file::BindSpaceFile { space_id: space_id.into(), file_path: file_path.into() });
     assert!(refused_as(HomeCatalogWork::new("bindSpaceFile").advance(&bind("sh1-no-such-studio", "/tmp/sh1.os"), &doc), "s.home.bind-space-file.unknown-studio"));
     assert!(refused_as(HomeCatalogWork::new("bindSpaceFile").advance(&bind("", "/tmp/sh1.os"), &doc), "s.home.bind-space-file.studio-invalid"));
-    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH1 bind law", "u1", "Ada").await;
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH1 bind law", "u1", "Ada", &mut authoring).await.expect("observed studio fixture");
     assert!(refused_as(HomeCatalogWork::new("bindSpaceFile").advance(&bind(&space_id, " "), &doc), "s.home.bind-space-file.path-invalid"));
     let stem = format!("sh1-bind-law-{space_id}");
     let file_path = std::env::temp_dir().join(format!("{stem}.os")).to_string_lossy().into_owned();
@@ -389,11 +393,13 @@ async fn the_bind_job_validates_then_writes_the_studio_file_once() {
 /// folder the job opens the folder dialog and writes nothing.
 #[semio_framework_async_macros::async_test]
 async fn the_persist_job_validates_then_keeps_the_studio_in_its_folder_once() {
+    let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     let snapshot = catalog_home();
     let history = empty_history();
     let doc = ArtifactView::new(&snapshot, &history);
     let persist = |space_id: &str, folder_path: Option<&str>| HomeCommand::PersistLocally(persist_locally::PersistLocally { space_id: space_id.into(), folder_path: folder_path.map(str::to_owned) });
-    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH2 persist law", "u1", "Ada").await;
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH2 persist law", "u1", "Ada", &mut authoring).await.expect("observed studio fixture");
     let Ok(ArtifactCommandWorkStep::Complete(dialog)) = HomeCatalogWork::new("persistLocally").advance(&persist(&space_id, None), &doc) else { panic!("a folder-less persist opens the dialog") };
     assert!(dialog.artifact_mutations.is_empty() && matches!(dialog.effects.as_slice(), [semio_framework_plugin::Effect::OpenDialog { dialog_id, .. }] if dialog_id == "persistLocally"));
     let folder = std::env::temp_dir().join(format!("sh2-persist-law-{space_id}"));
@@ -414,6 +420,8 @@ async fn the_persist_job_validates_then_keeps_the_studio_in_its_folder_once() {
 /// 🚫️ A folder studio without a folder is refused by name, never answered with an empty success.
 #[test]
 fn a_folder_studio_without_a_folder_is_refused_by_name() {
+    let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     let snapshot = catalog_home();
     let history = empty_history();
     let doc = ArtifactView::new(&snapshot, &history);
@@ -421,7 +429,7 @@ fn a_folder_studio_without_a_folder_is_refused_by_name() {
     let cfg = ConfigView { snapshot: &config, window: None };
     let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
     for folder_path in [None, Some(" ".to_owned())] {
-        let created = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "SH2 folderless".into(), kind: "folder".into(), folder_path }, &doc, &cfg, &identity);
+        let created = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "SH2 folderless".into(), kind: "folder".into(), folder_path }, &doc, &cfg, &identity, &mut authoring);
         assert!(matches!(created, Err(fault) if fault.code.0.as_str() == "s.home.create-studio.folder-path-required"));
     }
 }
@@ -430,8 +438,10 @@ fn a_folder_studio_without_a_folder_is_refused_by_name() {
 /// listed by the catalog, Home stops listing it, the event's exact inverse lists it again, and every refusal is named.
 #[semio_framework_async_macros::async_test]
 async fn removing_a_local_studio_is_a_config_tombstone_that_keeps_the_studio() {
+    let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     use protocol::Mutation as _;
-    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH1 tombstone law", "u1", "Ada").await;
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH1 tombstone law", "u1", "Ada", &mut authoring).await.expect("observed studio fixture");
     let snapshot = catalog_home();
     let history = empty_history();
     let doc = ArtifactView::new(&snapshot, &history);
@@ -481,10 +491,12 @@ fn rehydrate(document_id: &str, pack: &str, spr: &str) -> HomeCommand {
 /// back again re-lists nothing twice.
 #[semio_framework_async_macros::async_test]
 async fn the_host_rehydration_lists_the_kept_studio_once_under_its_name() {
+    let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     let snapshot = catalog_home();
     let history = empty_history();
     let doc = ArtifactView::new(&snapshot, &history);
-    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH2 kept law", "u1", "Ada").await;
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH2 kept law", "u1", "Ada", &mut authoring).await.expect("observed studio fixture");
     let (pack, spr) = kept_pair(&space_id);
     let mut work = HomeCatalogWork::new("applyLocalCatalogDocument");
     assert!(matches!(work.advance(&rehydrate(&space_id, &pack, &spr), &doc), Ok(ArtifactCommandWorkStep::Progress { .. })));
@@ -509,10 +521,12 @@ async fn the_host_rehydration_lists_the_kept_studio_once_under_its_name() {
 /// 🚫️ A malformed or mismatched pair is refused by name and writes nothing.
 #[semio_framework_async_macros::async_test]
 async fn the_host_rehydration_refuses_a_malformed_or_foreign_pair_by_name() {
+    let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     let snapshot = catalog_home();
     let history = empty_history();
     let doc = ArtifactView::new(&snapshot, &history);
-    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH2 kept refusal", "u1", "Ada").await;
+    let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH2 kept refusal", "u1", "Ada", &mut authoring).await.expect("observed studio fixture");
     let (pack, spr) = kept_pair(&space_id);
     assert!(refused_as(HomeCatalogWork::new("applyLocalCatalogDocument").advance(&rehydrate(&space_id, "not base64!", &spr), &doc), "s.home.apply-local-catalog-document.encoding-invalid"));
     assert!(refused_as(HomeCatalogWork::new("applyLocalCatalogDocument").advance(&rehydrate("sh2-some-other-studio", &pack, &spr), &doc), "s.home.apply-local-catalog-document.mismatch"));

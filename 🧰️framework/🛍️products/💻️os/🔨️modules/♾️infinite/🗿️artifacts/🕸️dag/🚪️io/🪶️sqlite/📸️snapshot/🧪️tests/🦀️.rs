@@ -4,7 +4,7 @@ use semio_framework_value::{DslValue, FromValue, Number, ToValue};
 
 use store::{ArtifactDsl, ArtifactPack};
 #[path="./🧮️properties/🦀️.rs"]
-mod property_allocation;
+pub(crate) mod property_allocation;
 
 fn laws() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()
@@ -44,7 +44,7 @@ fn port(word: u64) -> IoPortSpec {
         resolved: Some(true),
     }
 }
-fn full(word: u64) -> DagSnapshot {
+pub(crate) fn full(word: u64) -> DagSnapshot {
     let text = laws()["literal"].as_str().unwrap().to_owned();
     let f = f64::from_bits(word);
     let mut kinds = vec![
@@ -95,13 +95,12 @@ impl std::ops::Deref for Owned {
 impl Drop for Owned {
     fn drop(&mut self) {
         if let Some(snapshot) = self.0.take() {
-            let mut cursor = semio_framework_value::retirement::owned_retirement(snapshot);
-            loop {
-                match cursor.close_step(256, usize::MAX).unwrap() {
-                    store::SnapshotRetirementStep::Complete => break,
-                    store::SnapshotRetirementStep::Pending { .. } => {}
-                    store::SnapshotRetirementStep::Blocked => panic!("framework DAG retirement blocked"),
-                }
+            let mut cursor=semio_framework_value::retirement::controlled::ControlledRetirement::new(snapshot).unwrap();
+            for turn in 0..1_000_000{
+                let copy=cursor.next_copy_byte_demand().unwrap().max(4096);
+                let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:cursor.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:cursor.next_release_byte_demand().unwrap(),maximum_depth:cursor.next_depth_demand().unwrap()};
+                let step=cursor.step(grant).unwrap();assert!(step.progress().fits(grant));
+                if cursor.terminal_is_empty(){break;}assert!(turn<999_999,"original DAG fixture cleanup stalled");
             }
             assert!(cursor.terminal_is_empty());
         }

@@ -404,9 +404,9 @@ fn probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third_party_seriali
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
     let probe = &fixture["probeCodec"];
     let value = probe["value"].clone();
-    let snapshot = ProbeSnapshot(value.clone());
-    let diff = ProbeDiff(value.clone());
-    let mutation = ProbeMutation::SetValue(value.clone());
+    let snapshot = ProbeSnapshot(value.clone().into());
+    let diff = ProbeDiff(value.clone().into());
+    let mutation = ProbeMutation::SetValue(value.clone().into());
 
     assert_eq!(serde_json::Value::from(snapshot.to_value()), probe["snapshotEncoding"]);
     assert_eq!(serde_json::Value::from(diff.to_value()), probe["diffEncoding"]);
@@ -444,10 +444,10 @@ fn a_fresh_folder_workspace_lists_zero_artifacts() {
 async fn ensure_probe_artifact_seeds_a_real_revision_and_is_idempotent() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
-    let first = workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "text": "hello" })).await.expect("seed");
+    let first = workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "text": "hello" }).into()).await.expect("seed");
     assert_eq!(first.artifact_id, "probe-a");
     assert!(!first.head_edit_id.is_empty(), "a genuinely applied edit has a real edit id");
-    let second = workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "text": "should not apply" })).await.expect("idempotent re-open");
+    let second = workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "text": "should not apply" }).into()).await.expect("idempotent re-open");
     assert_eq!(first.head_edit_id, second.head_edit_id, "re-calling ensure_probe_artifact never double-commits");
 }
 
@@ -455,7 +455,7 @@ async fn ensure_probe_artifact_seeds_a_real_revision_and_is_idempotent() {
 async fn resolve_context_reports_the_open_probe_artifact_as_active() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), vec!["workspace.read".to_string()], empty_catalog()).expect("opens");
-    workspace.ensure_probe_artifact("probe-b", serde_json::json!({ "n": 1 })).await.expect("seed");
+    workspace.ensure_probe_artifact("probe-b", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let summary = workspace.resolve_context("agent:test").expect("resolve");
     assert_eq!(summary.principal, "agent:test");
     assert_eq!(summary.active_artifact_id.as_deref(), Some("probe-b"));
@@ -466,7 +466,7 @@ async fn resolve_context_reports_the_open_probe_artifact_as_active() {
 async fn read_resource_artifact_returns_real_bytes_after_a_commit() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
-    workspace.ensure_probe_artifact("probe-c", serde_json::json!({ "n": 42 })).await.expect("seed");
+    workspace.ensure_probe_artifact("probe-c", serde_json::json!({ "n": 42 }).into()).await.expect("seed");
     let contents = workspace.read_resource("semio://artifact/probe-c").expect("read");
     let body: serde_json::Value = serde_json::from_str(contents[0].text.as_ref().expect("text body")).expect("json body");
     assert!(body["packBytes"].as_u64().unwrap_or(0) > 0, "a real committed edit persists non-empty pack bytes: {body}");
@@ -708,7 +708,7 @@ fn read_artifact_resource_schema_is_real_for_an_open_probe_and_plugin_unavailabl
 async fn read_artifact_resource_schema_is_real_for_an_open_probe() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
-    workspace.ensure_probe_artifact("probe-schema", serde_json::json!({})).await.expect("seed");
+    workspace.ensure_probe_artifact("probe-schema", serde_json::json!({}).into()).await.expect("seed");
     let contents = workspace.read_resource("semio://artifact/probe-schema/schema").expect("real answer for an open probe artifact");
     let body: serde_json::Value = serde_json::from_str(contents[0].text.as_ref().expect("text body")).expect("json body");
     assert_eq!(body["schema"], PROBE_SCHEMA);
@@ -718,8 +718,8 @@ async fn read_artifact_resource_schema_is_real_for_an_open_probe() {
 async fn apply_probe_mutation_commits_a_real_second_edit_beyond_the_seed() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
-    let seeded = workspace.ensure_probe_artifact("probe-mutate", serde_json::json!({ "n": 1 })).await.expect("seed");
-    let mutated = workspace.apply_probe_mutation("probe-mutate", serde_json::json!({ "n": 2 })).await.expect("real second commit");
+    let seeded = workspace.ensure_probe_artifact("probe-mutate", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
+    let mutated = workspace.apply_probe_mutation("probe-mutate", serde_json::json!({ "n": 2 }).into()).await.expect("real second commit");
     assert_ne!(seeded.head_edit_id, mutated.head_edit_id, "a genuine second edit gets a genuinely different edit id");
     assert_ne!(seeded, mutated, "the revision stamp a real caller would compare as `expectedRevision` differs — this is exactly the predicate REVISION_CONFLICT is built on");
     let bytes = workspace.read_artifact_bytes("probe-mutate").expect("read").expect("artifact exists");
@@ -730,12 +730,12 @@ async fn apply_probe_mutation_commits_a_real_second_edit_beyond_the_seed() {
 async fn undo_then_redo_round_trips_a_real_probe_mutation() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
-    workspace.ensure_probe_artifact("probe-undo-redo", serde_json::json!({ "n": 1 })).await.expect("seed");
-    workspace.apply_probe_mutation("probe-undo-redo", serde_json::json!({ "n": 2 })).await.expect("second commit");
+    workspace.ensure_probe_artifact("probe-undo-redo", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
+    workspace.apply_probe_mutation("probe-undo-redo", serde_json::json!({ "n": 2 }).into()).await.expect("second commit");
     let undone = workspace.undo_probe_mutation("probe-undo-redo").await.expect("real undo");
-    assert_eq!(undone, serde_json::json!({ "n": 1 }), "undo reverts to the seeded value for real");
+    assert_eq!(serde_json::Value::from(undone), serde_json::json!({ "n": 1 }), "undo reverts to the seeded value for real");
     let redone = workspace.redo_probe_mutation("probe-undo-redo").await.expect("real redo");
-    assert_eq!(redone, serde_json::json!({ "n": 2 }), "redo restores the undone edit for real — a genuine round trip");
+    assert_eq!(serde_json::Value::from(redone), serde_json::json!({ "n": 2 }), "redo restores the undone edit for real — a genuine round trip");
 }
 
 #[test]

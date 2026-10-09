@@ -1,5 +1,6 @@
 //! ♻️ Original typed catalog owners conserve actual independent constructor and physical release receipts.
 use super::*;
+use super::tests::physical_test_close_grant;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 
 #[test]
@@ -17,7 +18,7 @@ fn bounded_value_retirement_preserves_original_owner_and_physical_receipts_under
                 let owner = Arc::new(owner);
                 let original = Arc::as_ptr(&owner);
                 let capacity = SnapshotRetirementFactory::retirement_birth_bytes(&factory, &owner);
-                let grant = RetainedCloneGrant::one_capacity_turn(capacity, 1);
+                let grant = physical_test_close_grant();
                 let (refusal, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| SnapshotRetirementFactory::retire(&factory, owner, RetainedCloneGrant { maximum_capacity_bytes: capacity - 1, ..grant }));
                 let (_, owner) = match refusal { Err(refusal) => refusal, Ok(_) => panic!("whole constructor undergrant must retain original shared owner") };
                 assert_eq!(Arc::as_ptr(&owner), original);
@@ -29,7 +30,7 @@ fn bounded_value_retirement_preserves_original_owner_and_physical_receipts_under
                 (Some(cursor), progress.retained_capacity_bytes)
             } else {
                 let capacity = ArtifactOwnedValueRetirementFactory::retirement_birth_bytes(&factory, &owner);
-                let grant = RetainedCloneGrant::one_capacity_turn(capacity, 1);
+                let grant = physical_test_close_grant();
                 let (refusal, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| factory.retire_owned(owner, RetainedCloneGrant { maximum_items: 0, ..grant }));
                 let (_, owner) = match refusal { Err(refusal) => refusal, Ok(_) => panic!("zero item must retain original owned value") };
                 assert_eq!(owner.as_ptr(), pointer);
@@ -43,8 +44,8 @@ fn bounded_value_retirement_preserves_original_owner_and_physical_receipts_under
             let mut turns = 0;
             while let Some(cursor) = slot.as_ref() {
                 let demand = artifact_retirement_box_demands(cursor, copy).unwrap();
-                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-                for refusal in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant })].into_iter().flatten() {
+                let grant = physical_test_close_grant();
+                for refusal in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (copy < demand.copy_bytes).then(|| RetainedCloneGrant { maximum_copy_bytes: copy, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant })].into_iter().flatten() {
                     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| artifact_retirement_box_close_step(&mut slot, refusal));
                     assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -79,7 +80,7 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
             if with_edit {
                 let mut reverse = semio_framework_value::list::PagedList::new();
                 for value in &inverse { reverse.try_push(*value).unwrap(); }
-                let edit = Edit { id: law["edit"].as_str().unwrap().to_owned(), actor: Some(law["actor"].as_str().unwrap().to_owned()), line: None, forwards: forwards.clone(), inverse: reverse, mutation_meta: Vec::with_capacity(3), verb: None, sequence_number: 1, started_at: "started".into(), finished_at: Some("finished".into()) };
+                let edit = Edit { id: law["edit"].as_str().unwrap().to_owned(), actor: Some(law["actor"].as_str().unwrap().into()), line: None, forwards: forwards.clone(), inverse: reverse, mutation_meta: Vec::with_capacity(3), verb: None, sequence_number: 1, started_at: "started".into(), finished_at: Some("finished".into()) };
                 let mut publisher = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
                 let view = publisher.view();
                 let reservation = edits.reserve_group_one(&view).unwrap();
@@ -104,7 +105,7 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
         let mut turns = 0;
         while !owner.terminal_is_empty() {
             let demand = owner.demands(copy).unwrap();
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            let grant = physical_test_close_grant();
             for denial in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
                 let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denial));
                 assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
@@ -144,7 +145,7 @@ fn original_displaced_queue_preserves_each_child_receipt_and_retains_maintenance
     let mut turns = 0;
     while !queue.terminal_is_empty() {
         let demand = queue.demands(copy).unwrap();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let grant = physical_test_close_grant();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes > 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant })].into_iter().flatten() {
             let (step, allocated, released) = crate::test_allocation::observe_backing(|| queue.close_step(denied));
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
@@ -168,7 +169,7 @@ fn original_displaced_queue_preserves_each_child_receipt_and_retains_maintenance
     assert_eq!(refused.kind, semio_framework_value::ValueRefusalKind::WorkLimit);
     queue.release_owner_slots(reservation).unwrap();
     let bytes = queue.backing_release_byte_demand().unwrap();
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: bytes, maximum_depth: 1 };
+    let grant = physical_test_close_grant();
     let (step, allocated, released) = crate::test_allocation::observe_backing(|| queue.release_empty_backing_step(RetainedCloneGrant { maximum_release_bytes: bytes - 1, ..grant }));
     assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
     assert_eq!((allocated, released), (0, 0));
@@ -220,8 +221,8 @@ fn original_sparse_lane_authority_matches_sorted_oracle_and_retains_original_phy
         let mut turns = 0;
         while !cursor.terminal_is_empty() {
             let copy = law["maximumCopyBytes"].as_u64().unwrap() as usize;
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: cursor.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: cursor.next_release_byte_demand().unwrap(), maximum_depth: cursor.next_depth_demand().unwrap() };
-            for denial in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (grant.maximum_release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: grant.maximum_release_bytes - 1, ..grant })].into_iter().flatten() {
+            let grant = physical_test_close_grant();
+            for denial in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (cursor.next_release_byte_demand().unwrap() != 0).then(|| RetainedCloneGrant { maximum_release_bytes: cursor.next_release_byte_demand().unwrap() - 1, ..grant })].into_iter().flatten() {
                 let (step, allocated, released) = crate::test_allocation::observe_backing(|| cursor.close_step(denial));
                 assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
                 assert_eq!((allocated, released), (0, 0));
@@ -265,7 +266,7 @@ fn original_repository_history_entry_close_conserves_raw_box_value_and_factory_c
     while !owner.terminal_is_empty() {
         let copy = law["maximumCopyBytes"].as_u64().unwrap() as usize;
         let demand = owner.close_demands(copy).unwrap();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let grant = physical_test_close_grant();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
             let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denied));
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
@@ -310,7 +311,7 @@ fn original_schema_history_array_close_releases_same_decoder_ledger_and_factory_
     while !owner.terminal_is_empty() {
         let copy = law["maximumCopyBytes"].as_u64().unwrap() as usize;
         let demand = owner.close_demands(copy).unwrap();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let grant = physical_test_close_grant();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
             let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denied));
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
@@ -342,7 +343,7 @@ fn original_retained_member_open_close_conserves_supplied_birth_and_physical_rel
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["retainedMemberClose"];
     let demand = bounded_artifact_store_owners_birth_demand::<DemoSnapshot, DemoMutation>().unwrap();
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: demand.capacity_bytes, maximum_depth: demand.depth, ..Default::default() };
+    let grant = physical_test_close_grant();
     let (mut owner, allocated, released) = crate::test_allocation::observe_backing(|| {
         let (owners, receipt) = bounded_artifact_store_owners::<DemoSnapshot, DemoMutation>(grant).unwrap_or_else(|_| panic!("exact original catalog source ingress"));
         assert!(receipt.fits(grant));
@@ -352,7 +353,7 @@ fn original_retained_member_open_close_conserves_supplied_birth_and_physical_rel
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(input).unwrap()).unwrap_or_else(|_| panic!("original input page"));
         pages.seal().unwrap();
         let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: law["artifactId"].as_str().unwrap().to_owned(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "demo".to_owned(), standard: "1".to_owned(), subset: "any".to_owned() } };
-        let request = member_open::MemberOpenRequest::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), u64::MAX, target, None, pages, crate::os_spr::ActorId(law["actor"].as_str().unwrap().to_owned()));
+        let request = member_open::MemberOpenRequest::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), u64::MAX, target, None, pages, crate::os_spr::ActorId(law["actor"].as_str().unwrap().into()));
         let mut owner = member_open::MemberStoreOpenRetained::new(request, owners);
         owner.stage_initial(DemoSnapshot::default()).unwrap_or_else(|_| panic!("original pending snapshot"));
         owner
@@ -363,13 +364,15 @@ fn original_retained_member_open_close_conserves_supplied_birth_and_physical_rel
     let mut turns = 0;
     while !owner.terminal_is_empty() {
         let copy = law["maximumCopyBytes"].as_u64().unwrap() as usize;
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy.max(owner.next_copy_byte_demand().unwrap()), maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: owner.next_release_byte_demand().unwrap(), maximum_depth: owner.next_depth_demand().unwrap() };
-        for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (grant.maximum_release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: grant.maximum_release_bytes - 1, ..grant }), (grant.maximum_capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: grant.maximum_capacity_bytes - 1, ..grant })].into_iter().flatten() {
+        let grant = physical_test_close_grant();
+        let original_release_demand=owner.next_release_byte_demand().unwrap();
+        let original_capacity_demand=owner.next_capacity_byte_demand(copy).unwrap();
+        for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (owner.next_release_byte_demand().unwrap() != 0).then(|| RetainedCloneGrant { maximum_release_bytes: owner.next_release_byte_demand().unwrap() - 1, ..grant }), (owner.next_capacity_byte_demand(copy).unwrap() != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap() - 1, ..grant })].into_iter().flatten() {
             let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denied));
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
-            assert_eq!(owner.next_release_byte_demand().unwrap(), grant.maximum_release_bytes);
-            assert_eq!(owner.next_capacity_byte_demand(copy).unwrap(), grant.maximum_capacity_bytes);
+            assert_eq!(owner.next_release_byte_demand().unwrap(),original_release_demand);
+            assert_eq!(owner.next_capacity_byte_demand(copy).unwrap(),original_capacity_demand);
         }
         let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(grant));
         let step = step.unwrap();
@@ -406,7 +409,7 @@ fn original_operation_rows_close_conserves_last_factory_and_retired_string_owner
     while !owner.terminal_is_empty() {
         let copy = law["maximumCopyBytes"].as_u64().unwrap() as usize;
         let demand = owner.demands(copy).unwrap();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let grant = physical_test_close_grant();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
             let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denied));
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());

@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+    "sha256": "cfc804ef326c69e1e140aa9e47e3170366e2f4cb02e82605bc96f96e78a34406",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+    "sha256": "0bb79433f345d6647907550c83e8afc5c8c62cdabcd24a955a6657854a72bf01",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+    "sha256": "2c07ceb021131e71f46ebb8e0f0826a797ce7e24eb96a8f13d51c1a33136004a",
+    "authorshipClaim": false
+  }
+]

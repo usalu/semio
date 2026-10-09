@@ -1,0 +1,39 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "beforeSha256": "31f189be692edd7640a0a4ddb715280f93c46b59b3bd6ee9279ea86b74ba4433",
+  "afterSha256": "140f421bcf52bbca0fb3dde66c33fe74136b4cae755549afe44ec6d3ffa7647a",
+  "actions": [
+    {
+      "logicalScope": "ephemeral original source issuers and all retained candidate/base/mutation cursor fields",
+      "beforeBlockSha256": "38c4c7d2c040ddc2ede6bbc5903868d9fd1a4d70c746d5483e31695cad25d556",
+      "afterBlockSha256": "ca3dc92b026fb2065d8057143a0caff91b81527a8c844bab1e7a13ee41366d27"
+    },
+    {
+      "logicalScope": "ephemeral defining existing begin captures original factory aliases; ungranted factory creation protocol remains observed",
+      "beforeBlockSha256": "e2896c726b5898531325f0ba2cdd6fede09aa2a454dfe27d5677e0c4e96458be",
+      "afterBlockSha256": "a11bfbd7d293785f8bcef9f16a5cf57b3716d591e62a612c9d9dfe646987d1ff"
+    },
+    {
+      "logicalScope": "ephemeral advancement borrows original request through semantic refusal",
+      "beforeBlockSha256": "a44142c09a2e4c8f2527b48fae4debe2003f16860b87fa696a27be6ea2eca95b",
+      "afterBlockSha256": "b838c4b004978fd704a0f560258106ef5b9ab72e264ac43f63a6943f5dba16ff"
+    },
+    {
+      "logicalScope": "ephemeral actual prepared transfer retains original base and mutation for controlled cancellation",
+      "beforeBlockSha256": "18a50496152278773e151035bdb9d0478fc69591d7d45868958867afc7c3ed20",
+      "afterBlockSha256": "f66d878dae9264694eb040880a48c580120e1affadde22f664becc2b6027a56f"
+    },
+    {
+      "logicalScope": "ephemeral full close/depth/refusal restoration/original current snapshot/mutation authorities",
+      "beforeBlockSha256": "4b00481678e6f102e7b270066f73d87c1b6aaf93e697eb921784fab08a9789e6",
+      "afterBlockSha256": "f7b16df947ac805f919c162517d5e01fdf35d15487f79d22c007545ef5e96399"
+    },
+    {
+      "logicalScope": "ephemeral four fallible original owner frontier projections",
+      "newBlockSha256": "c55cc22b6664ba8859e7a29e5ddfe96dcefed4b8417c4052eb9c38335142a235"
+    }
+  ],
+  "copiedSource": false,
+  "nativeAssertions": "UNRUN",
+  "qualification": "genuine current ephemeral defining factory.begin has no supplied grant; existing begin/advance creation proof remains unresolved and no production physical credit is claimed"
+}

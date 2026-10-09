@@ -16,7 +16,7 @@ pub struct PdfIntoPresentation;
 impl Deserializer<PresentationSnapshot> for PdfIntoPresentation {
     const FROM: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<PresentationSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<PresentationSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"PdfIntoPresentation: expected a binary pdf payload")));
         };

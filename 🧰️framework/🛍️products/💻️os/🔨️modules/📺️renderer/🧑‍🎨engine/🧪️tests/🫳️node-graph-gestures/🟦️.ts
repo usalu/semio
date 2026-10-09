@@ -205,8 +205,9 @@ describe("node graph gestures", () => {
     const dag = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"), "utf8");
     const begins = dag.slice(dag.indexOf("pub fn screen_pointer_gesture_begins_at"));
     expect(begins.slice(0, begins.indexOf("\n    }\n"))).toContain("self.screen_hit(sx, sy).is_screen_path()");
-    expect(dag).toContain("pub fn is_draggable_body(&self) -> bool {");
-    expect(dag).toContain("self.node_id.is_some() && !self.is_screen_path()");
+    const hit = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🦀️.rs"), "utf8");
+    expect(hit).toContain("pub fn is_draggable_body(&self) -> bool {");
+    expect(hit).toContain("self.node_id.is_some() && !self.is_screen_path()");
     expect(law.rules.aBodyPressSelectsThatNode).toContain("is_draggable_body");
   });
 });

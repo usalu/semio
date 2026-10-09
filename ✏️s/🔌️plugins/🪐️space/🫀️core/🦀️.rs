@@ -176,17 +176,19 @@ pub async fn register_studio_port(space_id: &str, port: Arc<dyn OsBackbonePort>)
 /// `SpaceSnapshot` document registered as a draft (`kind_id = "s.space"`) at `draft_uri(id)` on the
 /// ephemeral port, never on the real catalog port, never tracked as a `space://` catalog entry.
 /// `owner_id`/`owner_name` carry the signed-in identity selected by the caller's current host view.
-pub async fn create_and_register_ephemeral_studio(name: &str, owner_id: &str, owner_name: &str) -> String {
+pub async fn create_and_register_ephemeral_studio(name: &str, owner_id: &str, owner_name: &str, identity: &mut store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, store::VcsError> {
+    let draft = ephemeral_draft_catalog().await.create_draft("s.space", S_SPACE_SCHEMA, name.trim(), now_ms().await, None, identity)?;
     let owner = SpaceUser { id: if owner_id.is_empty() { "local".into() } else { owner_id.into() }, name: if owner_name.is_empty() { name.into() } else { owner_name.into() }, avatar: None, role: SpaceRole::Author };
     let mut projection = empty_space_snapshot(name.trim(), SpaceKind::Atelier, SpaceVisibility::Private);
     projection.users.push(owner);
-    let draft = ephemeral_draft_catalog().await.create_draft("s.space", S_SPACE_SCHEMA, name.trim(), now_ms().await, None);
     let document: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, &draft.artifact_id, name.trim(), projection);
-    if let Ok(payload) = encode_backbone_payload(&document) {
-        let draft_port = draft_backbone_port().await;
-        let _ = SpaceBackbonePort::write(draft_port.as_ref(), &draft_uri(&draft.artifact_id), &payload);
+    let draft_port = draft_backbone_port().await;
+    let result = encode_backbone_payload(&document).and_then(|payload| SpaceBackbonePort::write(draft_port.as_ref(), &draft_uri(&draft.artifact_id), &payload));
+    if let Err(error) = result {
+        ephemeral_draft_catalog().await.discard_draft(&draft_port, &draft.artifact_id);
+        return Err(error);
     }
-    draft.artifact_id
+    Ok(draft.artifact_id)
 }
 
 /// 📂️ Resolves a studio id against the draft catalog, registered ports, then catalogs.

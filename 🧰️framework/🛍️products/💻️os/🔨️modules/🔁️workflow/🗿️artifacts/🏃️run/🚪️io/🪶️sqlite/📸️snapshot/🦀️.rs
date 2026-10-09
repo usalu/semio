@@ -24,11 +24,11 @@ fn native_rows(record:&semio_framework_dsl_record::RecordValue,maximum:usize,nat
 }
 impl ArtifactSqliteSnapshot for RunArtifact{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
-  control.check_rows(2)?;control.check_value_bytes(40)?;let maximum=control.limits().max_rows;let maximum_value_bytes=control.limits().max_value_bytes;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{native_rows(record,maximum,native)?;value_bytes::record(record,maximum_value_bytes,native)?;Self::__dsl_from_record_controlled(record,native)},control)
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{
+  control.check_rows(2)?;control.check_value_bytes(40)?;let maximum=control.limits().max_rows;let maximum_value_bytes=control.limits().max_value_bytes;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {native_rows(record,maximum,native)?;value_bytes::record(record,maximum_value_bytes,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_owner)
  }
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
-  let rows=workload(self,control,SqliteSnapshotPhase::EncodeNative)?;value_bytes::owner(self,rows,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<store::io_schema::IoPayload,ValueError>{
+  let rows=workload(self,control,SqliteSnapshotPhase::EncodeNative)?;value_bytes::owner(self,rows,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let rows=workload(self,control,SqliteSnapshotPhase::EncodeNative)?;value_bytes::owner(self,rows,control)}
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{

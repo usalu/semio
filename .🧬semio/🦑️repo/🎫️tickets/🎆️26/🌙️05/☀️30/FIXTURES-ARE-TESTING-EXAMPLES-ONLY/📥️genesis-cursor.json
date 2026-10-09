@@ -1,0 +1,14 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "beforeSha256": "f945e28724dd5f927e1fa3b3bbd3947cfaa0d79ee6daa6904df681eb72063a26",
+    "afterSha256": "686b2d68c9214bbfe68ab70122fb032938ea770477f0b373860f256adea37f7c",
+    "qualification": "metadata transfer preserves originals; existing envelope native catalogs remain explicitly unaccounted; cursor checkpoint assignment retains actual page identities"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+    "beforeSha256": "e58accee968badeba95f587cd960288d6e766c183ad2a117137d94e3a7a96b9e",
+    "afterSha256": "062d4b22f5cac072776985c6e21737b63ea266d3d20f1586f62d6b202dc3ec7b",
+    "qualification": "metadata transfer preserves originals; existing envelope native catalogs remain explicitly unaccounted; cursor checkpoint assignment retains actual page identities"
+  }
+]

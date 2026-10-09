@@ -6,6 +6,44 @@ import fixture from "../🧫️fixtures/🔣️.json";
 import stageFixture from "../🧫️fixtures/🪆️stage/🔣️.json";
 import {stageOracle,type StageCase,type StageOperation,type StageResult} from "./🪆️stage/🟦️.ts";
 
+test("original shared actor lease authority preserves UTF8 and admits no replacement frame",async()=>{
+ const fixture=(await import("../../📝️shared-utf8/♻️original-lease/🧫️fixtures/🔣️.json")).default;
+ const schema=(await import("../../📝️shared-utf8/♻️original-lease/🧬️schema/🔣️.json")).default;
+ const validate=new Ajv({strict:true,allErrors:true}).compile(schema);expect(validate(fixture)).toBe(true);
+ for(const bad of [{...fixture,unknown:true},{...fixture,grant:{...fixture.grant,maximumCapacityBytes:1}},{...fixture,values:["changed"]}])expect(validate(bad)).toBe(false);
+ for(const text of fixture.values)for(const capacity of fixture.capacities)for(const aliases of fixture.aliases){
+  const db=new Database(":memory:");try{
+   db.exec("CREATE TABLE actors(value TEXT NOT NULL,leases INTEGER NOT NULL,capacity INTEGER NOT NULL,frames INTEGER NOT NULL,CHECK(leases>=0));");
+   db.run("INSERT INTO actors VALUES(?,?,?,0)",[text,aliases+1,capacity]);let finalOwners=0;
+   for(let position=0;position<=aliases;position++){db.run("UPDATE actors SET leases=leases-1");const row=db.query("SELECT value,leases,capacity,frames FROM actors").get()as {value:string;leases:number;capacity:number;frames:number};expect(row.value).toBe(text);expect(row.frames).toBe(fixture.expected.closeHeapBytes);if(row.leases===0){finalOwners++;expect(new TextEncoder().encode(row.value).length).toBe(Buffer.byteLength(text,"utf8"));}}
+   expect(finalOwners).toBe(1);expect(db.query("SELECT leases,frames FROM actors").get()).toEqual({leases:0,frames:0});
+  }finally{db.close();}
+ }
+ console.log("[DEBUG] original shared actor lease: strict independent authority, SQLite lease custody preserves NUL/Unicode, zero replacement frames and one final original owner");
+});
+
+
+test("borrowed native scopes intersect retained turn capacity before every original allocation",async()=>{
+ const fixture=(await import("../📏️maximum/🧫️fixtures/🔣️.json")).default;
+ const schema=(await import("../📏️maximum/🧬️schema/🔣️.json")).default;
+ const validate=new Ajv({strict:true,allErrors:true}).compile(schema);expect(validate(fixture)).toBe(true);
+ for(const bad of [{...fixture,unknown:true},{...fixture,initialBytes:-1},{...fixture,cases:fixture.cases.slice(1)},{...fixture,cases:fixture.cases.map((row,index)=>index===0?{...row,ownedBytes:-1}:row)}])expect(validate(bad)).toBe(false);
+ for(const row of fixture.cases){
+  const db=new Database(":memory:");let outcome="complete";
+  try{
+   db.exec("CREATE TABLE ledger(owned INTEGER NOT NULL,ceiling INTEGER NOT NULL,CHECK(owned<=ceiling));");
+   db.run("INSERT INTO ledger VALUES(?,?)",[fixture.initialBytes,fixture.firstTurnCapacityBytes]);
+   db.run("UPDATE ledger SET ceiling=min(ceiling,?)",[fixture.scopeMaximumBytes]);
+   const turn=()=>db.run("UPDATE ledger SET ceiling=min(?,owned+?)",[fixture.scopeMaximumBytes,fixture.nextTurnCapacityBytes]);
+   const charge=(bytes:number)=>db.run("UPDATE ledger SET owned=owned+?",[bytes]);
+   try{turn();if(row.id==="repeat"){charge(3);turn();charge(1);}else if(row.id==="nested"){db.run("UPDATE ledger SET ceiling=9");charge(2);db.run("UPDATE ledger SET ceiling=10");charge(1);}else if(row.id==="refuse")charge(4);else if(row.id==="cancel")outcome="canceled";else{charge(3);outcome="unwind";}}catch{outcome="limit";}
+   db.run("UPDATE ledger SET ceiling=?",[fixture.firstTurnCapacityBytes]);expect(outcome).toBe(row.outcome);expect(db.query("SELECT owned,ceiling FROM ledger").get()).toEqual({owned:row.ownedBytes,ceiling:fixture.restoredMaximumBytes});
+  }finally{db.close();}
+ }
+ console.log("[DEBUG] native borrowed scope maximum: strict corpus, repeated and nested original turn admissions, SQLite pre-allocation refusal and receipt restoration agree");
+});
+
+
 test("nested native stages preserve parent workloads, cancellation and cumulative ownership",async()=>{
   const classify=(error:unknown)=>{const message=(error as Error).message;const labels=new Map([["native decoding exceeded declared stage workload","overrun"],["native decoding canceled","canceled"],["native decoding ownership exceeds caller limit","limit"],["owned child rejected","rejected"]]);const label=labels.get(message);if(!label)throw error;return label;};
   for(const c of stageFixture.cases as StageCase[]){
@@ -44,4 +82,45 @@ test("native materialization retains cumulative bounds and interior cancellation
   const parent=new NativeDecodeControl(64,()=>true),n=fixture.nestedStage;await parent.beginStage(n.parentTotal);await parent.advance(n.parentBefore);await parent.scopedStage(async child=>{await child.beginStage(n.childTotal);await child.charge(n.childBytes);await child.advance(n.childTotal);});await parent.advance(n.parentAfter);expect(parent.ownedBytes).toBe(n.childBytes);await expect(parent.scopedStage(async child=>{await child.beginStage(n.childTotal);throw new Error("owned child failed");})).rejects.toThrow("owned child failed");await parent.advance(n.parentTotal-n.parentBefore-n.parentAfter);await expect(parent.step()).rejects.toThrow("declared stage workload");
   for(const c of fixture.utf8){const control=new NativeDecodeControl(0,()=>true),bytes=new Uint8Array(c.bytes);let independent=true,actual=true;try{new TextDecoder("utf-8",{fatal:true}).decode(bytes);}catch{independent=false;}try{await control.validateUtf8(bytes);}catch{actual=false;}expect(actual).toBe(independent);expect(actual).toBe(c.accepted);expect(control.ownedBytes).toBe(0);}
   let utf8Interior=false;const utf8Canceled=new NativeDecodeControl(0,p=>{if(p.completed===fixture.copyWorkload.cancelAt&&p.total===fixture.copyWorkload.total){utf8Interior=true;return false;}return true;});await expect(utf8Canceled.validateUtf8(new TextEncoder().encode(fixture.copyWorkload.text.repeat(fixture.copyWorkload.repetitions)))).rejects.toThrow("canceled");expect(utf8Interior).toBe(true);
+});
+
+
+test("borrowed native observers preserve original cancellation, complete cumulative debit and unwind restoration",async()=>{
+  const {default:fixture}=await import("../🧫️fixtures/🔭️observer/🔣️.json");
+  for(const sample of fixture.cases){
+    const parentEvents:number[]=[],observerEvents:number[]=[];let active=false,capturing=false;
+    const control=new NativeDecodeControl(sample.maximumBytes,event=>{if(capturing)parentEvents.push(event.ownedBytes);return !active||sample.parentRejectAt===null||event.ownedBytes<sample.parentRejectAt;});
+    await control.charge(sample.initialBytes);capturing=true;active=true;let outcome="complete";
+    try{await control.scopedObserver(event=>{observerEvents.push(event.ownedBytes);return sample.observerRejectAt===null||event.ownedBytes<sample.observerRejectAt;},async child=>{
+      expect(child).toBe(control);await child.beginStage(0);await child.charge(sample.chargeBytes);if(sample.unwindAfterCharge)throw Error("owned observer scope unwound");await child.checkpoint();
+    });}catch(error){outcome=sample.unwindAfterCharge?"unwound":(error as {kind:string}).kind;}
+    active=false;await control.checkpoint();
+    const actual={outcome,ownedBytes:control.ownedBytes,maximumBytes:control.maximumBytes,parentEvents,observerEvents};expect(actual).toEqual(sample.expected);
+    const database=new Database(":memory:");try{
+      database.exec("CREATE TABLE admission(owned INTEGER NOT NULL, ceiling INTEGER NOT NULL, CHECK(owned<=ceiling))");database.run("INSERT INTO admission VALUES(?,?)",[sample.initialBytes,sample.maximumBytes]);
+      const refusedBefore=sample.parentRejectAt!==null&&sample.initialBytes>=sample.parentRejectAt||sample.observerRejectAt!==null&&sample.initialBytes>=sample.observerRejectAt;
+      if(!refusedBefore)database.run("UPDATE admission SET owned=owned+? WHERE owned+?<=ceiling",[sample.chargeBytes,sample.chargeBytes]);
+      expect(database.query("SELECT owned FROM admission").get()).toEqual({owned:actual.ownedBytes});
+    }finally{database.close();}
+  }
+  console.log("[DEBUG] Five complete borrowed-observer vectors preserve scope identity, cancellation and unwind restoration with independent SQLite ownership admission");
+});
+
+
+test("native_detached_receiving_preserves_original_cumulative_ledger", async () => {
+ const fixture=(await import("../🧫️fixtures/🔌️detached/🔣️.json")).default;
+ const schema=(await import("../🧬️schema/🔌️detached/🔣️.json")).default;
+ expect(new Ajv({strict:true,allErrors:true}).compile(schema)(fixture)).toBe(true);
+ const db=new Database(":memory:");
+ try{
+  db.run("CREATE TABLE original_receipt(maximum INTEGER, owned INTEGER, recipient INTEGER)");
+  db.run("INSERT INTO original_receipt VALUES(?,?,1)",[fixture.maximumBytes,fixture.firstOwnedBytes]);
+  const receipt=db.query("SELECT maximum,owned,recipient FROM original_receipt").get();
+  db.run("UPDATE original_receipt SET owned=owned+? WHERE recipient=2 AND owned+?<=maximum",[fixture.secondOwnedBytes,fixture.secondOwnedBytes]);
+  expect(db.query("SELECT maximum,owned,recipient FROM original_receipt").get()).toEqual(receipt);
+  db.run("UPDATE original_receipt SET owned=owned+? WHERE recipient=1 AND owned+?<=maximum",[fixture.secondOwnedBytes,fixture.secondOwnedBytes]);
+  expect(db.query("SELECT maximum,owned,recipient FROM original_receipt").get()).toEqual({maximum:fixture.maximumBytes,owned:fixture.finalOwnedBytes,recipient:1});
+  expect(JSON.parse(JSON.stringify(fixture))).toEqual(fixture);
+  console.error("[DEBUG] original detached native receipt retains ceiling, cumulative ownership and recipient through independent SQLite/JSON");
+ }finally{db.close();}
 });

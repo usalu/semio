@@ -7,15 +7,15 @@ fn id_of(node: &DrawingLayerNode) -> String {
 }
 
 fn tree() -> DrawingSnapshot {
-    let mut group = create_drawing_group_layer("G");
+    let mut group = create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("G")).to_string().into()).expect("nonempty authored identity"), "G");
     if let DrawingLayerNode::Group(inner) = &mut group {
-        inner.children.push(create_drawing_shape_layer_rect("B"));
-        inner.children.push(create_drawing_shape_layer_rect("C"));
+        inner.children.push(create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("B")).to_string().into()).expect("nonempty authored identity"), "B"));
+        inner.children.push(create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("C")).to_string().into()).expect("nonempty authored identity"), "C"));
     }
     let mut document = default_drawing_document("tree", None);
-    document.layers.push(create_drawing_shape_layer_rect("A"));
+    document.layers.push(create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("A")).to_string().into()).expect("nonempty authored identity"), "A"));
     document.layers.push(group);
-    document.layers.push(create_drawing_shape_layer_rect("D"));
+    document.layers.push(create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("D")).to_string().into()).expect("nonempty authored identity"), "D"));
     document
 }
 
@@ -141,7 +141,7 @@ async fn a_middle_move_is_one_row_over_three_moves_of_one_layer() {
 async fn insert_then_move_lands_at_the_final_slot_and_insert_then_remove_cancels() {
     let base = tree();
     let group = named(&base, "G");
-    let fresh = create_drawing_shape_layer_rect("X");
+    let fresh = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("X")).to_string().into()).expect("nonempty authored identity"), "X");
     let fresh_id = id_of(&fresh);
     let created = diff_create_layer(&base.layers, None, 1, fresh);
     let one = apply(&created, &base);
@@ -168,7 +168,7 @@ async fn move_then_remove_removes_at_the_base_address_and_a_patch_of_an_inserted
     assert_eq!(delta.removed, vec![DrawingLayerRemoval { id: a, parent_id: None, index: 0 }], "move then remove removes at the base address");
     assert!(delta.moved.is_empty() && delta.inserted.is_empty());
     assert_eq!(apply(&total, &base), apply(&removed, &one));
-    let fresh = create_drawing_shape_layer_rect("X");
+    let fresh = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("X")).to_string().into()).expect("nonempty authored identity"), "X");
     let fresh_id = id_of(&fresh);
     let created = diff_create_layer(&base.layers, None, 0, fresh);
     let renamed = diff_set_layer_name(&fresh_id, "Renamed");
@@ -190,9 +190,9 @@ async fn a_stale_base_address_is_refused() {
 #[semio_framework_async_macros::async_test]
 async fn several_edits_inside_an_inserted_group_fold_by_mid_coordinates() {
     let base = tree();
-    let (p, q, r, s) = (create_drawing_shape_layer_rect("P"), create_drawing_shape_layer_rect("Q"), create_drawing_shape_layer_rect("R"), create_drawing_shape_layer_rect("S"));
+    let (p, q, r, s) = (create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("P")).to_string().into()).expect("nonempty authored identity"), "P"), create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Q")).to_string().into()).expect("nonempty authored identity"), "Q"), create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("R")).to_string().into()).expect("nonempty authored identity"), "R"), create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("S")).to_string().into()).expect("nonempty authored identity"), "S"));
     let (p_id, q_id, r_id, s_id) = (id_of(&p), id_of(&q), id_of(&r), id_of(&s));
-    let mut group = create_drawing_group_layer("X");
+    let mut group = create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("X")).to_string().into()).expect("nonempty authored identity"), "X");
     if let DrawingLayerNode::Group(inner) = &mut group {
         inner.children.push(p);
         inner.children.push(q);

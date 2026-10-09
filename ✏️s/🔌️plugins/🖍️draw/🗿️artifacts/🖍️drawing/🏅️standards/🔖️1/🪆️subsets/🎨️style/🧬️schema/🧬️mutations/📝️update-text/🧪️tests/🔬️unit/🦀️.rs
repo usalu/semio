@@ -3,7 +3,7 @@
 fn text_edits_preserve_content_size_and_history_payload() {
     use protocol::Mutation;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
-    let layer = crate::schema::create_drawing_text_layer("Text");
+    let layer = crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text");
     let id = crate::schema::layer_id(&layer).to_string();
     let before = crate::DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     for edit in fixture["edits"].as_array().unwrap() {

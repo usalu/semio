@@ -1,0 +1,27 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "package.json",
+      "sha256": "adecfcc3b54b3ed00cc159f3d7512647f3efe8c77e9291afb999753c5b065943"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "0a50f74af2bbcd4757aac1a9de8472ef3ae3be86e3c8a910d3feaba347f2fb90"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+      "sha256": "3264be35ac95c63d90bdd855c2eb5755ae56267d6b47fb988bc5a47f302201ba"
+    },
+    {
+      "path": "node_modules/@nxlv/python/dist/plugins/plugin.js",
+      "sha256": "d4f22a86f63aa9fd143517015eb8546e9c9b7c081e8c7360c0958dc352e8accc"
+    }
+  ],
+  "pureIgnoreOracle": {
+    "exactModuleProjectReincluded": true,
+    "nestedTrueCollectionIgnored": true,
+    "outerTrueCollectionThenModuleStillIgnored": true,
+    "siblingPackageNotReincluded": true
+  }
+}

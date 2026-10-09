@@ -1,0 +1,9 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "5574d59c8c4eedc83422f88532c001d7ca98fd0c605cff9d62b19997f722e35e",
+    "afterSha256": "4f23ba1273439d924992727e92052ab9cc895d934fb076484d9a9c47a8acf23d",
+    "reason": "Emit exact completed original Buffer and native-source hostile-control witness; no native invocation claimed"
+  }
+]

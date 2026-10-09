@@ -107,13 +107,13 @@ pub struct HierarchicalTreeLayoutOptions {
     pub locked_node_ids: Vec<String>,
 }
 
-fn default_tree_layer_spacing() -> f64 {
+pub(crate) fn default_tree_layer_spacing() -> f64 {
     120.0
 }
-fn default_tree_sibling_gap() -> f64 {
+pub(crate) fn default_tree_sibling_gap() -> f64 {
     28.0
 }
-fn default_direction() -> String {
+pub(crate) fn default_direction() -> String {
     "downwards".into()
 }
 

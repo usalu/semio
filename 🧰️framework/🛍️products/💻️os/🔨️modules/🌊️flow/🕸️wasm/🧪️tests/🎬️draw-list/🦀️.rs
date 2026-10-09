@@ -15,15 +15,10 @@ fn generation_3d_flow_host() -> FlowHost {
 /// 🧹️ `FlowHostSnapshot`'s ordered maps refuse to drop unretired (they panic inside the value layer), so
 /// every lane that builds a real host must walk it through the same retirement ladder the session
 /// close walks — see `FlowDomainAdapter::close_step`.
-fn retire(host: FlowHost) {
-    let mut retirement = FlowHostRetirement::new(host);
-    for _ in 0..1_000_000 {
-        if retirement.close_page(64, 65_536).expect("flow host retirement") {
-            assert!(retirement.terminal_nonopaque_is_empty(), "flow host retired without reaching its terminal");
-            return;
-        }
-    }
-    panic!("flow host did not retire within bound");
+fn retire(host:FlowHost){
+ let mut retirement=FlowHostRetirement::new(host);
+ for _ in 0..1_000_000{if retirement.terminal_is_empty(){return}let copy=retirement.next_close_copy_byte_demand().expect("original host copy authority");let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_close_capacity_byte_demand(copy).expect("original host capacity authority"),maximum_release_bytes:retirement.next_close_release_byte_demand().expect("original host release authority"),maximum_depth:retirement.next_close_depth_demand().expect("original host depth authority")};retirement.close_step(grant).expect("original host retirement");}
+ panic!("flow host did not retire within bound")
 }
 
 fn generation_3d_draw_list(width: u32, height: u32) -> (usize, Value) {

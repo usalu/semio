@@ -35,16 +35,7 @@ mod artifact_reserved_tool_job_tests {
         }
     }
 
-    impl ArtifactReservedJob for TerminalJob {
-        fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-            self.terminal = true;
-            Ok(PluginCloseStep::Complete)
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            self.terminal
-        }
-    }
+    impl ArtifactReservedJob for TerminalJob {}
 
     #[test]
     fn erased_dispatch_clone_release_preserves_unique_bounded_job_disposal_authority() {
@@ -53,13 +44,22 @@ mod artifact_reserved_tool_job_tests {
         let erased_dispatch_clone = retained.clone();
         drop(erased_dispatch_clone);
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-        assert!(matches!(retained.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), Ok(PluginCloseStep::Pending{..})));
+        use semio_framework_job::InteractiveJob;
+        use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
+        let frame=std::mem::size_of::<TerminalJob>();
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:frame,maximum_depth:1,..Default::default()};
+        assert_eq!(retained.close_step(grant),semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}});
         assert!(!retained.terminal_is_empty());assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst),0);
-        assert!(matches!(retained.close_step(1,0),Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0})));
+        for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_release_bytes:frame-1,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retained.close_step(denied));
+            assert_eq!(step,semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!retained.terminal_is_empty());
+        }
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst),0);
-        assert!(matches!(retained.close_step(1,ARTIFACT_OUTPUT_CHUNK_BYTES),Ok(PluginCloseStep::Pending{released_items:1,..})));
-        assert!(matches!(retained.close_step(1,ARTIFACT_OUTPUT_CHUNK_BYTES),Ok(PluginCloseStep::Complete)));
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retained.close_step(grant));
+        assert_eq!(step,semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:frame,..Default::default()}});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,frame));
+        assert_eq!(retained.close_step(grant),semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});
         assert!(retained.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
+        eprintln!("[DEBUG] original reserved dispatch retains its job under item/depth/release refusals and releases its exact physical frame={frame}");
     }
 }

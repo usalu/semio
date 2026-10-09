@@ -183,7 +183,7 @@ async fn resolve_plan_at_checkpoint_falls_back_to_full_decode_without_an_index()
         timestamp: "t-cp-1".to_string(),
         line_id: None,
     });
-    let envelope = crate::os_spr::history_transition_envelope(&commit, &crate::os_spr::ArtifactId("doc-2".to_string()), &crate::os_spr::ActorId("alice".to_string()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: 0 });
+    let envelope = crate::os_spr::history_transition_envelope(&commit, &crate::os_spr::ArtifactId("doc-2".to_string()), &crate::os_spr::ActorId("alice".into()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: 0 });
     log.transitions.push(HistoryTransitionRecord::from_envelope(&envelope));
 
     let bytes = crate::os_spr::history::encode_history(&log, &crate::os_spr::history::EncodeOptions::default()).await.unwrap();

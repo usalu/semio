@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "scope": "Original DAG/Engine typed source and constructor",
+  "sourceSha256": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🦀️.rs": "f2bbfe3b23ef3ed9e87f5265baab3410e07d9fe8bc620da948d09d8c33ca5400",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/♻️retirement/🦀️.rs": "0056f79c4546757a018cda16fe4a5feea719f2405e696525eec4e460e00d116e",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🦀️.rs": "73fab77bb172996b98340af9a39f5d89a6fb59041323d537396b0f4546d97555",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs": "4c11d1d644a58d8343efcaf66fb1d7c9204cb465b7e62686d562d6f91f26309a",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🦀️.rs": "808593cc8654af3750a9ea0b5b76a07fe378d4b76dd59f13f8eae291e2c55045",
+    "🧰️framework/🔨️modules/🕸️graph/⚙️engine/🦀️.rs": "ff05bbe8ad27fe2ebdeeae09424f58df3d311e96f77a87cbce72c789ba33d2cf",
+    "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs": "b5e081fdcf0077058db4dbdac9580396df26b87a335b109d0aa45f9c7783d29a"
+  },
+  "portable": {
+    "handle": 95827,
+    "exitCode": 0,
+    "strictAjv": true,
+    "omittedAuthoritiesRejected": 6,
+    "dagFields": 47,
+    "engineFields": 27,
+    "references": [
+      "JSON Patch",
+      "Node UTF8"
+    ]
+  },
+  "syntax": {
+    "handle": 51160,
+    "exitCode": 0,
+    "explicitRustOwners": 7,
+    "typeValidation": false
+  },
+  "native": {
+    "handle": 39602,
+    "exitCode": 1,
+    "stage": "PREASSERT",
+    "cargoExitCode": 101,
+    "generatedDiagnosticBytes": 0,
+    "selectedAssertionsObserved": false
+  },
+  "remaining": [
+    "Vector icon scene full authority",
+    "Full Host source physical closure",
+    "Original VCS/ABI outward receipt",
+    "Current native qualification"
+  ],
+  "nativeReplay": {
+    "handle": 80823,
+    "exitCode": 1,
+    "stage": "PREASSERT",
+    "replicationActorIdCompilerErrors": 9,
+    "selectedAssertionsObserved": false
+  },
+  "syntaxReplay": {
+    "handle": 78724,
+    "exitCode": 0,
+    "explicitRustOwners": 11,
+    "typeValidation": false
+  }
+}

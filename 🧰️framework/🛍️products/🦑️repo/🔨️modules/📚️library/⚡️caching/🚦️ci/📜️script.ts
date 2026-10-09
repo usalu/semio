@@ -2,7 +2,7 @@
 import { appendFileSync, readFileSync, statSync } from "node:fs";
 import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
-import { runTool } from "../🚀️bootstrap/📦️dependencies/📜️script.ts";
+import {repositoryCargoPreparationStorageV1, runTool } from "../🚀️bootstrap/📦️dependencies/📜️script.ts";
 import { githubJsonTransport } from "./🐙️github/🟦️.ts";
 import { resolveCiValidation } from "./🧭️baseline/🏃️resolve/🟦️.ts";
 
@@ -17,7 +17,7 @@ export class BaselineScript extends Script {
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     const progress = setInterval(() => console.error("Resolving successful CI ancestry…"), 10000);
     try {
-      const head = (await runTool("git", ["rev-parse", "--verify", "HEAD^{commit}"], this.root, controller.signal, true)).trim();
+      const head = (await runTool("git",["rev-parse", "--verify", "HEAD^{commit}"],this.root,controller.signal,true,process.env,repositoryCargoPreparationStorageV1(process.cwd()))).trim();
       let event: unknown = null;
       if (process.env.GITHUB_ACTIONS === "true") {
         const path = process.env.GITHUB_EVENT_PATH;
@@ -25,7 +25,7 @@ export class BaselineScript extends Script {
         event = JSON.parse(readFileSync(path, "utf8"));
       }
       const result = await resolveCiValidation({ environment: process.env, event, head, full: args.includes("--full") }, githubJsonTransport({ token: process.env.GITHUB_TOKEN }), async (base, head) => {
-        try { return (await runTool("git", ["merge-base", base, head], this.root, controller.signal, true)).trim() === base; }
+        try { return (await runTool("git",["merge-base", base, head],this.root,controller.signal,true,process.env,repositoryCargoPreparationStorageV1(process.cwd()))).trim() === base; }
         catch { controller.signal.throwIfAborted(); return false; }
       }, controller.signal);
       controller.signal.throwIfAborted();

@@ -189,8 +189,15 @@ fn probe_record_spec() -> semio_framework_dsl_record::RecordSpec {
     semio_framework_dsl_record::RecordSpec::new(Some("probe"), semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "value", semio_framework_dsl_record::Shape::Value)])
 }
 
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct ProbeSnapshot(pub serde_json::Value);
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
+pub struct ProbeSnapshot(pub semio_framework_value::DslValue);
+
+impl Default for ProbeSnapshot {
+    fn default() -> Self { Self(semio_framework_value::DslValue::Null) }
+}
+
+#[path = "🚪️io/🔤️json/🦀️.rs"]
+mod probe_json;
 
 #[path = "🪶️sqlite/🦀️.rs"]
 mod probe_sqlite;
@@ -199,17 +206,15 @@ impl store::ArtifactDsl for ProbeSnapshot {
     const EXTENSION: &'static str = "probe";
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        serde_json::from_str(text).map(ProbeSnapshot).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(0, 0)))
+        probe_json::parse(text).map(ProbeSnapshot).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, error.to_string(), semio_framework_diagnostic::TextSpan::at(0, 0)))
     }
 
     fn print_dsl(&self) -> String {
-        serde_json::to_string(&self.0).unwrap_or_else(|_| "null".to_string())
+        probe_json::print(&self.0).expect("Probe snapshot contains a valid JSON value")
     }
 }
 
-/// 🧩️ `ProbeSnapshot` is one opaque `serde_json::Value` leaf: it declares no child slot and no link
-/// slot, so its composition projection is empty. `ArtifactStore::undo`/`redo` reach it through
-/// `store::SpaceMember`, whose bound this satisfies.
+/// 🧩️ The JSON node tree declares no artifact child or link references.
 impl semio_framework_schema_composition::ArtifactCompositionFields for ProbeSnapshot {
     fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
         Ok(())
@@ -223,11 +228,12 @@ impl store::ArtifactPack for ProbeSnapshot {
     }
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        serde_json::to_vec(&self.0).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
+        probe_json::print(&self.0).map(String::into_bytes).map_err(store::PackError::from)
     }
 
     fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        serde_json::from_slice(bytes).map(ProbeSnapshot).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|_| store::PackError::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Probe JSON input is not UTF8")))?;
+        probe_json::parse(text).map(ProbeSnapshot).map_err(store::PackError::from)
     }
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
@@ -235,30 +241,27 @@ impl store::ArtifactPack for ProbeSnapshot {
     }
 }
 
-/// 🌉️ Hand-written, not derived: `ProbeSnapshot` wraps a foreign `serde_json::Value`, one of the
-/// documented gaps the `ToValue`/`FromValue` derive does not cover (`📓️fix-os-kernel-store-mutations.md`
-/// §"Key facts"). Bridges straight through `DslValue`'s own total `From<&serde_json::Value>` /
-/// `From<DslValue> for serde_json::Value` conversions, reproducing exactly what a derived newtype
-/// struct encodes (the inner value, transparently).
-///
-/// 🪲️ NEVER route this through `semio_framework_value::ToValue::to_value`/`semio_framework_value::FromValue::from_value`: since
-/// `🌱️value/🦀️.rs`'s serde-elimination those are `Ok(value.to_value())` / `T::from_value(value)`,
-/// so an impl that calls them is a two-frame infinite recursion that aborts the process with
-/// `fatal runtime error: stack overflow` the first time a probe document is committed. See
-/// `📓️fable-mcp-artifact-quick-recursion.md`.
+/// 🌉️ Projects the first-party tree through its original controlled value implementation.
 impl semio_framework_value::ToValue for ProbeSnapshot {
     fn to_value(&self) -> semio_framework_value::DslValue {
-        semio_framework_value::DslValue::from(&self.0)
+        self.0.clone()
     }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { semio_framework_value::ToValue::to_value_controlled(&self.0, control) }
 }
 impl semio_framework_value::FromValue for ProbeSnapshot {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        Ok(ProbeSnapshot(serde_json::Value::from(value)))
+        probe_json::validate(&value)?;
+        Ok(ProbeSnapshot(value))
     }
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { probe_json::validate_with(value, &mut |_| control.checkpoint())?; <semio_framework_value::DslValue as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self) }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct ProbeDiff(pub serde_json::Value);
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
+pub struct ProbeDiff(pub semio_framework_value::DslValue);
+
+impl Default for ProbeDiff {
+    fn default() -> Self { Self(semio_framework_value::DslValue::Null) }
+}
 
 impl store::DiffAlgebra<ProbeSnapshot> for ProbeDiff {
     fn inverse(&self, base: &ProbeSnapshot) -> Self {
@@ -280,31 +283,28 @@ impl store::MutationDiff<ProbeSnapshot> for ProbeDiff {
     }
 }
 
-/// 🌉️ Hand-written — same foreign-`serde_json::Value` gap, and the same no-`to_dsl_value` recursion
-/// rule, as [`ProbeSnapshot`]'s impl above.
+/// 🔄️ Preserves the first-party replacement tree and its original controlled projection.
 impl semio_framework_value::ToValue for ProbeDiff {
     fn to_value(&self) -> semio_framework_value::DslValue {
-        semio_framework_value::DslValue::from(&self.0)
+        self.0.clone()
     }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { semio_framework_value::ToValue::to_value_controlled(&self.0, control) }
 }
 impl semio_framework_value::FromValue for ProbeDiff {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        Ok(ProbeDiff(serde_json::Value::from(value)))
+        probe_json::validate(&value)?;
+        Ok(ProbeDiff(value))
     }
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { probe_json::validate_with(value, &mut |_| control.checkpoint())?; <semio_framework_value::DslValue as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self) }
 }
 
-/// 🧪️ The only operation this probe document supports: whole-value replace over an opaque JSON
-/// value, the simplest legal `Mutation` implementor.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+/// 🧪️ Replaces the complete ordered JSON node tree.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned, semio_framework_value::ToValue)]
 pub enum ProbeMutation {
-    SetValue(serde_json::Value),
+    SetValue(semio_framework_value::DslValue),
 }
 
-/// 🧷️ Hand-built `store::Mutation::DESCRIPTORS` entry for `ProbeMutation`'s one operation — not
-/// `#[derive(dsl::Mutations)]` (see `ProbeMutation`'s own docstring): that derive requires each
-/// variant to wrap a real `MutationLeaf` payload, and `SetValue`'s foreign `serde_json::Value`
-/// field is not one. Field values satisfy `store::validate_mutation_leaf_descriptor`'s contract by
-/// hand.
+/// 🧷️ Declares the atomic whole-tree replacement operation and its language surfaces.
 const PROBE_SET_VALUE_DESCRIPTOR: store::MutationLeafDescriptor = store::MutationLeafDescriptor {
     schema_version: 1,
     owner: "os/mcp/workspace/🧬️mutations/set-value",
@@ -343,50 +343,48 @@ impl store::Mutation<ProbeSnapshot> for ProbeMutation {
 }
 }
 
-/// 🌉️ Hand-written — `ProbeMutation::SetValue` wraps a foreign `serde_json::Value` field, same gap
-/// as [`ProbeSnapshot`]'s impl above (the derive cannot map a foreign type's shape into `DslValue`),
-/// and the same no-`to_dsl_value` recursion rule. Externally tagged as `{"SetValue": <payload>}` —
-/// byte-identical to what `#[derive(ToValue)]` and `serde`'s default emit for a tagless
-/// single-unnamed-field variant, which is what `🧫️fixtures/🔣️first-party-codecs.json`'s `probeCodec`
-/// section pins.
-impl semio_framework_value::ToValue for ProbeMutation {
-    fn to_value(&self) -> semio_framework_value::DslValue {
-        let ProbeMutation::SetValue(value) = self;
-        semio_framework_value::DslValue::object([(PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant.to_string(), semio_framework_value::DslValue::from(value))])
-    }
-}
+/// 🫴️ Moves a validated replacement payload from its single declared variant.
 impl semio_framework_value::FromValue for ProbeMutation {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let semio_framework_value::DslValue::Object(entries) = value else {
             return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a one-key `{}` object, found {value:?}", PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant)));
         };
         match <[(String, semio_framework_value::DslValue); 1]>::try_from(entries) {
-            Ok([(key, payload)]) if key == PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant => Ok(ProbeMutation::SetValue(serde_json::Value::from(payload))),
+            Ok([(key, payload)]) if key == PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant => { probe_json::validate(&payload)?; Ok(ProbeMutation::SetValue(payload)) },
             Ok([(key, _)]) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown variant `{key}`, expected `{}`", PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant))),
             Err(entries) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected exactly one variant key, found {}", entries.len()))),
         }
+    }
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        control.checkpoint()?;
+        let semio_framework_value::DslValue::Object(entries) = value else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Probe mutation requires a single variant object")) };
+        let [(key, payload)] = entries.as_slice() else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Probe mutation requires exactly one variant")) };
+        if key != PROBE_SET_VALUE_DESCRIPTOR.aggregate_variant { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Probe mutation variant is unknown")) }
+        probe_json::validate_with(payload, &mut |_| control.checkpoint())?;
+        <semio_framework_value::DslValue as semio_framework_value::FromValue>::from_value_controlled(payload, control).map(Self::SetValue)
     }
 }
 
 impl store::OpText for ProbeMutation {
     fn print_op(&self) -> String {
         let ProbeMutation::SetValue(value) = self;
-        serde_json::to_string(value).unwrap_or_else(|_| "null".to_string())
+        probe_json::print(value).expect("Probe mutation contains a valid JSON value")
     }
 
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        serde_json::from_str(line).map(ProbeMutation::SetValue).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(0, 0)))
+        probe_json::parse(line).map(ProbeMutation::SetValue).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, error.to_string(), semio_framework_diagnostic::TextSpan::at(0, 0)))
     }
 }
 
 impl store::OpBinary for ProbeMutation {
     fn encode_op(&self) -> Result<Vec<u8>, store::ProtocolError> {
         let ProbeMutation::SetValue(value) = self;
-        serde_json::to_vec(value).map_err(|error| store::ProtocolError::Malformed { what: "probe-op", offset: 0, detail: error.to_string() })
+        probe_json::print(value).map(String::into_bytes).map_err(|error| store::ProtocolError::Malformed { what: "probe-op", offset: 0, detail: error.to_string() })
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, store::ProtocolError> {
-        serde_json::from_slice(bytes).map(ProbeMutation::SetValue).map_err(|error| store::ProtocolError::Malformed { what: "probe-op", offset: 0, detail: error.to_string() })
+        let text = std::str::from_utf8(bytes).map_err(|error| store::ProtocolError::Malformed { what: "probe-op", offset: 0, detail: error.to_string() })?;
+        probe_json::parse(text).map(ProbeMutation::SetValue).map_err(|error| store::ProtocolError::Malformed { what: "probe-op", offset: 0, detail: error.to_string() })
     }
 }
 
@@ -403,58 +401,6 @@ pub fn ensure_probe_codec_registered() {
     });
 }
 
-/// 🧹️ Owned-value retirement for a probe's snapshot root/initial snapshot/mutation — a `ProbeStore`
-/// has nothing external to release (no blob handle, no disk row) so retiring one is exactly taking
-/// it, one bounded step at a time, mirroring `🏪️store/🦀️.rs`'s own `#[cfg(test)]`
-/// `DemoSnapshotRetirement`/`DemoInitialSnapshotRetirement`/`DemoMutationRetirement` triplet (the
-/// canonical shape for a value with no real external resource behind it).
-struct ProbeOwnedRetirement<T>(Option<T>);
-
-impl<T: Send> store::ErasedSnapshotRetirement for ProbeOwnedRetirement<T> {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.0.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
-    }
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct ProbeSnapshotRetirementFactory;
-
-impl store::SnapshotRetirementFactory<ProbeSnapshot> for ProbeSnapshotRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<ProbeSnapshot>) -> usize { std::mem::size_of::<ProbeOwnedRetirement<Arc<ProbeSnapshot>>>() }
-
-    fn retire(&self, snapshot: Arc<ProbeSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(ProbeOwnedRetirement(Some(snapshot)))
-    }
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct ProbeInitialSnapshotRetirementFactory;
-
-impl store::ArtifactOwnedValueRetirementFactory<ProbeSnapshot> for ProbeInitialSnapshotRetirementFactory {
-    fn retire_owned(&self, value: ProbeSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(ProbeOwnedRetirement(Some(value)))
-    }
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct ProbeMutationRetirementFactory;
-
-impl store::ArtifactOwnedValueRetirementFactory<ProbeMutation> for ProbeMutationRetirementFactory {
-    fn retire_owned(&self, value: ProbeMutation) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(ProbeOwnedRetirement(Some(value)))
-    }
-}
-
 /// 🔐️ The one real owner catalog every `ProbeStore` installs right after construction
 /// (`ensure_probe_artifact`) — required before `ArtifactStore::drop`'s terminal-empty witness can
 /// ever be reached (`install_document_store_owners_exact`'s own doc: "There is no default catalog").
@@ -466,7 +412,7 @@ impl store::ArtifactOwnedValueRetirementFactory<ProbeMutation> for ProbeMutation
 /// causal DAG, and finally the envelope shell — in the exact order `ArtifactStore::drop`'s witness
 /// checks them.
 fn probe_store_owners() -> store::DocumentStoreOwners<ProbeSnapshot, ProbeMutation> {
-    store::DocumentStoreOwners::new(Arc::new(ProbeSnapshotRetirementFactory), Arc::new(ProbeInitialSnapshotRetirementFactory), Arc::new(ProbeMutationRetirementFactory), Box::new(store::ArtifactStoreCursorDisposer::<ProbeSnapshot, ProbeMutation>::new()))
+    store::funded_bounded_artifact_store_owners::<ProbeSnapshot, ProbeMutation>().expect("Probe first-party store retirement catalog")
 }
 
 /// 🚪️ Drains one `ProbeStore` to `ArtifactStore::drop`'s exact terminal-empty witness before
@@ -484,13 +430,17 @@ fn close_probe_store_to_terminal(mut probe_store: ProbeStore) {
     const PROBE_STORE_CLOSE_MAXIMUM_TURNS: usize = 20_000;
     const PROBE_STORE_CLOSE_BLOCKED_BACKOFF: std::time::Duration = std::time::Duration::from_millis(1);
     for _ in 0..PROBE_STORE_CLOSE_MAXIMUM_TURNS {
-        match probe_store.close_owned_step(1, 1 << 16) {
-            Ok(store::SnapshotRetirementStep::Complete) => {
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 134_217_728, maximum_release_bytes: 134_217_728, maximum_depth: 256 };
+        match probe_store.close_owned_step(grant) {
+            Ok(semio_framework_value::RetainedCloneStep::Complete(progress)) => {
+                assert!(progress.fits(grant), "Probe store close exceeded the original caller turn");
                 assert!(probe_store.close_owned_terminal_is_empty(), "probe store close driver reported Complete without its exact terminal-empty witness");
                 return;
             }
-            Ok(store::SnapshotRetirementStep::Blocked) => std::thread::sleep(PROBE_STORE_CLOSE_BLOCKED_BACKOFF),
-            Ok(store::SnapshotRetirementStep::Pending { .. }) => continue,
+            Ok(semio_framework_value::RetainedCloneStep::Progress(progress)) => {
+                assert!(progress.fits(grant), "Probe store close exceeded the original caller turn");
+                if progress == semio_framework_value::RetainedCloneProgress::default() { std::thread::sleep(PROBE_STORE_CLOSE_BLOCKED_BACKOFF); }
+            },
             Err(error) => {
                 eprintln!("[probe-store-close] cannot reach terminal-empty: {error}");
                 return;
@@ -1697,6 +1647,7 @@ impl PluginArtifactChannel {
             source_dialect: declared.artifact_schema.clone(),
             policy: Vec::new(),
             budgets: crate::schema::ArtifactInferenceBudgetV1 { allocation_bytes: INFERENCE_ALLOCATION_BYTES, work_units: command.work_units.max(1), recursion_depth: INFERENCE_RECURSION_DEPTH },
+            retained: command.retained,
             cancellation_id: command.cancellation_id.clone(),
             previous_state: None,
             requested_cache_mode: crate::schema::ArtifactInferenceCacheModeV1::Cold,
@@ -3181,7 +3132,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_export(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, payload: &semio_framework::io_schema::IoPayload, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::sqlite_snapshot::SqliteDatabase> {
+fn guest_sqlite_export(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, payload: &semio_framework::io_schema::IoPayload, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::sqlite_snapshot::SqliteDatabase> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     use semio_framework::{ io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SnapshotEncoding, SqliteSnapshotPhase}};
@@ -3194,16 +3145,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let cancel = GuestCallCancellation::default();
     let _reactor = hub_socket_reactor().map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string())))?.enter();
     let mut progress_refusal = None;
-    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_export(&route.compiled, &dialect.to_coordinate(), encoding.as_str(), bytes, limits, &headless_codec_budget(), |_, _| { if let Err(cause) = control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0) { if progress_refusal.is_none() { progress_refusal = Some(cause); } cancel.cancel(); } }, &cancel)).map_err(|error| progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(|| guest_sqlite_turn_error(error)))?;
+    let grant=native.grant();
+    let result=native.native().with_encoding_receiver(|remaining,observer,allocate|{
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining,observer,allocate).map_err(IoError::from_value_error)?;
+        semio_framework_async::block_on(route.runtime.codec_sqlite_export(&route.compiled,&dialect.to_coordinate(),encoding.as_str(),bytes,limits,&headless_codec_budget(),|_,_|{if let Err(cause)=control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0){if progress_refusal.is_none(){progress_refusal=Some(cause)}cancel.cancel();}},&cancel,grant,&mut identity)).map_err(|error|progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(||guest_sqlite_turn_error(error)))
+    })?;
     let file = match result { sqlite_wire::SnapshotFileResult::Done(file) => file, sqlite_wire::SnapshotFileResult::Rejected(rejection) => return Err(rejection.into_io_error().map_err(IoError::from_value_error)?) };
-    let mut database = sqlite_snapshot::import_sqlite_database(&file.bytes, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(IoError::from_value_error)?;
-    let (actual, actual_encoding) = io::io_mechanism::take_sqlite_snapshot_metadata(&mut database).map_err(IoError::from_value_error)?;
+    let mut database = sqlite_snapshot::import_sqlite_database_controlled(&file.bytes, control).map_err(IoError::from_value_error)?;
+    let (actual, actual_encoding) = io::io_mechanism::take_sqlite_snapshot_metadata_controlled(&mut database,control).map_err(IoError::from_value_error)?;
     if actual != *dialect || actual_encoding != encoding { return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "guest SQLite export metadata disagrees with its exact requested snapshot"))); }
     Ok(IoOutcome { value: database, diagnostics: sqlite_wire::decode_diagnostics(&file.diagnostics).map_err(IoError::from_value_error)? })
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, mut database: semio_framework::sqlite_snapshot::SqliteDatabase, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, mut database: semio_framework::sqlite_snapshot::SqliteDatabase, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     use semio_framework::{ io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SqliteSnapshotPhase}};
@@ -3213,11 +3168,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let route = guest_sqlite_route(schema, dialect)?;
     let limits = control.limits();
     io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, control).map_err(IoError::from_value_error)?;
-    let bytes = sqlite_snapshot::export_sqlite_database(&database, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(IoError::from_value_error)?;
+    let bytes = sqlite_snapshot::export_sqlite_database_controlled(&database, control).map_err(IoError::from_value_error)?;
     let cancel = GuestCallCancellation::default();
     let _reactor = hub_socket_reactor().map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string())))?.enter();
     let mut progress_refusal = None;
-    let result = semio_framework_async::block_on(route.runtime.codec_sqlite_import(&route.compiled, &dialect.to_coordinate(), &bytes, limits, &headless_codec_budget(), |_, _| { if let Err(cause) = control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0) { if progress_refusal.is_none() { progress_refusal = Some(cause); } cancel.cancel(); } }, &cancel)).map_err(|error| progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(|| guest_sqlite_turn_error(error)))?;
+    let grant=native.grant();
+    let result=native.native().with_encoding_receiver(|remaining,observer,allocate|{
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining,observer,allocate).map_err(IoError::from_value_error)?;
+        semio_framework_async::block_on(route.runtime.codec_sqlite_import(&route.compiled,&dialect.to_coordinate(),&bytes,limits,&headless_codec_budget(),|_,_|{if let Err(cause)=control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0){if progress_refusal.is_none(){progress_refusal=Some(cause)}cancel.cancel();}},&cancel,grant,&mut identity)).map_err(|error|progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(||guest_sqlite_turn_error(error)))
+    })?;
     let payload = match result { sqlite_wire::SnapshotPayloadResult::Done(payload) => payload, sqlite_wire::SnapshotPayloadResult::Rejected(rejection) => return Err(rejection.into_io_error().map_err(IoError::from_value_error)?) };
     if payload.encoding != encoding.as_str() { return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "guest SQLite import returned a different native encoding"))); }
     let value = match encoding { sqlite_snapshot::SnapshotEncoding::Binary => IoPayload::Binary(payload.bytes), sqlite_snapshot::SnapshotEncoding::Text => IoPayload::Text(String::from_utf8(payload.bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))?) };
@@ -3257,12 +3216,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let sqlite_schema = semio_framework_async::block_on(runtime.codec_sqlite_schema(&compiled, &dialect.to_coordinate(), &headless_codec_budget())).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("guest semantic SQLite schema: {error}")))?;
     let mut routes = guest_codec_routes().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     if let Some(route) = routes.iter().find(|route| route.artifact_schema == artifact_schema && route.dialect == dialect) {
-        if route.compiled.package_hash != compiled.package_hash { return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "an exact guest snapshot route is already owned by another component")); }
+        if route.plugin_id != plugin_id || route.compiled.package_hash != compiled.package_hash { return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "an exact guest snapshot route is already owned by another plugin or component")); }
         return Ok(pack_schema_hash);
     }
     let codec = store::ArtifactCodec {
         schema: artifact_schema.to_string(),
         extension: "semio",
+        native_identity: store::ArtifactNativeSnapshotIdentity::Guest { plugin_id: plugin_id.to_string(), package_hash: compiled.package_hash, schema: artifact_schema.to_string() },
         snapshot_sqlite: Some(store::ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Owned(sqlite_schema), snapshot_type: None, export: guest_sqlite_export, import: guest_sqlite_import }),
         pack_schema_hash,
         compile_dsl: guest_compile_dsl,
@@ -3272,7 +3232,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         replay_envelopes: guest_replay_envelopes,
     };
     let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
-    semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: vec![semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration { dialect: dialect.clone(), codec }], ..Default::default() }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("registering a guest-backed semantic codec for `{artifact_schema}`: {error}")))?;
+    let binding=semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::Guest,plugin_id,Some(dialect.artifact_kind.clone()),Vec::new(),Some(dialect.clone()),None,&codec);
+    semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan { document_bindings:vec![binding],document_codecs: vec![codec.clone()], native_snapshots: vec![semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration { dialect: dialect.clone(), codec }], ..Default::default() }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("registering a guest-backed semantic codec for `{artifact_schema}`: {error}")))?;
     routes.push(Arc::new(GuestCodecRoute { dialect, artifact_schema: artifact_schema.to_string(), plugin_id: plugin_id.to_string(), runtime: Arc::clone(&runtime), compiled }));
     Ok(pack_schema_hash)
 }
@@ -4543,7 +4504,7 @@ impl HeadlessWorkspace {
     /// `ArtifactEvent::RemoteMutations` come back as guest events"). Applies `initial` as the FIRST
     /// commit only if the document has no history yet, so re-running this against an already-seeded
     /// workspace is idempotent and never double-commits. Returns the resulting `RevisionStamp`.
-    pub async fn ensure_probe_artifact(&self, artifact_id: &str, initial: serde_json::Value) -> Result<RevisionStamp, GatewayError> {
+    pub async fn ensure_probe_artifact(&self, artifact_id: &str, initial: semio_framework_value::DslValue) -> Result<RevisionStamp, GatewayError> {
         let existing = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id);
         let mut probe_store = match existing {
             Some(probe_store) => probe_store,
@@ -4554,7 +4515,7 @@ impl HeadlessWorkspace {
                 let document_key = self.origin.artifact_document_key(artifact_id);
                 let channels = self
                     .artifact_host
-                    .open(store::sync::ArtifactActorConfig {
+                    .open(store::sync::ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
                         document_id: artifact_id.to_string(),
                         schema: PROBE_SCHEMA.to_string(),
                         bindings: vec![self.origin.persistence_binding()],
@@ -4591,8 +4552,8 @@ impl HeadlessWorkspace {
     /// `PluginArtifactChannel::exchange`'s `PureCommand`/`TransactionPrepare` arms for exactly why a
     /// generic, arbitrary-plugin equivalent is not real yet (a guest-dispatch gap in `🔌️plugin`'s
     /// own shared code, out of this packet's owned file).
-    pub async fn apply_probe_mutation(&self, artifact_id: &str, value: serde_json::Value) -> Result<RevisionStamp, GatewayError> {
-        self.ensure_probe_artifact(artifact_id, serde_json::Value::Null).await?;
+    pub async fn apply_probe_mutation(&self, artifact_id: &str, value: semio_framework_value::DslValue) -> Result<RevisionStamp, GatewayError> {
+        self.ensure_probe_artifact(artifact_id, semio_framework_value::DslValue::Null).await?;
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("`{artifact_id}` was just ensured open but is missing from open_probes")))?;
         let dispatched = probe_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(value)], transaction: None }).await;
@@ -4607,7 +4568,7 @@ impl HeadlessWorkspace {
 
     /// 🧪️ Real `ArtifactStore::undo()` over an open probe document — same scope note as
     /// `apply_probe_mutation`.
-    pub async fn undo_probe_mutation(&self, artifact_id: &str) -> Result<serde_json::Value, GatewayError> {
+    pub async fn undo_probe_mutation(&self, artifact_id: &str) -> Result<semio_framework_value::DslValue, GatewayError> {
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open probe store to undo")))?;
         let outcome = probe_store.undo().await;
@@ -4619,7 +4580,7 @@ impl HeadlessWorkspace {
 
     /// 🧪️ Real `ArtifactStore::redo()` over an open probe document — same scope note as
     /// `apply_probe_mutation`.
-    pub async fn redo_probe_mutation(&self, artifact_id: &str) -> Result<serde_json::Value, GatewayError> {
+    pub async fn redo_probe_mutation(&self, artifact_id: &str) -> Result<semio_framework_value::DslValue, GatewayError> {
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open probe store to redo")))?;
         let outcome = probe_store.redo().await;
@@ -5013,7 +4974,7 @@ impl HeadlessWorkspace {
             Err(error) => return (None, Some(error.message)),
         };
         let _io_reactor = reactor.enter();
-        let channels = semio_framework_async::block_on(self.artifact_host.open(store::sync::ArtifactActorConfig {
+        let channels = semio_framework_async::block_on(self.artifact_host.open(store::sync::ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
             document_id: artifact_id.to_string(),
             schema,
             bindings: vec![store::sync::PersistenceBinding::Hub { base_url: base_url.clone(), space_id: space_id.clone(), surface: Some(lease.surface.surface_id.clone()) }],

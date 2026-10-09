@@ -1,0 +1,9 @@
+# Gitignore Complement Portability
+
+Executed requested pure in-memory installed ignore/minimatch checks, no graph/build/Source mutation. Finite proper-prefix/mismatching-character/longer-word expansion fails when constructed by Unicode codepoint: `[!🔨]` excludes surrogate code units in the JS ignore regex, so predecessor `🔧️modules` is incorrectly admitted. Canonical predecessor inequality requires exclusion. UTF16-unit expansion matches the sampled vectors but needs isolated surrogate literals; these cannot form a valid portable UTF8 .nxignore and cannot establish parity with Nx native walker's Unicode processing. Do not author either as an exact portable rule.
+
+Installed getDefaultPlugins395–400 unconditionally loads core package-json and project-json. Configured plugin include/exclude fields belong to that configured plugin wrapper, not a demonstrated override of those defaults. Custom Library candidate filtering alone does not gate ordinary project.json. Package-json workspace membership is an additional admission filter, but ordinary project-json still admits every visible config.
+
+No supported deterministic custom-plugin deletion hook was established in these defining paths. A clean all-admission boundary requires Nx's original file inventory filtering to use the canonical predicate, or a supported core admission extension proven against installed Nx; do not claim per-plugin filters or source-naming changes substitute for that. Exact-file module reinclusions can represent the current finite exception without admitting subtrees, but are not the requested arbitrary semantic solution. Continue four masks to protect actual collection projects while preserving this explicit limitation.
+
+Observations and dependency hashes in companion input are not authored work. Scope is the inspected installed APIs, not a proof no other Nx extension exists.

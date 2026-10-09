@@ -1,0 +1,14 @@
+import {test,expect} from "bun:test";
+import Ajv from "ajv/dist/2020";
+import TOML from "@iarna/toml";
+import {CargoTomlWorkspace,parseCargoToml} from "../🟦️.ts";
+import {CargoDiscoveryWorkspace} from "../../📁️physical/🟦️.ts";
+import {cargoPatternMatches} from "../../🔎️pattern/🟦️.ts";
+import policy from "../../🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json";
+import tomlVectors from "../🧫️fixtures/🔣️.json";
+import patternVectors from "../../🔎️pattern/🧫️fixtures/🔣️.json";
+import schema from "../🧬️schema/🔣️.json";
+import type {CargoProgress} from "../../🎛️control/🟦️.ts";
+const operation=(workspace:CargoDiscoveryWorkspace)=>{const deadline=performance.now()+60000;return{workspace,signal:new AbortController().signal,...policy.discovery,remainingMilliseconds:()=>deadline-performance.now(),onProgress:(event:CargoProgress)=>{expect(Number.isSafeInteger(event.completed)).toBe(true);console.log("[DEBUG] Cargo grammar "+event.stage+" "+event.completed);},yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))};};
+test("all original owned TOML programs retain schema and independent parser correspondence",async()=>{const admit=new Ajv({strict:true}).compile(schema);for(const row of tomlVectors.cases){const accounting=new CargoDiscoveryWorkspace(),workspace=new CargoTomlWorkspace(accounting),control=operation(accounting);if(row.accepted){const actual=await parseCargoToml(row.source,workspace,control,row.id);expect(admit(actual),JSON.stringify(admit.errors)).toBe(true);expect(actual).toEqual(row.expected);expect(actual).toEqual(TOML.parse(row.source));expect(workspace.state).toBe("complete");}else{await expect(parseCargoToml(row.source,workspace,control,row.id)).rejects.toThrow();expect(workspace.state).toBe("refused");}}},60000);
+test("all original Cargo pattern programs agree with the independent system glob implementation",async()=>{for(const row of patternVectors.cases){const control=operation(new CargoDiscoveryWorkspace());expect(await cargoPatternMatches(row.pattern,row.path,control),row.id).toBe(row.expected);expect(new Bun.Glob(row.pattern).match(row.path),row.id).toBe(row.expected);}},60000);

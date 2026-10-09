@@ -2,9 +2,15 @@
 use super::paged_encoder::{ChildTextView,PagedChildGroup,PagedChildGroups,PagedChildLabels};
 use super::reader::{ChildGroupDecodeVisitor,ChildGroupText};
 use semio_framework_os_kernel::{os_pack::{PackRefusal,codec::ByteSpan},os_spr::operation_bytes::OwnedOperationBytes};
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind,paged_text::{PagedText,TextReadSource},list::PagedList,ErasedSnapshotRetirement,SnapshotRetirementStep};
+use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind,paged_text::{PagedText,TextReadSource},list::PagedList,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
 use semio_framework_ui_locale::{Terminology,Locale};
 const CAPACITY:usize=isize::MAX as usize;
+
+/// 🪆️ Quotes the actual child and one enclosing depth without granting its demand.
+pub(super) fn child_demands(owner:&dyn ErasedSnapshotRetirement,copy:usize)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){return Ok(Default::default())}Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original child depth overflow"))?})}
+/// 🧾️ Preserves the performed child receipt while validating its original independent grant.
+pub(super) fn close_child(owner:&mut dyn ErasedSnapshotRetirement,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child requires enclosing depth"))}let child=RetainedCloneGrant{maximum_items:grant.maximum_items.min(1),maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child)?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original typed child").map_err(|error|error.with_retained_progress(step.progress()))?;Ok(RetainedCloneStep::Progress(step.progress()))}
+
 /// 🔤️ A finite intrinsic semantic cell and genuine long pages have distinct complete borrows.
 struct Text{inline:semio_framework_value::paged_text::InlineTextBuffer,complete:bool,paged:PagedText<CAPACITY>,long:bool}
 impl Text{
@@ -21,10 +27,17 @@ impl Text{
         self.paged.encode_with_inline(&mut self.inline,&mut self.long,maximum_payload_bytes,control,producer)?;self.complete=true;Ok(())
     }
 }
+impl Text{
+ fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.inline.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<usize>()+std::mem::size_of::<bool>(),depth:1,..Default::default()})}if self.long&&!self.paged.terminal_is_empty(){return child_demands(&self.paged,copy)}Ok(Default::default())}
+}
 impl ErasedSnapshotRetirement for Text{
-    fn close_step(&mut self,items:usize,bytes:usize)->Result<SnapshotRetirementStep,ValueError>{if items==0||bytes==0{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0})}if self.inline.close_one(1){self.complete=false;return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:0})}if self.long{return self.paged.close_step(1,bytes)}Ok(SnapshotRetirementStep::Complete)}
-    fn terminal_is_empty(&self)->bool{self.inline.terminal_is_empty()&&self.paged.terminal_is_empty()}
-    fn next_close_byte_demand(&self)->usize{if !self.inline.terminal_is_empty(){1}else if self.long{self.paged.next_close_byte_demand()}else{0}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if self.inline.close_one(1){self.complete=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}if self.long{return close_child(&mut self.paged,grant)}Ok(RetainedCloneStep::Complete(empty))}
+ fn terminal_is_empty(&self)->bool{self.inline.terminal_is_empty()&&self.paged.terminal_is_empty()}
+
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
+ fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.demands(copy)?.capacity_bytes)}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
 }
 fn invalid(detail:&'static str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,detail)}
 struct Source<'a>(ByteSpan<'a>);
@@ -39,10 +52,17 @@ impl ChildLabelOwner{
     fn cell_mut(&mut self,terminology:Terminology,locale:Locale)->&mut Text{&mut self.cells[terminology as usize][locale as usize]}
     fn read(&mut self,terminology:Terminology,locale:Locale,source:ByteSpan<'_>,control:&mut NativeDecodeControl<'_>)->Result<(),PackRefusal>{self.cell_mut(terminology,locale).read_from_source(&Source(source),control).map_err(Into::into)}
 }
+impl ChildLabelOwner{
+ fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{match self.cells.iter().flatten().find(|cell|!cell.terminal_is_empty()){Some(cell)=>child_demands(cell,copy),None=>Ok(Default::default())}}
+}
 impl ErasedSnapshotRetirement for ChildLabelOwner{
-    fn close_step(&mut self,items:usize,bytes:usize)->Result<SnapshotRetirementStep,ValueError>{for row in &mut self.cells{for cell in row{if !cell.terminal_is_empty(){return cell.close_step(items,bytes)}}}Ok(SnapshotRetirementStep::Complete)}
-    fn terminal_is_empty(&self)->bool{self.cells.iter().flatten().all(ErasedSnapshotRetirement::terminal_is_empty)}
-    fn next_close_byte_demand(&self)->usize{self.cells.iter().flatten().find(|cell|!cell.terminal_is_empty()).map(ErasedSnapshotRetirement::next_close_byte_demand).unwrap_or(0)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}for row in &mut self.cells{for cell in row{if !cell.terminal_is_empty(){return close_child(cell,grant)}}}Ok(RetainedCloneStep::Complete(empty))}
+ fn terminal_is_empty(&self)->bool{self.cells.iter().flatten().all(ErasedSnapshotRetirement::terminal_is_empty)}
+
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
+ fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.demands(copy)?.capacity_bytes)}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
 }
 impl PagedChildLabels for PagedList<ChildLabelOwner,CAPACITY>{fn len(&self)->usize{PagedList::len(self)}fn text(&self,label:usize,terminology:Terminology,locale:Locale)->Option<ChildTextView<'_>>{self.get(label).and_then(|label|label.cell(terminology,locale).view().ok())}}
 
@@ -53,20 +73,33 @@ impl PagedChildOwner{pub fn empty()->Self{Self{metadata:std::array::from_fn(|_|T
     pub(crate) fn retained_partial_source(&self)->Option<&OwnedOperationBytes>{self.partial_source.as_ref()}
     pub fn allocated_bytes(&self)->usize{self.pending_schema.as_ref().map(Text::allocated_bytes).unwrap_or(0)+self.metadata.iter().map(Text::allocated_bytes).sum::<usize>()+self.operations.allocated_bytes()+self.operations.iter().map(OwnedOperationBytes::allocated_bytes).sum::<usize>()+self.labels.allocated_bytes()+self.labels.iter().flat_map(|label|label.cells.iter().flatten()).map(Text::allocated_bytes).sum::<usize>()+self.partial_source.as_ref().map(OwnedOperationBytes::allocated_bytes).unwrap_or(0)+self.partial_label.as_ref().map(|label|label.cells.iter().flatten().map(Text::allocated_bytes).sum::<usize>()).unwrap_or(0)}
 }
+impl PagedChildOwner{
+ fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+  if let Some(schema)=self.pending_schema.as_ref(){return if schema.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<Text>>(),depth:1,..Default::default()})}else{child_demands(schema,copy)}}
+  if let Some(source)=self.partial_source.as_ref().or_else(||self.operations.len().checked_sub(1).and_then(|index|self.operations.get(index))){return if source.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<OwnedOperationBytes>(),depth:1,..Default::default()})}else{child_demands(source,copy)}}
+  if !self.operations.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:self.operations.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}
+  if let Some(label)=self.partial_label.as_ref().or_else(||self.labels.len().checked_sub(1).and_then(|index|self.labels.get(index))){return if label.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<ChildLabelOwner>(),depth:1,..Default::default()})}else{child_demands(label,copy)}}
+  if !self.labels.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:self.labels.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}
+  match self.metadata.iter().find(|text|!text.terminal_is_empty()){Some(text)=>child_demands(text,copy),None=>Ok(Default::default())}
+ }
+}
 impl ErasedSnapshotRetirement for PagedChildOwner{
-    fn close_step(&mut self,items:usize,bytes:usize)->Result<SnapshotRetirementStep,ValueError>{
-        if items==0||bytes==0{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0})}
-        if let Some(schema)=self.pending_schema.as_mut(){if !schema.terminal_is_empty(){return schema.close_step(1,bytes)}self.pending_schema.take();self.pending_schema_is_retired=false;return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:0})}
-        let index=self.operations.len().checked_sub(1);let source=match self.partial_source.as_mut(){Some(source)=>Some(source),None=>index.and_then(|index|self.operations.get_mut(index))};
-        if let Some(source)=source{return Ok(match source.close_one(1,bytes).map_err(|fault|ValueError::new(fault.kind,fault.reason))?{semio_framework_os_kernel::os_spr::operation_bytes::OperationByteCloseStep::Complete=>{if self.partial_source.is_some(){self.partial_source.take();}else{self.operations.pop();}SnapshotRetirementStep::Pending{released_items:1,released_bytes:0}},semio_framework_os_kernel::os_spr::operation_bytes::OperationByteCloseStep::Pending{released_items,released_bytes}=>SnapshotRetirementStep::Pending{released_items,released_bytes}})}
-        if !self.operations.terminal_is_empty(){let step=self.operations.release_empty_page(bytes).map_err(ValueError::from)?;return Ok(SnapshotRetirementStep::Pending{released_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes})}
-        let index=self.labels.len().checked_sub(1);let label=match self.partial_label.as_mut(){Some(label)=>Some(label),None=>index.and_then(|index|self.labels.get_mut(index))};
-        if let Some(label)=label{return match label.close_step(1,bytes)?{SnapshotRetirementStep::Complete=>{if self.partial_label.is_some(){self.partial_label.take();}else{self.labels.pop();}Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:0})},step=>Ok(step)}}
-        if !self.labels.terminal_is_empty(){let step=self.labels.release_empty_page(bytes).map_err(ValueError::from)?;return Ok(SnapshotRetirementStep::Pending{released_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes})}
-        for text in &mut self.metadata{if !text.terminal_is_empty(){return text.close_step(1,bytes)}}Ok(SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self)->bool{self.metadata.iter().all(ErasedSnapshotRetirement::terminal_is_empty)&&self.operations.terminal_is_empty()&&self.labels.terminal_is_empty()&&self.partial_source.is_none()&&self.partial_label.is_none()&&self.pending_schema.is_none()}
-    fn next_close_byte_demand(&self)->usize{if let Some(schema)=self.pending_schema.as_ref(){return schema.next_close_byte_demand().max(1)}if let Some(source)=self.partial_source.as_ref().or_else(||self.operations.len().checked_sub(1).and_then(|index|self.operations.get(index))){return source.next_close_byte_demand().unwrap_or(1)}if !self.operations.terminal_is_empty(){return self.operations.next_release_allocation_bytes().unwrap_or(1)}if let Some(label)=self.partial_label.as_ref().or_else(||self.labels.len().checked_sub(1).and_then(|index|self.labels.get(index))){return label.next_close_byte_demand().max(1)}if !self.labels.terminal_is_empty(){return self.labels.next_release_allocation_bytes().unwrap_or(1)}self.metadata.iter().find(|text|!text.terminal_is_empty()).map(ErasedSnapshotRetirement::next_close_byte_demand).unwrap_or(0)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
+  if let Some(schema)=self.pending_schema.as_mut(){if !schema.terminal_is_empty(){return close_child(schema,grant)}self.pending_schema.take();self.pending_schema_is_retired=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
+  let index=self.operations.len().checked_sub(1);let source=match self.partial_source.as_mut(){Some(source)=>Some(source),None=>index.and_then(|index|self.operations.get_mut(index))};
+  if let Some(source)=source{if !source.terminal_is_empty(){return close_child(source,grant)}if self.partial_source.is_some(){self.partial_source.take();}else{self.operations.pop();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
+  if !self.operations.terminal_is_empty(){let step=self.operations.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
+  let index=self.labels.len().checked_sub(1);let label=match self.partial_label.as_mut(){Some(label)=>Some(label),None=>index.and_then(|index|self.labels.get_mut(index))};
+  if let Some(label)=label{if !label.terminal_is_empty(){return close_child(label,grant)}if self.partial_label.is_some(){self.partial_label.take();}else{self.labels.pop();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
+  if !self.labels.terminal_is_empty(){let step=self.labels.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
+  for text in &mut self.metadata{if !text.terminal_is_empty(){return close_child(text,grant)}}Ok(RetainedCloneStep::Complete(empty))
+ }
+ fn terminal_is_empty(&self)->bool{self.metadata.iter().all(ErasedSnapshotRetirement::terminal_is_empty)&&self.operations.terminal_is_empty()&&self.labels.terminal_is_empty()&&self.partial_source.is_none()&&self.partial_label.is_none()&&self.pending_schema.is_none()}
+
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
+ fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.demands(copy)?.capacity_bytes)}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
 }
 impl PagedChildGroups for PagedList<PagedChildOwner,CAPACITY>{fn len(&self)->usize{PagedList::len(self)}fn group(&self,index:usize)->Option<PagedChildGroup<'_>>{self.get(index).and_then(|group|Some(PagedChildGroup{owner:group.metadata[0].view().ok()?,slot:group.metadata[1].view().ok()?,child_id:group.metadata[2].view().ok()?,schema:group.metadata[3].view().ok()?,operations:&group.operations,labels:&group.labels}))}}
 
@@ -88,10 +121,17 @@ impl ChildGroupDecodeVisitor for PagedChildDecodeOwner{
     fn end_group(&mut self,control:&mut NativeDecodeControl<'_>)->Result<(),PackRefusal>{let child=self.child()?;if child.operation_count!=child.label_count{return Err(invalid("child operation and label prefixes differ").into())}reserve(&mut self.groups,control)?;let child=self.child.take().ok_or_else(||invalid("child decoded group lacks original owner"))?;if let Err(child)=self.groups.push_reserved(child){self.child=Some(child);return Err(invalid("child group lost admitted slot").into())}Ok(())}
     fn end_groups(&mut self,_:&mut NativeDecodeControl<'_>)->Result<(),PackRefusal>{if self.child.is_some(){return Err(invalid("complete child decode retains an unfinished group").into())}Ok(())}
 }
+impl PagedChildDecodeOwner{
+ fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.symbols.terminal_is_empty(){return child_demands(&self.symbols,copy)}if let Some(child)=self.child.as_ref().or_else(||self.groups.len().checked_sub(1).and_then(|index|self.groups.get(index))){return if child.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<PagedChildOwner>(),depth:1,..Default::default()})}else{child_demands(child,copy)}}if !self.groups.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:self.groups.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}Ok(Default::default())}
+}
 impl ErasedSnapshotRetirement for PagedChildDecodeOwner{
-    fn close_step(&mut self,items:usize,bytes:usize)->Result<SnapshotRetirementStep,ValueError>{if items==0||bytes==0{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0})}if !self.symbols.terminal_is_empty(){return self.symbols.close_step(1,bytes)}let index=self.groups.len().checked_sub(1);let child=match self.child.as_mut(){Some(child)=>Some(child),None=>index.and_then(|index|self.groups.get_mut(index))};if let Some(child)=child{return match child.close_step(1,bytes)?{SnapshotRetirementStep::Complete=>{if self.child.is_some(){self.child.take();}else{self.groups.pop();}Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:0})},step=>Ok(step)}}if self.groups.terminal_is_empty(){return Ok(SnapshotRetirementStep::Complete)}let step=self.groups.release_empty_page(bytes).map_err(ValueError::from)?;Ok(SnapshotRetirementStep::Pending{released_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes})}
-    fn terminal_is_empty(&self)->bool{self.child.is_none()&&self.groups.terminal_is_empty()&&self.symbols.terminal_is_empty()}
-    fn next_close_byte_demand(&self)->usize{if !self.symbols.terminal_is_empty(){return self.symbols.next_close_byte_demand()}if let Some(child)=self.child.as_ref().or_else(||self.groups.len().checked_sub(1).and_then(|index|self.groups.get(index))){child.next_close_byte_demand().max(1)}else{self.groups.next_release_allocation_bytes().unwrap_or(0)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if !self.symbols.terminal_is_empty(){return close_child(&mut self.symbols,grant)}let index=self.groups.len().checked_sub(1);let child=match self.child.as_mut(){Some(child)=>Some(child),None=>index.and_then(|index|self.groups.get_mut(index))};if let Some(child)=child{if !child.terminal_is_empty(){return close_child(child,grant)}if self.child.is_some(){self.child.take();}else{self.groups.pop();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let step=self.groups.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
+ fn terminal_is_empty(&self)->bool{self.child.is_none()&&self.groups.terminal_is_empty()&&self.symbols.terminal_is_empty()}
+
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
+ fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.demands(copy)?.capacity_bytes)}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
 }
 
 /// 🫴️ The caller recipient retains parse and canonical scaffolds on both success and refusal.

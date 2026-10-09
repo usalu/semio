@@ -242,6 +242,20 @@ impl DslField for String {
     }
 }
 
+/// 📝️ Shared actors expose their original immutable text and require full authority for construction.
+impl DslField for semio_framework_value::SharedUtf8 {
+    fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if !path.is_empty(){return Err(native_encoding::projection_path_error())}Ok(native_encoding::FieldProjectionView::Text(self.as_str()))}
+    fn shape()->Shape{Shape::Text}
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.checkpoint()?;Ok(Shape::Text)}
+    fn to_value(&self)->FieldValue{FieldValue::Text(self.as_str().to_owned())}
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{control.step()?;Ok(FieldValue::Text(control.copy_text(self.as_str())?))}
+    fn from_value(value:&FieldValue)->Result<Self,String>{match value{FieldValue::Text(text)=>Ok(Self::from(text.clone())),_=>Err("expected Text".into())}}
+    fn from_value_controlled(_value:&FieldValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.checkpoint()?;Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"shared UTF8 construction requires original full retained authority"))}
+}
+#[cfg(test)]
+#[path="📝️shared-utf8/🧪️tests/🦀️.rs"]
+mod shared_utf8_tests;
+
 impl<const N: usize> DslField for semio_framework_value::paged::PagedUtf8<N> {
     fn shape() -> Shape { Shape::Text }
     fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> { control.checkpoint()?; Ok(Shape::Text) }

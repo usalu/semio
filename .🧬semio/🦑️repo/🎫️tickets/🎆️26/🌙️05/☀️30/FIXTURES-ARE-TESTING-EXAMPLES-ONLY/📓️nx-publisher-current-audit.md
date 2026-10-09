@@ -1,0 +1,11 @@
+# Authored Publisher Current Audit
+
+NxScript.run193 now awaits the async publisher before tool provisioning/activation and own Nx child creation. Genuine cache policy provides all four collection names, moduleMember and six actual custom/core manifest basenames. Root's reported four-law GREEN is separate from this read-only audit; original canonical target18224 outcome is pending.
+
+Publisher pre-abort, raw absolute root ancestry, real .nxignore file, per-entry cancellation, progress, true collection/generated/symlink Dirent exclusions, byte-sorted exact exceptions, literal ignore escaping, owned section replacement and before/current user-byte conflict checks are present. No fixture schema or external runtime dependency was introduced in the inspected helper.
+
+Concrete fresh guard gap: queued directory entry identity is accepted from an earlier Dirent; traversal later calls readdir without re-lstat-ing that directory/full ancestry. A progress callback can replace a queued genuine module directory with a symlink before its traversal, which readdir follows, and exact exceptions can be admitted from foreign bytes. Final real(root) does not validate admitted leaves. Add a portable callback mutation law and fresh directory/leaf physical revalidation before exception publication. Current-byte check precedes non-atomic writeFile; cancellation or concurrent replacement across publication is not covered by that check alone. Do not claim atomic/current leaf guards already established.
+
+Concrete policy inconsistency: taxonomy fixtureOwnerPathPatterns28702 lists tests, 🧫️fixtures and 🧪️fixtures but neither 🧫️examples nor 🧪️examples. schemaScopeCollectionPath3045 consumes exactly those root patterns. Thus a genuine schema facet under either example spelling misses collection-ancestry refusal, independent of structural whole-trial detection. Runtime34 and Nx policy535 cover all four. Add the two root/descendant pattern pairs to genuine taxonomy and portable schema-inventory cases including modules-name exception. Preserve broader testing schema rule and genuine CAD assets.
+
+Semantic source classifiers around11902 have broader testing/example roles intentionally; do not replace those with the runtime four-only criterion blindly. No build/test/source write performed; hashes are observations, not authorship.

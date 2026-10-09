@@ -1,0 +1,38 @@
+[
+  {
+    "code": "E0533",
+    "message": "expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Refused`",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 85,
+    "column": 27,
+    "rendered": "error[E0533]: expected value, found struct variant `semio_framework_job::InteractiveJobCloseStep::Refused`\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:85:27\n   |\n85 |             Err(error) => semio_framework_job::InteractiveJobCloseStep::Refused(error.kind),\n   |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not a value\n   |\nhelp: you might have meant to create a new value of the struct\n   |\n85 -             Err(error) => semio_framework_job::InteractiveJobCloseStep::Refused(error.kind),\n85 +             Err(error) => semio_framework_job::InteractiveJobCloseStep::Refused { kind: /* value */, progress: /* value */ },\n   |",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0063",
+    "message": "missing field `retained` in initializer of `BatchDriveConfig`",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 116,
+    "column": 17,
+    "rendered": "error[E0063]: missing field `retained` in initializer of `BatchDriveConfig`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:116:17\n    |\n116 | ...   config: semio_framework_job::BatchDriveConfig { site: \"presence.local.capture\", stage: semio_framework_job::InteractiveStage:...\n    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ missing `retained`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0164",
+    "message": "expected tuple struct or tuple variant, found struct variant `semio_framework_job::WorkerJobCloseStep::Refused`",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 147,
+    "column": 33,
+    "rendered": "error[E0164]: expected tuple struct or tuple variant, found struct variant `semio_framework_job::WorkerJobCloseStep::Refused`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:147:33\n    |\n147 |         assert!(!matches!(step, semio_framework_job::WorkerJobCloseStep::Refused(_)));\n    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not a tuple struct or tuple variant\n    |\nhelp: add the names to match a struct variant's fields\n    |\n147 -         assert!(!matches!(step, semio_framework_job::WorkerJobCloseStep::Refused(_)));\n147 +         assert!(!matches!(step, semio_framework_job::WorkerJobCloseStep::Refused { kind: _, progress: _ }));\n    |",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+    "code": "E0277",
+    "message": "the `?` operator can only be applied to values that implement `Try`",
+    "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs",
+    "line": 28,
+    "column": 78,
+    "rendered": "error[E0277]: the `?` operator can only be applied to values that implement `Try`\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs:28:78\n   |\n28 | ...{ release_bytes: semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<P>()?, depth: 1, ..Default::defa...\n   |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `usize`\n   |\n   = help: the nightly-only, unstable trait `Try` is not implemented for `usize`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs"
+  }
+]

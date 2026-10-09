@@ -424,7 +424,7 @@
     },
     {
       "id": "ephemeral-presence-snapshot-inverse",
-      "description": "Ruling \"Ephemeral roots\": a presence lane may keep a whole-root setter kind — whole-state diff impl, `type Diff = <root>` and a `Snapshot` inverse are admitted.",
+      "description": "R13/R14 enforce sparse diff and concrete inverse for this original presence/transient lane or type.",
       "segments": [
         "ephemeral-presence-snapshot-inverse",
         "👥️presence",
@@ -441,12 +441,25 @@
         "    }",
         "}"
       ],
-      "breaches": [],
+      "breaches": [
+        {
+          "line": 1,
+          "rule": "R13"
+        },
+        {
+          "line": 5,
+          "rule": "R13"
+        },
+        {
+          "line": 7,
+          "rule": "R14"
+        }
+      ],
       "oracle": []
     },
     {
       "id": "ephemeral-transient-nested-leaf",
-      "description": "The exemption follows the lane directory at any depth: a leaf under a transient lane may return a `Restore` inverse.",
+      "description": "R13/R14 enforce sparse diff and concrete inverse for this original presence/transient lane or type.",
       "segments": [
         "ephemeral-transient-nested-leaf",
         "🫧️transient",
@@ -461,12 +474,17 @@
         "    Ok(vec![M::Restore { root: base.clone() }])",
         "}"
       ],
-      "breaches": [],
+      "breaches": [
+        {
+          "line": 2,
+          "rule": "R14"
+        }
+      ],
       "oracle": []
     },
     {
       "id": "ephemeral-window-transient-type",
-      "description": "Lane TYPE exemption: a window transient aggregate in a `🪟️window` file keeps its whole-root setter (diff impl, `type Diff`, `Snapshot` inverse).",
+      "description": "R13/R14 enforce sparse diff and concrete inverse for this original presence/transient lane or type.",
       "segments": [
         "ephemeral-window-transient-type",
         "🪟️window",
@@ -483,12 +501,25 @@
         "    }",
         "}"
       ],
-      "breaches": [],
+      "breaches": [
+        {
+          "line": 1,
+          "rule": "R13"
+        },
+        {
+          "line": 5,
+          "rule": "R13"
+        },
+        {
+          "line": 7,
+          "rule": "R14"
+        }
+      ],
       "oracle": []
     },
     {
       "id": "ephemeral-window-presence-type",
-      "description": "The same for a presence aggregate.",
+      "description": "R13/R14 enforce sparse diff and concrete inverse for this original presence/transient lane or type.",
       "segments": [
         "ephemeral-window-presence-type",
         "🪟️window",
@@ -505,7 +536,20 @@
         "    }",
         "}"
       ],
-      "breaches": [],
+      "breaches": [
+        {
+          "line": 1,
+          "rule": "R13"
+        },
+        {
+          "line": 5,
+          "rule": "R13"
+        },
+        {
+          "line": 7,
+          "rule": "R14"
+        }
+      ],
       "oracle": []
     },
     {

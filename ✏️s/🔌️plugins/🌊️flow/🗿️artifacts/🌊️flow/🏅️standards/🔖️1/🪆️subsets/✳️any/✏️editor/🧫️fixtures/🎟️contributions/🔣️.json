@@ -1,0 +1,398 @@
+{
+  "schema": "flow.contributions-retirement-receiver.v1",
+  "ownerFields": [
+    "instance_owner",
+    "instance_retirement",
+    "completed",
+    "closing"
+  ],
+  "axes": [
+    "copiedItems",
+    "copiedBytes",
+    "retainedCapacityBytes",
+    "releasedBytes"
+  ],
+  "cases": [
+    {
+      "id": "pending-denied",
+      "status": "progress",
+      "grant": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 0
+      },
+      "initial": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "progress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "recorded": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 0
+      },
+      "ready": false,
+      "failed": false
+    },
+    {
+      "id": "pending-funded",
+      "status": "progress",
+      "grant": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 64,
+        "maximumReleaseBytes": 128,
+        "maximumDepth": 3
+      },
+      "initial": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 5,
+        "releasedBytes": 7
+      },
+      "recorded": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 5,
+        "releasedBytes": 7
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 61,
+        "maximumCapacityBytes": 59,
+        "maximumReleaseBytes": 121,
+        "maximumDepth": 3
+      },
+      "ready": false,
+      "failed": false
+    },
+    {
+      "id": "terminal-funded",
+      "status": "complete",
+      "grant": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 64,
+        "maximumReleaseBytes": 128,
+        "maximumDepth": 3
+      },
+      "initial": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 64
+      },
+      "recorded": {
+        "copiedItems": 1,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 64
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 64,
+        "maximumReleaseBytes": 64,
+        "maximumDepth": 3
+      },
+      "ready": false,
+      "failed": false
+    },
+    {
+      "id": "terminal-empty",
+      "status": "complete",
+      "grant": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 64,
+        "maximumReleaseBytes": 128,
+        "maximumDepth": 3
+      },
+      "initial": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "progress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "recorded": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 64,
+        "maximumReleaseBytes": 128,
+        "maximumDepth": 3
+      },
+      "ready": true,
+      "failed": false
+    },
+    {
+      "id": "failed-funded",
+      "status": "refused",
+      "grant": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 64,
+        "maximumReleaseBytes": 128,
+        "maximumDepth": 3
+      },
+      "initial": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "progress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 0
+      },
+      "recorded": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 128,
+        "maximumDepth": 3
+      },
+      "ready": false,
+      "failed": true
+    },
+    {
+      "id": "failed-over-capacity",
+      "status": "refused",
+      "grant": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 63,
+        "maximumReleaseBytes": 128,
+        "maximumDepth": 3
+      },
+      "initial": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "progress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 0
+      },
+      "recorded": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 128,
+        "maximumDepth": 3
+      },
+      "ready": false,
+      "failed": true
+    },
+    {
+      "id": "success-over-release",
+      "status": "complete",
+      "grant": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 64,
+        "maximumReleaseBytes": 128,
+        "maximumDepth": 3
+      },
+      "initial": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 129
+      },
+      "recorded": {
+        "copiedItems": 1,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 129
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 64,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 3
+      },
+      "ready": false,
+      "failed": true
+    },
+    {
+      "id": "same-external-recipient",
+      "status": "progress",
+      "grant": {
+        "maximumItems": 3,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 64,
+        "maximumReleaseBytes": 128,
+        "maximumDepth": 3
+      },
+      "initial": {
+        "copiedItems": 1,
+        "copiedBytes": 1,
+        "retainedCapacityBytes": 2,
+        "releasedBytes": 3
+      },
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 5,
+        "releasedBytes": 7
+      },
+      "recorded": {
+        "copiedItems": 2,
+        "copiedBytes": 4,
+        "retainedCapacityBytes": 7,
+        "releasedBytes": 10
+      },
+      "remaining": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 60,
+        "maximumCapacityBytes": 57,
+        "maximumReleaseBytes": 118,
+        "maximumDepth": 3
+      },
+      "ready": false,
+      "failed": false
+    },
+    {
+      "id": "unordered-object-axes",
+      "status": "progress",
+      "grant": {
+        "maximumDepth": 3,
+        "maximumReleaseBytes": 128,
+        "maximumCapacityBytes": 64,
+        "maximumCopyBytes": 64,
+        "maximumItems": 3
+      },
+      "initial": {
+        "releasedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "copiedBytes": 0,
+        "copiedItems": 0
+      },
+      "progress": {
+        "releasedBytes": 7,
+        "retainedCapacityBytes": 5,
+        "copiedBytes": 3,
+        "copiedItems": 1
+      },
+      "recorded": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 5,
+        "releasedBytes": 7
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 61,
+        "maximumCapacityBytes": 59,
+        "maximumReleaseBytes": 121,
+        "maximumDepth": 3
+      },
+      "ready": false,
+      "failed": false
+    }
+  ],
+  "aliasCustody": {
+    "sameOriginalHandle": true,
+    "nonfinalClosesSharedPayload": false,
+    "sourceTransferItems": 1,
+    "aliasesReachTerminalBeforeWork": true,
+    "initialTransfer": {
+      "copyBytes": 0,
+      "capacityBytes": 0,
+      "releaseBytes": 0,
+      "depth": 1
+    }
+  },
+  "instanceOwnerFields": [
+    "eval_session",
+    "closing"
+  ],
+  "aliasPolicies": [
+    {
+      "maximumItems": 1,
+      "maximumCopyBytes": 1,
+      "maximumCapacityBytes": 1048576,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 512
+    },
+    {
+      "maximumItems": 1,
+      "maximumCopyBytes": 3,
+      "maximumCapacityBytes": 1048576,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 512
+    },
+    {
+      "maximumItems": 1,
+      "maximumCopyBytes": 64,
+      "maximumCapacityBytes": 1048576,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 512
+    }
+  ]
+}

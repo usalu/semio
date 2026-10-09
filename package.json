@@ -19,8 +19,7 @@
     "!**/🗑️generated/**",
     "!🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg",
     "!🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/pkg",
-    "!🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings",
-    "!🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/🕸️bindings"
+    "!🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings"
   ],
   "engines": {
     "bun": ">=1.2.0",

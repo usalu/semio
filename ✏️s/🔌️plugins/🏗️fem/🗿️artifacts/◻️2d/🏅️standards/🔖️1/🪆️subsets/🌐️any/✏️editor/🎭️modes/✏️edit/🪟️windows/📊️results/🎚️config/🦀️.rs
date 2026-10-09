@@ -126,7 +126,7 @@ impl semio_framework_plugin::WindowConfigOwner for Fem2dResultsWindowConfigOwner
     const MAXIMUM_PUBLICATION_BYTES: usize = 16_384;
     type State = Fem2dResultsWindowConfig;
     type Mutation = Fem2dResultsWindowConfigMutation;
-    fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> {
+    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()
     }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {

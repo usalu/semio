@@ -29,7 +29,7 @@ pub struct Fem3dIntoCsv;
 impl Serializer<Fem3dSnapshot> for Fem3dIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &Fem3dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &Fem3dSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(IoPayload::Text(csv_text(from))))
     }
 }

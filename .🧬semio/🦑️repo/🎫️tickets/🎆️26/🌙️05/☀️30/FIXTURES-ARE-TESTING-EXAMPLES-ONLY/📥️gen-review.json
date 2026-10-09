@@ -1,0 +1,36 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🌱️genesis/🦀️.rs",
+      "sha256": "6130411e6132967084ee2d8b91ed9710b9c7e321501c4539f57c562715a1b162",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "686b2d68c9214bbfe68ab70122fb032938ea770477f0b373860f256adea37f7c",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "062d4b22f5cac072776985c6e21737b63ea266d3d20f1586f62d6b202dc3ec7b",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "1217520cc59d61734f73ce116e30e81170c3adf2766f50c6fa478d98394fbe11",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📏️physical-demand/🔣️.json",
+      "sha256": "b7449e5f95d9326adaf8e37e117e16a905f40634eb126cd010e9d849d75b6e6d",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "fe84ef4a3dc2e99e4967a04bd02e122daa43493e414ce5644e828f0d298ef28f",
+      "matches": true
+    }
+  ]
+}

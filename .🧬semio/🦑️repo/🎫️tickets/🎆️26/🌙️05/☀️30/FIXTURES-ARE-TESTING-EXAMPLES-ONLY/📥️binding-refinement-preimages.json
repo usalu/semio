@@ -1,0 +1,16 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "beforeSha256": "7c9c5fd4610c0499186c64f5329e07dc50e258fe15bd087997981bae4ea82ae1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
+      "beforeSha256": "9290fe2786257f0b63c08d950d6aabb2c6700cf30eaea01f60f5f302d2a11026"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+      "beforeSha256": "d1eb2167c248d0fb6d156ae02dba1eb72f2effee451a40887fd22b6516bc1c5b"
+    }
+  ]
+}

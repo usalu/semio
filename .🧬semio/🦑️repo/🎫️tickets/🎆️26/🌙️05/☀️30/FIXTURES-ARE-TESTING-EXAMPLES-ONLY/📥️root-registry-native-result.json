@@ -1,0 +1,13 @@
+{
+  "sessionId": 50708,
+  "nxExitCode": 1,
+  "duration": "3m41s",
+  "cargoSucceeded": false,
+  "actualCompilerError": "E0432 missing original EntityKindCatalog Rust definition",
+  "actualProvenanceError": "Complete current physical provenance authority required",
+  "producedDump": false,
+  "nativeAssertions": 0,
+  "sourceDrifts": 5,
+  "budgetChanges": false,
+  "sourceCopies": 0
+}

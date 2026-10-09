@@ -190,7 +190,7 @@ pub fn object_controlled<'v>(&'v self,control:&mut NativeDecodeControl<'_>)->Res
     }
 }
 
-fn tree_allocation<T>(length:usize)->Option<usize>{size_of::<T>().checked_mul(11)?.checked_add(align_of::<T>().checked_mul(3)?)?.checked_add(256)?.checked_mul(length.checked_add(1)?.ilog2() as usize+3)}
+pub(crate) fn tree_allocation<T>(length:usize)->Option<usize>{size_of::<T>().checked_mul(11)?.checked_add(align_of::<T>().checked_mul(3)?)?.checked_add(256)?.checked_mul(length.checked_add(1)?.ilog2() as usize+3)}
 fn hash_allocation<T>(length:usize)->Option<usize>{if length==0{return Some(0)}length.checked_mul(2)?.checked_next_power_of_two()?.max(4).checked_mul(size_of::<T>().checked_add(1)?)?.checked_add(128)}
 
 pub fn hash_map<K,V>(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<std::collections::HashMap<K,V>,ValueError>

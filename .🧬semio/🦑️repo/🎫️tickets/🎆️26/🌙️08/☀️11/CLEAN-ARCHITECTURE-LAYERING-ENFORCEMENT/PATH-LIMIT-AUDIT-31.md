@@ -1,0 +1,5 @@
+# Path Limit Audit 31
+
+Audit refused before path enumeration: read-only `git ls-files -z` returned149774 tracked entries, exceeding the authorized65536-entry ceiling. Listing size25700441 bytes is within64MiB. No truncated inventory, path-cap certification, grouped violation claims, or whole-ticket certification is supplied. No source contents were read/copied; no runtime/source edits, aliases, deletion, Git mutation or lifecycle claim.
+
+Receipt and listing identity are retained in `🗑️generated/p31.json`; both destinations were verified below256 characters and UTF16 units. Root must authorize deterministic bounded partitions for tracked inventory and existing ticket metadata, or a larger entry ceiling, before complete audit. Each partition should retain its full path/length identities and share a stable inventory hash. Producers must use short metadata receipts and canonical in-place source references rather than nested tracked-source ticket copies. No specific route/path has been independently certified by this refused audit.

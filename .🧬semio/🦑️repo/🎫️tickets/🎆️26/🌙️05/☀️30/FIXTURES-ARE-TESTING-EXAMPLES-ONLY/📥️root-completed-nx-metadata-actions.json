@@ -1,0 +1,16 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct9-root-follow-data",
+    "removedKiB": 348044,
+    "classification": "Completed Root-owned generated Nx metadata only",
+    "liveConsumers": [],
+    "nativeCachesAndProofLogsRemoved": false
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct9-root-follow-cache",
+    "removedKiB": 6836,
+    "classification": "Completed Root-owned generated Nx metadata only",
+    "liveConsumers": [],
+    "nativeCachesAndProofLogsRemoved": false
+  }
+]

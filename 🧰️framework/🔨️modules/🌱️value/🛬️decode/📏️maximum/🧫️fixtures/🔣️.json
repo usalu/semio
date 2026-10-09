@@ -1,0 +1,36 @@
+{
+  "schema": "semio.value.native-scope-maximum.v1",
+  "initialBytes": 7,
+  "firstTurnCapacityBytes": 100,
+  "scopeMaximumBytes": 10,
+  "nextTurnCapacityBytes": 16,
+  "cases": [
+    {
+      "id": "repeat",
+      "outcome": "limit",
+      "ownedBytes": 10
+    },
+    {
+      "id": "nested",
+      "outcome": "complete",
+      "ownedBytes": 10
+    },
+    {
+      "id": "refuse",
+      "outcome": "limit",
+      "ownedBytes": 7
+    },
+    {
+      "id": "cancel",
+      "outcome": "canceled",
+      "ownedBytes": 7
+    },
+    {
+      "id": "unwind",
+      "outcome": "unwind",
+      "ownedBytes": 10
+    }
+  ],
+  "restoredMaximumBytes": 100
+}
+

@@ -47,25 +47,25 @@ mod private_publication_group {
                 }
                 PrivateOwnedPublicationPhase::Preparation => {
                     let step = member.prepare_one_item_publication(self.publication_mut().unwrap(), grant)?;
-                    if matches!(step, store::ArtifactStoreOneItemPreparationStep::Prepared(_)) { self.phase = PrivateOwnedPublicationPhase::Staging; return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.progress())); }
+                    if let store::ArtifactStoreOneItemPreparationStep::Prepared(checkpoint, progress) = step { self.phase = PrivateOwnedPublicationPhase::Staging; return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, progress)); }
                     Ok(step)
                 }
                 PrivateOwnedPublicationPhase::Staging => {
                     self.grouped = true;
                     let step = member.stage_one_item_publication(self.publication_mut().unwrap(), visibility, grant)?;
-                    if matches!(step, store::ArtifactStoreOneItemPreparationStep::Prepared(_)) { self.phase = PrivateOwnedPublicationPhase::Staged; }
-                    Ok(if self.staged() { store::ArtifactStoreOneItemPreparationStep::Prepared(self.progress()) } else { step })
+                    if matches!(step, store::ArtifactStoreOneItemPreparationStep::Prepared(_, _)) { self.phase = PrivateOwnedPublicationPhase::Staged; }
+                    Ok(step)
                 }
-                PrivateOwnedPublicationPhase::Staged => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.progress())),
+                PrivateOwnedPublicationPhase::Staged => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.progress(), Default::default())),
                 _ => Err("private publication preparation requires its original pending lane".into()),
             }
         }
         /// 🔓️ Adopts the already staged root only after the exact common visibility commits.
         pub(crate) fn adopt(&mut self, member: &mut impl SpaceMember, visibility: &Arc<vcs::ArtifactGroupVisibility>, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-            if self.adopted() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.progress())); }
+            if self.adopted() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.progress(), Default::default())); }
             if !self.staged() { return Err("private publication adoption requires its fully staged candidate".into()); }
             let step = member.adopt_one_item_publication(self.publication_mut().unwrap(), visibility, grant)?;
-            if matches!(step, store::ArtifactStoreOneItemPreparationStep::Prepared(_)) { self.phase = PrivateOwnedPublicationPhase::Adopted; self.grouped = false; }
+            if matches!(step, store::ArtifactStoreOneItemPreparationStep::Prepared(_, _)) { self.phase = PrivateOwnedPublicationPhase::Adopted; self.grouped = false; }
             Ok(step)
         }
         /// 📐️ Exposes independent active source, staged root, metadata and physical frame currencies.

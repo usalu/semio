@@ -3,7 +3,7 @@
 fn image_edits_preserve_history_and_sparse_dimensions() {
     use protocol::Mutation;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
-    let mut layer=crate::schema::create_drawing_image_layer("Image",fixture["before"]["imageKey"].as_str().unwrap());
+    let mut layer=crate::schema::create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit((("Image")).to_string().into()).expect("nonempty authored identity"), "Image",fixture["before"]["imageKey"].as_str().unwrap());
     let crate::DrawingLayerNode::Image(image)=&mut layer else{panic!()};image.width=fixture["before"]["width"].as_f64().unwrap();image.height=fixture["before"]["height"].as_f64().unwrap();
     let id=crate::schema::layer_id(&layer).clone();
     let before=crate::DrawingSnapshot{layers:vec![layer].into(),..Default::default()};

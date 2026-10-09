@@ -1,0 +1,22 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+    "sha256": "f7ea5bf8bc96bd9448a629afdc3396de768f3f445a876cf245c0967ca7e1912b"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+    "sha256": "17179fe54914fc7c2b00dd478fdffe59fc451c2101e9ab10e2b8b36635425299"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+    "sha256": "2f203eca54b61314bdbb576a575e33758299ede42c565eb7668b38c161bfa2da"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs",
+    "sha256": "4c9972aeabf61f01140653b0af5601a594211d364fecdccdb09ec69c93d6bb26"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+    "sha256": "917aaccf8ec2f7d526761c5303de1b81b37d29430abf2d8176a0a04048ed281d"
+  }
+]

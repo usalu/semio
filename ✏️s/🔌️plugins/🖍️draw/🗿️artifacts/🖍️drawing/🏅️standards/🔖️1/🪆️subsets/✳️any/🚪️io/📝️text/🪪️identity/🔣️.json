@@ -1,0 +1,5 @@
+{
+  "title": "DrawingIdentitySpellingV1",
+  "type": "string",
+  "pattern": "^(layer|path|group|boolean|trace|shape|text|image|svg|image-asset)-[0-9a-f]{64}$"
+}

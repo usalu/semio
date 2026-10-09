@@ -1,0 +1,14 @@
+{
+  "session": 47767,
+  "exitCode": 0,
+  "durationMs": 1200,
+  "sourceHelpers": 3,
+  "fontLaws": 2,
+  "fontAssertions": 2752,
+  "flowReceiptAssertions": 32,
+  "selectedCopyExpectations": 12,
+  "hostOriginalFields": 37,
+  "debugVerified": true,
+  "nativeAssertions": 0,
+  "qualification": "Original exported Flow source functions and Font TS through retained private existing Nx target; no original package manifest/native/runtime graph equivalence"
+}

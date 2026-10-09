@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "origins",
+    "grant",
+    "scope",
+    "receivers",
+    "zeroDemandDoesNotCreateGrant"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.frame.bootstrap-authority.v1"
+    },
+    "origins": {
+      "const": [
+        "native-window",
+        "browser-worker"
+      ]
+    },
+    "grant": {
+      "$ref": "https://semio.dev/schema/value/retained-clone/grant"
+    },
+    "scope": {
+      "const": "per-transition; receipts accumulate without deriving authority"
+    },
+    "receivers": {
+      "const": [
+        "OsHost",
+        "FrameBuildHandle",
+        "ActiveFrameBuild",
+        "deadline-job",
+        "preparation-job"
+      ]
+    },
+    "zeroDemandDoesNotCreateGrant": {
+      "const": true
+    }
+  }
+}

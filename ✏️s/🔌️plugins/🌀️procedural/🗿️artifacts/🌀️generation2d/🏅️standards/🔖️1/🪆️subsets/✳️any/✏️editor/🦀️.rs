@@ -527,7 +527,7 @@ pub(crate) fn generation2d_flow_eval_hop(
     let result = match command {
         Generation2dCommand::FlowEvalTick(payload) => {
             let target = generation2d_preview_target(&payload.window_kind_id).ok_or_else(|| Fault::from("generation2d-flow-eval-window-kind-unknown"))?;
-            let (emit, publication) = flow_eval_tick::evaluate(&payload.window_id, &payload.window_kind_id, target, doc, cfg, sessions.get_mut(target));
+            let (emit, publication) = flow_eval_tick::evaluate(&payload.window_id, &payload.window_kind_id, target, doc, cfg, sessions.get_mut(target))?;
             link.note_evaluated(target, generation2d_preview_digest(target, committed, cfg, provisional_generation));
             let transient = match (target, publication) {
                 (PreviewEvalTarget::Generation, semio_framework_os_flow::FlowEvalPublication::Changed(preview_text)) => vec![SetGenerationPreview { preview_text }.into()],

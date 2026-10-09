@@ -1,0 +1,117 @@
+{
+  "aggregate": {
+    "session": 52004,
+    "nxExit": 0,
+    "seconds": 5.6,
+    "tests": 9,
+    "assertions": 182,
+    "depthTests": 1,
+    "depthAssertions": 612,
+    "log": "🗑️generated/native-encoder-aggregate-current.log"
+  },
+  "nativeRuntimeProven": false,
+  "endpoints": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "5c731deca495f7e69bbd44fc6b3b49cc63874d4d11bae7b607da01973432d6e9",
+      "characters": 112,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5ba65ee357849ebaf5748ffe3f2ba6364c294ed7959d17ede498cab2015705e7",
+      "characters": 115,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "aefe5fb94bca711061703757fcb206ca219fee3f2884465b399f6f2dfa50c2fc",
+      "characters": 128,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json",
+      "sha256": "9c92e8702ec8413f28ee10b8ff2f75c272a32d75e77c9854c5b4558ac77df845",
+      "characters": 126,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+      "sha256": "97968d09115e5791c896069e050545a6ed122b9696118c1552f7cbc0af75fe7c",
+      "characters": 126,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+      "sha256": "1d1b653bc40c81fd060530b8fcfb260dd979d9aab860c58698d8949c336fc469",
+      "characters": 122,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧫️fixtures/📖️canonical-reader.json",
+      "sha256": "55ad2749506e070bbe93099310db0cb926db94a0e87bee9ae9c42c4bef216395",
+      "characters": 125,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "sha256": "15e3028c3d23e3bff5b4ab9f2b65581195ae2defb82a54bf0293c1834d37c412",
+      "characters": 100,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "1e1cdd9e2ea007b3c91ce68d8bc1003f7f721562889c1842ea772357891cc12a",
+      "characters": 112,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "sha256": "1a466ddf97b4936dcaf80ce133cf853ff6e43ae2b9d3fecd7135c6d8c1b133c8",
+      "characters": 128,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+      "sha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e",
+      "characters": 135,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+      "sha256": "e8f71805a6e67c3b473a6620e58d1bff5116990be123e1f8e43ce5d24d266415",
+      "characters": 135,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+      "sha256": "9f39a68a155c9389fd3758cbde8d054c37eccc53ab2376ac8ada25ef8f5b687b",
+      "characters": 81,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs",
+      "sha256": "1f2e5649d22f52f44b21086e9bbbbbacdf8a195a7af878788f8d489bcc1ffc3d",
+      "characters": 78,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+      "sha256": "e4d4a9eba69ac564d8e90a0825f07b11ccf59c24187c9af41d8d5d1b609571ed",
+      "characters": 69,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "f8c1623d3495616dadfe8b3cce9df9e94c5506534efff1f2fc188287ec8dfa07",
+      "characters": 84,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+      "sha256": "74017abd2f687ab3c4ac2d010224e9fb5dea30cf2521aa6c2736a50958cac068",
+      "characters": 129,
+      "authorship": "narrow native action block or observer only; no whole-file attribution"
+    }
+  ]
+}

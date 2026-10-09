@@ -1,0 +1,7 @@
+# K8 Preflight Audit
+
+Finite source-only comparison of the retained Root17 diagnostics. Both bare-helper owners now import `super::tests::physical_test_close_grant`: bounded-value-retirement and snapshot-read-retirement. Their defining Store ancestry keeps this cfg(test)-only independent plain policy accessible. Current preflight accepts the original IoRunControl ninth parameter and both original callers match. The earlier arity cut is superseded; no predicted remaining compiler count is reported.
+
+The existing selected29 input remains the original Kernel test-native target with literal -E union and immediate success/failure reporting. Current permanent NativeTestScript resolves the existing test level and forwards --lib/--features sync,ureq plus the original arguments through runRepositoryCargoTests. Current project target invokes the permanent script. No profile, budget, feature, System observer or source-law bypass was added by the reviewed Root17 changes.
+
+Same-wallet encode/decode wrappers retain cumulative physical receipts; the caller policy remains independent plain authority. This specimen’s happy path does not prove error-recipient drain or complete physical closure. All observations/hashes are current-source facts only; the historical 212 diagnostics ran zero assertions, and no renewed compiler/native success is claimed here. High-worker consumer cohorts are outside this finite review.

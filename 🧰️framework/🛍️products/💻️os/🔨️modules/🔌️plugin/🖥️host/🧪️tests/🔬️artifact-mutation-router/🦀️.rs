@@ -67,7 +67,7 @@ async fn mock_handle(actor: RuntimeActorId) -> (Arc<MockGuestRuntime>, Arc<Plugi
     let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
     let compiled = mock.compile(&PackageRef { package: PackageId("mutplan".to_string()), hash: PackageHash([7u8; 32]) }, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
-    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await);
+    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_wake_authority()).await);
     (mock, handle)
 }
 

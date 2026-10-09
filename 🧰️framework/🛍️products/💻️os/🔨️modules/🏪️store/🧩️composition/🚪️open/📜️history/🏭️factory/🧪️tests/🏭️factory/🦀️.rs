@@ -183,11 +183,13 @@ fn input(fixture: &Value, dialect: &[String], history: &[u8]) -> VerifiedMemberH
     let mut verifier = MemberHistoryVerification::new(request, RetainedSprLimits::default()).unwrap_or_else(|_| panic!("verification admission"));
     let mut sequence = 0;
     for _ in 0..10000 {
-        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999), root_cancel_token(), || Some(1), &mut sequence);
+        let mut original_retained_progress_1 = semio_framework_value::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_1);
         match verifier.step(&mut cx) {
             MemberHistoryInputStep::Pending(_) => {}
             MemberHistoryInputStep::Ready => {
-                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+                let mut original_retained_progress_2 = semio_framework_value::RetainedCloneProgress::default();
+                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);
                 return verifier.take_ready(&mut cx).unwrap().unwrap();
             }
             MemberHistoryInputStep::Rejected(error) => panic!("valid framing rejected: {error:?}"),
@@ -221,7 +223,8 @@ fn run_case<M: MemberFactory>(fixture: &Value, row: &Value, grant: usize) {
     let input = input(fixture, &dialect, &selection_history());
     assert_eq!(input.retained_input_bytes(), fixture["inputBytes"].as_u64().unwrap() as usize);
     let mut sequence = 0;
-    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+    let mut original_retained_progress_3 = semio_framework_value::RetainedCloneProgress::default();
+    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_3);
     let mut owner = match MemberFactorySelection::<M>::begin(input, &cx) {
         Ok(owner) => owner,
         Err(mut rejected) => {
@@ -232,13 +235,15 @@ fn run_case<M: MemberFactory>(fixture: &Value, row: &Value, grant: usize) {
             return;
         }
     };
-    let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);
+    let mut original_retained_progress_4 = semio_framework_value::RetainedCloneProgress::default();
+    let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);
     assert!(matches!(owner.step(&mut zero), MemberFactorySelectionStep::Pending(_)));
     assert_eq!(owner.completed, 0);
     let mut error = None;
     let mut terminal = false;
     for _ in 0..10000 {
-        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999), root_cancel_token(), || Some(1), &mut sequence);
+        let mut original_retained_progress_5 = semio_framework_value::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);
         let before = owner.completed;
         let step = owner.step(&mut cx);
         assert!(owner.completed - before <= grant as u64 - cx.fuel_remaining());
@@ -256,7 +261,8 @@ fn run_case<M: MemberFactory>(fixture: &Value, row: &Value, grant: usize) {
         }
     }
     assert!(terminal);
-    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+    let mut original_retained_progress_6 = semio_framework_value::RetainedCloneProgress::default();
+    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_6);
     let (selected, retired) = if error.is_none() {
         let mut selected = owner.take_ready(&mut cx).unwrap().unwrap();
         let row = serde_json::json!([selected.declaration.kind, selected.declaration.standard, selected.declaration.subset, selected.declaration.schema]);
@@ -353,14 +359,17 @@ async fn semantic_history(fixture: &Value, row: &Value) -> Vec<u8> {
 
 fn selected(input: VerifiedMemberHistoryInput) -> SelectedMemberHistoryInput<SemioFixture> {
     let mut sequence = 0;
-    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+    let mut original_retained_progress_7 = semio_framework_value::RetainedCloneProgress::default();
+    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_7);
     let mut owner = MemberFactorySelection::<SemioFixture>::begin(input, &cx).unwrap_or_else(|_| panic!("closed factory admission"));
     for _ in 0..10000 {
-        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut sequence);
+        let mut original_retained_progress_8 = semio_framework_value::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_8);
         match owner.step(&mut cx) {
             MemberFactorySelectionStep::Pending(_) => {}
             MemberFactorySelectionStep::Ready => {
-                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+                let mut original_retained_progress_9 = semio_framework_value::RetainedCloneProgress::default();
+                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_9);
                 return owner.take_ready(&mut cx).unwrap().unwrap();
             }
             MemberFactorySelectionStep::Rejected(error) => panic!("valid selection rejected: {error:?}"),
@@ -381,7 +390,8 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
                 let mut sequence = 0;
                 let cancel = root_cancel_token();
                 cancel.cancel_now();
-                let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), cancel, || Some(1), &mut sequence);
+                let mut original_retained_progress_10 = semio_framework_value::RetainedCloneProgress::default();
+                let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_10);
                 let mut rejected = match MemberFactorySelection::<SemioFixture>::begin(input, &cx) {
                     Ok(mut accepted) => {
                         retire(&mut accepted, grant);
@@ -394,19 +404,22 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
                 continue;
             }
             let mut sequence = 0;
-            let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+            let mut original_retained_progress_11 = semio_framework_value::RetainedCloneProgress::default();
+            let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_11);
             let mut owner = MemberFactorySelection::<SemioFixture>::begin(input, &cx).unwrap_or_else(|_| panic!("fixture factory admission"));
             let at = row["at"].as_str().unwrap();
             if at != "begin" {
                 for _ in 0..10000 {
-                    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+                    let mut original_retained_progress_12 = semio_framework_value::RetainedCloneProgress::default();
+                    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_12);
                     assert!(!matches!(owner.step(&mut cx), MemberFactorySelectionStep::Rejected(_)));
                     if (at == "selected-unpublished" && owner.selected.is_some()) || (at != "selected-unpublished" && owner.phase == Phase::Complete) {
                         break;
                     }
                 }
             }
-            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+            let mut original_retained_progress_13 = semio_framework_value::RetainedCloneProgress::default();
+            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_13);
             if at == "selected-unpublished" {
                 assert!(owner.take_ready(&mut cx).unwrap().is_none());
                 assert!(owner.row < 18);
@@ -422,7 +435,8 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
                 "clock-absent" => || None,
                 _ => || Some(1),
             };
-            let mut cx = StepContext::new(OperationId(if event == "operation" { 8 } else { 7 }), Generation(if event == "generation" { 12 } else { 11 }), StepBudget::new(7, 999), cancel, clock, &mut sequence);
+            let mut original_retained_progress_14 = semio_framework_value::RetainedCloneProgress::default();
+            let mut cx = StepContext::new(OperationId(if event == "operation" { 8 } else { 7 }), Generation(if event == "generation" { 12 } else { 11 }), StepBudget::new(7, 999, crate::os_store::component::tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_14);
             let before = owner.completed;
             let diagnostic;
             if let Some(witness) = witness.as_mut() {
@@ -441,7 +455,8 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
             assert_eq!(diagnostic, expected_error(row));
             assert_eq!(usize::from(witness.is_some()), row["handoffs"].as_u64().unwrap() as usize);
             let mut retry_sequence = 0;
-            let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);
+            let mut original_retained_progress_15 = semio_framework_value::RetainedCloneProgress::default();
+            let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_15);
             let retired = if let Some(witness) = witness.as_mut() {
                 assert_eq!(witness.check(&retry).err(), diagnostic);
                 retire(witness, grant)
@@ -460,17 +475,20 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
             assert_eq!(input.retained_input_bytes(), row["inputBytes"].as_u64().unwrap() as usize, "{}", row["id"]);
             let mut selected = selected(input);
             let mut sequence = 0;
-            let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);
+            let mut original_retained_progress_16 = semio_framework_value::RetainedCloneProgress::default();
+            let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_16);
             assert!(selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut zero).unwrap().is_none());
             assert!(!selected.terminal_is_empty());
-            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+            let mut original_retained_progress_17 = semio_framework_value::RetainedCloneProgress::default();
+            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_17);
             let mut owner = selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut cx).unwrap().unwrap();
             assert!(selected.terminal_is_empty());
             assert!(matches!(selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut cx), Err(MemberOpenDiagnostic::Stale)));
             let mut error = None;
             let mut terminal = false;
             for _ in 0..20000 {
-                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999), root_cancel_token(), || Some(1), &mut sequence);
+                let mut original_retained_progress_18 = semio_framework_value::RetainedCloneProgress::default();
+                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_18);
                 match owner.step(&mut cx) {
                     MemberHistoryDictionaryStep::Pending(_) => {}
                     MemberHistoryDictionaryStep::Ready => {
@@ -485,7 +503,8 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
                 }
             }
             assert!(terminal);
-            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+            let mut original_retained_progress_19 = semio_framework_value::RetainedCloneProgress::default();
+            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_19);
             let (handoffs, retired) = if error.is_none() {
                 let mut verified = owner.take_ready(&mut cx).unwrap().unwrap();
                 assert_eq!(verified.declaration.schema, "stdio.semio");
@@ -512,11 +531,13 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
             let at = row["at"].as_str().unwrap();
             let mut dictionary = None;
             if at == "ready" {
-                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+                let mut original_retained_progress_20 = semio_framework_value::RetainedCloneProgress::default();
+                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_20);
                 dictionary = selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut cx).unwrap();
                 let mut ready = false;
                 for _ in 0..20000 {
-                    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999), root_cancel_token(), || Some(1), &mut sequence);
+                    let mut original_retained_progress_21 = semio_framework_value::RetainedCloneProgress::default();
+                    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_21);
                     match dictionary.as_mut().unwrap().step(&mut cx) {
                         MemberHistoryDictionaryStep::Ready => {
                             ready = true;
@@ -532,12 +553,14 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
             if event == "cancel" {
                 cancel.cancel_now();
             }
-            let mut cx = StepContext::new(OperationId(if event == "operation" { 8 } else { 7 }), Generation(if event == "generation" { 12 } else { 11 }), StepBudget::new(7, 999), cancel, || Some(1), &mut sequence);
+            let mut original_retained_progress_22 = semio_framework_value::RetainedCloneProgress::default();
+            let mut cx = StepContext::new(OperationId(if event == "operation" { 8 } else { 7 }), Generation(if event == "generation" { 12 } else { 11 }), StepBudget::new(7, 999, crate::os_store::component::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_22);
             let retired = if let Some(dictionary) = dictionary.as_mut() {
                 assert!(matches!(dictionary.take_ready(&mut cx), Err(error) if Some(error) == expected_error(row)));
                 assert_eq!(cx.fuel_remaining(), 7);
                 let mut retry_sequence = 0;
-                let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);
+                let mut original_retained_progress_23 = semio_framework_value::RetainedCloneProgress::default();
+                let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_23);
                 assert!(matches!(dictionary.step(&mut retry), MemberHistoryDictionaryStep::Rejected(error) if Some(error) == expected_error(row)));
                 retire(dictionary, grant)
             } else {
@@ -548,7 +571,8 @@ async fn member_factory_selection_retains_input_through_denial_and_handoff() {
                 assert!(matches!(selected.begin_dictionary(limits, &mut cx), Err(error) if Some(error) == expected_error(row)));
                 assert_eq!(selected.input.as_ref().unwrap().retained_input_bytes(), 260);
                 let mut retry_sequence = 0;
-                let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);
+                let mut original_retained_progress_24 = semio_framework_value::RetainedCloneProgress::default();
+                let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_24);
                 assert!(matches!(selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut retry), Err(error) if Some(error) == expected_error(row)));
                 retire(&mut selected, grant)
             };

@@ -7,13 +7,13 @@ fn identity(row:&SqliteRow,columns:usize)->Result<(),ValueError>{if row.values.l
 impl ArtifactSqliteSnapshot for SequenceSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn retire_sqlite_snapshot(self){neural_engine::ColdRetire::retire_cold(self)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   control.check_rows(2)?;let maximum=control.limits().max_value_bytes;
-  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{semantic_borrowed(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)},control)
+  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {semantic_borrowed(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;control.check_rows(2)?;semantic_owned(self,control)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
 
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
@@ -30,7 +30,7 @@ impl ArtifactSqliteSnapshot for SequenceSnapshot{
   let documents=&database.table("sequence_document")?.rows;let children=&database.table("sequence_content")?.rows;
   if documents.len()!=1||documents[0].rowid!=1||children.len()!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Sequence requires one document and one content child"))}
   let document=&documents[0];let child=&children[0];identity(document,2)?;identity(child,7)?;if child.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Sequence child requires the document parent"))}
-  control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint|{let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native=semio_framework_value::NativeDecodeControl::new(remaining,&mut progress);let result=(||{
+  control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining,&mut progress,&mut native_allocation);let result=(||{
   native.begin_stage(6)?;native.charge(std::mem::size_of::<Self>())?;
   let schema=native.copy_text(document.text(1)?)?;native.step()?;let child_id=native.copy_text(child.text(2)?)?;native.step()?;let artifact_id=native.copy_text(child.text(3)?)?;native.step()?;
   let artifact_kind=native.copy_text(child.text(4)?)?;native.step()?;let standard=native.copy_text(child.text(5)?)?;native.step()?;let subset=native.copy_text(child.text(6)?)?;native.step()?;native.checkpoint()?;
@@ -48,4 +48,3 @@ fn semantic_borrowed(r:&semio_framework_dsl_record::RecordValue,maximum:usize,na
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

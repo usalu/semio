@@ -1,0 +1,41 @@
+{
+  "input": [
+    [
+      "b",
+      "remove-b"
+    ],
+    [
+      "a",
+      "keep-a"
+    ],
+    [
+      "c",
+      "remove-c"
+    ],
+    [
+      "d",
+      "keep-d"
+    ]
+  ],
+  "active": [
+    [
+      "a",
+      "keep-a"
+    ],
+    [
+      "d",
+      "keep-d"
+    ]
+  ],
+  "grant": {
+    "items": 256,
+    "copyBytes": 32768,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 128
+  },
+  "handoffBirthBytes": 0,
+  "handoffReleaseBytes": 0,
+  "retiredSlotReuse": "refuse",
+  "conservation": "originalBirths+retirementBirths=retirementReleases"
+}

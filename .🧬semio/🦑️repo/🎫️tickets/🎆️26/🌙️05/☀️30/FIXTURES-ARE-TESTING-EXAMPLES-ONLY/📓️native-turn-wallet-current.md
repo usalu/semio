@@ -1,0 +1,11 @@
+# Current Member and Hydration Paid Turn Wallet
+
+Actual registered private original-source RED 73542 completed Nx 1 in 684 milliseconds after the independent Buffer and RFC6902 conservation oracle passed, then refused the missing defining member-step helper. Narrow original-source GREEN 14336 completed Nx 0 in 1.2 seconds: one law with 35 assertions, followed by the independent recursive-depth law with 612 assertions. Exact generated logs are native-turn-wallet-red.log and native-turn-wallet-green.log.
+
+The genuine defining Open helpers intersect all five supplied axes with the same caller context's remaining authority and record an actual completed receipt once before consuming its corresponding logical fuel. Initial opening's already-produced constructor, input birth/copies and child/witness retirement receipts now record in that wallet. Hydration's already-produced Fold Pending/Ready, target decode, catalog/envelope admission and active/runtime retirement receipts record in the same wallet. Accepted output and partial owners remain retained before validation, including cancellation/refusal. Snapshot child input records itself; Initial validates that child receipt without charging it again. Public outcomes retain their original meanings.
+
+This is a finite receipt integration, not a complete physical proof of opening. Cold typed Pack decode, other unquoted Hydration allocations and whole-turn native allocator/identity/cancellation laws remain outstanding. The pre-existing unused progress_fuel helper is left unchanged during the current Root compiler hold. No native or runtime success is inferred from Rustfmt/source assertions.
+
+Source actions contain only original path references, guarded block descriptions and hashes in native-turn-wallet-actions.json. Current five endpoint observations and actual terminal identities are native-turn-wallet-current.json. No checked-in Source was copied. Rust source mutations stopped upon Root's original Kernel diagnostic hold notice; no own Cargo process is active.
+
+Affected original-source aggregate renewal 95728 also completed Nx 0 in 3.2 seconds: five laws / 112 assertions plus independent depth 1 / 612. This renews the input, reader, immutable request policy and current wallet source laws together; native runtime claims remain unproven.

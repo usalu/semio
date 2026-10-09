@@ -614,7 +614,7 @@ fn bounded_history_fold_obeys_the_neutral_law() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🔁️fold/🧫️fixtures/🔣️.json")).unwrap();
     let fixture = supersede_fold_fixture();
     let document = ArtifactId(fixture["documentId"].as_str().unwrap().into());
-    let edits: Vec<FoldEdit> = fixture["edits"].as_array().unwrap().iter().map(|row| FoldEdit { id: row["id"].as_str().unwrap().into(), actor: row["actor"].as_str().map(str::to_owned), timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().unwrap(), logical: 0 }, mutation_ids: row["mutationIds"].as_array().unwrap().iter().map(|id| MutationId(id.as_str().unwrap().into())).collect(), line: row["line"].as_str().map(str::to_owned) }).collect();
+    let edits: Vec<FoldEdit> = fixture["edits"].as_array().unwrap().iter().map(|row| FoldEdit { id: row["id"].as_str().unwrap().into(), actor: row["actor"].as_str().map(Into::into), timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().unwrap(), logical: 0 }, mutation_ids: row["mutationIds"].as_array().unwrap().iter().map(|id| MutationId(id.as_str().unwrap().into())).collect(), line: row["line"].as_str().map(str::to_owned) }).collect();
     let transitions: Vec<crate::causal::MutationEnvelope> = fixture["steps"].as_array().unwrap().iter().filter(|row| row["kind"] == "transition").map(|row| fixture_step_envelope(&document, row)).collect();
     let expected = fold_history(&document, &edits, &transitions, &none()).unwrap();
     let input = std::sync::Arc::new((document, edits, transitions));
@@ -628,8 +628,8 @@ fn bounded_history_fold_obeys_the_neutral_law() {
         for _ in 0..100000 {
             match job.step(job.next_step_grant(grant,bytes.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
                 HistoryFoldJobStep::Pending { completed, .. } => { assert!(completed >= done && completed-done <= grant as u64); done = completed; },
-                HistoryFoldJobStep::Ready(fold) => { result = Some(fold); break; },
-                HistoryFoldJobStep::Rejected(error) => panic!("bounded fold: {error:?}"),
+                HistoryFoldJobStep::Ready { value: fold, .. } => { result = Some(fold); break; },
+                HistoryFoldJobStep::Rejected { .. } => panic!("bounded fold: {:?}", job.rejection()),
             }
         }
         assert_eq!(result.unwrap(), expected);
@@ -672,8 +672,8 @@ fn bounded_history_transition_decoding_obeys_the_neutral_law() {
             for _ in 0..100000 {
                 match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
                     HistoryFoldJobStep::Pending { .. } => {},
-                    HistoryFoldJobStep::Ready(value) => { actual = Some(Ok(value)); break; },
-                    HistoryFoldJobStep::Rejected(error) => { actual = Some(Err(error)); break; },
+                    HistoryFoldJobStep::Ready { value, .. } => { actual = Some(Ok(value)); break; },
+                    HistoryFoldJobStep::Rejected { .. } => { actual = Some(Err(job.take_rejection().expect("closed decoder retains original refusal"))); break; },
                 }
             }
             let actual = actual.expect("decoder terminates under bounded grants");
@@ -698,7 +698,7 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
         assert_eq!(valid, row["valid"].as_bool().unwrap());
         if valid {
             let value = expected.as_ref().unwrap();
-            assert_eq!(value.actor.0, row["actor"].as_str().unwrap());
+            assert_eq!(value.actor.0.as_str(), row["actor"].as_str().unwrap());
             assert_eq!(value.diff.payload.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), row["diffPayloadHex"].as_str().unwrap());
         }
         let source = std::sync::Arc::new(bytes);
@@ -709,8 +709,8 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
             for _ in 0..100000 {
                 match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
                     HistoryFoldJobStep::Pending { .. } => {},
-                    HistoryFoldJobStep::Ready(value) => { outcome = Some(Ok(value)); break; },
-                    HistoryFoldJobStep::Rejected(error) => { outcome = Some(Err(error)); break; },
+                    HistoryFoldJobStep::Ready { value, .. } => { outcome = Some(Ok(value)); break; },
+                    HistoryFoldJobStep::Rejected { .. } => { outcome = Some(Err(job.take_rejection().expect("closed envelope retains original refusal"))); break; },
                 }
             }
             let outcome = outcome.expect("quarantine decoder terminates");
@@ -730,4 +730,63 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
         }
     }
     eprintln!("[DEBUG] Quarantined envelope decoder preserves exact payload bytes and UTF-8 under bounded grants, with terminal cancellation cleanup");
+}
+
+#[test]
+fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
+    use semio_framework_value::{ErasedSnapshotRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 65536, maximum_depth: 8 };
+    for refused in [false, true] {
+        let ((job, pointer), born, freed) = crate::test_allocation::observe_backing(|| {
+            let fault = refused.then(|| crate::ProtocolError::Malformed { what: "terminal receipt law", offset: 0, detail: String::with_capacity(37) });
+            let pointer = fault.as_ref().map(|error| match error { crate::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() });
+            (HistoryFoldJob::new(move |_| async move { match fault { Some(error) => Err(error), None => Ok(()) } }), pointer)
+        });
+        let held = born - freed;
+        let mut job = job;
+        let mut total_born = 0;
+        let mut total_released = 0;
+        let mut outcome = None;
+        for _ in 0..64 {
+            let (step, allocated, released) = crate::test_allocation::observe_backing(|| job.step(grant, &mut || false).unwrap());
+            let (progress, done) = match step {
+                HistoryFoldJobStep::Pending { progress, .. } => (progress, false),
+                HistoryFoldJobStep::Ready { value: (), progress } => { assert!(!refused); (progress, true) },
+                HistoryFoldJobStep::Rejected { progress } => { assert!(refused); (progress, true) },
+            };
+            assert!(progress.fits(grant));
+            assert_eq!(progress.retained_capacity_bytes, allocated);
+            assert_eq!(progress.released_bytes, released);
+            assert!(done || progress != RetainedCloneProgress::default());
+            total_born += allocated;
+            total_released += released;
+            if done { outcome = Some(progress); break; }
+        }
+        let outcome = outcome.expect("fixed independent fold policy makes finite progress");
+        assert!(outcome.released_bytes > 0);
+        if refused {
+            assert!(!job.terminal_is_empty());
+            let original = match job.rejection().unwrap() { crate::ProtocolError::Malformed { detail, .. } => { assert_eq!(detail.capacity(), 37); detail.as_ptr() }, _ => panic!("same original refusal") };
+            assert_eq!(Some(original), pointer);
+            let denied = RetainedCloneGrant { maximum_release_bytes: 36, ..grant };
+            let (step, allocated, released) = crate::test_allocation::observe_backing(|| job.close_step(denied).unwrap());
+            assert_eq!(step.progress(), RetainedCloneProgress::default());
+            assert_eq!((allocated, released), (0, 0));
+            assert_eq!(match job.rejection().unwrap() { crate::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() }, original);
+            for _ in 0..4 {
+                if job.terminal_is_empty() { break; }
+                let (step, allocated, released) = crate::test_allocation::observe_backing(|| job.close_step(grant).unwrap());
+                assert!(step.progress().fits(grant));
+                assert_eq!(step.progress().retained_capacity_bytes, allocated);
+                assert_eq!(step.progress().released_bytes, released);
+                total_born += allocated;
+                total_released += released;
+            }
+        }
+        assert!(job.terminal_is_empty());
+        assert_eq!(total_released, held + total_born);
+        let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(job));
+        assert_eq!((allocated, released), (0, 0));
+        eprintln!("[DEBUG] fold outcome rejected={} final control release={} total={} original={} refusal remains original until paid", refused, outcome.released_bytes, total_released, held);
+    }
 }

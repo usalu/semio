@@ -1,0 +1,107 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "beforeSha256": "88e9449587db1af2a665415502342f350f4d62b39892680eda39c81dab7826b9",
+  "afterSha256": "98b220c52ede8cd5876b6272a51c4423c737890561e22309ed04da363f265b52",
+  "actions": [
+    {
+      "beforeLiteralSha256": "0f52a1aa52507790f9b6a2fee135979fd9b9f438c94cf8af609bba1261354029",
+      "afterLiteralSha256": "04c81b3a6e7e624c93119072df4eb2f6bb490d6cd18eef8c354b8cfc2256db24",
+      "occurrences": 11,
+      "currency": "maximum_copy_bytes",
+      "originalExpression": "4096",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    },
+    {
+      "beforeLiteralSha256": "46d2b7790de07bf83d7949329ffea3694d997934a045d5643c014942f6ffd06c",
+      "afterLiteralSha256": "6e76394d136e24bbe3d19bc04b7114e05abc9cdeb4936b055b9e6300a66a54ed",
+      "occurrences": 2,
+      "currency": "maximum_copy_bytes",
+      "originalExpression": "4096",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    },
+    {
+      "beforeLiteralSha256": "dc2387cecf725b83cc523c9644a571a6bb2cd2c0385bbef9c8fdb062ed7c8c79",
+      "afterLiteralSha256": "8658585dec822a154caa382918e87c1a141288952c33669c92ca5a15c41adc5a",
+      "occurrences": 1,
+      "currency": "maximum_copy_bytes",
+      "originalExpression": "demand - 1",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    },
+    {
+      "beforeLiteralSha256": "f43e909a9d0f97b30228f96e05348d141e027b152630a03fa96ec8ef5ff317d7",
+      "afterLiteralSha256": "5f7179d04cb6e084544e78b10874998a78bb2b62d598dbb71a936f5ebe5f3e64",
+      "occurrences": 2,
+      "currency": "maximum_copy_bytes",
+      "originalExpression": "demand.max(1)",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    },
+    {
+      "beforeLiteralSha256": "28f327b9ad22b038a973178009e7e1d6596a653614ae59c9e20f0efa6cfeca23",
+      "afterLiteralSha256": "a07e7a363c729d45cc50b14c2d624f671943726d2a1dc7e86a05a98d583c8867",
+      "occurrences": 2,
+      "currency": "maximum_copy_bytes",
+      "originalExpression": "fixture[\"maximumBytes\"].as_u64().unwrap() as usize",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    },
+    {
+      "beforeLiteralSha256": "b94ead51d1e8bec8b4584b6fd299d2c2d38770113ecf973834e3cdd74007cdaa",
+      "afterLiteralSha256": "a047d2350c7f73ebc299fc4d147548d33c82b62a3c8ab32c458fd03bc483fbd5",
+      "occurrences": 1,
+      "currency": "maximum_copy_bytes",
+      "originalExpression": "0",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    },
+    {
+      "beforeLiteralSha256": "50389cd0245e0a73a894132b576d7434fbcd307bc16416100ba27c9eed232032",
+      "afterLiteralSha256": "90ef747bd44e55a1e2a8dc78e4bb9f946da6b3c7c2efb2fbc59831a38f1900b5",
+      "occurrences": 1,
+      "currency": "maximum_copy_bytes",
+      "originalExpression": "grant.maximum_bytes",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    },
+    {
+      "beforeLiteralSha256": "20907751d66e2316efc4deb3075699579f799fe951c833620a2705e978db5a81",
+      "afterLiteralSha256": "1e4f622f15e52928ea37428620c987df6ac411ef5973ab9f134412395891a9d9",
+      "occurrences": 1,
+      "currency": "maximum_capacity_bytes",
+      "originalExpression": "ErasedSnapshotRead::LEASE_ALLOCATION_BYTES - 1",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    },
+    {
+      "beforeLiteralSha256": "b268707105e492572821720dc2a32661dc553549b9be38960845f20255250d54",
+      "afterLiteralSha256": "39fc08682957d78290065c667d55fa7fa789b9d7368484994f94a8027757db37",
+      "occurrences": 1,
+      "currency": "maximum_capacity_bytes",
+      "originalExpression": "birth",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    },
+    {
+      "beforeLiteralSha256": "461984fe8408c0eb4fa58cab77b4a275a950040dd7ff3365b6af4acb49ccdbbc",
+      "afterLiteralSha256": "d1f9d22ba672df559798f418c7ec3469df03907bbb862b81ef85ecaaddac7f7c",
+      "occurrences": 1,
+      "currency": "maximum_copy_bytes",
+      "originalExpression": "0",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    },
+    {
+      "beforeLiteralSha256": "dd044374b4811183c50b0dcbf8c6650bd0b351e716ec4e2f196470a260415ede",
+      "afterLiteralSha256": "45b1f408c51f962293c7dcf0a26a097c85095e513a1c6ff6b8b33bde773a2599",
+      "occurrences": 1,
+      "currency": "maximum_capacity_bytes",
+      "originalExpression": "birth - 1",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    },
+    {
+      "beforeLiteralSha256": "742a4b3dfe4e44a995788650d387b32998b561659ed067430e9542a9aedacde7",
+      "afterLiteralSha256": "b3c62bf8cc3b191e00da37e8b9225644890558e5df554e1d5ce6b377855b95b1",
+      "occurrences": 1,
+      "currency": "maximum_capacity_bytes",
+      "originalExpression": "birth",
+      "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+    }
+  ],
+  "helperScope": "no-argument complete OneItem test policy sourced fieldwise from immutable five-currency plain declaration",
+  "copiedSource": false,
+  "nativeAssertions": "UNRUN",
+  "qualification": "retirement loops/demand callers still require separate full API integration; no type/native GREEN"
+}

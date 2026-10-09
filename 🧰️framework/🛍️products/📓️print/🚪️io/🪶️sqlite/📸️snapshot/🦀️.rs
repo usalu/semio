@@ -12,8 +12,8 @@ impl protocol::ArtifactSqliteSnapshot for ChartSnapshot{
  const SQLITE_SCHEMA:&'static str=SQL;
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase>{to_database(self,control)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self>{from_database(database,control)}
- fn decode_sqlite_snapshot_native(payload:&protocol::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self>{native::decode(payload,control)}
- fn encode_sqlite_snapshot_native(&self,encoding:protocol::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<protocol::io_schema::IoPayload>{native::encode(self,encoding,control)}
+ fn decode_sqlite_snapshot_native(payload:&protocol::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut protocol::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self>{native::decode(payload,control,native_owner)}
+ fn encode_sqlite_snapshot_native(&self,encoding:protocol::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut protocol::NativeSnapshotEncodeOwner<'_,'_>)->Result<protocol::io_schema::IoPayload>{native::encode(self,encoding,control,native_owner)}
  fn preflight_sqlite_snapshot_encoding(&self,encoding:protocol::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<()>{native::preflight(self,encoding,control)}
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->protocol::io_schema::IoResult<()>{if dialect.artifact_kind!="s.print.chart"||dialect.standard!="v1"||dialect.subset!="any"{return Err(protocol::io_schema::IoError::from_value_error(ValueError::new(K::UnsupportedOwner,"Chart SQLite owner requires its declared v1/any dialect")))}forecast(self,control,Phase::ProjectSnapshot).map_err(protocol::io_schema::IoError::from_value_error)?;Ok(protocol::io_schema::IoOutcome::clean(()))}
  fn retire_sqlite_snapshot(self){Self::retire_decoded(self)}

@@ -1,4 +1,5 @@
 {
+  "readLimits": {"maximumBytes":16384,"maximumAllocationBytes":131072,"maximumDepth":128,"maximumItems":4096},
   "source": "[\"owned\",7]",
   "cases": [
     {

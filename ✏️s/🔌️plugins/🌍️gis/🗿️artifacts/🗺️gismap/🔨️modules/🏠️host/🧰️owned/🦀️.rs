@@ -1011,7 +1011,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for GisMapRejectedConflictAutho
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "gis-map-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: "gis-map-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {

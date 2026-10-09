@@ -1,0 +1,26 @@
+[
+  {
+    "type": "node-terminal",
+    "name": "🧰️Framework 🛍️OS 🔌️Plugin 🏇️Mounted Owner 🦀️Native Corpus",
+    "command": "bun ./node_modules/nx/dist/bin/nx.js run @semio-tech/framework-plugin-mounted-owner-rs:test --outputStyle=stream --excludeTaskDependencies",
+    "cwd": "/Users/ueli/Documents/semio",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_WORKSPACE_ROOT_PATH": "/Users/ueli/Documents/semio",
+      "NX_CACHE_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mn/cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mn/data",
+      "SEMIO_TEST_LEVEL": "full",
+      "SEMIO_MOUNTED_OWNER_RESULTS": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mr/results.json",
+      "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mn/t",
+      "SEMIO_COMMAND_TIMEOUT_MS": "300000",
+      "SEMIO_COMMAND_MAX_BYTES": "134217728",
+      "SEMIO_COMMAND_MAX_LINES": "65536"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.93
+    },
+    "request": "launch"
+  }
+]

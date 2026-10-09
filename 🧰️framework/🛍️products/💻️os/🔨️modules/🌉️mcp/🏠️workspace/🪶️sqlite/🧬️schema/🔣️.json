@@ -1,0 +1,376 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "owner",
+    "objectOrder",
+    "numberStorage",
+    "nativeCustody",
+    "publication",
+    "callerGrant",
+    "cases",
+    "rejectedWire",
+    "schemaRefusals",
+    "semanticEdges"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "owner": {
+      "const": "os.mcp.probe"
+    },
+    "objectOrder": {
+      "const": "sourceOrdinal"
+    },
+    "numberStorage": {
+      "const": "exactJsonText"
+    },
+    "nativeCustody": {
+      "const": "originalCursorAndOutput"
+    },
+    "publication": {
+      "const": "moveOriginal"
+    },
+    "callerGrant": {
+      "const": {
+        "maximumItems": 65536,
+        "maximumCopyBytes": 1048576,
+        "maximumCapacityBytes": 4194304,
+        "maximumReleaseBytes": 4194304,
+        "maximumDepth": 128
+      }
+    },
+    "cases": {
+      "const": [
+        {
+          "id": "nested",
+          "wire": "{\"z\":[18446744073709551615,-9223372036854775808,-0.0,1e-7],\"a\":{},\"empty\":[],\"text\":\"λ🙂\\u0000\\n\"}",
+          "rows": [
+            [
+              1,
+              null,
+              null,
+              null,
+              "object",
+              null,
+              null,
+              null
+            ],
+            [
+              2,
+              1,
+              0,
+              "z",
+              "array",
+              null,
+              null,
+              null
+            ],
+            [
+              3,
+              2,
+              0,
+              null,
+              "number",
+              null,
+              "18446744073709551615",
+              null
+            ],
+            [
+              4,
+              2,
+              1,
+              null,
+              "number",
+              null,
+              "-9223372036854775808",
+              null
+            ],
+            [
+              5,
+              2,
+              2,
+              null,
+              "number",
+              null,
+              "-0.0",
+              null
+            ],
+            [
+              6,
+              2,
+              3,
+              null,
+              "number",
+              null,
+              "1e-7",
+              null
+            ],
+            [
+              7,
+              1,
+              1,
+              "a",
+              "object",
+              null,
+              null,
+              null
+            ],
+            [
+              8,
+              1,
+              2,
+              "empty",
+              "array",
+              null,
+              null,
+              null
+            ],
+            [
+              9,
+              1,
+              3,
+              "text",
+              "string",
+              null,
+              null,
+              "λ🙂\u0000\n"
+            ]
+          ]
+        },
+        {
+          "id": "null",
+          "wire": "null",
+          "rows": [
+            [
+              1,
+              null,
+              null,
+              null,
+              "null",
+              null,
+              null,
+              null
+            ]
+          ]
+        },
+        {
+          "id": "members",
+          "wire": "{\"\":\"\",\"é\":[null,false,true,0,9007199254740993],\"a\\u0000\":\"\\b\\f\\t\\r\"}",
+          "rows": [
+            [
+              1,
+              null,
+              null,
+              null,
+              "object",
+              null,
+              null,
+              null
+            ],
+            [
+              2,
+              1,
+              0,
+              "",
+              "string",
+              null,
+              null,
+              ""
+            ],
+            [
+              3,
+              1,
+              1,
+              "é",
+              "array",
+              null,
+              null,
+              null
+            ],
+            [
+              4,
+              3,
+              0,
+              null,
+              "null",
+              null,
+              null,
+              null
+            ],
+            [
+              5,
+              3,
+              1,
+              null,
+              "boolean",
+              0,
+              null,
+              null
+            ],
+            [
+              6,
+              3,
+              2,
+              null,
+              "boolean",
+              1,
+              null,
+              null
+            ],
+            [
+              7,
+              3,
+              3,
+              null,
+              "number",
+              null,
+              "0",
+              null
+            ],
+            [
+              8,
+              3,
+              4,
+              null,
+              "number",
+              null,
+              "9007199254740993",
+              null
+            ],
+            [
+              9,
+              1,
+              2,
+              "a\u0000",
+              "string",
+              null,
+              null,
+              "\b\f\t\r"
+            ]
+          ]
+        }
+      ]
+    },
+    "rejectedWire": {
+      "const": [
+        "{\"x\":1,\"x\":2}",
+        "NaN",
+        "[1,]"
+      ]
+    },
+    "schemaRefusals": {
+      "const": [
+        {
+          "id": "childWithoutOrdinal",
+          "row": [
+            2,
+            1,
+            null,
+            "x",
+            "null",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "id": "negativeOrdinal",
+          "row": [
+            2,
+            1,
+            -1,
+            "x",
+            "null",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "id": "nullWithNumber",
+          "row": [
+            2,
+            1,
+            0,
+            "x",
+            "null",
+            null,
+            "0",
+            null
+          ]
+        }
+      ]
+    },
+    "semanticEdges": {
+      "const": {
+        "allocationRefusals": [
+          {
+            "phase": "projection",
+            "maximumAllocationBytes": 0,
+            "expected": "ownershipLimit"
+          },
+          {
+            "phase": "reconstruction",
+            "maximumAllocationBytes": 0,
+            "expected": "ownershipLimit"
+          }
+        ],
+        "numericWords": [
+          {
+            "text": "18446744073709551615",
+            "bytes": 20,
+            "exactKind": "uint"
+          },
+          {
+            "text": "-9223372036854775808",
+            "bytes": 20,
+            "exactKind": "int"
+          },
+          {
+            "text": "-0.0",
+            "bytes": 4,
+            "exactKind": "float"
+          },
+          {
+            "text": "1e-7",
+            "bytes": 4,
+            "exactKind": "float"
+          }
+        ],
+        "physicalOrder": [
+          9,
+          4,
+          1,
+          8,
+          3,
+          7,
+          2,
+          6,
+          5
+        ],
+        "longCommonNames": [
+          "λ🙂xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxa",
+          "λ🙂xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb"
+        ],
+        "receiving": "originalSqlBuffersAndDslTree",
+        "cancellation": [
+          "parentIndex",
+          "groupOrder",
+          "nameCompare",
+          "stringPrefix"
+        ],
+        "deniedClose": [
+          "items",
+          "copyBytes",
+          "capacityBytes",
+          "releaseBytes",
+          "depth"
+        ]
+      }
+    }
+  }
+}

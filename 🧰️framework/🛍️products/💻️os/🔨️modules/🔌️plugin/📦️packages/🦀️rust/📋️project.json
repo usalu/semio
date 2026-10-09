@@ -9,6 +9,38 @@
     "family:os-plugin"
   ],
   "targets": {
+    "test-window-registry-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-window-registry source"
+      }
+    },
+    "test-window-registry-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧵️publication/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-window-registry native"
+      }
+    },
     "test-retained-metadata": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -262,6 +294,16 @@
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-retained-raw native"
+      }
+    },
+    "test-mounted-receiving": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-mounted-receiving"
       }
     }
   }

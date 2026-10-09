@@ -36,7 +36,7 @@ pub struct JsonIntoCuration;
 impl Deserializer<CurationSnapshot> for JsonIntoCuration {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<CurationSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<CurationSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JsonIntoCuration: expected a text json payload".to_string())));
         };

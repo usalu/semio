@@ -8,7 +8,6 @@ import Parser from "web-tree-sitter";
 import {parseArtifactRef} from "../../../../🧬️schema/🗿️artifact-reference/🟦️.ts";
 import vocabulary from "../../🔣️.json";
 import references from "../../../../🧬️schema/🗿️artifact-reference/🔣️.json";
-import schema from "../🧬️schema/🔣️.json";
 import corpus from "../🧫️fixtures/🔣️.json";
 const owner=resolve(import.meta.dir,"../..");
 const pkg=join(owner,"📦️packages/🦀️rust");
@@ -26,11 +25,11 @@ const ownerSources=async(entry:string,dependencies:readonly string[]):Promise<{p
 };
 
 
-test("neutral vocabulary corpus matches closed schema and independent literal SQLite rows",()=>{
-  const ajv=new Ajv({strict:false});ajv.addSchema(vocabulary);ajv.addSchema(references);const admit=ajv.compile(schema);expect(admit(corpus)).toBe(true);
-  for(const invalid of [{...corpus,unknown:true},{...corpus,normalDependencies:[...corpus.normalDependencies,"semio-framework-os-kernel"]}])expect(admit(invalid)).toBe(false);
+test("neutral vocabulary references match production contracts and independent literal SQLite rows",()=>{
+  const ajv=new Ajv({strict:false});ajv.addSchema(vocabulary);ajv.addSchema(references);const admit=ajv.getSchema(`${references.$id}#/$defs/ArtifactRef`)!;
+  
   const db=new Database(":memory:");db.run("CREATE TABLE identity(artifact_id TEXT,kind TEXT,standard TEXT,subset TEXT)");
-  try{for(const value of corpus.references){const actual=parseArtifactRef(value);db.run("DELETE FROM identity");db.run("INSERT INTO identity VALUES(?,?,?,?)",[actual.artifactId,actual.dialect.artifactKind,actual.dialect.standard,actual.dialect.subset]);expect(db.query("SELECT artifact_id AS artifactId,kind AS artifactKind,standard,subset FROM identity").get()).toEqual({artifactId:value.artifactId,...value.dialect});}}finally{db.close();}
+  try{for(const value of corpus.references){expect(admit(value)).toBe(true);const actual=parseArtifactRef(value);db.run("DELETE FROM identity");db.run("INSERT INTO identity VALUES(?,?,?,?)",[actual.artifactId,actual.dialect.artifactKind,actual.dialect.standard,actual.dialect.subset]);expect(db.query("SELECT artifact_id AS artifactId,kind AS artifactKind,standard,subset FROM identity").get()).toEqual({artifactId:value.artifactId,...value.dialect});}}finally{db.close();}
   console.error("[DEBUG] Three literal vocabulary identities retained under independent schema and SQLite");
 });
 

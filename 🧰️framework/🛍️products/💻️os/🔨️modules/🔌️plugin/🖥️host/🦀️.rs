@@ -3,6 +3,15 @@
 #[path = "../🧬️schema/🪶️sqlite/🦀️.rs"]
 pub mod sqlite_wire;
 
+#[path="🚪️io/🎛️operation/🦀️.rs"]
+mod operation;
+#[cfg(test)]
+#[path="🧪️tests/🛂️receiving/🦀️.rs"]
+mod test_native_authority;
+#[path="🚪️io/🪶️snapshot/🦀️.rs"]
+mod snapshot_call;
+pub use snapshot_call::{SnapshotCall,SnapshotCallOutput,SnapshotCallStatus,SnapshotComponentReceipt};
+
 #[path = "🧵️shard/🦀️.rs"]
 pub mod shard;
 
@@ -87,6 +96,7 @@ pub struct IoEntryRouteConflict {
 pub enum PluginHostError {
     Io(std::io::Error),
     Json(String),
+    NativeIo(semio_framework_value::ValueError),
     Wasmtime(String),
     Plugin(String),
     IoRouteConflict(Box<IoRouteConflict>),
@@ -107,6 +117,7 @@ impl std::fmt::Display for PluginHostError {
         match self {
             Self::Io(error) => write!(formatter, "io: {error}"),
             Self::Json(error) => write!(formatter, "json: {error}"),
+            Self::NativeIo(error)=>write!(formatter,"native io: {error}"),
             Self::Wasmtime(message) => write!(formatter, "wasmtime: {message}"),
             Self::Plugin(message) => write!(formatter, "plugin: {message}"),
             Self::IoRouteConflict(conflict) => write!(formatter, "io route conflict for {:?}: {} already owns it; {} cannot replace it", conflict.key, conflict.existing_plugin, conflict.incoming_plugin),
@@ -122,6 +133,7 @@ impl std::error::Error for PluginHostError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Io(error) => Some(error),
+            Self::NativeIo(error)=>Some(error),
             _ => None,
         }
     }
@@ -873,6 +885,7 @@ fn decode_guest_fault_bytes(bytes: &[u8]) -> TurnFault {
 fn decode_guest_plugin_error(error: wit_types::PluginError) -> TurnFault {
     match error {
         wit_types::PluginError::Fault(bytes) => decode_guest_fault_bytes(&bytes),
+        wit_types::PluginError::OperationRefusal(code)=>identity_turn_fault(crate::operation_authority::refusal(code)),
     }
 }
 
@@ -923,7 +936,7 @@ impl From<PluginHostError> for TurnFault {
 pub trait GuestRuntime: Send + Sync {
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError>;
     async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError>;
-    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault>;
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault>;
     /// 🧬️ `jobs.wit`'s `start-job` export — added past `design-runtime.md` §2's literal trait listing
     /// because that listing omits it even though `jobs.wit` declares three functions
     /// (`start-job`/`step-job`/`cancel-job`), not one: a job cannot be stepped before it exists.
@@ -935,8 +948,8 @@ pub trait GuestRuntime: Send + Sync {
     /// `step_job`, but `jobs.wit` declares three functions, and a generic `Effect::CancelJob`
     /// admission path — `🧵️shard/🦀️.rs`'s `ShardLoop::pump` — needs somewhere to call).
     async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault>;
-    async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError>;
-    async fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError>;
+    async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError>;
+    async fn restore(&self, inst: &mut GuestInstance, state: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError>;
     async fn drop_instance(&self, inst: GuestInstance);
 }
 
@@ -1228,7 +1241,7 @@ impl GuestRuntime for MockGuestRuntime {
 
     /// 👶️ host-dedyn: identical body to before this packet — no suspension point, so this
     /// resolves on its very first poll, same contract `GuestRuntime`'s own doc comment names.
-    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], _budget: Budget) -> Result<TurnResult, TurnFault> {
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], _budget: Budget, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         self.observed_turns.lock().expect("mock turn trace").push((inst.actor.0, events.to_vec(), _budget));
         self.observed_events.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.entry(inst.actor.0).or_default().extend_from_slice(events);
         let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
@@ -1294,7 +1307,7 @@ impl GuestRuntime for MockGuestRuntime {
         Ok(())
     }
 
-    async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+    async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
         let GuestInstanceState::Mock(state) = &mut inst.state else {
             return Err(PluginHostError::Plugin("MockGuestRuntime::checkpoint called on a non-mock GuestInstance".to_string()));
         };
@@ -1303,7 +1316,7 @@ impl GuestRuntime for MockGuestRuntime {
         Ok(bytes)
     }
 
-    async fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError> {
+    async fn restore(&self, inst: &mut GuestInstance, state: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError> {
         let GuestInstanceState::Mock(mock_state) = &mut inst.state else {
             return Err(PluginHostError::Plugin("MockGuestRuntime::restore called on a non-mock GuestInstance".to_string()));
         };
@@ -1447,6 +1460,10 @@ enum OwnedOperation {
     SqliteSchema,
     SqliteExport,
     SqliteImport,
+    SqliteRetirement,
+    SqliteClose,
+    SqliteTakeFile,
+    SqliteTakePayload,
 }
 
 impl OwnedOperation {
@@ -1468,6 +1485,11 @@ impl OwnedOperation {
             Self::SqliteSchema => OwnedSemioExport::SqliteSchema,
             Self::SqliteExport => OwnedSemioExport::SqliteExport,
             Self::SqliteImport => OwnedSemioExport::SqliteImport,
+            Self::SqliteRetirement => OwnedSemioExport::SqliteRetirement,
+            Self::SqliteClose => OwnedSemioExport::SqliteClose,
+            Self::SqliteTakeFile => OwnedSemioExport::SqliteTakeFile,
+            Self::SqliteTakePayload => OwnedSemioExport::SqliteTakePayload,
+
         }
     }
 }
@@ -1481,24 +1503,30 @@ enum OwnedStage {
 
 #[derive(Clone, Debug, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 struct OwnedPending {
+    retained_input: Option<Vec<u8>>,
     operation: OwnedOperation,
     stage: OwnedStage,
     fuel_used: u64,
 }
 
-#[derive(Clone, Debug, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
+#[derive(Debug, serde::Deserialize, FromValue)]
 struct OwnedCheckpointMetadata {
     pending: Option<OwnedPending>,
+    original_receipt: Option<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,
     guest_checkpoint: Option<Vec<u8>>,
     context: i32,
     next_resource: i32,
     instance_id: u32,
 }
 
+#[derive(serde::Serialize)]
+struct OwnedCheckpointView<'a>{pending:&'a Option<OwnedPending>,original_receipt:&'a Option<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,guest_checkpoint:&'a Option<Vec<u8>>,context:i32,next_resource:i32,instance_id:u32}
+
 struct OwnedInstanceState {
     artifact: Arc<OwnedSemioArtifact>,
     actor: OwnedSemioInstance,
     pending: Option<OwnedPending>,
+    original_receipt: Option<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,
     /// ☠️ Set by the first guest trap. A trapped guest keeps whatever linear memory, shadow-stack
     /// pointer and allocator state the trap left behind, so every later call starts from a lower
     /// stack pointer and traps again 112 bytes further down — ticket 26/09/18 slice A1 read that
@@ -1521,8 +1549,8 @@ struct OwnedInstanceState {
 /// needs the `🎠️kernel` module's own conversion pass first.
 #[derive(serde::Serialize)]
 struct OwnedPollInput<'a> {
-    events: &'a [Event],
-    command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
+    events: &'a [&'a Event],
+    command_page: Option<(&'a semio_framework::kernel::CommandPageCursor, &'a semio_framework::kernel::FixedCommandPage)>,
     cold_pair_page: Option<&'a semio_framework::kernel::ColdDocumentPairPage>,
     budget: Budget,
 }
@@ -1567,6 +1595,21 @@ struct OwnedSnapshotInput<'a> {
     encoding: &'a str,
     payload: &'a [u8],
     limits: sqlite_wire::SnapshotLimits,
+    native: sqlite_wire::SnapshotGrant,
+}
+
+fn snapshot_component_transport<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(dialect:&str,payload:&[u8],identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>)->Result<(String,Vec<u8>),TurnFault>{
+    identity.encode(|control|{
+        control.checkpoint()?;
+        control.charge(dialect.len().checked_add(payload.len()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"component snapshot transport length overflow"))?)?;
+        let mut coordinate=String::new();
+        coordinate.try_reserve_exact(dialect.len()).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"component snapshot dialect storage refused"))?;
+        coordinate.push_str(dialect);
+        let mut bytes=Vec::new();
+        bytes.try_reserve_exact(payload.len()).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"component snapshot payload storage refused"))?;
+        bytes.extend_from_slice(payload);
+        Ok::<_,semio_framework_value::ValueError>((coordinate,bytes))
+    }).map_err(identity_turn_fault)
 }
 
 /// 📦️ One document's authoritative binary pair as the owned `codec` exports return it.
@@ -1584,6 +1627,7 @@ pub struct GuestDocumentMirror {
 }
 
 struct OwnedInvocation {
+    retained_input: Option<Vec<u8>>,
     output: Vec<u8>,
     fuel_used: u64,
 }
@@ -1635,7 +1679,7 @@ impl OwnedRuntime {
             return Err(PluginHostError::Plugin("owned actor has an undriven start function".to_string()));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let mut state = OwnedInstanceState { artifact: Arc::clone(artifact), actor: owned, pending: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        let mut state = OwnedInstanceState { artifact: Arc::clone(artifact), actor: owned, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
         admit_owned_channel(&mut state).map_err(turn_fault_host)?;
         Ok(GuestInstance { actor, state: GuestInstanceState::Owned(state) })
     }
@@ -1691,7 +1735,7 @@ impl OwnedRuntime {
             return Err(TurnFault::Host(PluginHostError::Plugin("owned actor has an undriven start function".to_string())));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let mut state = OwnedInstanceState { artifact: Arc::clone(&owned.artifact), actor, pending: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        let mut state = OwnedInstanceState { artifact: Arc::clone(&owned.artifact), actor, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
         admit_owned_channel(&mut state)?;
         let encoded = serde_json::to_vec(&OwnedCodecInput { artifact_schema: OWNED_CODEC_ORIGIN_SCHEMA, document_id: "", pack: &[], spr: &[], ops: &[] }).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(&mut state, OwnedOperation::PackSchemaHash, Some(encoded))?;
@@ -1706,22 +1750,25 @@ impl OwnedRuntime {
     /// 🧬️ A throwaway instance of `owned` in its codec origin's state.
     fn codec_instance(&self, owned: &OwnedCompiledGuest, origin: &OwnedCodecOrigin) -> GuestInstance {
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let state = OwnedInstanceState { artifact: Arc::clone(&owned.artifact), actor: origin.actor.clone(), pending: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id };
+        let state = OwnedInstanceState { artifact: Arc::clone(&owned.artifact), actor: origin.actor.clone(), pending: None, original_receipt: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id };
         GuestInstance { actor: RuntimeActorId(0), state: GuestInstanceState::Owned(state) }
     }
 
-    pub fn execute_actor_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+    pub fn execute_actor_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         let state = owned_state_mut(inst)?;
         if state.pending.is_some() && !events.is_empty() {
             return Err(TurnFault::Trapped(format!("owned turn is mid-flight and cannot admit {} more event(s) — resume it with no events until it settles", events.len())));
         }
-        let mut ordinary_events = Vec::with_capacity(events.len());
+        let fresh=state.pending.is_none();
+        if fresh{
+        if state.original_receipt.is_some(){return Err(identity_turn_fault(crate::operation_authority::refusal(4)));}
+        let mut ordinary_events = identity.encode(|control|control.allocate_vec::<&Event>(events.len())).map_err(identity_turn_fault)?;
         let mut command_page = None;
         let mut cold_pair_page = None;
         for event in events {
             match event {
                 Event::CommandIngressPage { cursor, bytes } if command_page.is_none() && bytes.len() <= semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES && (!bytes.is_empty() || (cursor.kind == 28 && cursor.item_count == 0)) => {
-                    command_page = Some((cursor.clone(), bytes.clone()));
+                    command_page = Some((cursor, bytes));
                 }
                 Event::CommandIngressPage { .. } => return Err(TurnFault::Trapped("turn carries more than one command page or an invalid page size".to_string())),
                 Event::ColdDocumentPairPage(page) => {
@@ -1731,12 +1778,18 @@ impl OwnedRuntime {
                     validate_cold_page(page)?;
                     cold_pair_page = Some(page);
                 }
-                event => ordinary_events.push(event.clone()),
+                event => ordinary_events.push(event),
             }
         }
-        let input = serde_json::to_vec(&OwnedPollInput { events: &ordinary_events, command_page, cold_pair_page, budget }).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let input = identity.encode(|control|operation::input::encode_json_input(&OwnedPollInput { events: &ordinary_events, command_page, cold_pair_page, budget },control)).map_err(identity_turn_fault)?;
+        identity.encode(|control|control.charge(input.len())).map_err(identity_turn_fault)?;
         begin_owned_operation(state, OwnedOperation::Poll, Some(input))?;
-        let invocation = resume_owned_operation(state, OwnedOperation::Poll, budget.fuel, budget.deadline_ms)?;
+        }
+        let mut receiver=if fresh{semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::new(identity)}else{let receipt=state.original_receipt.take().ok_or_else(||identity_turn_fault(crate::operation_authority::refusal(4)))?;match semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::resume(receipt,identity){Ok(receiver)=>receiver,Err((error,receipt))=>{state.original_receipt=Some(receipt);return Err(identity_turn_fault(error));}}};
+        let invocation = resume_owned_operation_authored(state, OwnedOperation::Poll, budget.fuel, budget.deadline_ms, OwnedDeadline::TotalWall, |_,_|{}, None, &mut receiver);
+        let receipt=receiver.pause();
+        state.original_receipt=if state.pending.is_some()||invocation.is_err(){Some(receipt)}else{None};
+        let invocation=invocation?;
         let mut result: TurnResult = decode_owned_result(&invocation.output)?;
         result.fuel_used = invocation.fuel_used;
         Ok(result)
@@ -1767,19 +1820,32 @@ impl OwnedRuntime {
         decode_owned_result(&invocation.output)
     }
 
+    fn codec_call_authored<T:serde::de::DeserializeOwned,I:serde::Serialize,O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self,compiled:&CompiledHandle,operation:OwnedOperation,input:&I,budget:Budget,mut progress:impl FnMut(u64,std::time::Duration),cancellation:Option<&GuestCallCancellation>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>)->Result<T,TurnFault>{
+        let owned=owned_compiled_guest(compiled)?;
+        let used=self.codec_origin(owned,budget,&mut progress,cancellation)?;
+        let mut instance=self.codec_instance(owned,&used.origin);
+        let state=owned_state_mut(&mut instance)?;
+        let input=identity.encode(|control|operation::input::encode_json_input(input,control)).map_err(identity_turn_fault)?;
+        identity.encode(|control|control.charge(input.len())).map_err(identity_turn_fault)?;
+        begin_owned_operation(state,operation,Some(input))?;
+        let mut receiver=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::new(identity);
+        let invocation=resume_owned_operation_authored(state,operation,budget.fuel.saturating_sub(used.spent_fuel),budget.deadline_ms,OwnedDeadline::NoFuelProgress,|fuel,elapsed|progress(used.reported_fuel.saturating_add(fuel),elapsed),cancellation,&mut receiver)?;
+        decode_owned_result(&invocation.output)
+    }
+
     /// 🏛️ Resolves only the exact declared dialect's handwritten SQLite schema.
     pub async fn codec_sqlite_schema(&self, compiled: &CompiledHandle, dialect: &str, budget: Budget) -> Result<String, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::SqliteSchema, &OwnedSnapshotInput { dialect, encoding: "", payload: &[], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits::default().into() }, budget, |_, _| {}, None)
+        self.codec_call(compiled, OwnedOperation::SqliteSchema, &OwnedSnapshotInput { dialect, encoding: "", payload: &[], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits::default().into(), native: semio_framework_value::RetainedCloneGrant::default().into() }, budget, |_, _| {}, None)
     }
 
     /// 📤️ Projects native values using the component's own semantic provider under observed fuel.
-    pub async fn codec_sqlite_export(&self, compiled: &CompiledHandle, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::SqliteExport, &OwnedSnapshotInput { dialect, encoding, payload, limits: limits.into() }, budget, progress, Some(cancellation))
+    pub async fn codec_sqlite_export<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &CompiledHandle, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
+        self.codec_call_authored(compiled, OwnedOperation::SqliteExport, &OwnedSnapshotInput { dialect, encoding, payload, limits: limits.into(), native: native_grant.into() }, budget, progress, Some(cancellation), identity)
     }
 
     /// 📥️ Reconstructs native values after the component validates exact dialect and domain DDL.
-    pub async fn codec_sqlite_import(&self, compiled: &CompiledHandle, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::SqliteImport, &OwnedSnapshotInput { dialect, encoding: "", payload, limits: limits.into() }, budget, progress, Some(cancellation))
+    pub async fn codec_sqlite_import<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &CompiledHandle, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
+        self.codec_call_authored(compiled, OwnedOperation::SqliteImport, &OwnedSnapshotInput { dialect, encoding: "", payload, limits: limits.into(), native: native_grant.into() }, budget, progress, Some(cancellation), identity)
     }
 
     /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
@@ -1824,13 +1890,13 @@ impl OwnedRuntime {
     }
 
     /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for an unlinked package.
-    pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget) -> Result<GuestDocumentPair, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, |_, _| {}, None)
+    pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<GuestDocumentPair, TurnFault> {
+        self.codec_call_authored(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, |_, _| {}, None, identity)
     }
 
     /// 🧩️ `codec.apply-ops` with the same stall-bound fuel observations as [`Self::codec_genesis_observed`].
-    pub async fn codec_apply_ops_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<GuestDocumentPair, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, progress, Some(cancellation))
+    pub async fn codec_apply_ops_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<GuestDocumentPair, TurnFault> {
+        self.codec_call_authored(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, progress, Some(cancellation), identity)
     }
 
     /// 📜️ `codec.replay-envelopes` — the hub's Check In fold, with the same stall-bound fuel
@@ -1858,8 +1924,8 @@ impl GuestRuntime for OwnedRuntime {
         self.instantiate_actor(compiled, actor)
     }
 
-    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
-        self.execute_actor_turn(inst, events, budget)
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
+        self.execute_actor_turn(inst, events, budget, identity)
     }
 
     async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
@@ -1889,7 +1955,7 @@ impl GuestRuntime for OwnedRuntime {
         decode_owned_result(&invocation.output)
     }
 
-    async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+    async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
         let state = match &mut inst.state {
             GuestInstanceState::Owned(state) => state,
             _ => return Err(PluginHostError::Plugin("checkpoint called on a non-owned GuestInstance".to_string())),
@@ -1907,19 +1973,14 @@ impl GuestRuntime for OwnedRuntime {
         } else {
             None
         };
-        let metadata = OwnedCheckpointMetadata { pending: state.pending.clone(), guest_checkpoint, context: state.context, next_resource: state.next_resource, instance_id: state.instance_id };
-        let metadata = semio_framework_pack_json::to_json_string(&metadata).into_bytes();
-        let actor = state.actor.checkpoint();
-        let mut checkpoint = Vec::with_capacity(20 + metadata.len() + actor.len());
-        checkpoint.extend_from_slice(OWNED_CHECKPOINT_MAGIC);
-        checkpoint.extend_from_slice(&(metadata.len() as u32).to_le_bytes());
-        checkpoint.extend_from_slice(&(actor.len() as u64).to_le_bytes());
-        checkpoint.extend_from_slice(&metadata);
-        checkpoint.extend_from_slice(&actor);
-        Ok(checkpoint)
+        let metadata = OwnedCheckpointView { pending: &state.pending, original_receipt:&state.original_receipt, guest_checkpoint:&guest_checkpoint, context: state.context, next_resource: state.next_resource, instance_id: state.instance_id };
+        identity.encode(|control|{
+            let layout=state.actor.checkpoint_layout(control)?;
+            operation::checkpoint::encode_checkpoint_frame(&metadata,&mut|sink|layout.visit(sink),control)
+        }).map_err(identity_turn_fault).map_err(turn_fault_host)
     }
 
-    async fn restore(&self, inst: &mut GuestInstance, checkpoint: &[u8]) -> Result<(), PluginHostError> {
+    async fn restore(&self, inst: &mut GuestInstance, checkpoint: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError> {
         let state = match &mut inst.state {
             GuestInstanceState::Owned(state) => state,
             _ => return Err(PluginHostError::Plugin("restore called on a non-owned GuestInstance".to_string())),
@@ -1940,6 +2001,7 @@ impl GuestRuntime for OwnedRuntime {
         let metadata: OwnedCheckpointMetadata = semio_framework_pack_json::from_json_str(metadata_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         state.actor = state.artifact.restore(&checkpoint[metadata_end..]).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         state.pending = metadata.pending;
+        state.original_receipt=metadata.original_receipt;
         state.context = metadata.context;
         state.next_resource = metadata.next_resource;
         state.instance_id = metadata.instance_id;
@@ -1985,7 +2047,7 @@ fn begin_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperati
             OwnedStage::Call
         }
     };
-    state.pending = Some(OwnedPending { operation, stage, fuel_used: 0 });
+    state.pending = Some(OwnedPending { retained_input:None, operation, stage, fuel_used: 0 });
     Ok(())
 }
 
@@ -2024,11 +2086,23 @@ enum OwnedDeadline {
     NoFuelProgress,
 }
 
+fn identity_turn_fault(error:semio_framework_value::ValueError)->TurnFault{TurnFault::Host(PluginHostError::NativeIo(error))}
+fn receiving_turn_fault(error:operation::wasmtime::ReceiveError)->TurnFault{match error{operation::wasmtime::ReceiveError::Refused(error)=>identity_turn_fault(error),operation::wasmtime::ReceiveError::Runtime(error)=>TurnFault::Trapped(error.to_string())}}
+
 fn resume_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32) -> Result<OwnedInvocation, TurnFault> {
     resume_owned_operation_observed(state, operation, fuel, deadline_ms, OwnedDeadline::TotalWall, |_, _| {}, None)
 }
 
 fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32, deadline: OwnedDeadline, mut progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<OwnedInvocation, TurnFault> {
+    resume_owned_operation_bound(state, operation, fuel, deadline_ms, deadline, progress, cancellation, None)
+}
+
+fn resume_owned_operation_authored(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32, deadline: OwnedDeadline, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>, receiver: &mut dyn semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiving) -> Result<OwnedInvocation, TurnFault> {
+    let result=resume_owned_operation_bound(state, operation, fuel, deadline_ms, deadline, progress, cancellation, Some(receiver));
+    result.and_then(|output|{receiver.ensure_finished().map_err(identity_turn_fault)?;Ok(output)})
+}
+
+fn resume_owned_operation_bound(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32, deadline: OwnedDeadline, mut progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>, mut receiver: Option<&mut dyn semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiving>) -> Result<OwnedInvocation, TurnFault> {
     let started = std::time::Instant::now();
     let mut fuel_moved_at = started;
     let mut remaining = fuel;
@@ -2074,45 +2148,50 @@ fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: Ow
                 pending.fuel_used = pending.fuel_used.saturating_add(fuel_used);
                 remaining = remaining.saturating_sub(fuel_used);
                 completed_fuel = pending.fuel_used;
-                let results = reply_owned_host(state, &call).map_err(|error| TurnFault::Trapped(error.to_string()))?;
-                state.actor.resume_host(call.id, Ok(results))?;
-                state.pending = Some(pending);
+                let result=reply_owned_host(state,&call,receiver.as_deref_mut()).map_err(|error|TurnFault::Trapped(error.to_string())).and_then(|results|state.actor.resume_host(call.id,Ok(results)).map_err(TurnFault::from));
+                state.pending=Some(pending);
+                result?;
             }
             CoreStepOutcome::Complete { fuel_used, values } => {
                 pending.fuel_used = pending.fuel_used.saturating_add(fuel_used);
                 remaining = remaining.saturating_sub(fuel_used);
-                match pending.stage {
+                completed_fuel=pending.fuel_used;
+                let result=(||->Result<Option<OwnedInvocation>,TurnFault>{match &mut pending.stage {
                     OwnedStage::Allocate { input } => {
                         let [Value::I32(pointer)] = values.as_slice() else { return Err(TurnFault::Trapped("owned allocator returned an invalid pointer".to_string())) };
-                        write_owned_memory(&mut state.actor, *pointer, &input)?;
-                        state.actor.begin(operation.export(), vec![Value::I32(*pointer), Value::I32(input.len() as i32)])?;
-                        pending.stage = OwnedStage::Call;
-                        completed_fuel = pending.fuel_used;
-                        state.pending = Some(pending);
+                        write_owned_memory(&mut state.actor,*pointer,input)?;
+                        let length=input.len()as i32;
+                        if matches!(operation,OwnedOperation::SqliteExport|OwnedOperation::SqliteImport|OwnedOperation::SqliteRetirement|OwnedOperation::SqliteClose|OwnedOperation::SqliteTakeFile|OwnedOperation::SqliteTakePayload){pending.retained_input=Some(std::mem::take(input));}
+                        state.actor.begin(operation.export(),vec![Value::I32(*pointer),Value::I32(length)])?;
+                        pending.stage=OwnedStage::Call;
+                        Ok(None)
                     }
                     OwnedStage::Call => {
-                        let output = state.actor.read_bytes_result(&values, OWNED_RESULT_LIMIT)?;
                         let [Value::I64(pair)] = values.as_slice() else { return Err(TurnFault::Trapped("owned call returned an invalid pointer/length pair".to_string())) };
-                        let pair = *pair as u64;
-                        state.actor.begin(OwnedSemioExport::Deallocate, vec![Value::I32(pair as u32 as i32), Value::I32((pair >> 32) as u32 as i32)])?;
-                        pending.stage = OwnedStage::Deallocate { output };
-                        completed_fuel = pending.fuel_used;
-                        state.pending = Some(pending);
+                        let pair=*pair as u64;
+                        match crate::operation_authority::owned_result::decode(pair).map_err(identity_turn_fault)?{crate::operation_authority::owned_result::OwnedReturn::Bytes{..}=>{},crate::operation_authority::owned_result::OwnedReturn::Refusal(kind)=>return Err(identity_turn_fault(semio_framework_value::ValueError::literal(kind,"original guest operation returned scalar refusal"))),}
+                        if let Some(receiver)=receiver.as_deref_mut(){receiver.receive_output((pair>>32)as u32 as usize).map_err(identity_turn_fault)?;}
+                        let output=state.actor.read_bytes_result(&values,OWNED_RESULT_LIMIT)?;
+                        pending.stage=OwnedStage::Deallocate{output};
+                        state.actor.begin(OwnedSemioExport::Deallocate,vec![Value::I32(pair as u32 as i32),Value::I32((pair>>32)as u32 as i32)])?;
+                        Ok(None)
                     }
-                    OwnedStage::Deallocate { output } => {
-                        progress(pending.fuel_used, started.elapsed());
-                        return Ok(OwnedInvocation { output, fuel_used: pending.fuel_used });
-                    }
-                }
+                    OwnedStage::Deallocate { output } => Ok(Some(OwnedInvocation{retained_input:pending.retained_input.take(),output:std::mem::take(output),fuel_used:pending.fuel_used})),
+                }})();
+                match result{Ok(Some(invocation))=>{progress(invocation.fuel_used,started.elapsed());return Ok(invocation)},Ok(None)=>state.pending=Some(pending),Err(error)=>{state.pending=Some(pending);return Err(error)}}
             }
             CoreStepOutcome::Cancelled { fuel_used } => {
-                progress(pending.fuel_used.saturating_add(fuel_used), started.elapsed());
+                pending.fuel_used=pending.fuel_used.saturating_add(fuel_used);
+                progress(pending.fuel_used,started.elapsed());
+                state.pending=Some(pending);
                 return Err(TurnFault::Trapped(format!("owned operation cancelled after {fuel_used} instructions")));
             }
             CoreStepOutcome::Fault { fuel_used, error } => {
-                progress(pending.fuel_used.saturating_add(fuel_used), started.elapsed());
-                state.poisoned = true;
-                return Err(TurnFault::Trapped(owned_fault_text(state, &error.to_string())));
+                pending.fuel_used=pending.fuel_used.saturating_add(fuel_used);
+                progress(pending.fuel_used,started.elapsed());
+                state.pending=Some(pending);
+                state.poisoned=true;
+                return Err(TurnFault::Trapped(owned_fault_text(state,&error.to_string())));
             }
         }
         if remaining < remaining_before {
@@ -2157,6 +2236,7 @@ fn cancel_owned_operation(state: &mut OwnedInstanceState) -> Result<(), TurnFaul
         _ => return Err(TurnFault::Trapped("owned interpreter did not acknowledge cancellation".to_string())),
     }
     state.pending = None;
+    state.original_receipt=None;
     Ok(())
 }
 
@@ -2185,8 +2265,27 @@ fn owned_wasi_entropy() -> Result<u64, PluginHostError> {
     semio_framework_os_kernel::os_identity::entropy_u64().map_err(|error| PluginHostError::Plugin(format!("owned WASI random: {error}")))
 }
 
-fn reply_owned_host(state: &mut OwnedInstanceState, call: &HostCall) -> Result<Vec<Value>, PluginHostError> {
+fn reply_owned_host<'loan,'source>(state: &mut OwnedInstanceState, call: &HostCall, receiver: Option<&'loan mut (dyn semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiving+'source)>) -> Result<Vec<Value>, PluginHostError> {
     let values = match (call.module.as_str(), call.name.as_str()) {
+        ("semio:framework/pure@1.0.0", "operation-begin") => {
+            let outcome = receiver.ok_or_else(|| crate::operation_authority::refusal(6)).and_then(|receiver| receiver.begin());
+            let mut result = [0u8;16];
+            match outcome { Ok(maximum) => result[8..].copy_from_slice(&(maximum as u64).to_le_bytes()), Err(error) => { result[..4].copy_from_slice(&1u32.to_le_bytes()); result[8..12].copy_from_slice(&crate::operation_authority::refusal_code(error.kind).to_le_bytes()); } }
+            write_owned_memory(&mut state.actor, owned_argument_i32(call, 0)?, &result).map_err(turn_fault_host)?;
+            Vec::new()
+        }
+        ("semio:framework/pure@1.0.0", "operation-progress" | "operation-allocation" | "operation-finish") => {
+            let outcome = receiver.ok_or_else(|| crate::operation_authority::refusal(6)).and_then(|receiver| {
+                let number = |index:usize| match call.arguments.get(index) { Some(Value::I64(value)) => usize::try_from(u64::from_ne_bytes(value.to_ne_bytes())).map_err(|_|crate::operation_authority::refusal(2)), _ => Err(crate::operation_authority::refusal(4)) };
+                match call.name.as_str() {
+                    "operation-progress" => receiver.progress(semio_framework_value::native_encoding::NativeEncodeProgress{completed:number(0)?,total:number(1)?,owned_bytes:number(2)?}),
+                    "operation-allocation" => receiver.allocation(semio_framework_value::native_encoding::NativeEncodeAllocation{bytes:number(0)?,owned_bytes:number(1)?,next_owned_bytes:number(2)?,maximum_bytes:number(3)?}),
+                    "operation-finish" => receiver.finish(number(0)?),
+                    _ => Err(crate::operation_authority::refusal(4)),
+                }
+            });
+            vec![Value::I32(outcome.map_or_else(|error|crate::operation_authority::refusal_code(error.kind) as i32,|()|0))]
+        }
         ("semio:framework/pure@1.0.0", "now-ms") => vec![Value::I64(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64))],
         ("semio:framework/pure@1.0.0", "log") | ("semio:framework/pure@1.0.0", "trace-span") => Vec::new(),
         ("$root", "[context-get-0]") => vec![Value::I32(state.context)],
@@ -2384,6 +2483,7 @@ use actor_bindings::exports::semio::framework::{jobs as wit_jobs, reactor as wit
 /// asset_map }` — `limiter` is an implementation necessity (`Store::limiter` needs somewhere to
 /// read bounds from), not part of the design's literal 5-field list.
 struct ActorHostState {
+    operation_slot:operation::slot::OperationSlot,
     plugin_id: String,
     #[allow(dead_code)]
     actor: RuntimeActorId,
@@ -2520,6 +2620,13 @@ impl actor_bindings::semio::framework::pure::Host for ActorHostState {
     fn trace_span(&mut self, name: String) {
         eprintln!("[actor:{}:trace] {name}", self.plugin_id);
     }
+}
+
+impl operation::wasmtime::OperationHostStore for ActorHostState{
+ fn operation_slot(&mut self)->&mut operation::slot::OperationSlot{&mut self.operation_slot}
+ fn operation_log(&mut self,level:String,message:String){actor_bindings::semio::framework::pure::Host::log(self,level,message)}
+ fn operation_now_ms(&mut self)->i64{actor_bindings::semio::framework::pure::Host::now_ms(self)}
+ fn operation_trace_span(&mut self,name:String){actor_bindings::semio::framework::pure::Host::trace_span(self,name)}
 }
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the seven type-only interfaces
@@ -2731,6 +2838,7 @@ impl WasmtimeRuntime {
         let epoch = EpochDeadlines::new(&engine, &plugin_host_worker_pool());
         let mut linker = Linker::new(&engine);
         actor_bindings::Actor::add_to_linker::<ActorHostState, wasmtime::component::HasSelf<ActorHostState>>(&mut linker, |state: &mut ActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        operation::wasmtime::register(&mut linker).map_err(|error|PluginHostError::Wasmtime(error.to_string()))?;
         wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let engine_config_hash = shared_engine_config_hash(&cfg, pooling_active).await;
         let isolated_engine = SharedEngineConfig { force_on_demand: !pooling_active, ..cfg }.to_isolated_arg();
@@ -2768,31 +2876,36 @@ impl WasmtimeRuntime {
     }
 
     /// 📤️ Executes a semantic snapshot projection within the guest's resource bounds.
-    pub async fn codec_sqlite_export(&self, compiled: &CompiledHandle, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
+    pub async fn codec_sqlite_export<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &CompiledHandle, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
         let mut instance = self.codec_instance(compiled, budget).await?;
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else { return Err(TurnFault::Trapped("SQLite export requires Wasmtime instance".into())); };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
         let encoding = match encoding { "binary" => actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary, "text" => actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text, _ => return Err(TurnFault::Trapped("invalid snapshot encoding".into())) };
         let limits = wit_snapshot_limits(limits);
-        let output = observe_sqlite_guest(store.run_concurrent(async |accessor| bindings.semio_framework_codec().call_sqlite_export(accessor, dialect.to_string(), encoding, payload.to_vec(), limits).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(decode_guest_plugin_error)?;
-        Ok(match output { actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Done(output) => sqlite_wire::SnapshotFileResult::Done(sqlite_wire::SnapshotFile { bytes: output.bytes, diagnostics: output.diagnostics }), actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Rejected(output) => sqlite_wire::SnapshotFileResult::Rejected(wit_snapshot_rejection(output)) })
+        let (coordinate,bytes)=snapshot_component_transport(dialect,payload,identity)?;
+        let mut receiver=operation::OriginalOperationReceiver::new(identity);
+        let output = observe_sqlite_guest(store.run_concurrent(async |accessor| operation::wasmtime::receive(accessor,&mut receiver,bindings.semio_framework_codec().call_sqlite_export(accessor, coordinate, encoding, bytes, limits, wit_snapshot_grant(native_grant))).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(receiving_turn_fault)?.map_err(decode_guest_plugin_error)?;
+        Ok(match output { actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Done(output) => sqlite_wire::SnapshotFileResult::Done(sqlite_wire::SnapshotFile { bytes: output.bytes, diagnostics: output.diagnostics }), actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Rejected(output) => sqlite_wire::SnapshotFileResult::Rejected(wit_snapshot_rejection(output)), actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Pending(output)=>sqlite_wire::SnapshotFileResult::Pending(wit_snapshot_retirement(output)) })
     }
 
     /// 📥️ Reconstructs a native snapshot from the exact declared semantic SQLite schema.
-    pub async fn codec_sqlite_import(&self, compiled: &CompiledHandle, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
+    pub async fn codec_sqlite_import<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &CompiledHandle, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
         let mut instance = self.codec_instance(compiled, budget).await?;
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else { return Err(TurnFault::Trapped("SQLite import requires Wasmtime instance".into())); };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
         let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
         let limits = wit_snapshot_limits(limits);
-        let output = observe_sqlite_guest(store.run_concurrent(async |accessor| bindings.semio_framework_codec().call_sqlite_import(accessor, dialect.to_string(), payload.to_vec(), limits).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(decode_guest_plugin_error)?;
+        let (coordinate,bytes)=snapshot_component_transport(dialect,payload,identity)?;
+        let mut receiver=operation::OriginalOperationReceiver::new(identity);
+        let output = observe_sqlite_guest(store.run_concurrent(async |accessor| operation::wasmtime::receive(accessor,&mut receiver,bindings.semio_framework_codec().call_sqlite_import(accessor, coordinate, bytes, limits, wit_snapshot_grant(native_grant))).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(receiving_turn_fault)?.map_err(decode_guest_plugin_error)?;
         Ok(match output {
             actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Done(output) => {
-                let encoding = match output.encoding { actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary => "binary", actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text => "text" }.to_string();
+                let encoding = match output.encoding { actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary => sqlite_wire::SnapshotEncoding::Binary, actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text => sqlite_wire::SnapshotEncoding::Text };
                 sqlite_wire::SnapshotPayloadResult::Done(sqlite_wire::SnapshotPayload { encoding, bytes: output.bytes, diagnostics: output.diagnostics })
             }
             actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Rejected(output) => sqlite_wire::SnapshotPayloadResult::Rejected(wit_snapshot_rejection(output)),
+            actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Pending(output)=>sqlite_wire::SnapshotPayloadResult::Pending(wit_snapshot_retirement(output)),
         })
     }
 
@@ -2860,7 +2973,7 @@ impl WasmtimeRuntime {
 
     /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for a package whose Rust codec the
     /// host does not link.
-    pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: &Budget) -> Result<GuestDocumentPair, TurnFault> {
+    pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: &Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<GuestDocumentPair, TurnFault> {
         let mut instance = self.codec_instance(compiled, budget).await?;
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
             return Err(TurnFault::Trapped("codec.apply-ops called on a non-wasmtime GuestInstance".to_string()));
@@ -2922,6 +3035,10 @@ async fn observe_sqlite_guest<F: std::future::Future>(future: F, epoch: &EpochDe
 }
 
 /// 🏷️ Restores the actual codec ABI's complete closed provider authority.
+fn wit_snapshot_retirement(value:actor_bindings::exports::semio::framework::codec::SnapshotRetirement)->sqlite_wire::SnapshotRetirement {
+ sqlite_wire::SnapshotRetirement{ticket:value.ticket,owned_bytes:value.owned_bytes,refusal:value.refusal,native_pending:value.native_pending,output_pending:value.output_pending,terminal:value.terminal,demands:sqlite_wire::SnapshotDemands{items:value.demands.items,copy_bytes:value.demands.copy_bytes,capacity_bytes:value.demands.capacity_bytes,release_bytes:value.demands.release_bytes,depth:value.demands.depth}}
+}
+
 fn wit_snapshot_rejection(value: actor_bindings::exports::semio::framework::codec::SnapshotRejection) -> sqlite_wire::SnapshotRejection {
     use actor_bindings::exports::semio::framework::codec::ValueRefusalKind as Wire;
     use semio_framework_value::ValueRefusalKind as Native;
@@ -2932,6 +3049,11 @@ fn wit_snapshot_rejection(value: actor_bindings::exports::semio::framework::code
 fn wit_snapshot_limits(value: semio_framework::sqlite_snapshot::SqliteDatabaseLimits) -> actor_bindings::exports::semio::framework::codec::SnapshotLimits {
     let value = sqlite_wire::SnapshotLimits::from(value);
     actor_bindings::exports::semio::framework::codec::SnapshotLimits { max_file_bytes: value.max_file_bytes, max_value_bytes: value.max_value_bytes, max_allocation_bytes: value.max_allocation_bytes, max_schema_bytes: value.max_schema_bytes, max_rows: value.max_rows, max_columns: value.max_columns, max_tables: value.max_tables, max_pages: value.max_pages }
+}
+
+fn wit_snapshot_grant(value:semio_framework_value::RetainedCloneGrant)->actor_bindings::semio::framework::types::RetainedCloneGrant{
+    let value=sqlite_wire::SnapshotGrant::from(value);
+    actor_bindings::semio::framework::types::RetainedCloneGrant{maximum_items:value.maximum_items,maximum_copy_bytes:value.maximum_copy_bytes,maximum_capacity_bytes:value.maximum_capacity_bytes,maximum_release_bytes:value.maximum_release_bytes,maximum_depth:value.maximum_depth}
 }
 
 //#region 🗂️GuestCodecDispatch
@@ -2966,15 +3088,15 @@ impl GuestRuntimes {
     }
 
     /// 📤️ Executes the component's typed projection with caller cancellation and resource bounds.
-    pub async fn codec_sqlite_export(&self, compiled: &CompiledHandle, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
+    pub async fn codec_sqlite_export<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &CompiledHandle, dialect: &str, encoding: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotFileResult, TurnFault> {
         if cancellation.is_cancelled() { return Err(TurnFault::Cancelled); }
-        match self { Self::Owned(runtime) => runtime.codec_sqlite_export(compiled, dialect, encoding, payload, limits, budget.clone(), progress, cancellation).await, Self::Wasmtime(runtime) => runtime.codec_sqlite_export(compiled, dialect, encoding, payload, limits, budget, progress, cancellation).await, #[cfg(test)] Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("semantic SQLite export requires a real component".into())) }
+        match self { Self::Owned(runtime) => runtime.codec_sqlite_export(compiled, dialect, encoding, payload, limits, budget.clone(), progress, cancellation, native_grant, identity).await, Self::Wasmtime(runtime) => runtime.codec_sqlite_export(compiled, dialect, encoding, payload, limits, budget, progress, cancellation, native_grant, identity).await, #[cfg(test)] Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("semantic SQLite export requires a real component".into())) }
     }
 
     /// 📥️ Executes exact semantic reconstruction with caller cancellation and resource bounds.
-    pub async fn codec_sqlite_import(&self, compiled: &CompiledHandle, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
+    pub async fn codec_sqlite_import<O:FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool+?Sized>(&self, compiled: &CompiledHandle, dialect: &str, payload: &[u8], limits: semio_framework::sqlite_snapshot::SqliteDatabaseLimits, budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, native_grant: semio_framework_value::RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_,O>) -> Result<sqlite_wire::SnapshotPayloadResult, TurnFault> {
         if cancellation.is_cancelled() { return Err(TurnFault::Cancelled); }
-        match self { Self::Owned(runtime) => runtime.codec_sqlite_import(compiled, dialect, payload, limits, budget.clone(), progress, cancellation).await, Self::Wasmtime(runtime) => runtime.codec_sqlite_import(compiled, dialect, payload, limits, budget, progress, cancellation).await, #[cfg(test)] Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("semantic SQLite import requires a real component".into())) }
+        match self { Self::Owned(runtime) => runtime.codec_sqlite_import(compiled, dialect, payload, limits, budget.clone(), progress, cancellation, native_grant, identity).await, Self::Wasmtime(runtime) => runtime.codec_sqlite_import(compiled, dialect, payload, limits, budget, progress, cancellation, native_grant, identity).await, #[cfg(test)] Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("semantic SQLite import requires a real component".into())) }
     }
 
     /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
@@ -3008,10 +3130,10 @@ impl GuestRuntimes {
     }
 
     /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply.
-    pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: &Budget) -> Result<GuestDocumentPair, TurnFault> {
+    pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: &Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<GuestDocumentPair, TurnFault> {
         match self {
-            Self::Owned(runtime) => runtime.codec_apply_ops(compiled, artifact_schema, pack, spr, ops, budget.clone()).await,
-            Self::Wasmtime(runtime) => runtime.codec_apply_ops(compiled, artifact_schema, pack, spr, ops, budget).await,
+            Self::Owned(runtime) => runtime.codec_apply_ops(compiled, artifact_schema, pack, spr, ops, budget.clone(), identity).await,
+            Self::Wasmtime(runtime) => runtime.codec_apply_ops(compiled, artifact_schema, pack, spr, ops, budget, identity).await,
             #[cfg(test)]
             Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("codec.apply-ops has no scripted runtime — it needs a real component".to_string())),
         }
@@ -3062,6 +3184,7 @@ impl GuestRuntime for WasmtimeRuntime {
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let (wasi, diagnostics) = guest_wasi_ctx();
         let host_state = ActorHostState {
+            operation_slot:operation::slot::OperationSlot::new(),
             plugin_id: format!("actor-{}", actor.0),
             actor,
             caps: caps.to_vec(),
@@ -3110,7 +3233,7 @@ impl GuestRuntime for WasmtimeRuntime {
     /// A malformed entry is SKIPPED rather than failing the turn, matching `AppCommand::
     /// Presence`'s own roster-decode convention: presence is best-effort and TTL-scoped, so
     /// one bad update must not cost the actor an otherwise valid turn's patches and effects.
-    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("execute_turn called on a non-wasmtime GuestInstance".to_string()));
         };
@@ -3232,7 +3355,7 @@ impl GuestRuntime for WasmtimeRuntime {
         store.run_concurrent(async |accessor| bindings.semio_framework_jobs().call_cancel_job(accessor, job).await).await.map_err(|error| classify_guest_trap(&error))?.map_err(|error| classify_guest_trap(&error))
     }
 
-    async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+    async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(PluginHostError::Plugin("checkpoint called on a non-wasmtime GuestInstance".to_string()));
         };
@@ -3246,7 +3369,7 @@ impl GuestRuntime for WasmtimeRuntime {
             .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
     }
 
-    async fn restore(&self, inst: &mut GuestInstance, state_bytes: &[u8]) -> Result<(), PluginHostError> {
+    async fn restore(&self, inst: &mut GuestInstance, state_bytes: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError> {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(PluginHostError::Plugin("restore called on a non-wasmtime GuestInstance".to_string()));
         };
@@ -3321,14 +3444,14 @@ impl GuestRuntime for GuestRuntimes {
         }
     }
 
-    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         match self {
-            Self::Owned(r) => r.execute_turn(inst, events, budget).await,
-            Self::Wasmtime(r) => r.execute_turn(inst, events, budget).await,
+            Self::Owned(r) => r.execute_turn(inst, events, budget, identity).await,
+            Self::Wasmtime(r) => r.execute_turn(inst, events, budget, identity).await,
             #[cfg(test)]
-            Self::Mock(r) => r.execute_turn(inst, events, budget).await,
+            Self::Mock(r) => r.execute_turn(inst, events, budget, identity).await,
             #[cfg(test)]
-            Self::Recording(r) => r.execute_turn(inst, events, budget).await,
+            Self::Recording(r) => r.execute_turn(inst, events, budget, identity).await,
         }
     }
 
@@ -3365,25 +3488,25 @@ impl GuestRuntime for GuestRuntimes {
         }
     }
 
-    async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+    async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
         match self {
-            Self::Owned(r) => r.checkpoint(inst).await,
-            Self::Wasmtime(r) => r.checkpoint(inst).await,
+            Self::Owned(r) => r.checkpoint(inst, identity).await,
+            Self::Wasmtime(r) => r.checkpoint(inst, identity).await,
             #[cfg(test)]
-            Self::Mock(r) => r.checkpoint(inst).await,
+            Self::Mock(r) => r.checkpoint(inst, identity).await,
             #[cfg(test)]
-            Self::Recording(r) => r.checkpoint(inst).await,
+            Self::Recording(r) => r.checkpoint(inst, identity).await,
         }
     }
 
-    async fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError> {
+    async fn restore(&self, inst: &mut GuestInstance, state: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError> {
         match self {
-            Self::Owned(r) => r.restore(inst, state).await,
-            Self::Wasmtime(r) => r.restore(inst, state).await,
+            Self::Owned(r) => r.restore(inst, state, identity).await,
+            Self::Wasmtime(r) => r.restore(inst, state, identity).await,
             #[cfg(test)]
-            Self::Mock(r) => r.restore(inst, state).await,
+            Self::Mock(r) => r.restore(inst, state, identity).await,
             #[cfg(test)]
-            Self::Recording(r) => r.restore(inst, state).await,
+            Self::Recording(r) => r.restore(inst, state, identity).await,
         }
     }
 
@@ -4546,7 +4669,7 @@ enum GuestRelayPublicationKind {
 
 struct GuestRelayPublication {
     kind: GuestRelayPublicationKind,
-    source: Vec<u8>,
+    source: std::mem::ManuallyDrop<Vec<u8>>,
     cursor: usize,
     copied: bool,
     retired: bool,
@@ -4563,7 +4686,7 @@ impl GuestRelayPublication {
             GuestRelayPublicationKind::Commit => semio_framework_job::JobPayloadStream::CommitOutput,
             GuestRelayPublicationKind::Fault => semio_framework_job::JobPayloadStream::Fault,
         };
-        Self { kind, source, cursor: 0, copied: false, retired: false, oversized, writer: Some(semio_framework_job::RetainedJobPayloadWriter::new(stream)) }
+        Self { kind, source:std::mem::ManuallyDrop::new(source), cursor: 0, copied: false, retired: false, oversized, writer: Some(semio_framework_job::RetainedJobPayloadWriter::new(stream)) }
     }
 
     fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
@@ -4578,17 +4701,24 @@ impl GuestRelayPublication {
             return semio_framework_job::StepOutcome::Yield;
         }
         if !self.retired {
-            if !self.source.is_empty() {
-                let keep = self.source.len().saturating_sub(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                self.source.truncate(keep);
-                context.consume_fuel(1);
-                return semio_framework_job::StepOutcome::Yield;
+            if self.source.is_empty()&&self.source.capacity()==0{
+                let grant=context.retained_grant();let bytes=std::mem::size_of::<bool>();
+                if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth<1{return semio_framework_job::StepOutcome::Yield;}
+                self.retired=true;
+                let progress=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};
+                if context.consume_retained(progress).is_err(){return semio_framework_job::StepOutcome::Yield;}
+                context.consume_fuel(1);return semio_framework_job::StepOutcome::Yield;
             }
-            drop(std::mem::take(&mut self.source));
-            self.retired = true;
+            let step=match self.close_original_source(context.retained_grant()){Ok(step)=>step,Err(_)=>return semio_framework_job::StepOutcome::Yield};
+            let progress=step.progress();
+            if context.consume_retained(progress).is_err(){return semio_framework_job::StepOutcome::Yield;}
             context.consume_fuel(1);
             return semio_framework_job::StepOutcome::Yield;
         }
+        let metadata=std::mem::size_of::<Option<semio_framework_job::RetainedJobPayloadWriter>>()+std::mem::size_of::<semio_framework_job::RetainedJobPayload>()+std::mem::size_of::<semio_framework_job::StepOutcome>();
+        let grant=context.retained_grant();
+        if grant.maximum_items==0||grant.maximum_copy_bytes<metadata||grant.maximum_depth<1{return semio_framework_job::StepOutcome::Yield;}
+        if context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:metadata,..Default::default()}).is_err(){return semio_framework_job::StepOutcome::Yield;}
         let writer = self.writer.take().expect("guest relay publication owns finished writer");
         let payload = match writer.finish() {
             Ok(payload) => payload,
@@ -4612,33 +4742,48 @@ impl GuestRelayPublication {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if let Some(writer) = self.writer.as_mut() {
-            match writer.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => {
-                    if writer.terminal_is_empty() {
-                        self.writer = None;
-                    }
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-                }
-                semio_framework_job::JobPayloadCloseStep::Complete => self.writer = None,
-            }
+    fn original_source_demand(&self)->semio_framework_value::RetirementDemand{
+        if !self.source.is_empty(){semio_framework_value::RetirementDemand{copy_bytes:1+std::mem::size_of::<usize>(),depth:1,..Default::default()}}
+        else if self.source.capacity()!=0{semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Vec<u8>>(),release_bytes:self.source.capacity(),depth:1,..Default::default()}}
+        else{Default::default()}
+    }
+
+    fn close_original_source(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementTurnError};
+        if self.source.is_empty()&&self.source.capacity()==0{return Ok(RetainedCloneStep::Complete(Default::default()));}
+        let demand=self.original_source_demand();
+        semio_framework_value::advance_retirement_turn(demand,grant,|grant|{
+            if !self.source.is_empty(){let count=self.source.len().min(grant.maximum_copy_bytes-std::mem::size_of::<usize>());let keep=self.source.len()-count;self.source.truncate(keep);return Ok((RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:count+std::mem::size_of::<usize>(),..Default::default()}),false));}
+            drop(std::mem::take(&mut*self.source));
+            Ok((RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}),self.source.capacity()==0))
+        }).map_err(|error|match error{RetirementTurnError::Owner(error)|RetirementTurnError::Receipt(error)=>error})
+    }
+
+    fn retirement_demands(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if let Some(writer)=self.writer.as_ref(){return if writer.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<semio_framework_job::RetainedJobPayloadWriter>>(),depth:1,..Default::default()})}else{let mut demand=writer.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"Host publication writer depth overflow"))?;Ok(demand)};}
+        Ok(self.original_source_demand())
+    }
+
+    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+        use semio_framework_job::InteractiveJobCloseStep as S;
+        let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return S::Refused{kind:error.kind,progress:error.retained_progress()}};
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return S::Pending{progress:Default::default()};}
+        if let Some(writer)=self.writer.as_mut(){
+            if writer.terminal_is_empty(){drop(self.writer.take());return S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}};}
+            return match writer.close_step(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}){Ok(step)=>S::Pending{progress:step.progress()},Err(error)=>S::Refused{kind:error.kind,progress:error.retained_progress()}};
         }
-        if self.source.is_empty() {
-            return semio_framework_job::InteractiveJobCloseStep::Complete;
-        }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        let released_bytes = maximum_bytes.min(self.source.len());
-        self.source.truncate(self.source.len() - released_bytes);
-        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes }
+        match self.close_original_source(grant){Ok(semio_framework_value::RetainedCloneStep::Progress(progress))=>S::Pending{progress},Ok(semio_framework_value::RetainedCloneStep::Complete(progress))=>S::Complete{progress},Err(error)=>S::Refused{kind:error.kind,progress:error.retained_progress()}}
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.writer.is_none() && self.source.is_empty()
+        self.writer.is_none() && self.source.is_empty() && self.source.capacity() == 0
     }
 }
+
+impl Drop for GuestRelayPublication{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Host publication abandoned original writer or source backing");if self.source.is_empty()&&self.source.capacity()==0{unsafe{std::mem::ManuallyDrop::drop(&mut self.source);}}}}
+#[cfg(test)]
+#[path="♻️publication/🧪️tests/🦀️.rs"]
+mod original_publication_source_tests;
 
 struct GuestColdRelayJob {
     runtime: Arc<GuestRuntimes>,
@@ -4660,13 +4805,10 @@ struct GuestColdRelayJob {
 }
 
 impl GuestColdRelayJob {
-    fn register_wake(&self, waker: &std::task::Waker) -> bool {
-        if let Some(slot) = self.pending.as_ref() {
-            slot.register_wake(waker);
-            false
-        } else {
-            true
-        }
+    fn original_close_demand(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        let Some(publication)=self.publication.as_ref()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Host relay runtime, Pool, completion and cancellation owners require native retirement"));};
+        if publication.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<GuestRelayPublication>>(),depth:1,..Default::default()});}
+        let mut demand=publication.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original Host relay publication depth overflow"))?;Ok(demand)
     }
 
     fn submit(&mut self, request: GuestRelayRequest) {
@@ -4797,77 +4939,28 @@ impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing {
-            self.begin_close();
-        }
-        if let Some(publication) = self.publication.as_mut() {
-            let step = publication.close_step(maximum_items, maximum_bytes);
-            if publication.terminal_is_empty() {
-                self.publication = None;
+    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+        use semio_framework_job::InteractiveJobCloseStep as S;
+        if !self.closing{self.begin_close();}
+        if let Some(publication)=self.publication.as_mut(){
+            if publication.terminal_is_empty(){
+                let bytes=std::mem::size_of::<Option<GuestRelayPublication>>();
+                if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth<1{return S::Pending{progress:Default::default()};}
+                drop(self.publication.take());return S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}};
             }
-            return step;
+            if grant.maximum_depth==0{return S::Pending{progress:Default::default()};}
+            return match publication.close_step(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}){S::Complete{progress}=>S::Pending{progress},step=>step};
         }
-        if let Some(slot) = &self.pending {
-            let Some(completion) = slot.try_take() else { return semio_framework_job::InteractiveJobCloseStep::Blocked };
-            self.pending = None;
-            self.publication = Some(match completion {
-                GuestRelayCompletion::Fault(bytes) => GuestRelayPublication::new(GuestRelayPublicationKind::Fault, bytes.into_source()),
-                GuestRelayCompletion::Rejected(bytes) | GuestRelayCompletion::TerminalFault(bytes) => {
-                    self.cleanup_required = false;
-                    GuestRelayPublication::new(GuestRelayPublicationKind::Fault, bytes.into_source())
-                }
-                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Running { progress: Some(bytes) })) => GuestRelayPublication::new(GuestRelayPublicationKind::Preview, bytes.into_source()),
-                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Done { output })) => GuestRelayPublication::new(GuestRelayPublicationKind::Commit, output.into_source()),
-                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Failed { error })) => GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.into_source()),
-                GuestRelayCompletion::Started(Err(error)) | GuestRelayCompletion::Stepped(Err(error)) => GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.to_string().into_bytes()),
-                GuestRelayCompletion::Cancelled => {
-                    self.cleanup_required = false;
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-                GuestRelayCompletion::Started(Ok(())) | GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Running { progress: None })) => {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-            });
-            self.publication.as_mut().expect("close retained relay publication").begin_close();
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let Some((kind, input)) = self.start.as_mut() {
-            if !input.is_empty() {
-                if maximum_items == 0 || maximum_bytes == 0 {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                let released_bytes = maximum_bytes.min(input.len());
-                input.truncate(input.len() - released_bytes);
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            if !kind.is_empty() {
-                if maximum_items == 0 || maximum_bytes < kind.len() {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                let released_bytes = kind.len();
-                kind.clear();
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            self.start = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if self.cleanup_required {
-            self.submit_cleanup();
-            return if self.pending.is_some() { semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { semio_framework_job::InteractiveJobCloseStep::Blocked };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        S::Refused{kind:semio_framework_value::ValueRefusalKind::UnsupportedOwner,progress:Default::default()}
     }
 
-    fn register_close_wake(&self, waker: &std::task::Waker) -> bool {
-        self.pending.as_ref().is_some_and(|slot| {
-            slot.register_wake(waker);
-            true
-        })
-    }
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.original_close_demand()?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.original_close_demand()?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.original_close_demand()?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.original_close_demand()?.depth)}
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && !self.cleanup_required && self.start.is_none() && self.pending.is_none() && self.publication.as_ref().is_none_or(GuestRelayPublication::terminal_is_empty)
+        false
     }
 }
 
@@ -4960,39 +5053,22 @@ impl semio_framework_job::InteractiveJob for GuestRelayLifecycleProbeJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.control.awake.load(std::sync::atomic::Ordering::Acquire) {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if self.remaining == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Complete;
-        }
-        if maximum_items == 0 || self.control.release_permits.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |permits| permits.checked_sub(1)).is_err() {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        self.remaining -= 1;
-        self.control.releases.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+        use semio_framework_job::InteractiveJobCloseStep as S;
+        if self.remaining==0{return S::Refused{kind:semio_framework_value::ValueRefusalKind::UnsupportedOwner,progress:Default::default()};}
+        if !self.control.awake.load(std::sync::atomic::Ordering::Acquire){return S::Blocked;}
+        let bytes=std::mem::size_of::<usize>();
+        if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth<1{return S::Pending{progress:Default::default()};}
+        if self.control.release_permits.try_update(std::sync::atomic::Ordering::AcqRel,std::sync::atomic::Ordering::Acquire,|permits|permits.checked_sub(1)).is_err(){return S::Blocked;}
+        self.remaining-=1;self.control.releases.fetch_add(1,std::sync::atomic::Ordering::SeqCst);
+        S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}}
     }
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if self.remaining==0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original lifecycle control Arc, wake and output owners require native retirement"));}Ok(std::mem::size_of::<usize>())}
+    fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{self.next_close_copy_byte_demand().map(|_|0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.next_close_copy_byte_demand().map(|_|0)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.next_close_copy_byte_demand().map(|_|1)}
 
-    fn register_close_wake(&self, waker: &std::task::Waker) -> bool {
-        let ready = || self.control.awake.load(std::sync::atomic::Ordering::Acquire) && (self.remaining == 0 || self.control.release_permits.load(std::sync::atomic::Ordering::Acquire) > 0);
-        if ready() {
-            waker.wake_by_ref();
-            return true;
-        }
-        *self.control.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(waker.clone());
-        if ready() {
-            if let Some(waker) = self.control.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-                waker.wake();
-            }
-        }
-        true
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.remaining == 0
-    }
+    fn terminal_is_empty(&self)->bool{false}
 }
 
 #[expect(clippy::large_enum_variant, reason = "Failed worker admission must retain the exact job and credits for bounded retirement without allocating on rejection.")]
@@ -5003,7 +5079,26 @@ enum GuestRelayMountedOwner {
     Empty,
 }
 
+/// 🧾️ Preserves the exact original embedding policy and native wake effect before another child runs.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct GuestRelayWakeReceipt{pub epoch:u64,pub slot:usize,pub generation:u64,pub grant:semio_framework_value::retained_clone::RetainedCloneGrant,pub progress:semio_framework_value::retained_clone::RetainedCloneProgress}
+/// 📥️ The original embedding debits or retains a borrowed full receipt before admitting its successor.
+pub trait GuestRelayWakeReceiptReceiver:Send+Sync{fn checkout(&self,slot:usize,generation:u64)->Result<Option<GuestRelayWakeTurnGrant>,semio_framework_value::ValueError>;fn collect(&self,receipt:&GuestRelayWakeReceipt)->Result<bool,semio_framework_value::ValueError>;}
+/// 🚦️ Required first-party issuer and receipt receiver belong to the actual Host embedding.
+#[derive(Clone)]
+pub struct GuestRelayWakeAuthority{pub drive_policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub issuer:semio_framework_job::OriginalWorkerWakeIssuer,pub receiver:Arc<dyn GuestRelayWakeReceiptReceiver>}
+#[path="🔔️wake/🦀️.rs"]
+mod original_wake_receipts;
+pub use original_wake_receipts::{GuestRelayWakeReceiptLedger,GuestRelayWakeTurnGrant,GuestRelayWakeTurnReceipt};
+#[cfg(test)]
+#[global_allocator]
+static HOST_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+struct GuestRelayWakeCustody{original:std::mem::ManuallyDrop<Option<Box<dyn semio_framework_job::RetainedWorkerWake>>>,receipt:Option<GuestRelayWakeReceipt>,registered:bool,refusal:Option<semio_framework_value::ValueRefusalKind>}
+impl GuestRelayWakeCustody{fn new()->Self{Self{original:std::mem::ManuallyDrop::new(None),receipt:None,registered:false,refusal:None}}}
+impl Drop for GuestRelayWakeCustody{fn drop(&mut self){assert!(std::thread::panicking()||(self.original.is_none()&&self.receipt.is_none()),"mounted relay abandoned original wake frame or receipt");if self.original.is_none(){unsafe{std::mem::ManuallyDrop::drop(&mut self.original);}}}}
+
 struct GuestRelayMountedSession {
+    wake:GuestRelayWakeCustody,
     generation: u64,
     owner: GuestRelayMountedOwner,
     checked_out: Option<semio_framework_job::WorkerJobOutcome<GuestColdRelayJob>>,
@@ -5072,6 +5167,7 @@ enum GuestRelayMountedSlot {
 }
 
 struct GuestRelayMountedRegistry {
+    wake_authority:GuestRelayWakeAuthority,
     slots: Box<[Mutex<GuestRelayMountedSlot>]>,
     next_generation: std::sync::atomic::AtomicU64,
     pool: WorkerPool,
@@ -5089,12 +5185,13 @@ struct GuestRelayMountedRegistry {
 }
 
 impl GuestRelayMountedRegistry {
-    fn new() -> Self {
-        Self::with_pool(plugin_host_worker_pool())
+    fn new(wake_authority:GuestRelayWakeAuthority) -> Self {
+        Self::with_pool(plugin_host_worker_pool(),wake_authority)
     }
 
-    fn with_pool(pool: WorkerPool) -> Self {
+    fn with_pool(pool: WorkerPool,wake_authority:GuestRelayWakeAuthority) -> Self {
         Self {
+            wake_authority,
             slots: std::iter::repeat_with(|| Mutex::new(GuestRelayMountedSlot::Empty)).take(GUEST_RELAY_MOUNTED_SLOTS).collect(),
             next_generation: std::sync::atomic::AtomicU64::new(1),
             pool,
@@ -5110,6 +5207,44 @@ impl GuestRelayMountedRegistry {
             #[cfg(test)]
             reaper_wake_waits: std::sync::atomic::AtomicUsize::new(0),
         }
+    }
+
+    fn checkout_original_wake(&self,wake:&mut GuestRelayWakeCustody,index:usize,generation:u64)->Option<GuestRelayWakeTurnGrant>{
+        let mut context=match self.wake_authority.receiver.checkout(index,generation){Ok(context)=>context?,Err(error)=>{wake.refusal=Some(error.kind);return None}};let policy=self.wake_authority.policy;
+        context.grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:context.grant.maximum_items.min(policy.maximum_items),maximum_copy_bytes:context.grant.maximum_copy_bytes.min(policy.maximum_copy_bytes),maximum_capacity_bytes:context.grant.maximum_capacity_bytes.min(policy.maximum_capacity_bytes),maximum_release_bytes:context.grant.maximum_release_bytes.min(policy.maximum_release_bytes),maximum_depth:context.grant.maximum_depth.min(policy.maximum_depth)};Some(context)
+    }
+
+    fn collect_original_wake_receipt(&self,wake:&mut GuestRelayWakeCustody)->bool{
+        let Some(receipt)=wake.receipt.as_ref()else{return true};
+        match self.wake_authority.receiver.collect(receipt){Ok(true)=>{wake.receipt=None;true},Ok(false)=>false,Err(error)=>{wake.refusal=Some(error.kind);false}}
+    }
+
+    fn admit_original_session_wake<J:semio_framework_job::InteractiveJob+'static>(&self,owner:&semio_framework_job::WorkerJobSession<J>,wake:&mut GuestRelayWakeCustody,index:usize,generation:u64,waker:&std::task::Waker)->bool{
+        if !self.collect_original_wake_receipt(wake){return false}
+        if wake.registered{return true}
+        let Some(context)=self.checkout_original_wake(wake,index,generation)else{return false};let grant=context.grant;let epoch=context.epoch;
+        if wake.original.is_some(){
+            match owner.register_retained_wake(&mut wake.original,grant){
+                Ok(Some(progress))=>{assert!(progress.fits(grant),"original mounted wake registration exceeded supplied authority");wake.receipt=Some(GuestRelayWakeReceipt{epoch,slot:index,generation,grant,progress});wake.registered=true;waker.wake_by_ref();},
+                Ok(None)|Err(_)=>{wake.receipt=Some(GuestRelayWakeReceipt{epoch,slot:index,generation,grant,progress:Default::default()});}
+            }
+            self.collect_original_wake_receipt(wake);return false;
+        }
+        match (self.wake_authority.issuer)(waker,grant){
+            Ok(Some((original,progress)))=>{assert!(progress.fits(grant),"original mounted wake issuer exceeded supplied authority");*wake.original=Some(original);wake.receipt=Some(GuestRelayWakeReceipt{epoch,slot:index,generation,grant,progress});wake.refusal=None;wake.original.as_ref().unwrap().wake_by_ref();},
+            Ok(None)=>{wake.receipt=Some(GuestRelayWakeReceipt{epoch,slot:index,generation,grant,progress:Default::default()});},
+            Err(error)=>{wake.refusal=Some(error.kind);let progress=error.retained_progress();wake.receipt=Some(GuestRelayWakeReceipt{epoch,slot:index,generation,grant,progress});}
+        }
+        self.collect_original_wake_receipt(wake);false
+    }
+
+    fn close_original_wake(&self,wake:&mut GuestRelayWakeCustody,index:usize,generation:u64)->GuestRelayMountedReap{
+        if !self.collect_original_wake_receipt(wake){return GuestRelayMountedReap::Blocked{wake_registered:false}}
+        if wake.original.is_none(){return GuestRelayMountedReap::Idle};let Some(context)=self.checkout_original_wake(wake,index,generation)else{return GuestRelayMountedReap::Blocked{wake_registered:false}};let grant=context.grant;let epoch=context.epoch;let original=wake.original.as_mut().unwrap();
+        let terminal=original.terminal_is_empty();let demand=if terminal{semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<Box<dyn semio_framework_job::RetainedWorkerWake>>>(),release_bytes:original.frame_release_bytes(),depth:1,..Default::default()}}else{match original.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>{wake.refusal=Some(error.kind);wake.receipt=Some(GuestRelayWakeReceipt{epoch,slot:index,generation,grant,progress:error.retained_progress()});self.collect_original_wake_receipt(wake);return GuestRelayMountedReap::Blocked{wake_registered:false}}}};
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{wake.receipt=Some(GuestRelayWakeReceipt{epoch,slot:index,generation,grant,progress:Default::default()});self.collect_original_wake_receipt(wake);return GuestRelayMountedReap::Blocked{wake_registered:false}}
+        let progress=if terminal{drop(wake.original.take());semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}}else{match original.close_step(grant){Ok(step)=>step.progress(),Err(error)=>{wake.refusal=Some(error.kind);error.retained_progress()}}};
+        assert!(progress.fits(grant),"original mounted wake close exceeded supplied authority");wake.receipt=Some(GuestRelayWakeReceipt{epoch,slot:index,generation,grant,progress});let collected=self.collect_original_wake_receipt(wake);if !collected||progress==Default::default(){GuestRelayMountedReap::Blocked{wake_registered:false}}else{GuestRelayMountedReap::Progress}
     }
 
     fn reserve(&self) -> Option<(usize, u64)> {
@@ -5149,15 +5284,11 @@ impl GuestRelayMountedRegistry {
             *slot = GuestRelayMountedSlot::Reserved { generation: reserved_generation, output };
             return;
         }
-        if self.reaper_failed.load(std::sync::atomic::Ordering::Acquire) {
-            if let GuestRelayMountedOwner::Rejected(rejected) = &mut owner {
-                Self::close_rejected(rejected);
-            }
-            drop(owner);
-            return;
+        if self.reaper_failed.load(std::sync::atomic::Ordering::Acquire){
+            if let GuestRelayMountedOwner::Rejected(rejected)=&mut owner{Self::close_rejected(rejected);}
         }
         *slot =
-            GuestRelayMountedSlot::Mounted(GuestRelayMountedSession { generation, owner, checked_out: None, lifecycle_probe_checked_out: None, outcome: None, outcome_page: 0, output, terminal: None, lifecycle: GuestRelayMountedLifecycle::Running });
+            GuestRelayMountedSlot::Mounted(GuestRelayMountedSession { wake:GuestRelayWakeCustody::new(), generation, owner, checked_out: None, lifecycle_probe_checked_out: None, outcome: None, outcome_page: 0, output, terminal: None, lifecycle: GuestRelayMountedLifecycle::Running });
     }
 
     fn detach(self: &Arc<Self>, index: usize, generation: u64) {
@@ -5214,37 +5345,11 @@ impl GuestRelayMountedRegistry {
     }
 
     fn fail_detached(&self) {
-        for slot in &self.slots {
-            let retired = {
-                let mut slot = slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                let GuestRelayMountedSlot::Mounted(session) = &mut *slot else { continue };
-                if !matches!(session.lifecycle, GuestRelayMountedLifecycle::DetachedForReap) {
-                    continue;
-                }
-                if matches!(session.owner, GuestRelayMountedOwner::Rejected(_)) {
-                    let GuestRelayMountedOwner::Rejected(rejected) = &mut session.owner else { unreachable!() };
-                    Self::close_rejected(rejected);
-                    if rejected.terminal_is_empty() {
-                        session.owner = GuestRelayMountedOwner::Empty;
-                    }
-                    if matches!(session.owner, GuestRelayMountedOwner::Rejected(_)) {
-                        continue;
-                    }
-                }
-                Some(std::mem::replace(&mut *slot, GuestRelayMountedSlot::Empty))
-            };
-            drop(retired);
-        }
+        self.reaper_failed.store(true,std::sync::atomic::Ordering::Release);
     }
 
-    fn close_rejected(owner: &mut semio_framework_job::WorkerJobSessionAdmissionRejected<GuestColdRelayJob>) {
+    fn close_rejected(owner:&mut semio_framework_job::WorkerJobSessionAdmissionRejected<GuestColdRelayJob>){
         owner.begin_close();
-        for _ in 0..semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES.saturating_add(8) {
-            if owner.terminal_is_empty() {
-                return;
-            }
-            let _ = owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-        }
     }
 
     fn reap_one(&self, waker: &std::task::Waker) -> GuestRelayMountedReap {
@@ -5257,7 +5362,8 @@ impl GuestRelayMountedRegistry {
                 continue;
             }
             self.reaper_cursor.store((index + 1) % GUEST_RELAY_MOUNTED_SLOTS, std::sync::atomic::Ordering::Release);
-            return match Self::pump_close(session, Some(waker)) {
+            match self.close_original_wake(&mut session.wake,index,session.generation){GuestRelayMountedReap::Idle=>{},step=>return step}
+            return match self.pump_close(session,index,Some(waker)) {
                 GuestRelayMountedClose::Complete => {
                     *slot = GuestRelayMountedSlot::Empty;
                     GuestRelayMountedReap::Progress
@@ -5303,64 +5409,51 @@ impl GuestRelayMountedRegistry {
         })
     }
 
-    fn pump_close(session: &mut GuestRelayMountedSession, waker: Option<&std::task::Waker>) -> GuestRelayMountedClose {
-        if let Some(outcome) = session.outcome.as_mut() {
-            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            if outcome.terminal_is_empty() {
-                session.outcome = None;
+    fn pump_close(&self,session:&mut GuestRelayMountedSession,index:usize,_waker:Option<&std::task::Waker>)->GuestRelayMountedClose{
+        use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
+        if !self.collect_original_wake_receipt(&mut session.wake){return GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered};}
+        let Some(context)=self.checkout_original_wake(&mut session.wake,index,session.generation)else{return GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered};};
+        let grant=context.grant;
+        let metadata=|copy_bytes|RetirementDemand{copy_bytes,depth:1,..Default::default()};
+        let demand:Result<RetirementDemand,ValueError>=(||{
+            if let Some(outcome)=session.outcome.as_ref(){return if outcome.terminal_is_empty(){Ok(metadata(std::mem::size_of::<Option<semio_framework_job::StepOutcome>>()))}else{outcome.retirement_demands()};}
+            if session.checked_out.is_some(){return Ok(metadata(std::mem::size_of::<Option<semio_framework_job::WorkerJobOutcome<GuestColdRelayJob>>>()));}
+            if session.lifecycle_probe_checked_out.is_some(){return Ok(metadata(std::mem::size_of::<Option<semio_framework_job::WorkerJobOutcome<GuestRelayLifecycleProbeJob>>>()));}
+            let map=|error|match error{semio_framework_job::WorkerJobDemandError::Refused(error)=>error,semio_framework_job::WorkerJobDemandError::Contention(_)=>ValueError::literal(ValueRefusalKind::WorkLimit,"original Host close owner is checked out")};
+            match &session.owner{
+                GuestRelayMountedOwner::Session(owner)=>if owner.terminal_is_empty(){Ok(metadata(std::mem::size_of::<GuestRelayMountedOwner>()))}else{owner.retirement_demands(grant.maximum_copy_bytes).map_err(map)},
+                GuestRelayMountedOwner::LifecycleProbe(owner)=>if owner.terminal_is_empty(){Ok(metadata(std::mem::size_of::<GuestRelayMountedOwner>()))}else{owner.retirement_demands(grant.maximum_copy_bytes).map_err(map)},
+                GuestRelayMountedOwner::Rejected(owner)=>if owner.terminal_is_empty(){Ok(metadata(std::mem::size_of::<GuestRelayMountedOwner>()))}else{owner.retirement_demands(grant.maximum_copy_bytes)},
+                GuestRelayMountedOwner::Empty=>Ok(Default::default()),
             }
-            return GuestRelayMountedClose::Pending;
-        }
-        if let Some(owner) = session.checked_out.take() {
-            owner.begin_close();
-            return GuestRelayMountedClose::Pending;
-        }
-        if let Some(owner) = session.lifecycle_probe_checked_out.take() {
-            owner.begin_close();
-            return GuestRelayMountedClose::Pending;
-        }
-        match &mut session.owner {
-            GuestRelayMountedOwner::Session(owner) => match owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-                semio_framework_job::WorkerJobCloseStep::Complete => {
-                    session.owner = GuestRelayMountedOwner::Empty;
-                    GuestRelayMountedClose::Complete
-                }
-                semio_framework_job::WorkerJobCloseStep::Pending { .. } => GuestRelayMountedClose::Pending,
-                semio_framework_job::WorkerJobCloseStep::Blocked => {
-                    let wake_registered = waker.is_some_and(|waker| owner.register_close_wake(waker).unwrap_or(false));
-                    GuestRelayMountedClose::Blocked { wake_registered }
-                }
-            },
-            GuestRelayMountedOwner::Rejected(owner) => {
-                owner.begin_close();
-                let step = owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                if owner.terminal_is_empty() {
-                    session.owner = GuestRelayMountedOwner::Empty;
-                    GuestRelayMountedClose::Complete
-                } else {
-                    match step {
-                        semio_framework_job::InteractiveJobCloseStep::Pending { .. } => GuestRelayMountedClose::Pending,
-                        semio_framework_job::InteractiveJobCloseStep::Blocked => {
-                            let wake_registered = waker.is_some_and(|waker| semio_framework_job::InteractiveJob::register_close_wake(owner.job(), waker));
-                            GuestRelayMountedClose::Blocked { wake_registered }
-                        }
-                        semio_framework_job::InteractiveJobCloseStep::Complete => GuestRelayMountedClose::Pending,
-                    }
+        })();
+        let mut progress=RetainedCloneProgress::default();
+        let result=match demand{
+            Err(error)=>{session.wake.refusal=Some(error.kind);GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},
+            Ok(demand)if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth=>GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered},
+            Ok(demand)=>{
+                if let Some(outcome)=session.outcome.as_mut(){
+                    if outcome.terminal_is_empty(){drop(session.outcome.take());progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};}
+                    else{match outcome.close_step(grant){Ok(step)=>progress=step.progress(),Err(error)=>{session.wake.refusal=Some(error.kind);progress=error.retained_progress();}}}
+                    GuestRelayMountedClose::Pending
+                }else if let Some(owner)=session.checked_out.take(){owner.begin_close();progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};GuestRelayMountedClose::Pending}
+                else if let Some(owner)=session.lifecycle_probe_checked_out.take(){owner.begin_close();progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};GuestRelayMountedClose::Pending}
+                else{
+                    let terminal=match &session.owner{GuestRelayMountedOwner::Session(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::LifecycleProbe(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Rejected(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Empty=>false};
+                    if terminal{session.owner=GuestRelayMountedOwner::Empty;progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};GuestRelayMountedClose::Pending}
+                    else{match &mut session.owner{
+                        GuestRelayMountedOwner::Session(owner)=>match owner.close_step(grant){semio_framework_job::WorkerJobCloseStep::Complete{progress:p}|semio_framework_job::WorkerJobCloseStep::Pending{progress:p}=>{progress=p;GuestRelayMountedClose::Pending},semio_framework_job::WorkerJobCloseStep::Refused{kind,progress:p}=>{session.wake.refusal=Some(kind);progress=p;GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},semio_framework_job::WorkerJobCloseStep::Blocked=>GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},
+                        GuestRelayMountedOwner::LifecycleProbe(owner)=>match owner.close_step(grant){semio_framework_job::WorkerJobCloseStep::Complete{progress:p}|semio_framework_job::WorkerJobCloseStep::Pending{progress:p}=>{progress=p;GuestRelayMountedClose::Pending},semio_framework_job::WorkerJobCloseStep::Refused{kind,progress:p}=>{session.wake.refusal=Some(kind);progress=p;GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},semio_framework_job::WorkerJobCloseStep::Blocked=>GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},
+                        GuestRelayMountedOwner::Rejected(owner)=>match owner.close_step(grant){semio_framework_job::InteractiveJobCloseStep::Complete{progress:p}|semio_framework_job::InteractiveJobCloseStep::Pending{progress:p}=>{progress=p;GuestRelayMountedClose::Pending},semio_framework_job::InteractiveJobCloseStep::Refused{kind,progress:p}=>{session.wake.refusal=Some(kind);progress=p;GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},semio_framework_job::InteractiveJobCloseStep::Blocked=>GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},
+                        GuestRelayMountedOwner::Empty=>{session.wake.refusal=Some(ValueRefusalKind::UnsupportedOwner);GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},
+                    }}
                 }
             }
-            GuestRelayMountedOwner::LifecycleProbe(owner) => match owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-                semio_framework_job::WorkerJobCloseStep::Complete => {
-                    session.owner = GuestRelayMountedOwner::Empty;
-                    GuestRelayMountedClose::Complete
-                }
-                semio_framework_job::WorkerJobCloseStep::Pending { .. } => GuestRelayMountedClose::Pending,
-                semio_framework_job::WorkerJobCloseStep::Blocked => {
-                    let wake_registered = waker.is_some_and(|waker| owner.register_close_wake(waker).unwrap_or(false));
-                    GuestRelayMountedClose::Blocked { wake_registered }
-                }
-            },
-            GuestRelayMountedOwner::Empty => GuestRelayMountedClose::Complete,
-        }
+        };
+        if !progress.fits(grant){session.wake.refusal=Some(ValueRefusalKind::InvariantViolated);}
+        session.wake.receipt=Some(GuestRelayWakeReceipt{epoch:context.epoch,slot:index,generation:session.generation,grant,progress});
+        if !self.collect_original_wake_receipt(&mut session.wake){return GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered};}
+        result
     }
 
     fn outcome_payload(outcome: &semio_framework_job::StepOutcome) -> Option<&semio_framework_job::RetainedJobPayload> {
@@ -5374,45 +5467,6 @@ impl GuestRelayMountedRegistry {
         }
     }
 
-    fn finish_outcome(session: &mut GuestRelayMountedSession, waker: &std::task::Waker) {
-        let terminal = session.outcome.as_ref().is_some_and(semio_framework_job::StepOutcome::is_terminal);
-        if terminal {
-            let outcome = session.outcome.take().expect("terminal relay outcome remains owned");
-            session.terminal = Some(match outcome {
-                semio_framework_job::StepOutcome::Complete(_) => GuestRelayMountedTerminal::Complete,
-                semio_framework_job::StepOutcome::Cancelled => GuestRelayMountedTerminal::Cancelled,
-                semio_framework_job::StepOutcome::Fault(_) => GuestRelayMountedTerminal::Fault,
-                _ => unreachable!("terminal relay classification remains stable"),
-            });
-            if let Some(owner) = session.checked_out.take() {
-                owner.begin_close();
-            } else {
-                session.lifecycle_probe_checked_out.take().expect("terminal relay owner remains checked out").begin_close();
-            }
-            session.lifecycle = GuestRelayMountedLifecycle::DrainingForCaller;
-            waker.wake_by_ref();
-        } else {
-            session.outcome = None;
-            if let Some(owner) = session.checked_out.take() {
-                let wake_after_resume = owner.job().register_wake(waker);
-                if let Err(owner) = owner.resume() {
-                    owner.begin_close();
-                    session.terminal = Some(GuestRelayMountedTerminal::HostFault(PluginHostError::Plugin("plugin cold relay resume rejected".into())));
-                    session.lifecycle = GuestRelayMountedLifecycle::DrainingForCaller;
-                } else if wake_after_resume {
-                    waker.wake_by_ref();
-                }
-            } else {
-                let owner = session.lifecycle_probe_checked_out.take().expect("resumable relay owner remains checked out");
-                if let Err(owner) = owner.resume() {
-                    owner.begin_close();
-                    session.terminal = Some(GuestRelayMountedTerminal::HostFault(PluginHostError::Plugin("plugin relay lifecycle probe resume rejected".into())));
-                    session.lifecycle = GuestRelayMountedLifecycle::DrainingForCaller;
-                }
-            }
-        }
-    }
-
     fn pump(self: &Arc<Self>, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
         let mut slot = self.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let GuestRelayMountedSlot::Mounted(session) = &mut *slot else {
@@ -5421,11 +5475,15 @@ impl GuestRelayMountedRegistry {
         if session.generation != generation {
             return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay generation is stale".into())));
         }
+        if matches!(session.lifecycle,GuestRelayMountedLifecycle::Running){
+            let admitted=match &session.owner{GuestRelayMountedOwner::Session(owner)=>self.admit_original_session_wake(owner,&mut session.wake,index,generation,waker),GuestRelayMountedOwner::LifecycleProbe(owner)=>self.admit_original_session_wake(owner,&mut session.wake,index,generation,waker),GuestRelayMountedOwner::Rejected(_)|GuestRelayMountedOwner::Empty=>true};
+            if !admitted{return std::task::Poll::Pending}
+        }else if !self.collect_original_wake_receipt(&mut session.wake){return std::task::Poll::Pending}
         if matches!(session.lifecycle, GuestRelayMountedLifecycle::DetachedForReap) {
             return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay ownership is detached".into())));
         }
         if matches!(session.lifecycle, GuestRelayMountedLifecycle::DrainingForCaller) {
-            match Self::pump_close(session, Some(waker)) {
+            match self.pump_close(session,index,Some(waker)) {
                 GuestRelayMountedClose::Complete => {
                     let mounted = std::mem::replace(&mut *slot, GuestRelayMountedSlot::Empty);
                     let GuestRelayMountedSlot::Mounted(mut session) = mounted else { unreachable!("mounted relay slot remains mounted through close") };
@@ -5444,33 +5502,22 @@ impl GuestRelayMountedRegistry {
             }
             return std::task::Poll::Pending;
         }
-        if let Some(outcome) = session.outcome.as_mut() {
-            if let Some(payload) = Self::outcome_payload(outcome) {
-                if let Some(page) = payload.page(session.outcome_page) {
-                    if matches!(outcome, semio_framework_job::StepOutcome::Complete(_) | semio_framework_job::StepOutcome::Fault(_)) {
-                        if let Err(error) = session.output.write_page(page) {
-                            session.terminal = Some(GuestRelayMountedTerminal::HostFault(error));
-                            if let Some(owner) = session.checked_out.take() {
-                                owner.begin_close();
-                            } else {
-                                session.lifecycle_probe_checked_out.take().expect("faulted relay output retains its checked-out owner").begin_close();
-                            }
-                            session.lifecycle = GuestRelayMountedLifecycle::DrainingForCaller;
-                        }
-                    }
-                    session.outcome_page += 1;
+        if session.outcome.is_some(){
+            if session.outcome.as_ref().is_some_and(semio_framework_job::StepOutcome::terminal_is_empty){session.wake.refusal=Some(semio_framework_value::ValueRefusalKind::UnsupportedOwner);return std::task::Poll::Pending;}
+            let Some(context)=self.checkout_original_wake(&mut session.wake,index,generation)else{return std::task::Poll::Pending;};
+            let grant=context.grant;let outcome=session.outcome.as_mut().unwrap();let page=Self::outcome_payload(outcome).and_then(|payload|payload.page(session.outcome_page));
+            let mut progress=semio_framework_value::RetainedCloneProgress::default();
+            if let Some(page)=page{
+                let bytes=page.len()+2*std::mem::size_of::<usize>();
+                if grant.maximum_items>0&&grant.maximum_copy_bytes>=bytes&&grant.maximum_depth>0&&session.output.length.checked_add(page.len()).is_some_and(|length|length<=semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES){
+                    if matches!(outcome,semio_framework_job::StepOutcome::Complete(_)|semio_framework_job::StepOutcome::Fault(_)){session.output.write_page(page).expect("original output capacity was admitted before page effects");}
+                    session.outcome_page+=1;progress=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};
                 }
+            }else{
+                match outcome.close_step(grant){Ok(step)=>progress=step.progress(),Err(error)=>{session.wake.refusal=Some(error.kind);progress=error.retained_progress();}}
             }
-            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            if matches!(session.lifecycle, GuestRelayMountedLifecycle::DrainingForCaller) {
-                waker.wake_by_ref();
-                return std::task::Poll::Pending;
-            }
-            if outcome.terminal_is_empty() {
-                Self::finish_outcome(session, waker);
-            } else {
-                waker.wake_by_ref();
-            }
+            session.wake.receipt=Some(GuestRelayWakeReceipt{epoch:context.epoch,slot:index,generation,grant,progress});self.collect_original_wake_receipt(&mut session.wake);
+            if progress.copied_items>0{waker.wake_by_ref();}
             return std::task::Poll::Pending;
         }
         if let GuestRelayMountedOwner::LifecycleProbe(owner) = &session.owner {
@@ -5490,23 +5537,12 @@ impl GuestRelayMountedRegistry {
                     waker.wake_by_ref();
                 }
                 Ok(_) => {}
-                Err(_) => {
-                    let _ = owner.register_wake(waker);
-                }
+                Err(_) => {}
             }
             return std::task::Poll::Pending;
         }
-        let GuestRelayMountedOwner::Session(owner) = &session.owner else {
-            if let GuestRelayMountedOwner::Rejected(rejected) = &mut session.owner {
-                rejected.begin_close();
-                let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                if rejected.terminal_is_empty() {
-                    session.owner = GuestRelayMountedOwner::Empty;
-                    *slot = GuestRelayMountedSlot::Empty;
-                    return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay admission rejected".into())));
-                }
-            }
-            waker.wake_by_ref();
+        let GuestRelayMountedOwner::Session(owner)=&session.owner else{
+            if matches!(session.owner,GuestRelayMountedOwner::Rejected(_)){let _=self.pump_close(session,index,Some(waker));}
             return std::task::Poll::Pending;
         };
         match owner.try_step_on_caller() {
@@ -5514,7 +5550,6 @@ impl GuestRelayMountedRegistry {
                 let checked = owner.take_outcome(ticket).map_err(|_| PluginHostError::Plugin("plugin cold relay outcome unavailable".into()));
                 match checked {
                     Ok(mut checked) => {
-                        let _ = checked.job().register_wake(waker);
                         session.outcome = Some(checked.take_outcome());
                         session.checked_out = Some(checked);
                         session.outcome_page = 0;
@@ -5533,9 +5568,7 @@ impl GuestRelayMountedRegistry {
                 Err(_) => return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay terminal unavailable".into()))),
             },
             Ok(_) => {}
-            Err(_) => {
-                let _ = owner.register_wake(waker);
-            }
+            Err(_) => {}
         };
         std::task::Poll::Pending
     }
@@ -5650,13 +5683,14 @@ fn guest_relay_lifecycle_wait(pool: &WorkerPool, mut ready: impl FnMut() -> bool
     Err(detail.to_string())
 }
 
-fn guest_relay_lifecycle_probe_session(control: &Arc<GuestRelayLifecycleProbeControl>, generation: u64, terminal_output: Option<Vec<u8>>, remaining: usize) -> Result<semio_framework_job::WorkerJobSession<GuestRelayLifecycleProbeJob>, String> {
+fn guest_relay_lifecycle_probe_session(control: &Arc<GuestRelayLifecycleProbeControl>, generation: u64, terminal_output: Option<Vec<u8>>, remaining: usize, retained:semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_job::WorkerJobSession<GuestRelayLifecycleProbeJob>, String> {
     let job = GuestRelayLifecycleProbeJob { control: Arc::clone(control), remaining, terminal_output, closing: false };
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(generation),
         generation: semio_framework_job::Generation(generation),
         cancel: semio_framework_job::root_cancel_token(),
         config: semio_framework_job::BatchDriveConfig {
+            retained,
             site: "plugin-host.relay-lifecycle",
             stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
             fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
@@ -5669,24 +5703,18 @@ fn guest_relay_lifecycle_probe_session(control: &Arc<GuestRelayLifecycleProbeCon
         control.wake();
         control.release_one();
         control.release_one();
-        for _ in 0..64 {
-            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            if rejected.terminal_is_empty() {
-                break;
-            }
-        }
         "relay lifecycle probe admission refused".to_string()
     })
 }
 
-fn exercise_abandoned_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Result<GuestRelayLifecycleProjection, String> {
+fn exercise_abandoned_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace,wake_authority:GuestRelayWakeAuthority) -> Result<GuestRelayLifecycleProjection, String> {
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
     let result = (|| {
-        let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone()));
+        let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone(),wake_authority.clone()));
         registry.next_generation.store(trace.generation, std::sync::atomic::Ordering::Release);
         let (index, generation) = registry.reserve().ok_or_else(|| "relay lifecycle slot unavailable".to_string())?;
         let control = Arc::new(GuestRelayLifecycleProbeControl::new());
-        let session = guest_relay_lifecycle_probe_session(&control, generation, None, 2)?;
+        let session = guest_relay_lifecycle_probe_session(&control, generation, None, 2,wake_authority.drive_policy)?;
         registry.mount(index, generation, GuestRelayMountedOwner::LifecycleProbe(session));
         let mut first_reason = None;
         for event in &trace.events {
@@ -5720,10 +5748,10 @@ fn exercise_abandoned_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) ->
     result.and_then(|projection| shutdown.map(|()| projection))
 }
 
-fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Result<GuestRelayLifecycleProjection, String> {
+fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace,wake_authority:GuestRelayWakeAuthority) -> Result<GuestRelayLifecycleProjection, String> {
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
     let result = (|| {
-        let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone()));
+        let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone(),wake_authority.clone()));
         registry.next_generation.store(trace.generation, std::sync::atomic::Ordering::Release);
         let (index, generation) = registry.reserve().ok_or_else(|| "relay lifecycle slot unavailable".to_string())?;
         let mut first_reason = None;
@@ -5733,7 +5761,7 @@ fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Resu
             if let Some(output) = event.strip_prefix("terminal:") {
                 let control = Arc::new(GuestRelayLifecycleProbeControl::new());
                 control.wake();
-                let session = guest_relay_lifecycle_probe_session(&control, generation, Some(output.as_bytes().to_vec()), 0)?;
+                let session = guest_relay_lifecycle_probe_session(&control, generation, Some(output.as_bytes().to_vec()), 0,wake_authority.drive_policy)?;
                 registry.mount(index, generation, GuestRelayMountedOwner::LifecycleProbe(session));
                 for _ in 0..256 {
                     let _ = registry.pump(index, generation, std::task::Waker::noop());
@@ -5750,7 +5778,7 @@ fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Resu
             } else if event == "reap-other" {
                 let control = Arc::new(GuestRelayLifecycleProbeControl::new());
                 let (other_index, other_generation) = registry.reserve().ok_or_else(|| "relay lifecycle competing slot unavailable".to_string())?;
-                let session = guest_relay_lifecycle_probe_session(&control, other_generation, None, 2)?;
+                let session = guest_relay_lifecycle_probe_session(&control, other_generation, None, 2,wake_authority.drive_policy)?;
                 registry.mount(other_index, other_generation, GuestRelayMountedOwner::LifecycleProbe(session));
                 registry.detach(other_index, other_generation);
                 guest_relay_lifecycle_wait(&pool, || control.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(), "relay lifecycle competing reaper did not park")?;
@@ -5786,10 +5814,10 @@ fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Resu
     result.and_then(|projection| shutdown.map(|()| projection))
 }
 
-fn exercise_stale_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Result<GuestRelayLifecycleProjection, String> {
+fn exercise_stale_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace,wake_authority:GuestRelayWakeAuthority) -> Result<GuestRelayLifecycleProjection, String> {
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
     let result = (|| {
-        let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone()));
+        let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone(),wake_authority.clone()));
         registry.next_generation.store(trace.generation, std::sync::atomic::Ordering::Release);
         let (index, generation) = registry.reserve().ok_or_else(|| "relay lifecycle slot unavailable".to_string())?;
         registry.mount(index, generation, GuestRelayMountedOwner::Empty);
@@ -5813,9 +5841,9 @@ fn exercise_stale_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Res
     result.and_then(|projection| shutdown.map(|()| projection))
 }
 
-fn exercise_capacity_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> Result<GuestRelayLifecycleProjection, String> {
+fn exercise_capacity_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace,wake_authority:GuestRelayWakeAuthority) -> Result<GuestRelayLifecycleProjection, String> {
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
-    let registry = GuestRelayMountedRegistry::with_pool(pool.clone());
+    let registry = GuestRelayMountedRegistry::with_pool(pool.clone(),wake_authority.clone());
     registry.next_generation.store(trace.generation, std::sync::atomic::Ordering::Release);
     let mut reserved = Vec::new();
     let mut state = "Empty";
@@ -5840,17 +5868,17 @@ fn exercise_capacity_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace) -> 
 
 /// 🧪️ Drives one schema-owned lifecycle trace through the production replay or mounted-relay transition machinery.
 #[doc(hidden)]
-pub fn exercise_relay_lifecycle_trace(trace_json: &str) -> Result<String, String> {
+pub fn exercise_relay_lifecycle_trace(trace_json: &str,wake_authority:GuestRelayWakeAuthority) -> Result<String, String> {
     let trace: GuestRelayLifecycleTrace = serde_json::from_str(trace_json).map_err(|error| format!("invalid relay lifecycle trace: {error}"))?;
     let projection = match (trace.id.as_str(), trace.machine.as_str(), trace.initial.as_str()) {
         ("replay-first-fault-wins", "replay", "CaptureKind") => {
             let actual = shard::exercise_replay_lifecycle_trace(&trace.events)?;
             GuestRelayLifecycleProjection { state: actual.state.to_string(), first_reason: actual.first_reason, cancel_admissions: 0, release_opportunities: actual.release_opportunities, caller_output: None }
         }
-        ("relay-abandoned-blocked-wake", "relay", "Running") => exercise_abandoned_relay_lifecycle_trace(&trace)?,
-        ("relay-live-terminal-caller-output", "relay", "Running") => exercise_live_relay_lifecycle_trace(&trace)?,
-        ("relay-stale-generation-refused", "relay", "Running") => exercise_stale_relay_lifecycle_trace(&trace)?,
-        ("relay-max-plus-one-refused", "relay", "Empty") => exercise_capacity_relay_lifecycle_trace(&trace)?,
+        ("relay-abandoned-blocked-wake", "relay", "Running") => exercise_abandoned_relay_lifecycle_trace(&trace,wake_authority.clone())?,
+        ("relay-live-terminal-caller-output", "relay", "Running") => exercise_live_relay_lifecycle_trace(&trace,wake_authority.clone())?,
+        ("relay-stale-generation-refused", "relay", "Running") => exercise_stale_relay_lifecycle_trace(&trace,wake_authority.clone())?,
+        ("relay-max-plus-one-refused", "relay", "Empty") => exercise_capacity_relay_lifecycle_trace(&trace,wake_authority.clone())?,
         _ => return Err(format!("unsupported relay lifecycle trace {:?}", trace.id)),
     };
     serde_json::to_string(&projection).map_err(|error| format!("relay lifecycle projection failed: {error}"))
@@ -5875,13 +5903,13 @@ pub struct PluginInstanceHandle {
 }
 
 impl PluginInstanceHandle {
-    pub async fn new(actor: RuntimeActorId, runtime: Arc<GuestRuntimes>, instance: GuestInstance) -> Self {
+    pub async fn new(actor: RuntimeActorId, runtime: Arc<GuestRuntimes>, instance: GuestInstance,wake_authority:GuestRelayWakeAuthority) -> Self {
         Self {
             actor,
             runtime,
             instance: Arc::new(Mutex::new(GuestInstanceSlot::Available(instance))),
             instance_gate: Arc::new(semio_framework_async::Semaphore::new(1)),
-            relay_registry: Arc::new(GuestRelayMountedRegistry::new()),
+            relay_registry: Arc::new(GuestRelayMountedRegistry::new(wake_authority)),
             next_job_id: std::sync::atomic::AtomicU64::new(1),
         }
     }
@@ -5904,6 +5932,7 @@ impl PluginInstanceHandle {
             generation,
             cancel: semio_framework_job::root_cancel_token(),
             config: semio_framework_job::BatchDriveConfig {
+                retained:self.relay_registry.wake_authority.drive_policy,
                 site: "plugin-host.cold-relay",
                 stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
                 fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
@@ -6026,6 +6055,11 @@ impl std::fmt::Debug for PluginInstanceHandle {
 }
 
 #[cfg(test)]
+fn test_relay_wake_authority()->GuestRelayWakeAuthority{
+    GuestRelayWakeAuthority{drive_policy:serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("⚡️effects/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap(),policy:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64},issuer:semio_framework_job::admit_original_thread_worker_wake,receiver:Arc::new(GuestRelayWakeReceiptLedger::new())}
+}
+
+#[cfg(test)]
 #[path = "🧪️tests/🔬️guest-cold-relay/🦀️.rs"]
 mod guest_cold_relay_tests;
 //#endregion 🔀️PostTurnRelay
@@ -6131,7 +6165,7 @@ impl SessionLanePack {
     }
 
     /// 🧾 Applies guest `AppFrame::Emit` op bytes onto this lane via `ArtifactCodec` when `schema` is set.
-    pub async fn apply_emit_ops(&mut self, schema: Option<&str>, ops: Vec<u8>) {
+    pub async fn apply_emit_ops(&mut self, schema: Option<&str>, ops: Vec<u8>, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         if ops.is_empty() {
             return;
         }
@@ -6147,7 +6181,7 @@ impl SessionLanePack {
             self.pending_binary_ops = ops;
             return;
         }
-        match (codec.apply_ops_binary)(&self.pack, &self.spr, &ops).await {
+        match (codec.apply_ops_binary)(&self.pack, &self.spr, &ops,identity).await {
             Ok((pack, spr, ops_text)) => {
                 self.pack = pack;
                 self.spr = spr;
@@ -6738,6 +6772,7 @@ struct InferenceRouteRequest {
     source_dialect: String,
     policy: Vec<u8>,
     budgets: InferenceRouteBudget,
+    retained: semio_framework_value::retained_clone::RetainedCloneGrant,
     cancellation_id: String,
     previous_state: Option<Vec<u8>>,
     requested_cache_mode: InferenceRouteCacheMode,
@@ -6781,6 +6816,7 @@ struct InferenceRouteResult {
     source_dialect: String,
     policy: Vec<u8>,
     budgets: InferenceRouteBudget,
+    retained: semio_framework_value::retained_clone::RetainedCloneGrant,
     cancellation_id: String,
     previous_state: Option<Vec<u8>>,
     requested_cache_mode: InferenceRouteCacheMode,
@@ -7026,6 +7062,7 @@ async fn build_dependency_inference_request(base: &InferenceRouteRequest, depend
         source_dialect: base.source_dialect.clone(),
         policy: base.policy.clone(),
         budgets: base.budgets.clone(),
+        retained: base.retained,
         cancellation_id: base.cancellation_id.clone(),
         previous_state: None,
         requested_cache_mode: base.requested_cache_mode.clone(),
@@ -7057,6 +7094,7 @@ async fn validate_inference_echo(request: &InferenceRouteRequest, result: &Infer
         || result.source_dialect != request.source_dialect
         || result.policy != request.policy
         || result.budgets != request.budgets
+        || result.retained != request.retained
         || result.cancellation_id != request.cancellation_id
         || result.previous_state != request.previous_state
         || result.requested_cache_mode != request.requested_cache_mode
@@ -8145,3 +8183,12 @@ mod sqlite_refusal_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+/// 🛂️ Generated concurrent imports forward the real inline admission slot to the original caller pump.
+impl actor_bindings::semio::framework::pure::HostWithStore<ActorHostState> for wasmtime::component::HasSelf<ActorHostState> {
+ async fn operation_begin(accessor:&wasmtime::component::Accessor<ActorHostState,Self>)->Result<u64,u32>{match operation::wasmtime::request(accessor,operation::slot::OperationRequest::Begin).await{operation::slot::OperationReply::Begin(value)=>value,_=>Err(4)}}
+ async fn operation_progress(accessor:&wasmtime::component::Accessor<ActorHostState,Self>,completed:u64,total:u64,owned:u64)->u32{match operation::wasmtime::request(accessor,operation::slot::OperationRequest::Progress{completed,total,owned}).await{operation::slot::OperationReply::Code(value)=>value,_=>4}}
+ async fn operation_allocation(accessor:&wasmtime::component::Accessor<ActorHostState,Self>,bytes:u64,owned:u64,next:u64,maximum:u64)->u32{match operation::wasmtime::request(accessor,operation::slot::OperationRequest::Allocation{bytes,owned,next,maximum}).await{operation::slot::OperationReply::Code(value)=>value,_=>4}}
+ async fn operation_reserve_return(accessor:&wasmtime::component::Accessor<ActorHostState,Self>,kind:actor_bindings::semio::framework::pure::OperationReturnAllocation,count:u64)->u32{match operation::wasmtime::request(accessor,operation::slot::OperationRequest::ReserveReturn{kind:operation::wasmtime::allocation_kind(kind),count}).await{operation::slot::OperationReply::Code(value)=>value,_=>4}}
+ async fn operation_finish(accessor:&wasmtime::component::Accessor<ActorHostState,Self>,owned:u64)->u32{match operation::wasmtime::request(accessor,operation::slot::OperationRequest::Finish{owned}).await{operation::slot::OperationReply::Code(value)=>value,_=>4}}
+}

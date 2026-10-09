@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "copyPolicies",
+    "source",
+    "metadataBytes",
+    "rootItems",
+    "sameSource",
+    "heapClone",
+    "coldFallback",
+    "childNarrowDelegation",
+    "rootCopyBytes"
+  ],
+  "properties": {
+    "copyPolicies": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "source": {
+      "const": "Original↔Retained"
+    },
+    "metadataBytes": {
+      "const": 256
+    },
+    "rootItems": {
+      "const": 1
+    },
+    "sameSource": {
+      "const": true
+    },
+    "heapClone": {
+      "const": false
+    },
+    "coldFallback": {
+      "const": false
+    },
+    "childNarrowDelegation": {
+      "const": true
+    },
+    "rootCopyBytes": {
+      "const": 0
+    }
+  }
+}

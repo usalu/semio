@@ -1,0 +1,10 @@
+{
+  "exitCode": 1,
+  "tests": 5,
+  "passed": 4,
+  "failed": 1,
+  "durationMs": 1400,
+  "assertions": 359,
+  "qualification": "Actual queued directory became a symlink and publisher incorrectly resolved/published; original four laws remain positive",
+  "logSha256": "d4326b7cb479262e56ca95f7e57c7a8f28434611d0fc70f4e4feeb650f462f70"
+}

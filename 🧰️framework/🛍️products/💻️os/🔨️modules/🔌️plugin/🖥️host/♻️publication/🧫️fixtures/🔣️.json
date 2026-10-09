@@ -1,0 +1,34 @@
+{
+  "policy": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 64
+  },
+  "sources": [
+    {
+      "length": 0,
+      "capacity": 0
+    },
+    {
+      "length": 1,
+      "capacity": 8192
+    },
+    {
+      "length": 8193,
+      "capacity": 65536
+    }
+  ],
+  "stages": [
+    "logical-source",
+    "physical-backing",
+    "parent-complete"
+  ],
+  "languages": [
+    "en",
+    "de"
+  ],
+  "logicalMetadataBytes": 8,
+  "backingMetadataBytes": 24
+}

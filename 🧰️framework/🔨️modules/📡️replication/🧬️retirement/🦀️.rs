@@ -26,6 +26,7 @@ impl<V: RetireOwned> RetireOwned for crate::MapEntryOperation<V> {
 }
 
 semio_framework_value::artifact_retire_leaf!(crate::MapPresence);
+semio_framework_value::artifact_retire_leaf!(crate::MergePolicy, crate::ConflictResolution);
 semio_framework_value::artifact_retire_struct!(crate::TransactionRef { id, tool });
 semio_framework_value::artifact_retire_struct!(crate::HistoryFold { applied, redo, refused, checkpoint, alternative, trunk, changes, checkpoints, alternatives, supersessions });
 semio_framework_value::artifact_retire_struct!(crate::EffectiveSupersession { transition_id, actor, timestamp, scope, replacement });
@@ -95,7 +96,7 @@ impl RetireOwned for crate::HistoryTransition {
 semio_framework_value::artifact_retire_struct!(crate::MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff, inverse, timestamp, transaction, verb, line });
 semio_framework_value::artifact_retire_struct!(crate::ArtifactDiff { schema, payload });
 semio_framework_value::artifact_retire_struct!(crate::InverseMutation { schema, payload });
-impl RetireOwned for crate::ActorId { fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()} }
+impl RetireOwned for crate::ActorId { fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{semio_framework_value::SharedUtf8::controlled_retirement_supported()} }
 impl RetireOwned for crate::ArtifactId { fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()} }
 impl RetireOwned for crate::SchemaId { fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()} }
 

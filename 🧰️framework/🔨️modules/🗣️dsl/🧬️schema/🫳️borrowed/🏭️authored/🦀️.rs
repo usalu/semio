@@ -22,6 +22,8 @@ impl BorrowedRecordSpecProducer{
  pub const fn of<T:BorrowedDslRecord>()->Self{Self{produce:borrowed_record::<T>}}
  /// ⛽️ Reads a static descriptor using the same cumulative output control and progress callback.
  pub fn encode(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<crate::BorrowedRecordSpec,crate::ValueError>{control.checkpoint()?;control.step()?;Ok((self.produce)())}
+ /// 🛬️ Reads the same immutable declaration through the original input observer.
+ pub fn decode(&self,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<crate::BorrowedRecordSpec,crate::ValueError>{control.checkpoint()?;control.step()?;Ok((self.produce)())}
 }
 
 macro_rules! borrowed_scalar_fields {
@@ -31,7 +33,7 @@ borrowed_scalar_fields!(Bool;bool);
 borrowed_scalar_fields!(Int;i8,i16,i32,i64,isize);
 borrowed_scalar_fields!(UInt;u8,u16,u32,u64,usize);
 borrowed_scalar_fields!(Float;f32,f64);
-borrowed_scalar_fields!(Text;String);
+borrowed_scalar_fields!(Text;String,semio_framework_value::SharedUtf8);
 impl<const N:usize> BorrowedDslField for semio_framework_value::paged::PagedUtf8<N>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::Text;}
 borrowed_scalar_fields!(Wire;crate::Wire);
 borrowed_scalar_fields!(Value;semio_framework_value::DslValue);

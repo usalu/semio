@@ -160,6 +160,7 @@ impl Drop for CountedToken {
 }
 
 struct CountedField {
+    refuse_after_close: bool,
     token: Option<Box<CountedToken>>,
     counts: Arc<Counts>,
 }
@@ -168,11 +169,11 @@ impl CountedField {
     fn new(vector: &FieldVector, counts: &Arc<Counts>) -> (Box<Self>, usize) {
         let token = Box::new(CountedToken { id: vector.token_id, payload: vector.payload.clone().into_boxed_slice(), released: false, counts: Arc::clone(counts) });
         let identity = token.as_ref() as *const CountedToken as usize;
-        (Box::new(Self { token: Some(token), counts: Arc::clone(counts) }), identity)
+        (Box::new(Self { refuse_after_close: false, token: Some(token), counts: Arc::clone(counts) }), identity)
     }
 
     fn unexpected() -> OwnedSchemaDecodeDiagnostic {
-        OwnedSchemaDecodeDiagnostic { code: "test.rejected-page-unstarted-field", offset: 0, line: 1, column: 1, path: OwnedSchemaPath::ROOT }
+        OwnedSchemaDecodeDiagnostic { code: "test.rejected-page-unstarted-field", offset: 0, line: 1, column: 1, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 }
 
@@ -228,7 +229,9 @@ impl ArtifactEnvelopeFieldDecoder<(), ()> for CountedField {
         let mut token = self.token.take().expect("same counted token");
         token.released = true;
         drop(token);
-        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }))
+        let progress = RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() };
+        if self.refuse_after_close { return Err(OwnedSchemaDecodeDiagnostic { code: "test.rejected-field-after-release", refusal_kind: semio_framework_value::ValueRefusalKind::OwnershipLimit, retained_progress: progress, ..Self::unexpected() }); }
+        Ok(RetainedCloneStep::Progress(progress))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -356,7 +359,7 @@ impl Subject {
             }
         };
         let ticket = authority.field_ticket;
-        let diagnostic = OwnedSchemaDecodeDiagnostic { code: "test.rejected-page-close", offset: 0, line: 1, column: 1, path: OwnedSchemaPath::ROOT };
+        let diagnostic = OwnedSchemaDecodeDiagnostic { code: "test.rejected-page-close", offset: 0, line: 1, column: 1, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
         match authority.reject(diagnostic) {
             Ok(rejected) => Some(Self::Registered { rejected: Box::new(rejected), registry, ticket }),
             Err(mut authority) => {
@@ -526,3 +529,29 @@ fn unadmitted_rejected_pages_obey_zero_short_and_exact_grants() {
     assert!(failures.is_empty(), "{failures:#?}");
 }
 //#endregion 🧪️PageLaws
+
+#[test]
+fn original_field_release_survives_registered_and_unadmitted_refusal() {
+    let vectors=fixture();
+    let expected:serde_json::Value=serde_json::from_str(include_str!("../../🚪️io/🧬️schema/⚠️diagnostic/🧫️fixtures/field-close.json")).unwrap();
+    for registered in [false,true] {
+        let original=record(&pages(&vectors.cases[0]));
+        let counts=Arc::new(Counts::default());
+        let(mut field,address)=CountedField::new(&vectors.field_owner,&counts);
+        field.refuse_after_close=true;
+        let mut failures=Vec::new();
+        let mut subject=Subject::new(registered,original,field,&mut failures).unwrap();
+        let before=witness(subject.record());
+        let refusal=subject.close_step(vectors.field_owner.close_grant).unwrap_err();
+        let progress=refusal.retained_progress();
+        let observed=serde_json::json!({"copiedItems":progress.copied_items,"copiedBytes":progress.copied_bytes,"retainedCapacityBytes":progress.retained_capacity_bytes,"releasedBytes":progress.released_bytes});
+        assert_eq!(observed,expected["retainedProgress"]);
+        assert_eq!(refusal.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
+        assert_eq!(witness(subject.record()),before);
+        assert_eq!(counts.token_drops.lock().unwrap().as_slice(),[(address,vectors.field_owner.token_id,vectors.field_owner.payload.clone())]);
+        subject.teardown(&mut failures);
+        drop(subject);
+        assert!(failures.is_empty(),"{failures:?}");
+        assert_eq!(counts.token_drops.lock().unwrap().len(),1);
+    }
+}

@@ -1,0 +1,397 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sourceActionUnion": [
+    {
+      "path": ".vscode/launch.json",
+      "actionLedgers": [
+        "reader-endpoints",
+        "law-routes-actions"
+      ],
+      "codepoints": 47,
+      "utf16": 47
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "actionLedgers": [
+        "reader-endpoints",
+        "law-routes-actions"
+      ],
+      "codepoints": 55,
+      "utf16": 56
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 147,
+      "utf16": 160
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 152,
+      "utf16": 165
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 149,
+      "utf16": 162
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 153,
+      "utf16": 166
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 152,
+      "utf16": 165
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 89,
+      "utf16": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 92,
+      "utf16": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+      "actionLedgers": [
+        "ecma-reader-endpoints"
+      ],
+      "codepoints": 82,
+      "utf16": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "ecma-reader-endpoints"
+      ],
+      "codepoints": 90,
+      "utf16": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧫️fixtures/🔣️.json",
+      "actionLedgers": [
+        "ecma-reader-endpoints"
+      ],
+      "codepoints": 95,
+      "utf16": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "ecma-reader-endpoints"
+      ],
+      "codepoints": 93,
+      "utf16": 100
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🟦️.ts",
+      "actionLedgers": [
+        "ecma-reader-endpoints"
+      ],
+      "codepoints": 91,
+      "utf16": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 106,
+      "utf16": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🚦️ownership/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "mesh-law-actions"
+      ],
+      "codepoints": 98,
+      "utf16": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions",
+        "mesh-law-actions"
+      ],
+      "codepoints": 95,
+      "utf16": 101
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+      "actionLedgers": [
+        "two-trial-actions"
+      ],
+      "codepoints": 116,
+      "utf16": 126
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "two-trial-actions"
+      ],
+      "codepoints": 112,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 89,
+      "utf16": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 92,
+      "utf16": 99
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📋️project.json",
+      "actionLedgers": [
+        "law-routes-actions"
+      ],
+      "codepoints": 121,
+      "utf16": 129
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧪️tests/🟦️.test.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 125,
+      "utf16": 134
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 123,
+      "utf16": 132
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+      "actionLedgers": [
+        "geometry-renewed-actions"
+      ],
+      "codepoints": 109,
+      "utf16": 117
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json",
+      "actionLedgers": [
+        "geometry-renewed-actions"
+      ],
+      "codepoints": 112,
+      "utf16": 120
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/🎟️work.json",
+      "actionLedgers": [
+        "geometry-renewed-actions"
+      ],
+      "codepoints": 104,
+      "utf16": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "actionLedgers": [
+        "two-trial-actions",
+        "flow-recreated-actions",
+        "flow-current2-actions"
+      ],
+      "codepoints": 123,
+      "utf16": 133
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "actionLedgers": [
+        "two-trial-actions",
+        "flow-recreated-actions",
+        "flow-current2-actions"
+      ],
+      "codepoints": 126,
+      "utf16": 136
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+      "actionLedgers": [
+        "law-routes-actions"
+      ],
+      "codepoints": 112,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "actionLedgers": [
+        "law-routes-actions"
+      ],
+      "codepoints": 109,
+      "utf16": 118
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
+      "actionLedgers": [
+        "plugin-target-correction"
+      ],
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 126,
+      "utf16": 134
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/📏️live-physical-demand/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 171,
+      "utf16": 182
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 137,
+      "utf16": 146
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "actionLedgers": [
+        "reader-endpoints"
+      ],
+      "codepoints": 116,
+      "utf16": 124
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "actionLedgers": [
+        "reader-endpoints"
+      ],
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "actionLedgers": [
+        "reader-endpoints",
+        "dynamic-member-action",
+        "validator-method-action",
+        "construction-actions",
+        "default-effects-actions"
+      ],
+      "codepoints": 110,
+      "utf16": 118
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "reader-endpoints",
+        "construction-actions"
+      ],
+      "codepoints": 118,
+      "utf16": 127
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
+      "actionLedgers": [
+        "reader-endpoints",
+        "construction-actions",
+        "default-effects-actions"
+      ],
+      "codepoints": 123,
+      "utf16": 132
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "reader-endpoints"
+      ],
+      "codepoints": 121,
+      "utf16": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🟦️.ts",
+      "actionLedgers": [
+        "reader-endpoints"
+      ],
+      "codepoints": 119,
+      "utf16": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "actionLedgers": [
+        "reader-endpoints"
+      ],
+      "codepoints": 95,
+      "utf16": 102
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "actionLedgers": [
+        "reader-endpoints"
+      ],
+      "codepoints": 93,
+      "utf16": 99
+    }
+  ],
+  "retainedLedgerInputs": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️ecma-reader-endpoints.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️dynamic-member-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️validator-method-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️construction-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️default-effects-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️mesh-law-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️two-trial-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️flow-recreated-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️flow-current2-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️geometry-renewed-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️law-routes-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️plugin-target-correction.json"
+  ],
+  "observerFieldsExcluded": [
+    {
+      "ledger": "flow-current2-actions",
+      "field": "fixtureObserverUnchanged",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+      "adopted": false
+    }
+  ],
+  "pathViolations": []
+}

@@ -1,23 +1,24 @@
 #!/usr/bin/env bun
+import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "../../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { orchestratorBudgetMs } from "../../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Script, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
-import { discoverCargoWorkspaces } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1, discoverCargoWorkspaces } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { repoToolCacheEnv } from "../../../../🏃️process/🌿️environment/🟦️.ts";
 import { wasmBindgenVersion } from "../../../🦀️cargo/🟦️.ts";
 import { runTool,runPreparedCargoDependencyPairV1 } from "../📜️script.ts";
 
-export type DependencyToolRunner = (command: string, args: string[], cwd: string, signal: AbortSignal, capture?: boolean | "ignore", environment?: NodeJS.ProcessEnv) => Promise<string>;
+export type DependencyToolRunner = (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean | "ignore", environment: NodeJS.ProcessEnv,storage:CargoPreparationStorageV1) => Promise<string>;
 
 /** 🛠️ Synchronizes one native environment; Nx schedules every cross-environment prerequisite. */
-export async function prepareDependencies(kind: string, workspace: string, signal: AbortSignal, runner: DependencyToolRunner = runTool): Promise<void> {
+export async function prepareDependencies(kind: string, workspace: string, signal: AbortSignal, storage:CargoPreparationStorageV1,runner: DependencyToolRunner = runTool): Promise<void> {
   signal.throwIfAborted();
   const run = async (command: string, args: string[], capture = false, environment?: NodeJS.ProcessEnv): Promise<string> => {
     signal.throwIfAborted();
-    const result = await runner(command, args, workspace, signal, capture, environment);
+    const result = await runner(command, args, workspace, signal, capture, environment??process.env,storage);
     signal.throwIfAborted();
     return result;
   };
@@ -34,7 +35,7 @@ export async function prepareDependencies(kind: string, workspace: string, signa
       await run("rustup", ["target", "add", name]);
   };
   if (kind === "python") await run("uv", ["sync", "--locked", "--all-packages", "--all-groups"]);
-  else if (kind === "cargo") { for (const owner of discoverCargoWorkspaces(workspace)) { await runPreparedCargoDependencyPairV1(workspace,owner.manifest,signal,runner===runTool?undefined:runner); } }
+  else if (kind === "cargo") { for (const owner of discoverCargoWorkspaces(workspace)) { await runPreparedCargoDependencyPairV1(workspace,owner.manifest,signal,storage,runner===runTool?undefined:runner); } }
   else if (kind === "cargo-lock") { for (const owner of discoverCargoWorkspaces(workspace)) await run("cargo", ["update", "--workspace", "--manifest-path", owner.manifest]); }
   else if (kind === "go") await run("go", ["mod", "download"], false, { ...process.env, GOWORK: join(workspace, "go.work") });
   else if (kind === "dotnet") console.log("[deps-dotnet] Nx project restores completed");
@@ -56,7 +57,7 @@ export async function prepareDependencies(kind: string, workspace: string, signa
 /** 🔌️ Owns cancellation and an optional budget without importing the application router. */
 export class NativeDependenciesScript extends Script {
   async run(args: string[]): Promise<void> {
-    if (args.length !== 1) throw new Error("Native dependency synchronization requires one environment and accepts no installer overrides");
+    if (!(args.length===1||args.length===3&&args[1]==="--storage")) throw new Error("Native dependency synchronization requires one environment and accepts no installer overrides");
     const controller = new AbortController(), budget = orchestratorBudgetMs();
     if (!Number.isSafeInteger(budget) || budget < 0) throw new Error("SEMIO_ORCHESTRATOR_BUDGET_MS must be a nonnegative integer");
     let cancelled: NodeJS.Signals | undefined;
@@ -64,7 +65,7 @@ export class NativeDependenciesScript extends Script {
     const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM");
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     const timer = budget ? setTimeout(() => controller.abort(new Error(`Native dependency synchronization exceeded ${budget}ms`)), budget) : undefined;
-    try { await prepareDependencies(args[0]!, this.root, controller.signal); }
+    try { await prepareDependencies(args[0]!, this.root, controller.signal,args.length===3?parseCargoPreparationStorageV1({version:1,directory:args[2]}):repositoryCargoPreparationStorageV1(this.root)); }
     catch (error) { if (!cancelled) throw error; process.exitCode = cancelled === "SIGINT" ? 130 : 143; }
     finally { clearTimeout(timer); process.off("SIGINT", interrupt); process.off("SIGTERM", terminate); }
   }

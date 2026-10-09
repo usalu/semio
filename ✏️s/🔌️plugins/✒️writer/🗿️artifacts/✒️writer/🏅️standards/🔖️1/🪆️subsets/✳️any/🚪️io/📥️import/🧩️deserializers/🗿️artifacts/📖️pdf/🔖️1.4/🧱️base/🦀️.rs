@@ -12,7 +12,7 @@ pub struct PdfIntoWriter;
 impl Deserializer<WriterSnapshot> for PdfIntoWriter {
     const FROM: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<WriterSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PdfIntoWriter: expected a binary payload".to_string())));
         };

@@ -410,7 +410,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
         if self.closing || self.complete {
             return Err(Fault::from("generation3d-view-work-is-terminal"));
         }
@@ -496,12 +496,13 @@ fn generation3d_view_continue_inline(
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
+    retained_grant: semio_framework_value::RetainedCloneGrant,
 ) -> preview_eval::FlowEvalTickOutcome {
     if !session.inline_continuation_admitted(window_id, turn_started_us, semio_framework_job::default_now_us()) {
         return preview_eval::FlowEvalTickOutcome { extension_invocations: Vec::new(), publication: semio_framework_os_flow::FlowEvalPublication::Retained, census_moved: false };
     }
     session.arm_window_tick(window_id);
-    preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, turn_started_us)
+    preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, turn_started_us, retained_grant)
 }
 
 /// 🐢️ The viewer's binding of [`preview_eval::chain_ui_scope`] — one preview body, no graph body
@@ -544,7 +545,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         .then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
         if self.complete || self.closing {
             return Err(Fault::from("generation3d-view-flow-eval-window-work-terminal"));
         }
@@ -560,18 +561,19 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         // 📚️ The tick evaluates what this surface is LOOKING at, which is the picked example once the
         // navbar named one — the read-only counterpart of the editor switch replacing its host_snapshot.
         let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
+        let retained_grant=cx.retained_grant();
         let outcome = self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
             owner.with_session_waking(|session| {
                 let host_snapshot = &viewed.snapshot().host_snapshot;
                 match input.command {
-                    Generation3dViewCommand::FlowEvalTick(_) => Ok(preview_eval::evaluate_tick(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, None)),
+                    Generation3dViewCommand::FlowEvalTick(_) => Ok(preview_eval::evaluate_tick(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, None, retained_grant)),
                     Generation3dViewCommand::FlowEvalResolve(payload) => {
                         preview_eval::resolve_eval(payload, session);
-                        Ok(generation3d_view_continue_inline(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, turn_started_us))
+                        Ok(generation3d_view_continue_inline(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, turn_started_us, retained_grant))
                     }
                     Generation3dViewCommand::FlowTessellateResolve(payload) => {
                         preview_eval::resolve_tessellate(payload, session);
-                        Ok(generation3d_view_continue_inline(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, turn_started_us))
+                        Ok(generation3d_view_continue_inline(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, turn_started_us, retained_grant))
                     }
                     _ => Err(Fault::from("generation3d-view-flow-eval-window-command-mismatch")),
                 }
@@ -632,7 +634,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation3d-view-flow-resolve-work-repeated"));
         }
@@ -763,7 +765,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation3d-view-contributions-work-repeated"));
         }
@@ -1078,7 +1080,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewDocu
         generation3d_view_bounded_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation3d-view-document-io-work-repeated"));
         }

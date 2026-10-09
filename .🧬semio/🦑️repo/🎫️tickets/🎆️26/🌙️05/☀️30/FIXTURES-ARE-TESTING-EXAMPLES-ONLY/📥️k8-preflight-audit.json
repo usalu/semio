@@ -1,0 +1,36 @@
+{
+  "executed": false,
+  "authored": false,
+  "retainedRootDiagnostics": 17,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️bounded-value-retirement/🦀️.rs",
+      "authored": false,
+      "sha256": "cb7ae12fd15ae6ceb1ccc2a56ffe2937b43b52ac0af9487d6fa611bc2d94f5de"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🦀️.rs",
+      "authored": false,
+      "sha256": "84c19262cb4fe68a7df5bce6b6284c9700e36cde59e33fb27b0bb242ef91bc82"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs",
+      "authored": false,
+      "sha256": "886deb4d98e1883424cf8e9a524fc3d723c431fb885bf6ccb0c1015c4d6da86a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "authored": false,
+      "sha256": "8e529bda73ec6fdb0f67edb7b5375ee375742c5527ff125c3b419bac58f8e48e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "authored": false,
+      "sha256": "713285c5e6d3580e6e923926a4f306e10e45df26d3a8e0077e1e492548a9bf60"
+    }
+  ],
+  "selectedNames": 29,
+  "target": "@semio-tech/framework-os-kernel:test-native",
+  "currentBareImports": "super::tests::physical_test_close_grant in both files",
+  "currentPreflight": "nine parameters including original IoRunControl"
+}

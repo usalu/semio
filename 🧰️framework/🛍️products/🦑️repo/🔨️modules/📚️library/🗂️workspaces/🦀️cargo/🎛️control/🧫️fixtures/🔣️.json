@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "limits": {"maximumUnits": 10, "maximumOwnedBytes": 100, "maximumDepth": 8},
+  "cases": [
+    {"id": "admitted", "units": 4, "bytes": 32, "accepted": true},
+    {"id": "zero", "units": 0, "bytes": 0, "accepted": true},
+    {"id": "exact-limit", "units": 10, "bytes": 100, "accepted": true},
+    {"id": "negative-work", "units": -1, "bytes": 0, "accepted": false},
+    {"id": "fractional-work", "units": 0.5, "bytes": 0, "accepted": false},
+    {"id": "negative-ownership", "units": 1, "bytes": -1, "accepted": false},
+    {"id": "fractional-ownership", "units": 1, "bytes": 0.5, "accepted": false},
+    {"id": "work-limit", "units": 11, "bytes": 0, "accepted": false},
+    {"id": "ownership-limit", "units": 1, "bytes": 101, "accepted": false}
+  ]
+}

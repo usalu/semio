@@ -1,0 +1,5 @@
+# Genesis bounded source review
+
+Six hash observations in `📥️gen-review.json`; no execution or authorship adoption. Funded admission quotes two original Arc shells with checked sum and depth1, preflights the full supplied grant before either allocation, and returns exact typed snapshot plus original Pack Vec on refusal. Hydration checks the same quote before taking either original; the fallible admission branch restores both. Schema and artifact-id Strings move through the owner ingress rather than copying. Existing cursor pages remain present while checkpoint is installed. Accepted runtime/envelope are stored before subsequent receipt checks.
+
+No new concrete custody issue was found in these narrow blocks. This does not establish complete BindGenesis receipts: envelope arrays/ledgers/cursor births and typed codec ownership remain explicitly pending. Native System/pointer/Serde law is authored but unrun; older two-law positive remains a different epoch. Cold ungranted from_verified_pack is still an existing separate API; this review credits only the new funded Hydration path and does not infer all callers funded.

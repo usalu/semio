@@ -28,7 +28,8 @@
       "{projectRoot}/**/*",
       "sharedGlobals",
       "!{projectRoot}/**/🧪️tests/**/*",
-      "!{projectRoot}/**/🧫️fixtures/**/*",
+      "!{projectRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*",
+      "!{projectRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*",
       "!{projectRoot}/**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
       "!{projectRoot}/.storybook/**"
     ],
@@ -56,7 +57,7 @@
       "{workspaceRoot}/Monorepo.sln"
     ],
     "nativeSources": [
-      "default"
+      "production"
     ],
     "nativeTestSources": [
       "default"

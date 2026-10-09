@@ -18,14 +18,9 @@ impl ArtifactStoreInitializationAuthority<TestSnapshot, TestMutation> for Physic
     fn step(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome { semio_framework_job::StepOutcome::Yield }
     fn request_cancel(&mut self) {}
     fn take_candidate(&mut self) -> Option<store::ArtifactStore<TestSnapshot, TestMutation>> { None }
-    fn next_close_byte_demand(&self) -> usize { self.buffer.as_ref().map_or(0, Vec::capacity) }
+    fn retirement_demands(&self,_body:usize)->Result<RetirementDemand,ValueError>{Ok(self.buffer.as_ref().map_or(Default::default(),|buffer|RetirementDemand{copy_bytes:std::mem::size_of_val(&self.buffer),release_bytes:buffer.capacity(),depth:1,..Default::default()}))}
     fn begin_close(&mut self) {}
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        let Some(buffer) = self.buffer.as_ref() else { return Ok(PluginCloseStep::Complete) };
-        if maximum_items == 0 || maximum_bytes < buffer.capacity() { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
-        let bytes = self.buffer.take().unwrap().capacity();
-        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes })
-    }
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=Default::default();let Some(buffer)=self.buffer.as_ref()else{return Ok(RetainedCloneStep::Complete(empty))};let copied_bytes=std::mem::size_of_val(&self.buffer);let released_bytes=buffer.capacity();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_release_bytes<released_bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}drop(self.buffer.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes,released_bytes,..empty}))}
     fn terminal_is_empty(&self) -> bool { self.buffer.is_none() }
 }
 
@@ -39,25 +34,27 @@ fn initializer_job_retains_terminal_authority_until_its_physical_box_is_funded()
         let mut buffer = Vec::new(); buffer.try_reserve_exact(extent).unwrap();
         assert_eq!(buffer.capacity(), extent);
         let mut job = ArtifactStoreInitializationJob::new(Box::new(PhysicalInitializerAuthority { buffer: Some(buffer) }));
-        let demand = job.next_close_byte_demand();
-        let first = job.close_step(1, row["callerBytes"].as_u64().unwrap() as usize);
-        if row["releasedBytes"].as_u64().unwrap() == 0 { job.close_step(1, admission); }
+        job.begin_close();
+        let demand = job.next_close_release_byte_demand().unwrap();
+        let original_grant=|release|RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:release,maximum_depth:4096};
+        let first = job.close_step(original_grant(row["callerBytes"].as_u64().unwrap()as usize));
+        if row["releasedBytes"].as_u64().unwrap() == 0 { job.close_step(original_grant(admission)); }
         assert!(job.accept_terminal_failure());
         assert!(job.authority.is_some());
         assert!(!job.terminal_is_empty());
         let box_bytes = std::mem::size_of::<PhysicalInitializerAuthority>();
-        let terminal_demand = job.next_close_byte_demand();
-        let denied = job.close_step(1, box_bytes - 1);
+        let terminal_demand = job.next_close_release_byte_demand().unwrap();
+        let denied = job.close_step(original_grant(box_bytes-1));
         let retained = job.authority.is_some();
-        let released = job.close_step(1, box_bytes);
-        for _ in 0..8 { if job.terminal_is_empty() { break; } job.close_step(1, admission); }
+        let released = job.close_step(original_grant(box_bytes));
+        for _ in 0..8 { if job.terminal_is_empty() { break; } job.close_step(original_grant(admission)); }
         assert!(job.terminal_is_empty());
         assert_eq!(demand, extent);
-        assert_eq!(first, InteractiveJobCloseStep::Pending { released_items: usize::from(row["releasedBytes"].as_u64().unwrap() != 0), released_bytes: row["releasedBytes"].as_u64().unwrap() as usize });
+        assert_eq!(first, InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:usize::from(row["releasedBytes"].as_u64().unwrap()!=0),copied_bytes:if row["releasedBytes"].as_u64().unwrap()!=0{std::mem::size_of::<Option<Vec<u8>>>()}else{0},released_bytes:row["releasedBytes"].as_u64().unwrap()as usize,..Default::default()}});
         assert_eq!(terminal_demand, box_bytes);
-        assert_eq!(denied, InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(denied, InteractiveJobCloseStep::Pending{progress:Default::default()});
         assert!(retained);
-        assert_eq!(released, InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: box_bytes });
+        assert_eq!(released, InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<Box<dyn ArtifactStoreInitializationAuthority<TestSnapshot,TestMutation>>>>(),released_bytes:box_bytes,..Default::default()}});
         eprintln!("[DEBUG] initializer job physical backing={extent} erased-authority-box={box_bytes} retained-denied-owner=true");
     }
 }
@@ -67,7 +64,7 @@ std::thread_local! {
 }
 
 /// 🧮️ A test operation that counts every fold of it (`diff`), so the reload law bounds what one initializer step folds.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned)]
 struct ReloadCountedOp(TestMutation);
 
 impl semio_framework_value::ToValue for ReloadCountedOp {
@@ -129,18 +126,10 @@ impl store::Mutation<TestSnapshot> for ReloadCountedOp {
 }
 
 /// 🧹️ Closes a counted store under its bounded owners.
-fn close_reload_counted_store(store: &mut store::ArtifactStore<TestSnapshot, ReloadCountedOp>) {
-    for _ in 0..65_536 {
-        match store.close_owned_step(1, 4096).expect("the counted store closes under its exact grant") {
-            store::SnapshotRetirementStep::Pending { .. } => {}
-            store::SnapshotRetirementStep::Blocked => panic!("the counted store has no external owner"),
-            store::SnapshotRetirementStep::Complete => {
-                assert!(store.close_owned_terminal_is_empty());
-                return;
-            }
-        }
-    }
-    panic!("the counted store did not close");
+fn close_reload_counted_store(store:&mut store::ArtifactStore<TestSnapshot,ReloadCountedOp>){
+    let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:4096};
+    for _ in 0..65536{let step=store.close_owned_store_step(grant).expect("counted original Store full grant close");assert!(step.progress().fits(grant));let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,store.close_owned_store_terminal_is_empty(),"counted original Store").expect("counted original Store receipt");if matches!(step,RetainedCloneStep::Complete(_)){assert!(store.close_owned_store_terminal_is_empty());return;}}
+    panic!("the counted store did not close under its original fixed grant");
 }
 
 /// 🐢️ LAW (N17, design §16.6): a reload never folds a long history inside one turn. A 240-mutation document with a
@@ -152,15 +141,16 @@ fn close_reload_counted_store(store: &mut store::ArtifactStore<TestSnapshot, Rel
 #[semio_framework_async_macros::async_test]
 async fn a_long_history_reloads_one_operation_per_initializer_step() {
     use crate::test_app_mutation_fixture::SetCount;
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let mut observer=|_|true;let mut identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(law["native"]["maximumIdentityBytes"].as_u64().unwrap()as usize,&mut observer).unwrap();let original=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
     let genesis = store::create_document_envelope::<TestSnapshot, ReloadCountedOp>(RELOAD_DOCUMENT_SCHEMA, "long-reload", TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None);
     let mut source = Box::pin(store::ArtifactStore::new(genesis, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("source store");
     source.install_document_store_owners_exact(bounded_document_store_owners::<TestSnapshot, ReloadCountedOp>());
     for value in 1..=240 {
-        Box::pin(source.dispatch(store::ArtifactCommand::Apply { mutations: vec![ReloadCountedOp(TestMutation::SetCount(SetCount { value }))], transaction: None })).await.expect("source edit");
+        Box::pin(source.dispatch(store::ArtifactCommand::Apply { mutations: vec![ReloadCountedOp(TestMutation::SetCount(SetCount { value }))], transaction: None },&mut identity)).await.expect("source edit");
     }
     let first = source.mutation_ops().expect("source operations")[0].mutation_id.clone();
     let inputs = vec![store::SupersedeInput { target: first, replacement: Some(ReloadCountedOp(TestMutation::SetCount(SetCount { value: 1000 }))) }];
-    Box::pin(source.dispatch(store::ArtifactCommand::Supersede { scope: None, inputs })).await.expect("a supersession");
+    Box::pin(source.dispatch(store::ArtifactCommand::Supersede { scope: None, inputs },&mut identity)).await.expect("a supersession");
     let files = Box::pin(store::print_document_pack(source.envelope())).await.expect("source pair prints");
     let envelope = Box::pin(store::parse_document_pack::<TestSnapshot, ReloadCountedOp>(&files.pack, &files.spr)).await.expect("the pair parses").into_envelope();
     let mut whole = Box::pin(store::ArtifactStore::new(Box::pin(store::parse_document_pack::<TestSnapshot, ReloadCountedOp>(&files.pack, &files.spr)).await.expect("the pair parses again").into_envelope(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("a store loaded in one piece");
@@ -172,7 +162,8 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     let mut folded = 0;
     loop {
         let before = RELOAD_FOLDS.with(std::cell::Cell::get);
-        let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::CancelToken::root_now(), semio_framework_job::default_now_us, &mut sequence);
+        let mut ownership=RetainedCloneProgress::default();
+        let mut cx=semio_framework_job::StepContext::new(operation,generation,semio_framework_job::StepBudget::new(1,u64::MAX,original),semio_framework_job::CancelToken::root_now(),semio_framework_job::default_now_us,&mut sequence,&mut ownership);
         let outcome = semio_framework_job::InteractiveJob::step(&mut job, &mut cx);
         assert!(RELOAD_FOLDS.with(std::cell::Cell::get) - before <= 1, "initializer step {steps} folded more than one operation");
         let progress = job.progress();
@@ -191,17 +182,18 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     let mut reloaded = job.take_candidate().expect("the reloaded store");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
     let admission = fixture["admissionBytes"].as_u64().unwrap() as usize;
-    let authority_bytes = std::mem::size_of::<BoundedStoreInitializationAuthority<TestSnapshot, ReloadCountedOp>>();
-    let handoff_demand = job.next_close_byte_demand();
+    let authority_bytes=std::mem::size_of_val(job.authority.as_ref().unwrap().as_ref());
+    let handoff_demand=semio_framework_job::InteractiveJob::next_close_release_byte_demand(&job).unwrap();
     assert!(job.authority.is_some());
-    assert_eq!(semio_framework_job::InteractiveJob::close_step(&mut job, 1, authority_bytes - 1), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(semio_framework_job::InteractiveJob::close_step(&mut job,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:authority_bytes-1,maximum_depth:4096}), semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});
     for _ in 0..65_536 {
         if job.terminal_is_empty() {
             break;
         }
-        let maximum_bytes = job.next_close_byte_demand().max(4096);
-        let step = semio_framework_job::InteractiveJob::close_step(&mut job, 1, maximum_bytes);
-        if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } = step { assert!(released_items <= 1 && released_bytes <= admission); }
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:admission,maximum_depth:4096};
+        let step=semio_framework_job::InteractiveJob::close_step(&mut job,grant);
+        assert!(step.progress().fits(grant));
+        if let semio_framework_job::InteractiveJobCloseStep::Pending{progress}=step{assert!(progress.copied_items<=1&&progress.released_bytes<=admission);}
     }
     assert!(job.terminal_is_empty(), "the initializer hands its store off and closes");
     assert_eq!(handoff_demand, authority_bytes);

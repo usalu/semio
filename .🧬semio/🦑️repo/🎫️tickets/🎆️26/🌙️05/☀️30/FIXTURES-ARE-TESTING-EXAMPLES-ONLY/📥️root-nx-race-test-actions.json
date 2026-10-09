@@ -1,0 +1,9 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "571a2357e7940a45e24e1cb07d63f478695feafd5ffbaa3f423a9529b8875978",
+    "afterSha256": "f4951445c4576dda02b21195a38638fa1875e45ff6be379ba404c102d42755dc",
+    "qualification": "Actual original filesystem mutation during queued admission exposes symlink replacement, not a Source substring assumption"
+  }
+]

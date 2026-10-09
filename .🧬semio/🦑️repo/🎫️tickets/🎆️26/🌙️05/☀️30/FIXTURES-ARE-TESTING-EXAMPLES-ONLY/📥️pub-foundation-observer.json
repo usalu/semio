@@ -1,0 +1,18 @@
+{
+  "observerPaths": [
+    "📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"
+  ],
+  "scriptSHA": "953194226790749673069f04a000449066091ed54bf5a1330dd7df006bfd481b",
+  "pluginSHA": "8b9b9018d39db3edb49ba811bf29ba7bef49d02cc1ef7bc85bd38b9a541a82d7",
+  "foundationBlockSHA": "125662b0f08b55da9392271a9199de3533ce8ba32d9af5f37de8c321c9efd255",
+  "authored": false,
+  "currentApi": "PluginApp::maintenance_step(RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>; Mounted drive_worker_step(pool,grant); pump_one_for_interactive_turn; real session receipt/terminal closure",
+  "obsoleteFoundationMarkers": [
+    "maintenance_step(maximum_items,maximum_bytes)",
+    "pump_one(pool,...)",
+    "PluginCloseStep::AwaitingInput",
+    "drive_worker_step(pool,maximum_bytes)"
+  ],
+  "actualRemainingGap": "MountedTypedCommandFullOperation.retirement_step and retire_typed_operation_unit still scalar/unpaid original owner closures; genuine APIs require full-grant propagation, not old-marker alias."
+}

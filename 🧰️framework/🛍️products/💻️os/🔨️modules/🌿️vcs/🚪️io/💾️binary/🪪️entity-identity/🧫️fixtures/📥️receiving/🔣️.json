@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "sources": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/💾️binary/🪪️operation-identity/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+    "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📑️operation-sequence/🦀️.rs",
+    "🌎️hub/🗿️artifact-authority/🔌️adapters/🦀️.rs",
+    "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🫀️core/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️create-studio/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/🛂️authority/🦀️.rs"
+  ],
+  "storeFrontiers": [
+    "dispatch",
+    "dispatch_apply_exact",
+    "replay_mutations",
+    "append_transaction",
+    "open_transaction_edit",
+    "create_alternative_with_supersede",
+    "commit_pending_checkpoint",
+    "pending_checkpoint_transition",
+    "undo_with_policy",
+    "dispatch_text",
+    "dispatch_binary",
+    "reconcile_alternative",
+    "dispatch_group",
+    "dispatch_peer_group",
+    "dispatch_relation_group",
+    "compensate",
+    "undo_one",
+    "undo_group",
+    "redo_group"
+  ],
+  "reservedFrontiers": [
+    "run_framework_reserved_commit_unit_admitted",
+    "checkpoint_child_unit",
+    "checkout_child_unit",
+    "framework_revert_unit",
+    "commit_framework_history_route",
+    "dispatch_group_history_action"
+  ],
+  "publicPluginFrontiers": [
+    "handle_action",
+    "handle_action_invocation",
+    "handle_command",
+    "handle_command_frame",
+    "handle_intent_frame",
+    "transaction_commit",
+    "transaction_undo",
+    "transaction_redo",
+    "ingest_operations_text",
+    "with_registry_on_bus",
+    "tick_backbone",
+    "load_child_pack",
+    "poll_document_archive_load",
+    "ingest_operations"
+  ],
+  "expectedFakeWrappers": 0,
+  "checkIdentityScopes": true,
+  "checkPluginSelfCalls": true,
+  "runtimeFrontiers": [
+    "plugin_open_actor_instance",
+    "plugin_create_app",
+    "plugin_create_app_with_id",
+    "plugin_handle_action",
+    "plugin_handle_command",
+    "plugin_ingest_operations",
+    "plugin_ingest_operations_text",
+    "plugin_poll_document_archive_load",
+    "plugin_receive_document_backbone",
+    "plugin_dispatch_response_action",
+    "plugin_dispatch_intents",
+    "plugin_exchange",
+    "plugin_resume_task",
+    "plugin_artifact_apply_ops"
+  ],
+  "checkRuntimeCalls": true,
+  "guestBoundaryCalls": [
+    "$crate::plugin_runtime::plugin_artifact_apply_ops",
+    "$crate::reactor::poll_kernel",
+    "$crate::reactor::poll"
+  ],
+  "groupWireFrontier": {
+    "method": "dispatch_emit_group",
+    "producer": "authored_operation_bytes",
+    "forbidden": "OpBinary::encode_op"
+  },
+  "draftHome": {
+    "catalog": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️.rs",
+    "core": "✏️s/🔌️plugins/🪐️space/🫀️core/🦀️.rs",
+    "editor": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "create": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️create-studio/🦀️.rs",
+    "worker": "HomeCreateStudioWork",
+    "bridge": "with_authoring_identity"
+  },
+  "ownedReceiving": {
+    "host": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+    "methods": [
+      "codec_call_authored",
+      "execute_actor_turn"
+    ],
+    "receiver": "OriginalOperationReceiver",
+    "imports": [
+      "operation-begin",
+      "operation-progress",
+      "operation-allocation",
+      "operation-finish"
+    ],
+    "required": [
+      "original_receipt: Option<",
+      "OriginalOperationReceiver::resume",
+      "receiver.pause()",
+      "receiver.ensure_finished()",
+      "if state.pending.is_none()"
+    ]
+  }
+}

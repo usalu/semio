@@ -1,0 +1,16 @@
+{
+  "schema": "historyFoldIndex.retainedSlot",
+  "authority": [
+    "originalItems",
+    "originalTypedCopyBytes",
+    "originalDepth"
+  ],
+  "operation": "inspect-one-original-native-slot",
+  "physicalBirth": 0,
+  "physicalRelease": 0,
+  "retiredRowCustody": "same-original-arena-until-controlled-owner-retirement",
+  "slotReuse": "refuse-retired-payload-slots",
+  "logicalRepair": "preserve-active-AVL-order-and-ranks",
+  "refusal": "before-effect",
+  "typedCopy": "size-of-original-key-value-pair-on-removal"
+}

@@ -28,6 +28,6 @@ pub(super) fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotCo
  let document=database.table("run_document")?.single_row()?;let trigger=database.table("run_trigger")?.single_row()?;
  if document.rowid!=1||document.values.len()!=11||document.integer(0)?!=1||trigger.rowid<=0||trigger.values.len()!=6||trigger.integer(0)?!=trigger.rowid||trigger.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Run requires complete aliased document and trigger ownership"))}
  let rows=rows::Rows::new(database,control)?;
- let owner=control.allocation_stage(phase,|remaining,progress|{let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native=semio_framework_value::NativeDecodeControl::new(remaining,&mut callback);let result=construct(database,&rows,&mut native);(result,native.owned_bytes())})??;
+ let owner=control.allocation_stage(phase,|remaining,progress,allocation|{let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);let result=construct(database,&rows,&mut native);(result,native.owned_bytes())})??;
  control.checkpoint(phase,rows.nodes.len(),rows.nodes.len())?;Ok(owner.take())
 }

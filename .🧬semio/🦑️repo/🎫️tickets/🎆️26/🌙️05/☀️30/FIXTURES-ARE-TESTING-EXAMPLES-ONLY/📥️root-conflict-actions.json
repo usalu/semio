@@ -1,0 +1,19 @@
+{
+  "sourceActions": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json",
+      "action": "removed",
+      "beforeSha256": "651ada00b667d08efc6d9786cc60dfd1a6959e372bcffa4cbb7abdea5f121a0a",
+      "afterSha256": null,
+      "reason": "Entire literal test collection is not a production schema."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts",
+      "action": "updated",
+      "beforeSha256": "493bd5971db5f87a1cc331759b1f021fa905334b9ae3db94cb55daf9aeb888da",
+      "afterSha256": "8ab203bd38583bfd935b85508a95d579b4878a798c8cb1d79f4532b35a9d4ce3",
+      "reason": "Remove only whole-collection Ajv admission and mirrored omissions; preserve original JSONPatch/stableJSON and UTF8/Buffer backing oracles."
+    }
+  ],
+  "originalPlainAndRustStable": true
+}

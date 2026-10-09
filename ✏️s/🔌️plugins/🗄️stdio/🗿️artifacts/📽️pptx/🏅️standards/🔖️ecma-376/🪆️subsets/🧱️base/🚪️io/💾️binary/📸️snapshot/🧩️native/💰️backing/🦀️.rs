@@ -16,7 +16,7 @@ fn measured(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, limits: SqliteD
 }
 pub(super) fn preflight(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
     let limits = control.limits();
-    control.allocation_stage(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint| {
+    control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint| {
         let mut callback = |event: semio_framework_value::native_encoding::NativeEncodeProgress| checkpoint(event.completed, event.total);
         let mut native = NativeEncodeControl::new(remaining, &mut callback);
         let result = (|| {
@@ -29,16 +29,18 @@ pub(super) fn preflight(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, con
         (result, native.owned_bytes())
     })?
 }
-pub(crate) fn encode(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<IoPayload, ValueError> {
+pub(crate) fn encode(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<IoPayload, ValueError> {let native_control=native_owner.native();
     let limits = control.limits();
-    control.allocation_stage(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint| {
+    control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint| {
         let mut callback = |event: semio_framework_value::native_encoding::NativeEncodeProgress| checkpoint(event.completed, event.total);
-        let mut native = NativeEncodeControl::new(remaining, &mut callback);
+        let native_before=native_control.owned_bytes();
+    let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
+
         let result = (|| {
-            let total = measured(snapshot, encoding, limits, &mut native)?;
+            let total = measured(snapshot, encoding, limits, native)?;
             let mut bytes = native.allocate_vec::<u8>(total)?;
             native.begin_stage(total)?;
-            let mut writer = OpcNativeWriter { control: &mut native, output: Some(&mut bytes), count: 0, rows: 0, limits, encoding };
+            let mut writer = OpcNativeWriter { control: native, output: Some(&mut bytes), count: 0, rows: 0, limits, encoding };
             super::write(snapshot, &mut writer)?;
             if writer.count != total || bytes.len() != total {
                 return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "PPTX measured native fields differ from emitted fields"));
@@ -49,7 +51,9 @@ pub(crate) fn encode(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, contro
                 SnapshotEncoding::Text => String::from_utf8(bytes).map(IoPayload::Text).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "PPTX native output is not UTF8")),
             }
         })();
-        (result, native.owned_bytes())
+        result
+    })});
+    (result,native_control.owned_bytes().saturating_sub(native_before))
     })?
 }
 pub(crate) fn input(bytes: &[u8], binary: bool, control: &mut SqliteSnapshotControl<'_>) -> Result<PptxSnapshot, ValueError> {
@@ -57,7 +61,7 @@ pub(crate) fn input(bytes: &[u8], binary: bool, control: &mut SqliteSnapshotCont
     if bytes.len() > limits.max_file_bytes {
         return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "PPTX native input exceeds caller file ceiling"));
     }
-    control.allocation_stage(SqliteSnapshotPhase::DecodeNative, |remaining, checkpoint| {
+    control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative, |remaining, checkpoint| {
         let mut callback = |event: semio_framework_value::native_decoding::NativeDecodeProgress| checkpoint(event.completed, event.total);
         let mut native = NativeDecodeControl::new(remaining, &mut callback);
         let result = (|| {

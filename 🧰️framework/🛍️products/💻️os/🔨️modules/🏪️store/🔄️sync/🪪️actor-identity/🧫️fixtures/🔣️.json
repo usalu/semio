@@ -1,0 +1,31 @@
+{
+  "grant": {
+    "maximumItems": 1024,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 64
+  },
+  "actors": [
+    {
+      "text": "",
+      "capacity": 19
+    },
+    {
+      "text": "é中🐚\u0000",
+      "capacity": 4096
+    },
+    {
+      "text": "original-actor",
+      "capacity": 65536
+    }
+  ],
+  "batchItems": [
+    0,
+    1,
+    1024,
+    1025
+  ],
+  "terminalDropBytes": 0,
+  "maximumTurns": 1048576
+}

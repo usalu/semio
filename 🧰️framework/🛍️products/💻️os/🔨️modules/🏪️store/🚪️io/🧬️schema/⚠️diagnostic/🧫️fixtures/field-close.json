@@ -1,0 +1,14 @@
+{
+  "code": "test.rejected-field-after-release",
+  "offset": 0,
+  "line": 1,
+  "column": 1,
+  "path": "$",
+  "refusalKind": "ownershipLimit",
+  "retainedProgress": {
+    "copiedItems": 1,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 3
+  }
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+    "present": false,
+    "sha256": null,
+    "same": false,
+    "maxPathCharacters": 108
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🟦️.ts",
+    "present": true,
+    "sha256": "aadc244125a645fa1cd72869f60eb39f073a6646291d16835e4cc0a588f39f70",
+    "same": false,
+    "maxPathCharacters": 105
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧫️fixtures/🔣️.json",
+    "present": true,
+    "sha256": "055e8640b8d08d5d082e9e009c706f3150a915e16fd0cba9f2fd91b149a1abef",
+    "same": true,
+    "maxPathCharacters": 110
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🦀️.rs",
+    "present": true,
+    "sha256": "664a5d007790b967dc76eb8ed184453727fc6cbebc535a0aa260a26f0f9c6b16",
+    "same": true,
+    "maxPathCharacters": 97
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧬️schema/🔣️.json",
+    "present": false,
+    "sha256": null,
+    "same": false,
+    "maxPathCharacters": 108
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧪️tests/🟦️.ts",
+    "present": true,
+    "sha256": "2779a682e531ee278b97e1b12df39b907b4fe5fca6e6bc73c445c2cd2172744f",
+    "same": false,
+    "maxPathCharacters": 105
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧫️fixtures/🔣️.json",
+    "present": true,
+    "sha256": "1182145ef90e71b726534c42a095e5568cfe7b08446b9266f6ec065b2d4c8dcc",
+    "same": true,
+    "maxPathCharacters": 110
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🦀️.rs",
+    "present": true,
+    "sha256": "aea951056479742dbe07ffb5a1ceba6981cde5bb82cbc0f496dd3e1ff868e5b6",
+    "same": false,
+    "maxPathCharacters": 97
+  }
+]

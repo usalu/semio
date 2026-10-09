@@ -135,6 +135,20 @@ class TestScript extends BundleScript {
   }
 }
 
+class ProbeSqliteSourceScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length) throw new Error("Probe SQLite source law has no arguments");
+    runCmd("bun", ["test", join(this.root, "..", "..", "🏠️workspace", "🪶️sqlite", "🧪️tests", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+  }
+}
+
+class ProbeSqliteNativeScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("Probe SQLite native law has a fixed original selector");
+    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, ["--lib", "probe_sqlite_original", "--", "--nocapture"]);
+  }
+}
+
 class CanonicalPairCheckScript extends BundleScript {
   run(): void {
     const oracle = join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🧩️pair", "🧪️tests", "🧪️canonical-pair-oracle", "🟦️.ts");
@@ -585,6 +599,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("publish", PublishScript)
   .register("check", CheckScript)
   .register("test", TestScript)
+  .register("probe-sqlite-source", ProbeSqliteSourceScript)
+  .register("probe-sqlite-native", ProbeSqliteNativeScript)
   .register("installed-service-check", InstalledServiceCheckScript)
   .register("canonical-pair-check", CanonicalPairCheckScript)
   .register("hub-live-catalog-oracle", HubLiveCatalogOracleScript)

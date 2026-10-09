@@ -45,7 +45,7 @@ impl PagedListAllocationError {
 const FANOUT: usize = 16;
 const PAGE_BYTES: usize = 4096;
 
-trait PageAllocation {
+pub(crate) trait PageAllocation {
     fn reserve<T>(owner: &mut Vec<T>, slots: usize) -> Result<(), std::collections::TryReserveError>;
 }
 
@@ -249,6 +249,11 @@ impl<T, const N: usize> PagedList<T, N> {
     pub fn allocated_bytes(&self) -> usize {
         self.allocated
     }
+    /// 🧭️ Quotes the existing original page path before one logical slot is borrowed or changed.
+    pub fn next_get_depth_demand(&self,index:usize)->Result<usize,PagedListError>{
+        if index>=self.length{return Ok(0);}
+        self.height().checked_add(1).ok_or(PagedListError {kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list lookup depth overflow"})
+    }
     pub fn has_reserved_slot(&self) -> bool {
         self.length < self.capacity
     }
@@ -378,6 +383,13 @@ impl<T, const N: usize> PagedList<T, N> {
         self.next_page_allocation_bytes()
     }
 
+    /// 🪜️ Quotes the actual prospective page path before its next backing allocation.
+    pub fn next_reserve_depth_demand(&self)->Result<usize,PagedListError>{
+        if self.has_reserved_slot(){return Ok(0)}
+        self.next_page_allocation_bytes()?;
+        self.height().max(Self::page_height(self.capacity/self.page_items())).checked_add(3).ok_or(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list reserve depth overflow"})
+    }
+
     /// 🎟️ Returns the next single backing allocation needed to reach a requested logical capacity.
     pub fn next_capacity_allocation_bytes(&self, capacity: usize) -> Result<Option<usize>, PagedListError> {
         if capacity > N {
@@ -433,6 +445,12 @@ impl<T, const N: usize> PagedList<T, N> {
             return Ok(PagedListProgress::default());
         }
         self.reserve_page(grant)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn reserve_one_using<A: PageAllocation>(&mut self, grant: usize) -> Result<PagedListProgress, PagedListAllocationError> {
+        if self.has_reserved_slot() { return Ok(PagedListProgress::default()); }
+        self.reserve_page_using::<A>(grant)
     }
 
     /// 🎟️ Admits at most one backing allocation toward a requested logical capacity.
@@ -521,6 +539,12 @@ impl<T, const N: usize> PagedList<T, N> {
             }
         }
         Err(rejected(PagedListRefusalKind::InvariantViolated, "fixed list page authority is missing"))
+    }
+
+    /// 📏️ Quotes the original reserved node path before one owner enters its next slot.
+    pub fn next_push_depth_demand(&self)->Result<usize,PagedListError>{
+        if !self.has_reserved_slot(){return Err(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list push requires its original reserved slot"});}
+        self.height().checked_add(3).ok_or(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list push depth overflow"})
     }
 
     pub fn push_reserved(&mut self, value: T) -> Result<(), T> {

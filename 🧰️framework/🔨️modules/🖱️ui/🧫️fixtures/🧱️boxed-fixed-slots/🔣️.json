@@ -12,7 +12,7 @@
       "capacityConstant": "UI_LAYOUT_SURFACE_SLOTS",
       "capacity": 64,
       "elementType": "Option<UiSurfaceSlot>",
-      "elementSizeBytes": 166040,
+      "elementSizeBytes": 165408,
       "ownerSizeBytes": 520
     }
   ]

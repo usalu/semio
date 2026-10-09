@@ -5,8 +5,8 @@ use crate::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind,list::PagedList
 use std::mem::ManuallyDrop;
 
 #[must_use="retirement queue payloads and backing must reach terminal-empty"]
-pub struct RetirementQueue {frames:ManuallyDrop<PagedList<Box<dyn ErasedSnapshotRetirement>,{usize::MAX}>>}
-impl Default for RetirementQueue {fn default()->Self {Self {frames:ManuallyDrop::new(PagedList::default())}}}
+pub struct RetirementQueue {frames:ManuallyDrop<PagedList<Box<dyn ErasedSnapshotRetirement>,{usize::MAX}>>,step_progress:RetainedCloneProgress}
+impl Default for RetirementQueue {fn default()->Self {Self {frames:ManuallyDrop::new(PagedList::default()),step_progress:Default::default()}}}
 impl RetirementQueue {
     pub fn len(&self)->usize {self.frames.len()}
     pub fn has_reserved_slot(&self)->bool {self.frames.has_reserved_slot()}
@@ -14,11 +14,14 @@ impl RetirementQueue {
     pub const fn frame_birth_bytes<T:RetireOwned>()->usize {owned_retirement_birth_bytes::<T>()}
     pub fn next_reserve_capacity_byte_demand(&self)->Result<usize,ValueError> {Ok(self.frames.next_capacity_allocation_bytes(self.frames.len().checked_add(1).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"retirement queue length overflow"))?).map_err(ValueError::from)?.unwrap_or(0))}
     pub fn reserve_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        self.step_progress=empty_progress();let result=self.reserve_original(grant);match result{Ok(progress)=>{self.step_progress=progress;Ok(progress)},Err(error)=>{self.step_progress=error.retained_progress();Err(error)}}
+    }
+    fn reserve_original(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
         let empty=empty_progress();
         if grant.maximum_items==0 || self.has_reserved_slot(){return Ok(empty);}
         if grant.maximum_depth<self.frames.len()+1{return Err(refusal(ValueRefusalKind::DepthLimit,"retirement queue reservation exceeds admitted depth"));}
         if self.next_reserve_capacity_byte_demand()?>grant.maximum_capacity_bytes{return Ok(empty);}
-        let step=self.frames.reserve_one(grant.maximum_capacity_bytes).map_err(|error|ValueError::from(error.refusal()))?;
+        let step=self.frames.reserve_one(grant.maximum_capacity_bytes).map_err(|error|{let progress=RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..empty};ValueError::from(error.refusal()).with_retained_progress(progress)})?;
         Ok(RetainedCloneProgress {copied_items:usize::from(step.progressed),retained_capacity_bytes:step.allocated_bytes,..empty})
     }
     pub fn admit_owned<T:RetireOwned>(&mut self,value:T,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,T)> {
@@ -28,6 +31,12 @@ impl RetirementQueue {
         let (owner,progress)=admit_owned_retirement(value,RetainedCloneGrant {maximum_depth:1,..grant})?;
         assert!(self.frames.push_reserved(owner).is_ok(),"retirement queue reserved slot disappeared");
         Ok(progress)
+    }
+    /// 🎟️ Transfers an original admitted frame into reserved custody without allocating another shell.
+    pub fn admit_typed_retirement<T:ErasedSnapshotRetirement+'static>(&mut self,original:&mut Option<Box<T>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+        if original.is_none()||grant.maximum_items==0||grant.maximum_depth<self.frames.len()+1{return Ok(None)}
+        if !self.has_reserved_slot(){return Err(refusal(ValueRefusalKind::OwnershipLimit,"original typed retirement requires its reserved queue slot"))}
+        assert!(self.frames.push_reserved(original.take().unwrap()).is_ok(),"original typed queue reserved slot disappeared");Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
     /// 🎟️ Transfers an original admitted frame into reserved custody without allocating another shell.
     pub fn admit_retirement(&mut self,owner:Box<dyn ErasedSnapshotRetirement>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Box<dyn ErasedSnapshotRetirement>)> {
@@ -54,11 +63,17 @@ impl RetirementQueue {
             None=>Ok(1),
         }
     }
+    /// 🧾️ Borrows the original queue turn receipt, including genuine failed-child effects.
+    pub fn step_progress(&self)->RetainedCloneProgress{self.step_progress}
     pub fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        self.step_progress=empty_progress();match self.step_original(grant){Ok(step)=>{self.step_progress=step.progress();Ok(step)},Err(error)=>{if error.retained_progress()!=empty_progress(){self.step_progress=error.retained_progress();}Err(error.with_retained_progress(self.step_progress))}}
+    }
+    fn step_original(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
         let empty=empty_progress();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
         if self.next_depth_demand()?>grant.maximum_depth{return Err(refusal(ValueRefusalKind::DepthLimit,"retirement queue exceeds admitted depth"));}
+        if self.next_copy_byte_demand()?>grant.maximum_copy_bytes||self.next_capacity_byte_demand(grant.maximum_copy_bytes)?>grant.maximum_capacity_bytes||self.next_release_byte_demand()?>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
         if self.frames.is_empty() {
             let step=self.frames.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}));
@@ -75,6 +90,7 @@ impl RetirementQueue {
         let child_grant=RetainedCloneGrant {maximum_depth:grant.maximum_depth-retained,..grant};
         let owner=self.frames.get_mut(index).unwrap();
         let step=owner.close_step(child_grant)?;
+        self.step_progress=step.progress();
         let progress=admit_retained_clone_close(child_grant,step,owner.terminal_is_empty(),"retirement queue original frame")?.progress();
         Ok(RetainedCloneStep::Progress(progress))
     }

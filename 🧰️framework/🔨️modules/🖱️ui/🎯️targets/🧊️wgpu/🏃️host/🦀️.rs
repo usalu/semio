@@ -229,7 +229,7 @@ impl semio_framework_job::InteractiveJob for ClipboardIoJob {
         if self.operation.is_none(){return InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}}
         let bytes=match self.operation.as_ref(){Some(ClipboardIoOperation::Write(text))=>text.capacity(),_=>0};
         if grant.maximum_items==0||bytes>grant.maximum_release_bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()}}
-        if bytes!=0&&grant.maximum_depth==0{return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)}
+        if bytes!=0&&grant.maximum_depth==0{return InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Default::default()}}
         self.operation=None;
         InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes}}
     }

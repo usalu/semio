@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "maximum",
+    "firstCapacityBytes",
+    "firstCopiedBytes",
+    "resumedCapacityBytes",
+    "sourceOwned",
+    "receivedInput",
+    "guestOwned",
+    "receivedOutput",
+    "reservedReturn",
+    "deniedReleaseBytes",
+    "terminalDropReleaseBytes",
+    "grant",
+    "checkpointProjection"
+  ],
+  "properties": {
+    "kind": {
+      "const": "original-same-phase-host-input"
+    },
+    "maximum": {
+      "const": 64
+    },
+    "firstCapacityBytes": {
+      "const": 4
+    },
+    "firstCopiedBytes": {
+      "const": 2
+    },
+    "resumedCapacityBytes": {
+      "const": 3
+    },
+    "sourceOwned": {
+      "const": 7
+    },
+    "receivedInput": {
+      "const": 7
+    },
+    "guestOwned": {
+      "const": 0
+    },
+    "receivedOutput": {
+      "const": 0
+    },
+    "reservedReturn": {
+      "const": 0
+    },
+    "deniedReleaseBytes": {
+      "const": 0
+    },
+    "terminalDropReleaseBytes": {
+      "const": 0
+    },
+    "grant": {
+      "const": {
+        "items": 1,
+        "copy": 64,
+        "capacity": 4096,
+        "release": 4096,
+        "depth": 32
+      }
+    },
+    "checkpointProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "originalMaximumBytes",
+        "hostCharge",
+        "proposedCharge",
+        "projectedRetirement",
+        "actualRetirement",
+        "refusal"
+      ],
+      "properties": {
+        "originalMaximumBytes": {
+          "const": 4096
+        },
+        "hostCharge": {
+          "const": 3
+        },
+        "proposedCharge": {
+          "const": 7
+        },
+        "projectedRetirement": {
+          "const": 10
+        },
+        "actualRetirement": {
+          "const": 3
+        },
+        "refusal": {
+          "const": "InvalidValue"
+        }
+      }
+    }
+  }
+}

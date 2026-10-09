@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "byteCredit": 4096,
+  "nowMs": 42,
+  "deadlineMs": 50,
+  "defaultRetained": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 4294967295,
+    "maximumReleaseBytes": 4294967295,
+    "maximumDepth": 4096
+  },
+  "cases": [
+    {
+      "name": "unequal",
+      "retained": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 5,
+        "maximumReleaseBytes": 7,
+        "maximumDepth": 11
+      },
+      "expectedArguments": [
+        2,
+        3,
+        5,
+        7,
+        11
+      ]
+    },
+    {
+      "name": "zero-items",
+      "retained": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 5,
+        "maximumReleaseBytes": 7,
+        "maximumDepth": 11
+      },
+      "expectedArguments": [
+        0,
+        3,
+        5,
+        7,
+        11
+      ]
+    },
+    {
+      "name": "zero-copy",
+      "retained": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 5,
+        "maximumReleaseBytes": 7,
+        "maximumDepth": 11
+      },
+      "expectedArguments": [
+        2,
+        0,
+        5,
+        7,
+        11
+      ]
+    },
+    {
+      "name": "zero-capacity",
+      "retained": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 7,
+        "maximumDepth": 11
+      },
+      "expectedArguments": [
+        2,
+        3,
+        0,
+        7,
+        11
+      ]
+    },
+    {
+      "name": "zero-release",
+      "retained": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 5,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 11
+      },
+      "expectedArguments": [
+        2,
+        3,
+        5,
+        0,
+        11
+      ]
+    },
+    {
+      "name": "zero-depth",
+      "retained": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 5,
+        "maximumReleaseBytes": 7,
+        "maximumDepth": 0
+      },
+      "expectedArguments": [
+        2,
+        3,
+        5,
+        7,
+        0
+      ]
+    },
+    {
+      "name": "copy-exceeds-transport",
+      "retained": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8192,
+        "maximumCapacityBytes": 17,
+        "maximumReleaseBytes": 19,
+        "maximumDepth": 23
+      },
+      "expectedArguments": [
+        2,
+        8192,
+        17,
+        19,
+        23
+      ]
+    }
+  ]
+}

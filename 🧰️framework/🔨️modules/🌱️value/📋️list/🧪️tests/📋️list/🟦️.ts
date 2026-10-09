@@ -59,3 +59,17 @@ test("retained release authority keeps physical ownership distinct from copied i
   assert(released.releasedBytes <= releaseAuthority.grant.maximumReleaseBytes);
   console.log("[DEBUG] Independent release oracle copy=64 release=4096 physical=128 one-below retains owner");
 });
+
+test("retained empty tail permits release while the earlier page stays live", () => {
+  const frontier=corpus.ordered.emptyTailRelease;
+  const values=applyPatch<number[]>([],Array.from({length:corpus.ordered.count},(_,value)=>({op:"add" as const,path:"/-",value})),true).newDocument;
+  const slots=Math.min(corpus.maximumPageBytes/frontier.elementBytes,corpus.capacity.maximum);
+  assert.equal(frontier.earlierLiveItems,slots);
+  assert.equal(frontier.tailItems,values.length-slots);
+  const pages=[values.slice(0,slots),values.slice(slots)];
+  const edited=applyPatch(pages,Array.from({length:frontier.tailItems},()=>({op:"remove" as const,path:"/1/0"})),true).newDocument;
+  assert.equal(edited[1].length,0);
+  assert.equal(edited[0].length,frontier.earlierLiveItems);
+  assert.deepEqual(edited[0],Array.from({length:frontier.earlierLiveItems},(_,value)=>value));
+  console.log("[DEBUG] original paged list neutral empty tail="+frontier.tailItems+" earlier live="+frontier.earlierLiveItems+" independentJSONPatch=true");
+});

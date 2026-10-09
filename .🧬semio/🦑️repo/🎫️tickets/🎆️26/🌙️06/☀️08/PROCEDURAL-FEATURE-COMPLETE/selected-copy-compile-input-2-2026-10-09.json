@@ -1,0 +1,123 @@
+{
+  "session": 9991,
+  "status": "preassert",
+  "errors": [
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "context": [
+        "  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:92:28",
+        "   |",
+        "92 |                     store::SnapshotRetirementStep::Complete => break,",
+        "   |                            ^^^^^^^^^^^^^^^^^^^^^^ could not find `SnapshotRetirementStep` in `store`"
+      ]
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "context": [
+        "  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:93:28",
+        "   |",
+        "93 |                     store::SnapshotRetirementStep::Pending { .. } => {}",
+        "   |                            ^^^^^^^^^^^^^^^^^^^^^^ could not find `SnapshotRetirementStep` in `store`"
+      ]
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "context": [
+        "  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:94:28",
+        "   |",
+        "94 |                     store::SnapshotRetirementStep::Blocked => panic!(\"framework Flow retirement blocked\"),",
+        "   |                            ^^^^^^^^^^^^^^^^^^^^^^ could not find `SnapshotRetirementStep` in `store`"
+      ]
+    },
+    {
+      "error": "error[E0425]: cannot find function `owned_retirement` in module `semio_framework_value::retirement`",
+      "context": [
+        "  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:89:65",
+        "   |",
+        "89 |             let mut cursor = semio_framework_value::retirement::owned_retirement(snapshot);",
+        "   |                                                                 ^^^^^^^^^^^^^^^^ not found in `semio_framework_value::retirement`"
+      ]
+    },
+    {
+      "error": "error[E0277]: `(dyn semio_framework_value::retirement::RetirementCursor + 'static)` cannot be shared between threads safely",
+      "context": [
+        "    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:144:27",
+        "     |",
+        " 144 | impl neural::Operator for ContributedExtensionStub {",
+        "     |                           ^^^^^^^^^^^^^^^^^^^^^^^^ `(dyn semio_framework_value::retirement::RetirementCursor + 'static)` cannot be shared between threads safely"
+      ]
+    },
+    {
+      "error": "error[E0061]: this function takes 5 arguments but 4 arguments were supplied",
+      "context": [
+        "   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:312:22",
+        "    |",
+        "312 | ... = (capability.export)(\"flow.host_snapshot\", &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()));",
+        "    |       ^^^^^^^^^^^^^^^^^^^--------------------------------------------------------------------------------------------------------------------------- argument #5 of type `&mut NativeSnapshotDecodeOwner<'_, '_>` is missing"
+      ]
+    },
+    {
+      "error": "error[E0061]: this function takes 6 arguments but 5 arguments were supplied",
+      "context": [
+        "   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:320:23",
+        "    |",
+        "320 | ... = (capability.import)(\"flow.host_snapshot\", &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).un...",
+        "    |       ^^^^^^^^^^^^^^^^^^^------------------------------------------------------------------------------------------------------------------------------------- argument #6 of type `&mut NativeSnapshotEncodeOwner<'_, '_>` is missing"
+      ]
+    },
+    {
+      "error": "error[E0282]: type annotations needed",
+      "context": [
+        "   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:384:108",
+        "    |",
+        "384 | ...eDatabaseLimits::default(), &mut |event| { phases.push(event.phase); true }).await.expect(\"framework Flow native state must reac...",
+        "    |                                      ^^^^^                ----- type must be known at this point"
+      ]
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "context": [
+        "    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:384:69",
+        "     |",
+        " 384 |         let output = io_run_with_snapshot_control(&export, payload, SqliteDatabaseLimits::default(), &mut |event| { phases.push(ev...",
+        "     |                      ----------------------------                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&mut IoRunControl<'_, '_>`, found `SqliteDatabaseLimits`"
+      ]
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "context": [
+        "    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:389:87",
+        "     |",
+        " 389 | ...et payload = io_run_with_snapshot_control(&import, IoPayload::Binary(bytes), SqliteDatabaseLimits::default(), &mut |event| { ph...",
+        "     |                 ----------------------------                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&mut IoRunControl<'_, '_>`, found `SqliteDatabaseLimits`"
+      ]
+    },
+    {
+      "error": "error[E0277]: `(dyn semio_framework_value::retirement::RetirementCursor + 'static)` cannot be shared between threads safely",
+      "context": [
+        "    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:159:119",
+        "     |",
+        " 159 | ...ement.as_ref().map_or(Ok(usize::from(!self.retirement_is_empty())),ControlledRetirement::next_depth_demand)}",
+        "     |                                               ^^^^^^^^^^^^^^^^^^^ `(dyn semio_framework_value::retirement::RetirementCursor + 'static)` cannot be shared between threads safely"
+      ]
+    },
+    {
+      "error": "error[E0277]: `(dyn semio_framework_value::retirement::RetirementCursor + 'static)` cannot be shared between threads safely",
+      "context": [
+        "    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:161:17",
+        "     |",
+        " 161 |         if self.retirement_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return ...",
+        "     |                 ^^^^^^^^^^^^^^^^^^^ `(dyn semio_framework_value::retirement::RetirementCursor + 'static)` cannot be shared between threads safely"
+      ]
+    },
+    {
+      "error": "error[E0277]: `(dyn semio_framework_value::retirement::RetirementCursor + 'static)` cannot be shared between threads safely",
+      "context": [
+        "    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:161:323",
+        "     |",
+        " 161 | ...y(){self.retirement=None}return Ok(if self.retirement_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedClon...",
+        "     |                                               ^^^^^^^^^^^^^^^^^^^ `(dyn semio_framework_value::retirement::RetirementCursor + 'static)` cannot be shared between threads safely"
+      ]
+    }
+  ]
+}

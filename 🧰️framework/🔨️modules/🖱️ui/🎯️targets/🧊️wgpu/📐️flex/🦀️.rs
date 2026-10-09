@@ -917,11 +917,11 @@ impl FlexTree {
         use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
         let empty=RetainedCloneProgress::default();if self.close_is_empty(){return Step::Complete{progress:empty}}
         if grant.maximum_items==0{return Step::Pending{progress:empty}}
-        let bytes=match self.next_close_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return Step::Refused(error.kind)};
-        if bytes>grant.maximum_release_bytes{return Step::Pending{progress:empty}}if grant.maximum_depth==0{return Step::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)}
+        let bytes=match self.next_close_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return Step::Refused{kind:error.kind,progress:error.retained_progress()}};
+        if bytes>grant.maximum_release_bytes{return Step::Pending{progress:empty}}if grant.maximum_depth==0{return Step::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Default::default()}}
         if let Some(Some(grid))=self.grids.last_mut(){
             let result=if grid.columns.pop().is_some(){None}else if !grid.columns.terminal_is_empty(){Some(grid.columns.release_empty_page(grant.maximum_release_bytes))}else if grid.rows.pop().is_some(){None}else if !grid.rows.terminal_is_empty(){Some(grid.rows.release_empty_page(grant.maximum_release_bytes))}else{*self.grids.last_mut().unwrap()=None;return Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}};
-            return match result{Some(Ok(receipt))=>Step::Pending{progress:RetainedCloneProgress{copied_items:usize::from(receipt.progressed),released_bytes:receipt.released_allocation_bytes,..Default::default()}},Some(Err(error))=>Step::Refused(semio_framework_value::ValueError::from(error).kind),None=>Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
+            return match result{Some(Ok(receipt))=>Step::Pending{progress:RetainedCloneProgress{copied_items:usize::from(receipt.progressed),released_bytes:receipt.released_allocation_bytes,..Default::default()}},Some(Err(error))=>{let error=semio_framework_value::ValueError::from(error);Step::Refused{kind:error.kind,progress:error.retained_progress()}},None=>Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
         }
         if self.flows.pop().is_some(){self.grids.pop();self.intrinsic.pop();self.resolved.pop();return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
         macro_rules! release{($field:ident)=>{if self.$field.capacity()!=0{drop(std::mem::take(&mut self.$field));return Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}}}}

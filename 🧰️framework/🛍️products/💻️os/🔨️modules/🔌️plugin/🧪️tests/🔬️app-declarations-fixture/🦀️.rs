@@ -326,7 +326,7 @@ pub(crate) mod fixture {
         const FROM: Dialect = STD1_ANY_DIALECT;
         const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Semantic;
         const CONFORMANCE: Option<fn(&Std1StrictSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic>> = Some(check_non_negative);
-        async fn deserialize(payload: &semio_framework::io_schema::IoPayload) -> semio_framework::io_schema::IoResult<Std1StrictSnapshot> {
+        async fn deserialize(payload: &semio_framework::io_schema::IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> semio_framework::io_schema::IoResult<Std1StrictSnapshot> {
             let semio_framework::io_schema::IoPayload::Binary(bytes) = payload else {
                 return Err(semio_framework::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "StrictFromAny: expected a binary payload")));
             };
@@ -344,7 +344,7 @@ pub(crate) mod fixture {
     impl semio_framework_os_kernel::io::io_mechanism::Serializer<Std1StrictSnapshot> for StrictIntoAny {
         const INTO: Dialect = STD1_ANY_DIALECT;
         const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Exact;
-        async fn serialize(from: &Std1StrictSnapshot, _: &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+        async fn serialize(from: &Std1StrictSnapshot, _: &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
             Ok(semio_framework::io_schema::IoOutcome { value: semio_framework::io_schema::IoPayload::Binary(Std1AnySnapshot { value: from.value }.encode_pack()), diagnostics: Vec::new() })
         }
     }
@@ -527,7 +527,7 @@ pub(crate) mod fixture {
             assert_eq!(owner.role, AppRole::Editor, "{schema}: the editor is the creation authority");
         }
         assert!(crate::plugin_runtime::artifact_codec_owner(&plugin, "semio.testkit.nobody/v1").is_err(), "no owner is refused");
-        let runtime = crate::plugin_runtime::PluginRuntime::new();
+        let runtime = crate::plugin_runtime::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
         for schema in schemas {
             let hash = crate::plugin_runtime::plugin_artifact_pack_schema_hash(&runtime, schema).await;
@@ -695,8 +695,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         use semio_framework::sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotPhase};
         const TYPED: Dialect = Dialect { artifact_kind: "s.testkit.typed-fixture", standard: StandardId("1"), subset: SubsetId("*") };
         let codec = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.typed-fixture/v1");
+        let binding = semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::DirectNative, "testkit", Some(TYPED.artifact_kind.to_string()), Vec::new(), Some(TYPED.into()), None, &codec);
         let assembly = semio_framework_schema_registry::assembly::begin().unwrap();
-        semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: vec![NativeSnapshotRegistration { dialect: TYPED.into(), codec }], ..Default::default() }).unwrap();
+        semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan { document_bindings: vec![binding], document_codecs: vec![codec.clone()], native_snapshots: vec![NativeSnapshotRegistration { dialect: TYPED.into(), codec }], ..Default::default() }).unwrap();
         drop(assembly);
         let snapshot = Std1AnySnapshot { value: 42 };
         let limits = SqliteDatabaseLimits::default();

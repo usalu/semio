@@ -2,10 +2,11 @@
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:child_process";
 import { existsSync, readFileSync, rmSync } from "node:fs";
+import { lstat, readFile, readdir, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
-import { join, resolve, win32, posix } from "node:path";
+import { dirname, isAbsolute, join, resolve, win32, posix } from "node:path";
 import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { orchestratorBudgetOpts, semioShipEnv } from "../../🏃️process/🟦️.ts";
 import { devToolingEnv, semioNxParallelFlag } from "../../🏃️process/🌿️environment/🟦️.ts";
@@ -37,6 +38,76 @@ export function publishBootstrapSources(root: string): void {
   if (!existsSync(declaration)) return;
   const { sources } = JSON.parse(readFileSync(declaration, "utf8")) as { sources: readonly { module: string; export: string }[] };
   for (const source of sources) createRequire(import.meta.url)(join(root, source.module))[source.export](root);
+}
+
+/** 🛡️ Publishes exact real project exceptions before Nx core can admit testing collections. */
+export async function publishNxCollectionBoundary(root: string, signal?: AbortSignal, progress?: (directories: number) => void): Promise<void> {
+  signal?.throwIfAborted();
+  if (!isAbsolute(root) || root.split(/[\\/]/u).some(part => part === "." || part === "..")) throw new Error("Nx collection publication requires raw absolute real ancestry");
+  const real = async (path: string): Promise<void> => {
+    for (let current = path; ; current = dirname(current)) {
+      const value = await lstat(current);
+      if (!value.isDirectory() || value.isSymbolicLink()) throw new Error("Nx collection publication requires real directory ancestry");
+      if (current === dirname(current)) return;
+    }
+  };
+  await real(root);
+  const policy = JSON.parse(await readFile(join(import.meta.dirname, "../🔣️policy.json"), "utf8")) as { generatedDirectories: string[]; exampleCollections: { names: string[]; moduleMember: string; manifestBasenames: string[] } };
+  const { names, moduleMember, manifestBasenames } = policy.exampleCollections;
+  const target = join(root, ".nxignore");
+  const original = async (): Promise<string> => {
+    try { const value = await lstat(target); if (!value.isFile() || value.isSymbolicLink()) throw new Error("Nx ignore authority must be a real file"); return await readFile(target, "utf8"); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return ""; throw error; }
+  };
+  const before = await original(), pending: string[][] = [[]], admitted: { path: string; device: number; inode: number }[] = [];
+  const visited: { path: string; device: number; inode: number }[] = [];
+  const excluded = new Set([...policy.generatedDirectories, ".🧬semio", "🤖️generated", "pkg"]);
+  let directories = 0;
+  while (pending.length) {
+    signal?.throwIfAborted();
+    const parts = pending.pop()!;
+    progress?.(++directories);
+    signal?.throwIfAborted();
+    const directory = join(root, ...parts), current = await lstat(directory);
+    if (!current.isDirectory() || current.isSymbolicLink()) throw new Error("Nx queued owner requires a real directory");
+    visited.push({ path: directory, device: current.dev, inode: current.ino });
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      signal?.throwIfAborted();
+      if (entry.isSymbolicLink()) continue;
+      const next = [...parts, entry.name];
+      if (names.some(name => next.some((part, index) => part === name && next[index - 1] !== moduleMember))) continue;
+      if (entry.isDirectory()) { if (!excluded.has(entry.name)) pending.push(next); continue; }
+      if (!entry.isFile() || !parts.some((part, index) => names.includes(part) && parts[index - 1] === moduleMember)) continue;
+      if (manifestBasenames.some(name => name === "*.patch" ? entry.name.endsWith(".patch") : entry.name === name)) {
+        const file = await lstat(join(root, ...next));
+        if (!file.isFile() || file.isSymbolicLink()) throw new Error("Nx admitted manifest requires a real file");
+        admitted.push({ path: next.join("/"), device: file.dev, inode: file.ino });
+      }
+    }
+  }
+  for (const directory of visited) {
+    signal?.throwIfAborted();
+    const current = await lstat(directory.path);
+    if (!current.isDirectory() || current.isSymbolicLink() || current.dev !== directory.device || current.ino !== directory.inode) throw new Error("Nx current admission requires unchanged real directory custody");
+  }
+  for (const file of admitted) {
+    signal?.throwIfAborted();
+    await real(dirname(join(root, file.path)));
+    const current = await lstat(join(root, file.path));
+    if (!current.isFile() || current.isSymbolicLink() || current.dev !== file.device || current.ino !== file.inode) throw new Error("Nx current admission requires unchanged real manifest custody");
+  }
+  const begin = "# 🧫️ Canonical Example Collection Admission", end = "# 🧫️ End Example Collection Admission";
+  const start = before.indexOf(begin), finish = before.indexOf(end);
+  if ((start < 0) !== (finish < 0) || (start >= 0 && finish < start)) throw new Error("Nx ignore publication requires a complete owned section");
+  const escape = (path: string): string => path.replace(/[\\*?\[\]#!]/g, "\\$&");
+  const masks = names.flatMap(name => manifestBasenames.map(file => `**/${name}/**/${file}`));
+  const section = [begin, ...masks, ...admitted.sort((a, b) => Buffer.compare(Buffer.from(a.path), Buffer.from(b.path))).map(file => `!/${escape(file.path)}`), end].join("\n") + "\n";
+  const result = start < 0 ? before + (before && !before.endsWith("\n") ? "\n" : "") + section : before.slice(0, start) + section + before.slice(finish + end.length).replace(/^\r?\n/, "");
+  signal?.throwIfAborted();
+  await real(root);
+  if (await original() !== before) throw new Error("Nx ignore authority changed during current owner admission");
+  signal?.throwIfAborted();
+  if (result !== before) await writeFile(target, result);
 }
 
 /** 🧮️ Lets each watched build finish its graph while the daemon retains source watching. */
@@ -138,6 +209,7 @@ export class NxScript extends Script {
       const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM");
       process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
       try {
+        await publishNxCollectionBoundary(this.root, controller.signal, directories => { if (directories === 1 || directories % 1024 === 0) console.log(`[nx] Admitting current real project owners (${directories} directories)`); });
         const api = nxBootstrapServices();
         tooling = await api.provisionNxTools(this.root, controller.signal);
         await api.activateNxTools(this.root, tooling, controller.signal);

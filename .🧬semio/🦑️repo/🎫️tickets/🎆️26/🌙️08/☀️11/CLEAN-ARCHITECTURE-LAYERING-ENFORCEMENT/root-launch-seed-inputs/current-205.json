@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "📥️interface41-in-place-receiving🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-interface-current-origin --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/📜️script.ts\" receiving receiving1 > \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/receiving1.outer.log\" 2>&1",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.51
+      }
+    },
+    {
+      "name": "📥️interface41-in-place-strict-red🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-interface-current-origin --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/📜️script.ts\" strict strict-red > \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/strict-red.outer.log\" 2>&1",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.51
+      }
+    },
+    {
+      "name": "📥️interface41-in-place-controller-red🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-interface-current-origin --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/📜️script.ts\" controller controller-red > \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/controller-red.outer.log\" 2>&1",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.51
+      }
+    },
+    {
+      "name": "🧮️ Runtime resource in-place receiving 1 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/📜️script.ts\" test",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8d/nd",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8d/nc",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8d",
+        "CARGO_PROFILE_DEV_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "CARGO_BUILD_JOBS": "2",
+        "RUST_MIN_STACK": "134217728",
+        "SEMIO_TEST_LEVEL": "long",
+        "SEMIO_COVERAGE": "0"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.74
+      }
+    },
+    {
+      "name": "🧮️ Runtime resource in-place receiving 2 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/📜️script.ts\" test",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8e/nd",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8e/nc",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8e",
+        "CARGO_PROFILE_DEV_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "CARGO_BUILD_JOBS": "2",
+        "RUST_MIN_STACK": "134217728",
+        "SEMIO_TEST_LEVEL": "long",
+        "SEMIO_COVERAGE": "0"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7401
+      }
+    },
+    {
+      "name": "🧮️ Runtime resource in-place receiving 3 🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/📜️script.ts\" test",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8f/nd",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8f/nc",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8f",
+        "CARGO_PROFILE_DEV_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "CARGO_BUILD_JOBS": "2",
+        "RUST_MIN_STACK": "134217728",
+        "SEMIO_TEST_LEVEL": "long",
+        "SEMIO_COVERAGE": "0"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7402
+      }
+    }
+  ],
+  "retireNames": [
+    "📥️current-general-receiving-red-41🧪️",
+    "📥️current-general-receiving-test-41🧪️",
+    "📥️current-origin-metadata-red-41🧪️",
+    "📥️current-origin-metadata-test-41🧪️",
+    "📥️current-origin-stage-41🧪️",
+    "📥️current-origin-inspect-41🧪️",
+    "📥️current-origin-preparation-diagnosis-41🧪️",
+    "📥️current-origin-preparation-worker-41🧪️",
+    "📥️current-origin-whole-test-41🧪️"
+  ]
+}

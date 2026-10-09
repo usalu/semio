@@ -38,7 +38,7 @@ async fn puzzle5d_editor_and_viewer_share_dialect() {
 /// DSL — so they are not compared byte for byte.)
 #[semio_framework_async_macros::async_test]
 async fn guest_codec_tables_answer_like_the_declared_native_codecs() {
-    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
+    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, crate::plugin().expect("puzzle assembles"));
     let document_id = format!("artifact-{}", "3".repeat(32));
     let declarations = [semio_s_artifact_puzzle_2d::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_3d::artifact::<crate::PuzzleApps>(), semio_s_artifact_puzzle_5d::artifact::<crate::PuzzleApps>()];

@@ -1,0 +1,49 @@
+{
+  "owned": false,
+  "logSha256": "7c7a5a6b62f155cd7c0af0e29133d644439f65d931bcd59a4bf9e19c12eead4d",
+  "summary": "17 tests run: 14 passed, 3 failed, 1484 skipped",
+  "rootSix": [
+    {
+      "test": "os_store::component::history_plan_retirement::tests::history_completed_plan_retains_original_residue_and_transferred_results",
+      "actualPassRows": 2
+    },
+    {
+      "test": "os_store::component::history_plan_retirement::tests::history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds",
+      "actualPassRows": 2
+    },
+    {
+      "test": "os_store::component::history_plan_retirement::tests::history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories",
+      "actualPassRows": 2
+    },
+    {
+      "test": "os_store::component::history_plan_retirement::tests::history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody",
+      "actualPassRows": 2
+    },
+    {
+      "test": "os_store::component::presence_retirement::tests::retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open",
+      "actualPassRows": 2
+    },
+    {
+      "test": "os_store::component::presence_retirement::tests::retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers",
+      "actualPassRows": 2
+    }
+  ],
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+      "sha256": "0dfc8684305c711194b963b97246e7d698253a4801b91e5cfd83351cff6a65ae"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "68d8e3336f3575e860d8f20fb97c56dc596ce412a1ebf812cc9b16f39429a798"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+      "sha256": "aa0a3c89c335caecd68d907504413a08e29f1647e852b7c5b78aa317958114c6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
+      "sha256": "dfe629bec7e6fc3df53e7f8d312c08005e30d1b82a98b77d9736f825bf117f0b"
+    }
+  ]
+}

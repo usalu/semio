@@ -53,7 +53,8 @@ function interfaces(value: unknown): readonly string[] {
   const output: string[] = [];
   for (let index = 0; index < value.length; index++) {
     const field = Object.getOwnPropertyDescriptor(value, String(index));
-    if (!field || !("value" in field) || typeof field.value !== "string" || !DOCUMENT_BROWSER_ACTOR_INTERFACES.includes(field.value) || (index > 0 && output[index - 1] >= field.value)) return deny();
+    const previous = output.at(-1);
+    if (!field || !("value" in field) || typeof field.value !== "string" || !DOCUMENT_BROWSER_ACTOR_INTERFACES.includes(field.value) || (previous !== undefined && previous >= field.value)) return deny();
     output.push(field.value);
   }
   return Object.freeze(output);

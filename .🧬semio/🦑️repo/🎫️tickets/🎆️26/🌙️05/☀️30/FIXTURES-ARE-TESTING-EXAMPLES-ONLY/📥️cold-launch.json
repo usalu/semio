@@ -1,0 +1,91 @@
+{
+  "actions": [
+    {
+      "path": ".vscode/launch.json",
+      "recordedAfterSHA": "c8563c00c607b76251c1d27119088e86e6d8e8d10b699f4e100c09ba73de62ef",
+      "reconstructedCurrentExcludingOwnInsertionSHA": "611858057eec626ea4bed672e7fee67995d4fa1a052936d5d8e4c7e9b39f0f9f",
+      "preimageQualification": "Original before hash was calculated in process but not persisted before partial live success/seed-anchor refusal; reconstructed projection is not an attested historical preimage.",
+      "logicalActions": [
+        "Two exact selected original test launch entries, preserve other text."
+      ],
+      "configurations": [
+        {
+          "name": "⚖️cold-pair-loading🧑‍🎨engine⚛️react🟦️",
+          "type": "node-terminal",
+          "request": "launch",
+          "command": "bun nx run @semio-tech/framework-renderer-react:test -- ../../../../../../🏪️store/👷️worker/🟦️.ts --testNamePattern=\"cold pair loading\" --silent=false --reporter=verbose",
+          "cwd": "${workspaceFolder}",
+          "env": {
+            "NX_DAEMON": "false",
+            "NX_ISOLATE_PLUGINS": "false",
+            "SEMIO_TEST_LEVEL": "long",
+            "SEMIO_INCLUDE_BACKBONE_WORKER": "1"
+          },
+          "presentation": {
+            "group": "4_gate",
+            "order": 900.05271
+          }
+        },
+        {
+          "name": "⚖️artifact-creation-owner🧑‍🎨engine⚛️react🟦️",
+          "type": "node-terminal",
+          "request": "launch",
+          "command": "bun nx run @semio-tech/framework-renderer-react:test -- ../../../../🧪️tests/🔬️engine-contract/🟦️.ts --testNamePattern=\"Space artifact creation host owner\" --silent=false --reporter=verbose",
+          "cwd": "${workspaceFolder}",
+          "env": {
+            "NX_DAEMON": "false",
+            "NX_ISOLATE_PLUGINS": "false",
+            "SEMIO_TEST_LEVEL": "long"
+          },
+          "presentation": {
+            "group": "4_gate",
+            "order": 900.05272
+          }
+        }
+      ]
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSHA": "6faea62565410911f5a988cc17e4e0d9b7cf9613b7dc71b12355b3d28cd7e267",
+      "logicalActions": [
+        "Register same two exact selected original renderer tests in existing4_gate order neighborhood; no other seed text change."
+      ],
+      "configurations": [
+        {
+          "name": "⚖️cold-pair-loading🧑‍🎨engine⚛️react🟦️",
+          "type": "node-terminal",
+          "request": "launch",
+          "command": "bun nx run @semio-tech/framework-renderer-react:test -- ../../../../../../🏪️store/👷️worker/🟦️.ts --testNamePattern=\"cold pair loading\" --silent=false --reporter=verbose",
+          "cwd": "${workspaceFolder}",
+          "env": {
+            "NX_DAEMON": "false",
+            "NX_ISOLATE_PLUGINS": "false",
+            "SEMIO_TEST_LEVEL": "long",
+            "SEMIO_INCLUDE_BACKBONE_WORKER": "1"
+          },
+          "presentation": {
+            "group": "4_gate",
+            "order": 900.05271
+          }
+        },
+        {
+          "name": "⚖️artifact-creation-owner🧑‍🎨engine⚛️react🟦️",
+          "type": "node-terminal",
+          "request": "launch",
+          "command": "bun nx run @semio-tech/framework-renderer-react:test -- ../../../../🧪️tests/🔬️engine-contract/🟦️.ts --testNamePattern=\"Space artifact creation host owner\" --silent=false --reporter=verbose",
+          "cwd": "${workspaceFolder}",
+          "env": {
+            "NX_DAEMON": "false",
+            "NX_ISOLATE_PLUGINS": "false",
+            "SEMIO_TEST_LEVEL": "long"
+          },
+          "presentation": {
+            "group": "4_gate",
+            "order": 900.05272
+          }
+        }
+      ],
+      "recordedAfterSHA": "77c8dc789c2e92cfb21c3ff02ec9a8675b9b093f2dde62e59d1c39f9e1f0dd8f"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-09",
+  "status": "schema/test authored before production",
+  "originalSourceSha256": {
+    "🧰️framework/🔨️modules/🌉️abi/🦀️.rs": "833a6752db96f35ff15d385cd5389824e1d419277f7c316f40203cba5434cb59",
+    "🧰️framework/🔨️modules/🌉️abi/🧬️schema/🔣️.json": "7379d3b07bd44c7d1f9a399c1691f1906c1e8e913a126b9a0039fcf11b93ca5d",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs": "cc071a24ed2bf67512925d3d9d578de04d3ebf64c1f30b7328ca5ffac656bbea",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️.rs": "6a01e6adb17ccc26178866bab36dc6fd93aa6a668909bc841db3b29d9ed79bf5",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js": "2be54e6a30511213ca6680f11dbfe5eb73d2c88eb6b503bc8e56d10a8377593b",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts": "99d3442f4caebe0c429058af12904fcfd1999b6a7761faa406dd0726338f1bd2"
+  },
+  "currencies": [
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "maximumReleaseBytes",
+    "maximumDepth"
+  ],
+  "portableSetupAttempt": {
+    "handle": 43933,
+    "status": "terminal PRE",
+    "reason": "existing x-semio-binary annotation needs declaration",
+    "log": "🗑️generated/sol-2026-10-08/abi-retained-grant-source-1.log"
+  },
+  "portableBaseline": {
+    "handle": 74781,
+    "status": "genuine terminal RED",
+    "reason": "original real send received time/deadline where independent retained currencies should be, no grant arguments supplied",
+    "actualArguments": [
+      "42n",
+      "50n"
+    ],
+    "expectedArguments": [
+      2,
+      3,
+      5,
+      7,
+      11
+    ],
+    "nxSeconds": 2.3,
+    "criticalPathSeconds": 0.244,
+    "runtimeFullyClosedBeforeAssertion": true,
+    "log": "🗑️generated/sol-2026-10-08/abi-retained-grant-source-2.log"
+  },
+  "portableReplay": {
+    "handle": 53807,
+    "status": "terminal GREEN",
+    "cases": 7,
+    "nxSeconds": 1.1,
+    "sourceMilliseconds": 303,
+    "log": "🗑️generated/sol-2026-10-08/abi-retained-grant-source-3.log"
+  },
+  "nativeAttempt": {
+    "handle": 19318,
+    "status": "terminal compiler PRE",
+    "assertions": 0,
+    "compilerErrors": 2,
+    "nxSeconds": 411,
+    "errors": [
+      "OS durable-group2938 PagedUtf8 vs String",
+      "framework manifest MediaType duplicate RetireOwned"
+    ],
+    "log": "🗑️generated/sol-2026-10-08/abi-retained-grant-native-1.log"
+  }
+}

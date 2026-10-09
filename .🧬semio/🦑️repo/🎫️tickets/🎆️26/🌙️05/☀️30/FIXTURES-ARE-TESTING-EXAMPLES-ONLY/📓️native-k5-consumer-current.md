@@ -1,0 +1,11 @@
+# Current k5 Snapshot Codec Consumer Integration
+
+Actual original Kernel k5 session31136 naturally failed with 46 located errors; 14 assigned codec diagnostics are the meaningful compiler RED for this cohort. No native assertions executed. Current source confirms NativeDecodeProgress/NativeEncodeProgress still exist in their defining native_decoding/native_encoding modules, while root exports are absent. Eleven Snapshot laws now name those genuine domains with their original completed/total/owned_bytes checks and cancellation/deadline semantics intact. No aliases or fabricated receipts were introduced.
+
+Two native encoding trait implementations now accept and forward the caller's actual NativeSnapshotEncodeOwner and borrow its original native control. Their former fresh internal native control/callback is removed; original SQLite checkpoints continue at start and each same-sized chunk. The decoder implementation accepts the supplied NativeDecodeControl and passes that exact control to the genuine record constructor. All plain payload and native allocation/lifetime/refusal laws remain.
+
+True original-source admission RED34209 failed the old root progress type reference; GREEN48719 completed Nx0 in3.9s with1law/18assertions and independent depth1/612. Exact generated logs native-k5-consumer-red-actual.log/native-k5-consumer-green.log. The earlier88078 log selected zero tests after a failed test write and is not a meaningful RED. Source grammar proof does not establish native type or runtime success.
+
+Four current original observers are native-k5-consumer-current.json; three narrow Source actions are native-k5-consumer-actions.json. No checked-in Source was copied. This finite consumer integration can participate in a justified original compiler renewal. The genuine cumulative encoder owner/caller and cold typed Pack physical producer remain outstanding; current binding correctness is not a complete physical encoder proof.
+
+Current affected aggregate50167 completed Nx0/3.2s: six original-source laws with130assertions plus independent depth1/612. Twelve current original endpoints (shared content observed, exact narrow authorship preserved) are recorded in native-k5-source-current.json. No own Cargo job is active.

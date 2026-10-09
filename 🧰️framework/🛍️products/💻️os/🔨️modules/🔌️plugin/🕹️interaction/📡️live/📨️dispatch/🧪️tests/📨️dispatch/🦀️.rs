@@ -274,7 +274,7 @@ fn drive_close_lease(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_id() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json")).unwrap();
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
     let mut lease = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
     assert!(!lease.is_retired().unwrap());
@@ -300,7 +300,7 @@ async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detachment() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🚪️lifetime/🏗️construction.json")).unwrap();
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
     let mut lease = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
     super::super::RUNTIME_CLOSE_CONSTRUCTION_LIVE.with(|probe| probe.set(None));
@@ -317,7 +317,7 @@ async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detac
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_detach() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧫️fixtures/🔣️.json")).unwrap();
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
     let mut old = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
     let displaced = runtime.instances.borrow_mut().take(7).unwrap();
@@ -341,7 +341,7 @@ async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_deta
 async fn instance_lifetime_close_construction_failure_preserves_original_live_root() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🚪️lifetime/🏗️construction.json")).unwrap();
     let law = &fixture["constructionFailure"];
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
     let rescue = runtime.instances.borrow().get(7).unwrap().clone();
     let generation = runtime.close_generation.get();
@@ -397,7 +397,7 @@ async fn run_ingress(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 /// owner-mutation payload past the decoder, and no `Error` frame hides the outcome.
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection() {
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
@@ -446,7 +446,7 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
 /// the merge then does is the folder route law's (`🧪️tests/🧪️folder-reload-route`); closing the program cancels what it admitted.
 #[semio_framework_async_macros::async_test]
 async fn a_merge_archive_command_is_admitted_under_its_own_sequence_on_both_routes() {
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let merge = |seq| protocol::AppCommand::MergeDocumentArchive { seq, archive: protocol::DocumentArchivePack { parent_pack: vec![1, 2], parent_spr: vec![3], members: Vec::new() } };
@@ -482,7 +482,7 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
 
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_registered_query_channel_continuation_ack_and_close() {
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let mut pending = std::collections::VecDeque::from(query_command(&runtime, 1, protocol::LocalInteractionQueryCommand::Read { request_id: 13 }).await);

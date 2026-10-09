@@ -1,0 +1,13 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"schema://framework.process/ResourceQueueTicketV1",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["arrivedAtMs","pid","owner"],
+  "properties":{
+    "arrivedAtMs":{"type":"integer","minimum":0,"maximum":281474976710655},
+    "pid":{"type":"integer","minimum":1,"maximum":9999999999},
+    "owner":{"type":"string","pattern":"^[A-Za-z0-9._-]{1,64}$"}
+  },
+  "definitions":{"Protocol":{"const":{"arrivalDigits":12,"arrivalBase":16,"pidDigits":10,"maximumAbsolutePathUtf16":256}}}
+}

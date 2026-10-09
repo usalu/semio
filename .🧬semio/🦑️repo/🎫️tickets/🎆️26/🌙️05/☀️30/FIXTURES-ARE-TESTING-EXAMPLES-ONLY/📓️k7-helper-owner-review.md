@@ -1,0 +1,7 @@
+# K7 Helper Owner Review
+
+Read-only current source cut. The defining helper is Store unit1670, `pub(super) fn physical_test_close_grant`; Store31310–31312 mounts that unit as a cfg(test)-only private `tests` module. Kernel237–240 mounts Store as private `os_store::component` and glob-reexports only accessible items; the private test module is not reexported as `os_store::tests`.
+
+All currently found explicit helper references already use `crate::os_store::component::tests`; no old `crate::os_store::tests` reference remains in this bounded Rust search. The six referenced files are original Store descendant test files. Their lexical ancestry under component allows private ancestor access; the helper is available through its parent component. No production alias or reexport is needed for this cohort. Future sibling Kernel consumers outside component would require a defining test-only visibility decision, rather than assuming this private path is accessible.
+
+The helper reads the original plain owned-emission physicalCloseGrant, not a schema or owner demand. Its five fixed axes are retained in the companion input with original hashes. The helper and referenced caller files are test-only; production Store has no cfg-independent dependency on that plain test input. No test/compiler execution was performed and the historical 212 diagnostics are not proof of the already-renamed current source.

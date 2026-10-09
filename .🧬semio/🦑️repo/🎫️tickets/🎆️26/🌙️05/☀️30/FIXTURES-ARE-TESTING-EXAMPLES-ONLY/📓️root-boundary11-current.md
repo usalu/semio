@@ -1,0 +1,5 @@
+# Current Fixture Boundary Renewal
+
+Original boundary11 98200 ended Nx1/1m43s with4739 modules/3755 scopes and4 whole-corpus schemas: VCS retirement, Neural input/evaluation and Store IO refusal. The private current corpus guard38155 independently failed Nx1/95ms on recreated VCS/Neural before its Source laws ran. Writer unknown; no attribution. Native renews3 non-Rust wrappers; Root retires Store refusal under persisted before hashes and uses the genuine existing Value wire Progress schema for each receipt. Original SQLite totals, defining Rust diagnostic grammar and native failure law/plain bytes are preserved unchanged. Exact Root actions in 📥️root-io-refusal-actions.json. Original source renewal is pending; Kernel21 separately pending.
+
+Actual original IO source17113 passed Nx0/6.2s,20 laws/577 assertions with canonical Progress/Ajv, actual SQLite and Rust grammar logs. Native physical assertion remains unrun. Original Kernel625 compiler errors recorded separately in 📓️k6-current.md.

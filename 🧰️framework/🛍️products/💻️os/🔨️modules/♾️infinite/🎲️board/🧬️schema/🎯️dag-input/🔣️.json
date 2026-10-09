@@ -38,29 +38,7 @@
     "channels": {
       "type": "array",
       "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "widgetId",
-          "port",
-          "direction"
-        ],
-        "properties": {
-          "widgetId": {
-            "type": "string",
-            "minLength": 1
-          },
-          "port": {
-            "type": "string",
-            "minLength": 1
-          },
-          "direction": {
-            "enum": [
-              "in",
-              "out"
-            ]
-          }
-        }
+        "$ref": "#/definitions/channel"
       }
     },
     "statuses": {
@@ -145,6 +123,104 @@
           }
         ]
       }
+    },
+    "selectionDomain": {
+      "enum": [
+        "nodes",
+        "edges"
+      ]
+    },
+    "channelDirection": {
+      "enum": [
+        "in",
+        "out"
+      ]
+    },
+    "channel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "widgetId",
+        "port",
+        "direction"
+      ],
+      "properties": {
+        "widgetId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "port": {
+          "type": "string",
+          "minLength": 1
+        },
+        "direction": {
+          "$ref": "#/definitions/channelDirection"
+        }
+      }
+    },
+    "wireRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "sourceTypes",
+        "target",
+        "targetTypes"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "targetTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "hover": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "channel",
+        "refusal"
+      ],
+      "properties": {
+        "channel": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/channel"
+            }
+          ]
+        },
+        "refusal": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/wireRefusal"
+            }
+          ]
+        }
+      }
     }
   },
   "oneOf": [
@@ -156,6 +232,9 @@
     },
     {
       "$ref": "#/definitions/statuses"
+    },
+    {
+      "$ref": "#/definitions/hover"
     }
   ]
 }

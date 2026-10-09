@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "shape",
+    "sameSource",
+    "controlledWithoutAuthority"
+  ],
+  "properties": {
+    "source": {
+      "const": "actor-original-雪"
+    },
+    "shape": {
+      "const": "Text"
+    },
+    "sameSource": {
+      "const": true
+    },
+    "controlledWithoutAuthority": {
+      "const": "UnsupportedOwner"
+    }
+  }
+}

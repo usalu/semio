@@ -17,7 +17,7 @@ pub struct TxtIntoBitmap;
 impl Deserializer<BitmapSnapshot> for TxtIntoBitmap {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<BitmapSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<BitmapSnapshot> {
         let text = match payload {
             IoPayload::Text(text) => text.clone(),
             IoPayload::Binary(bytes) => String::from_utf8(bytes.clone()).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("bitmap←txt: not valid utf-8: {error}"))))?,

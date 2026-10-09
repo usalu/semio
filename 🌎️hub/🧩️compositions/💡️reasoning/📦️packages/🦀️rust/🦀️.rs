@@ -37,6 +37,6 @@ mod viewer {
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
 mod plugin;
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ReasoningApps);
+semio_framework_plugin::plugin_exports!({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }, plugin::plugin, plugin::ReasoningApps);
 
 //#endregion 🔖️Plugin

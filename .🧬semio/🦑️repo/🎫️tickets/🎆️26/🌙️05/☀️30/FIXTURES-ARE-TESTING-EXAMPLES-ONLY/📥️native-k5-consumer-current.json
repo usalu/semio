@@ -1,0 +1,37 @@
+{
+  "actualCompilerRed": "k5 session31136 Nx1/Cargo101,14 assigned diagnostics; no assertions",
+  "sourceRed": {
+    "session": 34209,
+    "nxExit": 1,
+    "durationSeconds": 5.1,
+    "log": "native-k5-consumer-red-actual.log"
+  },
+  "sourceGreen": {
+    "session": 48719,
+    "nxExit": 0,
+    "durationSeconds": 3.9,
+    "tests": 1,
+    "assertions": 18,
+    "additionalDepthAssertions": 612,
+    "log": "native-k5-consumer-green.log"
+  },
+  "nativeRuntimeProven": false,
+  "endpoints": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "sha256": "1a466ddf97b4936dcaf80ce133cf853ff6e43ae2b9d3fecd7135c6d8c1b133c8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+      "sha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+      "sha256": "e8f71805a6e67c3b473a6620e58d1bff5116990be123e1f8e43ce5d24d266415"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "bc7ccaf6dfc6f12dbd0410c7f5816477f5b353ebb9f2b30257ee312579b56dcd"
+    }
+  ]
+}

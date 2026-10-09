@@ -1,0 +1,171 @@
+{
+  "ownedActions": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧺️heap.ts",
+      "action": "retire-only-whole-trial-admission",
+      "beforeSha256": "426a0b7a6759efe9e2ba8407e914ccff3f3668db73854638c0b9bcf7a99e55b2",
+      "afterSha256": "3226c0ff0793d13e54c2a035d7915092ba00e9bd6ed9a6e27fea57d6545e3e2c",
+      "currentSha256": "3226c0ff0793d13e54c2a035d7915092ba00e9bd6ed9a6e27fea57d6545e3e2c",
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧪️tests/🟦️.ts",
+      "action": "retire-only-whole-trial-admission",
+      "beforeSha256": "d435f1d03fadb76a02de171ae3a78ba0926e0abdd5dedb6c7b6f44dacaaecba0",
+      "afterSha256": "757de4df04f4e98af60adb050e97b721768927b6b692aca32856356170171242",
+      "currentSha256": "757de4df04f4e98af60adb050e97b721768927b6b692aca32856356170171242",
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧪️tests/🟦️.ts",
+      "action": "retire-only-whole-trial-admission",
+      "beforeSha256": "22adb2c914740de55caa3bc80b8da90816d217ccf30815caa912ca2a75157318",
+      "afterSha256": "29aa8b4999dc15ce167be5452aeadaf994bab99c0b894149ee969fd4f9d146ca",
+      "currentSha256": "29aa8b4999dc15ce167be5452aeadaf994bab99c0b894149ee969fd4f9d146ca",
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🧪️tests/🟦️.ts",
+      "action": "retire-only-whole-trial-admission",
+      "beforeSha256": "4c4e289e9849bd495529c5989eff4e7568be49ad55806fb5eab02b6f334f6966",
+      "afterSha256": "fdd91d1fd4f531ba411a4b4d2b3aff563ac903230f51cb13bffc97c3e0bde402",
+      "currentSha256": "fdd91d1fd4f531ba411a4b4d2b3aff563ac903230f51cb13bffc97c3e0bde402",
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📏️close-demand/🟦️.ts",
+      "action": "retire-only-whole-trial-admission",
+      "beforeSha256": "20dcefebce3a6b0d5ee4259b333a63be0fb37b9e1523a68c4768a27afa9d2536",
+      "afterSha256": "ede04127d5ddd215a50f45c4a4ad845ad35e56a192684be6af54a3f585995b52",
+      "currentSha256": "ede04127d5ddd215a50f45c4a4ad845ad35e56a192684be6af54a3f585995b52",
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+      "action": "retire-only-whole-trial-admission",
+      "beforeSha256": "f492f309021fd59c747c9b4d4c44a9bccd064783424ca4da46fab807bae4bb8f",
+      "afterSha256": "cb4753a173abdb0399f38626126fd713009327a42e9c116b20651758936ecc54",
+      "currentSha256": "cb4753a173abdb0399f38626126fd713009327a42e9c116b20651758936ecc54",
+      "matchesAction": true
+    },
+    {
+      "path": "🧫️fixtures/🧫️diff-only-law-gate/🫧️lanes/🧬️schema/🔣️.json",
+      "action": "remove-whole-trial-schema",
+      "beforeSha256": "4e1a6b0942c012981256909d54edef1e26bd2d35a97b9600eab99a97dfa4460c",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️schema/🧺️heap.json",
+      "action": "remove-whole-trial-schema",
+      "beforeSha256": "e55c3752859f0c757f5f9964e48f001c891fac2d9160c637dbe183a1df54eca9",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/📦️full-receipt/🔣️.json",
+      "action": "remove-whole-trial-schema",
+      "beforeSha256": "8737948118eb3511a2edf5e09c75404270399b671f351ad1824a8df5d43efba4",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧬️schema/🔣️.json",
+      "action": "remove-whole-trial-schema",
+      "beforeSha256": "ccea4d44989eb08d9c061ee9f0aa54ce920c8289298a156c49feb290d3e92720",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🧬️schema/🔣️.json",
+      "action": "remove-whole-trial-schema",
+      "beforeSha256": "6971e00bd6a3674b775c77eb51fe2843036c544d0fca15f9e612b43d16d1b2d9",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️expression/📏️kinds/🧬️schema/🔣️.json",
+      "action": "remove-whole-trial-schema",
+      "beforeSha256": "0a3ab05be72605cf04795d61ae99745baac76459f2a1982629387709cac7ab64",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️expression/🕸️parameters/🧬️schema/🔣️.json",
+      "action": "remove-whole-trial-schema",
+      "beforeSha256": "8ebd3b1554e697b74f91315d63f0d58dcddbd30c8355768d9547fc1783837596",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️expression/🧮️evaluation/🧬️schema/🔣️.json",
+      "action": "remove-whole-trial-schema",
+      "beforeSha256": "ac2f2dbd6227e2b3ebd5efb273c8d1daabc48fb9617669a547a09f8ae1e95d02",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🧬️schema/🔣️.json",
+      "action": "remove-whole-trial-schema",
+      "beforeSha256": "3cdc330cc8e52e88be194e4a1652414382bd13e0a93fce0a56b39fd01608db97",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧬️schema/📇️fixed-operation/🔣️.json",
+      "action": "remove-whole-trial-schema",
+      "beforeSha256": "daa86cd1e862269dbc15603b463429312e855386d1cea2131e01816f7f9f59fc",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️expression/🧪️tests/📜️conformance/🐍️.py",
+      "action": "remove-whole-trial-python-admissions",
+      "beforeSha256": "1187b32ce1d70ec4540afa5f551fd55efcdf4fc3d0c843eda428008c54af6793",
+      "afterSha256": "01ef4d9eb177795c0f9aef4a56f1bb38fcb7082d5c2e723a4a03bee3ca087193",
+      "currentSha256": "01ef4d9eb177795c0f9aef4a56f1bb38fcb7082d5c2e723a4a03bee3ca087193",
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🎟️insertion/🟦️.ts",
+      "action": "retire-only whole-trial validator; retainJSONPatch/Map/Set/reuse",
+      "beforeSha256": "7569a68becb6c196cfc3e3fe697155ff7466e0368099b37d075b3ef316e05786",
+      "afterSha256": "94b751a6135c38da4f76ed53e91241441aa1b083e5b03857e8264154c3e0801d",
+      "currentSha256": "94b751a6135c38da4f76ed53e91241441aa1b083e5b03857e8264154c3e0801d",
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️expression/🔤️syntax/🧬️schema/🔣️.json",
+      "action": "remove-only whole-trial Schema",
+      "beforeSha256": "b6916cb95f28404c240565c7e95166b7f19053929b6bcf81a320b61736b4eeef",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🎟️insertion/🔣️.json",
+      "action": "remove-only whole-trial Schema",
+      "beforeSha256": "83ee893b699bc2fba89259e1bab3013d2520fe2a164f7c8bcc9d969c8549c202",
+      "afterSha256": null,
+      "currentSha256": null,
+      "matchesAction": true
+    }
+  ],
+  "allCurrentMatch": true,
+  "verification": {
+    "originalTS": "47570 Nx0/1.7s 14/338 +depth1/612",
+    "originalIndexInsertion": "28760 Nx0/2.5s DEBUG140rows",
+    "originalExpressionPython": "36588 Nx0/6.9s 7passed/1.01s;3originalPythonsetupprerequisites",
+    "g12Guard": "94529 Nx1/188ms broader2 recreated paths; own12absence reached"
+  }
+}

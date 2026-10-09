@@ -1,0 +1,18 @@
+{
+  "sessionId": 11247,
+  "nxExitCode": 0,
+  "duration": "2.0s",
+  "tests": 4,
+  "assertions": 21,
+  "bunDuration": "1.92s",
+  "originalClassRefusals": 4,
+  "existingRealUtf8BytesPreserved": true,
+  "independentOriginalCanonicalAjvCases": 4,
+  "nativeAcquisitionCredit": false,
+  "precedingRelativeImportFailure": {
+    "sessionId": 65984,
+    "nxExitCode": 1,
+    "duration": "230ms",
+    "semanticRedCredit": false
+  }
+}

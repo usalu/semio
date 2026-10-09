@@ -1,0 +1,15 @@
+{
+  "producerCapacity": 64,
+  "policyCapacity": 0,
+  "externalCapacity": 64,
+  "turnCapacity": 64,
+  "remainingCapacity": 0,
+  "fuel": 6,
+  "refusalHeap": [
+    0,
+    0
+  ],
+  "falseCompleteReceipt": "same-actual-receipt",
+  "parentErrorIngress": "same-original-receipt",
+  "nestedErrorIngress": "same-original-context-delta"
+}

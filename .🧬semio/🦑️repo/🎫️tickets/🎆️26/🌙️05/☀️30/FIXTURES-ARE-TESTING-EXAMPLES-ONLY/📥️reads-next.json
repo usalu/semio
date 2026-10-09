@@ -1,0 +1,37 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sourceHash": "2008c31f243f716766187c6c0a2c8c1e1afc544218ff0fb8c133e0829f276f95",
+  "cases": [
+    {
+      "id": "conditional-write",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";let value=fixture;flag?(value=opaque()):(value=fixture);new Ajv().compile(schema)(value);",
+      "expectation": "join branch writes; value unresolved"
+    },
+    {
+      "id": "block-var",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";var value=fixture;{var value=opaque()}new Ajv().compile(schema)(value);",
+      "expectation": "var belongs enclosing function/module scope; unresolved"
+    },
+    {
+      "id": "async-result",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const read=async()=>fixture;new Ajv().compile(schema)(read());",
+      "expectation": "input is Promise, not imported JSON; unresolved unless genuine await modeled"
+    },
+    {
+      "id": "delete-content",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";delete fixture.cases;new Ajv().compile(schema)(fixture);",
+      "expectation": "deletion invalidates original document"
+    },
+    {
+      "id": "validator-replaced",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const ajv=new Ajv();ajv.compile=()=>opaque();ajv.compile(schema)(fixture);",
+      "expectation": "member assignment invalidates trusted Ajv method authority"
+    },
+    {
+      "id": "short-circuit-write",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";let value=fixture;flag&&(value=opaque());new Ajv().compile(schema)(value);",
+      "expectation": "conditional side effects join; unresolved, conservative current eagerUnknown acceptable"
+    }
+  ]
+}

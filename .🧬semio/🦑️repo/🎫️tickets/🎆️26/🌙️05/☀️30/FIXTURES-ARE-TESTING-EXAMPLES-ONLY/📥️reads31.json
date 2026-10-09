@@ -1,0 +1,66 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "sha256": "d88adeea98616d5408d7dc37a4c2550d40233421efa3fd847809a02b7c6c31be"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🚦️ownership/🧬️schema/🔣️.json",
+      "sha256": "7519a5b360b25ef635f6b6537feb02104254d6b9d5dba6e814751931993be1fc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🚦️ownership/🧫️fixtures/🔣️.json",
+      "sha256": "96ab7a706281309e99a345484131354014f93dbb696a19d0aeb9d77c89aea952"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
+      "sha256": "d221b95e9d860fda65bdd6f5e60f551f8083a0e250a5fd89e6480894d97f9aa0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🔬️math-unit/🦀️.rs",
+      "sha256": "3df5971066aaf68d09c4800dfa757491b5ffb40136547cd08f58b5638b0cef9f"
+    }
+  ],
+  "cases": [
+    {
+      "id": "nested-var-hoist",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";function run(){new Ajv().compile(schema)(fixture);{var schema=opaque()}}run();",
+      "expectation": "nested var shadows module schema throughout function; first schema undefined/unresolved"
+    },
+    {
+      "id": "lhs-reference-order",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const other={};let target=fixture;target.cases=(target=other);new Ajv().compile(schema)(fixture);",
+      "expectation": "LHS reference acquired before RHS; original fixture mutated"
+    },
+    {
+      "id": "computed-key-side-effect",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";function key(){fixture.cases=opaque();return \"x\"}const object={};object[key()]=0;new Ajv().compile(schema)(fixture);",
+      "expectation": "computed assignment key executes before RHS; fixture tainted"
+    },
+    {
+      "id": "escaped-ajv-instance",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const ajv=new Ajv();opaque(ajv);ajv.compile(schema)(fixture);",
+      "expectation": "opaque escape can replace methods; Ajv authority unresolved"
+    }
+  ],
+  "meshReader": {
+    "imports": [
+      503,
+      504
+    ],
+    "compile": 507,
+    "wholeAndMutants": [
+      508,
+      509,
+      510,
+      511,
+      512
+    ],
+    "nativePlainReaders": [
+      1524,
+      1546
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+  "before": "5689c7252fbaab7ba7194f7ed7192b1cc27a051949b4836d768b2e097afe3f3a",
+  "after": "e1d784cb5ae992cbb6d05016b2c3fa36a74577704fa90e6911e2378faabb12ae",
+  "action": "actual replaced original typed Box and map retained and paid; no live payload implicit Drop"
+}

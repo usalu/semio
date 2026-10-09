@@ -1,0 +1,10 @@
+{
+  "maximumBytes": 33554432,
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 2097152,
+    "maximumReleaseBytes": 2097152,
+    "maximumDepth": 64
+  }
+}

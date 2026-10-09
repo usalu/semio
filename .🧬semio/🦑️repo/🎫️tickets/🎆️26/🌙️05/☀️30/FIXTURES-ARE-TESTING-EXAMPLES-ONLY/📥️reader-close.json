@@ -1,0 +1,65 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "sha256": "d079567f793678d0eacae23712c381a5962d63e4c151096c42db9080396c4900",
+      "codepoints": 110,
+      "utf16Units": 118
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts",
+      "sha256": "6cb0a12885f8c892c0e5fbd6bfe65cce076b86ccc476690a7b479e428bdb5f52",
+      "codepoints": 118,
+      "utf16Units": 127
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🔣️.json",
+      "sha256": "2de0af73668999fd43ac7b85a5fb4efeec9d3f38d222cf91a6304f8da741427d",
+      "codepoints": 121,
+      "utf16Units": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🟦️.ts",
+      "sha256": "76f46c4da5361fb9344dbbbb7c94b0dcdc0d1d4081155be6ab9e65974745faa5",
+      "codepoints": 119,
+      "utf16Units": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
+      "sha256": "f61dbd347a4fad9bf50a4586a1c2255a74e1474d596dadd775a589a5f198a179",
+      "codepoints": 123,
+      "utf16Units": 132
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "f9c9eff1c05c4e0a4a1317b6711094fe985989f8d027b0ce01c33b532c62b3b6",
+      "codepoints": 95,
+      "utf16Units": 102
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "cef118f35284abbfe0c2308d71f3431ab03c4f8bda909c76f32227d1545022d5",
+      "codepoints": 113,
+      "utf16Units": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "0e84b6cbcc1e820b8dbe6a45235e0556c59250817d12d26d33cfd0ae58ae07e1",
+      "codepoints": 116,
+      "utf16Units": 124
+    }
+  ],
+  "canonicalId": "https://json.schemas.assets.semio-tech.com/repo/discovery/schema-reads/schema.json",
+  "exports": [
+    "SchemaSourceOrigin",
+    "SchemaValidationRead",
+    "SchemaReadIssue",
+    "SchemaValidationReadReport",
+    "SchemaReadProgress",
+    "SchemaValidationReadIndex"
+  ],
+  "plainCaseCount": 35,
+  "allBoundedPathsUnder256": true
+}

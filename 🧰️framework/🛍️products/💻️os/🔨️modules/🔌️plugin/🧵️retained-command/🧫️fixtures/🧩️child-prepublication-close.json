@@ -4,14 +4,37 @@
   "maximumBytes": 65536,
   "shortByteGrantPreservesExactAllocation": true,
   "children": [
-    { "id": "first", "slot": "slot-ä", "childId": "child-α", "value": "雪" },
-    { "id": "second", "slot": "slot-β", "childId": "child-二", "value": "💥" }
+    {
+      "id": "first",
+      "slot": "slot-ä",
+      "childId": "child-α",
+      "value": "雪"
+    },
+    {
+      "id": "second",
+      "slot": "slot-β",
+      "childId": "child-二",
+      "value": "💥"
+    }
   ],
-  "expectedRetirementOrder": ["second", "first"],
+  "expectedRetirementOrder": [
+    "second",
+    "first"
+  ],
   "zeroGrantPreservesOwner": true,
   "parentReleasedBeforeChildren": false,
-  "completionRejections": ["duplicate", "busy"],
+  "completionRejections": [
+    "duplicate",
+    "busy"
+  ],
   "rejectionReturnsOwner": true,
   "existingCompletionUntouched": true,
-  "boundedFactoryPublishesChild": false
+  "boundedFactoryPublishesChild": false,
+  "closeGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 64
+  }
 }

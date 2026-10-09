@@ -1,0 +1,25 @@
+{
+  "id": "original-operation-measurement-source-observation-v1",
+  "selectedRoots": [
+    "🧰️framework/🔨️modules/🚪️io/⏱️control",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot",
+    "✏️s/🔌️plugins/🏗️fem",
+    "🧰️framework/🔨️modules/🧵️job",
+    "🧰️framework/🔨️modules/🌱️value",
+    "🧰️framework/🔨️modules/🏃️process",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control"
+  ],
+  "maximumCumulativeReadBytes": 268435456,
+  "maximumReadChunkBytes": 1048576,
+  "maximumObservationMs": 60000,
+  "maximumClaims": 10000,
+  "maximumMetadataOutputBytes": 16777216,
+  "maximumPathUnicode": 256,
+  "maximumPathUtf16": 256,
+  "sourceCopies": 0,
+  "budgetMeaning": "Cumulative actual streamed bytes and physical read time across before, after, and born observations; source execution time is excluded."
+}

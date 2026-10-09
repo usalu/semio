@@ -24,10 +24,24 @@
           "type": "number"
         },
         "centerX": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "centerY": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "timeStep": {
           "type": "number"
@@ -74,10 +88,24 @@
           "type": "string"
         },
         "centerX": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "centerY": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "lockedNodeIds": {
           "type": "array",
@@ -96,15 +124,36 @@
           "type": "string"
         },
         "centerX": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "centerY": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "randomSeed": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 18446744073709551615
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "redrawHandlesAfter": {
           "type": "boolean"
@@ -116,10 +165,24 @@
           }
         },
         "forceGraph": {
-          "$ref": "#/$defs/ForceGraphLayoutOptions"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ForceGraphLayoutOptions"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "hierarchicalTree": {
-          "$ref": "#/$defs/HierarchicalTreeLayoutOptions"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HierarchicalTreeLayoutOptions"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false,
@@ -143,10 +206,24 @@
           ]
         },
         "centerX": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "centerY": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false,

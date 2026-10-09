@@ -1,0 +1,35 @@
+{
+  "executed": false,
+  "authored": false,
+  "observations": [
+    {
+      "path": "📜️script.ts",
+      "authored": false,
+      "sha256": "7c237a1b859e2d2068aec728b8a9e9be0ff48080d093e4ab4385fcbe8d69127b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
+      "authored": false,
+      "sha256": "0d6d00e7b949b80122d3530f5c6d097409d56b2b90b1add7f01717bc4fbf12c9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+      "authored": false,
+      "sha256": "54e1701e198840322d65d8fe615916acc8fb95172089c53c44298f53104f804b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+      "authored": false,
+      "sha256": "0a161a683dd85506c03c7a48aec979685b1c9f3b0a1248c72a61ee66930137a3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts",
+      "authored": false,
+      "sha256": "9f2e36c6bb0183344d840a11fe95230083ad9d387dbb0cc024f0e6d1f1cabb38"
+    }
+  ],
+  "tableCodes": 46,
+  "schemaCodes": 46,
+  "codeSetsEqual": true,
+  "scope": "developer schema verification; no application runtime edge proven"
+}

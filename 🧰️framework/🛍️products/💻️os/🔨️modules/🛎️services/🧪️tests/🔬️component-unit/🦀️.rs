@@ -1,4 +1,6 @@
 use super::*;
+
+fn fixture_compute_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
 use semio_framework_async::TraceId;
 use std::pin::Pin;
 use std::sync::atomic::AtomicBool;
@@ -197,7 +199,7 @@ impl InteractiveJob for CountingComputeJob {
 
     fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::WorkLimit);
+            return semio_framework_job::InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::WorkLimit,progress:Default::default()};
         }
         self.begin_close();
         if self.entered {
@@ -206,7 +208,7 @@ impl InteractiveJob for CountingComputeJob {
             return semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, ..Default::default() } };
         }
         let release = self.next_close_release_byte_demand().unwrap();
-        if grant.maximum_release_bytes < release { return semio_framework_job::InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::WorkLimit) }
+        if grant.maximum_release_bytes < release { return semio_framework_job::InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::WorkLimit,progress:Default::default()} }
         if self.current.is_some() { drop(self.current.take()); }
         else if self.observed_max.is_some() { drop(self.observed_max.take()); }
         else { return semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }; }
@@ -266,7 +268,7 @@ async fn interactive_jobs_never_exceed_the_compute_bound_under_a_burst() {
         let ctx = test_ctx(i as u64, scope.cancel.clone()).await;
         handles.push(async move {
             let job = CountingComputeJob { current: Some(current), observed_max: Some(observed_max), remaining_steps: 8, entered: false, closing: false };
-            pool.run_job(runtime, scope, ctx, job).await.expect("interactive job without a deadline must not fail");
+            pool.run_job(runtime, scope, ctx, fixture_compute_grant(), job).await.expect("interactive job without a deadline must not fail");
         });
     }
     futures_join_all(handles).await;
@@ -283,7 +285,7 @@ async fn interactive_job_deadline_cancels_the_resumable_job() {
     let mut ctx = test_ctx(0, scope.cancel.clone()).await;
     ctx.deadline_ms = Some(now + 40);
     let cancel = ctx.cancel.clone();
-    let outcome = pool.run_job(&runtime, &scope, ctx, NeverCompleteComputeJob { closing: false }).await;
+    let outcome = pool.run_job(&runtime, &scope, ctx, fixture_compute_grant(), NeverCompleteComputeJob { closing: false }).await;
     assert_eq!(outcome, Err(ComputeError::DeadlineExceeded), "a non-terminal job must stop at its absolute deadline");
     assert!(cancel.is_cancelled().await, "deadline propagation must cancel the running job");
 }
@@ -296,7 +298,7 @@ async fn stopped_compute_pool_returns_worker_lost_and_releases_the_job_owner() {
     let pool = ComputePool::with_pool(1, workers);
     let scope = runtime.open_scope(ScopeOwner::Service("compute-stopped"), None).await;
     let ctx = test_ctx(0, scope.cancel.clone()).await;
-    let outcome = pool.run_job(&runtime, &scope, ctx, NeverCompleteComputeJob { closing: false }).await;
+    let outcome = pool.run_job(&runtime, &scope, ctx, fixture_compute_grant(), NeverCompleteComputeJob { closing: false }).await;
     assert_eq!(outcome, Err(ComputeError::WorkerLost));
 }
 
@@ -1469,3 +1471,17 @@ async fn mock_completion_sink_records_calls_in_order() {
     assert_eq!(recorded[1].actor, 2);
 }
 //#endregion 🧾️CompletionSinkTests
+
+#[test]
+fn compute_returned_outcome_keeps_original_metadata_on_denied_grant_and_observes_exact_receipt(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();
+    let grant:semio_framework_job::RetainedCloneGrant=serde_json::from_value(fixture["metadataTurn"]["grant"].clone()).unwrap();
+    let expected:semio_framework_job::RetainedCloneProgress=serde_json::from_value(fixture["metadataTurn"]["receipt"].clone()).unwrap();
+    let mut owner=ComputeOutcomeCloseOwner{original:semio_framework_job::JobOutcomeSlot::from_outcome(StepOutcome::Cancelled),grant,progress:Default::default()};
+    let pointer=owner.original.original().unwrap() as *const StepOutcome;
+    for denied in [semio_framework_job::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_job::RetainedCloneGrant{maximum_copy_bytes:0,..grant},semio_framework_job::RetainedCloneGrant{maximum_depth:0,..grant}]{
+        owner.grant=denied;let step=owner.close_step().unwrap();assert_eq!(step.progress(),Default::default());assert_eq!(owner.progress,Default::default());assert_eq!(owner.original.original().unwrap() as *const StepOutcome,pointer);assert_eq!(owner.grant,denied);
+    }
+    owner.grant=grant;let step=owner.close_step().unwrap();assert_eq!(step,semio_framework_job::RetainedCloneStep::Complete(expected));assert!(owner.original.is_empty());assert_eq!(owner.progress,expected);assert_eq!(owner.grant,grant);assert_eq!(owner.close_step().unwrap().progress(),Default::default());assert_eq!(owner.progress,expected);
+    eprintln!("[DEBUG] actual Services returned original metadata same pointer under item/copy/depth denial; caller grant unchanged; exact copied1 byte1 release0 terminal receipt");
+}

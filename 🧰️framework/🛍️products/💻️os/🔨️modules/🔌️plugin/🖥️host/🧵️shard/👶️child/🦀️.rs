@@ -9,7 +9,7 @@
 //! count — only its CLI carries a single starter actor today, see `## gaps` in the P1 report for why
 //! multi-actor bootstrap over CLI args wasn't built).
 //!
-//! Usage: `semio-shard <component.wasm> <package-id> <actor-id>` — compiles and instantiates
+//! Usage: `semio-shard <component.wasm> <package-id> <actor-id> <identity-policy.json>` — compiles and instantiates
 //! `component.wasm` as `actor-id` under `package-id`, registers it on a fresh `ShardLoop`, and pumps
 //! forever. The FIRST envelope sent on stdin should normally be `Event::InstanceOpen` (its `config`
 //! bytes select the guest's own runtime behaviour, e.g. the scale fixture's `{"profile":"idle"}`) —
@@ -53,8 +53,8 @@ const INSTANTIATE_BUDGET: Budget = Budget { fuel: 200_000_000, deadline_ms: 500,
 /// ("each shard thread runs block_on(loop.run())").
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    let [_, wasm_path, package_id, actor_id_arg] = args.as_slice() else {
-        eprintln!("[semio-shard] usage: semio-shard <component.wasm> <package-id> <actor-id>");
+    let [_, wasm_path, package_id, actor_id_arg, identity_policy_arg] = args.as_slice() else {
+        eprintln!("[semio-shard] usage: semio-shard <component.wasm> <package-id> <actor-id> <identity-policy.json>");
         std::process::exit(2);
     };
     let actor_id: u64 = actor_id_arg.parse().unwrap_or_else(|error| {
@@ -79,7 +79,11 @@ fn main() {
     });
 
     let transport = semio_framework_async::block_on(StdioTransport::new(200));
-    let mut shard = semio_framework_async::block_on(ShardLoop::new(Arc::clone(&runtime), ShardTransports::Stdio(transport)));
+    let policy_text=std::fs::read_to_string(identity_policy_arg).unwrap_or_else(|error|{eprintln!("[semio-shard] identity policy read failed: {error}");std::process::exit(2)});
+    let policy=semio_framework_pack_json::from_json_str(&policy_text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error|{eprintln!("[semio-shard] identity policy rejected: {error}");std::process::exit(2)});
+    let alive=transport.identity_liveness();
+    let identity=semio_framework_plugin_host::shard::native_identity_issuer(policy,move |_|{let original=Arc::clone(&alive);Box::new(move |_|original.load(std::sync::atomic::Ordering::SeqCst))});
+    let mut shard = semio_framework_async::block_on(ShardLoop::new(Arc::clone(&runtime), ShardTransports::Stdio(transport),identity));
     if let Err(rejected) = shard.register(ActorId(actor_id), instance) {
         semio_framework_async::block_on(runtime.drop_instance(rejected.instance));
         eprintln!("[semio-shard] registration refused: {:?}", rejected.reason);

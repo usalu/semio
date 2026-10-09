@@ -9,14 +9,15 @@ fn complete_document_job(current: SurfaceReconciler, name: &str, generation: u64
     let mut job = SurfaceReconcileJob::try_new(current, tree(leaf(name)), generation).expect("real reconciliation admission");
     let mut sequence = 0;
     for _ in 0..100_000 {
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(
             semio_framework_job::allocate_operation_id(),
             semio_framework_job::Generation(generation),
-            semio_framework_job::StepBudget::new(1, u64::MAX),
+            semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut sequence,
-        );
+        &mut actual_retained_progress);
         match job.drive_one(&mut cx) {
             SurfaceReconcileJobStep::MoreWork => {}
             SurfaceReconcileJobStep::Ready => {

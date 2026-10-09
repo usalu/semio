@@ -18,7 +18,7 @@ pub fn dsl_text(from: &Block5dSnapshot) -> String {
 impl Serializer<Block5dSnapshot> for Block5dIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Block5dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &Block5dSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         serialize_dsl_txt(from)
     }
 }

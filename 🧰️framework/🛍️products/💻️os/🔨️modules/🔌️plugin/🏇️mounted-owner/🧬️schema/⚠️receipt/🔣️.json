@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "producerCapacity",
+    "policyCapacity",
+    "externalCapacity",
+    "turnCapacity",
+    "remainingCapacity",
+    "fuel",
+    "refusalHeap",
+    "falseCompleteReceipt",
+    "parentErrorIngress",
+    "nestedErrorIngress"
+  ],
+  "properties": {
+    "producerCapacity": {
+      "const": 64
+    },
+    "policyCapacity": {
+      "const": 0
+    },
+    "externalCapacity": {
+      "const": 64
+    },
+    "turnCapacity": {
+      "const": 64
+    },
+    "remainingCapacity": {
+      "const": 0
+    },
+    "fuel": {
+      "const": 6
+    },
+    "refusalHeap": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "const": 0
+        },
+        {
+          "const": 0
+        }
+      ],
+      "items": false
+    },
+    "falseCompleteReceipt": {
+      "const": "same-actual-receipt"
+    },
+    "parentErrorIngress": {
+      "const": "same-original-receipt"
+    },
+    "nestedErrorIngress": {
+      "const": "same-original-context-delta"
+    }
+  }
+}

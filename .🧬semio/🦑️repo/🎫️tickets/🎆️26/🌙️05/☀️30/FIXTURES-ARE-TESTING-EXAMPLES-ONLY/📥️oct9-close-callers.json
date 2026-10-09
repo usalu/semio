@@ -1,0 +1,28 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+  "beforeSHA": "83d705860bcebc638e4ca504d3dcbe138cb96b7cb7de5a6cbe47ab61dcf801fc",
+  "afterSHA": "c51c97ca1bd8276b40f03d1f6bb71576850e320af58337c38ef363e673538d78",
+  "actions": [
+    {
+      "scope": "fn close_member_dialect_fixture<M: SpaceMember>",
+      "beforeBlockSHA": "35a6a68a4ae61c6c4cd5233312e80c9131e48eeec4cc05dc067afeee21cb3a9c",
+      "afterBlockSHA": "3873c50c25c9cd0a2e93bdbee5539936a3362db516c987cabc9261bf69196b11"
+    },
+    {
+      "scope": "fn retire_demo_envelope<Mutation: Send",
+      "beforeBlockSHA": "df4504bfe7a3059d36b9b01510b065019574a59796cfaac114f55ea5dc41f7d3",
+      "afterBlockSHA": "bf9058bb41afc626fd1bd0720f07b776bd3339dbf65b55856598de6095521655"
+    },
+    {
+      "scope": "fn close_erased_member_publication(",
+      "beforeBlockSHA": "30fa8566b2e8cb237b6001740a50f6aaaaf5b2051cb9ce023baaca98c9e477be",
+      "afterBlockSHA": "57ff6438654bc41d30496822dc96d41629dbdee7851b2db5b0ed400689b4d1f0"
+    },
+    {
+      "scope": "fn close_durable_publication(",
+      "beforeBlockSHA": "75c28dad61d6ca1e4c91b27ab2f896d555cdfdbbf32eb613044c7a8aabaf510b",
+      "afterBlockSHA": "30d9a1f00c5cc150b929882e202737cd5018a7d522fcaa315abfba77f859c68b"
+    }
+  ],
+  "nativeExecuted": false
+}

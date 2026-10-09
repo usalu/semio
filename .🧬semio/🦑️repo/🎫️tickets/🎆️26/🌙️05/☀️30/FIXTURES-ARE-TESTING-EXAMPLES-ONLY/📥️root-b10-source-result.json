@@ -1,0 +1,23 @@
+{
+  "conflict": {
+    "sessionId": 25812,
+    "nxExitCode": 0,
+    "duration": "2.3s",
+    "actualDebug": "2 original envelopes /3 conflicts JSONPatch+stableJSON+UTF8"
+  },
+  "host": {
+    "sessionId": 25645,
+    "nxExitCode": 0,
+    "duration": "887ms",
+    "actualDebug": "36 actual current original fields /JSONPatch+UTF8"
+  },
+  "session": {
+    "nxExitCode": 0,
+    "duration": "88ms",
+    "bunTests": 1,
+    "assertions": 59,
+    "bunDurationMs": 21,
+    "actualDebug": "original custody livePublication/invalidation/reset/latchAdmission +UTF8/Buffer/JSONPatch"
+  },
+  "nativeExecuted": false
+}

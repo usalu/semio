@@ -1,0 +1,9 @@
+# Borrowed JSON Writer Partial Physical Receipt
+
+The genuine Value Grant/Progress domain remains unchanged. Actual JsonBorrowedWriteCursor normal turns now measure retained frame/path/output capacities and output copied length from their original owned containers. They record performed work before the native post-turn cancellation checkpoint. Errors carry exactly the current normal_step_progress. Final output transfer keeps its original allocation and counts its actual item transition, without reporting a release.
+
+True registered Source RED93701 Nx1/930ms reached the missing retained_capacity_bytes binding after independent JSON stringify/parse/Buffer/TextEncoder payload checks. GREEN48314 Nx0/709ms reached real original Pack source and Rust grammar, plus unchanged recursive depth1/612. Action native-writer-action.json records fresh original pre/post SHA of only the defining cursor block; existing JSON payload semantics and other parser/writer helpers are preserved.
+
+Original native borrowed_json_writer_preserves_actual_post_birth_cancellation_receipt is authored in the existing Pack unit module. It cancels the original callback after the first funded scaffold birth, compares error and cursor receipts with the real System allocation observer, verifies exact original frame/path pointers survive zero-item refusal, resumes with independent unchanged policy, and compares output with Serde. Native law is UNRUN; no allocator/type/runtime pass is inferred.
+
+Snapshot owner drive and retained static cursor recipient integration are still outstanding. Snapshot projection and cold typed Pack construction remain uncredited. Physical writer receipts do not make arbitrary caller-owned cold allocations controlled. Current exact three endpoint hashes: native-writer-current.json. Original-reference records only, no Source copies or paths beyond256characters.

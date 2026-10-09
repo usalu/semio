@@ -1,0 +1,23 @@
+{
+  "contract": "semio.frame.bootstrap-authority.v1",
+  "origins": [
+    "native-window",
+    "browser-worker"
+  ],
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 64
+  },
+  "scope": "per-transition; receipts accumulate without deriving authority",
+  "receivers": [
+    "OsHost",
+    "FrameBuildHandle",
+    "ActiveFrameBuild",
+    "deadline-job",
+    "preparation-job"
+  ],
+  "zeroDemandDoesNotCreateGrant": true
+}

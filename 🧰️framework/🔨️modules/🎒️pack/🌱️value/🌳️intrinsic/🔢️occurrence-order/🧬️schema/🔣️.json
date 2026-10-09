@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.pack.intrinsic.occurrence-order.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "ordering", "equalKeys", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "ordering": { "const": "originalOrdinal" },
+    "equalKeys": { "const": "retainOccurrences" },
+    "cases": { "type": "array", "minItems": 5, "items": { "$ref": "#/$defs/Case" } }
+  },
+  "$defs": {
+    "Case": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source", "bodyHex"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "source": { "$ref": "#/$defs/Value" },
+        "bodyHex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" }
+      }
+    },
+    "Value": { "oneOf": [
+      { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "null" } } },
+      { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "boolean" }, "value": { "type": "boolean" } } },
+      { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "text" }, "value": { "type": "string" } } },
+      { "type": "object", "additionalProperties": false, "required": ["kind", "items"], "properties": { "kind": { "const": "array" }, "items": { "type": "array", "items": { "$ref": "#/$defs/Value" } } } },
+      { "type": "object", "additionalProperties": false, "required": ["kind", "members"], "properties": { "kind": { "const": "object" }, "members": { "type": "array", "items": { "$ref": "#/$defs/Member" } } } }
+    ] },
+    "Member": {
+      "type": "object", "additionalProperties": false, "required": ["name", "value"],
+      "properties": { "name": { "type": "string" }, "value": { "$ref": "#/$defs/Value" } }
+    }
+  }
+}

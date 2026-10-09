@@ -7,11 +7,11 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
             verb: "compositeEdit".into(), meta, operation, canonical_revision: revision,
             artifact_generation: operation.generation.0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
             window_config_authority: None, window_transient_authority: None, publication_lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Child],
-            session: None, session_rejected: None, reserved_producer: None, completion: None, completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None, output_chunks: None, cancellation_lease: Some(lease), terminal_outcome: None, terminal_seen: true,
+            session: None, session_rejected: None, reserved_producer: None, completion: None, completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None, output_chunks: None, cancellation_lease: Some(lease), terminal_outcome: semio_framework_job::JobOutcomeSlot::empty(), terminal_seen: true,
             publication: Some(ArtifactToolCompletionValue::Emit(Ok(emit), EphemeralEmit::default())), pending_artifact_publication: None, pending_child_publication: None,
             owned_child_group: None, owned_child_committed: false, owned_child_result_pending: false,
             captured_child_content: Some(std::sync::Arc::new(ChildContentView::clone(&app.child_content_root))), captured_child_content_generation: app.child_content_generation,
-            result_page: None, result_page_presented: false, result_sequence: 0, publication_progress: 0, publication_checkpoint: None, publication_attempt: 0,
+            result_page: None, result_page_presented: false, result_sequence: 0, publication_progress: 0, publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None, publication_attempt: 0,
             ui_pending: true, progress: None, progress_pending: false, user_cancel_requested: false, published_artifact: false, published_config: false, published_window_config: false,
             command_logged: false, interaction_revalidated: false, terminal_fault: None, stage: MountedTypedCommandFullOperationStage::Publishing,
         };

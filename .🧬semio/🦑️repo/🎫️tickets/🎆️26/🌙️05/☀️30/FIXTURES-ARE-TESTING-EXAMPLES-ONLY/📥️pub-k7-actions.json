@@ -1,0 +1,111 @@
+{
+  "actualRed": "Root k7 29580 Cargo101212 located diagnostics,113 own E0308/1 trait error; no assertions",
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️backbone-parity/🦀️.rs",
+      "beforeSha256": "1f23047d1d7d97d0237680f8a3027b55818007fe42f7dc0a5eb63170c08ebad2",
+      "action": "actual SharedUtf8 actor construction for same original backbone author text",
+      "count": 1,
+      "beforeBlockSha256": "23c83a53e424c71fa0efbaddf79b2b456db8b6371b8c142f58d64506d724e9f3",
+      "afterBlockSha256": "289cf24b9bfd22cd039d5468440f9195af48e1da9b4adaf00fe6a2a51e2da2b4",
+      "afterSha256": "501076ee684d9f061bf7be72005dc8253f50784516dbec2ab6225e18b1e6d159"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "4869f0a1f3489e81d4a577d18fd72a92dd9f34d7c81d15ef29160372ffe5f262",
+      "action": "extend existing original grammar loop to actual backbone actor caller under unchanged five-second per-file budget; original neutral Ajv/JSON/Buffer law retained",
+      "beforeBlockSha256": "b8c7565ccb99f75f0339ba3e173ecd2cb633209544d772f9195198087401ce84",
+      "afterBlockSha256": "693a0bcf0dc40a3b7623a82d5b034a1d2323ce186a3e9d9a52c8402ebc16e0e6",
+      "count": 1,
+      "afterSha256": "1c8db1938ad0420f218a89239ce28432cd47750717794b7b77d8382faf89ea58"
+    }
+  ],
+  "sourceCopies": false,
+  "native": "unrun",
+  "peerObservations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "6bcbad9cf628baa4f5d4d5ad01572230f84fde42faac94446fdfe52104e08e2c",
+      "plainConstructorCount": 0,
+      "actualCanonicalObserverSelectionCount": 10,
+      "role": "fresh peer explicit canonical Observer constructor selection; no mutation or adoption by this lane"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/⚡️hot-path/🦀️.rs",
+      "sha256": "325b3f121338c1cbf5389d287d4e478037e1d29f5081245865fd54df78413f91",
+      "plainConstructorCount": 0,
+      "actualCanonicalObserverSelectionCount": 1,
+      "role": "fresh peer explicit canonical Observer constructor selection; no mutation or adoption by this lane"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/📤️outbound-announcement/🦀️.rs",
+      "sha256": "12a3eea7f8ce2b2480bafc386f474bfca1f8734d4200714f92ea4692c0532b0f",
+      "plainConstructorCount": 0,
+      "actualCanonicalObserverSelectionCount": 1,
+      "role": "fresh peer explicit canonical Observer constructor selection; no mutation or adoption by this lane"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "03a8b06828bf07935df9c1f7bc916770172844aa1627f2bfd71b4e6eac490bcb",
+      "plainConstructorCount": 0,
+      "actualCanonicalObserverSelectionCount": 65,
+      "role": "fresh peer explicit canonical Observer constructor selection; no mutation or adoption by this lane"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🦀️.rs",
+      "sha256": "08bc0ee47a4965316a9d25db7494b918f04ed9b65f9919102403aecababfd4e2",
+      "plainConstructorCount": 0,
+      "actualCanonicalObserverSelectionCount": 9,
+      "role": "fresh peer explicit canonical Observer constructor selection; no mutation or adoption by this lane"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/🦀️.rs",
+      "sha256": "21b62589497db266e627eee1a84e619599d9c5a94c82b8b020fcb9ff200e56ca",
+      "plainConstructorCount": 0,
+      "actualCanonicalObserverSelectionCount": 4,
+      "role": "fresh peer explicit canonical Observer constructor selection; no mutation or adoption by this lane"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs",
+      "sha256": "c76b46b8db566891f6ad7b17b28c12e5ee09f625583ba8c06b81fb3c6f712c20",
+      "plainConstructorCount": 0,
+      "actualCanonicalObserverSelectionCount": 2,
+      "role": "fresh peer explicit canonical Observer constructor selection; no mutation or adoption by this lane"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️tool-transaction/🦀️.rs",
+      "sha256": "f8519408d3928de3679b88b999261c703e878c1ffdf0ed42de082c6f47ec735c",
+      "plainConstructorCount": 0,
+      "actualCanonicalObserverSelectionCount": 10,
+      "role": "fresh peer explicit canonical Observer constructor selection; no mutation or adoption by this lane"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️viewer-head/🦀️.rs",
+      "sha256": "4108567e1eb1bd3544142bffa7132fd3e8c69cf6cb0d4ce27cff80ab3f32038c",
+      "plainConstructorCount": 0,
+      "actualCanonicalObserverSelectionCount": 9,
+      "role": "fresh peer explicit canonical Observer constructor selection; no mutation or adoption by this lane"
+    }
+  ],
+  "sourceReceipt": {
+    "session": 44179,
+    "exitCode": 0,
+    "laws": 6,
+    "failures": 0,
+    "bunDuration": "2.48s",
+    "log": "🗑️generated/pub-k7-source.log",
+    "oracle": "original registered Unit source laws; independent Ajv/JSON/Buffer/TextEncoder and original Rust grammar; no native/type proof"
+  },
+  "currentSourceObservations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️backbone-parity/🦀️.rs",
+      "sha256": "501076ee684d9f061bf7be72005dc8253f50784516dbec2ab6225e18b1e6d159",
+      "matchesAuthoredAfter": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "1c8db1938ad0420f218a89239ce28432cd47750717794b7b77d8382faf89ea58",
+      "matchesAuthoredAfter": true
+    }
+  ]
+}

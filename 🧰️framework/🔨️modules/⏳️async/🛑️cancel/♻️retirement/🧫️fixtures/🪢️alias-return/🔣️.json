@@ -1,0 +1,40 @@
+{
+  "contract": "semio.cancel.borrowed-alias-return.v1",
+  "policy": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 8,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 1
+  },
+  "aliases": [
+    1,
+    3,
+    48
+  ],
+  "borrowedWitness": "same-original-strong-allocation-held-through-turn",
+  "receipt": {
+    "copiedItems": 1,
+    "copiedBytes": 8,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "denied": [
+    "items",
+    "copy",
+    "depth"
+  ],
+  "foreignWitness": "InvariantViolated",
+  "rootRetains": [
+    "node",
+    "registeredWaiters",
+    "weakHeaders",
+    "cancellationState"
+  ],
+  "genericRefusals": [
+    "SharedAlias",
+    "WeakAlias",
+    "RegisteredWaiter"
+  ],
+  "waiterCapacity": 8
+}

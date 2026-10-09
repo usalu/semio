@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:flow-extension-sdk:normal-step-receipt",
+  "title": "Original Evaluation Normal Step Receipt",
+  "type": "object",
+  "required": [
+    "copiedItems",
+    "copiedBytes",
+    "retainedCapacityBytes",
+    "releasedBytes"
+  ],
+  "properties": {
+    "copiedItems": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "copiedBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "retainedCapacityBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "releasedBytes": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

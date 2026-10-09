@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "maximumBytes",
+    "firstOwnedBytes",
+    "secondOwnedBytes",
+    "finalOwnedBytes",
+    "wrongRecipient",
+    "phaseReset",
+    "terminalOwnerDropBytes",
+    "firstText",
+    "secondText"
+  ],
+  "properties": {
+    "kind": {
+      "const": "original-detached-native-receiving"
+    },
+    "maximumBytes": {
+      "const": 100
+    },
+    "firstOwnedBytes": {
+      "const": 8
+    },
+    "secondOwnedBytes": {
+      "const": 3
+    },
+    "finalOwnedBytes": {
+      "const": 11
+    },
+    "wrongRecipient": {
+      "const": "refuse-with-original-receipt"
+    },
+    "phaseReset": {
+      "const": false
+    },
+    "terminalOwnerDropBytes": {
+      "const": 0
+    },
+    "firstText": {
+      "const": "original"
+    },
+    "secondText": {
+      "const": "new"
+    }
+  }
+}

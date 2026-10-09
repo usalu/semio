@@ -89,7 +89,7 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::app::NoPluginApp> {
     owner_mutation_rosters: Vec<crate::app::OwnerMutationRoster>,
     app_defs: Vec<(App, crate::app::declarations::AppFactory<PA>)>,
     app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>>,
-    document_app_ids: Vec<&'static str>,
+    document_app_ids: Vec<String>,
     /// 🌳️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C — the new declaration tree,
     /// walked by `.declare_artifact(...)`/`try_build()` alongside (never instead of) `artifacts`
     /// above, which stays bound to the OLD `ArtifactDeclaration` type (debt D1).
@@ -389,15 +389,15 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         fn app_schema<A: ArtifactApp>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             ::semio_framework_async::poll::resolve_ready(A::app_schema())
         }
-        fn factory<A: ArtifactApp, PA: PluginApp + From<crate::app::VcsArtifactApp<A>>>(def: &crate::app::AppDefinition, actor: crate::protocol::ActorId) -> PA {
-            PA::from(::semio_framework_async::poll::resolve_ready(crate::app::VcsArtifactApp::with_registry(A::default(), crate::app::AppActionRegistry::from_definition(def), actor)))
+        fn factory<A: ArtifactApp, PA: PluginApp + From<crate::app::VcsArtifactApp<A>>>(def: &crate::app::AppDefinition, actor: crate::protocol::ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA {
+            PA::from(::semio_framework_async::poll::resolve_ready(crate::app::VcsArtifactApp::with_registry(A::default(), crate::app::AppActionRegistry::from_definition(def), actor, mounted_policy, identity)))
         }
         let mut app = app;
         crate::app::declarations::stamp_fault_notices::<A>(&mut app.definition);
         let definition = app.definition.clone();
+        self.document_app_ids.push(definition.id.clone());
         self.app_defs.push((app, crate::app::declarations::AppFactory { definition, create: factory::<A, PA>, document_schema: A::DOCUMENT_SCHEMA, codec: crate::app::artifact_codec_table::<A>() }));
         self.app_schema_descriptors.push(app_schema::<A>);
-        self.document_app_ids.push(A::APP_ID);
         self
     }
 
@@ -456,12 +456,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         fn app_schema<V: crate::app::ArtifactViewer>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             V::app_schema()
         }
-        fn factory<V, PA>(def: &crate::app::AppDefinition, actor: crate::protocol::ActorId) -> PA
+        fn factory<V, PA>(def: &crate::app::AppDefinition, actor: crate::protocol::ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA
         where
             V: crate::app::ArtifactViewer,
             PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>, V::Members>>,
         {
-            PA::from(::semio_framework_async::poll::resolve_ready(crate::app::VcsArtifactApp::<crate::app::ViewerApp<V>, V::Members>::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def), actor)))
+            PA::from(::semio_framework_async::poll::resolve_ready(crate::app::VcsArtifactApp::<crate::app::ViewerApp<V>, V::Members>::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def), actor, mounted_policy, identity)))
         }
         if def.io.artifact_schema.is_empty() {
             def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
@@ -526,8 +526,8 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             E::app_schema()
         }
-        fn factory<E: crate::app::ArtifactEditor, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>>(def: &crate::app::AppDefinition, actor: crate::protocol::ActorId) -> PA {
-            PA::from(::semio_framework_async::poll::resolve_ready(crate::app::VcsArtifactApp::<crate::app::EditorApp<E>, E::Members>::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def), actor)))
+        fn factory<E: crate::app::ArtifactEditor, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>>(def: &crate::app::AppDefinition, actor: crate::protocol::ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA {
+            PA::from(::semio_framework_async::poll::resolve_ready(crate::app::VcsArtifactApp::<crate::app::EditorApp<E>, E::Members>::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def), actor, mounted_policy, identity)))
         }
         if def.io.artifact_schema.is_empty() {
             def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
@@ -749,6 +749,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         runtime.extend_contributions(contributed_inference_services, &owner_mutation_rosters, contributed_mutation_runtime)?;
 
         crate::app::declarations::commit_artifact_declarations(&plugin_id, &declared_artifacts)?;
+        runtime.retain_document_bindings(crate::app::declarations::artifact_declaration_bindings(&plugin_id, &declared_artifacts));
         runtime.share_schema_documents(schema_documents.into_iter().map(|(_, documents)| documents).collect());
         runtime.publish_declared_catalogs()?;
 

@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "beforeSha256": "f27174bd56d32253d785977cf579186573e9aa9493b27d43a8806f32aad57d01",
+      "afterSha256": "7a210115535e46e26ce593f68f2bd4ef84f7f276d304315ded2403999f266b8f",
+      "action": "Resolve direct genuine Ajv validate calls/registry identifiers and explicitly refuse unhandled known validator methods."
+    }
+  ]
+}

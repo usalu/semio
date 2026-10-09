@@ -21,7 +21,7 @@ impl Serializer<WriterSnapshot> for WriterIntoMd {
     /// 🪧️ Lossy: only the document's content text survives — `schema`/`id`/`uri`/`language_id` have
     /// no home in a markdown file.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let md = MdSnapshot::from_text(&writer_text(from));
         Ok(IoOutcome { value: IoPayload::Text(store::ArtifactDsl::print_dsl(&md)), diagnostics: Vec::new() })
     }

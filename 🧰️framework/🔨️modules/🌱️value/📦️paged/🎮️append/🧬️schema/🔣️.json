@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["texts","chunkBytes","copyCapacityLimit","turnLimit"],"properties":{"texts":{"type":"array","items":{"type":"string"},"minItems":1},"chunkBytes":{"const":1024},"copyCapacityLimit":{"const":4096},"turnLimit":{"const":100000}}}

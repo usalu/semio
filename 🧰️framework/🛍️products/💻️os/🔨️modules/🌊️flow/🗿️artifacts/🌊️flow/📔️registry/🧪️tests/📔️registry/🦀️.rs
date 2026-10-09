@@ -28,15 +28,15 @@ fn contributed_registry_replacement_preserves_readers_and_drains_old_versions() 
     let catalogue: serde_json::Value = serde_json::from_str(&flow_neuron_kind_infos_json()).unwrap();
     assert!(catalogue.as_array().unwrap().iter().any(|item| item["id"] == "owned.echo"));
     assert!(!flow_catalogue_sections().is_empty());
-    assert_eq!(retire_flow_extension_registries_step(0, 64).unwrap(), neural::ValueRetirementStep::Blocked);
+    assert_eq!(test_flow_registry_retirement_step(0, 64).unwrap(), neural::RetainedCloneStep::Progress(Default::default()));
     for _ in 0..1000 {
-        if retire_flow_extension_registries_step(1, 64).unwrap() == neural::ValueRetirementStep::Blocked { break; }
+        if test_flow_registry_retirement_step(1, 64).unwrap() == neural::RetainedCloneStep::Progress(Default::default()) { break; }
     }
     assert!(!flow_extension_state().lock().unwrap().retired.is_empty());
     drop(reader);
     uninstall_flow_extension("owned").unwrap();
     for _ in 0..100_000 {
-        if retire_flow_extension_registries_step(1, 1).unwrap() == neural::ValueRetirementStep::Complete { break; }
+        if matches!(test_flow_registry_retirement_step(1, 1).unwrap(),neural::RetainedCloneStep::Complete(_)) { break; }
     }
     assert!(flow_extension_state().lock().unwrap().retired.len() <= queued_before, "this law retires every version IT queued — the depth another live law pins is not its to empty");
 }
@@ -51,25 +51,31 @@ fn contributed_registry_replacement_preserves_readers_and_drains_old_versions() 
 fn registry_maintenance_does_not_initialize_a_registry() {
     let _serialized = lock_flow_extension_registry_for_test();
     let initialized_before = FLOW_EXTENSION_STATE.get().is_some();
-    let step = retire_flow_extension_registries_step(1, 64);
+    let step = test_flow_registry_retirement_step(1, 64);
     if !initialized_before {
-        assert_eq!(step, Ok(neural::ValueRetirementStep::Complete), "with no registry there is nothing to retire");
+        assert_eq!(step, Ok(neural::RetainedCloneStep::Complete(Default::default())), "with no registry there is nothing to retire");
     }
     assert_eq!(FLOW_EXTENSION_STATE.get().is_some(), initialized_before, "a maintenance step must never be what initializes the registry");
 }
 
 struct FaultingOperator { text: String }
 impl neural::Operator for FaultingOperator {
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> { Ok(input.clone()) }
-    fn retirement_is_empty(&self) -> bool { self.text.is_empty() }
-    fn retire_step(&mut self, _: usize, _: usize, values: &mut neural::ValueRetirement) -> Result<neural::ValueRetirementStep, &'static str> {
-        values.text(std::mem::take(&mut self.text));
-        panic!("fixture retained operator fault");
-    }
+ fn evaluate(&self,input:&Dictionary)->Result<Dictionary,EvalError>{Ok(input.clone())}
+ fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(neural::OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{neural::OperatorPlanAdmission::immediate(input,grant)}
+ fn next_plan_copy_byte_demand(&self,_:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+ fn next_plan_capacity_byte_demand(&self,_:&Dictionary,_:usize)->Result<usize,ValueError>{Ok(0)}
+ fn next_plan_release_byte_demand(&self,_:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+ fn next_plan_depth_demand(&self,_:&Dictionary)->Result<usize,ValueError>{Ok(1)}
+ fn retirement_is_empty(&self)->bool{self.text.capacity()==0}
+ fn next_retire_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
+ fn next_retire_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
+ fn next_retire_release_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
+ fn next_retire_depth_demand(&self)->Result<usize,ValueError>{Ok(1)}
+ fn retire_step(&mut self,grant:RetainedCloneGrant,values:&mut neural::ValueRetirement)->Result<RetainedCloneStep,ValueError>{match values.text(std::mem::take(&mut self.text),grant){Ok(progress)=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original fixture typed refusal").with_retained_progress(progress)),Err((error,text))=>{self.text=text;Err(error)}}}
 }
 
 #[test]
-fn registry_maintenance_retains_cursor_outside_a_faulted_worker() {
+fn registry_maintenance_retains_cursor_after_original_typed_refusal() {
     let _serialized = lock_flow_extension_registry_for_test();
     let queued_before = drain_flow_extension_registry_retirements();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧫️fixtures/🔣️.json")).unwrap();
@@ -82,13 +88,13 @@ fn registry_maintenance_retains_cursor_outside_a_faulted_worker() {
     }
     let mut fault = None;
     for _ in 0..1000 {
-        if let Err(reason) = retire_flow_extension_registries_step(1, 1) { fault = Some(reason); break; }
+        if let Err(reason) = test_flow_registry_retirement_step(1, 1) { fault = Some(reason); break; }
     }
-    assert_eq!(fault, Some("flow.registry-retirement-panicked"));
+    assert_eq!(fault.map(|error|error.kind),Some(semio_framework_value::ValueRefusalKind::InvalidValue));
     assert!(!flow_extension_state().is_poisoned());
     assert!(!flow_extension_state().lock().unwrap().retired.is_empty());
     for _ in 0..1000 {
-        if retire_flow_extension_registries_step(1, 1).unwrap() == neural::ValueRetirementStep::Complete { break; }
+        if matches!(test_flow_registry_retirement_step(1, 1).unwrap(),neural::RetainedCloneStep::Complete(_)) { break; }
     }
     assert!(flow_extension_state().lock().unwrap().retired.len() <= queued_before, "this law retires every version IT queued — the depth another live law pins is not its to empty");
 }
@@ -126,7 +132,7 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
     assert_eq!(third_party_json(flow_extension_registry().schema("owned").unwrap()), expected);
     drop(reader);
     for _ in 0..100_000 {
-        if retire_flow_extension_registries_step(1, 64).unwrap() == neural::ValueRetirementStep::Complete { break; }
+        if matches!(test_flow_registry_retirement_step(1, 64).unwrap(),neural::RetainedCloneStep::Complete(_)) { break; }
     }
     let maximum = fixture["maximumGeneration"].as_str().unwrap().parse::<u64>().unwrap();
     flow_extension_state().lock().unwrap().generation = maximum;
@@ -139,7 +145,7 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
     sync_host_flow_extension_contributions("[]".to_string()).unwrap();
     assert!(flow_extension_registry().schema("owned").is_none());
     for _ in 0..100_000 {
-        if retire_flow_extension_registries_step(1, 64).unwrap() == neural::ValueRetirementStep::Complete { break; }
+        if matches!(test_flow_registry_retirement_step(1, 64).unwrap(),neural::RetainedCloneStep::Complete(_)) { break; }
     }
     assert!(flow_extension_state().lock().unwrap().retired.len() <= queued_before, "this law retires every version IT queued — the depth another live law pins is not its to empty");
 }
@@ -153,14 +159,15 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
 /// version, no amount of admission pressure may retire past it, and the refusal still arrives with
 /// every root intact.
 #[test]
-fn a_full_retirement_queue_reclaims_its_free_versions_before_refusing_but_never_past_a_live_reader() {
+fn a_full_retirement_queue_requires_funded_maintenance_and_preserves_live_reader() {
     let _serialized = lock_flow_extension_registry_for_test();
     drain_flow_extension_registry_retirements();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../📔️registry/🧫️fixtures/🔣️.json")).unwrap();
     let plugin = fixture["pluginId"].as_str().unwrap();
     let manifest = fixture["manifest"].to_string();
     for _ in 0..RETIRED_REGISTRY_CAPACITY * 4 {
-        install_flow_extension_manifest(plugin, &manifest).expect("an unpumped queue must not end the process's ability to install");
+        drain_flow_extension_registry_retirements();
+        install_flow_extension_manifest(plugin, &manifest).expect("funded original maintenance admits the next replacement");
     }
     assert!(flow_extension_state().lock().unwrap().retired.len() <= RETIRED_REGISTRY_CAPACITY, "an unread queue never grows past its declared capacity");
     let reader = flow_extension_registry();
@@ -173,7 +180,8 @@ fn a_full_retirement_queue_reclaims_its_free_versions_before_refusing_but_never_
     assert_eq!(install_flow_extension_manifest(plugin, &manifest), Err("flow.registry-retirement-full"), "a version a reader still holds is never retired past");
     assert_eq!(third_party_json(reader.schema("owned").unwrap()), pinned, "the refused admission leaves the pinned root exactly as it was");
     drop(reader);
-    install_flow_extension_manifest(plugin, &manifest).expect("the released reader's version is reclaimable again");
+    drain_flow_extension_registry_retirements();
+    install_flow_extension_manifest(plugin, &manifest).expect("funded closure of the released reader admits replacement");
     uninstall_flow_extension("owned").expect("the law leaves the contribution table as it found it");
 }
 //#endregion 🧪️RetainedReplacement
@@ -216,7 +224,7 @@ fn contributed_operators_are_addressed_by_their_contributing_plugin_id() {
     drop(registry);
     uninstall_flow_extension(flow_extension_id).unwrap();
     for _ in 0..100_000 {
-        if retire_flow_extension_registries_step(1, 64).unwrap() == neural::ValueRetirementStep::Complete { break; }
+        if matches!(test_flow_registry_retirement_step(1, 64).unwrap(),neural::RetainedCloneStep::Complete(_)) { break; }
     }
 }
 //#endregion 🪪️InvocationAddress

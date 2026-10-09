@@ -55,23 +55,28 @@ const TRANSACTION: &str = "tx-hot-path";
 /// 🧹️ Retires every displaced owner a step left behind, as the runtime's maintenance turns do between steps.
 fn settle(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
     while store.maintenance_retirements_under_pressure() {
-        store.maintenance_retirements_step(64, 1 << 20).expect("displaced owners retire");
+        let grant=physical_test_close_grant();
+        let step=store.maintenance_retirements_step(grant).expect("original displaced owners retire");
+        assert!(step.progress().fits(grant));
     }
 }
 
-async fn apply(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, n: i32) {
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }).await.expect("a plain edit applies");
+async fn apply(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, n: i32, identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }, identity).await.expect("a plain edit applies");
     settle(store);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn local_steps_cost_o_change_however_long_the_history() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let corpus: Corpus = serde_json::from_str(include_str!("../../🧫️fixtures/⚡️hot-path/🔣️.json")).expect("hot path corpus");
     assert_eq!(corpus.schema, "semio.store.hot-path/v1");
     for vector in &corpus.vectors {
         let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &vector.id, DemoSnapshot { n: Some(0) }, None)).await;
         for n in 0..vector.warmup {
-            apply(&mut store, n as i32).await;
+            apply(&mut store, n as i32, &mut identity).await;
         }
         let mut next = vector.warmup as i32;
         let transaction = protocol::TransactionRef { id: TRANSACTION.into(), tool: "demo#drag".into() };
@@ -80,11 +85,11 @@ async fn local_steps_cost_o_change_however_long_the_history() {
             for _ in 0..step.count {
                 next += 1;
                 match step.kind {
-                    StepKind::Apply => apply(&mut store, next).await,
-                    StepKind::Append => drop(store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::AddN(AddN { delta: 1 })], transaction: transaction.clone() }).await.expect("a tick appends")),
-                    StepKind::Commit => drop(store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: TRANSACTION.into() }).await.expect("the transaction commits")),
-                    StepKind::Undo => drop(store.dispatch(ArtifactCommand::Undo).await.expect("the applied tail undoes")),
-                    StepKind::Redo => drop(store.dispatch(ArtifactCommand::Redo).await.expect("the redo top redoes")),
+                    StepKind::Apply => apply(&mut store, next, &mut identity).await,
+                    StepKind::Append => drop(store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::AddN(AddN { delta: 1 })], transaction: transaction.clone() }, &mut identity).await.expect("a tick appends")),
+                    StepKind::Commit => drop(store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: TRANSACTION.into() }, &mut identity).await.expect("the transaction commits")),
+                    StepKind::Undo => drop(store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("the applied tail undoes")),
+                    StepKind::Redo => drop(store.dispatch(ArtifactCommand::Redo, &mut identity).await.expect("the redo top redoes")),
                 }
                 settle(&mut store);
             }

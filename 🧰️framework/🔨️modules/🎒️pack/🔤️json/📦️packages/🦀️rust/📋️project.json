@@ -6,6 +6,10 @@
     "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"]
   },
   "targets": {
+    "test-read-policy-source": {
+      "executor": "nx:run-commands", "cache": false, "inputs": ["default"],
+      "options": {"cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-read-policy-source"}
+    },
     "test-ownership": {
       "executor": "nx:run-commands", "cache": false, "inputs": ["default"],
       "options": {"cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-ownership"}

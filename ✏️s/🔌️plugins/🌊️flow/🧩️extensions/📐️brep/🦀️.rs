@@ -135,9 +135,11 @@ const INTENTIONALLY_UNEXPOSED: &[(&str, &str)] = &[
 macro_rules! retire_geometry_capture {
     ($field:tt) => {
         fn retirement_is_empty(&self) -> bool { self.$field.terminal_is_empty() }
-        fn retire_step(&mut self, items:usize, bytes:usize, _: &mut neural_engine::ValueRetirement) -> Result<neural_engine::ValueRetirementStep,&'static str> {
-            self.$field.close_step(items,bytes).map_err(|_| "brep.geometry-capture-retirement-failed")
-        }
+        fn retire_step(&mut self, grant:semio_framework_value::retained_clone::RetainedCloneGrant, _: &mut neural_engine::ValueRetirement) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError> { self.$field.close_step(grant) }
+        fn next_retire_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {self.$field.next_close_copy_byte_demand()}
+        fn next_retire_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError> {self.$field.next_close_capacity_byte_demand(copy)}
+        fn next_retire_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {self.$field.next_close_release_byte_demand()}
+        fn next_retire_depth_demand(&self)->Result<usize,semio_framework_value::ValueError> {self.$field.next_close_depth_demand()}
         fn retire_cold(mut self:Box<Self>) { self.$field.retire_cold(); }
     };
 }
@@ -2111,7 +2113,7 @@ pub mod geometry_inference;
 mod extension_guest {
     use flow_extension_sdk::flow_extension_topic_contribution;
     use semio_framework::{Fault, FaultCode, FaultOrigin};
-    use semio_framework_plugin::{ExecutionMode, ExtensionBundle, ExtensionResourceOwner, PluginCloseStep};
+    use semio_framework_plugin::{ExecutionMode, ExtensionBundle, ExtensionResourceOwner, PluginLifecycleStep};
 
     const FLOW_APP_ID: &str = "flow-play";
     const PROCEDURAL3D_APP_ID: &str = "procedural3d-play";
@@ -2158,7 +2160,7 @@ mod extension_guest {
                     let payload: flow_extension_sdk::EvaluateRequest = semio_framework_pack_json::from_json_str(std::str::from_utf8(req).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("geometry-inference.request"), error.to_string()))?, semio_framework_pack_json::JsonMemberPolicy::Reject)
                         .map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("geometry-inference.request"), error.to_string()))?;
                     let budget = semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: 64 * 1024 * 1024, work_units: if payload.round_units!=0 {payload.round_units}else if payload.budget == 0 { flow_extension_sdk::EVALUATE_STEP_BUDGET as u64 } else { payload.budget }, recursion_depth: 64 };
-                    let request = semio_framework_plugin::ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, cancellation_id: if payload.cancellation_id.is_empty(){"previewEval"}else{&payload.cancellation_id}, previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Incremental, canonical_payload: req, dependencies: &[] };
+                    let request = semio_framework_plugin::ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, retained:payload.retained, cancellation_id: if payload.cancellation_id.is_empty(){"previewEval"}else{&payload.cancellation_id}, previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Incremental, canonical_payload: req, dependencies: &[] };
                     service.infer_with_context(&request, &self.context).map(|execution| execution.canonical_payload).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message))
                 },
                 "tessellate" => {
@@ -2192,11 +2194,9 @@ mod extension_guest {
         fn inference_context(&self) -> Option<&dyn std::any::Any> { Some(&self.context) }
         fn cancel_inference(&self, cancellation_id: &str) -> bool { flow_extension_sdk::cancel_inference_evaluation(self.context.registry(),cancellation_id) }
         fn begin_close(&mut self) { self.context.begin_close(); }
-        fn close_step(&mut self, items: usize, bytes: usize) -> Result<PluginCloseStep, Fault> {
-            self.context.close_step(items,bytes)
-        }
+        fn close_step(&mut self, grant:semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {self.context.close_step(grant)}
         fn terminal_is_empty(&self) -> bool { self.context.terminal_is_empty() }
-        fn next_close_byte_demand(&self) -> usize { self.context.next_close_byte_demand() }
+        fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {self.context.retirement_demands(copy)}
         fn cancel_close(&mut self) { if !self.context.session().terminal_is_empty() { self.context.session().cancel_close(); } }
         fn resume_close(&mut self) { if !self.context.session().terminal_is_empty() { self.context.session().resume_close(); } }
     }
@@ -2204,7 +2204,7 @@ mod extension_guest {
     #[cfg(test)]
     include!("🧪️tests/🔬️extension-guest-standalone/🦀️.rs");
 
-    semio_framework_plugin::extension_exports!(bundle);
+    semio_framework_plugin::extension_exports!({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }, bundle);
 }
 // #endregion 🔖️ExtensionGuest
 

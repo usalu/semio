@@ -1,0 +1,6 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+  "before": "a923813193e802d3f519811831b759e578bf1609a7f2e220d449e59c21b455f4",
+  "after": "dcf596c0b3b575c02762e82f2da48baf5c4b9fe6ec4da9f486a21ce80253073b",
+  "action": "exact supported ordered fixture ownership + paid Map factory + terminal lifetime handoff; other borrowed test callers unchanged"
+}

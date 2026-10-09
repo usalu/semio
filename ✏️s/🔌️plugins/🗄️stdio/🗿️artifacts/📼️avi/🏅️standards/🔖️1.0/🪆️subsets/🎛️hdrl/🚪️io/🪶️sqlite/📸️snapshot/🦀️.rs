@@ -47,11 +47,11 @@ out.insert("avi_document",&[Cell::Text(&snapshot.schema),Cell::Integer(i64::from
 }
 
 impl ArtifactSqliteSnapshot for AviSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let limits=control.limits();semantic::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{semantic::borrowed(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)},control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();semantic::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {semantic::borrowed(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   semantic::typed(self,SqliteSnapshotPhase::EncodeNative,control)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
 
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::typed(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut bound=NativeEncodingBound::file_only(control)?;bound.add(32768)?;bound.repeated(self.schema.len(),24)?;let scalar=std::mem::size_of::<semio_framework_dsl_record::FieldValue>()*2+64;bound.repeated(self.main_header.reserved.len(),scalar)?;for stream in &self.streams{bound.add(16384)?;bound.repeated(stream.strh.fcc_type.len(),24)?;bound.repeated(stream.strh.fcc_handler.len(),24)?;bound.repeated(stream.strh.strh_extra.len(),scalar)?;match &stream.strf{AviStreamFormat::BitmapInfo{compression,..}=>bound.repeated(compression.len(),24)?,AviStreamFormat::WaveFormat{extra,..}=>bound.repeated(extra.len(),scalar)?,AviStreamFormat::Raw{data}=>bound.repeated(data.len(),scalar)?,}for chunk in &stream.chunks{bound.add(2048)?;bound.repeated(chunk.fourcc.len(),24)?;bound.repeated(chunk.data.len(),scalar)?;}for chunk in &stream.strl_extra{bound.add(1024)?;bound.repeated(chunk.fourcc.len(),24)?;bound.repeated(chunk.data.len(),scalar)?;}}for chunk in self.unknown_chunks.iter().chain(&self.hdrl_extra){bound.add(1024)?;bound.repeated(chunk.fourcc.len(),24)?;bound.repeated(chunk.data.len(),scalar)?;}bound.finish()}
@@ -77,4 +77,3 @@ impl ArtifactSqliteSnapshot for AviSnapshot{
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

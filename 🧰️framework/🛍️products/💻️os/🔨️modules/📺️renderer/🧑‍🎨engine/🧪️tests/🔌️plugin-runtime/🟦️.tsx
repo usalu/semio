@@ -509,7 +509,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "extension-requester", apps: [] } }), { headers: { "content-type": "application/json" } }));
         let handle: PluginWasmHandle | undefined;
         try {
-          handle = await loadPluginModule("extension-requester", "https://fixture.invalid/plugin.js", undefined, undefined, []);
+          handle = await loadPluginModule("extension-requester", "https://fixture.invalid/plugin.js");
           await run(handle, await handle.createApp("fixture"), { replace: () => { generation += 1n; }, captures: () => captures, guardedTurns: () => guardedTurns });
         } finally {
           await handle?.dispose();
@@ -2153,7 +2153,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "owned-ui", apps: [] } }), { headers: { "content-type": "application/json" } }));
         let handle: PluginWasmHandle | null = null;
         try {
-          handle = await loadPluginModule("owned-ui", "https://fixture.invalid/plugin.js", undefined, undefined, []);
+          handle = await loadPluginModule("owned-ui", "https://fixture.invalid/plugin.js");
           const instance = await handle.createApp("fixture");
           const actorId = `owned-ui#${instance}`;
           expect(retainedWindowByActor.has(actorId)).toBe(false);
@@ -2249,7 +2249,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "ingress-census", apps: [] } }), { headers: { "content-type": "application/json" } }));
           let handle: PluginWasmHandle | null = null;
           try {
-            handle = await loadPluginModule("ingress-census", "https://fixture.invalid/plugin.js", undefined, undefined, []);
+            handle = await loadPluginModule("ingress-census", "https://fixture.invalid/plugin.js");
             const instance = await handle.createApp("fixture");
             counting = true;
             await handle.handleAction(instance, JSON.stringify({ ...invocation, address: { ...invocation.address, instanceId: String(instance) } }), { locale: "en", terminology: "native", windowInstances: [] } as never);
@@ -2325,7 +2325,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "retirement-retry", apps: [] } }), { headers: { "content-type": "application/json" } }));
           let handle: PluginWasmHandle | null = null;
           try {
-            handle = await loadPluginModule("retirement-retry", "https://fixture.invalid/plugin.js", undefined, undefined, []);
+            handle = await loadPluginModule("retirement-retry", "https://fixture.invalid/plugin.js");
             const instance = await handle.createApp("fixture");
             const lease = captured.mock.results[0]!.value as ShardInstanceLifecycleLease;
             await expect(handle.destroyApp(instance)).rejects.toThrow(row.failure === "transport" ? "fixture-final-ack-transport" : "actor-lifecycle.ack-not-admitted");
@@ -3727,7 +3727,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       console.error = (...args: unknown[]) => { refusals.push(args.map(String).join(" ")); };
       let handle: PluginWasmHandle | null = null;
       try {
-        handle = await loadPluginModule("intake-rounds", "https://fixture.invalid/plugin.js", undefined, undefined, []);
+        handle = await loadPluginModule("intake-rounds", "https://fixture.invalid/plugin.js");
         const instance = await handle.createApp("fixture");
         const viewState = { locale: "en" as const, terminology: "native" as const, windowInstances: [{ id: panel, windowKindId: "fixture" }, { id: other, windowKindId: "fixture" }] };
         const projected = await handle.refreshUi(instance, { viewState, windows: [{ key: panel, bodyKey: "root" }, { key: other, bodyKey: "root" }] });
@@ -3777,7 +3777,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "beta", apps: [] } }), { headers: { "content-type": "application/json" } }));
       let handle: PluginWasmHandle | undefined;
       try {
-        handle = await loadPluginModule("beta", "https://fixture.invalid/plugin.js", undefined, undefined, []);
+        handle = await loadPluginModule("beta", "https://fixture.invalid/plugin.js");
         await expect(handle.createApp("s.beta.sheet@1/*#editor")).rejects.toThrow("fixture-open-not-configured");
         await expect(handle.createApp("home")).rejects.toThrow("fixture-open-not-configured");
       } finally {

@@ -1,0 +1,71 @@
+{
+  "sourceRed": {
+    "session": 44131,
+    "exit": 1,
+    "duration": "815ms",
+    "log": "🗑️generated/native-k6-policies-red.log"
+  },
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "5ba65ee357849ebaf5748ffe3f2ba6364c294ed7959d17ede498cab2015705e7",
+      "afterSha256": "40fd83498f9f5812221a62bf8ac39ac9b2f0084796a0885ae823348e0fd7e406",
+      "blocks": [
+        {
+          "before": "fn request_close_policy() -> RetainedCloneGrant {",
+          "after": "pub(super) fn request_close_policy() -> RetainedCloneGrant {"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "57d608f5f54354d6c38402c98a592046039e431b758335fb454c3c1ad4f35533",
+      "afterSha256": "0f7dfe7e391d8bf0e16e788f5f50024577c1022d8f1447bf7dc30ac0d07b6d98",
+      "blocks": [
+        {
+          "before": "let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: payload_grant, maximum_capacity_bytes: owner.next_capacity_byte_demand(payload_grant).unwrap(), maximum_release_bytes: owner.next_release_byte_demand().unwrap(), maximum_depth: owner.next_depth_demand().unwrap() };",
+          "after": "let grant = RetainedCloneGrant { maximum_copy_bytes: payload_grant, ..super::super::tests::request_close_policy() };"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "7dfa1ff9749f435a7282ced683032a963ec7ba20e5bcc7e59ecba5e5d873d178",
+      "afterSha256": "bbc5fb994d7d020ca81ea5a162c1db6a25c7375f2dd9a5a4c7160f7a7563ad0a",
+      "blocks": [
+        {
+          "before": "fn grant_of(demand: RetirementDemand) -> RetainedCloneGrant {\n    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }\n}\n\n",
+          "after": ""
+        },
+        {
+          "before": "hydration.close_step(grant_of(demand)).unwrap();",
+          "after": "hydration.close_step(crate::os_store::tests::physical_test_close_grant()).unwrap();"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "4ab9f3b00231040cad624f2b38c713c16a6d347aa0e39cc7f4bb73df3b7e8ba3",
+      "afterSha256": "a11c20ea6974810d08cc726017680d5e95d30e739c8cd468ed808627cb519ba3",
+      "blocks": [
+        {
+          "before": "fn demanded_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {\n    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }\n}\n\n",
+          "after": ""
+        },
+        {
+          "before": "let grant = demanded_grant(crate::os_store::SpaceMember::close_owned_demands(store, 512).expect(\"durable group fixture Store quotes its bounded owner demand\"));",
+          "after": "let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: 512, ..crate::os_store::tests::physical_test_close_grant() };"
+        },
+        {
+          "before": "        let demand = semio_framework_value::RetirementDemand { copy_bytes: retirement.next_copy_byte_demand().unwrap(), capacity_bytes: retirement.next_capacity_byte_demand(4096).unwrap(), release_bytes: retirement.next_release_byte_demand().unwrap(), depth: retirement.next_depth_demand().unwrap() };\n        if matches!(retirement.close_step(demanded_grant(demand))",
+          "after": "        if matches!(retirement.close_step(crate::os_store::tests::physical_test_close_grant())"
+        },
+        {
+          "before": "let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: fixture[\"maximumBodyBytes\"].as_u64().unwrap() as usize, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };",
+          "after": "let grant = RetainedCloneGrant { maximum_copy_bytes: fixture[\"maximumBodyBytes\"].as_u64().unwrap() as usize, ..crate::os_store::tests::physical_test_close_grant() };"
+        }
+      ]
+    }
+  ],
+  "qualification": "Original pointer, allocator, payload, negative frontier reductions, and finite-turn assertions preserved. Native laws unrun."
+}

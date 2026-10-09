@@ -1,0 +1,18 @@
+{
+  "boundary11": {
+    "sessionId": 98200,
+    "nxExitCode": 1,
+    "duration": "1m43s",
+    "modules": 4739,
+    "scopes": 3755,
+    "findings": 4
+  },
+  "currentCorpusGuard": {
+    "sessionId": 38155,
+    "nxExitCode": 1,
+    "duration": "95ms",
+    "absenceFailures": 2,
+    "sourceLawsRun": false
+  },
+  "writerIdentified": false
+}

@@ -1,0 +1,33 @@
+{
+  "executed": false,
+  "kernelSelection": [
+    "-E",
+    "test(retained_presence_peer_rejection_keeps_its_minting_factory_after_source_close) | test(retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payload) | test(committed_wire_witness_is_the_canonical_wire) | test(direct_presence_fixture_value_inverse) | test(retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open) | test(retained_presence_local_replacements_release_shared_aliases_and_retire_exact_final_owners) | test(retained_presence_peer_commit_rejects_foreign_and_stale_roots_without_losing_exact_owners) | test(retained_presence_store_close_preserves_distinct_original_local_and_peer_factories) | test(retained_presence_overlapping_rosters_retire_shared_entries_once_across_workers) | test(retained_presence_read_return_releases_alias_before_cross_worker_reclamation) | test(retained_presence_read_return_injected_alias_barrier_preserves_unreturned_guard) | test(retained_presence_read_transfer_contention_preserves_unreturned_capability) | test(retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers) | test(retained_presence_store_close_rejects_nonempty_terminal_and_late_commit_without_drop) | test(original_presence_examples_supply_independent_physical_close_authority) | test(captured_store_source_preserves_original_read_on_refusal_and_returns_root_to_its_original_registry) | test(store_read_terminal_registry_receipt_preserves_original_system_release) | test(original_returned_read_registry_alias_has_exact_physical_custody) | test(original_returned_read_registry_parallel_aliases_credit_exactly_one_frame) | test(native_snapshot_paid_wallet_preserves_all_axes_and_refused_receipt) | test(native_snapshot_cursor_retains_paid_original_on_cancellation_and_commits_same_output)",
+    "--success-output",
+    "immediate",
+    "--failure-output",
+    "immediate"
+  ],
+  "kernelAdded": [
+    "native_snapshot_paid_wallet_preserves_all_axes_and_refused_receipt",
+    "native_snapshot_cursor_retains_paid_original_on_cancellation_and_commits_same_output"
+  ],
+  "separatePackTest": "borrowed_json_writer_preserves_actual_post_birth_cancellation_receipt",
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs",
+      "sha256": "1f2e5649d22f52f44b21086e9bbbbbacdf8a195a7af878788f8d489bcc1ffc3d",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "f8c1623d3495616dadfe8b3cce9df9e94c5506534efff1f2fc188287ec8dfa07",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "158cf9c0f997ec5f3c070834e7e518452e1410cc1d1315541e99a29f0f22d16e",
+      "authored": false
+    }
+  ]
+}

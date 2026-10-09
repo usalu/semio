@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "mapCount",
+    "cancelAfterWork",
+    "maxRows",
+    "keys",
+    "commonPrefix",
+    "binary64Words"
+  ],
+  "properties": {
+    "schema": {
+      "const": "bim.sqlite.control/v1"
+    },
+    "mapCount": {
+      "type": "integer",
+      "minimum": 256
+    },
+    "cancelAfterWork": {
+      "const": 256
+    },
+    "maxRows": {
+      "const": 2
+    },
+    "keys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true
+    },
+    "binary64Words": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[0-9a-f]{16}$"}
+    },
+    "commonPrefix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "repeat",
+        "suffixes",
+        "expectedSuffixes"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 256
+        },
+        "suffixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "expectedSuffixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

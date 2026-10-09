@@ -86,16 +86,16 @@
     }
   ],
   "cargoProvenance": {
-    "name": "fresh_provenance_neutral",
+    "name": "fp",
     "stdout": "fresh-provenance-neutral",
     "compilerEnv": "FRESH_PROVENANCE_COMPILER_ROOT",
     "source": "fn main(){assert!(!env!(\"FRESH_PROVENANCE_COMPILER_ROOT\").is_empty());print!(\"fresh-provenance-neutral\");}",
     "buildSource": "fn main(){println!(\"cargo:rustc-env=FRESH_PROVENANCE_COMPILER_ROOT={}\",std::env::var(\"SEMIO_COMPILER_RESOURCE_ROOT\").unwrap());}"
   },
   "cargoOwnership": {
-    "rootName": "fresh_root_owner_neutral",
-    "nestedName": "fresh_nested_owner_neutral",
-    "missingName": "fresh_missing_owner_neutral",
+    "rootName": "fr",
+    "nestedName": "fn",
+    "missingName": "fm",
     "stdout": "fresh-nested-owner-neutral",
     "source": "fn main(){print!(\"fresh-nested-owner-neutral\");}",
     "consumerArguments": [

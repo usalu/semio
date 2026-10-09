@@ -325,3 +325,32 @@ async fn the_stall_guard_fires_after_repeated_no_progress_static_budget_steps() 
 }
 
 //#endregion
+
+
+#[semio_framework_async_macros::async_test]
+async fn original_cancelled_router_retains_deep_owner_until_its_exact_close_turns(){
+    struct OriginalOwner{cancelled:bool,remaining:usize,identity:std::sync::Arc<std::sync::atomic::AtomicUsize>}
+    impl BoundedJob for OriginalOwner{
+        fn step(&mut self,_budget:JobBudget)->JobStep{
+            assert!(self.cancelled);let prior=self.remaining;self.remaining=self.remaining.saturating_sub(1);
+            self.identity.store(prior,std::sync::atomic::Ordering::SeqCst);
+            if self.remaining==0{JobStep::Failed(fault_bytes("job.test.cancelled","original close completed"))}else{JobStep::Running(Some(vec![prior as u8]))}
+        }
+        fn cancel(&mut self){self.cancelled=true;}
+        fn checkpoint(&self)->Option<Vec<u8>>{None}
+        fn terminal_drop_is_shallow(&self)->bool{self.remaining==0}
+    }
+    let identity=std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(3));
+    insert_slot(980_021,"original-custody",&[],JobBody::Bounded(Box::new(OriginalOwner{cancelled:false,remaining:3,identity:identity.clone()})));
+    let original=JOBS.with(|jobs|{let jobs=jobs.borrow();let JobBody::Bounded(owner)=&jobs.get(&980_021).unwrap().body else{panic!("original bounded owner")};owner.as_ref() as *const dyn BoundedJob as *const()});
+    cancel_job(980_021).await;
+    assert_eq!(identity.load(std::sync::atomic::Ordering::SeqCst),3,"cancel never drives original close");
+    for expected in [3,2]{
+        let retained=JOBS.with(|jobs|{let jobs=jobs.borrow();let JobBody::Bounded(owner)=&jobs.get(&980_021).unwrap().body else{panic!("same bounded owner")};owner.as_ref() as *const dyn BoundedJob as *const()});
+        assert_eq!(retained,original);assert!(matches!(step_job(980_021,FULL_GRANT).await,JobStep::Running(_)));
+        assert_eq!(identity.load(std::sync::atomic::Ordering::SeqCst),expected);
+    }
+    assert!(matches!(step_job(980_021,FULL_GRANT).await,JobStep::Failed(_)));
+    assert!(JOBS.with(|jobs|!jobs.borrow().contains_key(&980_021)));
+    println!("[DEBUG] original cancelled router owner pointer survives signal and every pending turn until exact terminal");
+}

@@ -110,7 +110,14 @@
         "command": "bun ./📜️script.ts count-component-check",
         "cwd": "{projectRoot}"
       },
-      "dependsOn": [{"projects": ["@semio-tech/framework-plugin-host-test-component"], "target": "component-dev"}],
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-plugin-host-test-component"
+          ],
+          "target": "component-dev"
+        }
+      ],
       "cache": false
     },
     "sqlite-observation-check": {
@@ -126,6 +133,15 @@
           "sqlite-observation-check"
         ]
       }
+    },
+    "router-effect-source-custody": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts router-effect-source-custody",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "outputs": []
     }
   },
   "implicitDependencies": [

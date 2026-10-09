@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
-import { startNativeProgress } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { runOwnedCommand, startNativeProgress } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-job` task router: `bun ./📜️script.ts <test>`. */
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
@@ -41,6 +41,15 @@ class CloseDemandSourceScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("canonical-architecture", CanonicalArchitectureScript).register("test-close-demand-source", CloseDemandSourceScript);
+/** 🧪️ Executes every original portable Job retirement, context and budget oracle. */
+class RetainedSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if(segments.length)throw Error("Retained Job source suite takes no filters");
+    const paths=["🧪️tests/📏️close-demand/🟦️.ts","🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts","⏱️context/📦️owner/🧪️tests/🟦️.ts","⏱️budget/🧪️tests/🔮️corpus-oracles/🟦️.ts","♻️retirement/📄️payload/🧪️tests/🟦️.ts"];
+    await runOwnedCommand(process.execPath,["test",...paths.map(path=>resolve(this.root,"../..",path))],this.repoRoot,"job:retained-source",600000,{env:process.env});
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("canonical-architecture", CanonicalArchitectureScript).register("test-close-demand-source", CloseDemandSourceScript).register("test-retained-source", RetainedSourceScript);
 
 await runScriptMain(router, { defaultCommand: "test" });

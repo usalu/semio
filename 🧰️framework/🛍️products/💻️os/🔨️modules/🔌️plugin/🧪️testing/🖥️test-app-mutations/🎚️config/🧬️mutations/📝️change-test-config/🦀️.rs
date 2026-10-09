@@ -4,13 +4,15 @@ use semio_framework_value_derive::{FromValue, ToValue};
 fn required_nullable<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
     <Option<String> as serde::Deserialize>::deserialize(deserializer)
 }
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = store)]
 #[mutation_leaf(contract=::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ChangeTestConfigSelection {
     #[serde(deserialize_with = "required_nullable")]
     pub selected: Option<String>,
 }
+semio_framework_value::artifact_retire_struct!(ChangeTestConfigSelection { selected });
 impl ChangeTestConfigSelection {
     const OPCODE: &'static str = "change-test-config-selection";
     const TAG: u8 = 0x73;

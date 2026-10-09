@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "📥️interface41-in-place-source-owned-internal-dep-info🟢️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-interface-current-origin --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/📜️script.ts\" writer-green writer-green3 > \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/writer-green3.outer.log\" 2>&1",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.81
+      }
+    },
+    {
+      "name": "📥️interface41-in-place-current-complete7🟢️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-interface-current-origin --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/📜️script.ts\" current-green current-green7 > \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/current-green7.outer.log\" 2>&1",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.82
+      }
+    },
+    {
+      "name": "📥️interface41-in-place-original-command-deadlines🔴️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-interface-current-origin --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/📜️script.ts\" command-green command-policy-red > \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/command-policy-red.outer.log\" 2>&1",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/i41/nx-cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.8
+      }
+    }
+  ],
+  "retireNames": []
+}

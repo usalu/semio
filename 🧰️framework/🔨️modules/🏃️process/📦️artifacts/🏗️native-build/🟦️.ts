@@ -9,6 +9,8 @@ import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { createInterface } from "node:readline";
+import {lstat,mkdir,writeFile} from "node:fs/promises";
+import {CurrentPhysicalOwnerV1,type CurrentPhysicalPortV1} from "../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 
 import { acquireCargoBuildLeaseV1 } from "./🔒️lease/🟦️.ts";
 
@@ -192,24 +194,6 @@ export async function buildCargoArtifacts(manifest: string, args: string[], poli
   }
 }
 
-/** 🧮️ Finds the checksum-bearing internal dep-info only when its compiled artifact equals the actual selected uplift. */
-function cargoInternalDepInfoV1(message:any,buildDirectory:string|null,args:readonly string[]):readonly string[]{
-  if(!buildDirectory)return[];
-  const option=(name:string):string|undefined=>args.flatMap((value,index)=>value===name?[args[index+1]!]:value.startsWith(name+"=")?[value.slice(name.length+1)]:[])[0],packageName=/#([^@]+)@/u.exec(message.package_id??"")?.[1];
-  if(!packageName)return[];
-  const profile=option("--profile")??(args.includes("--release")?"release":"debug"),target=option("--target"),owner=join(buildDirectory,...(target?[target]:[]),profile,"build",packageName);
-  if(!existsSync(owner)||!lstatSync(owner).isDirectory())return[];
-  const selected=(message.filenames??[]).filter((file:string)=>existsSync(file)&&lstatSync(file).isFile()).map((file:string)=>({name:basename(file),sha256:createHash("sha256").update(readFileSync(file)).digest("hex")})),matches:string[]=[];
-  for(const unit of readdirSync(owner)){
-    const output=join(owner,unit,"out");if(!existsSync(output)||!lstatSync(output).isDirectory())continue;
-    for(const artifact of selected){const original=join(output,artifact.name),dep=original.replace(/\.(?:rlib|rmeta|so|dylib|dll|lib|wasm|exe)$/u,"")+".d";
-      if(!existsSync(original)||!lstatSync(original).isFile()||!existsSync(dep)||!lstatSync(dep).isFile()||createHash("sha256").update(readFileSync(original)).digest("hex")!==artifact.sha256)continue;
-      const text=readFileSync(dep,"utf8");if(text.includes("# checksum:"))matches.push(dep);
-    }
-  }
-  return [...new Set(matches)];
-}
-
 /** 🗂️ Observes actual directory names, entry kinds and raw link targets in portable UTF-8 order. */
 export function cargoDirectoryEntriesV1(path: string): Array<[string, string, string | null]> | null {
   try { return readdirSync(path).sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b))).map(name => { const child = join(path, name), entry = lstatSync(child); return [name, entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other", entry.isSymbolicLink() ? readlinkSync(child) : null]; }); } catch { return null; }
@@ -223,64 +207,44 @@ export function cargoInputDigestV1(path: string): { path: string; kind: "file" |
   } catch { return { path, kind: null, sha256: null }; }
 }
 
+const resourceReadSchema = JSON.parse(readFileSync(new URL("./📥️resources/🧬️schema/🔣️.json",import.meta.url),"utf8"));
 /** 📋️ Retains actual completed Cargo compiler, dep-info and resource observations without changing build or staging selection. */
-export function writeCompletedCargoInvocationProvenanceV1(receiptPath: string, invocation: { manifest: string; cwd: string; command: string; args: string[]; buildDirectory: string | null; builtAtMs: number; status: number; cancelled: boolean; units: any[]; buildScripts: any[] }, stagedPaths: ReadonlyMap<string, string> = new Map(), cargoHome: string = join(homedir(), ".cargo")): void {
-  const sha256 = (file: string): string | null => existsSync(file) && lstatSync(file).isFile() ? createHash("sha256").update(readFileSync(file)).digest("hex") : null;
-        for (const unit of invocation.units) {
-          const candidates = [...new Set((unit.message.filenames ?? []).flatMap((file: string) => [file.replace(/\.(?:rlib|rmeta|so|dylib|dll|lib|wasm|exe)$/u, "") + ".d", join(dirname(file), basename(file).replace(/^lib/u, "").replace(/\.(?:rlib|rmeta|so|dylib|dll|lib|wasm|exe)$/u, "") + ".d")]))] as string[];
-          candidates.push(...cargoInternalDepInfoV1(unit.message,invocation.buildDirectory,invocation.args));
-          unit.depInfo = [...new Set(candidates)].filter(file => existsSync(file) && lstatSync(file).isFile()).map(path => {
-            const text = readFileSync(path, "utf8"), sources = cargoDepInfoSourcesV1(text), relativeSources = sources.filter(source => !isAbsolute(source)).map(source => normalize(source)), targetSource = resolve(unit.message.target.src_path);
-            const owners = new Set<string>();
-            for (const manifest of [invocation.manifest, unit.message.manifest_path].filter((path): path is string => typeof path === "string")) for (let owner = dirname(resolve(manifest));;) {
-              if (existsSync(join(owner, "Cargo.toml"))) owners.add(owner);
-              const parent = dirname(owner); if (parent === owner) break; owner = parent;
-            }
-            const bases = [...owners].filter(base => relativeSources.some(source => resolve(base, source) === targetSource) && sources.every(source => { const path = resolve(base, source); return existsSync(path) && (lstatSync(path).isFile() || lstatSync(path).isDirectory()); }));
-            return { path, text, baseDirectory: relativeSources.length === 0 ? invocation.cwd : bases.length === 1 ? bases[0] : null };
-          });
-          unit.inputs = [...new Set(unit.depInfo.flatMap((row: { text: string; baseDirectory: string | null }) => cargoDepInfoSourcesV1(row.text).filter(path => isAbsolute(path) || row.baseDirectory !== null).map(path => resolve(row.baseDirectory ?? invocation.cwd, path))))].map(path => cargoInputDigestV1(path as string));
-          unit.observedAtMs = Date.now();
-          unit.artifacts = (unit.message.filenames ?? []).map((path: string) => {
-            const stagedPath = stagedPaths.get(path);
-            return { path, sha256: sha256(path), ...(stagedPath ? { stagedPath, stagedSha256: sha256(stagedPath) } : {}) };
-          });
-        }
-        const buildResources = invocation.buildScripts.flatMap(build => {
-          const path = join(build.out_dir, "semio-runtime-resource-inputs.jsonl");
-          if (!existsSync(path)) return [];
-          const text = readFileSync(path, "utf8"), resources = text.split(/\r?\n/u).filter(Boolean).map(line => {
-            const input = JSON.parse(line);
-            const entries = input.kind === "directory" ? cargoDirectoryEntriesV1(input.path) : null;
-            return { input, sha256: cargoInputDigestV1(input.path).sha256, outputSha256: typeof input.output === "string" ? sha256(input.output) : null, ...(entries ? { observedEntries: entries.map(([name, kind, symlinkTarget]) => ({ path: join(input.path, name), kind, symlinkTarget })) } : {}) };
-          });
-          return [{ package_id: build.package_id, out_dir: build.out_dir, path, text, sha256: sha256(path), observedAtMs: Date.now(), resources }];
-        });
-  const compilerResourceRoot = invocation.buildDirectory ? join(invocation.buildDirectory, "semio-compiler-resources") : null;
-  const compilerResourcePaths = compilerResourceRoot ? [...new Set(invocation.units.filter(unit => !unit.message.target.kind?.includes("proc-macro") && !unit.message.target.kind?.includes("custom-build")).flatMap(unit => unit.inputs.map((input: any) => input.path as string)))].filter(path => basename(path) === "observation.json" && relative(compilerResourceRoot, path).split(sep)[0] !== ".." && !isAbsolute(relative(compilerResourceRoot, path))) : [];
-  const compilerResources = compilerResourcePaths.map(path => {
-    const text = existsSync(path) && lstatSync(path).isFile() ? readFileSync(path, "utf8") : null; let observation: any; try { observation = text === null ? null : JSON.parse(text); } catch { observation = null; }
-    const bind = (identity: any, producer: boolean): any => {
-      if (!identity || ![identity.manifest, identity.source].every(path => typeof path === "string" && isAbsolute(path))) return null;
-      const matches = invocation.units.filter(unit => typeof unit.message.manifest_path === "string" && resolve(unit.message.manifest_path) === resolve(identity.manifest) && unit.inputs.some((input: any) => input.kind === "file" && resolve(input.path) === resolve(identity.source)) && (producer ? unit.message.target.kind.includes("proc-macro") : typeof identity.crate === "string" && unit.message.target.name.replaceAll("-", "_") === identity.crate && !unit.message.target.kind.includes("custom-build") && !unit.message.target.kind.includes("proc-macro")));
-      return matches.length === 1 ? matches[0].message : null;
-    };
-    const resources = Array.isArray(observation?.resources) ? observation.resources.map((input: any) => {
-      const entries = input.kind === "directory" && typeof input.path === "string" ? cargoDirectoryEntriesV1(input.path) : null;
-      return { input, sha256: typeof input.path === "string" ? cargoInputDigestV1(input.path).sha256 : null, outputSha256: typeof input.output === "string" ? sha256(input.output) : null, ...(entries ? { observedEntries: entries.map(([name, kind, symlinkTarget]) => ({ path: join(input.path, name), kind, symlinkTarget })) } : {}) };
-    }) : [];
-    return { path, text, sha256: sha256(path), observedAtMs: Date.now(), producer: observation?.producer ?? null, caller: observation?.caller ?? null, producerUnit: bind(observation?.producer, true), callerUnit: bind(observation?.caller, false), resources };
-  });
-  const manifests = new Set<string>([invocation.manifest, ...invocation.units.map(unit => unit.message.manifest_path).filter((path): path is string => typeof path === "string")]), inputPaths = new Set<string>(manifests), visited = new Set<string>();
-  for (let path of [invocation.cwd, ...[...manifests].map(path => dirname(path))]) for (;;) {
-    if (visited.has(path)) break;
-    visited.add(path);
-    for (const name of ["Cargo.toml", "Cargo.lock", ".cargo/config.toml", ".cargo/config", "rust-toolchain.toml", "rust-toolchain"]) inputPaths.add(join(path, name));
-    const parent = dirname(path); if (parent === path) break; path = parent;
+export type CargoCompilerUnitEvidenceV1=Readonly<{version:1;kind:"discovery";paths:readonly string[];producer:null}|{version:1;kind:"received";paths:readonly string[];producer:Readonly<{path:string;sha256:string;unit:number}>}>;
+const unitEvidenceSchema=JSON.parse(readFileSync(new URL("./🧬️schema/🧾️unit-evidence/🔣️.json",import.meta.url),"utf8"));
+/** 🧾️ Requires exact producer custody or explicitly funded compiler discovery. */
+export function parseCargoCompilerUnitEvidenceV1(value:unknown):CargoCompilerUnitEvidenceV1{if(validateJsonSchemaSubset(unitEvidenceSchema,value).length)throw Error("Complete compiler unit evidence required");const row=value as CargoCompilerUnitEvidenceV1;if(row.paths.some(path=>!isAbsolute(path)||path.length>256)||row.kind==="discovery"&&(row.paths.length!==0||row.producer!==null)||row.kind==="received"&&(!row.paths.length||!row.producer||!isAbsolute(row.producer.path)||row.producer.path.length>256||!Number.isSafeInteger(row.producer.unit)))throw Error("Compiler unit evidence owner refused");return Object.freeze({...row,paths:Object.freeze([...row.paths]),producer:row.producer===null?null:Object.freeze({...row.producer})}) as CargoCompilerUnitEvidenceV1;}
+
+export async function writeCompletedCargoInvocationProvenanceV1(receiptPath: string, invocation: { manifest: string; cwd: string; command: string; args: string[]; buildDirectory: string | null; builtAtMs: number; status: number; cancelled: boolean; units: any[]; buildScripts: any[] }, stagedPaths: ReadonlyMap<string, string>, cargoHome: string, physical: CurrentPhysicalPortV1): Promise<void> {
+  if(!physical||!physical.control||!["read","digest","directoryEntries","checkpoint","recheck"].every(key=>typeof (physical as any)[key]==="function"))throw Error("Complete current physical provenance authority required");
+  const policy=physical.control;if(![policy.maxBytes,policy.maxWork,policy.chunkBytes].every(Number.isSafeInteger)||policy.maxBytes<0||policy.maxWork<1||policy.chunkBytes<1||!["cancelled","remainingMs","onProgress"].every(key=>typeof(policy as any)[key]==="function"))throw Error("Finite current physical provenance control required");
+  const path=(value:string):string=>{if(typeof value!=="string"||!isAbsolute(value)||value.length>256||value.includes("\0"))throw Error("Physical provenance path refused");return resolve(value);};
+  path(receiptPath);path(cargoHome);path(invocation.cwd);path(invocation.manifest);if(invocation.buildDirectory)path(invocation.buildDirectory);
+  const kinds=new Map<string,"file"|"directory"|null>(),bytes=new Map<string,Uint8Array|null>(),digests=new Map<string,string|null>(),rosters=new Map<string,readonly import("../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts").CurrentPhysicalEntryV1[]|null>();
+  const kind=async(value:string):Promise<"file"|"directory"|null>=>{const file=path(value);if(kinds.has(file))return kinds.get(file)!;await physical.checkpoint();let result:"file"|"directory"|null=null;try{const stat=await lstat(file);if(stat.isSymbolicLink())throw Error("Physical provenance input cannot be a symbolic link");result=stat.isFile()?"file":stat.isDirectory()?"directory":null;}catch(error){if(!["ENOENT","ENOTDIR"].includes((error as {code?:string}).code??""))throw error;await physical.digest(file);}await physical.checkpoint();kinds.set(file,result);return result;};
+  const read=async(value:string):Promise<Uint8Array|null>=>{const file=path(value);if(bytes.has(file))return bytes.get(file)!;if(await kind(file)!=="file"){bytes.set(file,null);return null;}const actual=await physical.read(file);if(actual===undefined)throw Error("Physical provenance input disappeared");const valueBytes=typeof actual==="string"?Buffer.from(actual):actual;bytes.set(file,valueBytes);digests.set(file,createHash("sha256").update(valueBytes).digest("hex"));return valueBytes;};
+  const text=async(value:string):Promise<string|null>=>{const valueBytes=await read(value);return valueBytes===null?null:Buffer.from(valueBytes).toString("utf8");};
+  const entries=async(value:string)=>{const file=path(value);if(rosters.has(file))return rosters.get(file)!;if(await kind(file)!=="directory"){rosters.set(file,null);return null;}const rows=await physical.directoryEntries(file);if(!rows)throw Error("Physical provenance directory disappeared");rosters.set(file,rows);digests.set(file,createHash("sha256").update(JSON.stringify(rows.map(row=>[basename(row.path),row.kind,row.symlinkTarget]))).digest("hex"));return rows;};
+  const digest=async(value:string):Promise<string|null>=>{const file=path(value);if(digests.has(file))return digests.get(file)!;const type=await kind(file);if(type==="directory")await entries(file);else if(type==="file"){const actual=await physical.digest(file);if(actual===undefined)throw Error("Physical provenance input disappeared");digests.set(file,actual);}else digests.set(file,null);return digests.get(file)!;};
+  const sha256=async(value:string):Promise<string|null>=>await kind(value)==="file"?await digest(value):null;
+  const input=async(value:string)=>({path:value,kind:await kind(value),sha256:await digest(value)});
+  const resource=async(observation:any):Promise<any>=>{const actual=await input(observation.path);if(observation.kind==="read"){const errors=validateJsonSchemaSubset(resourceReadSchema,observation);const valueBytes=await read(observation.path),length=valueBytes?.byteLength??null;return{input:observation,bytes:length,sha256:actual.sha256,schemaErrors:errors,sourceExact:errors.length===0&&actual.kind==="file"&&length===observation.bytes&&actual.sha256===observation.sha256};}const rows=observation.kind==="directory"?await entries(observation.path):null;return{input:observation,sha256:actual.sha256,...(observation.kind==="copy"?{outputSha256:typeof observation.output==="string"?await sha256(observation.output):null}:{}),...(rows?{observedEntries:rows}: {})};};
+  const extension=/\.(?:rlib|rmeta|so|dylib|dll|lib|wasm|exe)$/u,units:any[]=[];
+  for(const original of invocation.units){
+    await physical.checkpoint();const evidence=parseCargoCompilerUnitEvidenceV1(original.evidence),unit={...original},message=unit.message,candidates:string[]=[...new Set<string>((message.filenames??[]).flatMap((file:string)=>[file.replace(extension,"")+".d",join(dirname(file),basename(file).replace(/^lib/u,"").replace(extension,"")+".d")]))];
+    delete unit.evidence;let producerUnit:any=null;if(evidence.kind==="received"){const source=await text(evidence.producer.path);if(source===null||await sha256(evidence.producer.path)!==evidence.producer.sha256)throw Error("Compiler producer receipt changed");const producer=JSON.parse(source);for(const field of["manifest","cwd","command","args","buildDirectory","builtAtMs","status","cancelled"])if(JSON.stringify(producer[field])!==JSON.stringify((invocation as any)[field]))throw Error("Compiler producer invocation differs");producerUnit=producer.units?.[evidence.producer.unit];if(!producerUnit||JSON.stringify(producerUnit.message)!==JSON.stringify(message)||JSON.stringify(producerUnit.depInfo?.map((row:any)=>row.path))!==JSON.stringify(evidence.paths))throw Error("Compiler producer unit custody differs");candidates.splice(0,candidates.length,...evidence.paths);}
+    const sourceOwners=new Set<string>(),targetSource=resolve(message.target.src_path);for(const manifest of[invocation.manifest,message.manifest_path].filter((value):value is string=>typeof value==="string"))for(let owner=dirname(resolve(manifest));;){if(await kind(join(owner,"Cargo.toml"))==="file")sourceOwners.add(owner);const parent=dirname(owner);if(parent===owner)break;owner=parent;}
+    const matchesSource=async(source:string):Promise<boolean>=>{for(const value of cargoDepInfoSourcesV1(source)){await physical.checkpoint();if(isAbsolute(value)){if(resolve(value)===targetSource)return true;continue;}for(const owner of sourceOwners){await physical.checkpoint();if(resolve(owner,value)===targetSource)return true;}}return false;};
+    if(evidence.kind==="discovery"&&invocation.buildDirectory){const option=(name:string)=>invocation.args.flatMap((value,index)=>value===name?[invocation.args[index+1]!]:value.startsWith(name+"=")?[value.slice(name.length+1)]:[])[0],packageName=/#([^@]+)@/u.exec(message.package_id??"")?.[1];if(packageName){const target=option("--target"),owner=join(invocation.buildDirectory,...(target?[target]:[]),option("--profile")??(invocation.args.includes("--release")?"release":"debug"),"build",packageName),rows=await entries(owner);if(rows)for(const row of rows){const output=join(row.path,"out");if(await kind(output)!=="directory")continue;for(const file of message.filenames??[]){const internal=join(output,basename(file)),dep=internal.replace(extension,"")+".d",depText=await text(dep);if(!depText?.includes("# checksum:")||!await matchesSource(depText))continue;const selected=await sha256(file);if(selected===null||await sha256(internal)!==selected)continue;candidates.push(dep);}}}}
+    const depInfo:any[]=[];for(const file of new Set(candidates)){const depText=await text(file);if(depText===null){if(evidence.kind==="received")throw Error("Compiler received candidate disappeared");continue;}if(evidence.kind==="received"&&producerUnit.depInfo.find((row:any)=>row.path===file)?.text!==depText)throw Error("Compiler received candidate bytes differ");const sources=cargoDepInfoSourcesV1(depText),relativeSources=sources.filter(source=>!isAbsolute(source)).map(source=>normalize(source)),owners=new Set<string>();for(const manifest of[invocation.manifest,message.manifest_path].filter((value):value is string=>typeof value==="string"))for(let owner=dirname(resolve(manifest));;){if(await kind(join(owner,"Cargo.toml"))==="file")owners.add(owner);const parent=dirname(owner);if(parent===owner)break;owner=parent;}const bases:string[]=[];for(const base of owners){if(!relativeSources.some(source=>resolve(base,source)===resolve(message.target.src_path)))continue;let valid=true;for(const source of sources){if(await kind(resolve(base,source))===null){valid=false;break;}}if(valid)bases.push(base);}depInfo.push({path:file,text:depText,baseDirectory:relativeSources.length===0?invocation.cwd:bases.length===1?bases[0]:null});}
+    unit.depInfo=depInfo;unit.inputs=[];for(const file of new Set<string>(depInfo.flatMap(row=>cargoDepInfoSourcesV1(row.text).filter(source=>isAbsolute(source)||row.baseDirectory!==null).map(source=>resolve(row.baseDirectory??invocation.cwd,source)))))unit.inputs.push(await input(file));unit.observedAtMs=Date.now();unit.artifacts=[];for(const file of message.filenames??[]){const stagedPath=stagedPaths.get(file);unit.artifacts.push({path:file,sha256:await sha256(file),...(stagedPath?{stagedPath,stagedSha256:await sha256(stagedPath)}:{})});}if(producerUnit){if(JSON.stringify(unit.depInfo)!==JSON.stringify(producerUnit.depInfo)||JSON.stringify(unit.inputs)!==JSON.stringify(producerUnit.inputs)||JSON.stringify(unit.artifacts.map((row:any)=>[row.path,row.sha256]))!==JSON.stringify(producerUnit.artifacts.map((row:any)=>[row.path,row.sha256])))throw Error("Compiler received physical witnesses differ");}units.push(unit);
   }
-  for (const name of ["config.toml", "config"]) inputPaths.add(join(cargoHome, name));
-  const invocationInputs = [...inputPaths].sort().map(path => ({ path, sha256: sha256(path) })), text = JSON.stringify({ version: 1, ...invocation, observedAtMs: Date.now(), invocationInputs, buildResources, compilerResourceRoot, compilerResources }) + "\n";
-  for (const path of new Set([receiptPath, ...(invocation.buildDirectory ? [join(invocation.buildDirectory, "semio-cargo-provenance", basename(receiptPath))] : [])])) { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, text); }
+  const buildResources:any[]=[];for(const build of invocation.buildScripts){const file=join(build.out_dir,"semio-runtime-resource-inputs.jsonl"),source=await text(file);if(source===null)continue;const resources:any[]=[];for(const line of source.split(/\r?\n/u).filter(Boolean))resources.push(await resource(JSON.parse(line)));buildResources.push({package_id:build.package_id,out_dir:build.out_dir,path:file,text:source,sha256:await sha256(file),observedAtMs:Date.now(),resources});}
+  const compilerResourceRoot=invocation.buildDirectory?join(invocation.buildDirectory,"semio-compiler-resources"):null,compilerResources:any[]=[];
+  const compilerPaths=compilerResourceRoot?[...new Set<string>(units.filter(unit=>!unit.message.target.kind?.includes("proc-macro")&&!unit.message.target.kind?.includes("custom-build")).flatMap(unit=>unit.inputs.map((row:any)=>row.path)))].filter(file=>basename(file)==="observation.json"&&relative(compilerResourceRoot,file).split(sep)[0]!==".."&&!isAbsolute(relative(compilerResourceRoot,file))):[];
+  for(const file of compilerPaths){const source=await text(file);let observation:any;try{observation=source===null?null:JSON.parse(source);}catch{observation=null;}const bind=(identity:any,producer:boolean)=>{if(!identity||![identity.manifest,identity.source].every(value=>typeof value==="string"&&isAbsolute(value)))return null;const matches=units.filter(unit=>typeof unit.message.manifest_path==="string"&&resolve(unit.message.manifest_path)===resolve(identity.manifest)&&unit.inputs.some((row:any)=>row.kind==="file"&&resolve(row.path)===resolve(identity.source))&&(producer?unit.message.target.kind.includes("proc-macro"):typeof identity.crate==="string"&&unit.message.target.name.replaceAll("-","_")===identity.crate&&!unit.message.target.kind.includes("custom-build")&&!unit.message.target.kind.includes("proc-macro")));return matches.length===1?matches[0].message:null;},resources:any[]=[];for(const row of Array.isArray(observation?.resources)?observation.resources:[])resources.push(await resource(row));compilerResources.push({path:file,text:source,sha256:await sha256(file),observedAtMs:Date.now(),producer:observation?.producer??null,caller:observation?.caller??null,producerUnit:bind(observation?.producer,true),callerUnit:bind(observation?.caller,false),resources});}
+  const manifests=new Set<string>([invocation.manifest,...units.map(unit=>unit.message.manifest_path).filter((value):value is string=>typeof value==="string")]),inputPaths=new Set<string>(manifests),visited=new Set<string>();for(let file of[invocation.cwd,...[...manifests].map(value=>dirname(value))])for(;;){if(visited.has(file))break;visited.add(file);for(const name of["Cargo.toml","Cargo.lock",".cargo/config.toml",".cargo/config","rust-toolchain.toml","rust-toolchain"])inputPaths.add(join(file,name));const parent=dirname(file);if(parent===file)break;file=parent;}for(const name of["config.toml","config"])inputPaths.add(join(cargoHome,name));const invocationInputs:any[]=[];for(const file of[...inputPaths].sort())invocationInputs.push({path:file,sha256:await sha256(file)});
+  const source=JSON.stringify({version:1,...invocation,units,observedAtMs:Date.now(),invocationInputs,buildResources,compilerResourceRoot,compilerResources})+"\n";if(Buffer.byteLength(source)>policy.maxBytes)throw Error("Physical provenance publication budget");await physical.recheck();for(const file of new Set([receiptPath,...(invocation.buildDirectory?[join(invocation.buildDirectory,"semio-cargo-provenance",basename(receiptPath))]:[])])){path(file);await physical.checkpoint();await mkdir(dirname(file),{recursive:true});await physical.checkpoint();await writeFile(file,source);}
+
 }
 
 async function captureCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1): Promise<void> {
@@ -342,7 +306,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
           }
           if ((message.reason === "compiler-artifact" || message.reason === "build-script-executed") && (options.environment ?? process.env).SEMIO_TEST_ARTIFACT_DIR) process.stdout.write(line + "\n");
           if (message.reason === "build-script-executed") buildScripts.push(message);
-          if (message.reason === "compiler-artifact") units.push({ message });
+          if (message.reason === "compiler-artifact") units.push({ message,evidence:{version:1,kind:"discovery",paths:[],producer:null} });
           if (message.reason !== "compiler-artifact" || message.target?.kind?.includes("custom-build")) continue;
           const packageUrl = message.package_id?.split("#")[0]?.replace(/^path\+/, "");
           const bin = args.indexOf("--bin"),
@@ -412,7 +376,8 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   } finally {
     try {
       {
-        writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot ?? join(policy.buildDirectory, "semio-cargo-provenance"), `cargo-unit-provenance-${basename(capture)}.json`), { manifest: path, cwd: policy.cwd, command: commandPort.command, args: [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], buildDirectory: policy.buildDirectory, builtAtMs, status: await status, cancelled, units, buildScripts }, new Map([...stagedNames].filter(([, key]) => files.has(key)).map(([path, key]) => [path, join(staging, key)])), (options.environment ?? process.env).CARGO_HOME);
+        if(!options.signal)throw Error("Cargo capture physical signal required");const observedAt=performance.now(),physical=new CurrentPhysicalOwnerV1(policy.cwd,{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>options.signal!.aborted,remainingMs:()=>60000-(performance.now()-observedAt),onProgress:row=>console.log("[cargo-provenance] "+JSON.stringify(row))});
+        await writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot ?? join(policy.buildDirectory, "semio-cargo-provenance"), `cargo-unit-provenance-${basename(capture)}.json`), { manifest: path, cwd: policy.cwd, command: commandPort.command, args: [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], buildDirectory: policy.buildDirectory, builtAtMs, status: await status, cancelled, units, buildScripts }, new Map([...stagedNames].filter(([, key]) => files.has(key)).map(([path, key]) => [path, join(staging, key)])), resolve((options.environment ?? process.env).CARGO_HOME??join(homedir(),".cargo")),physical);
       }
     } finally {
       rmSync(capture, { recursive: true, force: true });

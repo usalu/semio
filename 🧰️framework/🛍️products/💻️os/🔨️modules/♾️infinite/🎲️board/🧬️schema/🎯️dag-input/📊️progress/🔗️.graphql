@@ -1,0 +1,1 @@
+type DagComputingProgress { active: String stale: [String!]! }

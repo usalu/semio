@@ -15,7 +15,14 @@ fn value_round_trip_matches_serde_shape() {
     check(Vec3::new(1.0, 2.0, 3.0));
     check(VertexId(7));
     check(WeldMode::ByDistance);
-    check(MeshKernelError::InvalidInput("bad".to_string()));
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🌱️value/⚠️refusal/🔁️codec/🧫️fixtures/🔣️.json")).unwrap();
+    let wire=&corpus["valid"][0]["wire"];
+    let error=MeshKernelError::Retained(protocol::value::ValueError::new(protocol::value::ValueRefusalKind::from_wire(wire["kind"].as_str().unwrap()).unwrap(),wire["message"].as_str().unwrap()).with_retained_progress(serde_json::from_value(wire["retainedProgress"].clone()).unwrap()));
+    let MeshKernelError::Retained(cause)=error else{unreachable!()};let mut permit=|_|true;
+    let encoded=cause.to_value_controlled(&mut protocol::value::NativeEncodeControl::new(1_000_000,&mut permit)).unwrap();
+    assert_eq!(serde_json::Value::from(encoded.clone()),*wire);
+    let mut decode_permit=|_|true;
+    assert_eq!(protocol::value::ValueError::from_value_controlled(&encoded,&mut protocol::value::NativeDecodeControl::new(1_000_000,&mut decode_permit)).unwrap(),cause);
 
     // `HalfedgeMesh` has no `PartialEq` (pre-existing — not added here), so round-trip fidelity
     // is checked by re-encoding the decoded mesh and comparing `DslValue`s, plus a direct
@@ -773,13 +780,13 @@ fn indexed_corner_attributes_tessellate_with_seams_and_transform_once() {
     let transfer=mesh.tessellate().unwrap();assert_eq!(transfer.attributes["normal"].values.len(),1);assert_eq!(transfer.attributes["normal"].domain_len(),6);assert_ne!(&transfer.uvs[..2],&transfer.uvs[6..8]);
     let shared=transfer.edge_ids.iter().position(|id|mesh.halfedges[*id as usize].twin.is_some()).unwrap();assert_eq!(transfer.edge_is_seam[shared],1);assert_eq!(&transfer.edge_uvs[shared*4..shared*4+2],&[1.0,1.0]);
     let mut job=mesh.scale_job(Vec3([2.0,1.0,1.0]),true).unwrap();
-    let scaled=loop {match job.step(1).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
+    let scaled=loop {match job.step(1,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
     let normal=scaled.attributes()["normal"].value_at(0).unwrap().as_array().unwrap();
     assert!((normal[0].as_f64().unwrap()-1.0/5f64.sqrt()).abs()<1e-6);assert!((normal[1].as_f64().unwrap()-2.0/5f64.sqrt()).abs()<1e-6);assert_eq!(scaled.attributes()["normal"].values.len(),1);
     let mut component=mesh.clone();component.scale_vertices(&[VertexId(0)],Vec3([2.0,1.0,1.0]),Vec3::ZERO).unwrap();
     let channel=&component.attributes()["normal"];assert_eq!(channel.indices.as_ref().unwrap()[0],channel.indices.as_ref().unwrap()[3]);assert_ne!(channel.indices.as_ref().unwrap()[0],channel.indices.as_ref().unwrap()[1]);
     assert!((channel.value_at(0).unwrap().as_array().unwrap()[0].as_f64().unwrap()-1.0/5f64.sqrt()).abs()<1e-6);assert!((channel.value_at(1).unwrap().as_array().unwrap()[0].as_f64().unwrap()-2f64.sqrt().recip()).abs()<1e-6);
-    let mut cancelled=MeshTessellationJob::new(mesh);while cancelled.progress().phase!="tessellate-attributes" {assert!(matches!(cancelled.step(1).unwrap(),MeshTessellationStep::Working(_)));}cancelled.cancel();assert!(matches!(cancelled.step(1).unwrap(),MeshTessellationStep::Cancelled(_)));
+    let mut cancelled=MeshTessellationJob::new(mesh);while cancelled.progress().phase!="tessellate-attributes" {assert!(matches!(cancelled.step(super::tessellation_metadata_tests::funded_normal_grant(&cancelled)).unwrap().0,MeshTessellationStep::Working(_)));}cancelled.cancel();assert!(matches!(cancelled.step(super::tessellation_metadata_tests::funded_normal_grant(&cancelled)).unwrap().0,MeshTessellationStep::Cancelled(_)));
 }
 
 #[test]
@@ -788,7 +795,7 @@ fn orientation_remaps_corner_and_directed_edge_attributes_without_copying_sample
     let mut mesh=HalfedgeMesh::from_faces(&[[0.0,0.0,0.0],[1.0,0.0,0.0],[1.0,1.0,0.0],[0.0,1.0,0.0]],&[vec![0,1,2],vec![0,3,2]]).unwrap();
     mesh.mark_uv_seam(&[EdgeId(3)],true);let original=mesh.clone();
     for (name,domain) in [("corners",MeshAttributeDomain::Corner),("edges",MeshAttributeDomain::Edge)] {mesh.set_attribute(name.into(),MeshAttribute {domain,semantic:MeshAttributeSemantic::Custom,interpolation:MeshAttributeInterpolation::Nearest,values:(0..6).map(|id|DslValue::String(format!("sample-{id}"))).collect(),indices:None}).unwrap();}
-    let mut job=mesh.orient_faces_job().unwrap();let output=loop {match job.step(1).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
+    let mut job=mesh.orient_faces_job().unwrap();let output=loop {match job.step(1,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
     assert_eq!(output.face_vertex_ids(FaceId(1)).unwrap().iter().map(|vertex|vertex.0).collect::<Vec<_>>(),vec![2,3,0]);
     for (id,edge) in output.halfedges.iter().enumerate() {
         let source=original.halfedges.iter().position(|source|source.face==edge.face && source.vertex==edge.vertex).unwrap();
@@ -808,7 +815,7 @@ fn mirror_remaps_owned_channels_and_reflects_corner_capable_normals() {
     mesh.set_attribute("normal".into(),MeshAttribute {domain:MeshAttributeDomain::Vertex,semantic:MeshAttributeSemantic::Normal,interpolation:MeshAttributeInterpolation::Linear,values:vec![DslValue::Array(vec![DslValue::float(1.0),DslValue::float(0.0),DslValue::float(0.0)])],indices:Some(vec![0;3])}).unwrap();
     mesh.set_attribute("uv".into(),MeshAttribute {domain:MeshAttributeDomain::Corner,semantic:MeshAttributeSemantic::Uv,interpolation:MeshAttributeInterpolation::Linear,values:vec![DslValue::Array(vec![DslValue::float(0.0),DslValue::float(0.0)]),DslValue::Array(vec![DslValue::float(1.0),DslValue::float(0.0)]),DslValue::Array(vec![DslValue::float(0.0),DslValue::float(1.0)])],indices:None}).unwrap();
     mesh.set_attribute("label".into(),MeshAttribute {domain:MeshAttributeDomain::Face,semantic:MeshAttributeSemantic::Custom,interpolation:MeshAttributeInterpolation::Constant,values:vec![DslValue::String("shared".repeat(4096))],indices:None}).unwrap();
-    let mut job=mesh.mirror_job(MirrorAxis::X,0.0).unwrap();let mirrored=loop {match job.step(1).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
+    let mut job=mesh.mirror_job(MirrorAxis::X,0.0).unwrap();let mirrored=loop {match job.step(1,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
     assert_eq!(mirrored.face_count(),2);assert_eq!(mirrored.attributes()["label"].values.len(),1);assert_eq!(mirrored.attributes()["label"].indices,Some(vec![0,0]));
     assert_eq!(mirrored.attributes()["normal"].domain,MeshAttributeDomain::Corner);
     assert_eq!(mirrored.attributes()["normal"].value_at(0).unwrap().as_array().unwrap()[0].as_f64(),Some(1.0));assert_eq!(mirrored.attributes()["normal"].value_at(3).unwrap().as_array().unwrap()[0].as_f64(),Some(-1.0));
@@ -844,7 +851,7 @@ fn bulk_read_accessors_expose_a_pure_consumers_view_and_rebuild_the_mesh() {
 fn rebuild_from_source(source: semio_framework_mesh_engine::PolygonMeshSource) -> HalfedgeMesh {
     let mut job = HalfedgeMesh::polygon_source_job(source).unwrap();
     loop {
-        if let MeshModelingStep::Done(mesh) = job.step(4096).unwrap() {
+        if let MeshModelingStep::Done(mesh) = job.step(4096,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap() {
             return mesh;
         }
     }
@@ -916,4 +923,37 @@ fn the_seam_set_encodes_in_ascending_order() {
         assert_eq!(HalfedgeMesh::from_json(&mesh.to_json().unwrap()).unwrap().to_json().unwrap(), mesh.to_json().unwrap());
         assert_eq!(mesh.to_value(), first);
     }
+}
+/// 🧹️ Keeps the original output and source through a zero-effect cancellation request and funded physical closure.
+#[test]
+fn original_mesh_tessellation_cancellation_retains_exact_output_until_funded_closure(){
+    use crate::brep::queries::tessellation::tests::observe_tessellation_system as observe;
+    use protocol::value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
+    for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as usize){
+        let(mut job,source)=observe(||{let positions=serde_json::from_value::<Vec<[f32;3]>>(law["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["faces"].clone()).unwrap();let mut job=MeshTessellationJob::new(HalfedgeMesh::from_faces(&positions,&faces).unwrap());while job.output.as_ref().unwrap().positions.is_empty(){assert!(matches!(job.step(super::tessellation_metadata_tests::funded_normal_grant(&job)).unwrap().0,MeshTessellationStep::Working(_)));}job});
+        let output=job.output.as_ref().unwrap().positions.as_ptr();let original=job.mesh.vertices.as_ptr();let progress=job.progress();
+        let(_,signal)=observe(||job.cancel());assert_eq!(signal,(law["cancellationCapacityBytes"].as_u64().unwrap() as usize,law["cancellationReleaseBytes"].as_u64().unwrap() as usize));assert_eq!(job.output.as_ref().unwrap().positions.as_ptr(),output);assert_eq!(job.mesh.vertices.as_ptr(),original);
+        let(step,heap)=observe(||job.step(super::tessellation_metadata_tests::funded_normal_grant(&job)).unwrap().0);assert!(matches!(step,MeshTessellationStep::Cancelled(value) if value==progress));assert_eq!(heap,(0,0));
+        let(mut owner,handoff)=observe(||ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original mesh tessellation owner unsupported")));assert_eq!(handoff,(0,0));let(mut born,mut freed,mut turns)=(0,0,0);
+        while !owner.terminal_is_empty(){let grant=RetainedCloneGrant {maximum_items:law["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert_eq!(step.progress(),owner.step_progress());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<100000);}
+        assert_eq!(source.0-source.1+born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,law["terminalDropBytes"].as_u64().unwrap() as usize));eprintln!("[DEBUG] Original Mesh tessellation cancel copy={copy} originalOutput=true originalSource=true physical={freed} turns={turns} terminalDrop=0");
+    }
+}
+
+/// 🧺️ Original source collection uses existing reserved scratch rather than growing an unadmitted Vec.
+#[test]
+fn original_mesh_tessellation_source_collection_requires_original_buffer_reservation(){
+    use crate::brep::queries::tessellation::tests::observe_tessellation_system as observe;
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
+    let(mut job,source)=observe(||{let positions=serde_json::from_value::<Vec<[f32;3]>>(law["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["faces"].clone()).unwrap();MeshTessellationJob::new(HalfedgeMesh::from_faces(&positions,&faces).unwrap())});
+    let original=job.mesh.vertices.as_ptr();
+    let(mut reservation_born,mut reservation_freed)=(0,0);
+    while !job.buffer_reservation_complete(){let grant=protocol::value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:job.next_buffer_capacity_byte_demand(0).unwrap(),maximum_release_bytes:0,maximum_depth:job.next_buffer_depth_demand().unwrap()};let(step,heap)=observe(||job.reserve_buffer_step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));reservation_born+=heap.0;reservation_freed+=heap.1;}
+    let(_,heap)=observe(||{job.step(super::tessellation_metadata_tests::funded_normal_grant(&job)).unwrap();job.step(super::tessellation_metadata_tests::funded_normal_grant(&job)).unwrap();});
+    assert_eq!(heap,(0,0),"original source collection requires previously admitted backing");
+    assert_eq!(job.mesh.vertices.as_ptr(),original);
+    let(mut owner,handoff)=observe(||protocol::value::retirement::controlled::ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original tessellation closure unsupported")));assert_eq!(handoff,(0,0));let(mut born,mut freed)=(source.0+reservation_born,source.1+reservation_freed);
+    while !owner.terminal_is_empty(){let copy=owner.next_copy_byte_demand().unwrap();let grant=protocol::value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}
+    assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
 }

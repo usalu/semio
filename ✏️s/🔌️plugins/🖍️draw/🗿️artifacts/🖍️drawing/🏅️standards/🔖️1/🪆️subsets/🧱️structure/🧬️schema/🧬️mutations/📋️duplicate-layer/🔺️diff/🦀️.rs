@@ -9,7 +9,8 @@ pub fn diff(payload: &super::mutation::DuplicateLayer, base: &DrawingSnapshot) -
     let Some(layer) = find_drawing_layer(base, &payload.layer_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.to_string_owner()]);
     };
-    let duplicate = clone_drawing_layer_node(layer, " copy");
+    let duplicate = match clone_drawing_layer_node(layer, " copy", &payload.identities) {Ok(layer)=>layer,Err(error)=>return protocol::MutationOutcome::error("mutation.identity-invalid",error.to_string(),[payload.layer_id.to_string_owner()])};
+    for assignment in &payload.identities {if find_drawing_layer(base,&assignment.target).is_some(){return protocol::MutationOutcome::fatal("mutation.duplicate-id","A clone identity already exists.",[assignment.target.to_string_owner()]);}}
     let new_id = crate::schema::layer_id(&duplicate);
     if find_drawing_layer(base, new_id).is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A layer with id \"{}\" already exists.", new_id), [new_id.to_string()]);

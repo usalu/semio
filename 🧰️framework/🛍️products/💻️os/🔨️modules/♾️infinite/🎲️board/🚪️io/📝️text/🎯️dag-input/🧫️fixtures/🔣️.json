@@ -70,6 +70,60 @@
           ]
         }
       }
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "channel": null,
+        "refusal": null
+      }
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "channel": {
+          "widgetId": "node雪",
+          "port": "in",
+          "direction": "in"
+        },
+        "refusal": null
+      }
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "channel": null,
+        "refusal": {
+          "source": "source@out",
+          "sourceTypes": [
+            "vector"
+          ],
+          "target": "node雪@in",
+          "targetTypes": [
+            "geometry"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "channel": {
+          "widgetId": "node雪",
+          "port": "in",
+          "direction": "in"
+        },
+        "refusal": {
+          "source": "source@out",
+          "sourceTypes": [
+            "vector"
+          ],
+          "target": "node雪@in",
+          "targetTypes": [
+            "geometry"
+          ]
+        }
+      }
     }
   ],
   "refused": [
@@ -173,6 +227,104 @@
     {
       "kind": "statuses",
       "value": null
+    },
+    {
+      "kind": "hover",
+      "value": null
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "widgetId": "node雪",
+        "port": "in",
+        "direction": "in"
+      }
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "channel": null
+      }
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "channel": null,
+        "refusal": null,
+        "extra": true
+      }
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "channel": {
+          "widgetId": "node雪",
+          "port": "in",
+          "direction": "side"
+        },
+        "refusal": null
+      }
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "channel": {
+          "widgetId": "node雪",
+          "port": "in",
+          "direction": "in",
+          "extra": 0
+        },
+        "refusal": null
+      }
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "channel": null,
+        "refusal": {
+          "source": "source@out",
+          "sourceTypes": [
+            "vector"
+          ],
+          "target": "node雪@in",
+          "targetTypes": [
+            "geometry"
+          ],
+          "extra": 1
+        }
+      }
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "channel": null,
+        "refusal": {
+          "source": "source@out",
+          "sourceTypes": [
+            1
+          ],
+          "target": "node雪@in",
+          "targetTypes": [
+            "geometry"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "hover",
+      "value": {
+        "channel": null,
+        "refusal": {
+          "source": "source@out",
+          "sourceTypes": [
+            "vector"
+          ],
+          "target": "node雪@in",
+          "targetTypes": [
+            ""
+          ]
+        }
+      }
     }
   ],
   "rawRefused": [
@@ -183,6 +335,17 @@
     {
       "kind": "statuses",
       "text": "{\"n\":{\"status\":\"ok\"},\"n\":{\"status\":\"queued\"}}"
+    },
+    {
+      "kind": "hover",
+      "text": "{\"channel\":null,\"refusal\":null,\"refusal\":null}"
     }
-  ]
+  ],
+  "retainedGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 8,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 2048
+  }
 }

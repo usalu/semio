@@ -39,7 +39,7 @@ impl<T:RetireOwned+Sync> SnapshotReadRetirement<T> {
     }
 }
 impl<T:RetireOwned+Sync> RetirementCursor for SnapshotReadRetirement<T> {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress))=>RetirementStep::Progress(progress)}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
     fn terminal_is_empty(&self)->bool{self.read.is_none()&&self.alias.is_none()&&self.registry.is_none()&&self.active_returned.is_none()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
     fn allows_admitted_narrow_work(&self)->bool{true}

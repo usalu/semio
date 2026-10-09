@@ -1,0 +1,37 @@
+{
+  "utc": "2026-10-09T05:37:38.147631+00:00",
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "sourceCopies": false,
+  "beforeObserverSha256": "780c7b13d5c451d6e02c9ce994edb27dbd1c717e05e4d78e63a8d0a4e7bb4784",
+  "afterObserverSha256": "d6dd4d157ac677e7957bcf2a4e5bc39c180e5919118090d31d4a5ec8086a8501",
+  "ownedLogicalActions": [
+    {
+      "beforeBlockSha256": "c7257d8511da7c8a3296ae533210d6f2f4d89b1a2f6c58e935c53b45b3c81cf7",
+      "afterBlockSha256": "6d381b00875238568504b4a361b1ca37bf4ae93f33b972e244b56069cce11f14"
+    },
+    {
+      "beforeBlockSha256": "b93423cda1c015d27e6e8a6207591cecdabd41fee0006d46ec261c92635621ca",
+      "afterBlockSha256": "0c7077e8f03da76e3aeb4326e1d6f206810dea5abfc9201439822b494ee76a9a"
+    },
+    {
+      "beforeBlockSha256": "52256c8d2a9341986b907f6ae8a5b0bba92c42b19f0d7462c69ad842edf53241",
+      "afterBlockSha256": "2a5db91562e0d6beb4482502545cd03e3c90cb5f17342d30a4bce79c7dae26f7"
+    },
+    {
+      "beforeBlockSha256": "a4f51349d8887dda38bcdd584296b72dfd791cc3182ec1094b4ea0349f925dd6",
+      "afterBlockSha256": "28a3104bd417a7197970dc32c8c512197ff8ece4d55df617070d36b64f353b26"
+    },
+    {
+      "beforeBlockSha256": "cf438c8772a47fff65fb989f0d473b647a336065420832e779f5ecdf55e30fcd",
+      "afterBlockSha256": "a866e9a4976912eb82363be51a6ece22e1ff96d20db34a4884a249d9519b538a"
+    },
+    {
+      "beforeBlockSha256": "d70f3d036340028c0ffada2fefe1a879d4eebbcc5c7b6a4512eb24bdbda0ec23",
+      "afterBlockSha256": "06e99dfa867f01ccf83ea4e3d8238990262b2535ea64f9ef94dc600e65307635"
+    },
+    {
+      "beforeBlockSha256": "6d74aaee7a731639141028012c747452410c629ad06313b200375b6efe846b51",
+      "afterBlockSha256": "783de591ec85a2d8409746ca05228ddf4f9888106fa25802f735ff524415f8df"
+    }
+  ]
+}

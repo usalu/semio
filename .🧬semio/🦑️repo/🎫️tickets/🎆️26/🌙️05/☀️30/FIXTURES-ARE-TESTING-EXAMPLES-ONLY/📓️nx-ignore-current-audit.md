@@ -1,0 +1,11 @@
+# Nx Ignore Admission Audit
+
+Installed Nx core project-json plugin directly admits `{project.json,**/project.json}` (12–25), independently of Library createNodesV2. Core package-json also discovers package.json/project.json. Library inferenceCandidates therefore gates its emoji/Cargo candidates only; rejecting there cannot remove a core ordinary project.
+
+Nx getIgnoreObject reads .gitignore then .nxignore through installed `ignore` (gitignore semantics). Actual in-memory Bun oracle shows extglob `!(🔨️modules)` does not match with ignore, though minimatch matches it. These APIs are not interchangeable.
+
+Current .nxignore excludes only 🧫️fixtures project basenames, including genuine modules named that immediately under 🔨️modules. A broad module-subtree reinclude is unsafe: actual oracle admits a nested 🧪️examples project even after re-excluding nested 🧫️fixtures. Re-excluding every collection still needs care for a later legitimate modules-name segment; do not claim an arbitrary-depth semantic predicate implemented by a short extglob/blanket reinclude.
+
+Bounded portable strategy: four normalized collection project-basename exclusions, plus exact individual genuine module project-file reinclusions when their canonical predicate permits them. Never reinclude the entire module subtree. Test both emoji/ordinary project basenames, nested each collection, CAD assets and exact legitimate module files using Nx ignore and independent minimatch/canonical predicate. Exact reinclusions are a finite current admission representation, not a replacement for canonical source predicate enforcement across all plugin entrypoints. Package.json discovery must also be considered; basename-only project rules do not prevent a fixture package from becoming an inferred project.
+
+For clean defining enforcement, retain Library physical/symlink/byte-order checks and apply its canonical predicate before any candidate action, while explicitly accounting for Nx core ordinary/package admissions. Do not infer runtime purity from graph membership or cache patterns alone. No graph, tests, builds or Source mutations ran; only requested pure pattern API checks executed. Companion hashes are observer-only.

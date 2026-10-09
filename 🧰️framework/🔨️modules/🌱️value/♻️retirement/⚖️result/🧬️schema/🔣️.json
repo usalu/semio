@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Owned Result Variant",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Ok"
+      ],
+      "properties": {
+        "Ok": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Err"
+      ],
+      "properties": {
+        "Err": {
+          "type": "string"
+        }
+      }
+    }
+  ]
+}

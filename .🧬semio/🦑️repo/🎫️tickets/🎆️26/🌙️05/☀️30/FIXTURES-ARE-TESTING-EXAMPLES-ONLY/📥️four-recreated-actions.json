@@ -1,0 +1,41 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "beforeSha256": "fcbd0416b2055fae43ba247e3ca2f40a34b1b548fc34254387e86f13a259f974",
+      "afterSha256": "4b94df3e4d951574afb5b151289073283280cb2313cb75d6eb6c046bb7f7ced2",
+      "action": "Remove only current whole-trial Schema reads/admissions/mirror negatives; preserve every fresh peer independent behavior including pending-host identity/invalidation/request capacity/refused Unicode."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+      "beforeSha256": "f3c2bc80b6d92c2c5231c2fdef64b7d9ae64c26ed67482a428865937b891f2d5",
+      "afterSha256": "d5d2efdd54fa955ba06943d52e8f23fa665b75126fe68537de2ec0dc363bd2a9",
+      "action": "Remove only current whole-trial Schema reads/admissions/mirror negatives; preserve every fresh peer independent behavior including pending-host identity/invalidation/request capacity/refused Unicode."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "beforeSha256": "6734a38bc69e8ebe9258e3a592dc6ece4c91abcb1719680e9189f0fcfb59d8d6",
+      "afterSha256": null,
+      "action": "Retire fresh whole-trial authority after current original guard rejection; no writer attribution/genuine domain change."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/🎟️work.json",
+      "beforeSha256": "6c5bec8aa0e2f8ad6e942e66b381dccb9bd3ba9e771d0261ddba3f3df61e128a",
+      "afterSha256": null,
+      "action": "Retire fresh whole-trial authority after current original guard rejection; no writer attribution/genuine domain change."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json",
+      "beforeSha256": "418b15222453bac684c06133b57994c7e81a60449a34178229f34285f1b5de32",
+      "afterSha256": null,
+      "action": "Retire fresh whole-trial authority after current original guard rejection; no writer attribution/genuine domain change."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json",
+      "beforeSha256": "906ee9982d809307c6f6a2c4015d63407a1fe588756f5bcb85d86581d46a87fe",
+      "afterSha256": null,
+      "action": "Retire fresh whole-trial authority after current original guard rejection; no writer attribution/genuine domain change."
+    }
+  ],
+  "plainObserversUnchanged": true
+}

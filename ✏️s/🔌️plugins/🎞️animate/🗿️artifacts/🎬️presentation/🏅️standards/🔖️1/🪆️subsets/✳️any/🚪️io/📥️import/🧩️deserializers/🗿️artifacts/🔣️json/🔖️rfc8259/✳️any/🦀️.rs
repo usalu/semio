@@ -17,7 +17,7 @@ pub struct JsonIntoPresentation;
 impl Deserializer<PresentationSnapshot> for JsonIntoPresentation {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<PresentationSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<PresentationSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"JsonIntoPresentation: expected a binary json payload")));
         };

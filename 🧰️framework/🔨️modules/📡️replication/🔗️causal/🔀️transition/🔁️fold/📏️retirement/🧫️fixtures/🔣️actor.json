@@ -1,0 +1,24 @@
+{
+  "schema": "semio.history.fold-shared-actor-admission/v1",
+  "original": "actor-original-雪",
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "expected": {
+    "sameOriginal": true,
+    "deniedHeap": [
+      0,
+      0
+    ],
+    "birth": "actual-shared-arc-frame",
+    "copy": "native-owner-word-layout",
+    "prebornFrame": "same-queued-shell",
+    "terminalHeap": [
+      0,
+      0
+    ]
+  }
+}

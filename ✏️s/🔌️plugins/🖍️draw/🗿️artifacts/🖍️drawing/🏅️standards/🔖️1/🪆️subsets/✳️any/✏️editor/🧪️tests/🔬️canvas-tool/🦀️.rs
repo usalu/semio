@@ -10,7 +10,7 @@ fn nested_curve_selection_fixture() {
         let mut path = filled_path("Curve", segments.clone());
         crate::schema::layer_base_mut(&mut path).id = "curve".into();
         crate::schema::layer_base_mut(&mut path).attributes.fill=Some(crate::FillStyle::Solid {color:[1.0,0.0,0.0,1.0]});
-        let mut group = crate::schema::create_drawing_group_layer("Parent");
+        let mut group = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Parent")).to_string().into()).expect("nonempty authored identity"), "Parent");
         let DrawingLayerNode::Group(body) = &mut group else { unreachable!() };
         let [x,y,scale_x,scale_y,rotation]: [f64;5] = serde_json::from_value(case["parent"].clone()).unwrap();
         body.base.transform = crate::DrawingTransform { x,y,scale_x,scale_y,rotation, shear: 0.0 };
@@ -44,7 +44,7 @@ fn lasso_samples_yield_and_select_the_polygon_instead_of_its_rectangle() {
     let outside=stroked_path("Outside",vec![PathSegment::Move { to: [6.0,6.0] },PathSegment::Line { to: [7.0,7.0] }]);
     let expected=layer_id(&inside).to_string();
     let document=DrawingSnapshot { layers: vec![inside,outside].into(),..Default::default() };
-    let mut session=DrawingSession::new("selectLasso","");
+    let mut session=crate::editor::drawing::identity_test::session("selectLasso","");
     session.window_config.viewport=store::Viewport2d { x:0.0,y:0.0,zoom:1.0 };
     session.press(pointer("selectLasso",[0.0,0.0])).unwrap();
     let movement=CanvasPointerMove { shift: false, alt: false,  x:50.0,y:60.0,width:100.0,height:100.0,samples:vec![[60.0,50.0],[50.0,60.0]] };
@@ -92,10 +92,10 @@ fn shape_identity_is_replay_stable_and_scoped_to_the_durable_app_operation() {
         authoring_seed: "authoring-seed-test".into(),
     };
     let geometry = [10.0, 20.0, 30.0, 40.0];
-    let first = shape_drag_id("shapeRect", geometry, 3, Some(&operation));
-    assert_eq!(first, shape_drag_id("shapeRect", geometry, 3, Some(&operation)), "replaying the same admitted operation is deterministic");
-    assert_ne!(first, shape_drag_id("shapeRect", geometry, 3, Some(&AppOperationContext { app_instance_id: 8, ..operation.clone() })), "a different live app instance cannot collide at the same document revision and local operation ordinal");
-    assert_ne!(first, shape_drag_id("shapeRect", geometry, 4, Some(&operation)), "a second same-geometry creation in the same document uses its document-local ordinal");
+    let first = admitted_shape_key("shapeRect", geometry, 3, Some(&operation));
+    assert_eq!(first, admitted_shape_key("shapeRect", geometry, 3, Some(&operation)), "replaying the same admitted operation is deterministic");
+    assert_ne!(first, admitted_shape_key("shapeRect", geometry, 3, Some(&AppOperationContext { app_instance_id: 8, ..operation.clone() })), "a different live app instance cannot collide at the same document revision and local operation ordinal");
+    assert_ne!(first, admitted_shape_key("shapeRect", geometry, 4, Some(&operation)), "a second same-geometry creation in the same document uses its document-local ordinal");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -139,7 +139,7 @@ fn wide_admitted_scene_roots_and_groups_keep_pointer_work_bounded() {
     assert_eq!(roots_job.completed_work, TRACE_POINTER_WORK_PER_STEP);
     assert!(roots_job.work.len() <= TRACE_POINTER_WORK_PER_STEP + 2);
 
-    let mut group = crate::schema::create_drawing_group_layer("wide");
+    let mut group = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("wide")).to_string().into()).expect("nonempty authored identity"), "wide");
     let DrawingLayerNode::Group(body) = &mut group else { unreachable!() };
     body.children=(0..1023).map(|i|{let mut layer=leaf.clone();crate::schema::layer_base_mut(&mut layer).id=format!("child-{i}").into();layer}).collect();
     let mut document = crate::standards::v1::subsets::any::schema::default_drawing_document("wide-group", None);
@@ -175,7 +175,7 @@ fn marquee_maximum_plus_one_faults_without_unbounded_growth() {
 #[test]
 fn a_pen_draft_commits_one_path_layer_as_one_transaction() {
     let document = crate::standards::v1::subsets::any::schema::default_drawing_document("draft", None);
-    let mut session = DrawingSession::new("pen", "draft-seed");
+    let mut session = crate::editor::drawing::identity_test::session("pen", "draft-seed");
     for point in [[0.0,0.0],[10.0,0.0],[10.0,10.0]] { assert!(session.press(pointer("pen",point)).unwrap().artifact_mutations.is_empty()); }
     assert!(session.tool.matches("drafting"));
     let emit = session.finish_draft(base(&document)).unwrap();
@@ -187,7 +187,7 @@ fn a_pen_draft_commits_one_path_layer_as_one_transaction() {
     assert_eq!(path.segments, vec![PathSegment::Move { to: [0.0,0.0] }, PathSegment::Line { to: [10.0,0.0] }, PathSegment::Line { to: [10.0,10.0] }].into());
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { .. })), "a committed creation returns to the default utility");
     assert!(session.tool.at_rest());
-    let mut single = DrawingSession::new("pen", "");
+    let mut single = crate::editor::drawing::identity_test::session("pen", "");
     single.press(pointer("pen",[0.0,0.0])).unwrap();
     assert!(single.finish_draft(base(&document)).unwrap().artifact_mutations.is_empty(), "one point commits nothing");
 }
@@ -207,7 +207,7 @@ async fn pointer_down_tool_inputs_settle_in_one_microstep() {
 fn direct_drag_previews_then_commits_one_parametric_drag_transaction() {
     let path = stroked_path("Moving",vec![PathSegment::Move { to:[0.0,0.0] },PathSegment::Line { to:[10.0,10.0] }]);
     let id = layer_id(&path).to_string();
-    let mut group = crate::schema::create_drawing_group_layer("Parent");
+    let mut group = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Parent")).to_string().into()).expect("nonempty authored identity"), "Parent");
     let DrawingLayerNode::Group(body) = &mut group else { unreachable!() };
     body.base.transform = crate::DrawingTransform { x:100.0,y:200.0,scale_x:2.0,scale_y:4.0,rotation:std::f64::consts::FRAC_PI_2, shear: 0.0 };
     body.children.push(path);
@@ -215,7 +215,7 @@ fn direct_drag_previews_then_commits_one_parametric_drag_transaction() {
     let before = document.clone();
     let start = [80.0,210.0];
     let end = [88.0,220.0];
-    let mut session = DrawingSession::new("selectDirect","drag-seed");
+    let mut session = crate::editor::drawing::identity_test::session("selectDirect","drag-seed");
     session.window_config.viewport.zoom = 1.0;
     prepare_drag(&mut session,&document,start);
     assert!(session.tool.matches("dragging"));
@@ -237,11 +237,11 @@ fn direct_drag_previews_then_commits_one_parametric_drag_transaction() {
 
 #[test]
 fn cancelled_direct_drag_and_subthreshold_click_do_not_mutate() {
-    let mut layer = crate::schema::create_drawing_shape_layer_rect("Moving");
+    let mut layer = crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Moving")).to_string().into()).expect("nonempty authored identity"), "Moving");
     crate::schema::layer_base_mut(&mut layer).attributes.fill=Some(crate::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});
     let document = DrawingSnapshot { layers:vec![layer].into(),..Default::default() };
     for cancelled in [true,false] {
-        let mut session = DrawingSession::new("selectDirect","");
+        let mut session = crate::editor::drawing::identity_test::session("selectDirect","");
         session.window_config.viewport.zoom = 1.0;
         prepare_drag(&mut session,&document,[0.0,0.0]);
         let emit = if cancelled {
@@ -259,11 +259,11 @@ fn cancelled_direct_drag_and_subthreshold_click_do_not_mutate() {
 #[test]
 fn selection_grab_preparation_yields_and_rejects_locked_or_missing_targets_atomically() {
     for invalid in ["locked","hidden","missing","singular"] {
-        let mut first=crate::schema::create_drawing_shape_layer_rect("First");
+        let mut first=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
         crate::schema::layer_base_mut(&mut first).id="first".into();
-        let mut second=crate::schema::create_drawing_shape_layer_rect("Second");
+        let mut second=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
         crate::schema::layer_base_mut(&mut second).id="second".into();
-        let mut parent=crate::schema::create_drawing_group_layer("Parent");
+        let mut parent=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Parent")).to_string().into()).expect("nonempty authored identity"), "Parent");
         let base=crate::schema::layer_base_mut(&mut parent);
         base.locked=invalid=="locked";
         base.visible=invalid!="hidden";
@@ -283,11 +283,11 @@ fn selection_grab_preparation_yields_and_rejects_locked_or_missing_targets_atomi
 
 #[test]
 fn selection_drag_leaf_moves_equal_world_displacements_under_distinct_parents() {
-    let mut a=crate::schema::create_drawing_shape_layer_rect("A");
+    let mut a=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("A")).to_string().into()).expect("nonempty authored identity"), "A");
     crate::schema::layer_base_mut(&mut a).id="a".into();
-    let mut b=crate::schema::create_drawing_shape_layer_rect("B");
+    let mut b=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("B")).to_string().into()).expect("nonempty authored identity"), "B");
     crate::schema::layer_base_mut(&mut b).id="b".into();
-    let mut parent=crate::schema::create_drawing_group_layer("Parent");
+    let mut parent=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Parent")).to_string().into()).expect("nonempty authored identity"), "Parent");
     let base=crate::schema::layer_base_mut(&mut parent);
     base.transform.rotation=std::f64::consts::FRAC_PI_2;
     base.transform.scale_x=2.0;
@@ -326,10 +326,10 @@ fn repeated_pen_and_polygon_drafts_keep_distinct_layers_and_transactions() {
     for utility in ["pen","shapePolygon"] {
         let mut document=DrawingSnapshot::default();
         let (mut ids,mut transactions)=(std::collections::HashSet::new(),std::collections::HashSet::new());
-        let mut session=DrawingSession::new(utility,"draft-seed");
+        let mut session=crate::editor::drawing::identity_test::session(utility,"draft-seed");
         for round in 0..3 {
             for point in [[0.0,0.0],[10.0,0.0],[10.0,10.0]] { session.press(pointer(utility,point)).unwrap(); }
-            let emit=session.finish_draft(DrawingToolBase { document: Arc::new(document.clone()), operation: Some(AppOperationContext { app_instance_id: 1, parent_document_id: "draft".into(), operation_id: round, generation: 1, canonical_base_revision: [round as u8; 32], authoring_seed: "draft-seed".into() }) }).unwrap();
+            let emit=session.finish_draft(DrawingToolBase { document: Arc::new(document.clone()), operation: Some(AppOperationContext { app_instance_id: 1, parent_document_id: "draft".into(), operation_id: round+1, generation: 1, canonical_base_revision: [round as u8; 32], authoring_seed: "draft-seed".into() }) }).unwrap();
             let DrawingMutation::CreateLayer(created)=&emit.artifact_mutations[0] else {panic!("Expected creation")};
             assert!(ids.insert(layer_id(&created.layer).to_string()),"{utility} reused a completed draft id");
             assert!(transactions.insert(emit.transaction.clone().expect("one transaction per draft").id),"{utility} reused a transaction id");
@@ -354,7 +354,7 @@ fn selected_handle_previews_are_ephemeral_and_release_one_parametric_leaf() {
             assert_eq!(cursor.selection_bounds,Some([10.0,20.0,100.0,80.0]));
             let mut query=DrawingPointQuery::new("canvasPointerDown",cursor,false,"replace".into(),false);
             query.drag_start=Some(start);
-            let mut session=DrawingSession::new("selectDirect","");
+            let mut session=crate::editor::drawing::identity_test::session("selectDirect","");
             session.window_config.viewport.zoom=1.0;
             session.press(pointer("selectDirect",start)).unwrap();
             session.point_query=Some(query);
@@ -400,7 +400,7 @@ fn primitive_picking_uses_painted_contours() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🧮️geometry/🎯️picking/🧫️fixtures/🔷️shapes/🔣️.json")).unwrap();
     for sample in fixture.as_array().unwrap() {
         let kind=sample["kind"].as_str().unwrap();
-        let mut shape=crate::DrawingShapeBody {base:crate::schema::default_layer_base("shape"),shape_kind:kind.into(),rect:None,ellipse:None,circle:None,line:None,polygon:None};
+        let mut shape=crate::DrawingShapeBody {base:crate::schema::default_layer_base(crate::schema::identity::DrawingIdentity::admit((("shape")).to_string().into()).expect("nonempty authored identity"), "shape"),shape_kind:kind.into(),rect:None,ellipse:None,circle:None,line:None,polygon:None};
         shape.base.transform=crate::schema::geometry::affine::drawing_matrix_to_transform(serde_json::from_value(sample["matrix"].clone()).unwrap());
         let geometry=sample["geometry"].clone();
         match kind {
@@ -457,7 +457,7 @@ fn node_marquee_collects_snapshot_bound_anchors_in_bounded_steps() {
 fn empty_node_press_starts_marquee_without_changing_point_selection() {
     let path=filled_path("Path",vec![PathSegment::Move {to:[0.0,0.0]},PathSegment::Line {to:[10.0,0.0]}]);
     let id=layer_id(&path).to_string();let document=DrawingSnapshot {layers:vec![path].into(),..Default::default()};
-    let mut session=DrawingSession::new("editNodes","");
+    let mut session=crate::editor::drawing::identity_test::session("editNodes","");
     session.press(pointer("editNodes",[-20.0,-20.0])).unwrap();
     let mut cursor=TracePointerJob::new_query(&document,[-20.0,-20.0],1.0,false);cursor.node_editing=true;cursor.selected_ids=vec![id.clone()];finish_cached(&mut cursor,&document);
     let mut query=DrawingPointQuery::new("canvasPointerDown",cursor,false,"replace".into(),false);query.drag_start=Some([-20.0,-20.0]);session.point_query=Some(query);
@@ -494,7 +494,7 @@ fn node_marquee_rejects_overflow_and_excludes_hidden_or_locked_ancestors() {
     assert!(query.overflowed);assert!(query.hits.is_empty());
     for (visible,locked) in [(false,false),(true,true),(true,false)] {
         let mut path=filled_path("Child",vec![PathSegment::Move {to:[0.0,0.0]}]);crate::schema::layer_base_mut(&mut path).id="path".into();
-        let mut group=crate::schema::create_drawing_group_layer("Group");
+        let mut group=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
         if let DrawingLayerNode::Group(group)=&mut group {group.base.visible=visible;group.base.locked=locked;group.children.push(path);}
         let document=DrawingSnapshot {layers:vec![group].into(),..Default::default()};
         let mut query=TracePointerJob::new_marquee(&document,[-1.0,-1.0],[1.0,1.0],false);query.node_area=true;query.node_editing=true;query.selected_ids=vec!["path".into()];
@@ -503,8 +503,8 @@ fn node_marquee_rejects_overflow_and_excludes_hidden_or_locked_ancestors() {
     }
 }
 
-fn stroked_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(name,segments.into());crate::schema::layer_base_mut(&mut layer).attributes.stroke=Some(crate::StrokeStyle{color:[0.0,0.0,0.0,1.0],width:1.0,cap:crate::StrokeCap::Butt,join:crate::StrokeJoin::Miter,dash:None});layer}
-fn filled_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(name,segments.into());crate::schema::layer_base_mut(&mut layer).attributes.fill=Some(crate::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});layer}
+fn stroked_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit(((name)).to_string().into()).expect("nonempty authored identity"), name,segments.into());crate::schema::layer_base_mut(&mut layer).attributes.stroke=Some(crate::StrokeStyle{color:[0.0,0.0,0.0,1.0],width:1.0,cap:crate::StrokeCap::Butt,join:crate::StrokeJoin::Miter,dash:None});layer}
+fn filled_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit(((name)).to_string().into()).expect("nonempty authored identity"), name,segments.into());crate::schema::layer_base_mut(&mut layer).attributes.fill=Some(crate::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});layer}
 fn prepared(document:&DrawingSnapshot)->crate::schema::scene_paint::scene::PreparedScene{
  let mut vector=crate::schema::scene_preparation::DocumentVectorJob::new(document,crate::editor::drawing::geometry_session::limits(),crate::editor::drawing::geometry_session::algorithms()).unwrap();while !vector.advance(4096).unwrap().done{}let(mut close,plan)=vector.into_retirement();while !close.advance(4096).unwrap().done{}
  let mut paint=crate::schema::scene_paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,crate::editor::drawing::geometry_session::paint_limits());while !paint.advance(4096).unwrap().done{}let(mut close,scene)=paint.into_retirement();while !close.advance(4096).unwrap().done{}scene.unwrap()
@@ -519,3 +519,5 @@ fn finish_cached(job:&mut TracePointerJob,document:&DrawingSnapshot){finish_cach
 fn finish_cached_with(job:&mut TracePointerJob,document:&DrawingSnapshot,mut observe:impl FnMut(&TracePointerJob,bool)){
  let scene=prepared(document);let borrowed=MountedSceneQuery{scene:&scene,source:crate::schema::scene_identity::SceneIdentity{instance:710034,base:11,generation:1,revision:[1;32]},build:1};loop{let done=job.advance(document,&borrowed);observe(job,done);if done{break;}}let mut close=crate::schema::scene_paint::scene::PreparedSceneCloseJob::new(scene);while !close.advance(4096).unwrap().done{}assert!(close.terminal_is_empty());
 }
+
+fn admitted_shape_key(utility:&str,geometry:[f64;4],ordinal:usize,operation:Option<&AppOperationContext>)->String{let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);crate::standards::v1::subsets::any::io::text::identity::creation::shape_identity(utility,geometry,ordinal,operation.expect("explicit fixture operation"),&mut control).unwrap().into_key().to_string_owner()}

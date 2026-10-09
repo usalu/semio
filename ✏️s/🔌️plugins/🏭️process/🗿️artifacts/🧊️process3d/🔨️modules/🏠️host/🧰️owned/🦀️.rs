@@ -2921,7 +2921,7 @@ impl Process3dMutationDecodeAuthority {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 }
 
@@ -3327,7 +3327,7 @@ impl Process3dSnapshotDecodeAuthority {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
     fn session(&mut self) -> &mut crate::standards::v1::subsets::any::io::binary::snapshot::Process3dMountedPackSession {
@@ -3453,7 +3453,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for Process3dRejectedConflictAu
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "process3d-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: "process3d-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {

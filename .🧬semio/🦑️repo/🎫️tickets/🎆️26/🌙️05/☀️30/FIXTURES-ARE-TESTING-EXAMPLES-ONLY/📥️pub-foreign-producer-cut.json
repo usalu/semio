@@ -1,0 +1,83 @@
+{
+  "epoch": "2026-10-09T14:53:49.148929+00:00",
+  "sourceCopies": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+      "sha256": "d6474ff5e085932a4f89511632bb4d51166b95928c9cc64a64d6f73a23796e1e",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json",
+      "sha256": "fcc92f703fedddb3b3e97d7fd311025d05321fd4a576b1437e39f80b47837ef1",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs",
+      "sha256": "bb7db96c10e7f12d31b1649ffdecde562c150ba59bc4ea8ef30544a0b6f1c9d7",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+      "sha256": "5ada0676cd9ece42dd3099a73402daa22e7e48d672967056cfd507902b51c369",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "sha256": "729db6a8fafc81c41265d820988e57f98cdb5a2fbbb3299263e8004331619dc1",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "263b7090607550554d6da929e0d33a38148d524e99909ab6af288bebbed97aae",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs",
+      "sha256": "b079806d44a6b33f886c1b48f522ed177c4751645daad8322fe3bd8fb7f3bf53",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📣️set-transaction/🦀️.rs",
+      "sha256": "5ab27b4172bd7396cbe80e1cf66ab660d919d04dcd922ea337bac8fea010d694",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/⏩️set-transaction/🦀️.rs",
+      "sha256": "bd0a033b5242a3d7752a762f16298e0cc843d51ddbbad2bdaa38495518bfec3e",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/🦀️.rs",
+      "sha256": "21b62589497db266e627eee1a84e619599d9c5a94c82b8b020fcb9ff200e56ca",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "169460ee50357303d2c4e91d391e46b491381dcf5948ace323bccc139ecb48c4",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "sha256": "e0f6a215c401aa316e1a49cd9e7524f613600cf6fc6f92f64ba5b80e05cc2925",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify/🦀️.rs",
+      "sha256": "110562d9996aa927665b5017abe1573e41e951b24037bd5c4dd3228c5349de2e",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🦀️.rs",
+      "sha256": "64f3edccec3178234ce84bca6499ecad23b04a7ae2b88179c28c269ba63dddad",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🦀️.rs",
+      "sha256": "bb48f91c91603e3c4b16f673ecc10750366983eb6f9045e2a12892d22a8ec8fb",
+      "role": "current read-only producer/consumer observation, not authored or frozen"
+    }
+  ],
+  "ownedRustMutations": 0,
+  "state": "held through Native17; re-read and narrow-guard before mutation"
+}

@@ -5,7 +5,7 @@ import { runDefinitionChecks } from "../../🧪️tests/📜️definition/🟦�
 import { runBorrowedCarrierChecks } from "../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💾️binary/📸️snapshot/📦️pack/🧪️tests/🫳️borrowed-carriers/🟦️.ts";
 import { BundleScript } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import { prepareCargoWorkspaceInvocation } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
 import { devToolingEnv } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { acquireCargoBuildLeaseV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
@@ -28,7 +28,7 @@ class NativeSchemaScript extends BundleScript {
     const target = segments[0] ? join(workspace, "target") : join(artifacts, "gltf-native-target");
     const env = devToolingEnv({ NX_WORKSPACE_ROOT: workspace, CARGO_TARGET_DIR: target, CARGO_BUILD_BUILD_DIR: join(target, "intermediate") });
     const args = ["test", "--offline", "--manifest-path", manifest, "-p", "semio-s-artifact-stdio-gltf", "--lib"];
-    prepareCargoWorkspaceInvocation(workspace, args, workspace);
+    prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(workspace),workspace,args,workspace,process.env);
     const controller = new AbortController(), abort = () => controller.abort(), budget = buildBudgetMs() || 1_200_000, timer = setTimeout(abort, budget);
     process.once("SIGINT", abort); process.once("SIGTERM", abort);
     let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;

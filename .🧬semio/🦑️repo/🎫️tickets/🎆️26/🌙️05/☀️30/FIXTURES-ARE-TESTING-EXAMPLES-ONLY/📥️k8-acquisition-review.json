@@ -1,0 +1,196 @@
+{
+  "executed": false,
+  "authored": false,
+  "nativeReadiness": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "expected": "e6602a2c15c1cca0c2f63f639a3896dc9479b93e92f2493df9c6c95c3237e7eb",
+      "current": "e6602a2c15c1cca0c2f63f639a3896dc9479b93e92f2493df9c6c95c3237e7eb",
+      "match": true,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+      "expected": "cb3c18cb4d697494366d56f0d11dbcb1d3563511e8da69843375e3c40f85e31f",
+      "current": "cb3c18cb4d697494366d56f0d11dbcb1d3563511e8da69843375e3c40f85e31f",
+      "match": true,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+      "expected": "cf2902e40642a3ca82dc3b9e76511efa241236b3dfc0c2d7c84b533ea9282c3f",
+      "current": "a02fba2a1ea6a06c56ca21c537cb4fb25134c5a74f5cb3a92f703afa3cc9feac",
+      "match": false,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+      "expected": "d30391776f6e4b2e368fdbb2dabe02a5ca771013fc0d2d73c42fe5a75bd5af1c",
+      "current": "d30391776f6e4b2e368fdbb2dabe02a5ca771013fc0d2d73c42fe5a75bd5af1c",
+      "match": true,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "expected": "dc06202a7bfa2111c3cf5f44bf042ebcd59456ab9a830a83540fe51834f69838",
+      "current": "dc06202a7bfa2111c3cf5f44bf042ebcd59456ab9a830a83540fe51834f69838",
+      "match": true,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "expected": "a6174a54a1555bb2f7c4b36333780666a9af1c806d5d762a10c89c99cd86728d",
+      "current": "a6174a54a1555bb2f7c4b36333780666a9af1c806d5d762a10c89c99cd86728d",
+      "match": true,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json",
+      "expected": "c0641a0b23ec99ddbbdf28ccc3cc4a9a59c5804613777e1d274934daa25a8250",
+      "current": "c0641a0b23ec99ddbbdf28ccc3cc4a9a59c5804613777e1d274934daa25a8250",
+      "match": true,
+      "authored": false
+    }
+  ],
+  "publicationActions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️backbone-parity/🦀️.rs",
+      "expected": "501076ee684d9f061bf7be72005dc8253f50784516dbec2ab6225e18b1e6d159",
+      "current": "501076ee684d9f061bf7be72005dc8253f50784516dbec2ab6225e18b1e6d159",
+      "match": true,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+      "expected": "1c8db1938ad0420f218a89239ce28432cd47750717794b7b77d8382faf89ea58",
+      "current": "1c8db1938ad0420f218a89239ce28432cd47750717794b7b77d8382faf89ea58",
+      "match": true,
+      "authored": false
+    }
+  ],
+  "selectedDeclarations": [
+    {
+      "name": "retained_presence_peer_rejection_keeps_its_minting_factory_after_source_close",
+      "currentDeclared": true
+    },
+    {
+      "name": "retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payload",
+      "currentDeclared": true
+    },
+    {
+      "name": "committed_wire_witness_is_the_canonical_wire",
+      "currentDeclared": true
+    },
+    {
+      "name": "direct_presence_fixture_value_inverse",
+      "currentDeclared": true
+    },
+    {
+      "name": "retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open",
+      "currentDeclared": true
+    },
+    {
+      "name": "retained_presence_local_replacements_release_shared_aliases_and_retire_exact_final_owners",
+      "currentDeclared": true
+    },
+    {
+      "name": "retained_presence_peer_commit_rejects_foreign_and_stale_roots_without_losing_exact_owners",
+      "currentDeclared": true
+    },
+    {
+      "name": "retained_presence_store_close_preserves_distinct_original_local_and_peer_factories",
+      "currentDeclared": true
+    },
+    {
+      "name": "retained_presence_overlapping_rosters_retire_shared_entries_once_across_workers",
+      "currentDeclared": true
+    },
+    {
+      "name": "retained_presence_read_return_releases_alias_before_cross_worker_reclamation",
+      "currentDeclared": true
+    },
+    {
+      "name": "retained_presence_read_return_injected_alias_barrier_preserves_unreturned_guard",
+      "currentDeclared": true
+    },
+    {
+      "name": "retained_presence_read_transfer_contention_preserves_unreturned_capability",
+      "currentDeclared": true
+    },
+    {
+      "name": "retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers",
+      "currentDeclared": true
+    },
+    {
+      "name": "retained_presence_store_close_rejects_nonempty_terminal_and_late_commit_without_drop",
+      "currentDeclared": true
+    },
+    {
+      "name": "original_presence_examples_supply_independent_physical_close_authority",
+      "currentDeclared": true
+    },
+    {
+      "name": "captured_store_source_preserves_original_read_on_refusal_and_returns_root_to_its_original_registry",
+      "currentDeclared": true
+    },
+    {
+      "name": "store_read_terminal_registry_receipt_preserves_original_system_release",
+      "currentDeclared": true
+    },
+    {
+      "name": "original_returned_read_registry_alias_has_exact_physical_custody",
+      "currentDeclared": true
+    },
+    {
+      "name": "original_returned_read_registry_parallel_aliases_credit_exactly_one_frame",
+      "currentDeclared": true
+    },
+    {
+      "name": "native_snapshot_paid_wallet_preserves_all_axes_and_refused_receipt",
+      "currentDeclared": true
+    },
+    {
+      "name": "native_snapshot_cursor_retains_paid_original_on_cancellation_and_commits_same_output",
+      "currentDeclared": true
+    },
+    {
+      "name": "history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds",
+      "currentDeclared": true
+    },
+    {
+      "name": "history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories",
+      "currentDeclared": true
+    },
+    {
+      "name": "history_completed_plan_retains_original_residue_and_transferred_results",
+      "currentDeclared": true
+    },
+    {
+      "name": "history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody",
+      "currentDeclared": true
+    },
+    {
+      "name": "history_preview_output_retains_original_inputs_until_granted_parent_and_projection_close",
+      "currentDeclared": true
+    },
+    {
+      "name": "backbone_detach_refusal_preserves_descriptor_and_payload_at_full_destination",
+      "currentDeclared": true
+    },
+    {
+      "name": "backbone_detach_refusal_preserves_descriptor_and_payload_at_generation_overflow",
+      "currentDeclared": true
+    },
+    {
+      "name": "field_close_failure_preserves_real_receipts_through_the_original_decode_job",
+      "currentDeclared": true
+    }
+  ],
+  "preflight": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs",
+    "current": "886deb4d98e1883424cf8e9a524fc3d723c431fb885bf6ccb0c1015c4d6da86a",
+    "previousObserved": "886deb4d98e1883424cf8e9a524fc3d723c431fb885bf6ccb0c1015c4d6da86a",
+    "match": true
+  },
+  "route": "@semio-tech/framework-os-kernel:test-native; original long/--lib/features sync,ureq; no new control override"
+}

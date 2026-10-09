@@ -24,7 +24,8 @@ use semio_framework_value::{list::PagedList, paged::PagedUtf8};
 /// `setCamera`'s `ActionKind::View`), never a VCS-tracked document edit. There is deliberately no
 /// whole-document mutation: import/reset/example-load goes through `store::ArtifactStore::reset`
 /// (non-history), never through this enum.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
@@ -382,3 +383,6 @@ pub mod text_inverse;
 
 #[path = "🎮️prepare/🧰️child/🦀️.rs"]
 pub(crate) mod native_preparation_child;
+
+#[path="🧵️canonical/🦀️.rs"]
+mod canonical_fields;

@@ -20,7 +20,7 @@ type MemberApp = VcsArtifactApp<ToyRunApp, ToolRunMembers>;
 /// 🧸️ One unit appends `SetCount(base + unit)` and `SetLabel("unit-<unit>")` to the member, `base` being the member's count
 /// in the composed read the job starts from; one unit per step, so progress spans driver turns and a single step is one unit.
 pub(super) struct ToyMemberJob {
-    writer: ToolRunTickWriter,
+    original:ToyPortJobCustody,
     base_count: i32,
     target: u32,
     done: u32,
@@ -32,7 +32,7 @@ pub(super) fn toy_member_job(request: ToolRunJobRequest<'_, ToyRunApp>) -> Resul
     let member = &fixture()["member"];
     let base_count = request.children.typed_read::<TestSnapshot>(text(&member["slot"]), text(&member["childId"]))?.count;
     let done = (request.member_ops.len() / number(&fixture()["opsPerUnit"]) as usize) as u32;
-    Ok(ToyMemberJob { writer: ToolRunTickWriter::with_provisional_base(request.identity, request.member_ops.len() as u32), base_count, target: toy_target(&request.config), done, closing: false })
+    Ok(ToyMemberJob { original:ToyPortJobCustody::new(ToolRunTickWriter::with_provisional_base(request.identity,request.member_ops.len()as u32),request.port), base_count, target: toy_target(&request.config), done, closing: false })
 }
 
 impl semio_framework_job::InteractiveJob for ToyMemberJob {
@@ -45,11 +45,12 @@ impl semio_framework_job::InteractiveJob for ToyMemberJob {
         }
         self.done += 1;
         cx.consume_fuel(1);
-        self.writer.append_op(encoded(SetCount { value: self.base_count + self.done as i32 }.into())).expect("the member op fits the member cap");
-        self.writer.append_op(encoded(SetLabel { value: format!("unit-{}", self.done) }.into())).expect("the member op fits the member cap");
-        self.writer.append_entity(u64::from(self.done));
-        self.writer.progress(ToolRunProgress {
-            identity: self.writer.identity(),
+        self.original.writer.append_op(encoded(SetCount { value: self.base_count + self.done as i32 }.into())).expect("the member op fits the member cap");
+        self.original.writer.append_op(encoded(SetLabel { value: format!("unit-{}", self.done) }.into())).expect("the member op fits the member cap");
+        self.original.writer.append_entity(u64::from(self.done));
+        let identity=self.original.writer.identity();
+        self.original.writer.progress(ToolRunProgress {
+            identity,
             sequence: 0,
             state: ToolRunState::Running,
             stage: 0,
@@ -60,25 +61,11 @@ impl semio_framework_job::InteractiveJob for ToyMemberJob {
             conflicts: 0,
             steps: ToolRunStepRing::new(),
         });
-        let tick = self.writer.finish().expect("a pending member tick");
+        let tick = self.original.writer.finish().expect("a pending member tick");
         ToyRunJob::emit(cx, tick)
     }
 
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if self.closing {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Blocked
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing
-    }
+    toy_port_job_close!();
 }
 //#endregion 🧸️ToyMemberJob
 
@@ -107,16 +94,16 @@ async fn member_store() -> ToolRunMembers {
 }
 
 /// 🏗️ The toy app over the member roster with the parent declaring and owning its one member, run target `target`.
-async fn member_app(target: u64) -> MemberApp {
+async fn member_app(target: u64, caller:&mut ToyFixtureCaller<'_>) -> MemberApp {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
-    let mut app = artifact_app_laws::new_registered_app_with_members::<ToyRunApp, ToolRunMembers, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into())).await;
-    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }).await.expect("the member target config applies");
+    let mut app = artifact_app_laws::new_registered_app_with_members::<ToyRunApp, ToolRunMembers, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into()), caller.policy, &mut caller.identity).await;
+    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }, &mut caller.identity).await.expect("the member target config applies");
     let (slot, child_id) = member_key();
     let declared = ArtifactRef { artifact_id: child_id.clone(), dialect: member_dialect() }.to_uri();
-    app.store.dispatch(ArtifactCommand::Apply { mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })], transaction: None }).await.expect("the parent declares its member");
+    app.store.dispatch(ArtifactCommand::Apply { mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })], transaction: None }, &mut caller.identity).await.expect("the parent declares its member");
     app.refresh_cache().await.expect("the parent view follows its declaration");
-    app.register_child(slot, child_id, member_dialect(), member_store().await).await.expect("the owned member registers");
+    app.register_child(slot, child_id, member_dialect(), member_store().await, &mut caller.identity).await.expect("the owned member registers");
     app
 }
 
@@ -147,28 +134,28 @@ fn fresh_fold(base: &TestSnapshot, ops: &[Vec<u8>]) -> TestSnapshot {
     state
 }
 
-async fn member_action(app: &mut MemberApp, action: &str, arguments: Vec<(String, DslValue)>) -> DslValue {
-    app.handle_action(action, Some(&DslValue::Object(arguments)), &toy_meta()).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}")).output
+async fn member_action(app: &mut MemberApp, action: &str, arguments: Vec<(String, DslValue)>, caller:&mut ToyFixtureCaller<'_>) -> DslValue {
+    app.handle_action(action, Some(&DslValue::Object(arguments)), &toy_meta(), &mut caller.identity).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}")).output
 }
 
-async fn member_run_action(app: &mut MemberApp, action: &str) -> DslValue {
+async fn member_run_action(app: &mut MemberApp, action: &str, caller:&mut ToyFixtureCaller<'_>) -> DslValue {
     let slot = app.tool_runs.slot().expect("a member run slot exists");
-    member_action(app, action, vec![("runId".into(), DslValue::String(slot.run.to_string())), ("generation".into(), DslValue::String(slot.generation.to_string()))]).await
+    member_action(app, action, vec![("runId".into(), DslValue::String(slot.run.to_string())), ("generation".into(), DslValue::String(slot.generation.to_string()))], caller).await
 }
 
-async fn member_start(app: &mut MemberApp) {
-    let output = member_action(app, "toolRunStart", vec![("toolId".into(), DslValue::String(text(&member_fixture()["toolId"]).into()))]).await;
+async fn member_start(app: &mut MemberApp, caller:&mut ToyFixtureCaller<'_>) {
+    let output = member_action(app, "toolRunStart", vec![("toolId".into(), DslValue::String(text(&member_fixture()["toolId"]).into()))], caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "start spawns the member run job");
     assert_eq!(app.tool_runs.member(), Some((member_key().0.as_str(), member_key().1.as_str())), "the run targets the declared member");
 }
 
-async fn member_pump_until(app: &mut MemberApp, what: &str, done: impl Fn(&MemberApp) -> bool) {
+async fn member_pump_until(app: &mut MemberApp, what: &str, done: impl Fn(&MemberApp) -> bool, caller:&mut ToyFixtureCaller<'_>) {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     while std::time::Instant::now() < deadline {
         if done(app) {
             return;
         }
-        app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        advance_toy(app, caller).await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
     }
     let reasons: Vec<u16> = app.tool_runs.steps().map(|steps| steps.iter().map(|step| step.reason).collect()).unwrap_or_default();
     let admission = app.admit_child_content_publication().err().map(|fault| fault.code.0);
@@ -182,8 +169,9 @@ async fn member_transaction_rows(app: &mut MemberApp) -> Vec<semio_framework::ke
     history.upserts.into_iter().filter(|row| row.applied && row.transaction.as_ref().is_some_and(|transaction| transaction.tool == tool)).collect()
 }
 
-fn member_close(app: &mut MemberApp) {
-    artifact_app_laws::close_registered_fixture_app(app);
+fn member_close(app: &mut MemberApp, caller:&mut ToyFixtureCaller<'_>) {
+    caller.retain_original_receipts(app);
+    artifact_app_laws::close_registered_fixture_app(app,caller.policy);
     assert!(app.tool_runs.terminal_is_empty(), "the tool run ledger retires every member-owned alias and read on close");
 }
 //#endregion 🧰️MemberHarness
@@ -192,13 +180,18 @@ fn member_close(app: &mut MemberApp) {
 /// composed read the render seams take shows exactly their fresh fold on the member base.
 #[semio_framework_async_macros::async_test]
 async fn member_run_ticks_compose_the_member_on_read_while_both_stores_stay_untouched() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let member = member_fixture();
     let units = number(&member["units"]);
-    let mut app = member_app(units).await;
+    let mut app = member_app(units, &mut caller).await;
     let base = member_child(&app).snapshot_ref().clone();
     let (parent_generation, member_generation) = (app.store.generation(), member_child(&app).generation());
-    member_start(&mut app).await;
-    member_pump_until(&mut app, "the member run completes and its overlay shows every op", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work()).await;
+    member_start(&mut app, &mut caller).await;
+    member_pump_until(&mut app, "the member run completes and its overlay shows every op", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!(app.store.generation(), parent_generation, "member ticks never touch the parent store");
     assert_eq!(member_child(&app).generation(), member_generation, "member ticks never touch the member store");
     assert!(app.tool_runs.provisional().is_empty(), "a member run holds no parent op");
@@ -207,61 +200,71 @@ async fn member_run_ticks_compose_the_member_on_read_while_both_stores_stay_unto
     let composed = composed_member(&app);
     assert_eq!((composed.count as u64, composed.label.as_str()), (number(&member["countAfterFinalize"]), text(&member["labelAfterFinalize"])));
     assert_eq!(composed, fresh_fold(&base, app.tool_runs.member_ops()), "the composed read is the fresh fold of the run's ops");
-    member_run_action(&mut app, "toolRunAbort").await;
-    member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
+    member_run_action(&mut app, "toolRunAbort", &mut caller).await;
+    member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!(composed_member(&app), base, "an aborted member run composes the live member again");
-    member_close(&mut app);
+    member_close(&mut app, &mut caller);
 }
 
 /// ⚖️ LAW: a paused member run schedules nothing and every single step adds exactly one unit of member ops.
 #[semio_framework_async_macros::async_test]
 async fn member_run_pause_then_step_drives_exactly_one_unit_per_step() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let expected = &member_fixture()["pauseStep"];
-    let mut app = member_app(number(&expected["target"])).await;
-    member_start(&mut app).await;
-    member_pump_until(&mut app, "member job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running)).await;
-    assert_eq!(member_run_action(&mut app, "toolRunPause").await.get("toolRun").and_then(DslValue::as_str), Some("stopScheduling"));
+    let mut app = member_app(number(&expected["target"]), &mut caller).await;
+    member_start(&mut app, &mut caller).await;
+    member_pump_until(&mut app, "member job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running), &mut caller).await;
+    assert_eq!(member_run_action(&mut app, "toolRunPause", &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("stopScheduling"));
     for _ in 0..8 {
-        app.advance_typed_operation_publication().await.expect("paused turn");
+        advance_toy(&mut app, &mut caller).await.expect("paused turn");
     }
     let mut held = app.tool_runs.member_ops().len() as u64;
     for _ in 0..number(&expected["steps"]) {
-        assert_eq!(member_run_action(&mut app, "toolRunStep").await.get("toolRun").and_then(DslValue::as_str), Some("driveOneUnit"));
-        member_pump_until(&mut app, "single member step settles", |app| !app.tool_runs.has_pending_work()).await;
+        assert_eq!(member_run_action(&mut app, "toolRunStep", &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("driveOneUnit"));
+        member_pump_until(&mut app, "single member step settles", |app| !app.tool_runs.has_pending_work(), &mut caller).await;
         let after = app.tool_runs.member_ops().len() as u64;
         assert_eq!(after - held, number(&expected["opsPerStep"]), "one step is exactly one unit of member ops");
         held = after;
         for _ in 0..8 {
-            app.advance_typed_operation_publication().await.expect("paused turn");
+            advance_toy(&mut app, &mut caller).await.expect("paused turn");
         }
         assert_eq!(app.tool_runs.member_ops().len() as u64, held, "a paused member run schedules nothing");
     }
-    member_run_action(&mut app, "toolRunAbort").await;
-    member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
-    member_close(&mut app);
+    member_run_action(&mut app, "toolRunAbort", &mut caller).await;
+    member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
+    member_close(&mut app, &mut caller);
 }
 
 /// ⚖️ LAW: an aborted member run leaves zero trace — both store generations and edit logs, the command log, the history and
 /// the member state are exactly what they were before the run, and the run holds no op.
 #[semio_framework_async_macros::async_test]
 async fn member_run_abort_leaves_both_stores_the_command_log_and_the_history_untouched() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let expected = &member_fixture()["abort"];
-    let mut app = member_app(number(&expected["target"])).await;
+    let mut app = member_app(number(&expected["target"]), &mut caller).await;
     app.refresh_cache().await.expect("backfill the command log before the invariant capture");
     let base = member_child(&app).snapshot_ref().clone();
     let (parent_generation, parent_edits, commands) = (app.store.generation(), app.store.envelope().vcs.edits.len(), app.command_log.len());
     let (member_generation, member_edits) = (member_child(&app).generation(), member_child(&app).envelope().vcs.edits.len());
     let rows = member_transaction_rows(&mut app).await.len();
-    member_start(&mut app).await;
-    member_pump_until(&mut app, "first member unit", |app| app.tool_runs.member_ops().len() as u64 >= number(&expected["unitsBeforeAbort"]) * number(&fixture()["opsPerUnit"])).await;
-    assert_eq!(member_run_action(&mut app, "toolRunAbort").await.get("toolRun").and_then(DslValue::as_str), Some("closeJob"));
-    member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
+    member_start(&mut app, &mut caller).await;
+    member_pump_until(&mut app, "first member unit", |app| app.tool_runs.member_ops().len() as u64 >= number(&expected["unitsBeforeAbort"]) * number(&fixture()["opsPerUnit"]), &mut caller).await;
+    assert_eq!(member_run_action(&mut app, "toolRunAbort", &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("closeJob"));
+    member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!((app.store.generation(), app.store.envelope().vcs.edits.len(), app.command_log.len()), (parent_generation, parent_edits, commands), "abort: parent store and command log");
     assert_eq!((member_child(&app).generation(), member_child(&app).envelope().vcs.edits.len()), (member_generation, member_edits), "abort: member store");
     assert_eq!(member_child(&app).snapshot_ref(), &base, "abort: member state");
     assert_eq!(member_transaction_rows(&mut app).await.len(), rows, "abort: no history row");
     assert!(app.tool_runs.member_ops().is_empty(), "abort retires every member op");
-    member_close(&mut app);
+    member_close(&mut app, &mut caller);
 }
 
 /// ⚖️ LAW: a member run's finalize publishes ONE member edit — every op stamped with the run's `TransactionRef` (tool
@@ -270,17 +273,22 @@ async fn member_run_abort_leaves_both_stores_the_command_log_and_the_history_unt
 /// removes the whole run.
 #[semio_framework_async_macros::async_test]
 async fn member_run_finalize_is_one_member_edit_carrying_the_run_transaction_and_one_undo_removes_it() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let member = member_fixture();
-    let mut app = member_app(number(&member["units"])).await;
+    let mut app = member_app(number(&member["units"]), &mut caller).await;
     let base = member_child(&app).snapshot_ref().clone();
     let parent_edits = app.store.envelope().vcs.edits.len();
     let member_edits = member_child(&app).envelope().vcs.edits.len();
     let rows = member_transaction_rows(&mut app).await.len();
-    member_start(&mut app).await;
-    member_pump_until(&mut app, "member run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work()).await;
+    member_start(&mut app, &mut caller).await;
+    member_pump_until(&mut app, "member run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work(), &mut caller).await;
     let ops = app.tool_runs.member_ops().to_vec();
-    assert_eq!(member_run_action(&mut app, "toolRunFinalize").await.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
-    member_pump_until(&mut app, "member finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work()).await;
+    assert_eq!(member_run_action(&mut app, "toolRunFinalize", &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
+    member_pump_until(&mut app, "member finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!((app.store.envelope().vcs.edits.len() - parent_edits) as u64, number(&member["parentEditsAdded"]), "the parent publishes nothing");
     assert_eq!((member_child(&app).envelope().vcs.edits.len() - member_edits) as u64, number(&member["memberEditsAdded"]), "ONE member edit");
     let edit = member_child(&app).envelope().vcs.edits.last().expect("the finalized member edit");
@@ -299,25 +307,30 @@ async fn member_run_finalize_is_one_member_edit_carrying_the_run_transaction_and
     assert!(!row.mutations.is_empty() && row.mutations.iter().all(|mutation| mutation.editable), "the member mutations are editable in history");
     let label = &member["toolLabel"];
     assert_eq!((row.label.resolve(Terminology::Native, Locale::En).to_string(), row.label.resolve(Terminology::Native, Locale::De).to_string()), (text(&label["en"]).to_string(), text(&label["de"]).to_string()));
-    member_child_mut(&mut app).dispatch(ArtifactCommand::Undo).await.expect("undo the finalized member edit");
+    member_child_mut(&mut app).dispatch(ArtifactCommand::Undo, &mut caller.identity).await.expect("undo the finalized member edit");
     let undone = member_child(&app).snapshot_ref().clone();
     assert_eq!((undone.count as u64, undone.label.as_str()), (number(&member["countAfterUndo"]), text(&member["labelAfterUndo"])), "one member undo removes the whole run");
-    member_close(&mut app);
+    member_close(&mut app, &mut caller);
 }
 
 /// ⚖️ LAW (§20.14): a member run holds at most `TOOL_RUN_MEMBER_OPS_MAX` member ops — the ceiling that bounds its one-turn
 /// finalize — and reports the cap as the localized provisional-cap step carrying that ceiling.
 #[semio_framework_async_macros::async_test]
 async fn member_run_holds_at_most_the_member_ceiling_and_reports_the_cap() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let expected = &member_fixture()["capped"];
     assert_eq!(u64::from(semio_framework_tool_run::TOOL_RUN_MEMBER_OPS_MAX), number(&expected["memberOpsMax"]));
-    let mut app = member_app(number(&expected["target"])).await;
-    member_start(&mut app).await;
-    member_pump_until(&mut app, "the capped member run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work()).await;
+    let mut app = member_app(number(&expected["target"]), &mut caller).await;
+    member_start(&mut app, &mut caller).await;
+    member_pump_until(&mut app, "the capped member run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!(app.tool_runs.member_ops().len() as u64, number(&expected["memberOpsMax"]), "the run holds exactly the member ceiling");
     let capped = app.tool_runs.steps().expect("the run's steps").iter().any(|step| step.reason == semio_framework_tool_run::TOOL_RUN_REASON_PROVISIONAL_CAP && step.args.first() == Some(&semio_framework_tool_run::ToolRunStepArg::Unsigned(number(&expected["memberOpsMax"]))));
     assert!(capped, "the cap is reported with the member ceiling");
-    member_run_action(&mut app, "toolRunAbort").await;
-    member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
-    member_close(&mut app);
+    member_run_action(&mut app, "toolRunAbort", &mut caller).await;
+    member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
+    member_close(&mut app, &mut caller);
 }

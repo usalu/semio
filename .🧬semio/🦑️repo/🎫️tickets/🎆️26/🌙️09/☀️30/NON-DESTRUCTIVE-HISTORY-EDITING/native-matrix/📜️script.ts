@@ -24,6 +24,10 @@ if(process.argv[2]==="snapshot-clone-native"){
   await runRepositoryCargoTests(["semio-framework-os-kernel"],repository,["--lib",...process.argv.slice(3)],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/tools-execution")});
   process.exit(0);
 }
+if(process.argv[2]==="schema-retirement-native"){
+  await runRepositoryCargoTests(["semio-framework-schema-validator"],repository,["--lib","original_compiled_validator_retires_recursive_pattern_fields_under_full_grants","--status-level","pass","--final-status-level","all","--","--nocapture"],{...process.env,NEXTEST_SUCCESS_OUTPUT:"immediate",SEMIO_TEST_LEVEL:"long",SEMIO_TEST_ARTIFACT_DIR:join(import.meta.dir,"../🗑️generated/core-execution")});
+  process.exit(0);
+}
 if(process.argv[2]==="puzzle-domain-native"){
   const {runArtifactRustTests}=await import(join(repository,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts"));
   await runArtifactRustTests("semio-s-artifact-puzzle-2d",repository,process.argv.slice(3),["component-app-assembly"]);

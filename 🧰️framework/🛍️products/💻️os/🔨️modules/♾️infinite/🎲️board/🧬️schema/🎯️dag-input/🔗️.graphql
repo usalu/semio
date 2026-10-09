@@ -4,3 +4,6 @@ type DagSelectionDomains { nodes: [String!]! edges: [String!]! handles: [String!
 type DagChannelRef { widgetId: String! port: String! direction: DagChannelDirection! }
 type DagNodeEvaluationStatus { kind: DagNodeEvaluationKind! message: String ports: [String!] }
 type DagNodeStatusEntry { widgetId: String! status: DagNodeEvaluationStatus! }
+enum DagSelectionDomain { NODES EDGES }
+type DagWireTypeRefusal { source: String! sourceTypes: [String!]! target: String! targetTypes: [String!]! }
+type DagHoverFacts { channel: DagChannelRef refusal: DagWireTypeRefusal }

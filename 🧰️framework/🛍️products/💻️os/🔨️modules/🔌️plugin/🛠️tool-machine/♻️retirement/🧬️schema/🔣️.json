@@ -1,15 +1,203 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["originalId", "admission", "driver", "cause", "ledger", "closedLedger"],
+  "required": [
+    "originalId",
+    "admission",
+    "driver",
+    "cause",
+    "ledger",
+    "closedLedger",
+    "jobOutcome"
+  ],
   "additionalProperties": false,
   "properties": {
-    "originalId": {"type": "integer", "minimum": 0},
-    "admission": {"type": "array", "items": {"type": "boolean"}},
-    "driver": {"type": "object", "required": ["runs", "turns", "copyBytes", "expectedCounts"], "additionalProperties": false, "properties": {"runs": {"type": "array", "items": {"type": "integer", "minimum": 0}}, "turns": {"type": "integer", "minimum": 1}, "copyBytes": {"type": "integer", "minimum": 1}, "expectedCounts": {"type": "array", "items": {"type": "object", "required": ["run", "count"], "additionalProperties": false, "properties": {"run": {"type": "integer"}, "count": {"type": "integer", "minimum": 0}}}}}},
-    "cause": {"type": "object", "required": ["capacity", "phases"], "additionalProperties": false, "properties": {"capacity": {"type": "integer", "minimum": 1}, "phases": {"type": "array", "items": {"enum": ["original", "typed", "terminal"]}}}},
-    "ledger": {"type": "array", "items": {"$ref": "#/$defs/ledger"}},
-    "closedLedger": {"type": "array", "items": {"$ref": "#/$defs/ledger"}}
+    "originalId": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "admission": {
+      "type": "array",
+      "items": {
+        "type": "boolean"
+      }
+    },
+    "driver": {
+      "type": "object",
+      "required": [
+        "runs",
+        "turns",
+        "copyBytes",
+        "expectedCounts"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "turns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expectedCounts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "run",
+              "count"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "run": {
+                "type": "integer"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "cause": {
+      "type": "object",
+      "required": [
+        "capacity",
+        "phases"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "original",
+              "typed",
+              "terminal"
+            ]
+          }
+        }
+      }
+    },
+    "ledger": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ledger"
+      }
+    },
+    "closedLedger": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ledger"
+      }
+    },
+    "jobOutcome": {
+      "type": "object",
+      "required": [
+        "capacity",
+        "axes",
+        "turns"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "axes": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": "copy"
+            },
+            {
+              "const": "capacity"
+            },
+            {
+              "const": "release"
+            },
+            {
+              "const": "depth"
+            }
+          ],
+          "items": false,
+          "minItems": 4
+        },
+        "turns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "copied",
+              "allocated",
+              "released",
+              "retained"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "copied": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "allocated": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "released": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "retained": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
   },
-  "$defs": {"ledger": {"type": "object", "required": ["id", "entries", "capacity", "released"], "additionalProperties": false, "properties": {"id": {"type": "integer"}, "entries": {"type": "integer", "minimum": 0}, "capacity": {"type": "integer", "minimum": 0}, "released": {"type": "integer", "minimum": 0}}}}
+  "$defs": {
+    "ledger": {
+      "type": "object",
+      "required": [
+        "id",
+        "entries",
+        "capacity",
+        "released"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "released": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
 }

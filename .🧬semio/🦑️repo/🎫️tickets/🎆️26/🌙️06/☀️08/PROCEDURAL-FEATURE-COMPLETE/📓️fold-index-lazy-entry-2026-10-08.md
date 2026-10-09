@@ -17,3 +17,7 @@ Original HistoryFoldIndex now has the released Copy-key lazy entry, borrowed ori
 # Original Fold Index Lazy Entry
 
 Root owns original fold index borrowed lookup, lazy Copy-key entry, and original arena mutable-entry traversal needed by actual Flow session latches/chunk maps. A strict neutral fixture, Ajv/canonical JSON oracle and original source/arena/System full-grant law were authored first. Entry accepts Copy keys so existing lookup does not discard an owned duplicate key or allocate a displaced-key directory; only an actually vacant entry evaluates its constructor. Original String payload pointers and arena remain stable in the fixture. Clear/retain cannot be introduced as unbounded hidden destruction; actual Flow removal needs admitted original owner handoff. Source interface implementation is unchanged, and both new laws remain unrun.
+
+## Native qualification collected 2026-10-09
+
+Handle 16495 is now missing; the retained exact log proves terminal GREEN: 1 test passed, 309 skipped, Nextest 0.024 seconds and Nx 6 minutes 54 seconds. For copy grants 1, 3 and 64, original source 512 bytes plus admitted scaffolds 6488 bytes equals physical release 7000 bytes. Original payload and arena pointers are preserved, borrowed access allocates nothing, occupied closure calls are zero and vacant closure calls are one. Terminal Drop releases zero bytes. This qualifies the original lazy Copy entry and borrowed access methods; it does not qualify whole Session or Enduser runtime.

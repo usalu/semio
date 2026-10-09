@@ -1,0 +1,12 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "type":"object","additionalProperties":false,
+ "required":["schema","maximumBytes","initialBytes","text","expectedBytes","parentCompleted","parentTotal","cases"],
+ "properties":{
+  "schema":{"const":"value.original-native-receiving/v1"},
+  "maximumBytes":{"type":"integer","minimum":0},"initialBytes":{"type":"integer","minimum":0},
+  "text":{"type":"string"},"expectedBytes":{"type":"integer","minimum":0},
+  "parentCompleted":{"type":"integer","minimum":0},"parentTotal":{"type":"integer","minimum":0},
+  "cases":{"type":"array","uniqueItems":true,"items":{"enum":["full","portRefused","cancelBefore","cancelAfter","zeroRemaining","invalidOffset","unwind"]},"minItems":7,"maxItems":7}
+ }
+}

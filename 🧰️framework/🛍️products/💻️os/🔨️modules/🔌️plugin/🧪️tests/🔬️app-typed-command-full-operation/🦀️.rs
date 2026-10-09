@@ -1,5 +1,6 @@
 mod typed_command_full_operation_tests {
     use super::*;
+    use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
     use crate::publication_fixture::{ChangePublicationPresence, PublicationPresence, PublicationPresenceMutation};
 
     const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️full-operation/🧫️fixtures/🔣️.json");
@@ -137,6 +138,7 @@ mod typed_command_full_operation_tests {
         }
     }
 
+    #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct TwoTurnPublicationPresencePreparationFactory;
 
     struct TwoTurnPublicationPresencePreparation {
@@ -212,34 +214,13 @@ mod typed_command_full_operation_tests {
         }
     }
 
-    struct PublicationPresenceLocalRootRetirement {
-        root: Option<std::sync::Arc<PublicationPresence>>,
-    }
-
-    impl store::ErasedSnapshotRetirement for PublicationPresenceLocalRootRetirement {
-        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-            if maximum_items == 0 {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            if self.root.take().is_some() {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            Ok(store::SnapshotRetirementStep::Complete)
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            self.root.is_none()
-        }
-    }
-
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct PublicationPresenceLocalRootRetirementFactory;
 
     impl store::SnapshotRetirementFactory<PublicationPresence> for PublicationPresenceLocalRootRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<PublicationPresence>) -> usize { std::mem::size_of::<PublicationPresenceLocalRootRetirement>() }
-
-        fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
-            Box::new(PublicationPresenceLocalRootRetirement { root: Some(snapshot) })
+        fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<PublicationPresence>) -> usize { semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<PublicationPresence>() }
+        fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<PublicationPresence>)> {
+            semio_framework_value::retirement::shared::admit_shared_retirement(snapshot, grant, true)
         }
     }
 
@@ -250,7 +231,12 @@ mod typed_command_full_operation_tests {
         assert_eq!(grant.maximum_bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
         for case in fixture["publicationCases"].as_array().unwrap() {
             let boundary = case["cancelAt"].as_str().unwrap();
-            let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+            let mounted_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let identity_started=std::time::Instant::now();
+        let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] original typed fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("original typed fixture supplied identity authority");
+        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
             let revision = app.store.content_revision_now();
             let operation = semio_framework_job::Operation::new(
                 semio_framework_job::allocate_operation_id(),
@@ -280,8 +266,10 @@ mod typed_command_full_operation_tests {
                 completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None,
                 output_chunks: None,
                 cancellation_lease: Some(lease),
-                terminal_outcome: None,
+                    identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},
+                terminal_outcome: semio_framework_job::JobOutcomeSlot::empty(),
                 terminal_seen: true,
+                worker_resume_pending: false,
                 publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
                 pending_artifact_publication: None,
                 pending_child_publication: None,
@@ -294,7 +282,7 @@ mod typed_command_full_operation_tests {
                 result_page_presented: false,
                 result_sequence: 0,
                 publication_progress: 0,
-                publication_checkpoint: None,
+                publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None,
                 publication_attempt: 0,
                 ui_pending: true,
                 progress: None,
@@ -326,7 +314,7 @@ mod typed_command_full_operation_tests {
                     if pending.phase() == target {
                         break;
                     }
-                    app.publish_mounted_typed_operation_unit(&mut mounted).await.unwrap();
+                    app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
                 }
                 let Some(PendingArtifactStorePublication::Presence(pending)) = mounted.pending_artifact_publication.as_ref() else {
                     panic!("exact pending presence owner");
@@ -341,7 +329,7 @@ mod typed_command_full_operation_tests {
                 assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), page.bytes());
                 assert!(mounted.acknowledge_result_page(page.token).unwrap());
             }
-            app.publish_mounted_typed_operation_unit(&mut mounted).await.unwrap();
+            app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
             assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
             let cancelled = mounted.result_page.as_ref().unwrap();
             assert_eq!(cancelled.lane, TypedOperationResultLane::Fault);
@@ -429,7 +417,7 @@ mod typed_command_full_operation_tests {
             assert_eq!(cancellations.active_operation_count(), 0);
             let mut close = presence.begin_retirement(std::sync::Arc::new(PublicationPresence::default()), |_| true).ok().unwrap();
             for _ in 0..2048 {
-                if close.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete {
+                if matches!(close.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64}).unwrap(),RetainedCloneStep::Complete(_)) {
                     break;
                 }
             }
@@ -489,7 +477,12 @@ mod typed_command_full_operation_tests {
         for case in fixture["publicationCases"].as_array().unwrap() {
             for delayed_ack in [false, true] {
                 let boundary = case["cancelAt"].as_str().unwrap();
-                let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+                let mounted_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let identity_started=std::time::Instant::now();
+        let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] original typed fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("original typed fixture supplied identity authority");
+        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
                 let before = app.store.snapshot_root();
                 let revision = app.store.content_revision_now();
                 let generation = app.store.generation_now();
@@ -517,8 +510,10 @@ mod typed_command_full_operation_tests {
                     completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None,
                     output_chunks: None,
                     cancellation_lease: Some(lease),
-                    terminal_outcome: None,
+                    identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},
+                    terminal_outcome: semio_framework_job::JobOutcomeSlot::empty(),
                     terminal_seen: true,
+                worker_resume_pending: false,
                     publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
                     pending_artifact_publication: None,
                     pending_child_publication: None,
@@ -531,7 +526,7 @@ mod typed_command_full_operation_tests {
                     result_page_presented: false,
                     result_sequence: 0,
                     publication_progress: 0,
-                    publication_checkpoint: None,
+                    publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None,
                     publication_attempt: 0,
                     ui_pending: true,
                     progress: None,
@@ -563,7 +558,7 @@ mod typed_command_full_operation_tests {
                         if pending.phase() == target {
                             break;
                         }
-                        app.publish_mounted_typed_operation_unit(&mut mounted).await.unwrap();
+                        app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
                     }
                     let Some(PendingArtifactStorePublication::Artifact(pending)) = mounted.pending_artifact_publication.as_ref() else {
                         panic!("exact document pending owner");
@@ -587,7 +582,7 @@ mod typed_command_full_operation_tests {
                         assert!(mounted.acknowledge_result_page(receipt.token).unwrap());
                     }
                 }
-                app.publish_mounted_typed_operation_unit(&mut mounted).await.unwrap();
+                app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
                 let final_page = if delayed_ack {
                     let presented = mounted.take_result_page().unwrap();
                     let mut deliveries = 1;
@@ -897,7 +892,12 @@ mod typed_command_full_operation_tests {
     /// where it was — asserted directly below, over the property instead of its proxy.
     pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
-        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let mounted_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let identity_started=std::time::Instant::now();
+        let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] original typed fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("original typed fixture supplied identity authority");
+        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
         let first = fixture["slotReservation"]["firstOperation"].as_u64().unwrap();
         let collision = fixture["slotReservation"]["collidingOperation"].as_u64().unwrap();
         app.typed_operation_reservations[first as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(first);
@@ -938,8 +938,10 @@ mod typed_command_full_operation_tests {
                     completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None,
                     output_chunks: None,
                     cancellation_lease: Some(lease),
-                    terminal_outcome: None,
+                    identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},
+                    terminal_outcome: semio_framework_job::JobOutcomeSlot::empty(),
                     terminal_seen: true,
+                worker_resume_pending: false,
                     publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
                     pending_artifact_publication: pending,
                     pending_child_publication: None,
@@ -952,7 +954,7 @@ mod typed_command_full_operation_tests {
                     result_page_presented: false,
                     result_sequence: 0,
                     publication_progress: 0,
-                    publication_checkpoint: None,
+                    publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None,
                     publication_attempt: 0,
                     ui_pending: false,
                     progress: None,
@@ -1016,8 +1018,10 @@ mod typed_command_full_operation_tests {
                     completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None,
                     output_chunks: None,
                     cancellation_lease: None,
-                    terminal_outcome: None,
+                    identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},
+                    terminal_outcome: semio_framework_job::JobOutcomeSlot::empty(),
                     terminal_seen: true,
+                worker_resume_pending: false,
                     publication: None,
                     pending_artifact_publication: None,
                     pending_child_publication: None,
@@ -1030,7 +1034,7 @@ mod typed_command_full_operation_tests {
                     result_page_presented: true,
                     result_sequence: 0,
                     publication_progress: 0,
-                    publication_checkpoint: None,
+                    publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None,
                     publication_attempt: 0,
                     ui_pending: false,
                     progress: None,
@@ -1252,7 +1256,7 @@ mod typed_command_full_operation_tests {
         assert!(!typed_operation_document_is_fresh(&operation, canonical_revision, changed_document_revision, 0));
         publication.begin_close();
         for _ in 0..4 {
-            if publication.close_step(grant).expect("stale pending publication closes") == store::SnapshotRetirementStep::Complete {
+            if matches!(publication.close_step(grant).expect("stale pending publication closes"),RetainedCloneStep::Complete(_)) {
                 break;
             }
         }
@@ -1262,7 +1266,7 @@ mod typed_command_full_operation_tests {
         drop(initial_root);
         let mut close = presence.begin_retirement(std::sync::Arc::new(PublicationPresence::default()), |_| true).ok().unwrap();
         for _ in 0..2048 {
-            if close.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete {
+            if matches!(close.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64}).unwrap(),RetainedCloneStep::Complete(_)) {
                 break;
             }
         }
@@ -1634,8 +1638,8 @@ mod child_complete_group_candidate_tests{
         }
     }
     fn drain_retained(owner:&mut dyn semio_framework_value::ErasedSnapshotRetirement)->usize{
-        use semio_framework_value::SnapshotRetirementStep;
-        let mut released=0;for _ in 0..100000{match owner.close_step(1,4096).unwrap(){SnapshotRetirementStep::Complete=>break,SnapshotRetirementStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1);assert!(released_bytes<=4096);released+=released_bytes;},step=>panic!("retained child owner refused its genuine physical page grant: {step:?}")}}assert!(owner.terminal_is_empty());released
+        use semio_framework_value::{RetainedCloneGrant,RetainedCloneStep};
+        let mut released=0;for _ in 0..100000{match owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:64}).unwrap(){RetainedCloneStep::Complete(_)=>break,RetainedCloneStep::Progress(progress)=>{let released_items=progress.copied_items;let released_bytes=progress.released_bytes;assert!(progress.copied_bytes<=4096);assert_eq!(progress.retained_capacity_bytes,0);assert!(released_items<=1);assert!(released_bytes<=4096);released+=released_bytes;},step=>panic!("retained child owner refused its genuine physical page grant: {step:?}")}}assert!(owner.terminal_is_empty());released
     }
     fn drain_typed_groups(groups:&mut semio_framework_value::list::PagedList<paged_owner::PagedChildOwner,{isize::MAX as usize}>)->usize{
         let mut released=0;while let Some(child)=groups.get_mut(groups.len().saturating_sub(1)){released+=drain_retained(child);groups.pop();}while !groups.terminal_is_empty(){let step=groups.release_empty_page(4096).unwrap();assert!(step.progressed);assert!(step.released_allocation_bytes<=4096);released+=step.released_allocation_bytes;}released
@@ -1705,9 +1709,9 @@ mod child_complete_group_candidate_tests{
     }
     #[test]
     fn child_complete_actual_authored_label_producer_preserves_all_axes_and_retained_source(){
-        use semio_framework_value::{paged_text::{PagedText,InlineTextBuffer},NativeEncodeControl,ErasedSnapshotRetirement,SnapshotRetirementStep};
+        use semio_framework_value::{paged_text::{PagedText,InlineTextBuffer},NativeEncodeControl,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneStep};
         let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/✍️authored-label/🔣️.json")).unwrap();assert_eq!(fixture["englishBytes"],8194);assert_eq!(fixture["germanBytes"],8205);assert_eq!(fixture["maximumAllocationBytes"],65536);assert_eq!(fixture["initialAllocationBytes"],4096);assert_eq!(fixture["maximumItems"],1);assert_eq!(fixture["maximumBytes"],4096);
-        fn drain<const N:usize>(paged:&mut PagedText<N>,inline:&mut InlineTextBuffer)->usize{if !inline.terminal_is_empty(){assert!(inline.close_one(1));}let mut released=0;for _ in 0..8205+128{match paged.close_step(1,4096).unwrap(){SnapshotRetirementStep::Complete=>break,SnapshotRetirementStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released_bytes<=4096);released+=released_bytes;},SnapshotRetirementStep::Blocked=>panic!("authored label owner blocked")}}assert!(paged.terminal_is_empty()&&inline.terminal_is_empty());released}
+        fn drain<const N:usize>(paged:&mut PagedText<N>,inline:&mut InlineTextBuffer)->usize{if !inline.terminal_is_empty(){assert!(inline.close_one(1));}let mut released=0;for _ in 0..8205+128{match paged.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:64}).unwrap(){RetainedCloneStep::Complete(_)=>break,RetainedCloneStep::Progress(progress)=>{let released_items=progress.copied_items;let released_bytes=progress.released_bytes;assert!(progress.copied_bytes<=4096);assert_eq!(progress.retained_capacity_bytes,0);assert!(released_items<=1&&released_bytes<=4096);released+=released_bytes;}}}assert!(paged.terminal_is_empty()&&inline.terminal_is_empty());released}
         for large in[false,true]{let operation=crate::test_app_mutation_fixture::SetLabel{value:if large{std::iter::repeat_n('x',8181).collect()}else{fixture["shortValue"].as_str().unwrap().to_owned()}};for terminology in semio_framework_ui_locale::Terminology::ALL{for locale in semio_framework_ui_locale::Locale::ALL{let(prefix,suffix)=match locale{semio_framework_ui_locale::Locale::En=>(fixture["englishPrefix"].as_str().unwrap(),fixture["englishSuffix"].as_str().unwrap()),semio_framework_ui_locale::Locale::De=>(fixture["germanPrefix"].as_str().unwrap(),fixture["germanSuffix"].as_str().unwrap())};let mut paged=PagedText::<{isize::MAX as usize}>::empty();let mut inline=InlineTextBuffer::empty();let mut active=false;let mut allow=|_|true;let mut control=NativeEncodeControl::new(65536,&mut allow);paged.encode_with_inline(&mut inline,&mut active,65536,&mut control,|output|operation.label_into(terminology,locale,output)).unwrap();let expected=prefix.as_bytes().iter().copied().chain(operation.value.as_bytes().iter().copied()).chain(suffix.as_bytes().iter().copied());if large{assert!(active&&inline.borrow().is_err());assert!(paged.borrow().unwrap().bytes().eq(expected));}else{assert!(!active&&paged.borrow().is_err());assert!(inline.borrow().unwrap().bytes().eq(expected));assert_eq!(control.owned_bytes(),0);}let allocated=paged.allocated_bytes();assert_eq!(allocated,control.owned_bytes());assert_eq!(drain(&mut paged,&mut inline),allocated);
             if large{let mut paged=PagedText::<{isize::MAX as usize}>::empty();let mut inline=InlineTextBuffer::empty();let mut active=false;let mut allow=|_|true;let mut control=NativeEncodeControl::new(4096,&mut allow);assert!(paged.encode_with_inline(&mut inline,&mut active,65536,&mut control,|output|operation.label_into(terminology,locale,output)).is_err());assert!(paged.borrow().is_err()&&inline.borrow().is_err());assert!(active&&paged.allocated_bytes()>0&&paged.allocated_bytes()<=4096);assert_eq!(paged.allocated_bytes(),control.owned_bytes());let allocated=paged.allocated_bytes();assert_eq!(drain(&mut paged,&mut inline),allocated);}
         }}}
@@ -1746,7 +1750,7 @@ mod child_complete_group_candidate_tests{
     #[test]
     fn child_complete_group_source_candidate_accepted_ledger_retains_original_registry_sources(){
         mod registry{include!("./🧩️child-operations/🪪️registry/🦀️.rs");}
-        use semio_framework_value::{ErasedSnapshotRetirement,SnapshotRetirementStep};
+        use semio_framework_value::{ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneStep};
         use semio_framework_tool_machine::{ScrubLedger,ScrubInput,ToolStep,ToolAbortReason};
         use semio_framework_os_kernel::{ActorId,HybridLogicalTimestamp};
         use semio_framework_os_kernel::os_pack::codec::PackEncodeOptions;
@@ -1775,12 +1779,12 @@ mod child_complete_group_candidate_tests{
             let continuation=rejected.pause().unwrap();let mut allow=|_|true;let mut control=NativeEncodeControl::resume(continuation,&mut allow).unwrap();let two=owner.insert(&mut incoming,&mut control).unwrap();assert!(incoming.is_none());assert_eq!(owner.retained_count(),2);
             ledger.send("window","tool",&actor,"base",ScrubInput::Tick{gesture:"press".into(),leaves:vec![two]},clock(2)).unwrap();
             assert!(owner.borrow(one).is_some());assert_eq!(ledger.provisional().copied().collect::<Vec<_>>(),vec![two]);reconcile(&mut owner,&ledger,&mut control).unwrap();assert!(owner.borrow(one).is_none());assert_eq!(owner.borrow(two).unwrap().operations[0].byte_ref(0).map(|byte|byte as *const u8),Some(second_pointer));assert!(owner.take(one,&mut control).is_err());
-            assert_eq!(owner.close_step(0,4096).unwrap(),SnapshotRetirementStep::Pending{released_items:0,released_bytes:0});let mut displaced=0;
-            for _ in 0..16384{if owner.retained_count()==1{break}match owner.close_step(1,4096).unwrap(){SnapshotRetirementStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released_bytes<=4096);displaced+=released_bytes;},SnapshotRetirementStep::Complete=>panic!("live accepted source disappeared"),SnapshotRetirementStep::Blocked=>panic!("admitted displaced original cannot block under1/4096")}}
+            assert_eq!(owner.close_step(RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:64}).unwrap(),RetainedCloneStep::Progress(Default::default()));let mut displaced=0;
+            for _ in 0..16384{if owner.retained_count()==1{break}match owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:64}).unwrap(){RetainedCloneStep::Progress(progress)=>{let released_items=progress.copied_items;let released_bytes=progress.released_bytes;assert!(progress.copied_bytes<=4096);assert_eq!(progress.retained_capacity_bytes,0);assert!(released_items<=1&&released_bytes<=4096);displaced+=released_bytes;},RetainedCloneStep::Complete(_)=>panic!("live accepted source disappeared")}}
             assert_eq!(owner.retained_count(),1);assert_eq!(displaced,first_allocated);assert_eq!(owner.borrow(two).unwrap().operations[0].byte_ref(0).map(|byte|byte as *const u8),Some(second_pointer));
             if host_abort{
                 assert!(matches!(ledger.abort("window",Some("press"),ToolAbortReason::CaptureLost),ToolStep::Aborted(..)));assert!(ledger.is_empty());let mut incoming=Some(owner.take(two,&mut control).unwrap());assert_eq!(incoming.as_ref().unwrap().operations[0].byte_ref(0).map(|byte|byte as *const u8),Some(second_pointer));reconcile(&mut owner,&ledger,&mut control).unwrap();assert!(owner.borrow(two).is_none());let metadata=owner.allocated_bytes();let mut second_released=0;
-                for _ in 0..16384{match owner.close_step(1,4096).unwrap(){SnapshotRetirementStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released_bytes<=4096);second_released+=released_bytes;if released_items==0&&released_bytes==0{break}},SnapshotRetirementStep::Complete=>break,SnapshotRetirementStep::Blocked=>panic!("admitted aborted original cannot block under1/4096")}}
+                for _ in 0..16384{match owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:64}).unwrap(){RetainedCloneStep::Progress(progress)=>{let released_items=progress.copied_items;let released_bytes=progress.released_bytes;assert!(progress.copied_bytes<=4096);assert_eq!(progress.retained_capacity_bytes,0);assert!(released_items<=1&&released_bytes<=4096);second_released+=released_bytes;if released_items==0&&released_bytes==0{break}},RetainedCloneStep::Complete(_)=>break}}
                 assert_eq!(owner.retained_count(),0);let third_pointer=second_pointer;let third_allocated=second_allocated;let before_readmission=control.owned_bytes();let three=owner.insert(&mut incoming,&mut control).unwrap();assert!(incoming.is_none());assert!(control.owned_bytes()>=before_readmission&&control.owned_bytes()<=65536);
                 ledger.send("window","tool",&actor,"base",ScrubInput::Tick{gesture:"new-press".into(),leaves:vec![three]},clock(3)).unwrap();let retained=owner.borrow(three).expect("open registry lost monotone identity after abort and bounded source drain");assert_eq!(retained.operations[0].byte_ref(0).map(|byte|byte as *const u8),Some(third_pointer));assert_eq!(second_released,0);assert!(owner.allocated_bytes()>=metadata);reconcile(&mut owner,&ledger,&mut control).unwrap();
                 let ToolStep::Committed(_,leaves)=ledger.send("window","tool",&actor,"base",ScrubInput::Commit{gesture:"new-press".into(),leaves:vec![three]},clock(4)).unwrap()else{panic!("reused open registry did not commit actual new press")};assert_eq!(leaves,vec![three]);let mut published=owner.take(three,&mut control).unwrap();assert_eq!(published.operations[0].byte_ref(0).map(|byte|byte as *const u8),Some(third_pointer));assert_eq!(published.operations[0].len(),8194);reconcile(&mut owner,&ledger,&mut control).unwrap();assert!(owner.take(three,&mut control).is_err());assert_eq!(drain_retained(&mut published),third_allocated);let metadata=owner.allocated_bytes();owner.begin_close();assert_eq!(drain_retained(&mut owner),metadata);
@@ -1843,7 +1847,7 @@ mod child_complete_group_candidate_tests{
         let (step,zero)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(Default::default()));
         assert!(matches!(step,RetirementStep::BudgetExhausted));assert_eq!((zero.requested_bytes,zero.released_bytes),(0,0));assert!(!cursor.terminal_is_empty());
         let mut processed=0;
-        while cursor.next_work_byte_demand()!=0{
+        while cursor.next_work_byte_demand().unwrap()!=0{
             let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work_bytes,..Default::default()}));
             assert!(!observed.overflowed);assert_eq!((observed.requested_bytes,observed.released_bytes),(0,0));
             let RetirementStep::ProcessedBytes(bytes)=step else{panic!("logical source drain must preserve the exact backing")};
@@ -1886,7 +1890,7 @@ mod child_complete_group_candidate_tests{
             let(result,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.read_from_encoding_source(&Original,&mut control));assert!(!event.overflowed);assert_eq!(event.released_bytes,0);assert_eq!(event.requested_bytes,source.allocated_bytes());assert_eq!(event.requested_bytes,control.owned_bytes());let original=source.allocated_bytes();
             if mode=="initial4096"{assert!(result.is_err());assert!(source.value_view().is_err());assert_eq!(settle(&mut source),original);continue}result.unwrap();let original_byte=source.value_view().unwrap().byte_at(0);assert_eq!(original_byte,Some(b'x'));
             let(mut capsule,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.retained_pack_operation());assert_eq!((birth.requested_bytes,birth.released_bytes),(0,0));assert_eq!(capsule.variant_identity().unwrap(),("set-label",1));
-            if mode=="complete"{let mut measurement=semio_framework_os_kernel::os_spr::operation_bytes::OperationByteMeasurement::new(8202);let window=control.owned_bytes()+512;let(result,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||control.scoped_maximum(window,|control|semio_framework_os_kernel::variants_binary::encode_op_into(&mut capsule,&PackEncodeOptions::default(),&mut measurement,control)));result.unwrap();assert_eq!(measurement.exact_length().unwrap(),8202);assert_eq!((event.requested_bytes,event.released_bytes),(0,0));}
+            if mode=="complete"{let mut measurement=semio_framework_os_kernel::os_spr::operation_bytes::OperationByteMeasurement::new(8202);let window=control.owned_bytes()+512;let(result,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||control.scoped_maximum(window,|control|Ok::<_,semio_framework_value::ValueError>(semio_framework_os_kernel::variants_binary::encode_op_into(&mut capsule,&PackEncodeOptions::default(),&mut measurement,control))));result.unwrap().unwrap();assert_eq!(measurement.exact_length().unwrap(),8202);assert_eq!((event.requested_bytes,event.released_bytes),(0,0));}
             let mut child=paged_owner::PagedChildOwner::empty();let mut options=PackEncodeOptions::default();options.limits.max_file_len=if mode=="file-one-short"{8201}else{8202};if mode=="depth-zero"{options.limits.max_depth=0;}
             for(field,text)in[(reader::ChildGroupText::Owner,"owner"),(reader::ChildGroupText::Slot,"slot"),(reader::ChildGroupText::ChildId,"child"),(reader::ChildGroupText::Schema,"child.empty")]{child.read_metadata_from_encoding_source(field,&text,&options,&mut control).unwrap();}
             let result=child.produce_owned_operation(8202,&options,&mut control,|options,output,control|semio_framework_os_kernel::variants_binary::encode_op_into(&mut capsule,options,&mut Observed{inner:output,accepted:&accepted},control));

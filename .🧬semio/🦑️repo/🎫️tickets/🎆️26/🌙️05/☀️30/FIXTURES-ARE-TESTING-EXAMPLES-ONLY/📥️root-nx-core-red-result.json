@@ -1,0 +1,10 @@
+{
+  "exitCode": 1,
+  "tests": 4,
+  "passed": 3,
+  "failed": 1,
+  "assertions": 85,
+  "durationMs": 595,
+  "qualification": "Actual missing production collection policy semantic RED; original three input/inference laws remain positive",
+  "logSha256": "0ecf14420a3cb4aa7d606ab9f056a37d2a1f33b49806364989d3cddac6fd6f05"
+}

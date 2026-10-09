@@ -16,7 +16,7 @@ pub struct JsonIntoForms;
 impl Deserializer<FormsSnapshot> for JsonIntoForms {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<FormsSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<FormsSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"JsonIntoForms: expected a binary json payload")));
         };

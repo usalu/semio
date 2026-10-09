@@ -1,0 +1,38 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "sha256": "d079567f793678d0eacae23712c381a5962d63e4c151096c42db9080396c4900"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🟦️.ts",
+      "sha256": "76f46c4da5361fb9344dbbbb7c94b0dcdc0d1d4081155be6ab9e65974745faa5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🔣️.json",
+      "sha256": "2de0af73668999fd43ac7b85a5fb4efeec9d3f38d222cf91a6304f8da741427d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts",
+      "sha256": "f68646b77aab73e14989b6f49cded58e3165afd766cb1a3f85626750dc8f19b2"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "sha256": "6d7e248129c033ac99d6db41f88302158153427556a6380bef7aca28db953293"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
+      "sha256": "f45659e64e1830d3b50cb5bed5fb3a6d4f53b2ba7fae79a215706bcc21a36b31"
+    }
+  ],
+  "proposedOracles": [
+    "17-source timer-triggered cancellation after first yielded batch preserves original reason",
+    "unreadable callback throw propagated and undefined emits source-unavailable",
+    "JSON referenced twice read exactly once and emitted hash equals initial consumed bytes",
+    "empty list initial progress and cancellation terminal check",
+    "Unicode byte order contrasted with locale order",
+    "package-root authored Nx name replaces Cargo inference identity without duplicate project"
+  ]
+}

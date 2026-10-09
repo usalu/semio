@@ -1,0 +1,27 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "sha256": "69d5fcda976212d898634f8d79c4501c5696e93b5e487575a636ce74a4af5452",
+    "role": "read-only original observer"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+    "sha256": "5c731deca495f7e69bbd44fc6b3b49cc63874d4d11bae7b607da01973432d6e9",
+    "role": "read-only original observer"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+    "sha256": "1e1cdd9e2ea007b3c91ce68d8bc1003f7f721562889c1842ea772357891cc12a",
+    "role": "read-only original observer"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs",
+    "sha256": "4c9972aeabf61f01140653b0af5601a594211d364fecdccdb09ec69c93d6bb26",
+    "role": "read-only original observer"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json",
+    "sha256": "158cf9c0f997ec5f3c070834e7e518452e1410cc1d1315541e99a29f0f22d16e",
+    "role": "read-only original observer"
+  }
+]

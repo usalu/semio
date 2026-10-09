@@ -281,7 +281,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for DrawingRejectedConflictAuth
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "drawing-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: "drawing-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
@@ -2888,7 +2888,15 @@ impl DrawingMutationDigestAuthority {
                 }
                 _ => self.finish(digest, cx),
             },
-            DrawingMutation::RemoveImageAsset(_) | DrawingMutation::DuplicateLayer(_) | DrawingMutation::DeleteLayer(_) => self.finish(digest, cx),
+            DrawingMutation::DuplicateLayer(value)=>{
+                if self.phase==2 {self.credit.source_vec(&value.identities)?;self.credit.scalar_usize(digest,3,value.identities.len(),cx)?;self.phase=3;return Ok(false);}
+                if let Some(assignment)=value.identities.get(self.segment_index){
+                    let field=if self.phase==3{&assignment.source}else{&assignment.target};
+                    if !self.credit.observe_owned_string(digest,if self.phase==3{4}else{5},field,false,cx)?{return Ok(false);}
+                    if self.phase==3{self.phase=4;}else{self.phase=3;self.segment_index+=1;}return Ok(false);
+                }self.finish(digest,cx)
+            }
+            DrawingMutation::RemoveImageAsset(_) | DrawingMutation::DeleteLayer(_) => self.finish(digest, cx),
             DrawingMutation::ImportImageAsset(value)=>match self.phase {
                 2=>{self.credit.scalar_usize(digest,3,value.asset.width as usize,cx)?;self.phase=3;Ok(false)}
                 3=>{self.credit.scalar_usize(digest,4,value.asset.height as usize,cx)?;self.phase=4;Ok(false)}
@@ -3092,6 +3100,10 @@ struct DrawingDuplicateRewriteAuthority {
     frames: [DrawingTraversalFrame; DRAWING_MAXIMUM_LAYER_DEPTH],
     owners: Option<(usize, usize)>,
     identity: native_text_footprint::DrawingDuplicateIdentityCursor,
+    identity_index:Option<usize>,
+    assignment_scan:usize,
+    identities_observed:usize,
+    collision:Option<DrawingLayerLocator>,
     append: semio_framework_value::paged::PagedUtf8AppendCursor,
     append_active: bool,
     native_id: std::mem::ManuallyDrop<DrawingNativeText>,
@@ -3108,7 +3120,7 @@ struct DrawingDuplicateRewriteAuthority {
 impl DrawingDuplicateRewriteAuthority {
     fn new(mut pending_id: String, mut pending_name: String) -> Self {
         pending_id.clear();pending_name.clear();
-        Self { depth: 0, path: [0; DRAWING_MAXIMUM_LAYER_DEPTH], frames: [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH], owners: None, identity: Default::default(), append: Default::default(), append_active: false, native_id: std::mem::ManuallyDrop::new(Default::default()), displaced: None, search: None, reference: 0, turn: 0, mode: 0, pending_id: std::mem::ManuallyDrop::new(Some(pending_id)), pending_name: std::mem::ManuallyDrop::new(Some(pending_name)), terminal: false }
+        Self { depth: 0, path: [0; DRAWING_MAXIMUM_LAYER_DEPTH], frames: [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH], owners: None, identity: Default::default(), identity_index:None, assignment_scan:0, identities_observed:0, collision:None, append: Default::default(), append_active: false, native_id: std::mem::ManuallyDrop::new(Default::default()), displaced: None, search: None, reference: 0, turn: 0, mode: 0, pending_id: std::mem::ManuallyDrop::new(Some(pending_id)), pending_name: std::mem::ManuallyDrop::new(Some(pending_name)), terminal: false }
     }
 
     fn close_append(&mut self, grant: RetainedCloneGrant) -> Result<bool, &'static str> {
@@ -3136,7 +3148,7 @@ impl DrawingDuplicateRewriteAuthority {
         Ok(RetainedCloneStep::Progress(progress))
     }
 
-    fn step(&mut self, root: &mut DrawingLayerNode, original: &DrawingLayerNode, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    fn step(&mut self, root: &mut DrawingLayerNode, original: &DrawingLayerNode, document:&DrawingSnapshot, identities:&semio_framework_value::list::PagedList<crate::schema::identity::DrawingIdentityAssignment,{usize::MAX}>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal { return Ok(true); }
         let owners = (root as *const _ as usize, original as *const _ as usize);
         if self.owners.is_some_and(|held| held != owners) { return Err("drawing-store.duplicate-root-changed"); }
@@ -3145,16 +3157,37 @@ impl DrawingDuplicateRewriteAuthority {
         let source = DrawingDuplicateReferenceSearch::node_at(original, &self.path[..self.depth]).ok_or("drawing-store.duplicate-source-path")?;
         let node = DrawingLayerCloneAuthority::target_at_mut(root, &self.path[..self.depth]).ok_or("drawing-store.duplicate-path")?;
         let phase = self.frames[self.depth].phase;
+        if self.mode==0&&phase==0{
+            if let Some(assignment)=identities.get(self.assignment_scan){
+                if assignment.source==*crate::schema::layer_id(source){if self.identity_index.is_some(){return Err("drawing-store.duplicate-identity-repeated-source");}self.identity_index=Some(self.assignment_scan);}
+                self.assignment_scan+=1;cx.consume_fuel(1);return Ok(false);
+            }
+            let identity=identities.get(self.identity_index.ok_or("drawing-store.duplicate-identity-missing")?).ok_or("drawing-store.duplicate-identity-index")?;
+            if identity.target.is_empty(){return Err("drawing-store.duplicate-identity-empty");}
+            let locator=self.collision.get_or_insert_with(DrawingLayerLocator::new);
+            if !locator.step(document,&identity.target,cx)?{return Ok(false);}
+            if locator.found().is_some(){return Err("drawing-store.mutation-duplicate-layer");}self.collision=None;self.frames[self.depth].phase=8;
+        }
+        let target_identity=if self.mode==0{identities.get(self.identity_index.ok_or("drawing-store.duplicate-identity-missing")?).ok_or("drawing-store.duplicate-identity-index")?}else{identities.get(self.identity_index.unwrap_or(0)).ok_or("drawing-store.duplicate-identity-missing")?};
+        if self.mode==0&&self.frames[self.depth].phase==8{
+            if self.assignment_scan>=identities.len(){self.assignment_scan=0;}
+            if let Some(assignment)=identities.get(self.assignment_scan){
+                if Some(self.assignment_scan)!=self.identity_index&&assignment.target==target_identity.target{return Err("drawing-store.duplicate-identity-repeated-target");}
+                self.assignment_scan+=1;cx.consume_fuel(1);if self.assignment_scan<identities.len(){return Ok(false);}
+            }
+            self.frames[self.depth].phase=9;return Ok(false);
+        }
+        let phase=if self.frames[self.depth].phase==9{0}else{self.frames[self.depth].phase};
         if self.mode == 0 && phase < 7 {
             match phase {
                 0 => {
-                    let step = self.identity.step(crate::schema::layer_id(source), " copy", 1, DRAWING_OWNED_FIELD_BYTES)?;
+                    let step = self.identity.step(&target_identity.target, 1, DRAWING_OWNED_FIELD_BYTES)?;
                     cx.consume_fuel(step.observed_bytes.max(1) as u64);
                     if step.complete { self.frames[self.depth].phase = 1; }
                 }
                 1 => {
                     self.append_active = true;
-                    let id = self.identity.identity().ok_or("drawing-store.duplicate-identity-missing")?;
+                    let id = self.identity.identity(&target_identity.target).ok_or("drawing-store.duplicate-identity-missing")?;
                     let step = self.append.advance(id, &mut self.native_id, grant).map_err(|_| "drawing-store.duplicate-identity-append")?;
                     cx.consume_fuel(step.progress().copied_items.max(1) as u64);
                     if matches!(step, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 2; }
@@ -3162,7 +3195,7 @@ impl DrawingDuplicateRewriteAuthority {
                 2 => { if self.close_append(grant)? { self.frames[self.depth].phase = 3; }cx.consume_fuel(1); }
                 3 => {
                     std::mem::swap(&mut crate::schema::layer_base_mut(node).id, &mut self.native_id);
-                    self.identity.close_step(1);self.identity = Default::default();self.frames[self.depth].phase = 4;
+                    self.identity.close_step(1);self.identity = Default::default();self.identities_observed+=1;self.frames[self.depth].phase = 4;
                     cx.consume_fuel(size_of::<DrawingNativeText>() as u64);
                 }
                 4 => { if matches!(self.retire_displaced_granted(grant).map_err(|_| "drawing-store.duplicate-text-close")?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 5; }cx.consume_fuel(1); }
@@ -3182,22 +3215,26 @@ impl DrawingDuplicateRewriteAuthority {
             if let (DrawingLayerNode::Boolean(source), DrawingLayerNode::Boolean(node)) = (source, &mut *node) {
                 if self.reference < source.children.len() {
                     let target = source.children.get(self.reference).ok_or("drawing-store.duplicate-reference-target")?;
+
                     match phase {
                         0 => {
                             let search = self.search.get_or_insert_with(DrawingDuplicateReferenceSearch::new);
                             if !search.step(original, target, cx)? { return Ok(false); }
                             let internal = search.result.ok_or("drawing-store.duplicate-reference-result")?;
                             search.close();self.search = None;
-                            if internal { self.frames[self.depth].phase = 1; } else { self.reference += 1; }
+                            if internal { self.identity_index=None;self.assignment_scan=0;self.frames[self.depth].phase = 1; } else { self.reference += 1; }
                         }
                         1 => {
-                            let step = self.identity.step(target, " copy", 1, DRAWING_OWNED_FIELD_BYTES)?;
+                            if let Some(assignment)=identities.get(self.assignment_scan){if assignment.source==*target{self.identity_index=Some(self.assignment_scan);}self.assignment_scan+=1;cx.consume_fuel(1);return Ok(false);}
+                            let reference_identity=identities.get(self.identity_index.ok_or("drawing-store.duplicate-reference-identity-missing")?).ok_or("drawing-store.duplicate-reference-identity-index")?;
+                            let step = self.identity.step(&reference_identity.target, 1, DRAWING_OWNED_FIELD_BYTES)?;
                             cx.consume_fuel(step.observed_bytes.max(1) as u64);
                             if step.complete { self.frames[self.depth].phase = 2; }
                         }
                         2 => {
                             self.append_active = true;
-                            let id = self.identity.identity().ok_or("drawing-store.duplicate-reference-identity")?;
+                            let reference_identity=identities.get(self.identity_index.ok_or("drawing-store.duplicate-reference-identity-missing")?).ok_or("drawing-store.duplicate-reference-identity-index")?;
+                            let id = self.identity.identity(&reference_identity.target).ok_or("drawing-store.duplicate-reference-identity")?;
                             let step = self.append.advance(id, &mut self.native_id, grant).map_err(|_| "drawing-store.duplicate-reference-append")?;
                             cx.consume_fuel(step.progress().copied_items.max(1) as u64);
                             if matches!(step, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 3; }
@@ -3219,13 +3256,13 @@ impl DrawingDuplicateRewriteAuthority {
             let child = self.frames[self.depth].child;
             if child < group.children.len() {
                 if self.depth + 1 >= DRAWING_MAXIMUM_LAYER_DEPTH { return Err("drawing-store.duplicate-depth-capacity"); }
-                self.frames[self.depth].child += 1;self.path[self.depth] = child;self.depth += 1;self.frames[self.depth] = DrawingTraversalFrame::EMPTY;self.reference = 0;
+                self.frames[self.depth].child += 1;self.path[self.depth] = child;self.identity_index=None;self.assignment_scan=0;self.depth += 1;self.frames[self.depth] = DrawingTraversalFrame::EMPTY;self.reference = 0;
                 cx.consume_fuel(1);return Ok(false);
             }
         }
         if self.depth == 0 {
-            if self.mode == 0 { self.mode = 1;self.frames = [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH];self.path = [0; DRAWING_MAXIMUM_LAYER_DEPTH];self.reference = 0;cx.consume_fuel(1);return Ok(false); }
-            self.terminal = true;self.owners = None;Ok(true)
+            if self.mode == 0 { if self.identities_observed!=identities.len(){return Err("drawing-store.duplicate-identity-census");}self.mode = 1;self.frames = [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH];self.path = [0; DRAWING_MAXIMUM_LAYER_DEPTH];self.reference = 0;cx.consume_fuel(1);return Ok(false); }
+            self.identity_index=None;self.assignment_scan=0;self.identities_observed=0;self.collision=None;self.terminal = true;self.owners = None;Ok(true)
         } else { self.depth -= 1;self.reference = 0;cx.consume_fuel(1);Ok(false) }
     }
 
@@ -3242,7 +3279,7 @@ impl DrawingDuplicateRewriteAuthority {
         }
         let step = self.retire_displaced_granted(grant)?;
         if !matches!(step, RetainedCloneStep::Complete(_)) { return Ok(step); }
-        self.owners = None;self.terminal = true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+        self.identity_index=None;self.assignment_scan=0;self.identities_observed=0;self.collision=None;self.owners = None;self.terminal = true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
     fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
@@ -3261,7 +3298,7 @@ impl DrawingDuplicateRewriteAuthority {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.terminal && self.pending_id.is_none() && self.pending_name.is_none() && self.owners.is_none() && !self.append_active && self.displaced.is_none() && self.search.is_none() && self.identity.terminal_is_empty() && self.native_id.retained_chunks().allocated_bytes() == 0 && self.native_id.is_empty()
+        self.terminal && self.pending_id.is_none() && self.pending_name.is_none() && self.owners.is_none() && !self.append_active && self.displaced.is_none() && self.search.is_none() && self.collision.is_none() && self.identity_index.is_none() && self.assignment_scan==0 && self.identities_observed==0 && self.identity.terminal_is_empty() && self.native_id.retained_chunks().allocated_bytes() == 0 && self.native_id.is_empty()
     }
 }
 
@@ -3787,7 +3824,7 @@ impl DrawingMutationCandidateAuthority {
                         drop(self.layer_clone.take());
                         self.clone_work = Some(DrawingLayerCloneWorkAuthority::new());
                     }
-                    DrawingMutation::DuplicateLayer(_) => {
+                    DrawingMutation::DuplicateLayer(value) => {
                         let duplicate_source = DrawingLayerLocator::node_at(source, self.primary.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-duplicate-source")?;
                         if self.pending_layer.is_none() {
                             if self.layer_clone.is_none() {
@@ -3796,7 +3833,7 @@ impl DrawingMutationCandidateAuthority {
                                 return Ok(false);
                             }
                             let clone = self.layer_clone.as_mut().expect("Drawing duplicate layer clone remains retained");
-                            if !clone.step(duplicate_source, cx)? {
+                            if !clone.step(duplicate_source, source, &value.identities, cx)? {
                                 return Ok(false);
                             }
                             *self.pending_layer = clone.take();
@@ -3805,7 +3842,7 @@ impl DrawingMutationCandidateAuthority {
                             self.duplicate_rewrite = Some(DrawingDuplicateRewriteAuthority::new(self.duplicate_id_owner.take().ok_or("drawing-store.duplicate-id-owner-missing")?, name_owner));
                             return Ok(false);
                         }
-                        if !self.duplicate_rewrite.as_mut().ok_or("drawing-store.duplicate-rewrite-missing")?.step(self.pending_layer.as_mut().ok_or("drawing-store.duplicate-owner-missing")?, duplicate_source, cx)? {
+                        if !self.duplicate_rewrite.as_mut().ok_or("drawing-store.duplicate-rewrite-missing")?.step(self.pending_layer.as_mut().ok_or("drawing-store.duplicate-owner-missing")?, duplicate_source, source, &value.identities, cx)? {
                             return Ok(false);
                         }
                         let pages = self.overlay_pages.as_mut().ok_or("drawing-store.mutation-overlay-arena-missing")?;

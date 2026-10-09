@@ -1,0 +1,135 @@
+{
+  "schema": "dag.screenHitLaws",
+  "cases": [
+    {
+      "hit": {
+        "nodeId": null,
+        "channel": null,
+        "minimap": false,
+        "minimapViewport": false,
+        "portInsert": false,
+        "handle": false,
+        "widget": false
+      },
+      "screenPath": false,
+      "draggable": false
+    },
+    {
+      "hit": {
+        "nodeId": "node",
+        "channel": null,
+        "minimap": false,
+        "minimapViewport": false,
+        "portInsert": false,
+        "handle": false,
+        "widget": false
+      },
+      "screenPath": false,
+      "draggable": true
+    },
+    {
+      "hit": {
+        "nodeId": null,
+        "channel": null,
+        "minimap": true,
+        "minimapViewport": false,
+        "portInsert": false,
+        "handle": false,
+        "widget": false
+      },
+      "screenPath": true,
+      "draggable": false
+    },
+    {
+      "hit": {
+        "nodeId": "node",
+        "channel": null,
+        "minimap": true,
+        "minimapViewport": false,
+        "portInsert": false,
+        "handle": false,
+        "widget": false
+      },
+      "screenPath": true,
+      "draggable": false
+    },
+    {
+      "hit": {
+        "nodeId": null,
+        "channel": null,
+        "minimap": false,
+        "minimapViewport": false,
+        "portInsert": true,
+        "handle": false,
+        "widget": false
+      },
+      "screenPath": true,
+      "draggable": false
+    },
+    {
+      "hit": {
+        "nodeId": "node",
+        "channel": null,
+        "minimap": false,
+        "minimapViewport": false,
+        "portInsert": true,
+        "handle": false,
+        "widget": false
+      },
+      "screenPath": true,
+      "draggable": false
+    },
+    {
+      "hit": {
+        "nodeId": null,
+        "channel": null,
+        "minimap": false,
+        "minimapViewport": false,
+        "portInsert": false,
+        "handle": true,
+        "widget": false
+      },
+      "screenPath": true,
+      "draggable": false
+    },
+    {
+      "hit": {
+        "nodeId": "node",
+        "channel": null,
+        "minimap": false,
+        "minimapViewport": false,
+        "portInsert": false,
+        "handle": true,
+        "widget": false
+      },
+      "screenPath": true,
+      "draggable": false
+    },
+    {
+      "hit": {
+        "nodeId": null,
+        "channel": null,
+        "minimap": false,
+        "minimapViewport": false,
+        "portInsert": false,
+        "handle": false,
+        "widget": true
+      },
+      "screenPath": true,
+      "draggable": false
+    },
+    {
+      "hit": {
+        "nodeId": "node",
+        "channel": null,
+        "minimap": false,
+        "minimapViewport": false,
+        "portInsert": false,
+        "handle": false,
+        "widget": true
+      },
+      "screenPath": true,
+      "draggable": false
+    }
+  ]
+}

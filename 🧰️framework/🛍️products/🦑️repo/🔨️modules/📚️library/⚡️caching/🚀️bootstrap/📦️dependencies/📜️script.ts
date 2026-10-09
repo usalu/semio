@@ -1,18 +1,19 @@
 #!/usr/bin/env bun
+import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { spawn, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { Script, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { discoverBunWorkspaces, bunWorkspaceNativePatterns } from "../../../🗂️workspaces/🟦️bun/🟦️.ts";
 import {withPreparedCargoDependencyPairV1} from "../../../🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts";
 import {fileURLToPath} from "node:url";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 
 /** 🏃️ Runs one tool with progress, bounded optional output and cancellation of its process tree. */
-export async function runTool(command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean | "ignore" = false, environment: NodeJS.ProcessEnv = process.env): Promise<string> {
-    signal.throwIfAborted();
-    if (command === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(environment), args, cwd, environment);
+export async function runTool(command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean | "ignore", environment: NodeJS.ProcessEnv, storage:CargoPreparationStorageV1): Promise<string> {
+    signal.throwIfAborted();parseCargoPreparationStorageV1(storage);
+    if (command === "cargo") prepareCargoWorkspaceInvocation(storage,getWorkspaceRoot(environment),args,cwd,environment);
     return executeTool(command,args,cwd,signal,capture,environment);
 }
 
@@ -49,13 +50,13 @@ async function executeTool(command:string,args:string[],cwd:string,signal:AbortS
 }
 
 /** 🦀️ Executes only the owned prepared dependency pair without a public preparation bypass. */
-export async function runPreparedCargoDependencyPairV1(root:string,manifest:string,signal:AbortSignal,runner?:(command:string,args:string[],cwd:string,signal:AbortSignal,capture?:boolean|"ignore",environment?:NodeJS.ProcessEnv)=>Promise<string>):Promise<void> {
- await withPreparedCargoDependencyPairV1(root,manifest,signal,async(args,cwd,signal)=>{await (runner??executeTool)("cargo",args,cwd,signal,false,process.env);},[fileURLToPath(import.meta.url),fileURLToPath(new URL("./🏗️native/📜️script.ts",import.meta.url))]);
+export async function runPreparedCargoDependencyPairV1(root:string,manifest:string,signal:AbortSignal,storage:CargoPreparationStorageV1,runner?:(command:string,args:string[],cwd:string,signal:AbortSignal,capture:boolean|"ignore",environment:NodeJS.ProcessEnv,storage:CargoPreparationStorageV1)=>Promise<string>):Promise<void> {
+ await withPreparedCargoDependencyPairV1(storage,root,manifest,signal,async(args,cwd,signal)=>{if(runner)await runner("cargo",args,cwd,signal,false,process.env,storage);else await executeTool("cargo",args,cwd,signal,false,process.env);},[fileURLToPath(import.meta.url),fileURLToPath(new URL("./🏗️native/📜️script.ts",import.meta.url))]);
 }
 
 /** 📦️ Runs the selected Bun runtime through the shared process owner. */
 export async function runBun(args: string[], cwd: string, signal: AbortSignal): Promise<void> {
-  await runTool(process.execPath, args, cwd, signal);
+  await runTool(process.execPath,args,cwd,signal,false,process.env,repositoryCargoPreparationStorageV1(process.cwd()));
 }
 
 export type JavascriptDependencyRunner = (args: string[], cwd: string, signal: AbortSignal) => Promise<void>;
@@ -96,8 +97,10 @@ export class ContractCheckScript extends Script {
     if (args.length) throw new Error("Dependency contract check accepts no arguments");
     const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.root, ".🧬semio/🦑️repo/⚡️cache/tests/bootstrap-dependencies");
     mkdirSync(artifacts, { recursive: true });
-    await runTool(process.execPath, ["test", join(import.meta.dir, "🧪️tests/🟦️.ts")], this.root, new AbortController().signal, false, { ...process.env, SEMIO_TEST_ARTIFACT_DIR: artifacts });
+    await runTool(process.execPath,["test", join(import.meta.dir, "🧪️tests/🟦️.ts")],this.root,new AbortController().signal,false,{ ...process.env, SEMIO_TEST_ARTIFACT_DIR: artifacts },repositoryCargoPreparationStorageV1(process.cwd()));
   }
 }
 
 if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("sync", SyncScript).register("lock", RefreshLockScript).register("contract-check", ContractCheckScript).run(process.argv.slice(2));
+
+export {repositoryCargoPreparationStorageV1} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";

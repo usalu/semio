@@ -1,0 +1,22 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+  "beforeSHA": "4dbb15180e9101ef80d130a86d3b3215ef24c081990b2b184ab04605d6662473",
+  "afterSHA": "132276735c42964b57384360b221bc1a5052e85d98633a7a401d8929949b2b19",
+  "actions": [
+    {
+      "scope": "schema_test_close_grant",
+      "afterBlockSHA": "d930344abd99551e7a4bb9bde00e8bb14b7e4a8f95abbd4c018117fe4b38aa44"
+    },
+    {
+      "scope": "stale-owned-schema original input and terminal directory",
+      "beforeBlockSHA": "badbdd095790acf05f532f1e06e1adc639204df9d139b7c36c97f2ae76a850a5",
+      "afterBlockSHA": "e6ebda03e34efc081203c9b8a2d160cdcea8e613dc06ba47a4c0a4cf64c93ce1"
+    },
+    {
+      "scope": "cancelled-owned-schema original slots and exact separate backing release",
+      "beforeBlockSHA": "55eb77d91efc4c81c5e3ce29b81f6a9977c134b2a919b0863fa48a27e815d329",
+      "afterBlockSHA": "dbdf392b831bc0614100cf6e273239c47254574fd1c93c56590db76312354965"
+    }
+  ],
+  "nativeExecuted": false
+}

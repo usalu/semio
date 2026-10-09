@@ -1,0 +1,16 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "beforeSha256": "5f5f4939cbde5bac4f6194c5f9049b08eae948d21d78eb5a851d87a3c2000256",
+      "afterSha256": null,
+      "action": "Retire recreated whole session trial authority; no domain format changed."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "beforeSha256": "6799409c96a39f505a024920eb6996d871efa22581bc84532d7ec934ea40bfb2",
+      "afterSha256": "08e0637e58ce90ffc02e7393a718eeac80054886a5a37147875d9f0c5ee6c29e",
+      "action": "Retire only whole example admission/mirror mutants; retain original UTF8/Buffer/RFC6902 custody effects."
+    }
+  ]
+}

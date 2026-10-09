@@ -21,11 +21,11 @@ Evidence: `🗑️generated/controlled-cargo-callers/interface25-complete-custod
 - .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-normal-production-command-and-default-boundary-readonly-handoff.md
 - .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📓️oct8-permanent-runtime-command-wiring.md
 - .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-facets/📜️script.ts
-- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-I-O-BOUNDARIES-AND-MUTATION-SEPARATION/ResumedAuthoritativeState.md
-- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-I-O-BOUNDARIES-AND-MUTATION-SEPARATION/construct-geometry/📜️script.ts
-- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-I-O-BOUNDARIES-AND-MUTATION-SEPARATION/jpeg-tiff-recovery-current.md
-- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-I-O-BOUNDARIES-AND-MUTATION-SEPARATION/jpeg-tiff-resumed-owner-manifest.md
-- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-I-O-BOUNDARIES-AND-MUTATION-SEPARATION/representation-owners/📜️script.ts
+- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/ResumedAuthoritativeState.md
+- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/construct-geometry/📜️script.ts
+- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/jpeg-tiff-recovery-current.md
+- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/jpeg-tiff-resumed-owner-manifest.md
+- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/representation-owners/📜️script.ts
 - .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/CURRENT-GENERAL-PHYSICAL-CLAIM-EXECUTION.md
 - .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/continuation-current-native-erased-snapshot-full-grant-tdd-1.md
 - .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/continuation-interface-execution25.md

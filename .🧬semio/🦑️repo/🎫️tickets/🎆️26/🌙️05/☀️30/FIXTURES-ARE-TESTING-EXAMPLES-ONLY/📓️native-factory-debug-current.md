@@ -1,0 +1,3 @@
+# Current Factory Diagnostic Collision
+
+The original Replication94763 compiler receipt has E0119 from duplicate Debug implementations at construction lines10/11. Fresh current original source contains exactly one explicit implementation and no Debug derive on the defining error. It preserves the genuine error, borrowed original address, ticket-presence and physical progress fields. No source edit was necessary or authored in this lane; writer and native resolution are not inferred. The hash and actual diagnostic reference are retained in the companion input. A justified next native acquisition can verify this changed current epoch; the earlier run retains zero assertion credit.

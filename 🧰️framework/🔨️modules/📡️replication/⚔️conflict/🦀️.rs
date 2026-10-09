@@ -498,3 +498,6 @@ impl crate::value::FromValue for ReplayReport {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path="♻️report/🦀️.rs"]
+mod report_retirement;

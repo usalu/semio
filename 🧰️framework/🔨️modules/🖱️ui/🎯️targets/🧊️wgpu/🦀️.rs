@@ -142,6 +142,10 @@ pub mod shaders;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
+#[cfg(feature = "wgpu-engine")]
+#[path = "../../🚪️io/🔤️font/🤝️pair-adjustment/🦀️.rs"]
+pub(crate) mod font_pair_io;
+
 #[path = "🎨️theme/🦀️.rs"]
 pub mod theme;
 
@@ -272,7 +276,7 @@ pub use cursor::{resolve_semio_cursor, CursorDragState, SemioCursor};
 #[cfg(feature = "wgpu-engine")]
 pub use draw::{ear_clip_polygon, IconAtlas, MeshGpuTable, RasterKeepSetV1, RasterResidencyLedger, RasterTextureAdmission, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, MESH_GPU_KEEP_VERSION_CAPACITY};
 #[cfg(feature = "wgpu-engine")]
-pub use tree::{EditState, LayoutBucket, Node, NodeFlags, NodeKey, PaintBucket, UiTree, WidgetSpec, WidgetState};
+pub use tree::{EditState, LayoutBucket, Node, NodeFlags, NodeKey, NodeKeyRef, PaintBucket, UiTree, WidgetSpec, WidgetState};
 // 🪟️🫳️🖱️ W2 wiring: `w1d-events-overlay`'s overlay/drag-drop/scroll types, previously reachable only
 // via `crate::events::*` (the module itself is `pub`, just not curated into this flattened surface)
 // — `EventRouter` itself stays `pub(crate)` (an `engine::Ui` implementation detail; drive it via

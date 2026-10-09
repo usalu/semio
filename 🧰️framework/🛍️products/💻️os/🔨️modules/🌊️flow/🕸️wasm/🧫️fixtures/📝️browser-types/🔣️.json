@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "operationMethods": 105,
+  "operationMethods": 106,
   "excluded": [
     "open",
     "attachSurface",
@@ -61,5 +61,11 @@
       },
       "./🖥️flow-host.js": "./🖥️host/🟨️.js"
     }
-  }
+  },
+  "receiptFields": [
+    "copiedItems",
+    "copiedBytes",
+    "retainedCapacityBytes",
+    "releasedBytes"
+  ]
 }

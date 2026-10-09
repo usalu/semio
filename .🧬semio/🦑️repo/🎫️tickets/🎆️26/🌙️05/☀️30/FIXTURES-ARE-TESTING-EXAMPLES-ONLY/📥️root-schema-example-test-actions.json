@@ -1,0 +1,9 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json",
+    "action": "update",
+    "beforeSha256": "4c96d22c8a3df87e1ec98c4a4d685959fc293787ab819a2ae56f8d38c95fd2e6",
+    "afterSha256": "de2857e9ab3f5362e2ab21a0e5964331edc52bd4349478836a7cae58ed036cc8",
+    "qualification": "Extend six plain per-document Ajv/inventory neutral cases for two missing collections; compact opaque probe/item path labels while keeping all declared scope identities, schema values and prior outcomes, permitting real ticket-contained <=256 paths"
+  }
+]

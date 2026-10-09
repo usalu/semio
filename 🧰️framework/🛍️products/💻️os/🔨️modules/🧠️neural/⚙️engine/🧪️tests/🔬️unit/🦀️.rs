@@ -16,6 +16,12 @@ fn dictionary_owned_cursor_preserves_order_and_nested_ownership() {
 struct Echo;
 
 impl Operator for Echo {
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_copy:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(1)}
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let payload = input.get("x").and_then(|value| value.as_dictionary()).cloned().unwrap_or_else(|| input.clone());
         Ok(channel_output("x", payload))
@@ -25,6 +31,12 @@ impl Operator for Echo {
 struct Double;
 
 impl Operator for Double {
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_copy:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(1)}
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let value = input.get("number").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number.value".into()))?;
         Ok(channel_output("doubled", number_dictionary(value * 2.0)))
@@ -118,7 +130,7 @@ fn registry_catalogue_lists_operators_and_schemas() {
 fn evaluate_with_custom_dispatch() {
     let tree = Tree { neurons: vec![Neuron::with_kind("b", "double", Dictionary::new().insert("number", Value::Dictionary(number_dictionary(3.0))))], synapses: vec![] };
     let out = Evaluator::new(&Registry::new())
-        .evaluate_with(&tree, &HashMap::new(), &HashMap::new(), &|kind, input| {
+        .evaluate_with(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &|kind, input| {
             assert_eq!(kind, "double");
             Double.evaluate(input)
         })
@@ -162,7 +174,7 @@ fn a_wire_shadows_the_literal_its_neuron_records_for_that_port() {
     let doubled = |outputs: &HistoryFoldIndex<String, Dictionary>, id: &str| outputs.get(id).and_then(|d| d.get("doubled")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
     let parallel = Evaluator::new(&reg).evaluate(&tree, &HashMap::new()).unwrap();
     assert_eq!((doubled(&parallel, "wired"), doubled(&parallel, "unwired")), (Some(4.0), Some(20.0)), "the parallel walk evaluates the wire, and the literal only where nothing is wired");
-    let infos = HashMap::new();
+    let infos = HistoryFoldIndex::new();
     let sequential = Evaluator::new(&reg).evaluate_channels_sequential_with(&tree, &HashMap::new(), &infos, &mut |kind, input| reg.dispatch(kind, input)).unwrap();
     assert_eq!((doubled(&sequential.outputs, "wired"), doubled(&sequential.outputs, "unwired")), (Some(4.0), Some(20.0)), "the sequential walk agrees");
     parallel.retire_cold();
@@ -179,7 +191,7 @@ fn evaluate_channels_returns_resolved_inputs_per_neuron() {
     let tree = Tree { neurons: vec![Neuron::with_kind("add", "double", Dictionary::new())], synapses: vec![Synapse { id: "s1".into(), from: "slider".into(), to: "add".into(), from_port: "number".into(), to_port: "number".into() }] };
     let mut seeds = HashMap::new();
     seeds.insert("slider".into(), channel_output("number", number_dictionary(3.0)));
-    let channels = Evaluator::new(&reg).evaluate_channels(&tree, &seeds, &HashMap::from([(double_info().id.clone(), double_info())])).unwrap();
+    let channels = Evaluator::new(&reg).evaluate_channels(&tree, &seeds, &HistoryFoldIndex::from([(double_info().id.clone(), double_info())])).unwrap();
     assert_eq!(channels.inputs.get("add").and_then(|d| d.get("number")).and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
     assert_eq!(channels.outputs.get("add").and_then(|d| d.get("doubled")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(6.0));
     channels.retire_cold();
@@ -245,6 +257,12 @@ fn collect_routes_variadic_slots_in_order() {
 struct AddNumbers;
 
 impl Operator for AddNumbers {
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_copy:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(1)}
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let a = input.get("a").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("a".into()))?;
         let b = input.get("b").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("b".into()))?;
@@ -416,10 +434,10 @@ fn cached_evaluate_skips_dispatch_on_hit() {
         reg.dispatch(kind, input)
     };
     cache.begin_epoch();
-    evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
+    evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
     assert_eq!(calls.load(Ordering::Relaxed), 2);
     cache.begin_epoch();
-    evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
+    evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
     assert_eq!(calls.load(Ordering::Relaxed), 2);
     cache.retire_cold();
     tree.retire_cold();
@@ -436,7 +454,7 @@ fn missing_required_input_records_per_node_error() {
     reg.register_schema(number_schema());
     reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
     reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(AddNumbers) }], &["number"]);
-    let channels = Evaluator::new(&reg).evaluate_channels(&tree, &HashMap::new(), &HashMap::from([(add_info().id.clone(), add_info())])).unwrap();
+    let channels = Evaluator::new(&reg).evaluate_channels(&tree, &HashMap::new(), &HistoryFoldIndex::from([(add_info().id.clone(), add_info())])).unwrap();
     let add_out = channels.outputs.get("add").expect("add output");
     assert!(add_out.get("error").is_some() || add_out.get("sum").is_none());
     assert!(channels.outputs.contains_key("a"));
@@ -464,12 +482,12 @@ fn cached_evaluate_recomputes_only_changed_branch() {
         reg.dispatch(kind, input)
     };
     cache.begin_epoch();
-    evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
+    evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
     assert_eq!(calls.load(Ordering::Relaxed), 3);
     let mut tree_changed = tree.clone();
     std::mem::replace(&mut tree_changed.neurons[0], Neuron::with_kind("a", "echo", number_dictionary(3.0))).retire_cold();
     cache.begin_epoch();
-    evaluator.evaluate_channels_cached(&tree_changed, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
+    evaluator.evaluate_channels_cached(&tree_changed, &HashMap::new(), &HistoryFoldIndex::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
     assert_eq!(calls.load(Ordering::Relaxed), 5);
     tree_changed.retire_cold();
     cache.retire_cold();
@@ -497,7 +515,7 @@ fn evaluate_channels_budgeted_remaining_excludes_clean_branches() {
     };
     let dirty: HashSet<String> = ["b".to_string()].into_iter().collect();
     cache.begin_epoch();
-    let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &dirty, None, EvalStepBudget::PROBE,&|_|true).unwrap();
+    let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &dirty, None, EvalStepBudget::PROBE,&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 0);
     assert_eq!(result.remaining, vec!["b".to_string()], "clean branch node \"c\" must not appear in remaining");
     result.retire_cold();
@@ -525,7 +543,7 @@ fn evaluate_channels_budgeted_probe_computes_nothing() {
         reg.dispatch(kind, input)
     };
     cache.begin_epoch();
-    let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::PROBE,&|_|true).unwrap();
+    let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::PROBE,&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 0, "a budget-0 probe must never dispatch");
     assert_eq!(result.remaining, vec!["a".to_string(), "b".to_string()], "nothing computed yet — every neuron is still pending, in topo order");
     result.retire_cold();
@@ -554,11 +572,11 @@ fn evaluate_channels_budgeted_resumes_across_calls_until_complete() {
     };
     cache.begin_epoch();
     // ⏱️ Tick 1: budget for exactly one cache miss — stops at "a", "b" hasn't run yet.
-    let tick1 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1),&|_|true).unwrap();
+    let tick1 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1),&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 1);
     assert_eq!(tick1.remaining, vec!["b".to_string()]);
     // ⏱️ Tick 2: "a" is now a cache hit (free), so this budget-1 call reaches and computes "b".
-    let tick2 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1),&|_|true).unwrap();
+    let tick2 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1),&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 2, "resuming must not recompute the already-cached \"a\"");
     assert!(tick2.remaining.is_empty(), "the walk reached the end of the topo order");
     let doubled = tick2.channels.outputs.get("b").and_then(|dict| dict.get("doubled")).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64());
@@ -593,11 +611,11 @@ fn evaluate_channels_budgeted_serves_a_failed_dispatch_from_the_cache_on_resume(
         reg.dispatch(kind, input)
     };
     cache.begin_epoch();
-    let tick1 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1),&|_|true).unwrap();
+    let tick1 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1),&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 1);
     assert!(tick1.channels.outputs.get("a").and_then(|dict| dict.get("error")).is_some(), "\"a\" has no number input, so its dispatch fails");
     assert_eq!(tick1.remaining, vec!["b".to_string()]);
-    let tick2 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1),&|_|true).unwrap();
+    let tick2 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1),&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 2, "resuming must serve the failed \"a\" from the cache and spend the budget on \"b\"");
     assert!(tick2.remaining.is_empty(), "the walk got past the failed node and converged");
     assert!(tick2.channels.outputs.get("a").and_then(|dict| dict.get("error")).is_some(), "the cached answer is the same failure");
@@ -645,10 +663,10 @@ fn evaluate_channels_budgeted_yields_on_the_wall_clock_after_one_dispatch() {
     // has already passed: the deadline, not the node count, is what stops the walk.
     let overrun = EvalStepBudget::until(512, always_expired_now_us, 0);
     cache.begin_epoch();
-    let tick1 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, overrun,&|_|true).unwrap();
+    let tick1 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, overrun,&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 1, "an expired deadline must still admit one dispatch — a walk that computes nothing can never converge");
     assert_eq!(tick1.remaining, vec!["b".to_string()], "the walk yields at the next cache miss and names it as the blocker");
-    let tick2 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, overrun,&|_|true).unwrap();
+    let tick2 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, overrun,&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 2, "resuming past an expired deadline dispatches exactly one more node");
     assert!(tick2.remaining.is_empty(), "two calls converge the two-node chain even with the deadline permanently expired");
     let doubled = tick2.channels.outputs.get("b").and_then(|dict| dict.get("doubled")).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64());
@@ -681,7 +699,7 @@ fn evaluate_channels_budgeted_without_a_clock_keeps_the_node_count_as_the_only_c
         reg.dispatch(kind, input)
     };
     cache.begin_epoch();
-    let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::until(512, absent_now_us, 0),&|_|true).unwrap();
+    let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::until(512, absent_now_us, 0),&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 2, "both neurons run in one call when the clock cannot say the deadline passed");
     assert!(result.remaining.is_empty());
     result.retire_cold();
@@ -710,7 +728,7 @@ fn evaluate_channels_budgeted_probe_dispatches_nothing_even_past_a_deadline() {
         reg.dispatch(kind, input)
     };
     cache.begin_epoch();
-    let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::until(0, always_expired_now_us, 0),&|_|true).unwrap();
+    let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::until(0, always_expired_now_us, 0),&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 0, "a zero-dispatch budget never dispatches, deadline or not");
     assert_eq!(result.remaining, vec!["a".to_string(), "b".to_string()]);
     result.retire_cold();
@@ -733,7 +751,7 @@ fn evaluate_channels_budgeted_unlimited_matches_full_evaluation() {
     let cache = NeuralCache::new();
     let mut dispatch = |kind: &str, input: &Dictionary| reg.dispatch(kind, input);
     cache.begin_epoch();
-    let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::UNBOUNDED,&|_|true).unwrap();
+    let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::UNBOUNDED,&|_|true).unwrap();
     assert!(result.remaining.is_empty());
     let doubled = result.channels.outputs.get("b").and_then(|dict| dict.get("doubled")).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64());
     assert_eq!(doubled, Some(4.0));
@@ -1013,7 +1031,7 @@ fn a_budgeted_walk_parks_one_whole_wave_and_never_a_node_behind_a_parked_answer(
         registry.dispatch(kind, input)
     };
     cache.begin_epoch();
-    let wave = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::UNBOUNDED,&|_|true).unwrap();
+    let wave = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::UNBOUNDED,&|_|true).unwrap();
     let parked: Vec<&str> = wave.pending_extensions.iter().map(|pending| pending.neuron_id.as_str()).collect();
     assert_eq!(parked, ["left", "right"], "both ready contributed nodes park on the SAME hop");
     assert_eq!(join_dispatches.load(Ordering::Relaxed), 0, "a node behind a parked answer must never be dispatched");
@@ -1045,7 +1063,7 @@ fn a_two_level_contributed_graph_converges_in_two_waves() {
             Err(EvalError::PendingExtension { extension_id: "geometry".into(), operator_id: operator_id.into(), node_hash: node_hash(kind, input) })
         };
         cache.begin_epoch();
-        let step = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::UNBOUNDED,&|_|true).unwrap();
+        let step = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::UNBOUNDED,&|_|true).unwrap();
         let parked: Vec<String> = step.pending_extensions.iter().map(|pending| pending.neuron_id.clone()).collect();
         let converged = step.remaining.is_empty();
         step.retire_cold();
@@ -1067,9 +1085,9 @@ fn a_two_level_contributed_graph_converges_in_two_waves() {
 fn compact_pending_extension_uses_the_existing_progress_authority_before_serialization() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚦️owned-controls.json")).unwrap();let law=&fixture["compactPending"];let label=law["textUnit"].as_str().unwrap().repeat(law["textRepeats"].as_u64().unwrap()as usize);let mut tree=wave_tree();let left=tree.neurons.iter_mut().find(|neuron|neuron.id=="left").unwrap();left.params=std::mem::take(&mut left.params).insert("label",Value::Atom(Atom::String(label.clone())));let registry=wave_registry();let evaluator=Evaluator::new(&registry);let cache=NeuralCache::new();
     let mut dispatch=|kind:&str,input:&Dictionary|->Result<Dictionary,EvalError>{let Some(operator_id)=kind.strip_prefix("plugin.")else{return registry.dispatch(kind,input)};Err(EvalError::PendingExtension {extension_id:"geometry".into(),operator_id:operator_id.into(),node_hash:node_hash(kind,input)})};
-    let initial=evaluator.evaluate_channels_budgeted(&tree,&HashMap::new(),&HashMap::new(),&mut dispatch,&cache,&HashSet::new(),None,EvalStepBudget::UNBOUNDED,&|_|true).unwrap();let left=initial.pending_extensions.iter().find(|pending|pending.neuron_id=="left").unwrap();let previous_hash=left.node_hash;let oracle:serde_json::Value=serde_json::from_str(&left.input_json).unwrap();assert_eq!(oracle["label"].as_str(),Some(label.as_str()));initial.retire_cold();
-    let calls=std::cell::Cell::new(0);let resumed=evaluator.evaluate_channels_budgeted(&tree,&HashMap::new(),&HashMap::new(),&mut dispatch,&cache,&HashSet::new(),None,EvalStepBudget::UNBOUNDED,&|hash|{calls.set(calls.get()+1);hash!=previous_hash}).unwrap();let left=resumed.pending_extensions.iter().find(|pending|pending.neuron_id=="left").unwrap();assert_eq!(left.node_hash,previous_hash);assert!(left.input_json.is_empty());assert!(resumed.pending_extensions.iter().find(|pending|pending.neuron_id=="right").unwrap().input_json.len()>0);assert_eq!(calls.get(),2);resumed.retire_cold();
-    let left=tree.neurons.iter_mut().find(|neuron|neuron.id=="left").unwrap();left.params=std::mem::take(&mut left.params).insert("label",Value::Atom(Atom::String(format!("{label} changed"))));let changed=evaluator.evaluate_channels_budgeted(&tree,&HashMap::new(),&HashMap::new(),&mut dispatch,&cache,&HashSet::new(),None,EvalStepBudget::UNBOUNDED,&|hash|hash!=previous_hash).unwrap();let left=changed.pending_extensions.iter().find(|pending|pending.neuron_id=="left").unwrap();assert_ne!(left.node_hash,previous_hash);assert!(!left.input_json.is_empty());changed.retire_cold();cache.retire_cold();tree.retire_cold();registry.retire_cold();
+    let initial=evaluator.evaluate_channels_budgeted(&tree,&HashMap::new(),&HistoryFoldIndex::new(),&mut dispatch,&cache,&HashSet::new(),None,EvalStepBudget::UNBOUNDED,&|_|true).unwrap();let left=initial.pending_extensions.iter().find(|pending|pending.neuron_id=="left").unwrap();let previous_hash=left.node_hash;let oracle:serde_json::Value=serde_json::from_str(&left.input_json).unwrap();assert_eq!(oracle["label"].as_str(),Some(label.as_str()));initial.retire_cold();
+    let calls=std::cell::Cell::new(0);let resumed=evaluator.evaluate_channels_budgeted(&tree,&HashMap::new(),&HistoryFoldIndex::new(),&mut dispatch,&cache,&HashSet::new(),None,EvalStepBudget::UNBOUNDED,&|hash|{calls.set(calls.get()+1);hash!=previous_hash}).unwrap();let left=resumed.pending_extensions.iter().find(|pending|pending.neuron_id=="left").unwrap();assert_eq!(left.node_hash,previous_hash);assert!(left.input_json.is_empty());assert!(resumed.pending_extensions.iter().find(|pending|pending.neuron_id=="right").unwrap().input_json.len()>0);assert_eq!(calls.get(),2);resumed.retire_cold();
+    let left=tree.neurons.iter_mut().find(|neuron|neuron.id=="left").unwrap();left.params=std::mem::take(&mut left.params).insert("label",Value::Atom(Atom::String(format!("{label} changed"))));let changed=evaluator.evaluate_channels_budgeted(&tree,&HashMap::new(),&HistoryFoldIndex::new(),&mut dispatch,&cache,&HashSet::new(),None,EvalStepBudget::UNBOUNDED,&|hash|hash!=previous_hash).unwrap();let left=changed.pending_extensions.iter().find(|pending|pending.neuron_id=="left").unwrap();assert_ne!(left.node_hash,previous_hash);assert!(!left.input_json.is_empty());changed.retire_cold();cache.retire_cold();tree.retire_cold();registry.retire_cold();
     eprintln!("[DEBUG] Existing evaluation progress authority suppresses only current pending source serialization and captures changed input anew");
 }
 
@@ -1088,6 +1106,8 @@ fn dictionary_writer_source_retirement_uses_the_existing_exact_domain_authority(
     assert!(released>0);println!("[DEBUG] Dictionary writer source preserved independent serde identity and explicit physical retirement, bytes={released}, turns={turns}");
 }
 
+fn original_writer_grant(writer:&semio_framework_pack_json::JsonWriteCursor<Dictionary>,items:usize)->RetainedCloneGrant {let demand=writer.normal_step_demands().unwrap();RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:3.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
+
 fn close_original_writer(writer:semio_framework_pack_json::JsonWriteCursor<Dictionary>) {
     let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(writer).map_err(|(error,_)|error).unwrap();
     for _ in 0..250000 {
@@ -1102,7 +1122,7 @@ fn close_original_writer(writer:semio_framework_pack_json::JsonWriteCursor<Dicti
 fn dictionary_writer_source_preserves_original_text_and_independent_json_bytes() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚦️owned-controls.json")).unwrap();let text=fixture["compactPending"]["textUnit"].as_str().unwrap().repeat(fixture["compactPending"]["textRepeats"].as_u64().unwrap()as usize);let oracle=serde_json::json!({"a":null,"b":true,"c":-42,"d":1.25,"z":{"text":text}});let input=serde_json::to_string(&oracle).unwrap();
     let source:Dictionary=semio_framework_pack_json::from_json_str(&input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let pointer=source.get("z").unwrap().as_dictionary().unwrap().get("text").unwrap().as_atom().unwrap().as_str().unwrap().as_ptr();let mut writer=semio_framework_pack_json::JsonWriteCursor::new(source);let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(4*1024*1024,&mut admitted);let mut turns=0;
-    let output=loop{let before=writer.progress();assert!(writer.step(0,&mut control).unwrap().is_none());assert_eq!(before,writer.progress());assert!(writer.take_source().is_none());turns+=1;assert!(turns<250000);if let Some(output)=writer.step(1,&mut control).unwrap(){break output;}};assert_eq!(output,input);assert_eq!(serde_json::from_str::<serde_json::Value>(&output).unwrap(),oracle);let original=writer.take_source().unwrap();assert_eq!(original.get("z").unwrap().as_dictionary().unwrap().get("text").unwrap().as_atom().unwrap().as_str().unwrap().as_ptr(),pointer);assert!(writer.take_source().is_none());crate::retirement::retire_value_cold(ValueRetirement::from_dictionary(original));close_original_writer(writer);
-    for cutoff in [0,1,64,4096] {let source:Dictionary=semio_framework_pack_json::from_json_str(&input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut writer=semio_framework_pack_json::JsonWriteCursor::new(source);let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(4*1024*1024,&mut admitted);for _ in 0..cutoff{assert!(writer.step(1,&mut control).unwrap().is_none());}close_original_writer(writer);}
+    let output=loop{let before=writer.progress();assert!(writer.step(0,&mut control,original_writer_grant(&writer,0)).unwrap().is_none());assert_eq!(before,writer.progress());assert!(writer.take_source().is_none());turns+=1;assert!(turns<250000);if let Some(output)=writer.step(1,&mut control,original_writer_grant(&writer,1)).unwrap(){break output;}};assert_eq!(output,input);assert_eq!(serde_json::from_str::<serde_json::Value>(&output).unwrap(),oracle);let original=writer.take_source().unwrap();assert_eq!(original.get("z").unwrap().as_dictionary().unwrap().get("text").unwrap().as_atom().unwrap().as_str().unwrap().as_ptr(),pointer);assert!(writer.take_source().is_none());crate::retirement::retire_value_cold(ValueRetirement::from_dictionary(original));close_original_writer(writer);
+    for cutoff in [0,1,64,4096] {let source:Dictionary=semio_framework_pack_json::from_json_str(&input,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut writer=semio_framework_pack_json::JsonWriteCursor::new(source);let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(4*1024*1024,&mut admitted);for _ in 0..cutoff{assert!(writer.step(1,&mut control,original_writer_grant(&writer,1)).unwrap().is_none());}close_original_writer(writer);}
     println!("[DEBUG] Same JSON writer borrowed original typed Dictionary text, turns={turns}, bytes={}",output.len());
 }

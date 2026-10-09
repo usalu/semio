@@ -1,0 +1,18 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "6cef2342e7cc4ee4396db9aa2deea357667cb3b7512aa6f71ffa14cc0bcc5c07"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "f945e28724dd5f927e1fa3b3bbd3947cfaa0d79ee6daa6904df681eb72063a26"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs",
+      "sha256": "b3592fb79d8dc9f96bece19a4d88cb4fb077517cda9b16e131f05fd4ad0a931b"
+    }
+  ]
+}

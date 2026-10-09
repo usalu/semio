@@ -49,13 +49,8 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountAndNotify {
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set transaction count and notify to {}", self.value), &format!("Transaktionsanzahl und Benachrichtigung auf {} setzen", self.value))
     }
-    fn foreign_steps(&self, _: &TxnSnapshot) -> Vec<protocol::ForeignStep> {
-        vec![protocol::ForeignStep {
-            target: protocol::ForeignTarget { artifact_id: "peer-doc".to_string(), artifact_kind: "s.testkit.txn".to_string(), dialect: None },
-            mutation_id: protocol::SchemaId("semio.testkit-txn/v1#notify".to_string()),
-            payload: Vec::new(),
-            label: "notify".to_string(),
-        }]
+    fn foreign_step_source<'a>(&'a self, _: &'a TxnSnapshot, index: usize) -> Result<Option<protocol::ForeignStepSource<'a>>, semio_framework_value::ValueError> {
+        Ok((index == 0).then_some(protocol::ForeignStepSource { artifact_id: "peer-doc", artifact_kind: "s.testkit.txn", dialect: None, mutation_id: "semio.testkit-txn/v1#notify", payload: &[], label: "notify" }))
     }
     fn may_emit_foreign_steps(&self) -> bool {
         true

@@ -1,0 +1,20 @@
+{
+  "epoch": "2026-10-09T14:45:20.964783+00:00",
+  "sourceCopies": false,
+  "actions": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\udce1\ufe0freplication/\ud83c\udfae\ufe0fmutation/\ud83c\udf10\ufe0fforeign/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "beforeSha256": "332935a656ab8c34d8f6cd2932f1aecfe28ecfdc17111c4ab044890d9b038ead",
+      "afterSha256": "34ea36b89970bc5e5a1d4c1a6931980ac106c0a9d2a3ac0506f543220aa66537",
+      "scope": "genuine original borrowed mutation producer regression, preserving payload/Ajv/grammar laws"
+    }
+  ],
+  "red": {
+    "session": 13276,
+    "nxExit": 1,
+    "duration": "1.4s",
+    "log": "\ud83d\uddd1\ufe0fgenerated/pub-foreign-borrowed-red.log",
+    "oracle": "Ajv/JSON/Buffer/TextEncoder and original leaf Rust grammar reached; original Mutation borrowed-source requirement failed",
+    "native": false
+  }
+}

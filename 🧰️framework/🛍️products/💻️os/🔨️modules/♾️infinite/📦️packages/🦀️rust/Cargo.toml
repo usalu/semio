@@ -87,5 +87,6 @@ wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window", "Request", "RequestInit", "RequestMode", "Response", "console"] }
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

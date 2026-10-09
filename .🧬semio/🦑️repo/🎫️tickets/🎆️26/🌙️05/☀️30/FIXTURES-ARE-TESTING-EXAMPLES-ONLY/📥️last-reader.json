@@ -1,0 +1,63 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
+      "sha256": null,
+      "present": false,
+      "matchesPrior": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "61ec2e7957d432cfa013321ee1aaf0b47ea02ef8398da641d37b5976b44024ff",
+      "present": true,
+      "matchesPrior": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧫️fixtures/🔣️.json",
+      "sha256": "be5fd4ba0f2b6421317a4b3ec8426c67d8921497b7e73122dd3eb8b437a77666",
+      "present": true,
+      "matchesPrior": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🟦️.ts",
+      "sha256": "91c22808102ec4ed1870e23da05d7e06e355890ae06f17d16b78ea9280447a7b",
+      "present": true,
+      "matchesPrior": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "sha256": "5f5f4939cbde5bac4f6194c5f9049b08eae948d21d78eb5a851d87a3c2000256",
+      "present": true,
+      "matchesPrior": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "sha256": "7e154ace576417c70629ee9862c742631bc82d3fad7206cfcc25a54e8047f9bf",
+      "present": true,
+      "matchesPrior": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+      "sha256": "032fb7c1ee75e599681b4dbb1f673977c4613774d1b779e83eab93b24ef3e238",
+      "present": true,
+      "matchesPrior": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧹️retirement/🦀️.rs",
+      "sha256": "a3e01e0d680150c4ddec8930182f922da69ca2dc6bdf6a5ec1b7653d4435dd9b",
+      "present": true,
+      "matchesPrior": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+      "sha256": "dcd870adae7cb166cafabf1c1e9b1fa8ed3f3af58f9ed246b7ef6eb136c13842",
+      "present": true,
+      "matchesPrior": false
+    }
+  ],
+  "readerSourceHash": "7a210115535e46e26ce593f68f2bd4ef84f7f276d304315ded2403999f266b8f",
+  "exampleHash": "e77cb7fb3535e9280be185feac2a25840ea24096aba22bb293f588b39d77cec7",
+  "plainCases": 40
+}

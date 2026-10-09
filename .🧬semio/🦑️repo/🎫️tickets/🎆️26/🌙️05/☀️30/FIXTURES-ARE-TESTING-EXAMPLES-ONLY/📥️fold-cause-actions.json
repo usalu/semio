@@ -1,0 +1,25 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧾️wire/♻️retirement/🦀️.rs",
+    "before": "266de9c6bd64a23aea8e4840c7671e79427470fb966aa68864b62c99a801abd9",
+    "after": "30865104d521f38b4267139075ea1024828d6a4db3117093c360c6568910dbf1",
+    "beforeBlock": "a96757a21f87ec7dc06331385ab35c3347f6f93f79f3cb18e1b46f23d88d3bdc",
+    "afterBlock": "ead41bb41ebd35ea06ac93cad64f2490f49c0f564a5c39d57c179a38baf32757"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs",
+    "before": "8c2c3e80f51f6f903eee0e42ac71f0edb16b215645c39dbd6d991eca729444f7",
+    "after": "a7ee1d31d7c6f7f3b70ee1b22f7171dbb90ebf7a995de7e783285d81b67af4b8",
+    "block": "Canonical borrowed cause demand/close exports"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs",
+    "before": "c96c910a1b3db4e3e2a5e0e73dd987a6b813bfa70e0cbbe53275e1e0b90eb50f",
+    "after": "52a65c54fd2b39af1a68551ec5e43e1ea572528deac6a50a2e7b4542df03c48f",
+    "blocks": [
+      "Duplicate error demand retired",
+      "Canonical borrowed cause axes/cleanup",
+      "Rejected remains observable until paid close"
+    ]
+  }
+]

@@ -9,10 +9,28 @@ pub enum GeometryStep {
 }
 /// 🔌️ One supplied geometry authority owns its retained jobs and handle claims until explicit close.
 pub trait GeometryPort: Send + Sync {
-    fn retain(&self, handles: &[String]);
-    fn tessellate_step(&self, handle: &str, tolerance: f64, units: usize) -> GeometryStep;
+    fn begin_retain(&mut self, handles: Vec<String>) -> Result<(), (ValueError, Vec<String>)>;
+    fn retain_terminal_is_empty(&self) -> bool;
+    fn next_retain_copy_byte_demand(&self) -> Result<usize, ValueError>;
+    fn next_retain_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError>;
+    fn next_retain_release_byte_demand(&self) -> Result<usize, ValueError>;
+    fn next_retain_depth_demand(&self) -> Result<usize, ValueError>;
+    fn retain_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn retain_step_progress(&self) -> RetainedCloneProgress;
+    fn next_tessellate_copy_byte_demand(&self, handle: &str, tolerance: f64) -> Result<usize, ValueError>;
+    fn next_tessellate_capacity_byte_demand(&self, handle: &str, tolerance: f64, copy: usize) -> Result<usize, ValueError>;
+    fn next_tessellate_release_byte_demand(&self, handle: &str, tolerance: f64) -> Result<usize, ValueError>;
+    fn next_tessellate_depth_demand(&self, handle: &str, tolerance: f64) -> Result<usize, ValueError>;
+    fn tessellate_step(&self, handle: &str, tolerance: f64, units: usize, grant: RetainedCloneGrant) -> Result<(GeometryStep, RetainedCloneProgress), ValueError>;
     fn dispose(&self, handle: &str) -> Result<(), String>;
-    fn cancel(&self) -> usize;
+    fn begin_cancel(&mut self) -> Result<(), ValueError>;
+    fn cancel_terminal_is_empty(&self) -> bool;
+    fn next_cancel_copy_byte_demand(&self) -> Result<usize, ValueError>;
+    fn next_cancel_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError>;
+    fn next_cancel_release_byte_demand(&self) -> Result<usize, ValueError>;
+    fn next_cancel_depth_demand(&self) -> Result<usize, ValueError>;
+    fn cancel_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn cancel_step_progress(&self) -> RetainedCloneProgress;
     fn begin_close(&self);
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
     fn terminal_is_empty(&self)->bool;

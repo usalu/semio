@@ -1,0 +1,21 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "a50ffcb4e6edd2a25cdca6a54f33d382e651ee17f218759485d220ecea35b50f",
+    "afterSha256": "97cc481e7fc3d3f3682449318f5ae2dc6ffc013bc0b56f42730f2a9121ce1ede",
+    "qualification": "Original Flow Widget/Synapse payload contract admission and real Graphlib/JSONPatch oracles preserved, no whole-corpus validator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+    "action": "remove",
+    "beforeSha256": "644b9bd1ba1664857f5e5801a72b43331abf55fa3dfc17fd6fbf74e8d40586e9",
+    "afterSha256": null,
+    "qualification": "Actual cases/expectedIds whole testing corpus authority retired"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema",
+    "action": "remove-empty-directory",
+    "qualification": "Exact empty retired testing authority facet rmdir guard"
+  }
+]

@@ -1,0 +1,9 @@
+# Original Surface Writer Integration
+
+Socket native47419 ended1 on the original SceneDecodeCursor stage13 writer.step missing its current RetainedCloneGrant, before any Socket assertion. Root preserves the original writer under Owned, original NativeEncodeContinuation, input source and output/scaffold custody.
+
+Stage13 now quotes the actual current normal_step_demands, supplies one internally quoted turn with all five independent currencies, invokes the actual original writer once and checks its real normal_step_progress. Nested scoped_maximum restores the original controller ceiling before pause while preserving cumulative charges. The actual born-byte delta settles into the original SceneDecodeCursor admission. Error paths preserve original writer and resumed continuation for its existing explicit close path; no UnsupportedOwner or ordinary-drop substitute is introduced.
+
+Original normal advance API still exposes maximum_units and cumulative storage, not external five-currency normal grants. Internal exact admission corrects this prerequisite but does not qualify that separate interface frontier. Original seven neutral Scene laws include complete embedded JSON/Serde comparison, original input identity, actual heap receipts, cancellation, exact/one-short cumulative limits and malformed carriers.
+
+Surface20987 exited0: seven original Native laws passed,216 skipped, through the exact existing package test-scene-wire-native and current preparation/policy. Actual [DEBUG] receipts conserve original wire and typed owners, eight embedded output scaffolds, funded cancellation, and positive one-short admission; independent Serde output comparisons passed. This verifies the original Surface writer prerequisite only; it is not a universal artifact census or an externally funded five-axis normal interface receipt.

@@ -4,7 +4,7 @@ use super::*;
 const FLOW_VCS_PRODUCTION_LEDGER: &str = include_str!("../../🧫️fixtures/📊️.tsv");
 
 fn bridge_budget() -> AbiWorkBudget {
-    AbiWorkBudget { byte_credit: 4_096, now_ms: 0, deadline_ms: Some(8), cancelled: false, interrupted: false }
+    AbiWorkBudget { byte_credit: 4_096, retained:semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:u32::MAX as usize,maximum_release_bytes:u32::MAX as usize,maximum_depth:4096}, now_ms: 0, deadline_ms: Some(8), cancelled: false, interrupted: false }
 }
 
 fn bridge_request(operation: u16, request: u64, generation: u32, bytes: Vec<u8>) -> AbiMessage {
@@ -53,7 +53,7 @@ fn close_domain(domain: &mut FlowDomainAdapter) {
     let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap();
     domain.begin_close();
     for _ in 0..fixture["close"]["maximumTurns"].as_u64().unwrap() {
-        if domain.close_step(bridge_budget()).unwrap() {
+        if matches!(domain.close_step(bridge_budget()).unwrap(),RetainedCloneStep::Complete(_)) {
             assert!(domain.terminal_is_empty());
             return;
         }
@@ -120,20 +120,20 @@ fn linear_memory_close_preserves_the_exact_retained_event_until_delivery_and_ack
     std::thread::spawn(|| {
         let mut bytes = vec![0; 4096];
         BRIDGE.with(|bridge| bridge.borrow_mut().try_send(bridge_request(protocol::FLOW_OPERATION_OPEN, 1, 1, Vec::new()), bridge_budget()).unwrap());
-        let length = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), bytes.len(), 4096, 0, 8) };
+        let length = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), bytes.len(), 4096, 1, 4096, u32::MAX as usize, u32::MAX as usize, 4096, 0, 8) };
         assert!(length > 0);
         let AbiMessage::Reply(reply) = decode_abi_message(&bytes[..length as usize]).unwrap() else { panic!("open reply") };
         let session = FlowPayloadReader::new(reply.bytes.as_slice()).handle().unwrap();
         let mut payload = FlowPayloadWriter::default();
         payload.handle(session);
         BRIDGE.with(|bridge| bridge.borrow_mut().try_send(bridge_request(2_518, 2, 1, payload.finish()), bridge_budget()).unwrap());
-        let needed = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), 1, 4096, 0, 8) };
+        let needed = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), 1, 4096, 1, 4096, u32::MAX as usize, u32::MAX as usize, 4096, 0, 8) };
         assert!(needed > 1);
         let expected = RETAINED.with(|retained| retained.borrow().as_ref().unwrap().bytes.clone());
         flow_bridge_begin_close();
         assert_eq!(flow_bridge_terminal_is_empty(), 0);
         RETAINED.with(|retained| assert_eq!(retained.borrow().as_ref().unwrap().bytes, expected));
-        let delivered = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), bytes.len(), 4096, 0, 8) };
+        let delivered = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), bytes.len(), 4096, 1, 4096, u32::MAX as usize, u32::MAX as usize, 4096, 0, 8) };
         assert_eq!(delivered, needed);
         assert_eq!(&bytes[..delivered as usize], expected);
         let AbiMessage::Event(event) = decode_abi_message(&expected).unwrap() else { panic!("retained event") };
@@ -142,7 +142,7 @@ fn linear_memory_close_preserves_the_exact_retained_event_until_delivery_and_ack
             if flow_bridge_terminal_is_empty() == 1 {
                 break;
             }
-            let length = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), bytes.len(), 4096, 0, 8) };
+            let length = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), bytes.len(), 4096, 1, 4096, u32::MAX as usize, u32::MAX as usize, 4096, 0, 8) };
             if length > 0 {
                 if let AbiMessage::Event(event) = decode_abi_message(&bytes[..length as usize]).unwrap() {
                     BRIDGE.with(|bridge| acknowledge_bridge_event(&mut bridge.borrow_mut(), &event));
@@ -180,24 +180,30 @@ fn surface_status_payload(surface: u32, generation: u32, status: &str) -> Vec<u8
 }
 
 fn run(domain: &mut FlowDomainAdapter, operation: u16, payload: Vec<u8>) -> Result<Vec<u8>, FlowFailure> {
-    let arguments = FlowArguments::preflight(operation, payload)?;
+    let mut arguments = FlowArguments::preflight(operation, payload)?;
     let mut action = flow_action(operation, &arguments).ok_or_else(|| abi_failure(AbiErrorCode::UnknownOperation))?;
-    loop {
-        match action.advance(domain, &arguments, AbiWorkBudget::credits(1)) {
-            FlowFeatureStep::Complete(output) => return Ok(output),
-            FlowFeatureStep::Failed(failure) => return Err(failure),
+    action.bind_admission(FlowFeatureAdmission{session:semio_framework::abi::AbiHandle::try_new(1,1).unwrap(),request_generation:1})?;
+    let budget=if matches!(operation,2514|2515|2518|2519|2525|2528|2520|2522|2523){let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();dag_budget(&fixture,1)}else{AbiWorkBudget::credits(1)};
+    let result=loop {
+        match action.advance(domain, &arguments, budget) {
+            FlowFeatureStep::Complete(output) => break Ok(output),
+            FlowFeatureStep::Failed(failure) => break Err(failure),
             FlowFeatureStep::Yield | FlowFeatureStep::Progress { .. } | FlowFeatureStep::Checkpoint(_) | FlowFeatureStep::Preview(_) | FlowFeatureStep::SurfaceStatus(_) | FlowFeatureStep::RetainedPage(_) => {}
         }
-    }
+    };
+    for _ in 0..100000{if action.close_step(&mut arguments,budget)?{return result}}
+    Err(abi_failure(AbiErrorCode::Busy))
 }
 
 #[test]
-fn malformed_omitted_and_unknown_selection_data_remain_owned() {
+fn malformed_omitted_and_unknown_selection_data_refuse_before_host_changes() {
     let mut domain = FlowDomainAdapter::default();
+    domain.host.set_selection(&["slider".into()]);
+    let accepted=domain.host.selected_widget_ids();
     for json in ["{", "{}", r#"{"widgets":[],"futureOptional":true}"#] {
-        run(&mut domain, 2_525, text_payload(json)).unwrap();
+        assert!(run(&mut domain, 2_525, text_payload(json)).is_err());
+        assert_eq!(domain.host.selected_widget_ids(),accepted);
     }
-    assert_eq!(domain.host.selected_widget_ids_json(), "[]");
     close_domain(&mut domain);
 }
 
@@ -349,7 +355,7 @@ fn flow_session_text(session: semio_framework::abi::AbiHandle, text: &str) -> Ve
 /// Counted at the bridge rather than at the feature because the event is the unit that matters: every
 /// `Progress` is its own ABI message the host has to poll, decode and reply to.
 fn document_json_transfer(byte_credit: usize) -> (usize, Vec<u8>) {
-    let budget = AbiWorkBudget { byte_credit, now_ms: 0, deadline_ms: None, cancelled: false, interrupted: false };
+    let budget = AbiWorkBudget { byte_credit, retained:semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:u32::MAX as usize,maximum_release_bytes:u32::MAX as usize,maximum_depth:4096}, now_ms: 0, deadline_ms: None, cancelled: false, interrupted: false };
     let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
     let session = flow_open_session(&mut bridge, budget);
 
@@ -503,8 +509,8 @@ fn cancellation_prevents_the_bound_domain_action() {
     let mut feature = FlowDomainAdapter::start_feature(Rc::clone(&domain), admission, 2_501, writer.finish()).unwrap();
     assert!(matches!(feature.step(AbiWorkBudget::credits(64)), FlowFeatureStep::Progress { completed: 0, total: 3 }));
     feature.cancel(AbiWorkBudget::credits(64)).unwrap();
-    assert!(!feature.close_step(AbiWorkBudget::credits(64)).unwrap());
-    while !feature.close_step(AbiWorkBudget::credits(64)).unwrap() {}
+    assert!(!matches!(feature.close_step(AbiWorkBudget::credits(64)).unwrap(),RetainedCloneStep::Complete(_)));
+    while !matches!(feature.close_step(AbiWorkBudget::credits(64)).unwrap(),RetainedCloneStep::Complete(_)) {}
     drop(feature);
     close_domain(&mut domain.borrow_mut());
 }
@@ -687,7 +693,7 @@ fn selected_widget_query_uses_census_and_multiple_cancellable_grants() {
         }
     };
     assert!(grants > output.len() + 4);
-    assert_eq!(output, domain.host.selected_widget_ids_json().into_bytes());
+    assert_eq!(output,serde_json::to_vec(&domain.host.selected_widget_ids()).unwrap());
 
     let mut action = flow_action(2_518, &arguments).unwrap();
     assert!(matches!(action.advance(&mut domain, &arguments, AbiWorkBudget::credits(1)), FlowFeatureStep::Progress { .. }));
@@ -788,7 +794,7 @@ fn close_ladder_census(document_json: &str) -> Vec<(String, usize)> {
             Some((held, count)) if *held == phase => *count += 1,
             _ => census.push((phase, 1)),
         }
-        if domain.close_step(bridge_budget()).unwrap() {
+        if matches!(domain.close_step(bridge_budget()).unwrap(),RetainedCloneStep::Complete(_)) {
             assert!(domain.terminal_is_empty(), "a complete close must be terminal at turn {turn}");
             return census;
         }
@@ -812,3 +818,108 @@ fn the_retirement_ladder_names_every_turn_it_spends() {
 }
 
 //#endregion 🪜️RetirementLadder
+
+/// 🎟️ Preserves every supplied ownership axis through the original ABI to VCS boundary.
+#[test]
+fn original_flow_boundary_preserves_independent_retained_wallet(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌉️abi/🧫️fixtures/🎟️retained-grant/🔣️.json")).unwrap();
+ for row in fixture["cases"].as_array().unwrap(){
+  let value=&row["retained"];
+  let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize};
+  let budget=AbiWorkBudget{byte_credit:fixture["byteCredit"].as_u64().unwrap()as usize,retained:grant,now_ms:fixture["nowMs"].as_u64().unwrap(),deadline_ms:fixture["deadlineMs"].as_u64(),cancelled:false,interrupted:false};
+  let actual=flow_vcs_grant(budget);assert_eq!(actual.retained,grant);assert_eq!(actual.bytes,budget.byte_credit);assert_eq!(actual.now_milliseconds,budget.now_ms);
+  let reference:Vec<usize>=row["expectedArguments"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as usize).collect();
+  assert_eq!([actual.retained.maximum_items,actual.retained.maximum_copy_bytes,actual.retained.maximum_capacity_bytes,actual.retained.maximum_release_bytes,actual.retained.maximum_depth],reference.as_slice());
+ }
+ assert_eq!(AbiWorkBudget::credits(4096).retained,semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0});
+ println!("[DEBUG] original Flow ABI/VCS independent ownership wallets=7 transport-only allowance mints zero ownership");
+}
+
+fn dag_budget(fixture:&Value,byte_credit:usize)->AbiWorkBudget{let mut budget=AbiWorkBudget::credits(byte_credit);budget.retained=serde_json::from_value(fixture["retainedGrant"].clone()).unwrap();budget}
+
+#[test]
+fn original_dag_poll_spends_each_independent_retained_grant_once(){
+    let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();let mut polls=0;
+    for credit in fixture["workGrants"].as_array().unwrap().iter().filter_map(Value::as_u64).filter(|credit|*credit!=0){for operation in fixture["pollOperations"].as_array().unwrap().iter().filter_map(Value::as_u64){let operation=operation as u16;
+        let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));domain.borrow_mut().host.set_selection_domains(&crate::infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
+        let input=operation==2525;let expected=if input{fixture["replacement"].clone()}else{let domain=domain.borrow();match operation{2518=>serde_json::to_value(domain.host.selected_widget_ids()).unwrap(),2519=>serde_json::to_value(domain.host.dag.selected_edge_ids()).unwrap(),2520=>serde_json::to_value(domain.host.dag.selection_domains()).unwrap(),2522=>serde_json::to_value(domain.host.dag.hover_facts()).unwrap(),2523=>serde_json::to_value(domain.host.dag.selected_channels()).unwrap(),_=>unreachable!()}};let payload=if input{text_payload(&serde_json::to_string(&expected).unwrap())}else{Vec::new()};let arguments=FlowArguments::preflight(operation,payload).unwrap();let observer=Rc::new(FlowOperationObserver::new());observer.bound.set(true);let admission=FlowFeatureAdmission{session:semio_framework::abi::AbiHandle::try_new(1,1).unwrap(),request_generation:1};let mut action=flow_action(operation,&arguments).unwrap();action.bind_admission(admission).unwrap();action.bind_observer(observer.clone());let mut feature=FlowProgramFeature{domain:domain.clone(),arguments,action,observer,admission,operation,dag_read_lease:None,terminal_failure:None};let budget=dag_budget(&fixture,credit as usize);let mut complete=false;
+        for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){
+            let before=feature.action.retained_receipt().unwrap();let step=feature.step(budget);let after=feature.action.retained_receipt().unwrap();assert!(after.copied_items-before.copied_items<=budget.retained.maximum_items);assert!(after.copied_bytes-before.copied_bytes<=budget.retained.maximum_copy_bytes);assert!(after.retained_capacity_bytes-before.retained_capacity_bytes<=budget.retained.maximum_capacity_bytes);assert!(after.released_bytes-before.released_bytes<=budget.retained.maximum_release_bytes);polls+=1;
+            match step{FlowFeatureStep::Complete(bytes)=>{if input{assert!(bytes.is_empty());assert_eq!(serde_json::to_value(domain.borrow().host.dag.selection_domains()).unwrap(),expected)}else{assert_eq!(serde_json::from_slice::<Value>(&bytes).unwrap(),expected)}complete=true;break},FlowFeatureStep::Failed(failure)=>panic!("original retained poll {failure:?}"),_=>{}}
+        }
+        assert!(complete);let mut closed=false;for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){if matches!(feature.close_step(dag_budget(&fixture,1)).unwrap(),RetainedCloneStep::Complete(_)){closed=true;break}}assert!(closed);drop(feature);close_domain(&mut domain.borrow_mut());
+    }}
+    println!("[DEBUG] original production DAG poll independentRetainedCurrencies=true byteCredits=1,4096 grantSettledOnce=true independentSerde=true controlledClose=true polls={polls}");
+}
+
+#[test]
+fn admitted_dag_output_pins_the_original_source_and_control_releases_every_lease(){
+    let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();
+    let session=semio_framework::abi::AbiHandle::try_new(1,1).unwrap();
+    for operation in fixture["outputOperations"].as_array().unwrap(){
+        for refusal in fixture["terminalRefusals"].as_array().unwrap(){
+            let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));
+            domain.borrow_mut().host.set_selection_domains(&crate::infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
+            let original=domain.borrow().host.selected_widget_ids();
+            let mut output=FlowDomainAdapter::start_feature(Rc::clone(&domain),FlowFeatureAdmission{session,request_generation:1},operation.as_u64().unwrap()as u16,Vec::new()).unwrap();
+            assert!(matches!(output.step(dag_budget(&fixture,0)),FlowFeatureStep::Yield));
+            assert!(domain.borrow().dag_read_lease.upgrade().is_none());
+            assert!(matches!(output.step(dag_budget(&fixture,1)),FlowFeatureStep::Progress{..}));
+            assert!(domain.borrow().dag_read_lease.upgrade().unwrap().active.get());
+            let source=serde_json::to_string(&fixture["replacement"]).unwrap();
+            let mut mutation=FlowDomainAdapter::start_feature(Rc::clone(&domain),FlowFeatureAdmission{session,request_generation:2},2525,text_payload(&source)).unwrap();
+            assert!(matches!(mutation.step(dag_budget(&fixture,4096)),FlowFeatureStep::Yield));
+            assert_eq!(domain.borrow().host.selected_widget_ids(),original);
+            let mut budget=dag_budget(&fixture,1);
+            let expected=match refusal.as_str().unwrap(){
+                "cancelled"=>{output.cancel(budget).unwrap();AbiErrorCode::Cancelled},
+                "interrupted"=>{budget.interrupted=true;AbiErrorCode::Interrupted},
+                "deadline"=>{budget.deadline_ms=Some(0);AbiErrorCode::DeadlineExceeded},
+                "revoked"=>{domain.borrow().dag_read_lease.upgrade().unwrap().active.set(false);AbiErrorCode::StaleGeneration},
+                _=>unreachable!(),
+            };
+            assert!(matches!(output.step(budget),FlowFeatureStep::Failed(FlowFailure{code,..})if code==expected));
+            assert!(domain.borrow().dag_read_lease.upgrade().is_none_or(|lease|!lease.active.get()));
+            assert!(matches!(output.step(dag_budget(&fixture,1)),FlowFeatureStep::Failed(FlowFailure{code,..})if code==expected));
+            let mut completed=false;
+            for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){match mutation.step(dag_budget(&fixture,1)){FlowFeatureStep::Complete(bytes)=>{assert!(bytes.is_empty());completed=true;break},FlowFeatureStep::Failed(failure)=>panic!("admitted selection mutation {failure:?}"),_=>{}}}
+            assert!(completed);
+            assert!(domain.borrow().host.selected_widget_ids().is_empty());
+            for feature in [&mut output,&mut mutation]{let mut closed=false;for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){if matches!(feature.close_step(dag_budget(&fixture,1)).unwrap(),RetainedCloneStep::Complete(_)){closed=true;break}}assert!(closed)}
+            drop(output);drop(mutation);close_domain(&mut domain.borrow_mut());
+        }
+    }
+    println!("[DEBUG] production Flow DAG original source lease: outputFamilies=5 terminalFrontiers=4 competingMutationPinned=true zeroFuelPreserved=true independentSerde=true");
+}
+
+#[test]
+fn admitted_dag_original_outputs_match_independent_serde_under_pinned_single_unit_grants(){
+    let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();let session=semio_framework::abi::AbiHandle::try_new(1,1).unwrap();let mut grants=0;
+    for operation in fixture["outputOperations"].as_array().unwrap(){let operation=operation.as_u64().unwrap()as u16;let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));domain.borrow_mut().host.set_selection_domains(&crate::infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
+        let expected={let domain=domain.borrow();match operation{2518=>serde_json::to_vec(&domain.host.selected_widget_ids()).unwrap(),2519=>serde_json::to_vec(&domain.host.dag.selected_edge_ids()).unwrap(),2520=>serde_json::to_vec(&domain.host.dag.selection_domains()).unwrap(),2522=>serde_json::to_vec(&domain.host.dag.hover_facts()).unwrap(),2523=>serde_json::to_vec(&domain.host.dag.selected_channels()).unwrap(),_=>unreachable!()}};
+        let mut feature=FlowDomainAdapter::start_feature(Rc::clone(&domain),FlowFeatureAdmission{session,request_generation:1},operation,Vec::new()).unwrap();let mut completed=false;
+        for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){assert!(matches!(feature.step(dag_budget(&fixture,0)),FlowFeatureStep::Yield));grants+=1;match feature.step(dag_budget(&fixture,1)){FlowFeatureStep::Complete(bytes)=>{assert_eq!(serde_json::from_slice::<Value>(&bytes).unwrap(),serde_json::from_slice::<Value>(&expected).unwrap());completed=true;break},FlowFeatureStep::Failed(failure)=>panic!("original DAG output {failure:?}"),_=>{}}}
+        assert!(completed);assert!(domain.borrow().dag_read_lease.upgrade().is_none_or(|lease|!lease.active.get()));let mut closed=false;for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){if matches!(feature.close_step(dag_budget(&fixture,1)).unwrap(),RetainedCloneStep::Complete(_)){closed=true;break}}assert!(closed);drop(feature);close_domain(&mut domain.borrow_mut());
+    }
+    println!("[DEBUG] production Flow DAG original output independentSerde=true outputFamilies=5 singleUnitGrants={grants} zeroFuelPreserved=true leasesReleased=true");
+}
+
+/// 🪜️ One original domain close turn spends one incoming full wallet and preserves its actual receipt.
+#[test]
+fn flow_original_domain_close_spends_one_wallet_and_reports_actual_effects(){
+ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+ semio_framework_artifact_flow_flow::flow_extension_registry_generation();
+ for copy in [1,3,64]{
+  let (mut domain,source)=observe(||{let mut domain=FlowDomainAdapter::default();domain.bind_session(semio_framework::abi::AbiHandle::try_new(1,1).unwrap());domain.frame_payload=String::with_capacity(4096);domain.frame_payload.push_str("original-frame");domain});
+  let original=domain.frame_payload.as_ptr();let source_bytes=source.requested_bytes-source.released_bytes;
+  let(_,heap)=observe(||domain.begin_close());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(domain.frame_retirement.as_ref().unwrap().original().unwrap().as_ptr(),original);
+  let(mut born,mut released,mut turns)=(0,0,0);
+  while !domain.terminal_is_empty(){
+   turns+=1;assert!(turns<1_048_576);let(demands,heap)=observe(||domain.next_close_demands(copy).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+   let budget=AbiWorkBudget{retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demands.capacity_bytes,maximum_release_bytes:demands.release_bytes,maximum_depth:demands.depth},..bridge_budget()};
+   let(step,heap)=observe(||domain.close_step(AbiWorkBudget{retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..budget.retained},..budget}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+   let(step,heap)=observe(||domain.close_step(budget).unwrap());assert!(step.progress().fits(budget.retained));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;
+  }
+  assert_eq!(released,source_bytes+born);let(_,heap)=observe(||drop(domain));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original domain fixedcopy={copy} source={source_bytes} born={born} released={released} turns={turns} oneWallet=true terminalDrop0");
+ }
+}

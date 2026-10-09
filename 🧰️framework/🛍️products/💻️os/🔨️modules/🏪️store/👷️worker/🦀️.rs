@@ -42,12 +42,12 @@ impl BackboneWorkerHost {
         let _ = self.pool.pump(0);
         let request = backbone_worker_wire::decode_request(bytes).map_err(|error| JsValue::from_str(&error))?;
         match request {
-            BackboneWorkerRequest::Open { document_id, client_instance_id, schema, bindings, watch_external, actor } => {
+            BackboneWorkerRequest::Open { document_id, client_instance_id, schema, bindings, watch_external, actor, actor_identity_grant } => {
                 let Some(client_instance_id) = client_instance_id else { return Ok(()) };
                 if self.documents.get(&document_id).is_some_and(|entry| entry.client_instance_id == client_instance_id) {
                     return Ok(());
                 }
-                let config = crate::os_store::sync::ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: watch_external.unwrap_or(true), actor };
+                let config = crate::os_store::sync::ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: watch_external.unwrap_or(true), actor, actor_identity_grant };
                 if let Some(previous) = self.documents.remove(&document_id) {
                     self.host.close_key(&previous.document_key);
                 }

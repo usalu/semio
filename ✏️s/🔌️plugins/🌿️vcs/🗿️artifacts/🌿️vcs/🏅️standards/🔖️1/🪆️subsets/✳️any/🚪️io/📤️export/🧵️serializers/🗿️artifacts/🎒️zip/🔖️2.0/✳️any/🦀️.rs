@@ -13,7 +13,7 @@ pub struct VcsIntoZip;
 impl Serializer<VcsSnapshot> for VcsIntoZip {
     const INTO: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &VcsSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &VcsSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let error = |message: String| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("VcsIntoZip: {message}")));
         let archive = decode_zip(&encode_document_archive(from).map_err(|e| error(e.to_string()))?).map_err(|e| error(e.to_string()))?;
         Ok(IoOutcome::clean(IoPayload::Binary(store::ArtifactPack::encode_pack(&archive))))

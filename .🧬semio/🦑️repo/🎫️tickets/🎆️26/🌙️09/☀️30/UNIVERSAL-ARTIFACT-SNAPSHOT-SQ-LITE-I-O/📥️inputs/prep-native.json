@@ -1,0 +1,5 @@
+{
+  "command": "bun nx run @semio-tech/framework-os-kernel:test --skip-nx-cache --skip-remote-cache --excludeTaskDependencies -- long --lib --filter-expr \"test(snapshot_clone_preparation_birth_returns_original_request_before_domain_work)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+  "originalLaw": "snapshot_clone_preparation_birth_returns_original_request_before_domain_work",
+  "state": "demand-before-grant-first-fix"
+}

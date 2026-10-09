@@ -1,0 +1,45 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "981c60ab467d3ca270aa4b10925e13426211a7416795276000998c0bfb494d40",
+      "name": "@semio-tech/framework-plugin-web",
+      "targetName": "test-lifecycle",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "inputs": [
+          "default"
+        ],
+        "options": {
+          "command": "bun ./📜️script.ts test lifecycle"
+        }
+      },
+      "presentInNamedInputs": false,
+      "nonArrayNamedInputs": []
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "0e84b6cbcc1e820b8dbe6a45235e0556c59250817d12d26d33cfd0ae58ae07e1",
+      "name": "@semio-tech/repo-lib",
+      "targetName": "schema-read-inventory",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "inputs": [
+          "sharedGlobals",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*"
+        ],
+        "options": {
+          "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+          "command": "bun ./📜️script.ts schema-read-inventory",
+          "forwardAllArgs": true
+        }
+      },
+      "presentInNamedInputs": false,
+      "nonArrayNamedInputs": []
+    }
+  ]
+}

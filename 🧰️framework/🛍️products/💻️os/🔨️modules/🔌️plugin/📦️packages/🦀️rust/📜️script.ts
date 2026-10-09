@@ -420,13 +420,20 @@ class SnapshotSqliteRefusalScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   const [mode,...rest]=segments;
   if(rest.length || !["source","native","host-native"].includes(mode))throw Error("test-snapshot-sqlite-refusal requires source, native or host-native");
-  if(mode!=="source"){
-   await runRepositoryCargoTests([mode==="native"?"semio-framework-plugin":"semio-framework-plugin-host"],this.repoRoot,["--lib","sqlite_snapshot_guest_refusal_"]);
+  if(mode==="host-native"){
+   const receipts=await runRepositoryExactCargoLaws({cwd:this.repoRoot,env:process.env,groups:[{package:"semio-framework-plugin-host",target:{kind:"lib"},laws:["sqlite_refusal_tests::sqlite_snapshot_guest_refusal_host_preserves_causes_diagnostics_and_actual_vm_cancellation","snapshot_call::metadata::tests::original_snapshot_scalar_metadata_borrows_actual_json_without_heap","snapshot_call::metadata::tests::original_snapshot_scalar_metadata_cancellation_keeps_source_and_ceiling","operation::input::tests::original_snapshot_input_cancellation_retains_actual_json_backing","snapshot_call::tests::original_snapshot_pending_fuel_preserves_original_completed_ceiling"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR??nextestArtifactLocation(this.repoRoot).directory,progress(event){console.log(`[DEBUG] original snapshot host owner ${event.stage}: ${event.law??""}`);}});
+   console.log(`[DEBUG] original snapshot host owner receipts=${receipts.length}`);
+   return;
+  }
+  if(mode==="native"){
+   await runRepositoryCargoTests(["semio-framework-plugin"],this.repoRoot,["--lib","sqlite_snapshot_guest_refusal_"]);
    return;
   }
   const {runBudgetedTestCommand}=await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts");
   const {testLevelBudgetMs}=await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,["test",resolve(this.root,"../../🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+  const source=resolve(this.root,"../../🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }
 }
 
@@ -466,14 +473,96 @@ class WindowMutationScript extends BundleScript{
   console.log(`[DEBUG] window-mutation nativeReceipts=${receipts.length}`);
  }
 }
+/** 🗂️ Qualifies original paged window registry order and independently funded retirement. */
+class WindowRegistryScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!["source","native"].includes(segments[0]))throw Error("test-window-registry requires source or native");
+  if(segments[0]==="native"){
+   await runRepositoryCargoTests(["semio-framework-plugin"],this.repoRoot,["--lib","window_config_paged_registry","--","--nocapture"]);
+   return;
+  }
+  const file=resolve(this.root,"../../🪟️window/🎚️config/🗂️registry/🧪️tests/🟦️.ts");
+  await runRepositoryTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],{cwd:this.repoRoot,budgetMs:120000});
+  await runRepositoryTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:120000});
+ }
+}
+
+/** 👷️ Drives the original reserved job's complete independent currency law. */
+class ReservedRetirementScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!["source","native"].includes(segments[0]))throw Error("test-reserved-retirement requires source or native");
+  const {runBudgetedTestCommand}=await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts");
+  const original=resolve(this.root,"../../👷️job/🧾️bytes/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",original],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,["test",original],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
+  if(segments[0]==="source")return;
+  if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+  const receipts=await runRepositoryExactCargoLaws({cwd:this.root,env:process.env,groups:[{package:"semio-framework-plugin",target:{kind:"lib"},laws:["app::plugin_builder_contract_tests::original_reserved_job_currency_law_retains_spare_backing_until_exact_release"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,buildBudgetMs:3600000,listBudgetMs:60000,lawBudgetMs:120000});
+  console.log(`[DEBUG] original reserved job native receipts=${receipts.length}`);
+ }
+}
+
+/** 🏇️ Executes the original runtime scheduling, acknowledgement and terminal witnesses in place. */
+class MountedReceivingScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-mounted-receiving accepts no arguments");
+    const artifactDir = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!artifactDir) throw Error("mounted receiving requires explicit owned artifact storage");
+    const abort = new AbortController();
+    const stop = () => abort.abort();
+    process.once("SIGINT", stop); process.once("SIGTERM", stop);
+    try {
+      const receipts = await runRepositoryExactCargoLaws({
+        cwd: this.root, env: process.env, nativeEnv: { RUST_MIN_STACK: "268435456" }, artifactDir,
+        buildBudgetMs: 300000, listBudgetMs: 60000, lawBudgetMs: 60000, cancelled: () => abort.signal.aborted,
+        groups: [{ package: "semio-framework-plugin", target: { kind: "lib" }, cargoArgs: ["--offline"], laws: [
+          "component::cooperative_pump_tests::cooperative_maintenance_live_host_revisits_queued_owner",
+          "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_does_not_publish_terminal_before_watchdog",
+          "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_deadline_resume_never_reenters_completed_work",
+          "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_late_physical_step_retains_its_exact_outcome",
+          "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_deadline_submit_refusal_preserves_candidate",
+          "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward_authority",
+          "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_fault_outcome_dominates_complete_progress",
+          "component::reactor::pending::issued_receipt_tests::reactor_issued_patch_ack_and_rejection_match_neutral_exact_tuple",
+          "component::reactor::pending::issued_receipt_tests::reactor_issued_parallel_patch_slots_and_duplicate_ack_remain_independent",
+          "component::reactor::pending::issued_receipt_tests::reactor_uncommitted_patch_handback_preserves_exact_slot_and_retry",
+          "component::reactor::pending::issued_receipt_tests::reactor_acknowledged_patch_slots_retire_without_instance_close",
+          "component::plugin_runtime::plugin_builder_contract_tests::a_spawned_task_awaits_a_real_request_and_its_resume_mutates_the_store_under_the_original_meta",
+          "component::plugin_runtime::plugin_builder_contract_tests::task_admission_defers_the_user_factory_until_actor_execution",
+          "component::plugin_runtime::plugin_builder_contract_tests::spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it",
+          "component::plugin_runtime::plugin_builder_contract_tests::key_dedupe_cancels_the_previously_live_task_under_the_same_key",
+          "component::plugin_runtime::plugin_builder_contract_tests::instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot",
+          "component::plugin_runtime::plugin_builder_contract_tests::checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume"
+        ] }],
+        progress(event) { console.log(`[DEBUG] mounted-receiving ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }
+      });
+      for (const receipt of receipts) console.log(`[DEBUG] mounted-receiving ${JSON.stringify(receipt)}`);
+    } finally { process.removeListener("SIGINT", stop); process.removeListener("SIGTERM", stop); }
+  }
+}
+
+/** 🧬️ Checks the original Window domain preparation fixture against independent SQLite semantics. */
+class WindowPreparationSourceScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==0)throw Error("test-window-preparation-source takes no arguments");
+  const file=resolve(this.root,"../../🪟️window/🎚️config/🧬️preparation/🧪️tests/🟦️.ts");
+  await runRepositoryTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],{cwd:this.repoRoot,budgetMs:120000});
+  await runRepositoryTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:120000});
+ }
+}
+
 const router = new ScriptRouter(import.meta.dir).register("test-window-mutation",WindowMutationScript).register("test-retained-raw",RetainedRawScript).register("test-retained-metadata",RetainedMetadataScript).register("test-snapshot-sqlite-refusal",SnapshotSqliteRefusalScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript).register("test-command-ingress-consumer",CommandIngressConsumerScript)
+  .register("test-window-registry",WindowRegistryScript)
+  .register("test-window-preparation-source",WindowPreparationSourceScript)
   .register("canonical-architecture", CanonicalArchitectureScript)
   .register("cooperative-host-check", CooperativeHostCheckScript)
   .register("document-backbone-binding-check", DocumentBackboneBindingCheckScript)
   .register("cold-document-pair-ingress-check", ColdDocumentPairIngressCheckScript)
   .register("guest-lifecycle-check", GuestLifecycleCheckScript)
+  .register("test-mounted-receiving", MountedReceivingScript)
   .register("check", CheckScript)
   .register("test", TestScript)
+  .register("test-reserved-retirement", ReservedRetirementScript)
   .register("test-composed-child-history-source", ComposedChildHistorySourceScript)
   .register("test-output-retirement-native", OutputRetirementNativeScript)
   .register("test-fixture-channel-interfaces", FixtureChannelInterfacesScript)

@@ -1,3 +1,4 @@
+use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress};
 #[cfg(target_arch = "wasm32")]
 extern crate semio_framework_async as wasm_bindgen_futures;
 #[cfg(test)]
@@ -107,6 +108,7 @@ mod generated_plugin_hosts;
 
 #[path = "../../../🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod scenes;
+use semio_framework_os_renderer_camera as camera_storage;
 
 #[path = "../../../🧱️elements/📐️Canvas2dHost/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub(crate) mod canvas2d_gumball;
@@ -162,6 +164,8 @@ mod runtime_mailbox_core;
 // docstring for exactly what moves and, more importantly, what still cannot.
 #[path = "../🧵️frame-job/🦀️.rs"]
 mod frame_job;
+#[path = "../../../🪙️authority/🖼️frame/🦀️.rs"]
+mod frame_authority;
 
 #[path = "../📐️surface-lane/🦀️.rs"]
 mod surface_lane;
@@ -3750,7 +3754,7 @@ impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob {
         let empty = semio_framework_job::RetainedCloneProgress::default();
         if self.probe.get_mut().is_none() { return InteractiveJobCloseStep::Complete { progress: empty }; }
         if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: empty }; }
-        if grant.maximum_depth == 0 { return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit); }
+        if grant.maximum_depth == 0 { return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }; }
         let mut handback = match self.handback.try_lock() {
             Ok(handback) => handback,
             Err(std::sync::TryLockError::WouldBlock) => return InteractiveJobCloseStep::Blocked,
@@ -3866,9 +3870,11 @@ impl RendererAssetDecodeSession {
             }
         }
         if let Some(rejected) = self.rejected.as_mut() {
-            let grant = match rejected.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) { Ok(grant) => grant, Err(_) => { self.fault = Some("original rejected job close demand refused"); return false; } };
+            let demand = match rejected.retirement_demands(ui_contract::UI_WORKER_RETIREMENT_POLICY.maximum_copy_bytes) { Ok(demand) => demand, Err(_) => { self.fault = Some("original rejected job close demand refused"); return false; } };
+            if !ui_contract::ui_worker_retirement_permits(demand) { self.fault = Some("original worker owner exceeds fixed retirement policy"); return false; }
+            let grant = ui_contract::UI_WORKER_RETIREMENT_POLICY;
             let step = rejected.close_step(grant).admit(grant, rejected.terminal_is_empty());
-            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused(_)) { self.fault = Some("original rejected job close receipt refused"); return false; }
+            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused { .. }) { self.fault = Some("original rejected job close receipt refused"); return false; }
             if rejected.terminal_is_empty() {
                 self.rejected = None;
             }
@@ -3949,7 +3955,9 @@ impl RendererAssetDecodeSession {
                 }
             }
             WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty => {
-                let grant = match session.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) { Ok(grant) => grant, Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => return false, Err(_) => { self.fault = Some("original worker job close demand refused"); return false; } };
+                let demand = match session.retirement_demands(ui_contract::UI_WORKER_RETIREMENT_POLICY.maximum_copy_bytes) { Ok(demand) => demand, Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => return false, Err(_) => { self.fault = Some("original worker job close demand refused"); return false; } };
+                if !ui_contract::ui_worker_retirement_permits(demand) { self.fault = Some("original worker owner exceeds fixed retirement policy"); return false; }
+                let grant = ui_contract::UI_WORKER_RETIREMENT_POLICY;
             let step = session.close_step(grant);
             if !step.progress().fits(grant) || matches!(step, semio_framework_job::WorkerJobCloseStep::Refused(_)) { self.fault = Some("original worker job close receipt refused"); return false; }
                 if session.terminal_is_empty() {
@@ -7646,11 +7654,11 @@ pub(crate) mod kernel_runtime {
         ///
         /// 🧵️ P1e: the injected process-wide pool (`crate::renderer_worker_pool`), never a pool this
         /// type mints for itself — see `ParallelRuntime::new`'s own doc.
-        async fn new(request_queue: Arc<KernelRequestQueue>) -> Self {
+        async fn new(request_queue: Arc<KernelRequestQueue>, identity_policy:semio_framework_plugin_host::shard::ShardIdentityPolicy) -> Self {
             let guest_runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new()));
             let pool = Arc::new(crate::renderer_worker_pool());
             let worker_count = u16::try_from(pool.worker_count()).unwrap_or(u16::MAX);
-            let runtime = crate::parallel_runtime::ParallelRuntime::new(pool, guest_runtime.clone(), native_shard_count(), 2, 64).await;
+            let runtime = crate::parallel_runtime::ParallelRuntime::new(pool, guest_runtime.clone(), native_shard_count(), 2, 64,|_|{let original_queue=Arc::clone(&request_queue);semio_framework_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let queue=Arc::clone(&original_queue);Box::new(move |_|!queue.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing)})}).await;
             Self {
                 request_queue,
                 guest_runtime,
@@ -9778,7 +9786,8 @@ pub(crate) mod kernel_runtime {
     }
 
     async fn run_kernel_pool(queue: Arc<KernelRequestQueue>) {
-        let mut state = KernelPoolState::new(queue.clone()).await;
+        let identity_policy=semio_framework_pack_json::from_json_str(include_str!("../../../../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored native shard identity policy");
+        let mut state = KernelPoolState::new(queue.clone(),identity_policy).await;
         loop {
             if state.command_maintenance_pending() {
                 let _ = state.command_maintenance_step();
@@ -10054,7 +10063,7 @@ pub mod scale_bench {
         async fn new(runtime: Arc<GuestRuntimes>, shard_count: u16) -> Self {
             let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
             let pool = Arc::new(semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores)));
-            let runtime = super::parallel_runtime::ParallelRuntime::new(pool, runtime, shard_count.max(1), 0, 64).await;
+            let runtime = super::parallel_runtime::ParallelRuntime::new(pool, runtime, shard_count.max(1), 0, 64,{let policy=semio_framework_pack_json::from_json_str(include_str!("../../../../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored benchmark shard identity policy");move |_|semio_framework_plugin_host::shard::native_identity_issuer(policy,|_|Box::new(|_|true))}).await;
             Self { runtime, budgets: HashMap::new(), seq: 0, ordinals: HashMap::new(), now_ms: 0, pending: Vec::new() }
         }
 
@@ -15083,22 +15092,22 @@ impl AppRuntime {
 const FRAME_ENGINE_PACKET_CAPACITY: usize = 256;
 
 struct FrameEnginePackets {
-    slots: Box<[Option<engine_canvas::EngineCanvasPacket>; FRAME_ENGINE_PACKET_CAPACITY]>,
+    slots: Option<Box<[Option<engine_canvas::EngineCanvasPacket>; FRAME_ENGINE_PACKET_CAPACITY]>>,
     len: usize,
 }
 
 impl Default for FrameEnginePackets {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), len: 0 }
+        Self { slots: Some(semio_framework_async::boxed_fixed_slots(|| None)), len: 0 }
     }
 }
 
 impl FrameEnginePackets {
     fn try_push(&mut self, packet: engine_canvas::EngineCanvasPacket) -> Result<(), engine_canvas::EngineCanvasPacket> {
-        if self.len == FRAME_ENGINE_PACKET_CAPACITY {
+        if self.len == FRAME_ENGINE_PACKET_CAPACITY || self.slots.is_none() {
             return Err(packet);
         }
-        self.slots[self.len] = Some(packet);
+        self.slots.as_mut().unwrap()[self.len] = Some(packet);
         self.len += 1;
         Ok(())
     }
@@ -15106,23 +15115,46 @@ impl FrameEnginePackets {
     fn pop(&mut self) -> Option<engine_canvas::EngineCanvasPacket> {
         let index = self.len.checked_sub(1)?;
         self.len = index;
-        self.slots[index].take()
+        self.slots.as_mut()?.get_mut(index)?.take()
     }
 
     fn last_mut(&mut self) -> Option<&mut engine_canvas::EngineCanvasPacket> {
-        self.len.checked_sub(1).and_then(|index| self.slots[index].as_mut())
+        self.len.checked_sub(1).and_then(|index| self.slots.as_mut().and_then(|slots| slots[index].as_mut()))
     }
 
     fn get(&self, index: usize) -> Option<&engine_canvas::EngineCanvasPacket> {
-        (index < self.len).then(|| self.slots[index].as_ref()).flatten()
+        (index < self.len).then(|| self.slots.as_ref().and_then(|slots| slots[index].as_ref())).flatten()
     }
 
     fn is_empty(&self) -> bool {
-        self.len == 0 && self.slots.iter().all(Option::is_none)
+        self.len == 0 && self.slots.as_ref().is_none_or(|slots| slots.iter().all(Option::is_none))
     }
+
+    fn terminal_is_empty(&self) -> bool { self.len == 0 && self.slots.is_none() }
+
+    /// 📏️ Quotes the original fixed array backing independently of its logical packet count.
+    fn backing_retirement_demands(&self) -> semio_framework_value::RetirementDemand {
+        if self.slots.is_none() || self.len != 0 { return Default::default(); }
+        semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Box<[Option<engine_canvas::EngineCanvasPacket>; FRAME_ENGINE_PACKET_CAPACITY]>>(), release_bytes: std::mem::size_of::<[Option<engine_canvas::EngineCanvasPacket>; FRAME_ENGINE_PACKET_CAPACITY]>(), depth: 1, ..Default::default() }
+    }
+
+    /// 🎟️ Releases only the actual empty original backing under the unchanged caller grant.
+    fn close_backing_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneProgress};
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return InteractiveJobCloseStep::Complete { progress: empty }; }
+        if self.len != 0 { return InteractiveJobCloseStep::Blocked; }
+        let demand = self.backing_retirement_demands();
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_release_bytes < demand.release_bytes { return InteractiveJobCloseStep::Pending { progress: empty }; }
+        if grant.maximum_depth == 0 { return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }; }
+        drop(self.slots.take());
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..empty } }
+    }
+
 }
 
 pub(crate) struct AppFrameBuild {
+    retained: semio_framework_job::RetainedCloneGrant,
     input: ui_wgpu::wgpu::PreparedRenderInput,
     input_candidate: Option<shell::PresentedInputCandidateWitness>,
     engine_packets: FrameEnginePackets,
@@ -15136,6 +15168,7 @@ pub(crate) struct AppFrameBuild {
 }
 
 struct AppFrameAfterChrome {
+    retained: semio_framework_job::RetainedCloneGrant,
     resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
     input_candidate: Option<shell::PresentedInputCandidateWitness>,
     upload_rejected: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
@@ -15149,6 +15182,7 @@ struct AppFrameAfterChrome {
 }
 
 struct FrameBuildCursor {
+    retained: semio_framework_job::RetainedCloneGrant,
     phase: FrameBuildPhase,
     retained_clock_index: usize,
     retained_clock_deadline: Option<f64>,
@@ -15213,8 +15247,9 @@ enum FrameBuildPhase {
 }
 
 impl FrameBuildCursor {
-    fn new(presentation_witness: RuntimePresentationWitness) -> Self {
+    fn new(presentation_witness: RuntimePresentationWitness, retained: semio_framework_job::RetainedCloneGrant) -> Self {
         Self {
+            retained,
             phase: FrameBuildPhase::Deferred,
             retained_clock_index: 0,
             retained_clock_deadline: None,
@@ -15257,7 +15292,7 @@ impl FrameBuildCursor {
             return false;
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            if !retirement.close_step() || !retirement.terminal_is_empty() {
+            if !matches!(retirement.close_step(self.retained), InteractiveJobCloseStep::Complete { .. }) || !retirement.terminal_is_empty() {
                 return false;
             }
             self.retirement = None;
@@ -15344,7 +15379,7 @@ impl FrameBuildCursor {
         if let Some(input) = self.resource_input.take() {
             self.retirement = Some(
                 AppFrameBuild {
-                    generation: semio_framework_trace::Generation(input.preview_generation),
+                    retained: self.retained,                    generation: semio_framework_trace::Generation(input.preview_generation),
                     input,
                     input_candidate: self.input_candidate.take(),
                     engine_packets: std::mem::take(&mut self.engine_packets),
@@ -15442,7 +15477,7 @@ fn frame_prepared_abandonment_complete(grant: semio_framework_value::retained_cl
         InteractiveJobCloseStep::Complete { progress } if progress.fits(grant) => Ok(true),
         InteractiveJobCloseStep::Pending { progress } if progress.fits(grant) => Ok(false),
         InteractiveJobCloseStep::Blocked => Ok(false),
-        InteractiveJobCloseStep::Refused(_) => Err("prepared abandonment ownership refused"),
+        InteractiveJobCloseStep::Refused { .. } => Err("prepared abandonment ownership refused"),
         _ => Err("prepared abandonment receipt exceeded its grant"),
     }
 }
@@ -15477,6 +15512,7 @@ impl AppFrameAfterChrome {
                 return true;
             };
             let build = AppFrameBuild {
+                retained: self.retained,
                 generation: semio_framework_trace::Generation(input.preview_generation),
                 input,
                 input_candidate: self.input_candidate.take(),
@@ -15495,7 +15531,7 @@ impl AppFrameAfterChrome {
             return false;
         }
         let Some(retirement) = self.retirement.as_mut() else { return false };
-        if !retirement.close_step() || !retirement.terminal_is_empty() {
+        if !matches!(retirement.close_step(self.retained), InteractiveJobCloseStep::Complete { .. }) || !retirement.terminal_is_empty() {
             return false;
         }
         self.retirement = None;
@@ -15503,7 +15539,45 @@ impl AppFrameAfterChrome {
     }
 }
 
+/// 🚧️ Keeps an original child that has no declared physical retirement authority.
+fn frame_unpriced_child() -> InteractiveJobCloseStep {
+    InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::UnsupportedOwner, progress: RetainedCloneProgress::default() }
+}
+
+/// 🧾️ Carries the real child receipt without publishing the parent as empty.
+fn frame_child_step(step: InteractiveJobCloseStep, grant: RetainedCloneGrant, terminal: bool) -> InteractiveJobCloseStep {
+    match step.admit(grant, terminal) {
+        InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+        step => step,
+    }
+}
+
+/// 🪙️ Quotes the original inline owner header after its physical children are empty.
+fn frame_inline_gate(grant: RetainedCloneGrant, bytes: usize) -> Option<InteractiveJobCloseStep> {
+    if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes { return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }); }
+    if grant.maximum_depth == 0 { return Some(InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }); }
+    None
+}
+
+/// ♻️ Returns the actual paid inline header receipt independently of heap release.
+fn frame_inline_progress(bytes: usize) -> InteractiveJobCloseStep {
+    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..RetainedCloneProgress::default() } }
+}
+
+/// 🧵️ Preserves all currencies and refusal progress from the original worker owner.
+fn frame_worker_child_step(step: semio_framework_job::WorkerJobCloseStep, grant: RetainedCloneGrant, terminal: bool) -> InteractiveJobCloseStep {
+    use semio_framework_job::WorkerJobCloseStep;
+    let step = match step {
+        WorkerJobCloseStep::Pending { progress } => InteractiveJobCloseStep::Pending { progress },
+        WorkerJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Complete { progress },
+        WorkerJobCloseStep::Blocked => InteractiveJobCloseStep::Blocked,
+        WorkerJobCloseStep::Refused { kind, progress } => InteractiveJobCloseStep::Refused { kind, progress },
+    };
+    frame_child_step(step, grant, terminal)
+}
+
 pub(crate) struct FrameTransaction {
+    retained: semio_framework_job::RetainedCloneGrant,
     directives: Option<frame_job::FrameDirectives>,
     operation: semio_framework_trace::OperationId,
     generation: semio_framework_trace::Generation,
@@ -15513,7 +15587,7 @@ pub(crate) struct FrameTransaction {
     phase: AppFrameTransactionPhase,
     board_authority_cursor: usize,
     world3d_authority_cursor: usize,
-    scene_camera_cursor: scenes::SceneCameraDispatchCursor,
+    scene_camera_cursor: Option<scenes::SceneCameraDispatchCursor>,
     /// 🥽️ How many world surfaces this frame has already offered a `registerBrushMesh` step — a
     /// plain index into `world3d_states`, so the phase owns no closable authority.
     brush_mesh_cursor: usize,
@@ -15582,8 +15656,9 @@ enum AppFrameTransactionPhase {
 }
 
 impl FrameTransaction {
-    pub(crate) fn new(directives: frame_job::FrameDirectives, operation: semio_framework_trace::OperationId, generation: semio_framework_trace::Generation) -> Self {
+    pub(crate) fn new(directives: frame_job::FrameDirectives, operation: semio_framework_trace::OperationId, generation: semio_framework_trace::Generation, retained: semio_framework_job::RetainedCloneGrant) -> Self {
         Self {
+            retained,
             directives: Some(directives),
             operation,
             generation,
@@ -15593,7 +15668,7 @@ impl FrameTransaction {
             phase: AppFrameTransactionPhase::SceneCamera,
             board_authority_cursor: 0,
             world3d_authority_cursor: 0,
-            scene_camera_cursor: scenes::SceneCameraDispatchCursor::begin(app_now_ms()),
+            scene_camera_cursor: None,
             brush_mesh_cursor: 0,
             build_cursor: None,
             finish_cursor: None,
@@ -15726,7 +15801,32 @@ impl FrameTransaction {
             };
         }
         match self.phase {
-            AppFrameTransactionPhase::SceneCamera => match self.scene_camera_cursor.step() {
+            AppFrameTransactionPhase::SceneCamera => {
+                let grant = context.retained_grant();
+                if self.scene_camera_cursor.is_none() {
+                    match scenes::SceneCameraDispatchCursor::begin(app_now_ms(), grant) {
+                        Ok((cursor, progress)) => {
+                            self.scene_camera_cursor = Some(cursor);
+                            if context.consume_retained(progress).is_err() { runtime.record_frame_fault("camera original admission receipt exceeded frame authority"); return AppFrameTransactionStep::Fault; }
+                            return AppFrameTransactionStep::Pending;
+                        }
+                        Err(error) => {
+                            let _ = context.consume_retained(error.retained_progress());
+                            runtime.record_frame_fault("camera original storage admission refused");
+                            return AppFrameTransactionStep::Fault;
+                        }
+                    }
+                }
+                let (step, progress) = match self.scene_camera_cursor.as_mut().unwrap().step(grant) {
+                    Ok(receipt) => receipt,
+                    Err(error) => {
+                        let _ = context.consume_retained(error.retained_progress());
+                        runtime.record_frame_fault("camera original storage transition refused");
+                        return AppFrameTransactionStep::Fault;
+                    }
+                };
+                if context.consume_retained(progress).is_err() { runtime.record_frame_fault("camera original transition receipt exceeded frame authority"); return AppFrameTransactionStep::Fault; }
+                match step {
                 scenes::SceneCameraDispatchStep::Pending => AppFrameTransactionStep::Pending,
                 scenes::SceneCameraDispatchStep::Action(action) => {
                     if let Err(_action) = app.frame_actions.try_push(action) {
@@ -15745,6 +15845,7 @@ impl FrameTransaction {
                     runtime.record_frame_fault(fault);
                     self.phase = AppFrameTransactionPhase::Terminal;
                     AppFrameTransactionStep::Fault
+                }
                 }
             },
             AppFrameTransactionPhase::BrushMesh => {
@@ -15771,7 +15872,7 @@ impl FrameTransaction {
                         return AppFrameTransactionStep::Fault;
                     };
                     runtime.admit_build_presentation_witness(presentation_witness);
-                    self.build_cursor = Some(FrameBuildCursor::new(presentation_witness));
+                    self.build_cursor = Some(FrameBuildCursor::new(presentation_witness, self.retained));
                     return AppFrameTransactionStep::Pending;
                 }
                 let Some(cursor) = self.build_cursor.as_mut() else { return AppFrameTransactionStep::Pending };
@@ -16204,52 +16305,17 @@ impl FrameTransaction {
         }
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
-        if let Some(producer) = self.raster_rejected.as_mut() {
-            if !producer.close_step() {
-                return false;
-            }
-            self.raster_rejected = None;
-            return false;
+    /// ♻️ Preserves the camera child's physical receipts before any other frame child is considered.
+    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if let Some(camera) = self.scene_camera_cursor.as_mut() {
+            if !camera.terminal_is_empty() { return frame_child_step(camera.close_step(grant), grant, camera.terminal_is_empty()); }
+            let bytes = std::mem::size_of::<Option<scenes::SceneCameraDispatchCursor>>();
+            if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
+            self.scene_camera_cursor = None;
+            return frame_inline_progress(bytes);
         }
-        if let Some(cursor) = self.raster_uploads.as_mut() {
-            if !cursor.close_step() {
-                return false;
-            }
-            self.raster_uploads = None;
-            return false;
-        }
-        if let Some(cursor) = self.build_cursor.as_mut() {
-            if !cursor.close_step() || !cursor.terminal_is_empty() {
-                return false;
-            }
-            self.build_cursor = None;
-            return false;
-        }
-        if let Some(cursor) = self.finish_cursor.as_mut() {
-            if !cursor.close_step() || !cursor.terminal_is_empty() {
-                return false;
-            }
-            self.finish_cursor = None;
-            return false;
-        }
-        if let Some(partial) = self.after_chrome.as_mut() {
-            if !partial.close_step() {
-                return false;
-            }
-            self.after_chrome = None;
-            return false;
-        }
-        if !self.scene_camera_cursor.terminal_is_empty() {
-            self.scene_camera_cursor.close_step();
-            return false;
-        }
-        let Some(directives) = self.directives.as_mut() else { return true };
-        if !directives.close_step() {
-            return false;
-        }
-        self.directives = None;
-        true
+        if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }; }
+        frame_unpriced_child()
     }
 
     fn stage_label(&self) -> &'static str {
@@ -16264,8 +16330,9 @@ impl FrameTransaction {
         }
     }
 
+    /// 🧭️ Other nested frame children still require their own physical retirement witnesses.
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.directives.is_none() && self.build_cursor.is_none() && self.finish_cursor.is_none() && self.after_chrome.is_none() && self.raster_uploads.is_none() && self.raster_rejected.is_none() && self.scene_camera_cursor.terminal_is_empty()
+        false
     }
 
     pub(crate) fn discard_presented_input_candidate(&mut self, runtime: &RuntimeMailbox) -> bool {
@@ -16284,6 +16351,7 @@ impl FrameTransaction {
 }
 
 pub(crate) struct AppFramePresentation {
+    retained: semio_framework_job::RetainedCloneGrant,
     packet: Option<ui_wgpu::wgpu::PreparedRenderPacket>,
     input_candidate: Option<shell::PresentedInputCandidateWitness>,
     engine_packets: FrameEnginePackets,
@@ -16310,6 +16378,7 @@ pub(crate) fn discard_frame_input_candidate(runtime: &RuntimeMailbox, candidate:
 impl AppFrameBuild {
     pub(crate) fn into_preparation(self) -> AppFramePreparation {
         let AppFrameBuild {
+            retained,
             input,
             input_candidate,
             engine_packets,
@@ -16326,6 +16395,7 @@ impl AppFrameBuild {
             Err(rejected) => (None, Some(rejected)),
         };
         AppFramePreparation {
+            retained,
             job,
             job_rejected,
             input_candidate,
@@ -16346,6 +16416,7 @@ impl AppFrameBuild {
 }
 
 pub(crate) struct AppFramePreparation {
+    retained: semio_framework_job::RetainedCloneGrant,
     job: Option<ui_wgpu::wgpu::PreparedRenderJob>,
     job_rejected: Option<ui_wgpu::wgpu::PreparedRenderJobRejected>,
     input_candidate: Option<shell::PresentedInputCandidateWitness>,
@@ -16361,6 +16432,11 @@ pub(crate) struct AppFramePreparation {
     job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
     terminal: bool,
     fault: Option<&'static str>,
+}
+
+/// 🪙️ Compares actual child demand with the five unchanged incoming frame axes.
+fn frame_retirement_permits(grant: semio_framework_job::RetainedCloneGrant, demand: semio_framework_value::RetirementDemand) -> bool {
+    grant.maximum_items != 0 && demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth
 }
 
 impl AppFramePreparation {
@@ -16379,13 +16455,14 @@ impl AppFramePreparation {
         self.session.as_ref().and_then(semio_framework_job::BatchJobSession::callback_verdict)
     }
 
-    pub(crate) fn drive_step(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, cancel: semio_framework_job::CancelToken, _preview_sequence: &mut u64) -> semio_framework_job::StepOutcome {
+    pub(crate) fn drive_step(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, cancel: semio_framework_job::CancelToken, retained: semio_framework_job::RetainedCloneGrant, _preview_sequence: &mut u64) -> semio_framework_job::StepOutcome {
+        assert_eq!(retained, self.retained, "frame preparation preserves its original incoming five-axis authority");
         if let Some(job) = self.job.take() {
             let params = semio_framework_job::BatchJobParams {
                 operation,
                 generation,
                 cancel,
-                config: semio_framework_job::BatchDriveConfig { site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_us: 1000 },
+                config: semio_framework_job::BatchDriveConfig { retained, site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_us: 1000 },
                 now_us: semio_framework_job::default_now_us,
             };
             match semio_framework_job::BatchJobSession::try_new(job, params) {
@@ -16407,9 +16484,11 @@ impl AppFramePreparation {
             return semio_framework_job::StepOutcome::Yield;
         }
         if let Some(rejected) = self.rejected.as_mut() {
-            let grant = match rejected.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) { Ok(grant) => grant, Err(_) => { self.fault = Some("original rejected job close demand refused"); return semio_framework_job::StepOutcome::Yield; } };
+            let demand = match rejected.retirement_demands(self.retained.maximum_copy_bytes) { Ok(demand) => demand, Err(_) => { self.fault = Some("original rejected job close demand refused"); return semio_framework_job::StepOutcome::Yield; } };
+            if !frame_retirement_permits(self.retained, demand) { self.fault = Some("original worker owner exceeds fixed retirement policy"); return semio_framework_job::StepOutcome::Yield; }
+            let grant = self.retained;
             let step = rejected.close_step(grant).admit(grant, rejected.terminal_is_empty());
-            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused(_)) { self.fault = Some("original rejected job close receipt refused"); return semio_framework_job::StepOutcome::Yield; }
+            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused { .. }) { self.fault = Some("original rejected job close receipt refused"); return semio_framework_job::StepOutcome::Yield; }
             if rejected.terminal_is_empty() {
                 self.rejected = None;
                 self.terminal = true;
@@ -16459,6 +16538,7 @@ impl AppFramePreparation {
         let packet = self.session.as_mut()?.checked_out_job_mut()?.take_packet()?;
         self.session.as_mut()?.begin_close();
         Some(AppFramePresentation {
+            retained: self.retained,
             packet: Some(packet),
             input_candidate: self.input_candidate.take(),
             engine_packets: self.engine_packets.take()?,
@@ -16476,66 +16556,57 @@ impl AppFramePreparation {
         discard_frame_input_candidate(runtime, &mut self.input_candidate)
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
-        if let Some(rejected) = self.job_rejected.as_mut() {
-            if !rejected.close_step() {
-                return false;
-            }
-            self.job_rejected = None;
-            return false;
-        }
+    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if self.input_candidate.is_some() { return InteractiveJobCloseStep::Blocked; }
+        if self.job_rejected.is_some() { return frame_unpriced_child(); }
         if let Some(job) = self.job.as_mut() {
-            semio_framework_job::InteractiveJob::begin_close(job);
             use semio_framework_job::InteractiveJob;
-            let demand = (|| Ok::<_, semio_framework_value::ValueError>(semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: job.next_close_copy_byte_demand()?, maximum_capacity_bytes: job.next_close_capacity_byte_demand(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)?, maximum_release_bytes: job.next_close_release_byte_demand()?, maximum_depth: job.next_close_depth_demand()? }))();
-            let grant = match demand { Ok(grant) => grant, Err(_) => { self.fault = Some("prepared render job close demand refused"); return false; } };
-            let step = job.close_step(grant).admit(grant, job.terminal_is_empty());
-            match step {
-                semio_framework_job::InteractiveJobCloseStep::Complete { .. } => self.job = None,
-                semio_framework_job::InteractiveJobCloseStep::Refused(_) => { self.fault = Some("prepared render job close receipt refused"); return false; },
-                _ => return false,
+            job.begin_close();
+            if !job.terminal_is_empty() {
+                return frame_child_step(job.close_step(grant), grant, job.terminal_is_empty());
             }
-            return false;
+            let bytes = std::mem::size_of::<Option<ui_wgpu::wgpu::PreparedRenderJob>>();
+            if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
+            self.job = None;
+            return frame_inline_progress(bytes);
         }
         if let Some(rejected) = self.rejected.as_mut() {
-            let grant = match rejected.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) { Ok(grant) => grant, Err(_) => { self.fault = Some("original rejected job close demand refused"); return false; } };
-            let step = rejected.close_step(grant).admit(grant, rejected.terminal_is_empty());
-            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused(_)) { self.fault = Some("original rejected job close receipt refused"); return false; }
-            if rejected.terminal_is_empty() {
-                self.rejected = None;
-            }
-            return false;
+            if !rejected.terminal_is_empty() { return frame_child_step(rejected.close_step(grant), grant, rejected.terminal_is_empty()); }
+            let bytes = std::mem::size_of::<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::PreparedRenderJob>>>();
+            if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
+            self.rejected = None;
+            return frame_inline_progress(bytes);
         }
         if let Some(session) = self.session.as_mut() {
             if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
                 session.begin_close();
-                return false;
+                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
             }
-            let grant = match session.next_close_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) { Ok(grant) => grant, Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => return false, Err(_) => { self.fault = Some("original worker job close demand refused"); return false; } };
-            let step = session.close_step(grant);
-            if !step.progress().fits(grant) || matches!(step, semio_framework_job::WorkerJobCloseStep::Refused(_)) { self.fault = Some("original worker job close receipt refused"); return false; }
-            if session.terminal_is_empty() {
-                self.session = None;
-            }
-            return false;
+            if !session.terminal_is_empty() { return frame_worker_child_step(session.close_step(grant), grant, session.terminal_is_empty()); }
+            let bytes = std::mem::size_of::<Option<semio_framework_job::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>>();
+            if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
+            self.session = None;
+            return frame_inline_progress(bytes);
         }
-        if self.cursor_wake.take().is_some() {
-            return false;
+        if self.cursor_wake.is_some() {
+            let bytes = std::mem::size_of::<Option<infinite_world::world::WorldCursorWakeToken>>();
+            if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
+            self.cursor_wake = None;
+            return frame_inline_progress(bytes);
         }
         #[cfg(not(target_arch = "wasm32"))]
-        if self.job_progress.take().is_some() {
-            return false;
-        }
-        let Some(packets) = self.engine_packets.as_mut() else { return true };
-        if let Some(packet) = packets.last_mut() {
-            if !packet.close_step() || !packet.terminal_is_empty() {
-                return false;
+        if self.job_progress.is_some() { return frame_unpriced_child(); }
+        if let Some(packets) = self.engine_packets.as_mut() {
+            if !packets.terminal_is_empty() {
+                if !packets.is_empty() { return frame_unpriced_child(); }
+                return frame_child_step(packets.close_backing_step(grant), grant, packets.terminal_is_empty());
             }
-            packets.pop();
-            return false;
+            let bytes = std::mem::size_of::<Option<FrameEnginePackets>>();
+            if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
+            self.engine_packets = None;
+            return frame_inline_progress(bytes);
         }
-        self.engine_packets = None;
-        false
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
@@ -16759,33 +16830,32 @@ impl AppFramePresentation {
         discard_frame_input_candidate(runtime, &mut self.input_candidate)
     }
 
-    fn close_step(&mut self) -> bool {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if self.input_candidate.is_some() { return InteractiveJobCloseStep::Blocked; }
         if let Some(packet) = self.packet.as_mut() {
-            if !packet.retire_step() {
-                return false;
-            }
+            if !packet.retirement_is_empty() { return frame_child_step(packet.close_step(grant), grant, packet.retirement_is_empty()); }
+            let bytes = std::mem::size_of::<Option<ui_wgpu::wgpu::PreparedRenderPacket>>();
+            if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
             self.packet = None;
-            return false;
+            return frame_inline_progress(bytes);
         }
-        if let Some(packet) = self.engine_packets.last_mut() {
-            if !packet.close_step() || !packet.terminal_is_empty() {
-                return false;
-            }
-            self.engine_packets.pop();
-            return false;
+        if !self.engine_packets.terminal_is_empty() {
+            if !self.engine_packets.is_empty() { return frame_unpriced_child(); }
+            return frame_child_step(self.engine_packets.close_backing_step(grant), grant, self.engine_packets.terminal_is_empty());
         }
-        if self.cursor_wake.take().is_some() {
-            return false;
+        if self.cursor_wake.is_some() {
+            let bytes = std::mem::size_of::<Option<infinite_world::world::WorldCursorWakeToken>>();
+            if let Some(step) = frame_inline_gate(grant, bytes) { return step; }
+            self.cursor_wake = None;
+            return frame_inline_progress(bytes);
         }
         #[cfg(not(target_arch = "wasm32"))]
-        if self.job_progress.take().is_some() {
-            return false;
-        }
-        true
+        if self.job_progress.is_some() { return frame_unpriced_child(); }
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.packet.is_none() && self.input_candidate.is_none() && self.engine_packets.is_empty() && self.cursor_wake.is_none() && {
+        self.packet.is_none() && self.input_candidate.is_none() && self.engine_packets.terminal_is_empty() && self.cursor_wake.is_none() && {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 self.job_progress.is_none()
@@ -16914,7 +16984,7 @@ impl AppPresentedRetirement {
             return Ok(false);
         }
         if let Some(frame) = self.completed_frame.as_mut() {
-            if !frame.close_step() {
+            if !matches!(frame.close_step(frame.retained), InteractiveJobCloseStep::Complete { .. }) {
                 return Ok(false);
             }
             self.completed_frame = None;
@@ -18252,6 +18322,7 @@ impl AppRuntime {
                 let Some(resource_input) = cursor.resource_input.take() else { return FrameBuildBoundaryStep::Fault("frame build lost resource input") };
                 let engine_packets = std::mem::take(&mut cursor.engine_packets);
                 return FrameBuildBoundaryStep::Complete(AppFrameAfterChrome {
+                    retained: cursor.retained,
                     resource_input: Some(resource_input),
                     input_candidate: cursor.input_candidate.take(),
                     upload_rejected: None,
@@ -18429,6 +18500,7 @@ impl AppRuntime {
                     self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, cursor.settle, input.preview_generation, cancel));
                 }
                 return FrameFinishBoundaryStep::Complete(AppFrameBuild {
+                    retained: partial.retained,
                     generation: semio_framework_trace::Generation(input.preview_generation),
                     input,
                     input_candidate: partial.input_candidate.take(),
@@ -19157,31 +19229,16 @@ async fn boot_runtime(
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
 struct NativeSocketProbeSnapshot(String);
 
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path="🪶️sqlite/🧪️tests/🦀️.rs"]
+mod native_socket_sqlite_tests;
+
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::ArtifactSqliteSnapshot for NativeSocketProbeSnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("🪶️sqlite/🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
-        use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
-        control.check_rows(1)?;
-        control.check_value_bytes(self.0.len())?;
-        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
-        database.table_mut("socket_probe")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(self.0.clone())] });
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
-        Ok(database)
-    }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
-        control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
-        let rows = &database.table("socket_probe")?.rows;
-        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"socket probe requires one text row")); }
-        let snapshot = Self(rows[0].text(1)?.to_string());
-        control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
-        Ok(snapshot)
-    }
-}
+#[path="🪶️sqlite/🦀️.rs"]
+mod native_socket_sqlite;
 
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_store::ArtifactDsl for NativeSocketProbeSnapshot {
@@ -19198,6 +19255,13 @@ impl store::os_store::ArtifactDsl for NativeSocketProbeSnapshot {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_store::ArtifactPack for NativeSocketProbeSnapshot {
+    /// 🪪️ Declares this probe's real production IO identity independently from editor factories.
+    fn native_snapshot_registration()->Option<(semio_framework_artifact_reference::Dialect,store::os_store::ArtifactCodec)>{
+        Some((native_socket_sqlite::DIALECT,store::os_store::ArtifactCodec::of::<Self,NativeSocketProbeMutation>(native_socket_sqlite::SCHEMA)))
+    }
+
+    /// 📣️ Publishes both original document and native snapshot registries.
+    fn publish_native_snapshot()->Result<(),store::io::ArtifactAssemblyRegistryError>{native_socket_sqlite::publish()}
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
     fn sqlite_snapshot_codec() -> Option<store::os_store::ArtifactSqliteSnapshotCodec> {
         Some(<Self as store::os_store::ArtifactSqliteSnapshot>::sqlite_codec())
@@ -19242,7 +19306,7 @@ impl semio_framework_value::FromValue for NativeSocketProbeSnapshot {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
 struct NativeSocketProbeDiff(String);
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -19287,7 +19351,7 @@ impl semio_framework_value::FromValue for NativeSocketProbeDiff {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
 enum NativeSocketProbeMutation {
     Set(String),
 }
@@ -19398,9 +19462,9 @@ pub async fn run_socket_grant_probe() -> i32 {
     use semio_framework_async::ScopeOwner;
     use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 
-    const PROBE_SCHEMA: &str = "native.socket-grant.probe/v1";
+    const PROBE_SCHEMA: &str = native_socket_sqlite::SCHEMA;
     let Some(credential) = claimed_local_hub_credential("native") else { return 1 };
-    let _ = dsl::os_store::register_document_codec(dsl::os_store::ArtifactCodec::of::<NativeSocketProbeSnapshot, NativeSocketProbeMutation>(PROBE_SCHEMA));
+    if <NativeSocketProbeSnapshot as store::os_store::ArtifactPack>::publish_native_snapshot().is_err() { return 1; }
     let pool = renderer_worker_pool();
     let runtime = Arc::new(TokioHostRuntime::with_pool(pool.clone()));
     let scope = runtime.open_scope_now(ScopeOwner::Service("native_socket_grant_probe"), None);
@@ -19423,7 +19487,7 @@ pub async fn run_socket_grant_probe() -> i32 {
     let document_key = ArtifactDocumentKey::hub("probe-space", document_id);
     let _ = &document_key;
     let channels = host
-        .open(ArtifactActorConfig {
+        .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
             document_id: document_id.into(),
             schema: PROBE_SCHEMA.into(),
             bindings: vec![PersistenceBinding::Hub { base_url: credential.hub_origin().into(), space_id: "probe-space".into(), surface: Some("native.socket-grant.probe.editor".into()) }],

@@ -6,7 +6,8 @@
 //! two-phase registry path.
 
 use super::{BoundedJob, JobBudget, JobStep, TwoPhaseBoundedJob, WORK_UNITS_EXECUTE, WORK_UNITS_PUMP, WORK_UNITS_RETIRE};
-use semio_framework_job::{Generation, Operation, OperationId, RevisionId, StepOutcome};
+use semio_framework_job::{Generation, Operation, OperationId, RevisionId, StepOutcome, JobOutcomeSlot, close_step_outcome_slot};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value_derive::ToValue;
 use std::collections::VecDeque;
 
@@ -199,11 +200,6 @@ fn encode_bridge_item(item: &InferenceBridgeItem) -> Vec<u8> {
 }
 //#endregion 🌉️Channels
 
-/// 🎟️ Ceiling on the bounded retirement actions one `cancel`/`fail` may drive in a single call.
-/// A retirement that needs more than this leaves the owner deep, which `step_job`/`cancel_job`
-/// report as `job.bounded-false-terminal` rather than silently dropping a live worker session.
-const RETIRE_STEP_CEILING: usize = 4_096;
-
 type InferenceSession = semio_framework_job::MountedWorkerJobSession<semio_framework::action_bus::ErasedToolJob>;
 type InferenceRejected = semio_framework_job::WorkerJobSessionAdmissionRejected<semio_framework::action_bus::ErasedToolJob>;
 
@@ -256,20 +252,8 @@ enum InteractivePhase {
     Complete,
 }
 
-/// 📄️ Pages a `Yield`/`PreviewReady` outcome may retire inside a `Pump` crossing before the machine
-/// hands it to `OutcomeClose` instead — a preview the size of a WFC trace frame retires in one.
-const ABSORB_CLOSE_PAGES: usize = 4;
-
-/// 🔁️ What one mounted-session transition left the `Pump` crossing with.
-enum PumpTransition {
-    Absorbed { progress: Vec<u8>, preview: bool },
-    Settled(JobStep),
-}
-
-/// 🧾️ Retires an absorbed outcome's payload in place; `false` leaves it for `OutcomeClose`.
-fn retire_absorbed_outcome(outcome: &mut StepOutcome) -> bool {
-    (0..ABSORB_CLOSE_PAGES).any(|_| matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) && outcome.terminal_is_empty())
-}
+/// 🔁️ The exact original worker transition retained for one caller turn.
+enum PumpTransition { Settled(JobStep) }
 
 struct InteractiveInferenceJob {
     request: crate::app::WireArtifactInferenceRequest,
@@ -282,8 +266,9 @@ struct InteractiveInferenceJob {
     cancel: semio_framework_job::CancelToken,
     session: Option<InferenceSession>,
     rejected: Option<InferenceRejected>,
-    outcome: Option<StepOutcome>,
-    result: Option<Result<Vec<u8>, semio_framework::Fault>>,
+    outcome: JobOutcomeSlot,
+    retirement_progress: RetainedCloneProgress,
+    result: Option<Result<(Vec<u8>,Option<Vec<u8>>), semio_framework::Fault>>,
     terminal: bool,
     checkpoint: Option<Vec<u8>>,
     phase: InteractivePhase,
@@ -307,7 +292,8 @@ impl InteractiveInferenceJob {
             cancel: semio_framework_job::root_cancel_token(),
             session: None,
             rejected: None,
-            outcome: None,
+            outcome: JobOutcomeSlot::empty(),
+            retirement_progress: RetainedCloneProgress::default(),
             result: None,
             terminal: false,
             checkpoint: None,
@@ -330,45 +316,20 @@ impl InteractiveInferenceJob {
     /// so the wrapper left behind is shallow — the property `step_job`/`cancel_job` assert on.
     /// 🚫️async: E1 retirement driver consumed by `cancel` (an externally-declared sync trait method)
     /// and by `fail`; every close protocol it drives is itself synchronous.
-    fn retire(&mut self) {
-        if let Some(outcome) = self.outcome.as_mut() {
-            for _ in 0..RETIRE_STEP_CEILING {
-                if matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) && outcome.terminal_is_empty() {
-                    break;
-                }
-            }
-            if outcome.terminal_is_empty() {
-                self.outcome = None;
-            }
-        }
-        if let Some(session) = self.session.as_mut() {
-            session.begin_close();
-            for _ in 0..RETIRE_STEP_CEILING {
-                if matches!(session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::WorkerJobCloseStep::Complete) && session.terminal_is_empty() {
-                    break;
-                }
-            }
-            if session.terminal_is_empty() {
-                self.session = None;
-            }
-        }
-        if let Some(rejected) = self.rejected.as_mut() {
-            for _ in 0..RETIRE_STEP_CEILING {
-                if matches!(rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && rejected.terminal_is_empty() {
-                    break;
-                }
-            }
-            if rejected.terminal_is_empty() {
-                self.rejected = None;
-            }
-        }
+    fn record_retirement(&mut self,progress:RetainedCloneProgress)->Result<(),semio_framework::Fault>{
+        self.retirement_progress=self.retirement_progress.checked_add(progress).map_err(|error|super::fault("job.infer.retirement-receipt",error.to_string()))?;
+        if !progress.fits(self.request.retained){return Err(super::fault("job.infer.retirement-receipt","interactive inference exceeded its original full grant"));}
+        Ok(())
     }
 
     /// 🚫️async: E1 pure terminal constructor consumed by every sync state action below.
     fn fail(&mut self, error: semio_framework::Fault) -> JobStep {
-        self.retire();
-        self.phase = InteractivePhase::Complete;
-        JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&error))
+        self.result=Some(Err(error.with_retained_progress(self.retirement_progress)));self.terminal=true;
+        if !self.outcome.is_empty(){self.phase=InteractivePhase::OutcomeClose;}
+        else if let Some(session)=self.session.as_mut(){session.begin_close();self.phase=InteractivePhase::SessionClose;}
+        else if self.rejected.is_some(){self.phase=InteractivePhase::RejectedClose;}
+        else{self.phase=InteractivePhase::Complete;let Err(error)=self.result.take().unwrap()else{unreachable!()};return JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&error));}
+        JobStep::Running(Some(self.retirement_progress()))
     }
 
     /// 🚀️ `Dispatch`: publishes the request's identity preview, resolves the ActionBus factory for
@@ -393,6 +354,7 @@ impl InteractiveInferenceJob {
             generation: self.operation.generation,
             cancel: self.cancel.clone(),
             config: semio_framework_job::BatchDriveConfig {
+                retained:self.request.retained,
                 site: "semio.infer.action-bus",
                 stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
                 fuel_per_step: self.request.budgets.work_units.clamp(1, semio_framework_job::USER_VISIBLE_LANE_FUEL),
@@ -413,37 +375,9 @@ impl InteractiveInferenceJob {
         JobStep::Running(progress)
     }
 
-    /// ⚙️ `Pump`: drives the mounted session transition after transition inside ONE host crossing,
-    /// spending the crossing's own grant — `budget.fuel` at [`WORK_UNITS_PUMP`] per transition and
-    /// `budget.deadline_ms` against the monotonic clock — instead of ending the crossing at the first
-    /// outcome. A `Yield`/`PreviewReady` outcome whose payload retires within
-    /// [`ABSORB_CLOSE_PAGES`] is retired and resumed in place, the latest preview coalescing into the
-    /// crossing's progress bytes; anything lossless or terminal still leaves through `OutcomeClose`.
-    /// One transition per crossing made the host relay pay a whole `step-job` round trip (plus an
-    /// `OutcomeClose` one) for every 16-unit preview a WFC solve publishes: the 24 × 24 genesis solve
-    /// that settles natively in 16.6 s crossed 541 650 times in 582 s over the semio MCP without
-    /// finishing (ticket 26/09/23, `📓️wp-g5.md`). Without a clock the grant is one transition, as before.
-    /// The deadline is checked against the step driver's own exit reading, never a read of its own.
-    /// 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
-    fn pump(&mut self, budget: JobBudget) -> JobStep {
-        let deadline_us = semio_framework_job::default_now_us().and_then(|now_us| now_us.checked_add(u64::from(budget.deadline_ms).saturating_mul(1_000)));
-        let mut granted = budget.fuel;
-        let mut latest: Option<(Vec<u8>, bool)> = None;
-        loop {
-            granted = granted.saturating_sub(WORK_UNITS_PUMP);
-            match self.pump_transition() {
-                PumpTransition::Settled(step) => return step,
-                PumpTransition::Absorbed { progress, preview } => {
-                    if preview || !latest.as_ref().is_some_and(|(_, kept_preview)| *kept_preview) {
-                        latest = Some((progress, preview));
-                    }
-                }
-            }
-            let clock_spent = deadline_us.is_none_or(|deadline_us| self.session.as_ref().and_then(InferenceSession::last_step_end_us).is_none_or(|now_us| now_us >= deadline_us));
-            if granted < WORK_UNITS_PUMP || clock_spent {
-                return JobStep::Running(Some(latest.map_or_else(|| self.retirement_progress(), |(progress, _)| progress)));
-            }
-        }
+    /// ⚙️ Advances one original worker turn before its checked-out owner enters bounded closure.
+    fn pump(&mut self, _budget: JobBudget) -> JobStep {
+        let PumpTransition::Settled(step)=self.pump_transition();step
     }
 
     /// 🔁️ One mounted-session transition of [`Self::pump`]: submits and settles one worker step,
@@ -457,7 +391,6 @@ impl InteractiveInferenceJob {
         }
         let scheduled = self.bridge.scheduled();
         let mut progress = encode_bridge_item(&scheduled);
-        let mut preview = false;
         let stepped = match self.session.as_mut() {
             Some(session) => session.step_on_caller(),
             None => return PumpTransition::Settled(self.fail(super::fault("job.infer.session-missing", "interactive inference lost its mounted worker session before pumping"))),
@@ -465,6 +398,8 @@ impl InteractiveInferenceJob {
         if stepped.is_err() {
             return PumpTransition::Settled(self.fail(super::fault("job.infer.worker-pump", "interactive inference mounted worker transition was rejected")));
         }
+        let Some(receipt)=self.session.as_ref().and_then(InferenceSession::checked_out_retained_step_progress)else{return PumpTransition::Settled(self.fail(super::fault("job.infer.receipt-missing","interactive inference lost its same-owner actual worker receipt")));};
+        if let Err(error)=self.record_retirement(receipt){return PumpTransition::Settled(self.fail(error));}
         let Some(outcome) = self.session.as_mut().and_then(InferenceSession::take_checked_out_outcome) else {
             return PumpTransition::Settled(self.fail(super::fault("job.infer.outcome-missing", "interactive inference mounted worker checkout lost its exact outcome")));
         };
@@ -475,17 +410,16 @@ impl InteractiveInferenceJob {
                 let bytes = match copy_retained_payload(payload, PREVIEW_MAX_BYTES) {
                     Ok(bytes) => bytes,
                     Err(error) => {
-                        self.outcome = Some(outcome);
+                        self.outcome.retain(outcome).expect("inference retains its original checked-out outcome");
                         return PumpTransition::Settled(self.fail(error));
                     }
                 };
                 if let Err(error) = self.bridge.publish_preview(bytes) {
-                    self.outcome = Some(outcome);
+                    self.outcome.retain(outcome).expect("inference retains its original checked-out outcome");
                     return PumpTransition::Settled(self.fail(bridge_fault(&error)));
                 }
                 if let Some(item) = self.bridge.take_preview() {
                     progress = encode_bridge_item(&item);
-                    preview = true;
                 }
                 None
             }
@@ -493,16 +427,16 @@ impl InteractiveInferenceJob {
                 match copy_retained_payload(&checkpoint.state, LOSSLESS_MAX_BYTES) {
                     Ok(bytes) => self.checkpoint = Some(bytes),
                     Err(error) => {
-                        self.outcome = Some(outcome);
+                        self.outcome.retain(outcome).expect("inference retains its original checked-out outcome");
                         return PumpTransition::Settled(self.fail(error));
                     }
                 }
                 None
             }
             StepOutcome::Complete(candidate) => match copy_retained_payload(&candidate.output, LOSSLESS_MAX_BYTES).and_then(|output| copy_retained_payload(&candidate.state, LOSSLESS_MAX_BYTES).map(|state| (output, state))) {
-                Ok((output, state)) => Some(encode_result(self.request.clone(), output, (!state.is_empty()).then_some(state).or_else(|| self.checkpoint.clone()))),
+                Ok((output, state)) => Some(Ok((output, (!state.is_empty()).then_some(state).or_else(|| self.checkpoint.clone())))),
                 Err(error) => {
-                    self.outcome = Some(outcome);
+                    self.outcome.retain(outcome).expect("inference retains its original checked-out outcome");
                     return PumpTransition::Settled(self.fail(error));
                 }
             },
@@ -511,7 +445,7 @@ impl InteractiveInferenceJob {
                 match copy_retained_payload(&fault.detail, DIAGNOSTIC_MAX_BYTES) {
                     Ok(bytes) => self.bridge.publish_diagnostic(bytes),
                     Err(error) => {
-                        self.outcome = Some(outcome);
+                        self.outcome.retain(outcome).expect("inference retains its original checked-out outcome");
                         return PumpTransition::Settled(self.fail(error));
                     }
                 }
@@ -522,15 +456,8 @@ impl InteractiveInferenceJob {
                 Some(Err(super::fault("job.infer.interactive", detail)))
             }
         };
-        let mut outcome = outcome;
-        if result.is_none() && matches!(outcome, StepOutcome::Yield | StepOutcome::PreviewReady(_)) && retire_absorbed_outcome(&mut outcome) {
-            return match self.session.as_mut().map(InferenceSession::resume) {
-                Some(Ok(())) => PumpTransition::Absorbed { progress, preview },
-                _ => PumpTransition::Settled(self.fail(super::fault("job.infer.resume", "interactive inference outcome lost its exact resume authority"))),
-            };
-        }
+        self.outcome.retain(outcome).expect("inference retains its original checked-out outcome");
         self.result = result;
-        self.outcome = Some(outcome);
         self.phase = InteractivePhase::OutcomeClose;
         PumpTransition::Settled(JobStep::Running(Some(progress)))
     }
@@ -540,29 +467,16 @@ impl InteractiveInferenceJob {
     /// pump, exactly as the former future's inner close loop did.
     /// 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
     fn close_outcome(&mut self) -> JobStep {
-        let Some(outcome) = self.outcome.as_mut() else {
-            return self.fail(super::fault("job.infer.outcome-missing", "interactive inference lost the outcome it was retiring"));
-        };
-        match outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-            semio_framework_job::JobPayloadCloseStep::Pending { .. } => JobStep::Running(Some(self.retirement_progress())),
-            semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => {
-                self.outcome = None;
-                if self.terminal {
-                    if let Some(session) = self.session.as_mut() {
-                        session.begin_close();
-                    }
-                    self.phase = InteractivePhase::SessionClose;
-                    return JobStep::Running(Some(self.retirement_progress()));
-                }
-                match self.session.as_mut().map(InferenceSession::resume) {
-                    Some(Ok(())) => {
-                        self.phase = InteractivePhase::Pump;
-                        JobStep::Running(Some(self.retirement_progress()))
-                    }
-                    _ => self.fail(super::fault("job.infer.resume", "interactive inference outcome lost its exact resume authority")),
-                }
-            }
-            semio_framework_job::JobPayloadCloseStep::Complete => self.fail(super::fault("job.infer.outcome-false-terminal", "interactive inference outcome did not reach terminal-empty payload authority")),
+        if self.outcome.is_empty(){return self.fail(super::fault("job.infer.outcome-missing","interactive inference lost the outcome it was retiring"));}
+        let step=match close_step_outcome_slot(&mut self.outcome,self.request.retained){Ok(step)=>step,Err(error)=>{if let Err(receipt_error)=self.record_retirement(error.retained_progress()){return self.fail(receipt_error);}return self.fail(super::fault("job.infer.retirement",error.to_string()));}};
+        if let Err(error)=self.record_retirement(step.progress()){return self.fail(error);}
+        match step {
+            RetainedCloneStep::Progress(_)=>JobStep::Running(Some(self.retirement_progress())),
+            RetainedCloneStep::Complete(_) if self.outcome.is_empty()=>{
+                if self.terminal{if let Some(session)=self.session.as_mut(){session.begin_close();}self.phase=InteractivePhase::SessionClose;return JobStep::Running(Some(self.retirement_progress()));}
+                match self.session.as_mut().map(InferenceSession::resume){Some(Ok(()))=>{self.phase=InteractivePhase::Pump;JobStep::Running(Some(self.retirement_progress()))},_=>self.fail(super::fault("job.infer.resume","interactive inference outcome lost its exact resume authority"))}
+            },
+            RetainedCloneStep::Complete(_)=>self.fail(super::fault("job.infer.outcome-false-terminal","interactive inference outcome retained its original slot")),
         }
     }
 
@@ -572,18 +486,21 @@ impl InteractiveInferenceJob {
         let Some(session) = self.session.as_mut() else {
             return self.fail(super::fault("job.infer.session-missing", "interactive inference lost the session it was retiring"));
         };
-        match session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+        let step=session.close_step(self.request.retained);let empty=session.terminal_is_empty();
+        if let Err(error)=self.record_retirement(step.progress()){return self.fail(error);}
+        match step {
             semio_framework_job::WorkerJobCloseStep::Pending { .. } | semio_framework_job::WorkerJobCloseStep::Blocked => JobStep::Running(Some(self.retirement_progress())),
-            semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => {
+            semio_framework_job::WorkerJobCloseStep::Complete { .. } if empty => {
                 self.session = None;
                 self.phase = InteractivePhase::Complete;
                 match self.result.take() {
-                    Some(Ok(bytes)) => JobStep::Done(bytes),
-                    Some(Err(error)) => JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&error)),
+                    Some(Ok((bytes,state))) => match encode_result(self.request.clone(),bytes,state,self.retirement_progress){Ok(bytes)=>JobStep::Done(bytes),Err(error)=>JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&error))},
+                    Some(Err(error)) => JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&error.with_retained_progress(self.retirement_progress))),
                     None => JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&super::fault("job.infer.terminal-result", "terminal interactive inference produced no result"))),
                 }
             }
-            semio_framework_job::WorkerJobCloseStep::Complete => self.fail(super::fault("job.infer.session-false-terminal", "interactive inference session did not reach terminal-empty authority")),
+            semio_framework_job::WorkerJobCloseStep::Refused{kind,..}=>self.fail(super::fault("job.infer.retirement",format!("interactive worker close refused {kind:?}"))),
+            semio_framework_job::WorkerJobCloseStep::Complete { .. } => self.fail(super::fault("job.infer.session-false-terminal", "interactive inference session did not reach terminal-empty authority")),
         }
     }
 
@@ -594,14 +511,17 @@ impl InteractiveInferenceJob {
         let Some(rejected) = self.rejected.as_mut() else {
             return self.fail(super::fault("job.infer.admission", "interactive inference lost the rejection it was retiring"));
         };
-        match rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+        let step=rejected.close_step(self.request.retained);let empty=rejected.terminal_is_empty();
+        if let Err(error)=self.record_retirement(step.progress()){return self.fail(error);}
+        match step {
             semio_framework_job::InteractiveJobCloseStep::Pending { .. } | semio_framework_job::InteractiveJobCloseStep::Blocked => JobStep::Running(Some(self.retirement_progress())),
-            semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
+            semio_framework_job::InteractiveJobCloseStep::Complete { .. } if empty => {
                 self.rejected = None;
                 self.phase = InteractivePhase::Complete;
                 JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&super::fault("job.infer.admission", "interactive inference worker session capacity is exhausted")))
             }
-            semio_framework_job::InteractiveJobCloseStep::Complete => self.fail(super::fault("job.infer.admission-false-terminal", "interactive inference admission rejection did not reach terminal-empty authority")),
+            semio_framework_job::InteractiveJobCloseStep::Refused{kind,..}=>self.fail(super::fault("job.infer.retirement",format!("interactive rejection close refused {kind:?}"))),
+            semio_framework_job::InteractiveJobCloseStep::Complete { .. } => self.fail(super::fault("job.infer.admission-false-terminal", "interactive inference admission rejection did not reach terminal-empty authority")),
         }
     }
 
@@ -617,10 +537,6 @@ impl InteractiveInferenceJob {
 
 impl BoundedJob for InteractiveInferenceJob {
     fn step(&mut self, budget: JobBudget) -> JobStep {
-        if self.cancelled {
-            self.phase = InteractivePhase::Complete;
-            return JobStep::Failed(semio_framework_diagnostic::encode_fault_bytes(&super::fault("job.infer.cancelled", "interactive inference was cancelled before its next state action")));
-        }
         let price = self.price();
         if budget.fuel < price {
             return self.fail(super::fault("job.infer.budget-exhausted", format!("interactive inference needs {price} work units for its next state action and was granted {}", budget.fuel)));
@@ -638,7 +554,7 @@ impl BoundedJob for InteractiveInferenceJob {
     fn cancel(&mut self) {
         self.cancelled = true;
         self.cancel.cancel_now();
-        self.retire();
+        let _=self.fail(super::fault("job.infer.cancelled","interactive inference was cancelled"));
     }
 
     fn checkpoint(&self) -> Option<Vec<u8>> {
@@ -646,7 +562,7 @@ impl BoundedJob for InteractiveInferenceJob {
     }
 
     fn terminal_drop_is_shallow(&self) -> bool {
-        self.session.is_none() && self.rejected.is_none() && self.outcome.is_none()
+        self.session.is_none() && self.rejected.is_none() && self.outcome.is_empty()
     }
 }
 
@@ -672,7 +588,7 @@ fn bridge_fault(error: &InferenceBridgeError) -> semio_framework::Fault {
 /// 🧾️ The result of a completed interactive inference, reporting only what the host observed: the job completed (`complete`), faulted nowhere (`valid`),
 /// its final persisted state or last checkpoint is the resume state (`previous_state`), and it published no diagnostics on the success path. A fidelity the
 /// job never declared is `unreported`, never `exact`.
-fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_payload: Vec<u8>, resume_state: Option<Vec<u8>>) -> Result<Vec<u8>, semio_framework::Fault> {
+fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_payload: Vec<u8>, resume_state: Option<Vec<u8>>,retirement_progress:RetainedCloneProgress) -> Result<Vec<u8>, semio_framework::Fault> {
     let allocation = usize::try_from(request.budgets.allocation_bytes).map_err(|_| super::fault("job.infer.result", "allocation budget exceeds this runtime's address space"))?;
     if canonical_payload.len() > allocation {
         return Err(super::fault("job.infer.result", format!("interactive inference result has {} bytes, above allocation budget {allocation}", canonical_payload.len())));
@@ -685,6 +601,7 @@ fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_pa
         source_dialect: request.source_dialect.clone(),
     };
     let result = crate::app::WireArtifactInferenceResult {
+        retirement_progress,
         wire_version: crate::app::ARTIFACT_INFERENCE_WIRE_VERSION,
         owner: request.owner,
         artifact_kind: request.artifact_kind,
@@ -699,6 +616,7 @@ fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_pa
         source_dialect: request.source_dialect,
         policy: request.policy,
         budgets: request.budgets,
+        retained: request.retained,
         previous_state: resume_state,
         requested_cache_mode: request.requested_cache_mode.clone(),
         canonical_payload,

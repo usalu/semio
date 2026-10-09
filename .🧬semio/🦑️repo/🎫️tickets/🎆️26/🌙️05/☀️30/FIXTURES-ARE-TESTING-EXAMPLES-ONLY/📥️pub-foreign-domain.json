@@ -1,0 +1,256 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+      "sha256": "066e84d36e0ecd71db88a0606e212bd251f5ab414a783818ac8726c5ad7a5e98",
+      "foreignEntryLines": [
+        267,
+        279,
+        280,
+        281
+      ],
+      "role": "read-only genuine production/interface or direct test consumer observation; not authored action"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json",
+      "sha256": "fcc92f703fedddb3b3e97d7fd311025d05321fd4a576b1437e39f80b47837ef1",
+      "foreignEntryLines": [],
+      "role": "read-only genuine production/interface or direct test consumer observation; not authored action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs",
+      "sha256": "bb7db96c10e7f12d31b1649ffdecde562c150ba59bc4ea8ef30544a0b6f1c9d7",
+      "foreignEntryLines": [
+        265,
+        271,
+        843,
+        845
+      ],
+      "role": "read-only genuine production/interface or direct test consumer observation; not authored action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+      "sha256": "5ada0676cd9ece42dd3099a73402daa22e7e48d672967056cfd507902b51c369",
+      "foreignEntryLines": [
+        1032,
+        1033,
+        1073,
+        1074,
+        1157,
+        1159,
+        1161,
+        1163,
+        1361,
+        1364,
+        1365
+      ],
+      "role": "read-only genuine production/interface or direct test consumer observation; not authored action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "sha256": "70ec19f8f39be1f4b2d0464de698bd01e31e4db000151b2b19e82bc37e8724e3",
+      "foreignEntryLines": [
+        28749,
+        28783,
+        28787,
+        32467,
+        32471,
+        32495,
+        34336
+      ],
+      "role": "read-only genuine production/interface or direct test consumer observation; not authored action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "e915b7376e6162f8af4ee1a25b2ca091cbca522889665c1176dbe1f7de9af380",
+      "foreignEntryLines": [
+        17134,
+        17352,
+        17354,
+        22342,
+        24478,
+        26205,
+        26206,
+        26960,
+        26962,
+        27019,
+        27022
+      ],
+      "role": "read-only genuine production/interface or direct test consumer observation; not authored action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs",
+      "sha256": "b079806d44a6b33f886c1b48f522ed177c4751645daad8322fe3bd8fb7f3bf53",
+      "foreignEntryLines": [
+        726,
+        727
+      ],
+      "role": "read-only genuine production/interface or direct test consumer observation; not authored action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📣️set-transaction/🦀️.rs",
+      "sha256": "5ab27b4172bd7396cbe80e1cf66ab660d919d04dcd922ea337bac8fea010d694",
+      "foreignEntryLines": [
+        52,
+        60
+      ],
+      "role": "read-only genuine production/interface or direct test consumer observation; not authored action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/⏩️set-transaction/🦀️.rs",
+      "sha256": "bd0a033b5242a3d7752a762f16298e0cc843d51ddbbad2bdaa38495518bfec3e",
+      "foreignEntryLines": [
+        52
+      ],
+      "role": "read-only genuine production/interface or direct test consumer observation; not authored action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/🦀️.rs",
+      "sha256": "90afcf969568c559deb97fdaaa75a1ec1f4533d1cb401d1c852a5a8322f53e52",
+      "foreignEntryLines": [
+        80,
+        84
+      ],
+      "role": "read-only genuine production/interface or direct test consumer observation; not authored action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "169460ee50357303d2c4e91d391e46b491381dcf5948ace323bccc139ecb48c4",
+      "foreignEntryLines": [
+        76,
+        845,
+        851,
+        870
+      ],
+      "role": "read-only genuine production/interface or direct test consumer observation; not authored action"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+      "sha256": "e0f6a215c401aa316e1a49cd9e7524f613600cf6fc6f92f64ba5b80e05cc2925",
+      "role": "read-only existing borrowed controlled operation encoder; not authored endpoint",
+      "lines": {
+        "source": 14,
+        "advance": 61,
+        "factory": 175
+      }
+    }
+  ],
+  "native": "unrun",
+  "publisherReceipt": "7801 actual source RED, no runtime handoff success",
+  "sourceCopies": false,
+  "existingControlledLocalWire": "ArtifactPreparedOperationSource and ArtifactPreparedOperationCursor::advance use original full grant and retain written prefix on refusal; original factory reborrows typed source",
+  "existingPreparedCandidate": "ArtifactStoreOneItemPrepared owns original edit/post_snapshot and records only foreign presence; genuine output seam remains absent",
+  "firstMountedFailureDiagnosis": {
+    "noAwait": true,
+    "noLastClone": true,
+    "allThreeBorrowedBatchCalls": true,
+    "onlyOriginalInputClear": "emit.artifact_mutations.clear() inside cold foreign proposal",
+    "qualification": "fresh physical source predicate observation, not runtime or arbitrary observer adoption"
+  },
+  "currentCensuses": [
+    {
+      "utc": "2026-10-09T14:15:55.208484+00:00",
+      "rows": [
+        {
+          "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+          "sha256": "066e84d36e0ecd71db88a0606e212bd251f5ab414a783818ac8726c5ad7a5e98",
+          "foreignRows": [
+            281
+          ],
+          "qualification": "current reader/interface census only; no authored adoption"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json",
+          "sha256": "fcc92f703fedddb3b3e97d7fd311025d05321fd4a576b1437e39f80b47837ef1",
+          "foreignRows": [],
+          "qualification": "current reader/interface census only; no authored adoption"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs",
+          "sha256": "bb7db96c10e7f12d31b1649ffdecde562c150ba59bc4ea8ef30544a0b6f1c9d7",
+          "foreignRows": [
+            271
+          ],
+          "qualification": "current reader/interface census only; no authored adoption"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+          "sha256": "5ada0676cd9ece42dd3099a73402daa22e7e48d672967056cfd507902b51c369",
+          "foreignRows": [
+            1161,
+            1364
+          ],
+          "qualification": "current reader/interface census only; no authored adoption"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+          "sha256": "ecb3c733822eae370b141a92dd6022c21a280438873511ddae2ed89f49ba0588",
+          "foreignRows": [
+            28834,
+            32518,
+            34391
+          ],
+          "qualification": "current reader/interface census only; no authored adoption"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+          "sha256": "053640192426604421c1fd147fd130f673099386877825347a3b2aace38035f5",
+          "foreignRows": [
+            17356,
+            24480,
+            26964,
+            27024
+          ],
+          "qualification": "current reader/interface census only; no authored adoption"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs",
+          "sha256": "b079806d44a6b33f886c1b48f522ed177c4751645daad8322fe3bd8fb7f3bf53",
+          "foreignRows": [
+            727
+          ],
+          "qualification": "current reader/interface census only; no authored adoption"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📣️set-transaction/🦀️.rs",
+          "sha256": "5ab27b4172bd7396cbe80e1cf66ab660d919d04dcd922ea337bac8fea010d694",
+          "foreignRows": [
+            52
+          ],
+          "qualification": "current reader/interface census only; no authored adoption"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/⏩️set-transaction/🦀️.rs",
+          "sha256": "bd0a033b5242a3d7752a762f16298e0cc843d51ddbbad2bdaa38495518bfec3e",
+          "foreignRows": [
+            52
+          ],
+          "qualification": "current reader/interface census only; no authored adoption"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/🦀️.rs",
+          "sha256": "21b62589497db266e627eee1a84e619599d9c5a94c82b8b020fcb9ff200e56ca",
+          "foreignRows": [
+            84
+          ],
+          "qualification": "current reader/interface census only; no authored adoption"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🔬️unit/🦀️.rs",
+          "sha256": "169460ee50357303d2c4e91d391e46b491381dcf5948ace323bccc139ecb48c4",
+          "foreignRows": [
+            76,
+            845
+          ],
+          "qualification": "current reader/interface census only; no authored adoption"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs",
+          "sha256": "e0f6a215c401aa316e1a49cd9e7524f613600cf6fc6f92f64ba5b80e05cc2925",
+          "foreignRows": [],
+          "qualification": "current reader/interface census only; no authored adoption"
+        }
+      ]
+    }
+  ]
+}

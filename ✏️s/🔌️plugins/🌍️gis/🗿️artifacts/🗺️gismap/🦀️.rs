@@ -253,7 +253,7 @@ pub fn infer_gis_map_controlled(
         return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "inference result exceeds allocation budget"));
     }
     checkpoint(work)?;
-    Ok(semio_framework_plugin::ArtifactInferenceExecution {
+    Ok(semio_framework_plugin::ArtifactInferenceExecution { retirement_progress: Default::default(),
         canonical_payload: std::mem::take(&mut canonical_payload.0),
         diagnostics: Vec::new(),
         validity: "valid".into(),

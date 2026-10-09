@@ -1,5 +1,6 @@
 /** 🧪️ Verifies the Flow browser declaration against its schema, runtime and package projection. */
 import assert from "node:assert/strict";
+import Ajv from "ajv";
 import { readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +16,8 @@ export async function testFlowBrowserDeclaration(packageRoot: string): Promise<v
   const ts = await import("typescript");
   const { FlowSession } = await import("../../🕸️wasm/🌐️browser/🏃️runtime/🟨️.js");
   const fixture = JSON.parse(readFileSync(browserTypesFixturePath, "utf8"));
+  const schema=JSON.parse(readFileSync(new URL("../../🕸️wasm/🧬️schema/📝️browser-types/🔣️.json",import.meta.url),"utf8"));
+  const validate=new Ajv({strict:true,allErrors:true}).compile(schema);assert.equal(validate(fixture),true);
   
   
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
@@ -42,6 +45,8 @@ export async function testFlowBrowserDeclaration(packageRoot: string): Promise<v
   const names = [...new Set(methods.map((method) => method.name.getText(parsed)).filter((name) => !name.startsWith("[")))];
   const runtime = Object.getOwnPropertyNames(FlowSession.prototype).filter((name) => name !== "constructor").sort();
   assert.deepEqual(names.slice().sort(), runtime);
+  const progress=parsed.statements.find((node)=>ts.isInterfaceDeclaration(node)&&node.name.text==="FlowRetainedProgress");assert.ok(progress&&ts.isInterfaceDeclaration(progress));assert.deepEqual(progress.members.map((member)=>member.name?.getText(parsed)),fixture.receiptFields);
+  const exports=parsed.statements.find((node)=>ts.isInterfaceDeclaration(node)&&node.name.text==="FlowWasmExports");assert.ok(exports&&ts.isInterfaceDeclaration(exports));const receipt=exports.members.find((member)=>member.name?.getText(parsed)==="flow_bridge_step_progress");assert.ok(receipt&&ts.isMethodSignature(receipt));assert.equal(receipt.type?.getText(parsed),"bigint");
   assert.equal(names.filter((name) => ![...fixture.canvasMethods, "close", "free"].includes(name)).length, fixture.operationMethods);
   for (const sample of fixture.samples) {
     const method: MethodDeclaration | undefined = methods.find((value) => value.name.getText(parsed) === sample.name);
@@ -50,7 +55,7 @@ export async function testFlowBrowserDeclaration(packageRoot: string): Promise<v
     assert.equal(method.type?.getText(parsed), fixture.result);
   }
   for (const name of fixture.excluded) assert.equal(names.includes(name), false);
-  for (const mutate of [(value: typeof fixture) => { value.operationMethods = 111; }, (value: typeof fixture) => { value.result = "void"; }, (value: typeof fixture) => { value.extra = true; }, (value: typeof fixture) => { delete value.package.exports["."]; }, (value: typeof fixture) => { value.package.files.push(value.package.files[0]); }]) { const bad = structuredClone(fixture); mutate(bad);  }
+  for (const mutate of [(value: typeof fixture) => { value.operationMethods = 111; }, (value: typeof fixture) => { value.result = "void"; }, (value: typeof fixture) => { value.extra = true; }, (value: typeof fixture) => { delete value.package.exports["."]; }, (value: typeof fixture) => { value.package.files.push(value.package.files[0]); }]) { const bad = structuredClone(fixture); mutate(bad); assert.equal(validate(bad),false); }
   assert.equal(readFileSync(declarationPath, "utf8"), text);
-  console.log(`Flow browser declarations: ${fixture.operationMethods} schema methods, runtime prototype and TypeScript parser parity; 3 package exports and 2 TypeScript resolutions; 5 hostile fixtures rejected`);
+  console.log(`Flow browser declarations: ${fixture.operationMethods} schema methods, runtime prototype and TypeScript parser parity; 3 package exports and 2 TypeScript resolutions; 5 hostile fixtures rejected; strictAjv=true canonicalReceiptFields=4`);
 }

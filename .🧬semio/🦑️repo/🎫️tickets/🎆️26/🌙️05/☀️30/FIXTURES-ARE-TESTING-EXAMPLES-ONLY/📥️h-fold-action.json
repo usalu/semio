@@ -1,0 +1,8 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddfe\ufe0fdocument/\ud83d\udcdc\ufe0fhistory/\ud83d\udca7\ufe0fhydration/\ud83e\udd80\ufe0f.rs",
+  "before": "f3c19a98978538f6a7fc4d86d2bdb16367cfccf8bd6d55944e2c51306125cea5",
+  "after": "ee66ba8113fdbecbb6830701b14f12347e440f4bd99a1c7f2b383282cab31ca2",
+  "blockBefore": "15bbeee0324de43aa17f58542a95217fe6fb565cc9bfb2989918cceb4bb253ca",
+  "blockAfter": "9a6b63207db5faf2c20f49c07819a59e2aa057ff030668fa14afe3882ea62038",
+  "change": "Fold forwards original independent grant; one item policy, copy clipped to existing fuel; checked nested depth; producer Ready currently loses its terminal receipt and remains qualified"
+}

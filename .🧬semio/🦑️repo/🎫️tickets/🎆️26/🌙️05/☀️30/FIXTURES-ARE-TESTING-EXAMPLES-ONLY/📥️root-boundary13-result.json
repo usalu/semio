@@ -1,0 +1,15 @@
+{
+  "session": 91559,
+  "exitCode": 1,
+  "durationMs": 59000,
+  "modules": 4749,
+  "scopes": 3755,
+  "findings": [
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+      "detail": "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+    }
+  ],
+  "nativeAssertions": 0
+}

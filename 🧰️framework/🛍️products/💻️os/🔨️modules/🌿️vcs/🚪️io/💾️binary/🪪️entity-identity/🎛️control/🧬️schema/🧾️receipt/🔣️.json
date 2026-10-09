@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Operation Receipt",
+  "type": "object",
+  "required": [
+    "maximum",
+    "owned",
+    "finished",
+    "reserved_return",
+    "phase_start_owned",
+    "phase_start_reserved_return",
+    "received_output",
+    "received_input",
+    "received_retirement"
+  ],
+  "properties": {
+    "maximum": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "owned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "finished": {
+      "type": "boolean"
+    },
+    "reserved_return": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "phase_start_owned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "phase_start_reserved_return": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "received_output": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "received_input": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "received_retirement": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "$comment": "The actual first-party factory also validates conserved source ownership and requires the original supplied native receipt before resumption. Scalar serialization is never observer or allocation authority."
+}

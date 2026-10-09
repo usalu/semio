@@ -1,0 +1,555 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+    "sha256": "a923813193e802d3f519811831b759e578bf1609a7f2e220d449e59c21b455f4",
+    "bytes": 15345,
+    "diagnostics": [
+      {
+        "code": "E0425",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 123,
+        "column": 68
+      },
+      {
+        "code": "E0050",
+        "message": "method `close_step` has 3 parameters but the declaration in trait `semio_framework_value::ErasedSnapshotRetirement::close_step` has 2",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 123,
+        "column": 19
+      },
+      {
+        "code": "E0046",
+        "message": "not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 122,
+        "column": 1
+      },
+      {
+        "code": "E0050",
+        "message": "method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 172,
+        "column": 21
+      },
+      {
+        "code": "E0046",
+        "message": "not all trait items implemented, missing: `retirement_birth_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 171,
+        "column": 1
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 125,
+        "column": 23
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 162,
+        "column": 12
+      },
+      {
+        "code": "E0277",
+        "message": "the trait bound `MapMutation: semio_framework_value::retirement::RetireOwned` is not satisfied",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 194,
+        "column": 6
+      },
+      {
+        "code": "E0277",
+        "message": "the trait bound `MapMutation: semio_framework_pack_json::ArtifactCanonicalJsonTree` is not satisfied",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 194,
+        "column": 6
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 199,
+        "column": 85
+      },
+      {
+        "code": "E0308",
+        "message": "mismatched types",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 199,
+        "column": 39
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 201,
+        "column": 78
+      },
+      {
+        "code": "E0308",
+        "message": "mismatched types",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 201,
+        "column": 32
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 227,
+        "column": 87
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 235,
+        "column": 84
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 260,
+        "column": 73
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 263,
+        "column": 86
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 269,
+        "column": 69
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 283,
+        "column": 69
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 290,
+        "column": 86
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 302,
+        "column": 69
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 316,
+        "column": 69
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 320,
+        "column": 76
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 333,
+        "column": 75
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 211,
+        "column": 13
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 157,
+        "column": 23
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 208,
+        "column": 13
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 202,
+        "column": 13
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 199,
+        "column": 115
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 160,
+        "column": 23
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+        "line": 133,
+        "column": 23
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+    "sha256": "70de97a834e2bc749feb6d12b761ef79055841456989e4130434d9353bcef89c",
+    "bytes": 20531,
+    "diagnostics": [
+      {
+        "code": "E0425",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 12,
+        "column": 70
+      },
+      {
+        "code": "E0050",
+        "message": "method `close_step` has 3 parameters but the declaration in trait `semio_framework_value::ErasedSnapshotRetirement::close_step` has 2",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 12,
+        "column": 19
+      },
+      {
+        "code": "E0046",
+        "message": "not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 11,
+        "column": 1
+      },
+      {
+        "code": "E0050",
+        "message": "method `retire` has 2 parameters but the declaration in trait `semio_framework_value::SnapshotRetirementFactory::retire` has 3",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 22,
+        "column": 15
+      },
+      {
+        "code": "E0050",
+        "message": "method `retire` has 2 parameters but the declaration in trait `semio_framework_value::SnapshotRetirementFactory::retire` has 3",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 223,
+        "column": 15
+      },
+      {
+        "code": "E0050",
+        "message": "method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 235,
+        "column": 21
+      },
+      {
+        "code": "E0046",
+        "message": "not all trait items implemented, missing: `retirement_birth_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 234,
+        "column": 1
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 13,
+        "column": 12
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 40,
+        "column": 87
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 53,
+        "column": 86
+      },
+      {
+        "code": "E0308",
+        "message": "mismatched types",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 53,
+        "column": 40
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 55,
+        "column": 79
+      },
+      {
+        "code": "E0308",
+        "message": "mismatched types",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 55,
+        "column": 33
+      },
+      {
+        "code": "E0061",
+        "message": "this method takes 2 arguments but 1 argument was supplied",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 68,
+        "column": 48
+      },
+      {
+        "code": "E0599",
+        "message": "no method named `close_step` found for enum `Result<T, E>` in the current scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 70,
+        "column": 32
+      },
+      {
+        "code": "E0599",
+        "message": "no method named `terminal_is_empty` found for enum `Result<T, E>` in the current scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 71,
+        "column": 32
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 91,
+        "column": 86
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 92,
+        "column": 86
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 116,
+        "column": 83
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 121,
+        "column": 83
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 131,
+        "column": 86
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 143,
+        "column": 75
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 146,
+        "column": 82
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 153,
+        "column": 75
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 160,
+        "column": 73
+      },
+      {
+        "code": "E0308",
+        "message": "mismatched types",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 160,
+        "column": 27
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 172,
+        "column": 75
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 257,
+        "column": 90
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 261,
+        "column": 96
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 278,
+        "column": 90
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 283,
+        "column": 87
+      },
+      {
+        "code": "E0308",
+        "message": "mismatched types",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 283,
+        "column": 41
+      },
+      {
+        "code": "E0277",
+        "message": "the trait bound `ErrorRoot: semio_framework_value::retirement::RetireOwned` is not satisfied",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 361,
+        "column": 29
+      },
+      {
+        "code": "E0277",
+        "message": "the trait bound `ErrorRoot: semio_framework_pack_json::ArtifactCanonicalJsonTree` is not satisfied",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 361,
+        "column": 29
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 362,
+        "column": 71
+      },
+      {
+        "code": "E0560",
+        "message": "struct `os_store::component::ArtifactStoreOneItemGrant` has no field named `maximum_bytes`",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 386,
+        "column": 83
+      },
+      {
+        "code": "E0308",
+        "message": "mismatched types",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 386,
+        "column": 37
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 386,
+        "column": 115
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 284,
+        "column": 21
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 70,
+        "column": 59
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 61,
+        "column": 13
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 60,
+        "column": 13
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 56,
+        "column": 13
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 289,
+        "column": 21
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 288,
+        "column": 21
+      },
+      {
+        "code": "E0433",
+        "message": "cannot find type `SnapshotRetirementStep` in this scope",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+        "line": 53,
+        "column": 116
+      }
+    ]
+  }
+]

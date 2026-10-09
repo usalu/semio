@@ -528,13 +528,13 @@ fn retained_modeling_jobs_slice_work_and_match_synchronous_geometry() {
         if case["operation"] == "bevel" { synchronous.bevel_edges(&[EdgeId(0)],case["amount"].as_f64().unwrap() as f32,case["segments"].as_u64().unwrap() as u32).unwrap(); } else { synchronous.decimate(case["ratio"].as_f64().unwrap() as f32).unwrap(); }
         let mut sliced = make_job();
         let initial = sliced.progress();
-        assert!(matches!(sliced.step(0).unwrap(),MeshModelingStep::Working(_)));
+        assert!(matches!(sliced.step(0,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap(),MeshModelingStep::Working(_)));
         assert_eq!(sliced.progress(),initial);
         let mut calls = 0;
         let output = loop {
             let before = sliced.progress().units_done;
             calls += 1;
-            match sliced.step(1).unwrap() {
+            match sliced.step(1,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap() {
                 MeshModelingStep::Working(progress) => {
                     assert_eq!(progress.units_done,before+1);
                     assert!(progress.units_done < progress.units_total);
@@ -560,27 +560,27 @@ fn retained_modeling_jobs_slice_work_and_match_synchronous_geometry() {
         assert_eq!(source.to_obj().unwrap(),before);
         assert_eq!(sliced.progress().units_done,sliced.progress().units_total);
         sliced.cancel();
-        assert!(sliced.step(1).is_err());
+        assert!(sliced.step(1,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).is_err());
         let mut cancelled = make_job();
-        assert!(matches!(cancelled.step(1).unwrap(),MeshModelingStep::Working(_)));
+        assert!(matches!(cancelled.step(1,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap(),MeshModelingStep::Working(_)));
         let progress = cancelled.progress();
         cancelled.cancel();
-        assert!(matches!(cancelled.step(1).unwrap(),MeshModelingStep::Cancelled(value) if value.units_done == progress.units_done));
+        assert!(matches!(cancelled.step(1,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap(),MeshModelingStep::Cancelled(value) if value.units_done == progress.units_done));
         assert_eq!(source.to_obj().unwrap(),before);
         let mut batched = make_job();
-        let output = loop { match batched.step(3).unwrap() { MeshModelingStep::Done(mesh) => break mesh, MeshModelingStep::Working(_) => {}, MeshModelingStep::Cancelled(_) => panic!("unexpected cancellation") } };
+        let output = loop { match batched.step(3,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap() { MeshModelingStep::Done(mesh) => break mesh, MeshModelingStep::Working(_) => {}, MeshModelingStep::Cancelled(_) => panic!("unexpected cancellation") } };
         assert_eq!(output.to_obj().unwrap(),synchronous.to_obj().unwrap());
         for phase in case["cancelPhases"].as_array().unwrap() {
             let phase = phase.as_str().unwrap();
             let mut job = make_job();
             while job.progress().phase != phase {
-                assert!(matches!(job.step(1).unwrap(),MeshModelingStep::Working(_)),"missing phase {phase}");
+                assert!(matches!(job.step(1,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap(),MeshModelingStep::Working(_)),"missing phase {phase}");
             }
             let budget = case["sliceEvidence"]["cancelPhaseUnits"].as_u64().unwrap() as usize;
-            assert!(matches!(job.step(budget).unwrap(), MeshModelingStep::Working(_)));
+            assert!(matches!(job.step(budget,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap(), MeshModelingStep::Working(_)));
             let held = job.progress();
             job.cancel();
-            assert!(matches!(job.step(1000).unwrap(),MeshModelingStep::Cancelled(progress) if progress == held));
+            assert!(matches!(job.step(1000,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap(),MeshModelingStep::Cancelled(progress) if progress == held));
             assert_eq!(source.to_obj().unwrap(),before);
         }
     }

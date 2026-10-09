@@ -1,0 +1,27 @@
+{
+  "version": "6.0",
+  "nxVersion": "23.2.0",
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "nonProjectFiles": [],
+    "projectFileMap": {
+      "ticket-interface-current-origin": [
+        {
+          "file": "nx.json",
+          "hash": "17148348930459523583"
+        },
+        {
+          "file": "package.json",
+          "hash": "13648989909700484702"
+        },
+        {
+          "file": "project.json",
+          "hash": "16382741790708034554"
+        }
+      ]
+    }
+  },
+  "externalNodesHash": "3244421341483603138",
+  "dependencyResolutionAuthority": null
+}

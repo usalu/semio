@@ -12,7 +12,7 @@ pub struct TxtIntoPresentation;
 impl Deserializer<PresentationSnapshot> for TxtIntoPresentation {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<PresentationSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<PresentationSnapshot> {
         deserialize_dsl_txt(payload)
     }
 }

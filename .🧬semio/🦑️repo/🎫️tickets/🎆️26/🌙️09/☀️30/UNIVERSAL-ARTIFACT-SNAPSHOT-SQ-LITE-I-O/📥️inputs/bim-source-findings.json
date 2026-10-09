@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-09",
+  "qualification": "Read-only source audit plus bounded own-authored witness probes, not original Nx/provider qualification",
+  "observed": [
+    {
+      "case": "rich24maps",
+      "tables": 44,
+      "rows": 192,
+      "normalRestore": "completed",
+      "reversedTablesRestore": "refused one document required"
+    },
+    {
+      "case": "minimalOmittedMaps",
+      "tables": 44,
+      "rows": 2,
+      "normalRestore": "completed",
+      "reversedTablesRestore": "refused one document required"
+    },
+    {
+      "case": "latitudeBitsPlus2Pow64",
+      "result": "framework refused signed64 integer"
+    }
+  ],
+  "findings": [
+    {
+      "id": "table-order",
+      "priority": "high",
+      "anchor": "Source Reader.create line103",
+      "issue": "schema-ordered returned rows zipped with original input table names",
+      "proposal": "Use authoritative parsed schema order for names or validated original table rows indexed by exact name"
+    },
+    {
+      "id": "map-frontier",
+      "priority": "medium",
+      "anchor": "entries14/compareKeys15/forecast71",
+      "issue": "Object.entries and synchronous sort allocate/traverse full map before count/byte admission or fine cancellation; repeated again during projection",
+      "proposal": "Borrowed key traversal with controlled admission/checkpoints and stable Unicode scalar comparator; bound key/container before owned sort, avoid doubled inventory sort"
+    }
+  ],
+  "confirmedRoles": {
+    "topLevelMaps": 24,
+    "tableWidths": "matches DDL fixed codec widths in reviewed source",
+    "noOpaqueStructuredCells": true,
+    "optional": "Absent normalized; mixedtriples decoder refuses; emptyholes/propertysets preserved",
+    "ordering": "Unicode codepoint comparator equals UTF8 BTree lexical order for wellformed scalar strings; JS integerproperty enumeration may differ despite sorting, so semantic map comparison needed"
+  },
+  "noDefectClaim": [
+    "IEEE word overflow: actual framework rejects before reader",
+    "false terminal/native lifecycle: no Source audit proof",
+    "original provider qualification: belongs root"
+  ]
+}

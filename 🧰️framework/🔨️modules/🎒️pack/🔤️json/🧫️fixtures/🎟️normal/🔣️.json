@@ -1,0 +1,27 @@
+{
+  "title": "Original JSON Normal Physical Admission",
+  "sources": [
+    "{\"beta\":[1,\"ä🧩\"],\"alpha\":{\"nested\":true}}",
+    "[[],{},\"\\n\",null]",
+    "\"original 🧩\""
+  ],
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 32,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 256
+  },
+  "currencies": [
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "zeroGrant": "same-source-and-cursor",
+  "shortGrant": "no-birth-or-release",
+  "receipt": "actual-original-step",
+  "parser": "existing-JsonGrammarCursor",
+  "projection": "existing-JsonValueProjection",
+  "writer": "existing-JsonBorrowedWriteCursor"
+}

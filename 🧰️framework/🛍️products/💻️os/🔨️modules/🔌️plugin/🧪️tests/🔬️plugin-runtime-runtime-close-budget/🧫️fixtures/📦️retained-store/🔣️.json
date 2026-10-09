@@ -1,0 +1,9 @@
+{
+  "schema": "framework.plugin.retained-store-close",
+  "phases": ["child", "disposer", "store", "parent-frontier"],
+  "currencies": ["items", "copy", "capacity", "release", "depth"],
+  "originalPointerOnDenial": true,
+  "childCompleteIsParentProgress": true,
+  "separateDisposerAndStoreRemoval": true,
+  "parentCompleteRequiresAllOwners": true
+}

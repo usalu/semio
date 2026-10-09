@@ -12,7 +12,7 @@
 /// `poll_kernel_output` → `with_turn_execution` → `poll_kernel_turn`, with the same generic
 /// arguments the WIT bridge instantiates.
 fn reactor_turn_future_bytes() -> usize {
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let budget = Budget { fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 };
     let future = crate::reactor::poll_kernel(&runtime, Vec::new(), None, None, budget);
     let bytes = size_of_val(&future);
@@ -63,7 +63,7 @@ const SETTLED_TURN_RETENTION_CEILING_BYTES: isize = 64;
 /// A measurement that fails must fail as one red test, not as a process abort.
 #[semio_framework_async_macros::async_test]
 async fn a_settled_reactor_turn_retains_nothing_the_guest_cannot_afford() {
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
     let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(4_001, 8, "turn-retention".into())]).await.lifecycle_receipt.expect("Captured receipt");
     let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };

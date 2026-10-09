@@ -1,0 +1,13 @@
+{
+  "session": 1492,
+  "outcome": "pre-assertion compile failure",
+  "errors": [
+    "error[E0599]: no method named `foreign_steps` found for type parameter `Mutation` in the current scope\n     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:24475:109\n      |\n19669 | impl<P, Mutation> ArtifactStore<P, Mutation>\n      |         -------- method `foreign_steps` not found for this type parameter",
+    "error[E0599]: no method named `foreign_steps` found for reference `&Mutation` in the current scope\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs:727:81\n    |\n727 |         revision_accumulator.unit_flags.insert((edit_digest, index), !operation.foreign_steps(&store.current).is_empty());\n    |                                                                                 ^^^^^^^^^^^^^",
+    "error[E0599]: no method named `foreign_steps` found for reference `&Mutation` in the current scope\n     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:17351:72\n      |\n17351 | ...   self.revision.unit_flags.insert((digest, index), !original.foreign_steps(self.current.as_deref().ok_or(\"artifact store init...\n      |                                                                  ^^^^^^^^^^^^^",
+    "error[E0599]: no method named `foreign_steps` found for type parameter `Mutation` in the current scope\n     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:26959:87\n      |\n26737 | impl<P, Mutation> ReplayOwnedState<P, Mutation>\n      |         -------- method `foreign_steps` not found for this type parameter",
+    "error[E0599]: no method named `foreign_steps` found for type parameter `Mutation` in the current scope\n     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:27019:75\n      |\n26737 | impl<P, Mutation> ReplayOwnedState<P, Mutation>\n      |         -------- method `foreign_steps` not found for this type parameter"
+  ],
+  "lawExecuted": false,
+  "callerFixesAuthoredByRoot": false
+}

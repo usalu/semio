@@ -16,6 +16,7 @@ const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
 const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for workspace native proofs");
 mkdirSync(artifactRoot, { recursive: true });
+const storage={version:1 as const,directory:artifactRoot};
 const put = (root: string, path: string, source: string): void => { mkdirSync(join(root, path, ".."), { recursive: true }); writeFileSync(join(root, path), source); };
 const workspace = (members: string[], dependencies = ""): string => `[workspace]\nresolver="2"\nmembers=${JSON.stringify(members)}\n[workspace.metadata.semio.repository]\nschema-version=1\nexclude-patterns=[]\nowner-manifests=["*/Cargo.toml"]\nmember-manifests=${JSON.stringify(members.map(m=>m+"/Cargo.toml"))}\n[workspace.package]\nedition="2021"\n${dependencies}`;
 const pkg = (name: string, deps = ""): string => `[package]\nname="${name}"\nversion="0.1.0"\nedition.workspace=true\n[lib]\npath="🦀️.rs"\n${deps}`;
@@ -74,7 +75,7 @@ test("selected Cargo refresh removes deleted artifact and plugin manifests while
   unlinkSync(join(root,"specific",deleted,"Cargo.toml"));put(root,"specific/"+deleted+"/target/retained","source absence is explicit");
   expect(cargo(root,"Cargo.toml").status).not.toBe(0);
   expect(()=>publishCargoWorkspaceMembership(root,discoverCargoWorkspaces(root)[0]!,"check")).toThrow();
-  const owned=await import(pathToFileURL(cargoPreparationRuntimeV1(root)).href);owned.prepareCargoWorkspaceInvocation(root,["metadata","--manifest-path","Cargo.toml"],root);
+  const owned=await import(pathToFileURL(cargoPreparationRuntimeV1(root)).href);owned.prepareCargoWorkspaceInvocation(storage,root,["metadata","--manifest-path","Cargo.toml"],root,process.env);
   const native=cargo(root,"Cargo.toml");expect(native.status).toBe(0);expect(JSON.parse(native.text).workspace_members.length).toBe(2);
   expect(Bun.TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8"))).toEqual(TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8")));
   expect(publishCargoWorkspaceMembership(root,discoverCargoWorkspaces(root)[0]!,"check")).toBe(false);
@@ -109,7 +110,7 @@ test("every compiling native command prepares owners and keeps diagnostics off m
  put(root,"framework/kernel/🦀️.rs","");
  put(root,"📜️script.ts",observedCargoPreparationV1(root,'console.log("[preparation] owned input refreshed");'));
  const api=cargoPreparationRuntimeV1(root);
- put(root,"proof/📜️script.ts",`import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(api)};prepareCargoWorkspaceInvocation(${JSON.stringify(root)},["run","--manifest-path","Cargo.toml"],${JSON.stringify(root)});console.log(JSON.stringify({machine:"retained"}));`);
+ put(root,"proof/📜️script.ts",`import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(api)};prepareCargoWorkspaceInvocation(${JSON.stringify(storage)},${JSON.stringify(root)},["run","--manifest-path","Cargo.toml"],${JSON.stringify(root)},process.env);console.log(JSON.stringify({machine:"retained"}));`);
  const child=Bun.spawnSync([process.execPath,join(root,"proof/📜️script.ts")],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});
  if(child.exitCode!==0)throw new Error(Buffer.from(child.stderr).toString());
  expect(child.exitCode).toBe(0);expect(Buffer.from(child.stdout).toString()).toBe('{"machine":"retained"}\n');expect(Buffer.from(child.stderr).toString()).toContain("owned input refreshed");
@@ -247,7 +248,7 @@ test("Cargo preparation diagnostics observe only opted-in exact phases",()=>{
   expect(records.filter(row=>row.phase==="finished").map(row=>row.items)).toEqual([reached.length]);
  }finally{logger.mockRestore();if(old===undefined)delete process.env.SEMIO_CARGO_PREPARATION_TIMING;else process.env.SEMIO_CARGO_PREPARATION_TIMING=old;}
  const script=fileURLToPath(new URL("../🛠️preparation/📜️script.ts",import.meta.url));
- const child=Bun.spawnSync([process.execPath,script,"prepare","--manifest","Cargo.toml",...law.roots.flatMap((name:string)=>["--package",name])],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe",timeout:10_000});
+ const child=Bun.spawnSync([process.execPath,script,"prepare","--manifest","Cargo.toml",...law.roots.flatMap((name:string)=>["--package",name])],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe",timeout:10_000});
  expect(child.exitCode,child.stderr.toString()).toBe(0);
  const records=stripVTControlCharacters(child.stderr.toString()).split("\n").filter(line=>line.startsWith("[DEBUG] cargo-preparation ")).map(line=>JSON.parse(line.slice("[DEBUG] cargo-preparation ".length)));
  expect(records.filter(row=>law.scriptPhases.includes(row.phase)).map(row=>row.phase)).toEqual(law.scriptPhases);
@@ -261,9 +262,9 @@ test("queued Cargo preparation exposes opted-in waiting before the protected ope
  put(root,"Cargo.toml",workspace(["packages/*"]));put(root,"packages/a/Cargo.toml",pkg("a"));put(root,"packages/a/🦀️.rs","pub fn law() {}\n");
  const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",import.meta.url),"utf8")));
  expect(validate({phase:law.waiting.phase,owner:law.waiting.owner,elapsedMs:0,items:law.waiting.items})).toBe(true);
- const lease=await acquireQueuedResourceLease({owner:"independent-diagnostic-owner",directory:join(root,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"),resource:`cargo-preparation:${root}`,mode:"exclusive",signal:new AbortController().signal});
+ const lease=await acquireQueuedResourceLease({owner:"independent-diagnostic-owner",directory:storage.directory,resource:`cargo-preparation:${root}`,mode:"exclusive",signal:new AbortController().signal});
  const script=fileURLToPath(new URL("../🛠️preparation/📜️script.ts",import.meta.url));
- const child=Bun.spawn([process.execPath,script,"prepare","--manifest",law.waiting.owner],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe"});
+ const child=Bun.spawn([process.execPath,script,"prepare","--manifest",law.waiting.owner],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe"});
  const reader=child.stderr.getReader();let timeout:ReturnType<typeof setTimeout>|undefined;
  try{
   const observation=async():Promise<string>=>{const decoder=new TextDecoder();let buffered="";for(;;){const next=await reader.read();if(next.done)throw Error("Preparation closed before waiting observation");buffered+=decoder.decode(next.value,{stream:true});const lines=buffered.split("\n");buffered=lines.pop()!;const line=lines.map(line=>stripVTControlCharacters(line)).find(line=>line.startsWith("[DEBUG] cargo-preparation "));if(line)return line;}};
@@ -296,7 +297,7 @@ test("selected package preparation follows the Cargo resolved local closure with
   expect([...reached].map(id=>(packages.get(id) as any).name).sort()).toEqual(row.expected);
   const api=cargoPreparationRuntimeV1(root);
   const args=["test","--manifest-path",row.manifest,...row.packages.flatMap((name:string)=>["-p",name])];
-  put(root,"proof/📜️script.ts",`import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(api)};prepareCargoWorkspaceInvocation(${JSON.stringify(root)},${JSON.stringify(args)},${JSON.stringify(root)});`);
+  put(root,"proof/📜️script.ts",`import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(api)};prepareCargoWorkspaceInvocation(${JSON.stringify(storage)},${JSON.stringify(root)},${JSON.stringify(args)},${JSON.stringify(root)},process.env);`);
   const child=Bun.spawnSync([process.execPath,join(root,"proof/📜️script.ts")],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});
   expect(child.exitCode,child.stderr.toString()).toBe(0);
   expect(readFileSync(join(root,"events.jsonl"),"utf8").trim().split("\n").sort()).toEqual(row.expected);

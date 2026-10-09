@@ -1,0 +1,17 @@
+# Guest Persistent Close Contract Current
+
+Read-only 2026-10-09. No Guest runtime qualification.
+
+Authentic reuse patterns exist, but no current snapshot close export was found. Plugin app lifecycle is retained per original app/instance: plugin root34072–34151 describes exact close demands, executes one close turn and publishes Complete only when terminal_is_empty. `runtime_lifecycle_step` enforces actual progress/grant fits; fixture close8190–8210 drives that state machine with original policy and does not widen it. WIT instance-lifetime648–668 has lifetime-bound close request/captured/accepted/retired receipts; events812–813 carry actual instance close and lifecycle acknowledgement. Reuse lifetime/ticket identity and progress/canonical grant semantics, not app-specific payload or UI acknowledgement requirements.
+
+Host actual GuestInstance root709/state768 retains the compiled engine instance; OwnedInstanceState1509 has pending/original_receipt/poisoned actual continuation fields. SQLite Wasmtime codec_instance2860 creates a throwaway instance, so a local native recipient retained there cannot be resumed after return. Keep that same original instance in an operation-owned host slot on denied close, pinned to original compiled package and invocation. No fresh instance can close allocations owned by the old one.
+
+Minimal schema-first snapshot contract:
+
+- Start/import/export returns actual result plus optional retained-close ticket when original recipient contains ownership. Ticket refers to the real component-instance operation slot, not a synthetic returned payload factory. Keep original refusal and exact current ownership receipt beside it.
+- Descriptive close-demands request returns all five physical demands without allocating or granting authority. One close-step accepts caller's explicit RetainedCloneGrant and original progress/allocation/cancellation imports; returns exact progress and terminal flag. Complete requires actual retained recipient empty and host lift/return custody drained.
+- SDK retains original decode/encode recipient in persistent snapshot-operation state, along with actual admitted continuation and direction. Do not store mutable native control callback references across calls; retain consuming forwarded receipt/recipient and rebind original imported ports on each resumed call. Do not recreate a zero-origin/unlimited controller.
+- Host operation owner retains same GuestInstance and OriginalOperationReceipt. Resume validates exact cumulative owner/ceiling before the next close turn; close publication consumes only the supplied grant once. Refused close keeps instance/ticket/receipt reachable. Cancellation forbids new work but still allows caller-authorized cleanup turns.
+- Native VM output custody and component native recipient may both exist. Keep separate actual owners and quote their demands rather than collapsing them into opaque bytes or treating instance drop as controlled close. Host release of retained instance is a final admitted step after both owners terminal.
+
+Meaningful original law: real compiled component allocates intermediate/output; zero-release or one-short grant denies close; host returns genuine retained ticket without losing original pointer/receipt; subsequent original one-turn grants drain same instance, exact five-field progress fits, no duplicated allocation charge, independent semantic output/error oracle, terminal empty. Run both owned interpreter and Wasmtime; ordinary successful snapshot roundtrip cannot qualify denial cleanup.

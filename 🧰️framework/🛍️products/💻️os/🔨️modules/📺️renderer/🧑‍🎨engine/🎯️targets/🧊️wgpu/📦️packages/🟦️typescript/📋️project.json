@@ -245,6 +245,16 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
       ]
     },
+    "test-socket-snapshot-sqlite-source": {
+      "executor": "nx:run-commands", "cache": false, "dependsOn": [], "outputs": [],
+      "options": {"command": "bun ./📜️script.ts test-socket-snapshot-sqlite source", "cwd": "{projectRoot}"},
+      "inputs": ["sharedGlobals", "{projectRoot}/📜️script.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/**/*"]
+    },
+    "test-socket-snapshot-sqlite-native": {
+      "executor": "nx:run-commands", "cache": false, "dependsOn": [], "outputs": [],
+      "options": {"command": "bun ./📜️script.ts test-socket-snapshot-sqlite native", "cwd": "{projectRoot}"},
+      "inputs": ["sharedGlobals", "{projectRoot}/📜️script.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/**/*"]
+    },
     "test-native": {
       "executor": "nx:run-commands",
       "options": {

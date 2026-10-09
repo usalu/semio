@@ -671,7 +671,7 @@ where
     const BASE_BOUND: bool = T::BASE_BOUND;
 
     fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
-        let runner = ToolMachineRunner::start(T::tool(verb), ActorId(authoring_seed.to_string()), T::input(), T::host())?;
+        let runner = ToolMachineRunner::start(T::tool(verb), ActorId(authoring_seed.into()), T::input(), T::host())?;
         Ok(Self { runner, verb: verb.to_string(), authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string() })
     }
 
@@ -680,7 +680,7 @@ where
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: T::definition().fingerprint, states: gesture.states.clone(), history: Vec::new(), done: false };
         let snapshot = machine::restore::<T, machine::NoMigrations>(&persisted, context, &[]).map_err(|_| ToolRefusal::Closed)?;
         let transaction = ToolTransaction::resume(gesture.transaction.clone(), gesture.entries.clone());
-        let runner = ToolMachineRunner::resume(T::tool(&gesture.verb), ActorId(gesture.authoring_seed.clone()), T::input(), snapshot, Some(transaction), T::host())?;
+        let runner = ToolMachineRunner::resume(T::tool(&gesture.verb), ActorId(gesture.authoring_seed.clone().into()), T::input(), snapshot, Some(transaction), T::host())?;
         Ok(Self { runner, verb: gesture.verb.clone(), authoring_seed: gesture.authoring_seed.clone(), base_revision: gesture.base_revision.clone() })
     }
 
@@ -1104,7 +1104,7 @@ impl<M: Clone + 'static> Host<ScrubMachine<M>> for ScrubHost {
 pub struct ScrubState<M> {
     pub states: Vec<String>,
     pub tool: String,
-    pub actor: String,
+    pub actor: ActorId,
     pub gesture: String,
     pub base_revision: String,
     pub transaction: TransactionRef,
@@ -1132,7 +1132,7 @@ impl<M: Clone + 'static> Scrub<M> {
         let context = ScrubContext { gesture: Some(state.gesture), keys: state.entries.len() };
         let snapshot = machine::restore::<ScrubMachine<M>, machine::NoMigrations>(&persisted, context, &[]).map_err(|_| ToolRefusal::Closed)?;
         let transaction = ToolTransaction::resume(state.transaction, state.entries);
-        let runner = ToolMachineRunner::resume(state.tool, ActorId(state.actor), ScrubContext::default(), snapshot, Some(transaction), ScrubHost)?;
+        let runner = ToolMachineRunner::resume(state.tool, state.actor, ScrubContext::default(), snapshot, Some(transaction), ScrubHost)?;
         Ok(Self { runner, base_revision: state.base_revision })
     }
 
@@ -1173,7 +1173,7 @@ impl<M: Clone + 'static> Scrub<M> {
 
     /// 💾️ The state to persist: `Some` only while a transaction is open.
     pub fn persist(self) -> Option<ScrubState<M>> {
-        let (tool, actor) = (self.runner.tool().to_string(), self.runner.actor().0.clone());
+        let (tool, actor) = (self.runner.tool().to_string(), self.runner.actor().clone());
         let (snapshot, transaction) = self.runner.into_parts();
         let transaction = transaction.filter(|transaction| transaction.state() == ToolTransactionState::Open)?;
         let gesture = snapshot.context.gesture.clone()?;
@@ -1391,7 +1391,7 @@ impl<M> NodeDragEmit<M> {
 /// 🛠️ The ONE node-drag emission of every guest: `leaves` of the press `gesture` through [`node_drag_commit`] as the tool
 /// `<app_id>#<verb>`, minted from the admission's `authoring_seed` and [`authoring_clock`].
 pub fn node_drag_emit<M: Clone + 'static>(app_id: &str, verb: &str, authoring_seed: &str, gesture: &str, leaves: Vec<M>) -> NodeDragEmit<M> {
-    match node_drag_commit(format!("{app_id}#{verb}"), ActorId(authoring_seed.to_string()), gesture, leaves, authoring_clock(GESTURE_CLOCK_TICK.fetch_add(1, std::sync::atomic::Ordering::Relaxed))) {
+    match node_drag_commit(format!("{app_id}#{verb}"), ActorId(authoring_seed.into()), gesture, leaves, authoring_clock(GESTURE_CLOCK_TICK.fetch_add(1, std::sync::atomic::Ordering::Relaxed))) {
         Some((transaction, leaves)) if !authoring_seed.is_empty() => NodeDragEmit::Commit(transaction, leaves),
         Some((_, leaves)) => NodeDragEmit::Plain(leaves),
         None => NodeDragEmit::Nothing,
@@ -1741,7 +1741,7 @@ impl<M: Clone + 'static> Host<TypingMachine<M>> for TypingHost {
 pub struct TypingState<M> {
     pub states: Vec<String>,
     pub tool: String,
-    pub actor: String,
+    pub actor: ActorId,
     pub buffer: String,
     pub deadline_ms: u64,
     pub transaction: TransactionRef,
@@ -1769,7 +1769,7 @@ impl<M: Clone + 'static> Typing<M> {
         let snapshot = machine::restore::<TypingMachine<M>, machine::NoMigrations>(&persisted, context, &[]).map_err(|_| ToolRefusal::Closed)?;
         let transaction = ToolTransaction::resume(state.transaction, state.entries);
         let host = TypingHost { now_ms: 0, deadline_ms: Some(state.deadline_ms) };
-        let runner = ToolMachineRunner::resume(state.tool, ActorId(state.actor), TypingContext::default(), snapshot, Some(transaction), host)?;
+        let runner = ToolMachineRunner::resume(state.tool, state.actor, TypingContext::default(), snapshot, Some(transaction), host)?;
         Ok(Self { runner })
     }
 
@@ -1831,7 +1831,7 @@ impl<M: Clone + 'static> Typing<M> {
 
     /// 💾️ The state to persist: `Some` only while a transaction is open.
     pub fn persist(self) -> Option<TypingState<M>> {
-        let (tool, actor, deadline_ms) = (self.runner.tool().to_string(), self.runner.actor().0.clone(), self.runner.host.deadline_ms?);
+        let (tool, actor, deadline_ms) = (self.runner.tool().to_string(), self.runner.actor().clone(), self.runner.host.deadline_ms?);
         let (snapshot, transaction) = self.runner.into_parts();
         let transaction = transaction.filter(|transaction| transaction.state() == ToolTransactionState::Open)?;
         let buffer = snapshot.context.buffer.clone()?;

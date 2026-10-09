@@ -21,7 +21,7 @@ impl Deserializer<WriterSnapshot> for TxtIntoWriter {
     /// writer document it seeds is a fresh one (`"txt-import"`), never a restoration of a prior
     /// writer document's full identity.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<WriterSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "TxtIntoWriter: expected a text payload".to_string())));
         };

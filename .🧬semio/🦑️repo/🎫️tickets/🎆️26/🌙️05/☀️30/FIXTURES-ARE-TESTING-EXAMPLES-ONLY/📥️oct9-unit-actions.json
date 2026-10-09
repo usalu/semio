@@ -1,0 +1,912 @@
+{
+  "authoredActionEndpoints": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-runtime.json",
+      "logicalActions": [
+        {
+          "scope": "initialization_runtime_preserves_physical_backing_and_terminal_cursor_box"
+        }
+      ],
+      "beforeSHA": "f9d6e212ed075db67f12dc6431954c4705647012f793344163ee8716053bc1a0",
+      "recordedAfterSHA": "83d705860bcebc638e4ca504d3dcbe138cb96b7cb7de5a6cbe47ab61dcf801fc",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact logical scopes only; current whole-file hash may include concurrent peer changes; not a source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-close-callers.json",
+      "logicalActions": [
+        {
+          "scope": "fn close_member_dialect_fixture<M: SpaceMember>",
+          "beforeBlockSHA": "35a6a68a4ae61c6c4cd5233312e80c9131e48eeec4cc05dc067afeee21cb3a9c",
+          "afterBlockSHA": "3873c50c25c9cd0a2e93bdbee5539936a3362db516c987cabc9261bf69196b11"
+        },
+        {
+          "scope": "fn retire_demo_envelope<Mutation: Send",
+          "beforeBlockSHA": "df4504bfe7a3059d36b9b01510b065019574a59796cfaac114f55ea5dc41f7d3",
+          "afterBlockSHA": "bf9058bb41afc626fd1bd0720f07b776bd3339dbf65b55856598de6095521655"
+        },
+        {
+          "scope": "fn close_erased_member_publication(",
+          "beforeBlockSHA": "30fa8566b2e8cb237b6001740a50f6aaaaf5b2051cb9ce023baaca98c9e477be",
+          "afterBlockSHA": "57ff6438654bc41d30496822dc96d41629dbdee7851b2db5b0ed400689b4d1f0"
+        },
+        {
+          "scope": "fn close_durable_publication(",
+          "beforeBlockSHA": "75c28dad61d6ca1e4c91b27ab2f896d555cdfdbbf32eb613044c7a8aabaf510b",
+          "afterBlockSHA": "30d9a1f00c5cc150b929882e202737cd5018a7d522fcaa315abfba77f859c68b"
+        }
+      ],
+      "beforeSHA": "83d705860bcebc638e4ca504d3dcbe138cb96b7cb7de5a6cbe47ab61dcf801fc",
+      "recordedAfterSHA": "c51c97ca1bd8276b40f03d1f6bb71576850e320af58337c38ef363e673538d78",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact logical scopes only; current whole-file hash may include concurrent peer changes; not a source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-ledger-callers.json",
+      "logicalActions": [
+        {
+          "scope": "fn artifact_store_history_metadata_retirement_cursors_authors_pins_and_ids_under_each_grant()",
+          "beforeBlockSHA": "64be411bd0ccfd2a5c1f36edbc5d1d94997be8bd2f34e1b8a8d91f00d5fba318",
+          "afterBlockSHA": "7eba593ca96640e69b33d7ba072c2cde651ca4606c3f0cb5fde670706423e576"
+        },
+        {
+          "scope": "fn fixed_edit_message_ledger_resolves_probe_collisions",
+          "beforeBlockSHA": "e79986c09ca8bba16581b028463f1a0f99a6726b6480a897aec437eb247e420e",
+          "afterBlockSHA": "04314110faa52014562403271865b752c589014a52b5652d4eb224083cca5906"
+        },
+        {
+          "scope": "fn drain_rejected_edit_message_ledger(",
+          "beforeBlockSHA": "e9aa5a707b7af7de8aface5cc1e0613caf604e676f2628ee72e7790d64d7d2c7",
+          "afterBlockSHA": "136a415917df9b58479a12a4fd938e3bad9897bd58ea17d2d8ff1bfbf8359e72"
+        }
+      ],
+      "beforeSHA": "c51c97ca1bd8276b40f03d1f6bb71576850e320af58337c38ef363e673538d78",
+      "recordedAfterSHA": "4dbb15180e9101ef80d130a86d3b3215ef24c081990b2b184ab04605d6662473",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact logical scopes only; current whole-file hash may include concurrent peer changes; not a source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "actionEvidence": "📥️oct9-directory.json",
+      "logicalActions": [
+        {
+          "scope": "OwnedSchemaDecodePages directory release and physical terminal",
+          "beforeBlockSHA": "9e67857cddc0c2199310ea97b9e9582efc78d496470947557d60c9ee15d7def2",
+          "afterBlockSHA": "daa135dbd3fe16ebdc311663e27bf799cdc0c137820d05f98bf0a5a8a1373714"
+        },
+        {
+          "scope": "OwnedSchemaTokenCursor supplied close and four physical frontier observers",
+          "beforeBlockSHA": "630610065930f4130ed12eac4be6fbe555cd2a3722d1cbc5092f6e3ef29fbf6f",
+          "afterBlockSHA": "1cf4dd52e4188068ce6213b310016098f581f1cde02d4f34f57e8fc17116cf98"
+        },
+        {
+          "scope": "OwnedSchemaRecordCursor actual same-owner physical frontier forwarding",
+          "beforeBlockSHA": "60ece3ac3928fa5ac80ab341007435e55560824c99cb115c6714e69a3a60146d",
+          "afterBlockSHA": "d79cb7d3767dde88bd04cd78def65ece95766dafef186820737a4e4d4ae3b157"
+        }
+      ],
+      "beforeSHA": "e5b45ed9a69612c957e5cc9da4b55c3f32d36364a5223675819292dea9e0160b",
+      "recordedAfterSHA": "b23ee179a0b30569f8f495befb20020ab4cfa9990b9ee2711034b7f0302c1d6a",
+      "currentObservedSHA": "686b2d68c9214bbfe68ab70122fb032938ea770477f0b373860f256adea37f7c",
+      "attribution": "own exact logical scopes only; current whole-file hash may include concurrent peer changes; not a source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json",
+      "actionEvidence": "📥️oct9-directory-input.json",
+      "logicalActions": [
+        {
+          "scope": "append independent plain decodeCloseGrant, preserve every original field/value/order"
+        }
+      ],
+      "beforeSHA": "3dea4dcea83e620ebf1139367a7c92065b16c99740e7be0cc741852a224c9cef",
+      "recordedAfterSHA": "887c79c3e780dfc9728bf1a9926efc365c21eba073ca87edd7a5ddede2ca4adc",
+      "currentObservedSHA": "eca81f4fd530b1d83a4dc8d9ffe26877aca40d66bdc886a6904be33493e446ea",
+      "attribution": "own exact logical scopes only; current whole-file hash may include concurrent peer changes; not a source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-directory-laws.json",
+      "logicalActions": [
+        {
+          "scope": "schema_test_close_grant",
+          "afterBlockSHA": "d930344abd99551e7a4bb9bde00e8bb14b7e4a8f95abbd4c018117fe4b38aa44"
+        },
+        {
+          "scope": "stale-owned-schema original input and terminal directory",
+          "beforeBlockSHA": "badbdd095790acf05f532f1e06e1adc639204df9d139b7c36c97f2ae76a850a5",
+          "afterBlockSHA": "e6ebda03e34efc081203c9b8a2d160cdcea8e613dc06ba47a4c0a4cf64c93ce1"
+        },
+        {
+          "scope": "cancelled-owned-schema original slots and exact separate backing release",
+          "beforeBlockSHA": "55eb77d91efc4c81c5e3ce29b81f6a9977c134b2a919b0863fa48a27e815d329",
+          "afterBlockSHA": "dbdf392b831bc0614100cf6e273239c47254574fd1c93c56590db76312354965"
+        }
+      ],
+      "beforeSHA": "4dbb15180e9101ef80d130a86d3b3215ef24c081990b2b184ab04605d6662473",
+      "recordedAfterSHA": "132276735c42964b57384360b221bc1a5052e85d98633a7a401d8929949b2b19",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact logical scopes only; current whole-file hash may include concurrent peer changes; not a source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-factory.json",
+      "logicalActions": [
+        {
+          "scope": "impl semio_framework_value::FactoryPayloadRetirement for DemoPublishedRootWitness",
+          "beforeBlockSHA": "bca22262c35410e62f7b57639836ba38017231bf4d6f93342e02b0b6d0858ce8",
+          "afterBlockSHA": "5fe33b86aedc84b9799ddf0a93eccd6ed4f921787db19e0d6f78aaafea50ed9c"
+        },
+        {
+          "scope": "impl semio_framework_value::FactoryPayloadRetirement for DemoOneItemPreparationFactory",
+          "beforeBlockSHA": "b0f435771f1a394c49a2fd1f8a5b7cd4cc7767be38504c21dcd7252633d87a07",
+          "afterBlockSHA": "50ed4884e95ac86534acea44e497f7ed0eb8124cda0d90bf510163cde7f70b84"
+        }
+      ],
+      "beforeSHA": "132276735c42964b57384360b221bc1a5052e85d98633a7a401d8929949b2b19",
+      "recordedAfterSHA": "d4bb12dd49671430a670c66218d7067ec6298cd1dee3390af162ced08fb72345",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact logical scopes only; current whole-file hash may include concurrent peer changes; not a source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-witness-law.json",
+      "logicalActions": [
+        {
+          "scope": "factory_preborn_tickets_retire_sole_snapshot_weak"
+        }
+      ],
+      "beforeSHA": "d4bb12dd49671430a670c66218d7067ec6298cd1dee3390af162ced08fb72345",
+      "recordedAfterSHA": "ea33111fcb043e668566593ebf6e6a92f0cb88d252bb7662a98eb2dec2950cbe",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact logical scopes only; current whole-file hash may include concurrent peer changes; not a source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-group-callers.json",
+      "logicalActions": [
+        {
+          "scope": "drive_retirement_within full supplied policy",
+          "beforeBlockSHA": "33f727af07786098e6d0ff472c1d66e168bb4f189cee2f256b8651bd3351115e",
+          "afterBlockSHA": "561c598d842ee6ccb5dc05cd6ecdc9f44ddf596bf2d88d2e36e87fcb745bafa7"
+        },
+        {
+          "scope": "3 actual group cursor/current original caller policies",
+          "beforeCallsSHA": "c05830fee68039934a6568ef296c197629cd85ea892cffff83b4a2b67ba9d3bc"
+        },
+        {
+          "scope": "stored-genesis cancellation original captured bytes and decode directory",
+          "beforeBlockSHA": "8b8a446cb125fe01742bbef54feb8143ea37ffb0504b0f7d94a8853f1cfd6945",
+          "afterBlockSHA": "e6d5ab6b1339ae46dac257ddadaa0e55092dc1afbc53aa95fa6329debc025ead"
+        }
+      ],
+      "beforeSHA": "ea33111fcb043e668566593ebf6e6a92f0cb88d252bb7662a98eb2dec2950cbe",
+      "recordedAfterSHA": "444556cfb3e57204718e7176b75ae309d75acfaf8cfb1723348d36593f296b0e",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact logical scopes only; current whole-file hash may include concurrent peer changes; not a source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "logicalActions": [
+        "initialization runtime independent Grant/Ajv/Buffer and current source-law",
+        "decode original directory independent Buffer/u16/canonical Grant and current source-law",
+        "inline original unit factory independent Buffer frame and current source-law"
+      ],
+      "currentObservedSHA": "3d65f47dfdca02cbb762df657bfb03ce30ddac89d3b94ff673f31292e5a07289",
+      "historicalBeforeEvidence": "📥️oct9-runtime-law.json (before first of three laws); intermediate before hashes not retained",
+      "executedProof": [
+        {
+          "session": 49699,
+          "result": "Nx1 true runtime caller RED",
+          "log": "🗑️generated/oct9-runtime-red3.log"
+        },
+        {
+          "session": 85641,
+          "result": "Nx0 19/513",
+          "log": "🗑️generated/oct9-runtime-green.log"
+        },
+        {
+          "session": 30217,
+          "result": "Nx1 true directory RED",
+          "log": "🗑️generated/oct9-directory-red.log"
+        },
+        {
+          "session": 72607,
+          "result": "Nx0 20/528",
+          "log": "🗑️generated/oct9-directory-green.log"
+        },
+        {
+          "session": 91866,
+          "result": "Nx1 true inline factory RED",
+          "log": "🗑️generated/oct9-factory-red.log"
+        },
+        {
+          "session": 81471,
+          "result": "Nx0 21/538",
+          "log": "🗑️generated/oct9-factory-green.log"
+        }
+      ],
+      "attribution": "exact3 own test laws; existing source tests and peer bodies not adopted"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-alias-policy.json",
+      "logicalActions": [
+        {
+          "scope": "fn admit_demo_alias_retirement(",
+          "beforeBlockSHA": "8f7373c5fc0a817af20ec13d6ffba4bf5339271c431d0350a9f876c0c5b42505",
+          "afterBlockSHA": "ceca6b3d78bdc87b334474011d31687edb14e98a02a35bcb2efb47008d5f3589",
+          "action": "original configured test policy supplies positive birth authority; demand stays frontier/one-below negative input only"
+        },
+        {
+          "scope": "async fn artifact_store_snapshot_roots_and_final_envelope_transfer",
+          "beforeBlockSHA": "eb7669ba12fac83749ecf5b83f75e4b3db5c1ca09ca887ad8cdbe7ceb678dc56",
+          "afterBlockSHA": "1f45ba53590414c0c26ef04c36f13e83aa34efcc48f9ecbf7a310bbab1793283",
+          "action": "original configured test policy supplies positive birth authority; demand stays frontier/one-below negative input only"
+        }
+      ],
+      "beforeSHA": "444556cfb3e57204718e7176b75ae309d75acfaf8cfb1723348d36593f296b0e",
+      "recordedAfterSHA": "4621f89e5fa89a15b8a8f0230ae6008279db320a4ab33bc6f8df61668aa2a098",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "actionEvidence": "📥️oct9-begin-law.json",
+      "logicalActions": [
+        {
+          "scope": "durable factory supplied-grant/source original-refusal law"
+        }
+      ],
+      "beforeSHA": "a63d9ed46225e0f97771909e5d9b80e86c2282e6e197cd285994496766aa0964",
+      "recordedAfterSHA": "e989dc96ce31dac79ab0848b3a92c803217077642a6c1b103ff4dbaf38c9f31b",
+      "currentObservedSHA": "3d65f47dfdca02cbb762df657bfb03ce30ddac89d3b94ff673f31292e5a07289",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-begin.json",
+      "logicalActions": [
+        {
+          "logicalScope": "CountingOwnedPreparationFactory delegated actual begin demand/grant",
+          "beforeBlockSha256": "f7340912951f2c0bb605fa979e5bd17fade955fb25ea436f20f126a88ba81139",
+          "afterBlockSha256": "b332e49955551a713cd910626effc0b2f485ec3e42537f70a624ad80055512fc"
+        },
+        {
+          "logicalScope": "DemoMemberWirePreparationFactory exact original cursor birth/refusal",
+          "beforeBlockSha256": "d3a67d50355c66d88fb2b70b87a7dc8d7d8f2c3b317c3e159b9d3097b2acd185",
+          "afterBlockSha256": "df41f930b67c833bfa2363032934c8bd8e447b71ddf7f83807dc5da6bbab33a1"
+        },
+        {
+          "logicalScope": "DemoOneItemPreparationFactory actual frame plus stamped identity birth/copy admission",
+          "beforeBlockSha256": "bfa3b3ff34a2171740df3351b45e1be9e5298ad957d5e4223612a1390d509405",
+          "afterBlockSha256": "890384aa12e85dd0bb654b4f236d7d2d3e5bda85c88b11e2bd1b0199f1e9d362"
+        }
+      ],
+      "beforeSHA": "4621f89e5fa89a15b8a8f0230ae6008279db320a4ab33bc6f8df61668aa2a098",
+      "recordedAfterSHA": "88e9449587db1af2a665415502342f350f4d62b39892680eda39c81dab7826b9",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-literals.json",
+      "logicalActions": [
+        {
+          "beforeLiteralSha256": "0f52a1aa52507790f9b6a2fee135979fd9b9f438c94cf8af609bba1261354029",
+          "afterLiteralSha256": "04c81b3a6e7e624c93119072df4eb2f6bb490d6cd18eef8c354b8cfc2256db24",
+          "occurrences": 11,
+          "currency": "maximum_copy_bytes",
+          "originalExpression": "4096",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        },
+        {
+          "beforeLiteralSha256": "46d2b7790de07bf83d7949329ffea3694d997934a045d5643c014942f6ffd06c",
+          "afterLiteralSha256": "6e76394d136e24bbe3d19bc04b7114e05abc9cdeb4936b055b9e6300a66a54ed",
+          "occurrences": 2,
+          "currency": "maximum_copy_bytes",
+          "originalExpression": "4096",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        },
+        {
+          "beforeLiteralSha256": "dc2387cecf725b83cc523c9644a571a6bb2cd2c0385bbef9c8fdb062ed7c8c79",
+          "afterLiteralSha256": "8658585dec822a154caa382918e87c1a141288952c33669c92ca5a15c41adc5a",
+          "occurrences": 1,
+          "currency": "maximum_copy_bytes",
+          "originalExpression": "demand - 1",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        },
+        {
+          "beforeLiteralSha256": "f43e909a9d0f97b30228f96e05348d141e027b152630a03fa96ec8ef5ff317d7",
+          "afterLiteralSha256": "5f7179d04cb6e084544e78b10874998a78bb2b62d598dbb71a936f5ebe5f3e64",
+          "occurrences": 2,
+          "currency": "maximum_copy_bytes",
+          "originalExpression": "demand.max(1)",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        },
+        {
+          "beforeLiteralSha256": "28f327b9ad22b038a973178009e7e1d6596a653614ae59c9e20f0efa6cfeca23",
+          "afterLiteralSha256": "a07e7a363c729d45cc50b14c2d624f671943726d2a1dc7e86a05a98d583c8867",
+          "occurrences": 2,
+          "currency": "maximum_copy_bytes",
+          "originalExpression": "fixture[\"maximumBytes\"].as_u64().unwrap() as usize",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        },
+        {
+          "beforeLiteralSha256": "b94ead51d1e8bec8b4584b6fd299d2c2d38770113ecf973834e3cdd74007cdaa",
+          "afterLiteralSha256": "a047d2350c7f73ebc299fc4d147548d33c82b62a3c8ab32c458fd03bc483fbd5",
+          "occurrences": 1,
+          "currency": "maximum_copy_bytes",
+          "originalExpression": "0",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        },
+        {
+          "beforeLiteralSha256": "50389cd0245e0a73a894132b576d7434fbcd307bc16416100ba27c9eed232032",
+          "afterLiteralSha256": "90ef747bd44e55a1e2a8dc78e4bb9f946da6b3c7c2efb2fbc59831a38f1900b5",
+          "occurrences": 1,
+          "currency": "maximum_copy_bytes",
+          "originalExpression": "grant.maximum_bytes",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        },
+        {
+          "beforeLiteralSha256": "20907751d66e2316efc4deb3075699579f799fe951c833620a2705e978db5a81",
+          "afterLiteralSha256": "1e4f622f15e52928ea37428620c987df6ac411ef5973ab9f134412395891a9d9",
+          "occurrences": 1,
+          "currency": "maximum_capacity_bytes",
+          "originalExpression": "ErasedSnapshotRead::LEASE_ALLOCATION_BYTES - 1",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        },
+        {
+          "beforeLiteralSha256": "b268707105e492572821720dc2a32661dc553549b9be38960845f20255250d54",
+          "afterLiteralSha256": "39fc08682957d78290065c667d55fa7fa789b9d7368484994f94a8027757db37",
+          "occurrences": 1,
+          "currency": "maximum_capacity_bytes",
+          "originalExpression": "birth",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        },
+        {
+          "beforeLiteralSha256": "461984fe8408c0eb4fa58cab77b4a275a950040dd7ff3365b6af4acb49ccdbbc",
+          "afterLiteralSha256": "d1f9d22ba672df559798f418c7ec3469df03907bbb862b81ef85ecaaddac7f7c",
+          "occurrences": 1,
+          "currency": "maximum_copy_bytes",
+          "originalExpression": "0",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        },
+        {
+          "beforeLiteralSha256": "dd044374b4811183c50b0dcbf8c6650bd0b351e716ec4e2f196470a260415ede",
+          "afterLiteralSha256": "45b1f408c51f962293c7dcf0a26a097c85095e513a1c6ff6b8b33bde773a2599",
+          "occurrences": 1,
+          "currency": "maximum_capacity_bytes",
+          "originalExpression": "birth - 1",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        },
+        {
+          "beforeLiteralSha256": "742a4b3dfe4e44a995788650d387b32998b561659ed067430e9542a9aedacde7",
+          "afterLiteralSha256": "b3c62bf8cc3b191e00da37e8b9225644890558e5df554e1d5ce6b377855b95b1",
+          "occurrences": 1,
+          "currency": "maximum_capacity_bytes",
+          "originalExpression": "birth",
+          "scope": "existing unit caller literal; original items/expression preserved, other currencies declared fixed plain policy"
+        }
+      ],
+      "beforeSHA": "88e9449587db1af2a665415502342f350f4d62b39892680eda39c81dab7826b9",
+      "recordedAfterSHA": "98b220c52ede8cd5876b6272a51c4423c737890561e22309ed04da363f265b52",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-member-callers.json",
+      "logicalActions": [
+        {
+          "logicalScope": "Counting granted begin receipt and original pointer allocator assertions",
+          "occurrences": 1,
+          "beforeBlockSha256": "8096d4fa33781de90dc547e8120a751cd7537f5f8b03e69e5b5110d233fbd59c",
+          "afterBlockSha256": "8b2e3dbbc56de5a5b54408d0ff298a5994a5262d063a2d0a887e722f89b3feb3"
+        },
+        {
+          "logicalScope": "owned batch census immutable fixed release policy actual receipts",
+          "occurrences": 1,
+          "beforeBlockSha256": "7615deb804afd545f9b37f372065454d22111db68fad48e308271b71c6d9d44f",
+          "afterBlockSha256": "d8ae3bf15d007170c6253b6b053521bc95193fa113e9ec9a1b563931e44d7f2f"
+        },
+        {
+          "logicalScope": "member partial retention fixed original admission grant",
+          "occurrences": 1,
+          "beforeBlockSha256": "852a8f19916354c66337bdb0b1e237bca2343fd973475a33d5f3ddd72a803cac",
+          "afterBlockSha256": "e3f1ff1f66821eaecbf68882f96388b51dca3165f710150ed5cbca4545cba050"
+        },
+        {
+          "logicalScope": "three exact member cold close full independent grant",
+          "occurrences": 3,
+          "beforeBlockSha256": "bbb39a56a870bc41dc4b62b5fa7512acc4f59e4b8449b4ced63d8e3799ca5ce5",
+          "afterBlockSha256": "e65c289b0cb0607b1d86a17f1ad518ddfab18ee040af8f9dc7ee0a2b5d4ee414"
+        }
+      ],
+      "beforeSHA": "98b220c52ede8cd5876b6272a51c4423c737890561e22309ed04da363f265b52",
+      "recordedAfterSHA": "40adad19e52de995fad5775e94ec707d422e09fcb9effe2ab02429e4480f138b",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-group-full.json",
+      "logicalActions": [
+        {
+          "scope": "retained member original domains copy axes/full abort and paid cold close; original business fields retained"
+        }
+      ],
+      "beforeSHA": "40adad19e52de995fad5775e94ec707d422e09fcb9effe2ab02429e4480f138b",
+      "recordedAfterSHA": "f779e2425c0bec7522d9769fedd96dc1bd71f5ee3fc82c6164c326b7d21b6e4b",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-queue-unit.json",
+      "logicalActions": [
+        {
+          "logicalScope": "seven fresh decoder native positive cleanup policies use independent admission ceiling; no frontier priced grant",
+          "occurrences": 7,
+          "beforeBlockSha256": "2473619c00ff0e7effbdf50d556ce8894744fb1c5036edc407b7ba37bff034ec",
+          "afterBlockSha256": "4275503b15b223a04f594d88a27ec539c822aceb0931fe40c6c76bcba4b01d50"
+        },
+        {
+          "logicalScope": "displaced original terminal owner law genuine full contract, fixed birth/close policy, separate paid backing, typed reservation refusal",
+          "beforeBlockSha256": "1e0cc5fc5dc71722c3c238d95bd0357ed1ec5c72d610bca11b6ecc18a151d4cb",
+          "afterBlockSha256": "d0604f0c7bf4598b68698961ed5d3a6bb18953ff4d56fa332b34718a20a99cac"
+        }
+      ],
+      "beforeSHA": "f779e2425c0bec7522d9769fedd96dc1bd71f5ee3fc82c6164c326b7d21b6e4b",
+      "recordedAfterSHA": "32dcd1ea0c971e6006760c9a9c1188d04745be33bc29bc829baf54e3f5893a39",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "actionEvidence": "📥️oct9-prep-close-law.json",
+      "logicalActions": [
+        {
+          "scope": "actual durable preparation cancellation/captured authority law"
+        }
+      ],
+      "beforeSHA": "e989dc96ce31dac79ab0848b3a92c803217077642a6c1b103ff4dbaf38c9f31b",
+      "recordedAfterSHA": "3ffe6bb01ca839ddd3c14142835475299c1557632e49d06db6e25ce3bd0cc5b6",
+      "currentObservedSHA": "3d65f47dfdca02cbb762df657bfb03ce30ddac89d3b94ff673f31292e5a07289",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-prep-close.json",
+      "logicalActions": [
+        {
+          "logicalScope": "Demo original captured issuer factory fields and allocation-free close capabilities",
+          "beforeBlockSha256": "bd4e33d22d0d084a942efbeca217d51086079b6d31d9df8ad0e933119d9345ea",
+          "afterBlockSha256": "1de7e6ac61210c61a019cc5ca4f5dbdd76f93b105a6cb3c11aadc67450cb9848"
+        },
+        {
+          "logicalScope": "original immutable Demo factory source constructs genuine issuer owners during test setup",
+          "beforeBlockSha256": "c8ef05f5871e425f6ca8d7db06172a648420e3faed19ff79a540f11d176f0385",
+          "afterBlockSha256": "e2dc6422d49545ffa10f3e23f49e59ed91f307e9e502a63e18bb9b1616d62036"
+        },
+        {
+          "logicalScope": "Demo preparation retains candidate and exact source issuer aliases until controlled terminal",
+          "beforeBlockSha256": "249050656eeae32f8dec2c504c1ea66bd87d4811c4f43fa84fd6a4f9c262d1cc",
+          "afterBlockSha256": "d0c9237628256be94f0179e91b24933ab620bdc73fd8e2a105654f21e0c19cdd"
+        },
+        {
+          "logicalScope": "funded begin aliases only existing captured source issuers; no new issuer frames",
+          "beforeBlockSha256": "677f6b44080adbf02142d67cea8dcca71f61919c763a8c3768b20f6a9c6f6cc2",
+          "afterBlockSha256": "1cb0e627df6ec812adbce19b9576bb4e1ac565105c1d2a761b3e2c4be561dcca"
+        },
+        {
+          "logicalScope": "actual advance borrows retained original witness",
+          "beforeBlockSha256": "c4fa9f446ccb9349085cb8f237876442463eddaabf66a7b3637047c821d7c7c2",
+          "afterBlockSha256": "296cb98fb9d18e66f89a82c4d1fc0b19a53476b33fdca654c42ca696d52aa29a"
+        },
+        {
+          "logicalScope": "current full-grant cancellation original candidate/admitted issuers/registry restoration/physical terminal",
+          "beforeBlockSha256": "7a73ae2a010d4b14f9184e44597f9b0012061017313d88e37b113f762839fe25",
+          "afterBlockSha256": "53ad1dcb730ce77970b3a0cdafb25c03183c405ebf5b7dc232098926269a7804"
+        },
+        {
+          "logicalScope": "Demo preparation fallible four-frontier projection of actual retained owners",
+          "newBlockSha256": "12497f8cf746fcbacfe3dcc1d9ed7d4c136337dfaefc94429e0935660ed5573a"
+        }
+      ],
+      "beforeSHA": "32dcd1ea0c971e6006760c9a9c1188d04745be33bc29bc829baf54e3f5893a39",
+      "recordedAfterSHA": "31f189be692edd7640a0a4ddb715280f93c46b59b3bd6ee9279ea86b74ba4433",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-source-frame-law.json",
+      "logicalActions": [
+        {
+          "scope": "actual native original Demo source issuer/witness/frame allocation and paid closure law"
+        }
+      ],
+      "beforeSHA": "140f421bcf52bbca0fb3dde66c33fe74136b4cae755549afe44ec6d3ffa7647a",
+      "recordedAfterSHA": "9ee6b24d10abfaee2cc7db8b90128ae4be27fdd438e7993590e9f59a3b176991",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "actionEvidence": "📥️oct9-ephemeral-law.json",
+      "logicalActions": [
+        {
+          "scope": "extend actual preparation cancellation law to genuine ephemeral base/mutation custody"
+        }
+      ],
+      "beforeSHA": "3ffe6bb01ca839ddd3c14142835475299c1557632e49d06db6e25ce3bd0cc5b6",
+      "recordedAfterSHA": "4b5d14cb0d3f87d5afb7ceb33d3a39e896e76b303de3926a9eabb5242e9c91ac",
+      "currentObservedSHA": "3d65f47dfdca02cbb762df657bfb03ce30ddac89d3b94ff673f31292e5a07289",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-ephemeral.json",
+      "logicalActions": [
+        {
+          "logicalScope": "ephemeral original source issuers and all retained candidate/base/mutation cursor fields",
+          "beforeBlockSha256": "38c4c7d2c040ddc2ede6bbc5903868d9fd1a4d70c746d5483e31695cad25d556",
+          "afterBlockSha256": "ca3dc92b026fb2065d8057143a0caff91b81527a8c844bab1e7a13ee41366d27"
+        },
+        {
+          "logicalScope": "ephemeral defining existing begin captures original factory aliases; ungranted factory creation protocol remains observed",
+          "beforeBlockSha256": "e2896c726b5898531325f0ba2cdd6fede09aa2a454dfe27d5677e0c4e96458be",
+          "afterBlockSha256": "a11bfbd7d293785f8bcef9f16a5cf57b3716d591e62a612c9d9dfe646987d1ff"
+        },
+        {
+          "logicalScope": "ephemeral advancement borrows original request through semantic refusal",
+          "beforeBlockSha256": "a44142c09a2e4c8f2527b48fae4debe2003f16860b87fa696a27be6ea2eca95b",
+          "afterBlockSha256": "b838c4b004978fd704a0f560258106ef5b9ab72e264ac43f63a6943f5dba16ff"
+        },
+        {
+          "logicalScope": "ephemeral actual prepared transfer retains original base and mutation for controlled cancellation",
+          "beforeBlockSha256": "18a50496152278773e151035bdb9d0478fc69591d7d45868958867afc7c3ed20",
+          "afterBlockSha256": "f66d878dae9264694eb040880a48c580120e1affadde22f664becc2b6027a56f"
+        },
+        {
+          "logicalScope": "ephemeral full close/depth/refusal restoration/original current snapshot/mutation authorities",
+          "beforeBlockSha256": "4b00481678e6f102e7b270066f73d87c1b6aaf93e697eb921784fab08a9789e6",
+          "afterBlockSha256": "f7b16df947ac805f919c162517d5e01fdf35d15487f79d22c007545ef5e96399"
+        },
+        {
+          "logicalScope": "ephemeral four fallible original owner frontier projections",
+          "newBlockSha256": "c55cc22b6664ba8859e7a29e5ddfe96dcefed4b8417c4052eb9c38335142a235"
+        }
+      ],
+      "beforeSHA": "31f189be692edd7640a0a4ddb715280f93c46b59b3bd6ee9279ea86b74ba4433",
+      "recordedAfterSHA": "140f421bcf52bbca0fb3dde66c33fe74136b4cae755549afe44ec6d3ffa7647a",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "own exact scopes only; current whole hash observes peers, not authorship/source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "actionEvidence": "📥️oct9-wire-law.json",
+      "logicalActions": [
+        "wire original backing/captured issuer neutral regression"
+      ],
+      "beforeSHA": "4b5d14cb0d3f87d5afb7ceb33d3a39e896e76b303de3926a9eabb5242e9c91ac",
+      "recordedAfterSHA": "a36e15365ae75463b5a3bb97a6c79014b1a1750ad9de54695a5db56767a89315",
+      "currentObservedSHA": "3d65f47dfdca02cbb762df657bfb03ce30ddac89d3b94ff673f31292e5a07289",
+      "attribution": "Own exact logical actions only; whole-file hash includes concurrent peer changes; no freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-wire.json",
+      "logicalActions": [
+        "wire factory captures actual typed issuer",
+        "granted child ingress restores original typed request on refusal",
+        "original wire Vec/String capacity paid separately",
+        "raw request base/authority custody and full-grant terminal child/frame closure",
+        "one genuine test source construction"
+      ],
+      "beforeSHA": "9ee6b24d10abfaee2cc7db8b90128ae4be27fdd438e7993590e9f59a3b176991",
+      "recordedAfterSHA": "45951c6a96f305eec71d6fae069ab165359434d61e2a1dc40716db6416b74b4d",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "Own exact logical actions only; whole-file hash includes concurrent peer changes; no freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "actionEvidence": "📥️oct9-retained-law.json",
+      "logicalActions": [
+        "reader close fixed policy regression",
+        "empty retained inverse backing physical release regression"
+      ],
+      "beforeSHA": "a36e15365ae75463b5a3bb97a6c79014b1a1750ad9de54695a5db56767a89315",
+      "recordedAfterSHA": "fd3d9074e97191cd4f6c2d9cedd39df22ffbcc24ec952d153ac0708e7372ffce",
+      "currentObservedSHA": "3d65f47dfdca02cbb762df657bfb03ce30ddac89d3b94ff673f31292e5a07289",
+      "attribution": "Own exact logical actions only; whole-file hash includes concurrent peer changes; no freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-retained-unit.json",
+      "logicalActions": [
+        "reader helpers and missing disposer/lifecycle direct callers use fixed five-axis policy",
+        "inverse original empty Vec backing separately paid",
+        "publication birth law current full close without self priced query"
+      ],
+      "beforeSHA": "45951c6a96f305eec71d6fae069ab165359434d61e2a1dc40716db6416b74b4d",
+      "recordedAfterSHA": "6cef2342e7cc4ee4396db9aa2deea357667cb3b7512aa6f71ffa14cc0bcc5c07",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "Own exact logical actions only; whole-file hash includes concurrent peer changes; no freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "actionEvidence": "📥️oct9-probe-law.json",
+      "logicalActions": [
+        "nested probe actual wrapper birth and original counter closure regression"
+      ],
+      "beforeSHA": "fd3d9074e97191cd4f6c2d9cedd39df22ffbcc24ec952d153ac0708e7372ffce",
+      "recordedAfterSHA": "8b61ee377bacc1d51d353867e4aed898bba076a7d13b73488add4b671eca86a2",
+      "currentObservedSHA": "3d65f47dfdca02cbb762df657bfb03ce30ddac89d3b94ff673f31292e5a07289",
+      "attribution": "Own exact logical actions only; whole-file hash includes concurrent peer changes; no freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-probe.json",
+      "logicalActions": [
+        "probe whole graph BirthDemand before request take and child capacity/depth debit",
+        "original child Box/counter Arc separately controlled close",
+        "completion counter paid custody replaces uncontrolled Drop",
+        "three genuine optional catalog attachment caller grants/readiness",
+        "driver loss maintenance uses original supplied grant and independent demand checks"
+      ],
+      "beforeSHA": "6cef2342e7cc4ee4396db9aa2deea357667cb3b7512aa6f71ffa14cc0bcc5c07",
+      "recordedAfterSHA": "10e5b3e9249df6bbe97b9ca94bbfb57ae9f5552e24fb52dcdb1d2a33c81ed88d",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "Own exact logical actions only; whole-file hash includes concurrent peer changes; no freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "actionEvidence": "📥️oct9-vcs-law.json",
+      "logicalActions": [
+        "current VCS physical caller projection regression using unchanged neutral release rows"
+      ],
+      "beforeSHA": "8b61ee377bacc1d51d353867e4aed898bba076a7d13b73488add4b671eca86a2",
+      "recordedAfterSHA": "e5d8067f6108ec23d8b4c031673b557c6de4de272eff9856317d96b805c20e20",
+      "currentObservedSHA": "3d65f47dfdca02cbb762df657bfb03ce30ddac89d3b94ff673f31292e5a07289",
+      "attribution": "Own exact logical actions only; whole-file hash includes concurrent peer changes; no freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-vcs-unit.json",
+      "logicalActions": [
+        "VCS current original factory owner fields and fallible release frontier",
+        "callerBytes restrict only original release currency; fixed positive policy no query-priced grant",
+        "actual per-turn heap/release progress assertion",
+        "two direct hydration cancellation full-policy callers"
+      ],
+      "beforeSHA": "10e5b3e9249df6bbe97b9ca94bbfb57ae9f5552e24fb52dcdb1d2a33c81ed88d",
+      "recordedAfterSHA": "f6f7f33d5a866f8eee006a0fb7262e85a16c17e8e009b44457213a87a360ffd3",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "Own exact logical actions only; whole-file hash includes concurrent peer changes; no freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "actionEvidence": "📥️oct9-genesis-law.json",
+      "logicalActions": [
+        "actual Genesis producer/Box/frame frontier regression using original independent neutral release cases"
+      ],
+      "beforeSHA": "e5d8067f6108ec23d8b4c031673b557c6de4de272eff9856317d96b805c20e20",
+      "recordedAfterSHA": "3d65f47dfdca02cbb762df657bfb03ce30ddac89d3b94ff673f31292e5a07289",
+      "currentObservedSHA": "3d65f47dfdca02cbb762df657bfb03ce30ddac89d3b94ff673f31292e5a07289",
+      "attribution": "Own exact logical actions only; whole-file hash includes concurrent peer changes; no freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-genesis-unit.json",
+      "logicalActions": [
+        "actual granted Genesis verified original source and production retirement helper",
+        "real typed original snapshot issuer selects declared terminal physical frame",
+        "separate actual source/child/outer Box births and releases with pointer/heap receipt laws",
+        "original language neutral physical extent/release rows unchanged"
+      ],
+      "beforeSHA": "f6f7f33d5a866f8eee006a0fb7262e85a16c17e8e009b44457213a87a360ffd3",
+      "recordedAfterSHA": "e838e8f4a96971dc8be8d7e1db8c0c424bac30f6391009e3c34c9d3776b72092",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "Own exact logical actions only; whole-file hash includes concurrent peer changes; no freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "actionEvidence": "📥️oct9-current-step.json",
+      "logicalActions": [
+        "four native helpers match actual two-variant RetainedCloneStep and preserve meaningful no-external-wait progress assertions",
+        "two original message ledger callers preserve logical body ceiling and independent fixed physical grant"
+      ],
+      "beforeSHA": "e838e8f4a96971dc8be8d7e1db8c0c424bac30f6391009e3c34c9d3776b72092",
+      "recordedAfterSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "currentObservedSHA": "59f6d25178ffbec4d105be81084f2525510392eef6c07611114a3d2f2b2e4e39",
+      "attribution": "Own exact logical actions only; whole-file hash includes concurrent peer changes; no freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs",
+      "logicalActions": [
+        "genuine payload/writer full Demand frontier and exact supplied child grant/depth",
+        "actual child progress/refusal preserved before outer completion",
+        "fixed original1item16KiBcopy/release capacity0depth3 callback; no self-price",
+        "failed writer retains exact original writer and error on refusal"
+      ],
+      "beforeSHA": "ac4c330db854fc9a222fe5fc4a0c9a3a433c53098737297401e3689af9a5747c",
+      "recordedAfterSHA": "cf426954ea322cf917418eff4b1d26038fbc72c6a498895298b0a46648a8771b",
+      "currentObservedSHA": "cf426954ea322cf917418eff4b1d26038fbc72c6a498895298b0a46648a8771b",
+      "actionEvidence": "📥️services-nine.json",
+      "attribution": "own exact logical scopes only; whole-file current hash observes concurrent source, not source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️.rs",
+      "logicalActions": [
+        "canonical full-grant outcome-slot payload then separate paid header release",
+        "original retained outcome stays on typed refusal/error; original callback cleanup continues",
+        "resume only after actual canonical empty slot"
+      ],
+      "beforeSHA": "93d88d6e51ddcb4b4d1ce8e9db112b45c02a5e96407a9db74c0f837aaf890239",
+      "recordedAfterSHA": "212cb3bea6a0dcc1586b0c3225bf68f8d53f829ea4581de9f8f7de4dee914232",
+      "currentObservedSHA": "212cb3bea6a0dcc1586b0c3225bf68f8d53f829ea4581de9f8f7de4dee914232",
+      "actionEvidence": "📥️services-nine.json",
+      "attribution": "own exact logical scopes only; whole-file current hash observes concurrent source, not source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "logicalActions": [
+        "current actual Services/Job full-grant reader writer outcome regression using independent existing Ajv/Buffer currencies"
+      ],
+      "beforeSHA": "3d65f47dfdca02cbb762df657bfb03ce30ddac89d3b94ff673f31292e5a07289",
+      "recordedAfterSHA": "66aec7c0500fee41552b70c4386202e99c0b50b4e79420d98265993b8b99f75e",
+      "currentObservedSHA": "66aec7c0500fee41552b70c4386202e99c0b50b4e79420d98265993b8b99f75e",
+      "actionEvidence": "📥️services-nine-law.json",
+      "attribution": "own exact logical scopes only; whole-file current hash observes concurrent source, not source freeze"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "logicalActions": [
+        "actual grant coverage checks supplied depth with all other original currencies; no query-priced grant"
+      ],
+      "beforeSHA": "70843cd8101ec2cf5e580b4feccde7e17033b20a59490de51fddf08302671372",
+      "recordedAfterSHA": "850047659c398d3eca5f4291d94ac38e1983967854898553d2c693ffc5a42dfa",
+      "currentObservedSHA": "850047659c398d3eca5f4291d94ac38e1983967854898553d2c693ffc5a42dfa",
+      "actionEvidence": "📥️coverage-source.json",
+      "attribution": "own exact logical scopes only; current whole-file bytes may include preserved peers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json",
+      "logicalActions": [
+        "plain five-axis denial regression"
+      ],
+      "beforeSHA": "eca81f4fd530b1d83a4dc8d9ffe26877aca40d66bdc886a6904be33493e446ea",
+      "recordedAfterSHA": "a652fe434b049aef56ce3b927d4e97b4c0f3246f13f0caefe7062812c4242904",
+      "currentObservedSHA": "a652fe434b049aef56ce3b927d4e97b4c0f3246f13f0caefe7062812c4242904",
+      "actionEvidence": "📥️coverage-law.json",
+      "attribution": "own exact logical scopes only; current whole-file bytes may include preserved peers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "logicalActions": [
+        "independent SQLite/Ajv grant coverage source regression"
+      ],
+      "beforeSHA": "66aec7c0500fee41552b70c4386202e99c0b50b4e79420d98265993b8b99f75e",
+      "recordedAfterSHA": "7db140b397d5ebb4d691bcc65ffe027dbe91a841bdc48187e072a634e5a3b6ff",
+      "currentObservedSHA": "7db140b397d5ebb4d691bcc65ffe027dbe91a841bdc48187e072a634e5a3b6ff",
+      "actionEvidence": "📥️coverage-law.json",
+      "attribution": "own exact logical scopes only; current whole-file bytes may include preserved peers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "logicalActions": [
+        "actual native coverage regression"
+      ],
+      "beforeSHA": "784ac84807800eed81924ed5fd881d61d0ebbd50f5637b4e92f0d6de3645719a",
+      "recordedAfterSHA": "0dfb2d8564456e005bf481d2c49255d771afc5c4847bbaf1ebb92f0166b7002e",
+      "currentObservedSHA": "0dfb2d8564456e005bf481d2c49255d771afc5c4847bbaf1ebb92f0166b7002e",
+      "actionEvidence": "📥️coverage-law.json",
+      "attribution": "own exact logical scopes only; current whole-file bytes may include preserved peers"
+    }
+  ],
+  "nativeExecuted": false,
+  "permanentCommandChanges": false,
+  "normalProductionReleased": false,
+  "sourceCopiesAdded": false,
+  "executedCurrentProof": [
+    {
+      "session": 26629,
+      "result": "Nx1 21pass/1fail/543 true factory RED",
+      "log": "🗑️generated/oct9-begin-red.log"
+    },
+    {
+      "session": 28556,
+      "result": "Nx0 22pass/557 assertions/5.3s",
+      "log": "🗑️generated/oct9-begin-green.log"
+    },
+    {
+      "session": 54166,
+      "result": "Nx1 22pass/1fail/564 true durable close RED",
+      "log": "🗑️generated/oct9-prep-red.log"
+    },
+    {
+      "session": 9886,
+      "result": "Nx0 23pass/570 assertions/5s",
+      "log": "🗑️generated/oct9-prep-green.log"
+    },
+    {
+      "session": 12661,
+      "result": "Nx1 22pass/1fail/571 true old ephemeral close RED",
+      "log": "🗑️generated/oct9-ephemeral-red.log"
+    },
+    {
+      "session": 50180,
+      "result": "Nx1 22pass/1fail/573 wrong bare original base assertion; corrected to genuine three typed variants, no GREEN",
+      "log": "🗑️generated/oct9-ephemeral-green.log"
+    },
+    {
+      "session": 70249,
+      "result": "Nx1 22pass/1fail/570 assertions/8.6s; typed ephemeral restoration law pass, original Plugin rustfmt2s budget refusal, no full GREEN",
+      "log": "🗑️generated/oct9-ephemeral-current.log"
+    },
+    {
+      "session": 78204,
+      "result": "true wire original API/backing RED; separate grammar refusal",
+      "log": "🗑️generated/wire-red.log"
+    },
+    {
+      "session": 89605,
+      "result": "Nx0 24pass 590assert source-only GREEN6.6s",
+      "log": "🗑️generated/wire-green.log"
+    },
+    {
+      "session": 67431,
+      "result": "actual reader/inverse RED",
+      "log": "🗑️generated/retained-red.log"
+    },
+    {
+      "session": 77780,
+      "result": "Nx0 24pass 594assert source-only GREEN5.2s",
+      "log": "🗑️generated/retained-green.log"
+    },
+    {
+      "session": 47186,
+      "result": "actual ungranted wrapper source RED; separate grammar refusal",
+      "log": "🗑️generated/probe-red.log"
+    },
+    {
+      "session": 87509,
+      "result": "Nx0 24pass source-only GREEN7.7s",
+      "log": "🗑️generated/probe-green.log"
+    },
+    {
+      "session": 6161,
+      "result": "actual old VCS scalar/source RED; separate grammar refusal",
+      "log": "🗑️generated/vcs-red.log"
+    },
+    {
+      "session": 29062,
+      "result": "actual fabricated Genesis shape source RED; two independent grammar refusals",
+      "log": "🗑️generated/genesis-red.log"
+    },
+    {
+      "session": 49706,
+      "result": "Nx1 23pass1fail; all semantic laws pass; old StoreRoot2s rustfmt2166ms refusal",
+      "log": "🗑️generated/genesis-green.log"
+    },
+    {
+      "sourceRedSession": 89703,
+      "sourceGreenSession": 16842,
+      "sourceGreenResult": "Nx0/9.6s24laws615assertions",
+      "sourceGreenLog": "🗑️generated/services-green.log",
+      "nativeExecuted": false
+    },
+    {
+      "sourceRedSession": 78790,
+      "sourceGreenSession": 56543,
+      "sourceGreenResult": "Nx0/3.9s25laws629assertions",
+      "sourceGreenLog": "🗑️generated/coverage-green.log",
+      "nativeExecuted": false
+    }
+  ],
+  "sourceFreeze": false
+}

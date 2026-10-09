@@ -1,0 +1,27 @@
+# Architecture Operation Audit 34
+
+First-party read-only source audit. No runtime execution, rerun, source edit, Git mutation or ticket lifecycle claim. Read IF41 execution closure/broad port and Root JSON authority design; inspected current defining JSON grammar/source/operation, operation native tests, policy fixtures, neutral routing entry and Repo runCargo. These are sequential observations of concurrently edited files, not an atomic snapshot.
+
+## Correctness Defect
+
+P1: JSON caller maximum_depth is enforced late at grammar line1063 with frames.len()>limit. Container push occurs at1071 without refusing the new depth; an empty inner container closes at1058 before that predicate. Thus maximum_depth=1 permits [[]] into two grammar frames and maximum_depth=0 permits [] if normal grant separately funds the larger depth. Nonempty over-depth content eventually refuses, making policy dependent on contents. The operation passes this limit into the same grammar, so cumulative authority alone does not repair it. Add original language-neutral empty-container boundary vectors with independent semantic oracle and refuse container birth before push. Paths: 🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs:1058,1063,1071. This is source-derived, not reproduced runtime evidence.
+
+## Open Authority Frontiers
+
+P1: JsonSourceCursor::from_grammar is public and accepts arbitrary source plus any public grammar with no byte-limit admission or identity tie. JsonGrammarCursor::new installs unlimited byte/allocation/item limits; grammar.step takes a fresh input/control/grant on each call. into_grammar/from_grammar therefore cannot itself prove restored exact source identity or original caller custody. Direct source cursor step likewise permits changing controls and replenishing per-turn grants. Restrict raw constructor/restoration to owning internals or require retained original binding, and hand-port original consumers before API deletion. Paths: borrowed module lines16–21; main grammar lines924,954. This is an acknowledged legacy/primitive bypass frontier, not a defect in operation.new.
+
+P1: Existing parse and parse_bytes remain whole-document unowned entrypoints. parse creates its own accepted callback and unlimited native control and repeatedly recreates a4096-item grant (main lines870–880). Scoped operation laws do not establish full production receiving or removal. Native operation tests contain two laws: zero-capacity string first-turn/repeated grant conservation and cancellation after one unit, plus paid closure. They are useful but do not exercise successful allocated output, allocated cancellation, exhausted retirement with existing allocations, duplicate error ownership, complex complete receivers or public source-rebind misuse. No additional runtime acceptance is inferred from their source.
+
+P2: JsonReadSource is an open trait with byte_len/byte_at shared-reference methods. Copy does not establish immutable bytes: an implementation may read Cell/RefCell/shared mutable backing. Source identity is retained by operation fields but source content immutability is a documented caller contract rather than type-enforced invariant. Classify it explicitly or close/seal/admit source ownership; built-in str/[u8] borrows retain ordinary Rust immutability.
+
+## Supported Scoped Structure
+
+Operation.new borrows the exact supplied native control and stores source and policy once. step intersects turn grant with cumulative remaining normal authority and debits actual cursor receipt before returning success or error. close_step independently intersects/debits its retirement wallet; refused retirement birth restores cursor and paid owner is retained in closing. ManuallyDrop prevents hidden grammar destruction when abandoned, with a deliberate assertion/retention policy. These structural observations support the scoped design but do not imply runtime correctness, typed binding completeness or funded retirement cancellation/progress behavior: cleanup currently uses admission/close_factory_ticket without invoking borrowed native control. Confirm whether independently controlled cleanup is an accepted contract before treating that as a defect.
+
+The supplied closure explicitly accepts original Cargo30, command4, currentness6, Fresh3 and NativeOrchestration20 scopes with physical custody qualifications. This audit did not inspect every runtime receipt independently and does not extend those acceptances to Pack JSON, whole Runtime or broad removal.
+
+## Neutral Script Entry Frontier
+
+Current neutral routing Script and BundleScript constructors transport roots only; Script.run and ScriptRouter.run transport argv only; runScriptMain options carry argv/default/beforeDispatch but no mandatory finite execution operation. Repo library runCargo at2187 remains synchronous scalar args/cwd/environment and invokes old selectedCargoArguments before runCmd. Process budget constants remain zero. This agrees with the supplied185-callsite lexical frontier; this audit did not independently recensus all185 or claim transitive deletion proof.
+
+A valid broad port must author required neutral deadline/cancellation/progress/yield/retirement authority at actual permanent entries, preserve decreasing parent authority through child ownership and transport explicit Repo scope/storage/provenance for each real Cargo consumer. Merely routing all calls to one helper, hashing source custody or showing a new asynchronous owner exists cannot prove the broad original receivers are admitted.

@@ -1,0 +1,3 @@
+# K8 Original Current Run
+
+Actual original Kernel:test-native with unchanged normal policy compiled the lib-test target, zero emitted compiler errors/2187 warnings, then Nextest rejected selector/reporter arguments as unsupported binary arguments. Root placed an extra separator after long, so the actual existing parser correctly separated them into libtest arguments. Nx1/4m25s, zero native assertions. Debug stripping also reported ENOSPC; compiler finished, resource warning is separate. The corrected original call removes that one invocation separator; same selected29, reporters, features/profile/budget. Current after observations qualify 86 shared Source drifts; no complete compiler provenance or exclusive authorship claim.

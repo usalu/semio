@@ -1,0 +1,8 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+  "beforeSHA": "ad327059e12c9ba4cdaf79f85cc0d45b81a67de8bc2ae637e2af101c1a483280",
+  "old": "|value,output,native,_body|{store::space_history::io::sqlite::snapshot::admission::intrinsic(value,native,limits)?;*output=Some(());Ok(())}",
+  "new": "|value,output,native,body|{store::space_history::io::sqlite::snapshot::admission::intrinsic(value,native,limits)?;body.admit_frontier(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:std::mem::size_of::<Option<()>>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1})?;*output=Some(());body.record_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<()>>(),..Default::default()})}",
+  "scope": "actual semantic unit output assignment; original callback/control preserved",
+  "afterSHA": "e6602a2c15c1cca0c2f63f639a3896dc9479b93e92f2493df9c6c95c3237e7eb"
+}

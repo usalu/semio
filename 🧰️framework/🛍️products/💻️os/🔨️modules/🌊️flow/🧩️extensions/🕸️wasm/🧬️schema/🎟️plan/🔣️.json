@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scalarCursor",
+    "sameInputOnRefusal",
+    "coldFallback"
+  ],
+  "properties": {
+    "scalarCursor": {
+      "const": true
+    },
+    "sameInputOnRefusal": {
+      "const": true
+    },
+    "coldFallback": {
+      "const": false
+    }
+  }
+}

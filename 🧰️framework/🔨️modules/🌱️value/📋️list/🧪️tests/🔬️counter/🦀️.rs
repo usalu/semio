@@ -91,6 +91,9 @@ fn retained_fixed_list_pages_counter_keeps_actual_failed_allocation_until_releas
 fn retained_fixed_list_depth_quotes_original_tail_and_whole_release_frontiers() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let count=fixture["ordered"]["count"].as_u64().unwrap()as usize;
+    let tail=fixture["ordered"]["emptyTailRelease"]["tailItems"].as_u64().unwrap()as usize;
+    let earlier=fixture["ordered"]["emptyTailRelease"]["earlierLiveItems"].as_u64().unwrap()as usize;
+    assert_eq!(tail+earlier,count);
     let mut list=PagedList::<u64,600>::empty();
     let mut oracle=std::collections::VecDeque::new();
     for value in 0..count as u64{
@@ -100,7 +103,7 @@ fn retained_fixed_list_depth_quotes_original_tail_and_whole_release_frontiers() 
     while !oracle.is_empty(){
         let pointer=list.backing_ptr(list.len()-1).unwrap();
         assert_eq!(list.next_pop_depth_demand().unwrap(),list.height()+3);
-        assert!(list.next_release_depth_demand().is_err());
+        assert_eq!(list.next_release_depth_demand().is_err(),oracle.len()>earlier);
         assert_eq!(list.backing_ptr(list.len()-1).unwrap(),pointer);
         assert_eq!(list.pop(),oracle.pop_back());
     }

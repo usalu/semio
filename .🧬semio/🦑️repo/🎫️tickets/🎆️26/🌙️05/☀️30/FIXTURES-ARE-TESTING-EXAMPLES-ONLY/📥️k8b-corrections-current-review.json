@@ -1,0 +1,31 @@
+{
+  "owned": false,
+  "nativeExecuted": false,
+  "observedAt": "2026-10-09T14:34:52.214323+00:00",
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧫️fixtures/🔣️.json",
+      "sha256": "5ab8908edafee6c1198d49ae3da73bdaac91926febc16fd5991093f03133b279"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+      "sha256": "0dfc8684305c711194b963b97246e7d698253a4801b91e5cfd83351cff6a65ae"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "4150a1e675de9f18b70549653896ce8511697ff72261df797cd73ffc685b20d1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "28649679f2d4ab784521da3dad0ebdec8e3e665629400e2dff51c2b86b05db94"
+    }
+  ],
+  "literalRootSix": [
+    "os_store::component::history_plan_retirement::tests::history_completed_plan_retains_original_residue_and_transferred_results",
+    "os_store::component::history_plan_retirement::tests::history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds",
+    "os_store::component::history_plan_retirement::tests::history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories",
+    "os_store::component::history_plan_retirement::tests::history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody",
+    "os_store::component::presence_retirement::tests::retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open",
+    "os_store::component::presence_retirement::tests::retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers"
+  ]
+}

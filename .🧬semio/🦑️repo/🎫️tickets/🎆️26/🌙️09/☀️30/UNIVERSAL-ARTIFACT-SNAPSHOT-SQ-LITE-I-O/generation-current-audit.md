@@ -1,0 +1,9 @@
+# Current Generation Rewrite Audit
+
+Read-only mounted source review, no runtime receipt. GenerationRootRetirement delegates all four demands and grant-bearing progress to the actual canonical inline lease cursor. State and FormGeneration derive RetireOwned across every declared field. into_retirement checks controlled support before transfer; no root-constructor heap allocation is claimed.
+
+The new physical drain observes actual allocator events for zero-item turns, one-short capacity/release turns and exact turns, compares each exact turn with retained_capacity_bytes/released_bytes and grant.fits, checks terminal-empty/no-allocation Drop, and sums construction plus scaffold allocation against actual release. Copy baseline is raised to actual demand, so these are not false strict one-byte-work claims. Separate weak backpressure and nonfinal zero-backing alias closure are explicit. Ranked original shared values are checked by key/value pointer identity before constructing the roots.
+
+No concrete malformed receipt or Rust API mismatch was identified in these inspected laws. Source policy remains a separate neutral-validation task; Native execution is pending. These four laws qualify only original Generation per-root lease/final-backing behavior if they actually execute, not universal snapshot/public IO.
+
+Limits: catch_unwind Drop tests intentionally abandon guarded nonempty owners during panic and do not prove cleanup conservation. The physical conservation law is separate. retire_cold synchronously drains an explicit locally derived grant and asserts if weak leases remain; it does not provide asynchronous cancellation/progress to callers. Empty-root ordinary Drop releases Arc backing outside this cursor when all fields have zero capacity; the measured cursor law does not cover that convenience path. Keep claims scoped accordingly.

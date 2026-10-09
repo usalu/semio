@@ -1,0 +1,59 @@
+{
+  "schemaObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "sha256": "b0ef49e62caf92f9604518f278c213a7106426b992f339e2e9c3783c36c0a031",
+      "rootFields": [
+        "schema",
+        "copyBudgets",
+        "cases",
+        "publication",
+        "latchAdmission"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
+      "sha256": "d51e6d38fd9afa25f4caa0882ed0dcc986e05a72e8c723e1409e0ea5d91f7475",
+      "rootFields": [
+        "version",
+        "sources",
+        "storeFrontiers",
+        "reservedFrontiers",
+        "publicPluginFrontiers",
+        "expectedFakeWrappers",
+        "checkIdentityScopes",
+        "checkPluginSelfCalls",
+        "runtimeFrontiers",
+        "checkRuntimeCalls",
+        "guestBoundaryCalls",
+        "groupWireFrontier"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json",
+      "sha256": "c94bb31d7d93b34f4b38c22496c80cda84137eaba5b4b80fc811dac99031d632",
+      "rootFields": [
+        "version",
+        "cases",
+        "control",
+        "stream"
+      ]
+    }
+  ],
+  "readerBeforeSha256": "1e4bc2a547a66a0b7a1b8679f2d4da07227a1d1e00cfc02bb4cf2e5f5aeffb7c",
+  "unchangedPlainInputObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+      "sha256": "d08796c21727e01d015b177d01f6dac8ff2329ef6cee44ea8181c323c8d4d6d0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🔣️.json",
+      "sha256": "683ea96ba4f572caee4737e2c37a3b0c3511d919ae04e471d5342354a63fe33a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🔣️.json",
+      "sha256": "58aa6f79234f2df17fdc5c378ef6b43761562f3e0b3d88cf2ab9eb6008a205ad"
+    }
+  ],
+  "noSourceCopies": true
+}

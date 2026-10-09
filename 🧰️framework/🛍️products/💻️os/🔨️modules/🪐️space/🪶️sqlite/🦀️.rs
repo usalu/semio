@@ -10,9 +10,9 @@ pub(crate) fn reconstruct<T>(control: &mut semio_framework_os_kernel::sqlite_sna
     use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
     let maximum = control.reconstruction_remaining_bytes()?;
     let mut owned = 0;
-    let result = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, checkpoint| {
+    let result = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining,checkpoint,allocation| {
         let mut progress = |event: semio_framework_value::native_decoding::NativeDecodeProgress| checkpoint(event.completed,event.total);
-        let mut native = NativeDecodeControl::new(maximum.min(remaining), &mut progress);
+        let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(maximum.min(remaining),&mut progress,&mut native_allocation);
         let result = operation(&mut native);
         owned = native.owned_bytes();
         (result,owned)

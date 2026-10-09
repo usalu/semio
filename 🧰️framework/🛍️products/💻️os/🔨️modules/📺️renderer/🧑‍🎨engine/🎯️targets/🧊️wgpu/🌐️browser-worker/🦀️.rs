@@ -831,7 +831,7 @@ impl BrowserRendererBootstrap {
             surface_resize: None,
             stall: Default::default(),
         };
-        let mut host = crate::os_host::OsHost::new(runtime, presenter);
+        let mut host = crate::os_host::OsHost::new(runtime, presenter, crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
         let runtime_wake = self.wake.clone();
         host.runtime.set_waker(Rc::new(move || {
             let _ = runtime_wake.call0(&JsValue::NULL);

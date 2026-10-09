@@ -1,0 +1,9 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs",
+  "authored": false,
+  "ownAfterSha256": "3edfbd2b6c3acddecc66b4b82054e3de2c1ddd49a7a6536809163b094b4c0e35",
+  "currentSha256": "886deb4d98e1883424cf8e9a524fc3d723c431fb885bf6ccb0c1015c4d6da86a",
+  "drift": true,
+  "currentOriginalIoBinding": true,
+  "qualification": "Current shared Source changed to nine-parameter original IoRunControl path; no Root rollback/adoption/exclusive current-file credit"
+}

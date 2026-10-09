@@ -1,0 +1,66 @@
+{
+  "accepted": [
+    {
+      "active": null,
+      "stale": []
+    },
+    {
+      "active": "English / Deutsch",
+      "stale": [
+        "stale",
+        "é雪"
+      ]
+    }
+  ],
+  "refused": [
+    {},
+    {
+      "active": null
+    },
+    {
+      "active": null,
+      "stale": [
+        1
+      ]
+    },
+    {
+      "active": 12,
+      "stale": []
+    },
+    {
+      "active": null,
+      "stale": null
+    },
+    {
+      "active": null,
+      "stale": [
+        ""
+      ]
+    },
+    {
+      "active": "",
+      "stale": []
+    },
+    {
+      "active": null,
+      "stale": [],
+      "surprise": 1
+    }
+  ],
+  "duplicate": [
+    "{\"active\":null,\"active\":\"a\",\"stale\":[]}"
+  ],
+  "grants": [
+    0,
+    1,
+    1,
+    1,
+    1
+  ],
+  "signals": [
+    "cancelled",
+    "interrupted",
+    "expired"
+  ],
+  "maximumRequestBytes": 1048576
+}

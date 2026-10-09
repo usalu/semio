@@ -9,7 +9,7 @@
   "schemaSql": "CREATE TABLE transfer_literal (id INTEGER PRIMARY KEY, literal TEXT NOT NULL);",
   "literal": "literal 世界 🌠 complete transfer",
   "maximumAllocationBytes": 1048576,
-  "exportCopies": 1,
+  "exportCopies": 2,
   "importCopies": 2,
   "exportPhases": [
     "decodeNative",
@@ -20,5 +20,12 @@
     "readPages",
     "reconstructSnapshot",
     "encodeNative"
-  ]
+  ],
+  "snapshotGrant": {
+    "maximumItems": 256,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  }
 }

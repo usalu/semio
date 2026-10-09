@@ -1,0 +1,24 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "beforeSHA": "70843cd8101ec2cf5e580b4feccde7e17033b20a59490de51fddf08302671372",
+  "logicalBlockBeforeSHA": "f813513cff6f1dd994bc16f81f0b8a65f458cce9550ef1e537d1e93e894cb06e",
+  "recordedAfterSHA": "850047659c398d3eca5f4291d94ac38e1983967854898553d2c693ffc5a42dfa",
+  "logicalActions": [
+    "actual grant coverage checks supplied depth with all other original currencies; no query-priced grant"
+  ],
+  "sourceCopiesAdded": false,
+  "sourceRed": {
+    "session": 78790,
+    "result": "Nx1/6.7s24pass1fail629assertions exact missing depth source comparison",
+    "log": "🗑️generated/coverage-red.log"
+  },
+  "nativeExecuted": false,
+  "currentObservedSHA": "850047659c398d3eca5f4291d94ac38e1983967854898553d2c693ffc5a42dfa",
+  "executedProof": {
+    "sourceRedSession": 78790,
+    "sourceGreenSession": 56543,
+    "sourceGreenResult": "Nx0/3.9s25laws629assertions",
+    "sourceGreenLog": "🗑️generated/coverage-green.log",
+    "nativeExecuted": false
+  }
+}

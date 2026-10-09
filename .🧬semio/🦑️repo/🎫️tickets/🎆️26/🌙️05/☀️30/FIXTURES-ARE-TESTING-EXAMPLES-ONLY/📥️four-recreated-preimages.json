@@ -1,0 +1,87 @@
+{
+  "schemas": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "sha256": "6734a38bc69e8ebe9258e3a592dc6ece4c91abcb1719680e9189f0fcfb59d8d6",
+      "rootFields": [
+        "schema",
+        "copyBudgets",
+        "cases",
+        "publication",
+        "latchAdmission",
+        "invalidation",
+        "pendingHost"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/🎟️work.json",
+      "sha256": "6c5bec8aa0e2f8ad6e942e66b381dccb9bd3ba9e771d0261ddba3f3df61e128a",
+      "rootFields": [
+        "version",
+        "handles",
+        "expected",
+        "copyGrants",
+        "handoff",
+        "refusal",
+        "maximumDeniedReleaseBytes",
+        "completion",
+        "requestCapacityItems",
+        "refusedHandles",
+        "terminalDropBytes"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json",
+      "sha256": "418b15222453bac684c06133b57994c7e81a60449a34178229f34285f1b5de32",
+      "rootFields": [
+        "schema",
+        "cases",
+        "keyboard"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json",
+      "sha256": "906ee9982d809307c6f6a2c4015d63407a1fe588756f5bcb85d86581d46a87fe",
+      "rootFields": [
+        "sources",
+        "pure",
+        "old",
+        "semanticForbiddenTypes",
+        "typedSources",
+        "typedRetired",
+        "typedRegions"
+      ]
+    }
+  ],
+  "alreadyAbsentObserved": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json"
+  ],
+  "readers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "sha256": "fcbd0416b2055fae43ba247e3ca2f40a34b1b548fc34254387e86f13a259f974"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+      "sha256": "f3c2bc80b6d92c2c5231c2fdef64b7d9ae64c26ed67482a428865937b891f2d5"
+    }
+  ],
+  "unchangedPlainObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+      "sha256": "9e1f88de34c0e1f2233160495b285b9556acf77b0722f867345a68e2b60515b7",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧫️fixtures/🎟️work.json",
+      "sha256": "38882477c05852dbc3bc743a6b9e150731360d1cd784b6b4122d58d1336dba59",
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay.json",
+      "sha256": "4f505e6204e6596c33b5cba51277fd45b16d08742ad0abbe4a43ad609dcafca0",
+      "ownership": false
+    }
+  ]
+}

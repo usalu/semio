@@ -1,30 +1,287 @@
 {
   "valid": [
-    { "id": "malformed", "wire": { "kind": "invalidValue", "message": "field.3.expected text" } },
-    { "id": "canceled", "wire": { "kind": "canceled", "message": "caller stopped" } },
-    { "id": "owned bytes", "wire": { "kind": "ownershipLimit", "message": "owned allowance exceeded" } },
-    { "id": "allocation", "wire": { "kind": "allocationFailed", "message": "allocation refused" } },
-    { "id": "work", "wire": { "kind": "workLimit", "message": "units exceeded" } },
-    { "id": "depth", "wire": { "kind": "depthLimit", "message": "nested field refused" } },
-    { "id": "empty message", "wire": { "kind": "unsupportedOwner", "message": "" } },
-    { "id": "unicode and misleading prose", "wire": { "kind": "invariantViolated", "message": "canceled: Größe 🌱️\u0000\"\\\n" } }
+    {
+      "id": "malformed",
+      "wire": {
+        "kind": "invalidValue",
+        "message": "field.3.expected text",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      }
+    },
+    {
+      "id": "canceled",
+      "wire": {
+        "kind": "canceled",
+        "message": "caller stopped",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      }
+    },
+    {
+      "id": "owned bytes",
+      "wire": {
+        "kind": "ownershipLimit",
+        "message": "owned allowance exceeded",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      }
+    },
+    {
+      "id": "allocation",
+      "wire": {
+        "kind": "allocationFailed",
+        "message": "allocation refused",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      }
+    },
+    {
+      "id": "work",
+      "wire": {
+        "kind": "workLimit",
+        "message": "units exceeded",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      }
+    },
+    {
+      "id": "depth",
+      "wire": {
+        "kind": "depthLimit",
+        "message": "nested field refused",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      }
+    },
+    {
+      "id": "empty message",
+      "wire": {
+        "kind": "unsupportedOwner",
+        "message": "",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      }
+    },
+    {
+      "id": "unicode and misleading prose",
+      "wire": {
+        "kind": "invariantViolated",
+        "message": "canceled: Größe 🌱️\u0000\"\\\n",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      }
+    },
+    {
+      "id": "failed allocated receipt",
+      "wire": {
+        "kind": "invariantViolated",
+        "message": "original failed reservation",
+        "retainedProgress": {
+          "copiedItems": 1,
+          "copiedBytes": 32,
+          "retainedCapacityBytes": 256,
+          "releasedBytes": 0
+        }
+      }
+    }
   ],
-  "longMessage": { "kind": "invariantViolated", "unit": "field.refusal", "repeat": 10000 },
+  "longMessage": {
+    "kind": "invariantViolated",
+    "unit": "field.refusal",
+    "repeat": 10000
+  },
   "controls": [
-    { "id": "encoding canceled before output", "operation": "encode", "maximumBytes": 1000000, "cancelAt": 1, "expectedKind": "canceled" },
-    { "id": "encoding ownership ceiling", "operation": "encode", "maximumBytes": 0, "cancelAt": 0, "expectedKind": "ownershipLimit" },
-    { "id": "decoding canceled before construction", "operation": "decode", "maximumBytes": 1000000, "cancelAt": 1, "expectedKind": "canceled" },
-    { "id": "decoding ownership ceiling", "operation": "decode", "maximumBytes": 0, "cancelAt": 0, "expectedKind": "ownershipLimit" },
-    { "id": "decoding canceled inside long message", "operation": "decode", "maximumBytes": 1000000, "cancelAt": 7, "expectedKind": "canceled" }
+    {
+      "id": "encoding canceled before output",
+      "operation": "encode",
+      "maximumBytes": 1000000,
+      "cancelAt": 1,
+      "expectedKind": "canceled"
+    },
+    {
+      "id": "encoding ownership ceiling",
+      "operation": "encode",
+      "maximumBytes": 0,
+      "cancelAt": 0,
+      "expectedKind": "ownershipLimit"
+    },
+    {
+      "id": "decoding canceled before construction",
+      "operation": "decode",
+      "maximumBytes": 1000000,
+      "cancelAt": 1,
+      "expectedKind": "canceled"
+    },
+    {
+      "id": "decoding ownership ceiling",
+      "operation": "decode",
+      "maximumBytes": 0,
+      "cancelAt": 0,
+      "expectedKind": "ownershipLimit"
+    },
+    {
+      "id": "decoding canceled inside long message",
+      "operation": "decode",
+      "maximumBytes": 1000000,
+      "cancelAt": 7,
+      "expectedKind": "canceled"
+    }
   ],
   "invalid": [
-    { "id": "unknown kind", "members": [{ "key": "kind", "value": "InvalidValue" }, { "key": "message", "value": "bad" }], "expectedKind": "invalidValue" },
-    { "id": "numeric kind shape", "members": [{ "key": "kind", "value": true }, { "key": "message", "value": "bad" }], "expectedKind": "invalidValue" },
-    { "id": "null message", "members": [{ "key": "kind", "value": "canceled" }, { "key": "message", "value": null }], "expectedKind": "invalidValue" },
-    { "id": "missing message", "members": [{ "key": "kind", "value": "canceled" }], "expectedKind": "invalidValue" },
-    { "id": "missing kind", "members": [{ "key": "message", "value": "bad" }], "expectedKind": "invalidValue" },
-    { "id": "unknown field", "members": [{ "key": "kind", "value": "canceled" }, { "key": "message", "value": "bad" }, { "key": "extra", "value": "bad" }], "expectedKind": "invalidValue" },
-    { "id": "duplicate kind", "members": [{ "key": "kind", "value": "canceled" }, { "key": "kind", "value": "workLimit" }], "expectedKind": "invalidValue" },
-    { "id": "duplicate message", "members": [{ "key": "message", "value": "first" }, { "key": "message", "value": "last" }], "expectedKind": "invalidValue" }
+    {
+      "id": "unknown kind",
+      "members": [
+        {
+          "key": "kind",
+          "value": "InvalidValue"
+        },
+        {
+          "key": "message",
+          "value": "bad"
+        }
+      ],
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "numeric kind shape",
+      "members": [
+        {
+          "key": "kind",
+          "value": true
+        },
+        {
+          "key": "message",
+          "value": "bad"
+        }
+      ],
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "null message",
+      "members": [
+        {
+          "key": "kind",
+          "value": "canceled"
+        },
+        {
+          "key": "message",
+          "value": null
+        }
+      ],
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "missing message",
+      "members": [
+        {
+          "key": "kind",
+          "value": "canceled"
+        }
+      ],
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "missing kind",
+      "members": [
+        {
+          "key": "message",
+          "value": "bad"
+        }
+      ],
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "unknown field",
+      "members": [
+        {
+          "key": "kind",
+          "value": "canceled"
+        },
+        {
+          "key": "message",
+          "value": "bad"
+        },
+        {
+          "key": "extra",
+          "value": "bad"
+        }
+      ],
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "duplicate kind",
+      "members": [
+        {
+          "key": "kind",
+          "value": "canceled"
+        },
+        {
+          "key": "kind",
+          "value": "workLimit"
+        }
+      ],
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "duplicate message",
+      "members": [
+        {
+          "key": "message",
+          "value": "first"
+        },
+        {
+          "key": "message",
+          "value": "last"
+        }
+      ],
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "missing retained receipt",
+      "members": [
+        {
+          "key": "kind",
+          "value": "canceled"
+        },
+        {
+          "key": "message",
+          "value": "bad"
+        }
+      ],
+      "expectedKind": "invalidValue"
+    }
   ]
 }

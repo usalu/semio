@@ -64,7 +64,7 @@ semio_framework_diagnostic::fault_from_error!(ProtocolError, semio_framework_dia
 
 #[path="♻️retirement/🦀️.rs"]
 mod cause_retirement;
-pub use cause_retirement::{protocol_error_retirement_demand,close_protocol_error_one};
+pub use cause_retirement::{protocol_cause_retirement_demand,protocol_error_retirement_demand,close_protocol_cause_one,close_protocol_error_one};
 
 //#region 🔖️Limits
 /// 🛡️ Corruption-hardening ceilings every decoder in this crate family must validate

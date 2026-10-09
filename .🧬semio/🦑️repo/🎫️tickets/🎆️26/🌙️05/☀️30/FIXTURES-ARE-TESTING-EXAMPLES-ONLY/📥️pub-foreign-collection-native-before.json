@@ -1,0 +1,43 @@
+{
+  "epoch": "2026-10-09T15:10:01.752016+00:00",
+  "sourceCopies": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🦀️.rs",
+      "sha256": "74e4ecdb40e83b1a2fb34f36953dda7d183d117d433c72a475f10b2197b28f3d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧬️schema/🔣️.json",
+      "sha256": "6c84b8ce21f8a9797986b7473b0369e9239a6ef1437b178d65db4cfe240a0e32"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧬️schema/🟦️.ts",
+      "sha256": "ea9775c0ce30ad7d2081ab57440e7e9199374e4a92582f73dde89655dba4b81c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧫️fixtures/🔣️.json",
+      "sha256": "f3f69f6d41e87ff1ccbb5f8fe75400f9633e51ab3fe9a04f53226c6a9a980281"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts",
+      "sha256": "ca3d562a7383e691578de32aa561a9d932c1ba722309dffea987d024dbb81ed2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🦀️.rs",
+      "sha256": "c5c0f88187c543a73a14093b5e8434b68e2de4e826bed812d24944f4a1125042"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+      "sha256": "2e0e3de281c1cee5907317a9975114cb1071b0b6d2fb2c3d5cc37c04dda95f22"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "cb646595beb2aeabc2a00deef501d3e74a6c82144013ebbe87a1794e97b3f0df"
+    }
+  ],
+  "selection": [
+    "original_foreign_output_preserves_immutable_policy_and_every_cancelled_backing",
+    "original_foreign_collection_keeps_each_refused_row_and_real_backing_receipt"
+  ],
+  "qualification": "actual original Replication native route, no Kernel/borrowed derive/proposal publication credit"
+}

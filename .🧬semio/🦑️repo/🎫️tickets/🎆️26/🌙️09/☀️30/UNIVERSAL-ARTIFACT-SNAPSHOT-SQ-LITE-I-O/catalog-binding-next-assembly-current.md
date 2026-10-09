@@ -1,0 +1,17 @@
+# Catalog Binding Next Assembly Current
+
+Read-only 2026-10-09; parent Source40458/Native6112 pending, no runtime outcome claimed.
+
+Mounted NativeCodecBinding retains optional actual factory135/new141/accessor162. Original GIS105/VCS133 capture Some(original static receipt string), Stdio188 moves Some(original owned receipt string). Six actual trusted-catalog fixture call sites630/663/1102/1695/1715/2556 pass None. Binding clone preserves factory field.
+
+Metadata is still dropped at selected verification: trusted-catalog root1742 pushes only binding.codec into registration_codecs;1744 constructs VerifiedNativeArtifactCodec without factory. Its declaration1052 owns identity/optional codec/guest only. Thus provider preview retains factory but verified catalog and assembly registration do not. Hosted alias1800 onward clones owned.codec only and similarly loses factory. Preserve original factory independently in verified owner metadata or an assembly descriptor captured before this projection; aliases must copy the actual owner factory, not derive host factory IDs.
+
+Exact next assembly boundary is `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1526–1531`: verify_selected returns catalog plus codec-only vector, then one original assembly begins, Store preflight, caller checkpoint, Store registration. Return a full original ArtifactAssemblyRegistryPlan alongside catalog instead, using existing transaction and Kernel preflight/commit. Do not start a nested assembly inside supplied-assembly commit. Construct immutable rows during verified loops, before SQL filtering; perform all validation before publish. Atomic binding/document/native registry updates must remain under existing Kernel barrier, not commit document first and later ledger.
+
+NativeCatalog row capture belongs at native_codecs1713–1748, after verified binding lookup/hash and authentic package checks, before codec-only push. Available original owner tuple: record.plugin_id/package_id/version/component_sha256, expected.artifact_kind/schema/hash, binding actual native identity/optionalSQL/factory. Native row has no actual dialect/app from this loop: retain None rather than infer kind/schema coordinate. For unlinked Guest capability preserve real compiled package provenance; do not fabricate optional native SQL/factory.
+
+CatalogOpenTarget capture belongs after descriptor target validation1757 and actual selection1758, using genuine selection1774–1790. Available target package includes plugin/package/version/component SHA256/BLAKE3/descriptorSHA/execution protocol; target contains actual parent_dialect, artifact kind/schema/hash, surface_id/app_id/window_kind_id/role/renderer_target, read/write/observe grant and browser actor. Codec owner is `bound` package, which may differ from host record package. Capture contributor host and native/Guest owner independently. Keep real surface/window/role/renderer in ledger key/descriptor; app-only identity collapses distinct actual targets.
+
+For whole-input audit, selection rejection/absence is distinct from installed selected binding: retain prefilter declared rows with explicit selection status if claiming whole offered denominator. Existing selected ledger can truthfully count selected entries only. No new denominator counts inferred.
+
+Path check: all immediate existing ticket Markdown absolute paths inspected (1809 at observation) were <=256; maximum197. This report path is also below256. Generated compiler files were not inspected for this check.

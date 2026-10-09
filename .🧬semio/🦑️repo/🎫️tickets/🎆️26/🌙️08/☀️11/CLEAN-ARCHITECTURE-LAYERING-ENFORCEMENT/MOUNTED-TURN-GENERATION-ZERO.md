@@ -1,0 +1,11 @@
+# Mounted Turn Generation Zero
+
+The actual store begins at generation zero. The mounted identity now admits that original generation without changing it; instance and operation identity remain nonzero. Canonical decimal-u64 bounds, leading-zero refusals, exact pinned identity and every original malformed vector remain enforced.
+
+The registered portable route first physically closed with Nx/Bun exit 1 (session 49712). All three original selected laws ran: one passed, two failed, 92 assertions. Both failures were the newly authored actual-initial-store-generation-zero vector: first-party schema rejected both generation fields and the independent strict Ajv oracle returned refused instead of progress. Receipt: `🗑️generated/mp2/closure.json`; full terminal retained alongside metadata-only before/after admission. 1352 claims, 1351 exact; one Native Job oracle successor qualified without restoration.
+
+After this genuine red, only the generation schema pattern, native fixture identity parser and mounted turn identity admission were corrected in place. The attempted schema lookup initially refused before source mutation because its authored definition is IdentityV1, not MountedOwnerIdentityV1. Corrected lookup revalidated all three before hashes; no source was copied. Metadata pairs: `🗑️generated/mp2/correction-before.json` and `correction-after.json`.
+
+Portable green physically closed with Nx/Bun exit 0 (session 72414). All three selected original laws passed with 109 assertions: complete 28 admitted vectors, eight malformed observations, four explicit phase-policy vectors, first-party schema subset and strict independent Ajv. Native artifact and actual GenericPlugin binding laws are separate selected receiving gates, not silently skipped assertions. 1550 fresh in-place claims, 1549 exact; a current GenericPlugin peer successor was qualified and preserved. Receipt: `🗑️generated/mp3/closure.json`.
+
+The standalone native2 route is a fresh receiving attempt against current in-place Job/Value and owner sources. Portable green does not establish native execution or the actual mounted Plugin/FEM host chain. No Windows/Linux or full architecture acceptance is inferred. All new metadata, receipt and report paths remain within 256 characters and UTF16 units; no tracked source bodies were copied into the ticket.

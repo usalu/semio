@@ -1,0 +1,27 @@
+{
+  "owned": false,
+  "nativeExecuted": false,
+  "presenceActionHashMatches": true,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "68d8e3336f3575e860d8f20fb97c56dc596ce412a1ebf812cc9b16f39429a798"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "sha256": "610674c6f14773fb08d110aef1576c9063f8d7e5dae10f119bf9d25a03eafee9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "sha256": "6d7e248129c033ac99d6db41f88302158153427556a6380bef7aca28db953293"
+    },
+    {
+      "path": "nx.json",
+      "sha256": "8d5b1ad39a0199e7ddb180d8e3040091d496966287fb08a474668f436a3fe9ee"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+      "sha256": "a27d89099e73263de63d4a1b61cdd26d2b17c3b2b9f407b6035dd947d700611f"
+    }
+  ]
+}

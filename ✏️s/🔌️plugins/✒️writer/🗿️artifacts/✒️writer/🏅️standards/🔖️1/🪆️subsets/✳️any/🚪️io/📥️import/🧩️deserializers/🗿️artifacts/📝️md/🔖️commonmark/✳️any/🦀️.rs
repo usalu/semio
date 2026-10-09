@@ -17,7 +17,7 @@ impl Deserializer<WriterSnapshot> for MdIntoWriter {
     const FROM: Dialect = MD_DIALECT;
     /// 🪧️ Lossy: a markdown file carries no `schema`/`id`/`uri`/`language_id` — only content.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<WriterSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MdIntoWriter: expected a text payload".to_string())));
         };

@@ -1,0 +1,12 @@
+{
+  "contract": "reactor-task-admission/v1",
+  "observations": [
+    { "phase": "publication", "suspends": false, "invokesTaskFactory": false },
+    { "phase": "quota", "suspends": false, "invokesTaskFactory": false },
+    { "phase": "decomposition", "suspends": false, "invokesTaskFactory": false },
+    { "phase": "host", "suspends": false, "invokesTaskFactory": false },
+    { "phase": "registry", "suspends": false, "invokesTaskFactory": false },
+    { "phase": "admission", "suspends": false, "invokesTaskFactory": false },
+    { "phase": "execution", "suspends": true, "invokesTaskFactory": true }
+  ]
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🦀️.rs",
+    "sha256": "6595b910e52d05b8220bcbc7bc84cc8ddcdccc31fa9100d0f80e436ff771f2d6",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧫️fixtures/🔣️.json",
+    "sha256": "e2102efc222e354686e8a0cd7525129d89f4792fbb88b41de27589d6711f2b63",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️.rs",
+    "sha256": "99da108db0fca01e37b8e48c5ecd764d2a8fc38d41a0631e1457d683229a8f65",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧫️fixtures/🔣️.json",
+    "sha256": "92f5290eacedc399f4def7ae6c2c82bd0369a17aa593984188138e956c1644a0",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🦀️.rs",
+    "sha256": "61c7f9f0b70c1ff1cb79d6e19798aaafd38e7eb2ec3b96da4f040740a1e2524d",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🦀️.rs",
+    "sha256": "ef641ceea3090e74f42fdc4258ebe910cca376a2ee20d488ba3b8037f33f16af",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧫️fixtures/🔣️.json",
+    "sha256": "cf6431483832fdbd6c70a534bc79c4896b113126111f8899e30d9f29a1fcdd20",
+    "authored": false
+  }
+]

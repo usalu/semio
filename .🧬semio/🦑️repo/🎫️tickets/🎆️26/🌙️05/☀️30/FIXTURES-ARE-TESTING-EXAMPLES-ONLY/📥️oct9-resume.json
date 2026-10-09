@@ -1,0 +1,21 @@
+{
+  "observed": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "absolutePathCharacters": 79,
+      "sha256": "88cecac27b93a261e3f5dc55bc77a9ad3a975cbba8528068cfb086f7ea7c3095"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "absolutePathCharacters": 94,
+      "sha256": "042255b6e91c6a54c5742e2944383f2ff77afd89fef28d3bb1427dbb7a459f0b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "absolutePathCharacters": 120,
+      "sha256": "8f7ea613966444e7b0226aa71bdd1452c1bdb745a780738bf22dd5acbd25e3db"
+    }
+  ],
+  "sourceCopied": false,
+  "status": "resumed-current-source-no-freeze"
+}

@@ -1,4 +1,6 @@
 use super::*;
+
+fn fixture_router_grant()->semio_framework_job::RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../🛎️services/🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();serde_json::from_value(law["callerGrant"].clone()).unwrap()}
 use semio_framework_async::testkit::ManualRuntime;
 use std::sync::atomic::AtomicUsize;
 
@@ -61,21 +63,30 @@ impl InteractiveJob for RecordingRouterJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.begin_close();
-        if self.calls.is_some() {
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.calls = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        InteractiveJobCloseStep::Complete
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementTurnError};
+        let demand=self.close_demands();
+        let result=semio_framework_value::advance_retirement_turn(demand,grant,|_|{
+            if self.calls.as_ref().is_some_and(|original|Arc::weak_count(original)!=0){return Ok((RetainedCloneStep::Progress(Default::default()),false));}
+            let Some(original)=self.calls.take()else{return Ok((RetainedCloneStep::Complete(Default::default()),true));};
+            let released_bytes=if let Some(original)=Arc::into_inner(original){drop(original);demand.release_bytes}else{0};
+            Ok((RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()}),true))
+        });
+        match result{Ok(step)if self.calls.is_none()=>InteractiveJobCloseStep::Complete{progress:step.progress()},Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(RetirementTurnError::Owner(error)|RetirementTurnError::Receipt(error))=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}.admit(grant,self.terminal_is_empty())
     }
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands().copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,_body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands().release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands().depth)}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.calls.is_none()
     }
+}
+
+impl RecordingRouterJob {
+    fn close_demands(&self)->semio_framework_value::RetirementDemand{self.calls.as_ref().map_or(Default::default(), |_|semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<Arc<AtomicUsize>>>(),release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>(),depth:1,..Default::default()})}
 }
 
 impl RouterEffectHandler for RecordingRouterHandler {
@@ -129,8 +140,8 @@ async fn revoked_capability_cancels_only_its_own_operations_and_actor_survives()
     let revoked_cap = CapabilityTokenId(1);
     let kept_cap = CapabilityTokenId(2);
 
-    let dispatch_revoked = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: Some(revoked_cap) };
-    let dispatch_kept = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: Some(kept_cap) };
+    let dispatch_revoked = EffectDispatchContext { router_turn_grant:fixture_router_grant(), actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: Some(revoked_cap) };
+    let dispatch_kept = EffectDispatchContext { router_turn_grant:fixture_router_grant(), actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: Some(kept_cap) };
 
     executor.execute(&dispatch_revoked, &[Effect::BlobLoad { req: RequestId(1), hash: "h1".to_string() }]).await;
     executor.execute(&dispatch_kept, &[Effect::BlobLoad { req: RequestId(2), hash: "h2".to_string() }]).await;
@@ -176,7 +187,7 @@ async fn storage_quota_denial_produces_a_typed_completion_not_a_panic() {
     let package_scope = runtime_dyn.open_scope(ScopeOwner::Package("pkg".to_string()), None).await;
     actors.activate(runtime_dyn.as_ref(), 1, 0, &package_scope).await;
 
-    let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
+    let dispatch = EffectDispatchContext { router_turn_grant:fixture_router_grant(), actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
     let big_bytes = vec![0u8; 1_000];
     executor.execute(&dispatch, &[Effect::StorageWrite { req: RequestId(9), key: "k".to_string(), bytes: big_bytes }]).await;
     runtime.drive().await;
@@ -287,7 +298,7 @@ async fn spawn_job_and_cancel_job_are_reported_shard_owned_never_dispatched() {
     let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
     let (executor, injector, actors) = executor(runtime_dyn.clone()).await;
     activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0).await;
-    let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
+    let dispatch = EffectDispatchContext { router_turn_grant:fixture_router_grant(), actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
     let report = executor.execute(&dispatch, &[Effect::SpawnJob { job: 1, kind: "k".to_string(), input: vec![], placement: semio_framework::kernel::JobPlacement::Inline }, Effect::CancelJob { job: 1 }]).await;
     runtime.drive().await;
     assert_eq!(report.shard_owned, 2);
@@ -301,7 +312,7 @@ async fn shell_effects_are_reported_shell_owned_never_dispatched() {
     let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
     let (executor, _injector, actors) = executor(runtime_dyn.clone()).await;
     activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0).await;
-    let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
+    let dispatch = EffectDispatchContext { router_turn_grant:fixture_router_grant(), actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
     let report = executor.execute(&dispatch, &[Effect::Notify { message: "hi".to_string() }]).await;
     assert_eq!(report.shell_owned, 1);
     assert_eq!(report.dispatched, 0);
@@ -315,7 +326,7 @@ async fn router_effect_runs_through_the_retained_compute_session() {
     activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0).await;
     let recording_handler = Arc::new(RecordingRouterHandler(Arc::new(AtomicUsize::new(0))));
     executor.router_handler = recording_handler.clone();
-    let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
+    let dispatch = EffectDispatchContext { router_turn_grant:fixture_router_grant(), actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
     executor.execute(&dispatch, &[Effect::CacheRead { req: RequestId(5), engine_id: "e".to_string(), key: "k".to_string() }]).await;
     runtime.drive().await;
     assert_eq!(recording_handler.0.load(Ordering::SeqCst), 1);
@@ -333,7 +344,7 @@ async fn router_effect_on_a_stopped_compute_pool_returns_worker_lost_without_str
     let compute = ComputePool::with_pool(1, pool);
     let ctx = OperationContext { actor: 1, generation: 0, trace: TraceId(91), lane: 0, deadline_ms: None, cancel: CancelToken::root().await, capability: None };
     let handler: Arc<dyn RouterEffectHandler> = Arc::new(RecordingRouterHandler(Arc::new(AtomicUsize::new(0))));
-    let outcome = run_router_effect_job(&compute, &runtime, &scope, ctx, &handler, RouterEffect::CacheRead { engine_id: "e".to_string(), key: "k".to_string() }).await;
+    let outcome = run_router_effect_job(&compute, &runtime, &scope, ctx, fixture_router_grant(), &handler, RouterEffect::CacheRead { engine_id: "e".to_string(), key: "k".to_string() }).await;
     assert!(matches!(outcome, RouterEffectJobOutcome::WorkerLost));
 }
 //#endregion 🚀️ClassificationTests
@@ -384,3 +395,82 @@ async fn backbone_delta_fanout_coalesces_a_burst_for_the_same_uri() {
     assert_eq!(drained, vec![b"delta-2".to_vec()], "a burst of deltas for the SAME uri must collapse to the latest");
 }
 //#endregion 📡️BackboneTests
+
+#[test]
+fn router_effect_original_sources_keep_capacity_until_funded_close() {
+    fn verify<J:InteractiveJob>(mut job:J,source:fn(&J)->&Option<Vec<u8>>,text:&str,grant:semio_framework_value::RetainedCloneGrant){
+        let pointer=source(&job).as_ref().unwrap().as_ptr();let capacity=source(&job).as_ref().unwrap().capacity();
+        job.begin_close();let mut released=0;let mut copies=0;let mut turns=0;
+        while !job.terminal_is_empty(){
+            let copy=job.next_close_copy_byte_demand().unwrap();let release=job.next_close_release_byte_demand().unwrap();let depth=job.next_close_depth_demand().unwrap();
+            assert_eq!(job.next_close_capacity_byte_demand(copy).unwrap(),0);
+            for axis in 0..4{
+                let mut denied=grant;
+                match axis{0=>denied.maximum_items=0,1 if copy>0=>denied.maximum_copy_bytes=copy-1,2 if release>0=>denied.maximum_release_bytes=release-1,3 if depth>0=>denied.maximum_depth=depth-1,_=>continue}
+                let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(denied));
+                assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+                assert!(!matches!(step,InteractiveJobCloseStep::Complete{..}));
+                assert_eq!(source(&job).as_ref().unwrap().as_ptr(),pointer);assert_eq!(source(&job).as_deref().unwrap(),text.as_bytes());
+            }
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant));
+            assert!(step.progress().fits(grant));assert_eq!(step.progress().retained_capacity_bytes,heap.requested_bytes);assert_eq!(step.progress().released_bytes,heap.released_bytes);
+            assert!(!matches!(step,InteractiveJobCloseStep::Refused{..}|InteractiveJobCloseStep::Blocked));
+            released+=step.progress().released_bytes;copies+=step.progress().copied_bytes;turns+=1;assert!(turns<16);
+        }
+        assert_eq!(released,capacity);assert!(copies>=std::mem::size_of::<Option<Vec<u8>>>());
+        let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!(heap.released_bytes,0);
+        let oracle:Vec<u8>=serde_json::from_str(&serde_json::to_string(text.as_bytes()).unwrap()).unwrap();assert_eq!(oracle,text.as_bytes());
+        eprintln!("[DEBUG] original router source length{} capacity{capacity} close{turns} copied{copies} released{released} drop0",text.len());
+    }
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
+    assert_eq!(fixture["expectedDropReleaseBytes"],0);
+    for row in fixture["sources"].as_array().unwrap(){
+        let text=row["text"].as_str().unwrap();
+        let source=||{let mut source=Vec::with_capacity(row["capacity"].as_u64().unwrap()as usize);source.extend_from_slice(text.as_bytes());source};
+        verify(FaultRouterEffectJob{detail:Some(source()),writer:Some(RetainedJobPayloadWriter::new(JobPayloadStream::Fault)),cursor:0,closing:false},|job|&job.detail,text,grant);
+        verify(CompleteRouterEffectJob{output:Some(source()),writer:Some(RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput)),cursor:0,closing:false},|job|&job.output,text,grant);
+    }
+}
+
+#[test]
+fn router_effect_original_box_frame_has_a_separate_funded_terminal_turn(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
+    assert_eq!(fixture["wrapper"]["separateTerminalFrame"],true);assert_eq!(fixture["wrapper"]["normalFactoryBirthQualified"],false);
+    let mut source=Vec::with_capacity(fixture["sources"][0]["capacity"].as_u64().unwrap()as usize);source.extend_from_slice(fixture["sources"][0]["text"].as_str().unwrap().as_bytes());let source_capacity=source.capacity();
+    let(mut owner,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||DynRouterEffectJob(Some(Box::new(FaultRouterEffectJob{detail:Some(source),writer:None,cursor:0,closing:false}))));
+    let frame=std::mem::size_of_val(&**owner.0.as_ref().unwrap());assert_eq!(birth.requested_bytes,frame);assert_eq!(birth.released_bytes,0);
+    owner.begin_close();let mut released=0;let mut saw_frame=false;
+    for _ in 0..fixture["wrapper"]["maximumTurns"].as_u64().unwrap(){
+        if owner.terminal_is_empty(){break;}
+        let original=owner.0.as_ref().unwrap();let terminal=original.terminal_is_empty();let pointer=(&**original as *const dyn InteractiveJob).cast::<()>();
+        let demand=owner.close_demands(grant.maximum_copy_bytes).unwrap();
+        if terminal{
+            saw_frame=true;assert_eq!(demand.release_bytes,frame);assert_eq!(demand.depth,1);
+            let denied=semio_framework_value::RetainedCloneGrant{maximum_release_bytes:frame-1,..grant};
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!owner.terminal_is_empty());assert_eq!((&**owner.0.as_ref().unwrap()as *const dyn InteractiveJob).cast::<()>(),pointer);
+        }
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(!matches!(step,InteractiveJobCloseStep::Refused{..}|InteractiveJobCloseStep::Blocked));released+=heap.released_bytes;
+        if terminal{assert!(matches!(step,InteractiveJobCloseStep::Complete{..}));}
+    }
+    assert!(saw_frame&&owner.terminal_is_empty());assert_eq!(released,source_capacity+frame);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!(heap.released_bytes,0);
+    eprintln!("[DEBUG] original router Box frame{frame} source{source_capacity} released{released} separate terminal frame funded drop0; factory birth unqualified");
+}
+
+#[test]
+fn router_effect_recording_leases_keep_unique_shared_and_weak_backing_custody(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
+    for case in fixture["recordingLeases"].as_array().unwrap(){
+        let source=Arc::new(AtomicUsize::new(7));let bytes=semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>();
+        let mut alias=(case=="alias").then(||RecordingRouterJob{calls:Some(source.clone()),yielded:false,closing:false});let weak=(case=="weak").then(||Arc::downgrade(&source));let mut owner=RecordingRouterJob{calls:Some(source),yielded:false,closing:false};owner.begin_close();
+        let demand=owner.close_demands();
+        for denied in [semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_release_bytes:bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_depth:0,..grant}]{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+        if weak.is_some(){let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+        let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(weak));assert_eq!(heap.released_bytes,0);
+        assert_eq!(owner.calls.as_ref().unwrap().load(Ordering::SeqCst),serde_json::from_str::<usize>("7").unwrap());
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant));assert!(owner.terminal_is_empty());assert!(step.progress().fits(grant));assert_eq!(step.progress().released_bytes,heap.released_bytes);let mut released=heap.released_bytes;
+        if let Some(alias)=alias.as_mut(){assert_eq!(released,0);alias.begin_close();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||alias.close_step(grant));assert!(alias.terminal_is_empty());assert_eq!(step.progress().released_bytes,heap.released_bytes);released+=heap.released_bytes;}
+        assert_eq!(released,bytes);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{drop(owner);drop(alias);});assert_eq!(heap.released_bytes,0);eprintln!("[DEBUG] original recording lease {} backing{bytes} released{released} weak-gated terminal drop0",case.as_str().unwrap());
+    }
+}

@@ -1,19 +1,5 @@
-//! 📤️ Runtime dump of `schema_export_catalog_entries()` for catalog parity: the authority the
-//! generated `🔣️schema-catalog.json` is cross-checked against by `schema verify --rust-entries`.
-//!
-//! Runs in its own test binary so the dump carries exactly the scopes the linked crates register and
-//! nothing a sibling unit test happened to put in the process-wide catalog. The rendered dump is the
-//! `schema-export-registry-entries-v1` shape
-//! `{ "contractId", "generator", "entries": [ { "scope", "export", "format" } ] }`, entries sorted by
-//! `(scope, export, format)` with the ascii `SchemaFormat::id()` spelling. `contractId` is the
-//! taxonomy `schemaExportResolution.rustEntriesContractId`; `SchemaRustEntryDump` in
-//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts` is the consumer.
-//!
-//! The dump is checked three ways: against the committed fixture
-//! `🧫️fixtures/📤️schema-export-entries-dump.json` (regenerate with
-//! `SEMIO_SCHEMA_EXPORT_ENTRIES_OUT=<that path>`), against the `framework.schema` JSON Schema facet
-//! through the owned draft-07 validator, and — from the same fixture — against `ajv` in
-//! `🧪️tests/📤️schema-export-entries/🟦️.ts`.
+//! 🧪️ Independent synthetic registry examples for sorting, missing formats and canonical validation.
+//! The committed dump is testing-only; production entries run the clean native export binary.
 
 use {semio_framework_schema::register_framework_schema_exports, semio_framework_schema::structural_validator_for, semio_framework_schema::FRAMEWORK_SCHEMA_SCOPE};
 use semio_framework_schema_registry::register_scope_schema_exports;

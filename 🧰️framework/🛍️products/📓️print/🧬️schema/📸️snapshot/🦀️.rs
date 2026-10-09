@@ -3,7 +3,7 @@ use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue,ToValue};
 
 
-#[derive(Clone, Debug, ToValue, FromValue,semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, ToValue, FromValue,semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(deny_unknown_fields)]
 pub struct ChartSnapshot {
     pub chart: DslValue,

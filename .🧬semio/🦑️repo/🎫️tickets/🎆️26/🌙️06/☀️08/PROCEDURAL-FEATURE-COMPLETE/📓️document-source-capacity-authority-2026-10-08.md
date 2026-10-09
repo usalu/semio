@@ -1,3 +1,7 @@
+# Current Neural Prerequisite, 2026-10-09
+
+Original Neural full-grant source/cache/registry/input lane is now actual GREEN80/80 on the existing original lib gate79227, native0.90s/Nx3m31s, cache skipped. Current receipts, original2168-byte RED and repairs are retained in [Neural full-grant](📓️neural-full-grant-2026-10-08.md). Root owns the separate mixed Ordered/Controlled query audit. Original Plugin65959 PRE, full G3/source-import/restore/cold parser/Diff qualifications below remain open; no Neural passage is attributed to those paths.
+
 # Original Document Capacity and Parser Authority — 2026-10-08
 
 This extends the current execution report. Source observations are distinct from runtime qualification. Original seven reaches the shared kernel511 PREASSERT; no unchanged native retry is authorized by these observations. Existing canonical LoadDocument shell/publication laws and portable sparse8/schema receipts remain preserved.
@@ -163,3 +167,15 @@ The exact physical schema disappeared again after the actual strict portable4051
 Root original all-raster31511 is fresh terminal actual GREEN11/11,783 skipped, native120ms/Nx4m21s after exact authority restoration. It includes the original physical-job-close namespace and eight final-pool System receipts (103368/168872 bytes, terminal DropFree0). This qualifies the restored bindings at execution; it does not prove persistent source custody after execution. Root owns its full native capture/input.
 
 Plugin65959 is collected terminal exit1, genuine Cargo build status101, zero law assertions, Nx11m50s including cold Cranelift compilation/shared lease. Current PRE is in original Store callers: removed SnapshotRetirementStep imports in history hydration/config retained owners and a removed ErasedSnapshotRetirement next_close_byte_demand implementation in hydration. Raw build diagnostics are retained under output-retirement-current/exact-cargo-laws-22mKGC/00. Output source is unqualified and no identical replay is admitted. Defining Neural source began migrating during that dependency build after its own original terminal RED; its production source was not reached by this PRE.
+
+## Current Shared Original Job And Command Reversal, 2026-10-09
+
+Fresh Mesh81314 is actual PRE18 Job/zero import assertions. Current defining Job source then changed outside this lane: no JobPayloadCloseStep or two-argument payload close references remain in its root, and the original payload API now returns full Result<RetainedCloneStep> with genuine page/ledger/parent demands. I made no Job mutation; the changed original source is preserved. A new exact original payload-retirement2 native launcher is registered in both authorities for the existing Job target, to obtain a genuine current compile/runtime receipt without whole kernel replay.
+
+The original retained-command shell also changed during read-only inspection: current source has full-grant raw/wire/downloader/completion closure and explicit retained UnsupportedOwner for remaining source/emit/context fields, replacing the earlier observed logical free/ordinary drop implementation. The original metadata/admission/completion modules are preserved. No attribution to a deleting or editing actor is inferred. This is source-authored and unqualified; the genuine typed remaining source owners are still required. Original Plugin65959 PRE remains retained and was not replayed unchanged.
+
+## Current Original Job Payload Full-Grant Qualification
+
+Native session40443 collected terminal exit0 on2026-10-09:2 tests passed,36 skipped,nextest0.017s/Nx47.2s,cache skipped. Exact original registered framework-job-rs:test payload law gate compiled the current externally changed Job source; this lane made no Job source mutation. Capture: `🗑️generated/document-continuation-2026-10-08/job-payload-original-full1.txt`. This qualifies the two genuine page/ledger original-pointer physical laws and clears their defining compile prerequisite; it does not qualify Plugin/G3 or Mesh import assertions. Mesh genuine original import baseline95205 subsequently reached its own allocator assertion and was RED.
+
+The current retained-command source retains unsupported original context, emission and hover owners rather than ordinarily dropping them. Necessary next work is original typed input/root integration, exact original terminal Box work shell quotes, and genuine neutral/System publication-cancellation laws. Root owns changed Ordered/Controlled physical query authority; HighUI owns global Plugin close/config definitions.

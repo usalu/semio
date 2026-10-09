@@ -10,10 +10,12 @@ import { terminateOwnedProcessTree } from "../../../../../🔨️modules/🏃️
 import { spawn, spawnSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { randomUUID } from "node:crypto";
+import {homedir} from "node:os";
+import {CurrentPhysicalOwnerV1} from "../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
-import { cargoInvocationManifestV1, prepareCargoWorkspaceInvocation } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1, cargoInvocationManifestV1, prepareCargoWorkspaceInvocation } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
 import { cargoDirectories } from "../⚡️caching/🦀️cargo/🟦️.ts";
 import { devToolingEnv } from "./🌿️environment/🟦️.ts";
@@ -65,10 +67,10 @@ const observesCargoInvocation = (args: readonly string[], env: NodeJS.ProcessEnv
  * component builds, the trusted-catalog publish's `os-hub` build). Bun's own writer waits the pipe out. Returns cargo's exit
  * status; `budgetMs` (> 0) elapsing or a SIGINT/SIGTERM of this process ends the whole cargo tree and throws. */
 export async function cargoStreamingStatus(args: readonly string[], cwd: string, env: NodeJS.ProcessEnv, budgetMs: number): Promise<number> {
-  prepareCargoWorkspaceInvocation(getWorkspaceRoot(env), args, cwd,env);
+  prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot(env)),getWorkspaceRoot(env),args,cwd,env);
   const observes = observesCargoInvocation(args, env), buildDirectory = observes ? cargoDirectories(getWorkspaceRoot(), env).build : undefined, provenanceRoot = env.SEMIO_TEST_ARTIFACT_DIR ?? (buildDirectory ? join(buildDirectory, "semio-cargo-provenance") : undefined), builtAtMs = Date.now(), units: any[] = [], buildScripts: any[] = [];
   const child = spawn("cargo", [...args], { cwd, env: buildDirectory ? { ...env, SEMIO_COMPILER_RESOURCE_ROOT: join(buildDirectory, "semio-compiler-resources") } : env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
-  const observation = provenanceRoot ? (async () => { for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) { let message; try { message = JSON.parse(line); } catch { continue; } if (message.reason === "compiler-artifact") units.push({ message }); else if (message.reason === "build-script-executed") buildScripts.push(message); } })() : Promise.resolve();
+  const observation = provenanceRoot ? (async () => { for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) { let message; try { message = JSON.parse(line); } catch { continue; } if (message.reason === "compiler-artifact") units.push({ message,evidence:{version:1,kind:"discovery",paths:[],producer:null} }); else if (message.reason === "build-script-executed") buildScripts.push(message); } })() : Promise.resolve();
   child.stdout!.pipe(process.stdout, { end: false });
   child.stderr!.pipe(process.stderr, { end: false });
   let stopped: string | undefined, status = 1;
@@ -93,13 +95,17 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
     return status;
   } finally {
     if (budget) clearTimeout(budget);
-    process.removeListener("SIGINT", onSignal);
-    process.removeListener("SIGTERM", onSignal);
-    await observation;
-    if (provenanceRoot) {
-      const { writeCompletedCargoInvocationProvenanceV1 } = await import("../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts");
-      const manifest = cargoInvocationManifestV1(args, cwd);
-      writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot, `cargo-unit-provenance-cargo-relay-${randomUUID()}.json`), { manifest, cwd, command: "cargo", args: [...args], buildDirectory: buildDirectory!, builtAtMs, status, cancelled: Boolean(stopped), units, buildScripts }, undefined, env.CARGO_HOME);
+    try {
+      await observation;
+      if (provenanceRoot) {
+        const { writeCompletedCargoInvocationProvenanceV1 } = await import("../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts");
+        const manifest = cargoInvocationManifestV1(args, cwd);
+        const observedAt=performance.now(),physical=new CurrentPhysicalOwnerV1(cwd,{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>Boolean(stopped),remainingMs:()=>60000-(performance.now()-observedAt),onProgress:row=>console.log("[cargo-provenance] "+JSON.stringify(row))});
+        await writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot, `cargo-unit-provenance-cargo-relay-${randomUUID()}.json`), { manifest, cwd, command: "cargo", args: [...args], buildDirectory: buildDirectory!, builtAtMs, status, cancelled: Boolean(stopped), units, buildScripts },new Map(),resolve(env.CARGO_HOME??join(homedir(),".cargo")),physical);
+      }
+    } finally {
+      process.removeListener("SIGINT", onSignal);
+      process.removeListener("SIGTERM", onSignal);
     }
   }
 }
@@ -118,7 +124,7 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
     }
   }
   const relayed = cmd === "cargo" && (process.platform !== "win32" || observesCargoInvocation(formattedArgs, opts.env ?? process.env));
-  if (cmd === "cargo" && !relayed) prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, opts.cwd ?? process.cwd(), opts.env ?? process.env);
+  if (cmd === "cargo" && !relayed) prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot()),getWorkspaceRoot(),args,opts.cwd ?? process.cwd(),opts.env ?? process.env);
   const result = relayed
     ? spawnSync(process.versions.bun ? process.execPath : "bun", [CARGO_RELAY_SCRIPT, "relay", ...formattedArgs], {
         stdio: "inherit",

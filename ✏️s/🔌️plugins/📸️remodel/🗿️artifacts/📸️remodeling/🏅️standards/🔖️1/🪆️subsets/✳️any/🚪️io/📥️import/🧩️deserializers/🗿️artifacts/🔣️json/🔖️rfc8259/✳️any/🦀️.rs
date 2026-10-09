@@ -33,7 +33,7 @@ impl Deserializer<RemodelingSnapshot> for JsonIntoRemodeling {
             _ => Confidence::None,
         }
     }
-    async fn deserialize(payload: &IoPayload) -> IoResult<RemodelingSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<RemodelingSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "json→remodeling: expected a text json payload".to_string())));
         };

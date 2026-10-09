@@ -1,0 +1,6 @@
+{
+  "path": "📥️isolated-verification/📜️script.ts",
+  "beforeSha256": "49db704d63c50f7d4c331ffd134ddaadabea388d6dabde0023f97989198f9621",
+  "afterSha256": "1f57896cfa6eb6b1f9fab83787f479ae6e6cbde880e63ef81c022f02db4d159f",
+  "action": "Insert exact two-path absence guard; preserve all peer guard bodies."
+}

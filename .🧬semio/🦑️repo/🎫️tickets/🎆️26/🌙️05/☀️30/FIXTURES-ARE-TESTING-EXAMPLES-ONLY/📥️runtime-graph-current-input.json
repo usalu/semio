@@ -1,0 +1,27 @@
+{
+  "originalTask": {
+    "executor": "nx:run-commands",
+    "cache": false,
+    "options": {
+      "command": "bun ./📜️script.ts schema runtime-graph",
+      "env": {
+        "CARGO_TARGET_DIR": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target",
+        "CARGO_BUILD_BUILD_DIR": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build"
+      }
+    }
+  },
+  "sourcePath": "📋️project.json",
+  "sourceSha256": "28dc133c4b9d356944ab22edc3a76651e429b4aae6918d6fed6679b57d806e25",
+  "inheritedOverrides": {
+    "CARGO_TARGET_DIR": null,
+    "CARGO_BUILD_BUILD_DIR": null,
+    "CARGO_PROFILE": null,
+    "RUSTFLAGS": null,
+    "RUST_MIN_STACK": null,
+    "NX_CACHE_DIRECTORY": null,
+    "NX_WORKSPACE_DATA_DIRECTORY": null,
+    "SEMIO_TEST_ARTIFACT_DIR": null
+  },
+  "sourceCopies": false,
+  "sourceFreeze": false
+}

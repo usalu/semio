@@ -6,7 +6,7 @@ use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {
     let document = default_drawing_document("doc-text-test", None);
-    let operation = crate::mutations::create_layer(None, Some(document.layers.len()), create_drawing_shape_layer_rect("Op Binary Test"));
+    let operation = crate::mutations::create_layer(None, Some(document.layers.len()), create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Op Binary Test")).to_string().into()).expect("nonempty authored identity"), "Op Binary Test"));
     store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     let bytes = encode_op(&operation).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -18,7 +18,7 @@ async fn document_text_round_trips_a_store_with_an_applied_operation() {
     let envelope = store::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
     let mut doc_store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
-    let layer = create_drawing_shape_layer_rect("Added Rect");
+    let layer = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Added Rect")).to_string().into()).expect("nonempty authored identity"), "Added Rect");
     let layer_id_value = layer_id(&layer).to_string();
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::create_layer(None, None, layer)], transaction: None }).await.expect("apply add layer");
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::set_layer_opacity(layer_id_value.into(), 0.5)], transaction: None }).await.expect("apply set opacity");
@@ -40,7 +40,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let envelope = store::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
     let mut doc_store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
-    let layer = create_drawing_shape_layer_rect("Added Rect");
+    let layer = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Added Rect")).to_string().into()).expect("nonempty authored identity"), "Added Rect");
     let layer_id_value = layer_id(&layer).to_string();
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::create_layer(None, None, layer)], transaction: None }).await.expect("apply add layer");
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::set_layer_opacity(layer_id_value.into(), 0.5)], transaction: None }).await.expect("apply set opacity");

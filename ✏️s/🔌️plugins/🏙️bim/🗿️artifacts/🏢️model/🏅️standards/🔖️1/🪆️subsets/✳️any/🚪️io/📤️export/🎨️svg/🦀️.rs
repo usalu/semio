@@ -68,7 +68,7 @@ pub struct ModelIntoSvg;
 impl Serializer<ModelSnapshot> for ModelIntoSvg {
     const INTO: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let text = export_svg(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ModelIntoSvg: {message}"))))?;
         Ok(IoOutcome::clean(IoPayload::Text(text)))
     }

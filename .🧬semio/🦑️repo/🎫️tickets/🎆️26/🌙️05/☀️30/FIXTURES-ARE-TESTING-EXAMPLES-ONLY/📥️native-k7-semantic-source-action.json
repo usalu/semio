@@ -1,0 +1,7 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+  "beforeSHA": "cb56af691534bacb08d7f8e07d5dcf6f2a06a697024fd2cf0428926a6a4620c1",
+  "old": "expect(history.includes(\"|value,output,native|\")).toBe(true);",
+  "new": "expect(history.includes(\"|value,output,native,body|\")).toBe(true);expect(history.includes(\"body.admit_frontier(\")).toBe(true);expect(history.includes(\"body.record_progress(\")).toBe(true);",
+  "afterSHA": "dc06202a7bfa2111c3cf5f44bf042ebcd59456ab9a830a83540fe51834f69838"
+}

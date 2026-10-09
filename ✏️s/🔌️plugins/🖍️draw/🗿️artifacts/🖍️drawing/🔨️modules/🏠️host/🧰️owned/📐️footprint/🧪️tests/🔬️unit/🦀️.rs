@@ -89,18 +89,12 @@ fn paged_native_drawing_snapshot_decoded_field_close_admits_actual_birth_and_rel
 }
 
 #[test]
-fn paged_native_drawing_snapshot_duplicate_identity_matches_independent_siphash() {
-    use std::hash::Hash;
+fn paged_native_drawing_snapshot_duplicate_identity_consumes_admitted_target() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
-    let suffix = law["duplicateIdentity"]["suffix"].as_str().unwrap();
     let mut ids: Vec<String> = law["duplicateIdentity"]["ids"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().into()).collect();
     ids.push(law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize) + "\0");
     for id in ids {
-        let material = format!("{id}{suffix}");
-        let mut oracle = siphasher::sip::SipHasher13::new_with_keys(0, 0);
-        material.as_bytes().hash(&mut oracle);
-        let expected = format!("layer-{:016x}", oracle.finish());
-        assert_eq!(expected, crate::schema::create_drawing_id("layer", material.as_bytes()));
+        let expected=id.clone();
         let chunks = std::iter::once(String::new()).chain(id.chars().flat_map(|value| [value.to_string(), String::new()]));
         let source = PagedUtf8::<{usize::MAX}>::from_retained_chunks(PagedList::try_from_iter(chunks).unwrap(), id.len()).unwrap();
         let foreign = PagedUtf8::<{usize::MAX}>::default();
@@ -108,27 +102,27 @@ fn paged_native_drawing_snapshot_duplicate_identity_matches_independent_siphash(
             let (mut cursor, allocation) = observe(DrawingDuplicateIdentityCursor::default);
             assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));assert!(size_of_val(&cursor) <= 4096);
             for (items, bytes) in [(0, bytes), (1, 0)] {
-                let (step, allocation) = observe(|| cursor.step(&source, suffix, items, bytes).unwrap());
+                let (step, allocation) = observe(|| cursor.step(&source, items, bytes).unwrap());
                 assert_eq!(step, DrawingDuplicateIdentityStep::default());assert!(cursor.terminal_is_empty());
                 assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             }
             let mut total = 0;
             for _ in 0..100000 {
-                let (step, allocation) = observe(|| cursor.step(&source, suffix, 1, bytes).unwrap());
+                let (step, allocation) = observe(|| cursor.step(&source, 1, bytes).unwrap());
                 assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));assert!(step.observed_bytes <= bytes);total += step.observed_bytes;
-                let (refused, allocation) = observe(|| cursor.step(&foreign, suffix, 1, bytes));
+                let (refused, allocation) = observe(|| cursor.step(&foreign, 1, bytes));
                 assert_eq!(refused.unwrap_err(), "drawing-store.duplicate-identity-owner-changed");assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
                 if step.complete { break; }
             }
-            assert_eq!(cursor.identity(), Some(expected.as_str()));assert_eq!(total, size_of::<usize>() + material.len());
+            assert_eq!(cursor.identity(&source), Some(&source));assert_eq!(total, id.len());
             let (done, allocation) = observe(|| cursor.close_step(0));assert!(!done);assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             let (done, allocation) = observe(|| cursor.close_step(1));assert!(done);assert!(cursor.terminal_is_empty());assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             let (_, allocation) = observe(|| drop(cursor));assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-            eprintln!("[DEBUG] Drawing duplicate original UTF8/NUL ID+suffix exact SipHash1-3 cold authority {expected} bytes={total} grant={bytes}; zero heap birth/read/refusal/close/drop");
+            eprintln!("[DEBUG] Drawing duplicate intrinsic UTF8/NUL admitted target cold authority {expected} bytes={total} grant={bytes}; zero heap birth/read/refusal/close/drop");
         }
         for turn in law["cancelAt"].as_array().unwrap() {
             let mut cursor = DrawingDuplicateIdentityCursor::default();
-            for _ in 0..turn.as_u64().unwrap() { cursor.step(&source, suffix, 1, 7).unwrap(); }
+            for _ in 0..turn.as_u64().unwrap() { cursor.step(&source, 1, 7).unwrap(); }
             let (done, allocation) = observe(|| cursor.close_step(1));assert!(done);assert!(cursor.terminal_is_empty());assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             let (_, allocation) = observe(|| drop(cursor));assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
         }
@@ -267,20 +261,20 @@ fn paged_native_drawing_snapshot_direct_layer_footprint_matches_actual_retained_
     for kind in 0..7 {
         let (source, allocation) = observe(|| {
             let mut source = match kind {
-                0 => crate::schema::create_drawing_shape_layer_rect(&long),
-                1 => crate::schema::create_drawing_path_layer(&long, PagedList::default()),
-                2 => crate::schema::create_drawing_text_layer(&long),
-                3 => crate::schema::create_drawing_image_layer(&long, &long),
-                4 => crate::schema::create_drawing_group_layer(&long),
-                5 => crate::schema::create_drawing_boolean_layer(&long, "union", PagedList::try_from_iter([PagedUtf8::try_from_str(&long).unwrap(), PagedUtf8::default()]).unwrap()),
-                _ => crate::schema::create_drawing_trace_layer(&long, &long),
+                0 => crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long),
+                1 => crate::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, PagedList::default()),
+                2 => crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long),
+                3 => crate::schema::create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, &long),
+                4 => crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long),
+                5 => crate::schema::create_drawing_boolean_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, "union", PagedList::try_from_iter([PagedUtf8::try_from_str(&long).unwrap(), PagedUtf8::default()]).unwrap()),
+                _ => crate::schema::create_drawing_trace_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, &long),
             };
             if let DrawingLayerNode::Text(value) = &mut source { value.content = PagedUtf8::try_from_str(&long).unwrap(); }
             source
         });
         assert!(!allocation.overflowed);
         let retained = allocation.requested_bytes.checked_sub(allocation.released_bytes).unwrap();
-        let foreign = crate::schema::create_drawing_group_layer("foreign");
+        let foreign = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("foreign")).to_string().into()).expect("nonempty authored identity"), "foreign");
         let (mut cursor, allocation) = observe(DrawingLayerFootprintCursor::default);
         assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
         assert!(std::mem::size_of_val(&cursor) <= 4096);

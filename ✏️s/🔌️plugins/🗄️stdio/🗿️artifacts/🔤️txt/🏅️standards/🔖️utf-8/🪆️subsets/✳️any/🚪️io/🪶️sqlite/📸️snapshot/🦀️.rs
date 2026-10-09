@@ -82,7 +82,7 @@ impl ArtifactSqliteSnapshot for TxtSnapshot {
         })()
     }
 
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         let limits = control.limits();
         control.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 0)?;
         let size = match payload { store::io_schema::IoPayload::Binary(bytes) => bytes.len(), store::io_schema::IoPayload::Text(text) => text.len() };
@@ -117,7 +117,7 @@ impl ArtifactSqliteSnapshot for TxtSnapshot {
         Ok(Self { schema, lines, trailing_newline, line_ending: ending })
     }
 
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<store::io_schema::IoPayload, ValueError> {
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         let body_size = native_length(self, control)?;
         let limits = control.limits();
         let prefix = match encoding { SnapshotEncoding::Binary => store::semio_format::declared_envelope_prefix_len("stdio.txt", store::semio_format::Component::Pack, 1)?, SnapshotEncoding::Text => 0 };

@@ -17,7 +17,7 @@ fn the_mint_vectors_match_the_first_party_and_third_party_blake3() {
     assert_eq!(fixture["schema"].as_str(), Some("semio.replication.transaction-ref"));
     for case in fixture["cases"].as_array().expect("cases") {
         let id = case["id"].as_str().expect("case id");
-        let actor = crate::ids::ActorId(case["actor"].as_str().expect("actor").to_string());
+        let actor = crate::ids::ActorId(case["actor"].as_str().expect("actor").into());
         let clock = fixture_clock(case);
         let tool = case["tool"].as_str().expect("tool");
         let expected = TransactionRef { id: case["expect"]["id"].as_str().expect("expected id").to_string(), tool: case["expect"]["tool"].as_str().expect("expected tool").to_string() };

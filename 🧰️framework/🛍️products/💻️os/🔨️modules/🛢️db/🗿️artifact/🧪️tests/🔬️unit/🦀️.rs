@@ -1529,7 +1529,7 @@ async fn journal_authority() -> (ArtifactAuthority, StdArc<db_storage::DbBackend
 }
 
 fn journal_grant() -> store::ArtifactStoreOneItemGrant {
-    store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES }
+    store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: store::durable_group::DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES, maximum_release_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
 }
 
 //#region 🔖️RecoveryFixtureStore
@@ -1870,8 +1870,11 @@ fn close_committed_recovery_hash_store(store: &mut store::ArtifactStore<HashProj
 
 fn close_journal_commit(commit: &mut dyn store::durable_group::DurableOwnedGroupJournalCommitV1) {
     commit.begin_close();
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: store::durable_group::DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES, maximum_release_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 };
     for _ in 0..8 {
-        if commit.close_step(journal_grant()).unwrap() == store::SnapshotRetirementStep::Complete {
+        let step = commit.close_step(grant).unwrap();
+        assert!(step.progress().fits(grant));
+        if matches!(step, semio_framework_value::RetainedCloneStep::Complete(_)) {
             assert!(commit.terminal_is_empty());
             return;
         }

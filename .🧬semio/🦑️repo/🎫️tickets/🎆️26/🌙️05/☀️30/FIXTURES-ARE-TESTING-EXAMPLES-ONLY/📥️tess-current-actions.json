@@ -1,0 +1,22 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json",
+      "beforeSha256": "412e4917c288b158e0eb9871c2d7a5b692ff1d8e9080cbc748031365de91ffe2",
+      "afterSha256": null,
+      "action": "Retire only current whole tessellation/modeling trial Schema/admissions and unused Schema-only reads; preserve Three box/compound/wire/liveMap/import/modeling and all original native/plain laws."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧬️schema/🎟️owners.json",
+      "beforeSha256": "4e966e00aee8f9befe0936c78648e5acb4c330b07f0086bba046e38e85323e12",
+      "afterSha256": null,
+      "action": "Retire only current whole tessellation/modeling trial Schema/admissions and unused Schema-only reads; preserve Three box/compound/wire/liveMap/import/modeling and all original native/plain laws."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "df3c63d9ce49c65db28aeb5eeb1cf80dd2eedad0d843bd8ce7f9641aa17d958b",
+      "afterSha256": "aeadd4889673008b13e74271c8b01f9f829eebd7b910f3011fb52f37da8e1887",
+      "action": "Retire only current whole tessellation/modeling trial Schema/admissions and unused Schema-only reads; preserve Three box/compound/wire/liveMap/import/modeling and all original native/plain laws."
+    }
+  ]
+}

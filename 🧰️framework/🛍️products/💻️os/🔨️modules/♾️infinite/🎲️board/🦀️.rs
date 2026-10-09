@@ -37,6 +37,10 @@ pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canv
 
 // #region 🔖️Kinds
 use std::collections::{BTreeMap, BTreeSet};
+use crate::os_spr::causal::transition::HistoryFoldIndex;
+#[path="♻️retirement/🦀️.rs"]
+mod retirement;
+use retirement::RetainedPoint;
 
 use canvas::{CubicBez, Point, Vec2};
 
@@ -68,9 +72,15 @@ pub enum BoardEvent {
 /// ✅️ Selection snapshot maintained by the engine hot path.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Selection {
-    pub edge_ids: BTreeSet<EdgeId>,
-    pub handle_ids: BTreeSet<HandleId>,
-    pub node_ids: BTreeSet<NodeId>,
+    pub edge_ids: semio_framework_value::numeric_scratch::NumericSet<EdgeId>,
+    pub handle_ids: semio_framework_value::numeric_scratch::NumericSet<HandleId>,
+    pub node_ids: semio_framework_value::numeric_scratch::NumericSet<NodeId>,
+}
+
+impl semio_framework_value::retirement::RetireOwned for Selection {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(self.edge_ids),deferred(self.handle_ids),deferred(self.node_ids)])}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.edge_ids),deferred_birth_bytes_for(&self.handle_ids),deferred_birth_bytes_for(&self.node_ids)])}
+    fn controlled_retirement_supported()->bool{true}
 }
 
 /// 🖼️ Minimal render snapshot suitable for a host-side drawing layer or tests.
@@ -650,14 +660,14 @@ impl Default for EngineSelectionOptions {
 #[derive(Clone, Debug)]
 pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     pub camera: Camera,
-    pub edges: BTreeMap<EdgeId, GraphEdge<P::Endpoint>>,
-    pub edge_semantics: BTreeMap<EdgeId, ElementSemantics>,
+    pub edges: HistoryFoldIndex<EdgeId, GraphEdge<P::Endpoint>>,
+    pub edge_semantics: HistoryFoldIndex<EdgeId, ElementSemantics>,
     pub enforce_acyclic: bool,
     pub events: Vec<BoardEvent>,
-    pub handles: BTreeMap<HandleId, Handle>,
+    pub handles: HistoryFoldIndex<HandleId, Handle>,
     pub hover: Option<u64>,
     pub interaction: InteractionMode,
-    pub nodes: BTreeMap<NodeId, Node>,
+    pub nodes: HistoryFoldIndex<NodeId, Node>,
     pub selection: Selection,
     pub preselect: Selection,
     pub preselect_removed: Selection,
@@ -670,7 +680,7 @@ pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     area_initial: Selection,
     area_points: Vec<Point>,
     area_screen_points: Vec<Point>,
-    drag_start_positions: BTreeMap<NodeId, Point>,
+    drag_start_positions: HistoryFoldIndex<NodeId, RetainedPoint>,
     proximity_connection: Option<ProximityConnection>,
     next_edge_id: u64,
     retirement_backing_credited_bytes: usize,
@@ -690,14 +700,14 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
     fn default() -> Self {
         Self {
             camera: Camera::default(),
-            edges: BTreeMap::new(),
-            edge_semantics: BTreeMap::new(),
+            edges: HistoryFoldIndex::new(),
+            edge_semantics: HistoryFoldIndex::new(),
             enforce_acyclic: false,
             events: Vec::new(),
-            handles: BTreeMap::new(),
+            handles: HistoryFoldIndex::new(),
             hover: None,
             interaction: InteractionMode::default(),
-            nodes: BTreeMap::new(),
+            nodes: HistoryFoldIndex::new(),
             selection: Selection::default(),
             preselect: Selection::default(),
             preselect_removed: Selection::default(),
@@ -710,7 +720,7 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
             area_initial: Selection::default(),
             area_points: Vec::new(),
             area_screen_points: Vec::new(),
-            drag_start_positions: BTreeMap::new(),
+            drag_start_positions: HistoryFoldIndex::new(),
             proximity_connection: None,
             next_edge_id: 1000,
             retirement_backing_credited_bytes: 0,
@@ -811,6 +821,11 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         retire_backing!(&mut self.selection_preview_points, Point);
         retire_backing!(&mut self.area_points, Point);
         retire_backing!(&mut self.area_screen_points, Point);
+        for selection in [&mut self.selection,&mut self.preselect,&mut self.preselect_removed,&mut self.area_initial]{
+            for values in [&mut selection.edge_ids,&mut selection.handle_ids,&mut selection.node_ids]{
+                if !values.terminal_is_empty(){let bytes=values.next_close_release_byte_demand().expect("finite numeric selection backing demand");let credited_bytes=maximum_bytes.min(bytes.saturating_sub(self.retirement_backing_credited_bytes));self.retirement_backing_credited_bytes+=credited_bytes;if self.retirement_backing_credited_bytes<bytes{return GraphEngineBackingRetirementStep::Pending{credited_bytes,released_bytes:0}}let progress=values.close_copy_step(1,self.retirement_backing_credited_bytes).expect("admitted numeric selection backing release");if progress.progressed{self.retirement_backing_credited_bytes=0;}return GraphEngineBackingRetirementStep::Pending{credited_bytes,released_bytes:progress.released_allocation_bytes};}
+            }
+        }
         debug_assert_eq!(self.retirement_backing_credited_bytes, 0);
         GraphEngineBackingRetirementStep::Complete
     }
@@ -968,7 +983,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             InteractionMode::DragNode { .. } | InteractionMode::DragNodes { .. } => {
                 for (id, start) in &self.drag_start_positions {
                     if let Some(node) = self.nodes.get_mut(id) {
-                        node.center = *start;
+                        node.center = start.0;
                     }
                 }
             }
@@ -1062,7 +1077,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.drag_start_positions.clear();
         for id in &members {
             if let Some(node) = self.nodes.get(id) {
-                self.drag_start_positions.insert(*id, node.center);
+                self.drag_start_positions.insert(*id, RetainedPoint(node.center));
             }
         }
         self.interaction = InteractionMode::DragNodes { primary_id, offset: point - primary.center };
@@ -1086,7 +1101,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.drag_start_positions.clear();
         for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&node_id) } {
             if let Some(n) = self.nodes.get(id) {
-                self.drag_start_positions.insert(*id, n.center);
+                self.drag_start_positions.insert(*id, RetainedPoint(n.center));
             }
         }
         if drag_group {
@@ -1115,7 +1130,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 self.drag_start_positions.clear();
                 for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&node_id) } {
                     if let Some(n) = self.nodes.get(id) {
-                        self.drag_start_positions.insert(*id, n.center);
+                        self.drag_start_positions.insert(*id, RetainedPoint(n.center));
                     }
                 }
                 if drag_group {
@@ -1170,7 +1185,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                             self.drag_start_positions.clear();
                             for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&node_id) } {
                                 if let Some(n) = self.nodes.get(id) {
-                                    self.drag_start_positions.insert(*id, n.center);
+                                    self.drag_start_positions.insert(*id, RetainedPoint(n.center));
                                 }
                             }
                             if drag_group {

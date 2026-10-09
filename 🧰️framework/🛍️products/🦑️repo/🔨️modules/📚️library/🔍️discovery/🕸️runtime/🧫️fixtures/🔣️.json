@@ -1965,13 +1965,7 @@
       "value": {
         "kind": "read",
         "path": "/workspace/asset",
-        "output": "/build/asset",
         "operation": {
-          "source": "/workspace/macro.rs",
-          "line": 1,
-          "name": "read"
-        },
-        "snapshotOperation": {
           "source": "/workspace/macro.rs",
           "line": 1,
           "name": "read"
@@ -1979,7 +1973,9 @@
         "callsite": {
           "source": "/workspace/lib.rs",
           "line": 1
-        }
+        },
+        "bytes": 1,
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       },
       "accepted": true
     },
@@ -1987,13 +1983,7 @@
       "name": "RuntimeCompilerResourceV1",
       "value": {
         "path": "/workspace/asset",
-        "output": "/build/asset",
         "operation": {
-          "source": "/workspace/macro.rs",
-          "line": 1,
-          "name": "read"
-        },
-        "snapshotOperation": {
           "source": "/workspace/macro.rs",
           "line": 1,
           "name": "read"
@@ -2001,7 +1991,9 @@
         "callsite": {
           "source": "/workspace/lib.rs",
           "line": 1
-        }
+        },
+        "bytes": 1,
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       },
       "accepted": false
     },
@@ -2068,13 +2060,7 @@
             "input": {
               "kind": "read",
               "path": "/workspace/asset",
-              "output": "/build/asset",
               "operation": {
-                "source": "/workspace/macro.rs",
-                "line": 1,
-                "name": "read"
-              },
-              "snapshotOperation": {
                 "source": "/workspace/macro.rs",
                 "line": 1,
                 "name": "read"
@@ -2082,10 +2068,14 @@
               "callsite": {
                 "source": "/workspace/lib.rs",
                 "line": 1
-              }
+              },
+              "bytes": 1,
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             },
             "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "outputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "bytes": 1,
+            "sourceExact": true,
+            "schemaErrors": []
           }
         ]
       },
@@ -2153,13 +2143,7 @@
             "input": {
               "kind": "read",
               "path": "/workspace/asset",
-              "output": "/build/asset",
               "operation": {
-                "source": "/workspace/macro.rs",
-                "line": 1,
-                "name": "read"
-              },
-              "snapshotOperation": {
                 "source": "/workspace/macro.rs",
                 "line": 1,
                 "name": "read"
@@ -2167,10 +2151,14 @@
               "callsite": {
                 "source": "/workspace/lib.rs",
                 "line": 1
-              }
+              },
+              "bytes": 1,
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             },
             "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "outputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "bytes": 1,
+            "sourceExact": true,
+            "schemaErrors": []
           }
         ]
       },
@@ -2400,6 +2388,48 @@
     {
       "id": "trailing-comment",
       "source": "import './live.ts'; /* unclosed"
+    }
+  ],
+  "resourceReads": [
+    {
+      "id": "empty",
+      "hex": "",
+      "currentHex": "",
+      "exact": true
+    },
+    {
+      "id": "binary",
+      "hex": "00ff0180",
+      "currentHex": "00ff0180",
+      "exact": true
+    },
+    {
+      "id": "changed-same-size",
+      "hex": "00ff0180",
+      "currentHex": "00fe0180",
+      "exact": false
+    },
+    {
+      "id": "changed-length",
+      "hex": "00ff0180",
+      "currentHex": "00ff",
+      "exact": false
+    }
+  ],
+  "actorCallerArgumentChanges": [
+    {
+      "name": "empty",
+      "kind": "empty"
+    },
+    {
+      "name": "extra-feature",
+      "kind": "append",
+      "value": "--all-features"
+    },
+    {
+      "name": "missing-crate-type",
+      "kind": "remove",
+      "value": "cdylib"
     }
   ]
 }

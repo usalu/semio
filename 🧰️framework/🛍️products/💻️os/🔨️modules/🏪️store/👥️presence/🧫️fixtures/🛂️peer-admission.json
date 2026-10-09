@@ -1,6 +1,7 @@
 {
   "maximumItems": 1,
   "maximumBytes": 4096,
+  "physicalCloseGrant": { "maximumItems": 1, "maximumCopyBytes": 4096, "maximumCapacityBytes": 1048576, "maximumReleaseBytes": 1048576, "maximumDepth": 64 },
   "cases": [
     { "name": "accepted-short-large-allocation", "actor": { "unit": "ä", "repeat": 1, "minimumCapacity": 65536 }, "state": "ready", "accepted": true, "expectedActorBytes": 2 },
     { "name": "rejected-empty-large-allocation", "actor": { "unit": "", "repeat": 0, "minimumCapacity": 65536 }, "state": "ready", "accepted": false, "expectedActorBytes": 0 },
@@ -13,5 +14,7 @@
   "expectedRejectedOwnerPreserved": true,
   "expectedSnapshotRetirements": 1,
   "factoryBinding": { "samePresenceType": true, "sourceClosedBeforeRetirement": true, "expectedOriginalRetirements": 1, "expectedForeignRetirements": 0 },
-  "requiresCapacitySizedByteGrant": false
+  "retirementBirthRefusals": ["items", "capacity", "depth"],
+  "requiresCapacitySizedCopyGrant": false,
+  "requiresCapacitySizedReleaseGrant": true
 }

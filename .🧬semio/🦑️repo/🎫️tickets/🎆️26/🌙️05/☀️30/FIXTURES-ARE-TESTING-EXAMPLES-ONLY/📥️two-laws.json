@@ -1,0 +1,59 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
+      "sha256": "e0028ec9305e5da09e031cbe7e311144cf467bbec5ded59e8d5c7b7c39a3eeb1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "41d9a2b27023e22efd3221be015b96376d6a366847ca582c366f145ea258baeb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧫️fixtures/🔣️.json",
+      "sha256": "be5fd4ba0f2b6421317a4b3ec8426c67d8921497b7e73122dd3eb8b437a77666"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🟦️.ts",
+      "sha256": "91c22808102ec4ed1870e23da05d7e06e355890ae06f17d16b78ea9280447a7b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "sha256": "ee2ccbe8513ad9e7ba0f2644d0f02f31af09a3a8d3e1f827310821a57105b7d5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "sha256": "061bde56c3cdf7287742727fe065247bad1f2436223610c4d4951cb883d4ce0d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+      "sha256": "032fb7c1ee75e599681b4dbb1f673977c4613774d1b779e83eab93b24ef3e238"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧹️retirement/🦀️.rs",
+      "sha256": "dcc3e604b8d2b852fed65cd0804be6dfa8d34c8b45753c5d0aa16bdb99e035e7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+      "sha256": "3f782cf4b1c4ebf9ddfe06814d15ef1556506b87895dad65cf5f9cafd5457e57"
+    }
+  ],
+  "portableCases": [
+    {
+      "id": "dynamic-nested-write",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const key=opaque();fixture[key][0].id=\"changed\";new Ajv().compile(schema)(fixture);",
+      "expected": "unknown selector retains possible root alias; root content tainted"
+    },
+    {
+      "id": "computed-receiver-once",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const ajv=new Ajv();let calls=0;function receiver(){calls+=1;return ajv}receiver()[\"compile\"](schema)(fixture);",
+      "expected": "receiver evaluated once before key and arguments; calls1"
+    },
+    {
+      "id": "computed-key-before-args",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const ajv=new Ajv();let value=fixture;function key(){value=opaque();return \"compile\"}ajv[key()](schema)(value);",
+      "expected": "computed key side effect occurs once before args; value unresolved"
+    }
+  ]
+}

@@ -17,6 +17,7 @@ test("erased controlled retirement preserves the neutral independent-grant contr
   expect(law.maximumCopyBytes).toBe(3);
   expect(law.maximumItems).toBe(1);
   expect(law.unsupportedKind).toBe("unsupportedOwner");
+  expect(law.unsupportedEffects).toEqual({bornBytes:0,releasedBytes:0});
 });
 console.log("[DEBUG] controlled retirement independent oracle imports loaded");
 const validValue = new Ajv({strict:false}).compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
@@ -188,4 +189,21 @@ test("cold shared retirement keeps logical work separate from exact physical bac
  expect(Math.ceil(law.buffer.bytes/law.buffer.workBytes)+4).toBe(law.buffer.maximumTurns);
  const source=readFileSync(join(owner,"♻️retirement/🦀️.rs"),"utf8");const shared=source.slice(source.indexOf("impl<T: RetireOwned + Sync> ErasedSnapshotRetirement for SharedRetirement<T>"),source.indexOf("impl<T: RetireOwned + Sync> Drop for SharedRetirement<T>"));expect(shared).toContain("fn next_close_byte_demand(");
  console.log("[DEBUG] shared cold retirement neutral Node Buffer/TextEncoder/RFC6902 confirms original logical quanta and indivisible physical capacity, native allocator witness required");
+});
+
+test("original controlled reservation failure saves actual retained allocation before error",()=>{
+ const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️reservation.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️reservation.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
+ const original=Buffer.from(law.original,"utf8");const pointer=original.buffer;
+ const before={source:law.original,capacity:0,released:0,receipt:0};const actual=128*law.allocatorMultiplier;
+ const retained=applyPatch(before,[{op:"replace",path:"/capacity",value:actual},{op:"replace",path:"/receipt",value:actual}],true,false).newDocument;
+ expect(retained.source).toBe(law.original);expect(original.buffer).toBe(pointer);expect(retained.capacity).toBeGreaterThan(128);expect(retained.receipt).toBe(retained.capacity);expect(law.expected.admissionReceipt).toBe("same-actual-receipt");expect(retained.released).toBe(law.expected.releasedBytes);
+ const closed=applyPatch(retained,[{op:"replace",path:"/capacity",value:0},{op:"replace",path:"/released",value:actual}],true,false).newDocument;expect(closed.released).toBe(retained.receipt);expect(law.expected.terminalHeap).toEqual([0,0]);
+ console.log("[DEBUG] independent Ajv/NodeBuffer/RFC6902 failed reservation preserves original, exact post-allocation receipt and same physical close owner");
+});
+
+test("original controlled root transfer preserves the same source under its incoming narrow wallet",()=>{
+ const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/📥️root/🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/📥️root/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
+ const db=new Database(":memory:");try{db.run("CREATE TABLE policy(copy INTEGER)");for(const copy of law.copyPolicies)db.query("INSERT INTO policy VALUES(?)").run(copy);expect(db.query("SELECT copy FROM policy WHERE copy>=0 ORDER BY copy").all()).toEqual(law.copyPolicies.map((copy:number)=>({copy})));}finally{db.close();}
+ expect(applyPatch({original:law.source},[{op:"move",from:"/original",path:"/retained"}],true,false).newDocument).toEqual({retained:law.source});
+ const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source).toContain("if self.value.is_some() { return Ok(0); }");const root=source.slice(source.indexOf("let cursor = self.value.take().unwrap().retirement();"),source.indexOf("let index = self.cursors.len() - 1;"));expect(root).toContain("copied_bytes: 0");expect(source).not.toContain("if grant.maximum_copy_bytes < self.next_copy_byte_demand()?");expect(source).toContain("if work && body_bytes < minimum_work_bytes && (birth==0 || !self.cursors.get(index).unwrap().allows_admitted_narrow_work())");
 });

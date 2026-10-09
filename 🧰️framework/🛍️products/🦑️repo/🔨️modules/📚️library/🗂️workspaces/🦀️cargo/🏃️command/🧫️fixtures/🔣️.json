@@ -1,0 +1,76 @@
+{
+  "request": {
+    "version": 1,
+    "root": "/workspace",
+    "cwd": "/workspace",
+    "args": [
+      "--version"
+    ],
+    "environment": {},
+    "storage": {
+      "version": 1,
+      "directory": "/owned"
+    },
+    "provenance": {
+      "version": 1,
+      "buildDirectory": "/compiler",
+      "mirrorDirectory": null
+    }
+  },
+  "missing": [
+    "version",
+    "root",
+    "cwd",
+    "args",
+    "environment",
+    "storage",
+    "provenance"
+  ],
+  "bad": [
+    [
+      "root",
+      "relative"
+    ],
+    [
+      "cwd",
+      "relative"
+    ],
+    [
+      "args",
+      []
+    ],
+    [
+      "args",
+      [
+        "a\u0000b"
+      ]
+    ],
+    [
+      "environment",
+      {
+        "a": 1
+      }
+    ],
+    [
+      "storage",
+      {
+        "version": 1,
+        "directory": "relative"
+      }
+    ],
+    [
+      "provenance",
+      {
+        "version": 1,
+        "buildDirectory": "relative",
+        "mirrorDirectory": null
+      }
+    ]
+  ],
+  "native": {
+    "name": "owned_command_native",
+    "manifest": "[workspace]\n[package]\nname=\"owned_command_native\"\nversion=\"0.0.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n[features]\nowned=[]\n",
+    "lock": "version = 4\n[[package]]\nname = \"owned_command_native\"\nversion = \"0.0.0\"\n",
+    "source": "#[cfg(feature=\"owned\")] pub fn value()->u8{7}\n"
+  }
+}

@@ -1430,6 +1430,11 @@
         "command": "bun ./📜️script.ts root-corpus-port-boot-source"
       }
     },
+    "publication-provenance-physical-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {"command": "bun ./📜️script.ts publication-provenance-physical-source"}
+    },
     "runtime-callsite-source": {
       "executor": "nx:run-commands",
       "cache": false,

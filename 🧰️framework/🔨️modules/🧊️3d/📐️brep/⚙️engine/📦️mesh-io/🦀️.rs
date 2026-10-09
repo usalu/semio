@@ -26,6 +26,8 @@
 
 use crate::brep::operations::euler::{add_shell, add_solid};
 use crate::brep::engine::MeshTransfer;
+use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
+use semio_framework_mesh_engine::HistoryFoldIndex;
 use crate::brep::queries::tessellation::tessellate_solid;
 use crate::brep::representation::arena::SolidId;
 use crate::brep::representation::error::KernelError;
@@ -63,24 +65,41 @@ pub struct MeshImportCursor {
     solid: Option<SolidId>,
     recorder: OpRecorder,
     cancelled: bool,
-    fault: Option<KernelError>,
     units: usize,
     retired: bool,
-    retirement: crate::brep::engine::retirement::PayloadRetirement,
-    released_buffers: bool,
+    retirement: Option<ImportCloseOwner>,
+    retirement_stage:u8,
     triangles: usize,
-    provenance_credit: Option<usize>,
-    vertex_map: std::collections::BTreeMap<[u64;3],crate::brep::representation::arena::VertexId>,
-    edge_map: std::collections::BTreeMap<([u64;3],[u64;3]),(crate::brep::representation::arena::EdgeId,usize,bool)>,
+    vertex_map: HistoryFoldIndex<[u64;3],crate::brep::representation::arena::VertexId>,
+    edge_map: HistoryFoldIndex<([u64;3],[u64;3]),(crate::brep::representation::arena::EdgeId,usize,bool)>,
     boundary_edges: usize,
 }
-struct ImportIndexRetirement {
-    vertices: std::collections::BTreeMap<[u64;3],crate::brep::representation::arena::VertexId>,
-    edges: std::collections::BTreeMap<([u64;3],[u64;3]),(crate::brep::representation::arena::EdgeId,usize,bool)>,
+struct ImportScratch {
+    positions:Vec<f32>,positions64:Vec<Pnt3>,normals64:Vec<Vec3>,normals:Vec<f32>,indices:Vec<u32>,faces:Vec<crate::brep::representation::arena::FaceId>,
+    vertices:HistoryFoldIndex<[u64;3],crate::brep::representation::arena::VertexId>,
+    edges:HistoryFoldIndex<([u64;3],[u64;3]),(crate::brep::representation::arena::EdgeId,usize,bool)>,
 }
-impl crate::brep::engine::retirement::RetirementFrontier for ImportIndexRetirement {
-    fn advance(&mut self,_:&mut crate::brep::engine::retirement::PayloadRetirement,_grant:semio_framework_value::retained_clone::RetainedCloneGrant)->bool {if self.vertices.pop_first().is_none() {self.edges.pop_first();}self.vertices.is_empty() && self.edges.is_empty()}
+semio_framework_value::artifact_retire_struct!(ImportScratch {positions,positions64,normals64,normals,indices,faces,vertices,edges});
+enum RemovedImportEntity {
+    Vertex {value:crate::brep::representation::topology::Vertex},
+    Edge {value:crate::brep::representation::topology::Edge},
+    Coedge {value:crate::brep::representation::topology::Coedge},
+    Loop {value:crate::brep::representation::topology::Loop},
+    Face {value:crate::brep::representation::topology::Face},
+    Shell {value:crate::brep::representation::topology::Shell},
+    Solid {value:crate::brep::representation::topology::Solid},
+    Curve3 {value:crate::brep::representation::curve::Curve3},
+    Curve2 {value:crate::brep::representation::curve::Curve2},
+    Surface {value:crate::brep::representation::surface::Surface},
 }
+crate::brep::representation::retire_geometry_variants!(RemovedImportEntity {Vertex {value},Edge {value},Coedge {value},Loop {value},Face {value},Shell {value},Solid {value},Curve3 {value},Curve2 {value},Surface {value}});
+enum ImportCloseOwner { Scratch(ControlledRetirement<ImportScratch>),Entity(ControlledRetirement<RemovedImportEntity>),Recorder(ControlledRetirement<OpRecorder>) }
+impl ImportCloseOwner {
+    fn owner(&self)->&dyn semio_framework_value::ErasedSnapshotRetirement {match self {Self::Scratch(value)=>value,Self::Entity(value)=>value,Self::Recorder(value)=>value}}
+    fn owner_mut(&mut self)->&mut dyn semio_framework_value::ErasedSnapshotRetirement {match self {Self::Scratch(value)=>value,Self::Entity(value)=>value,Self::Recorder(value)=>value}}
+}
+fn import_controller<T:semio_framework_value::retirement::RetireOwned>(value:T)->ControlledRetirement<T> {ControlledRetirement::new(value).unwrap_or_else(|_|panic!("original import payload requires typed ownership"))}
+fn import_progress()->RetainedCloneStep {RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()})}
 /// 📦 The current result of advancing the existing mesh import mutation.
 pub enum MeshImportStep { Working, Cancelled, Done(crate::brep::representation::topology::EntityRef) }
 impl MeshImportCursor {
@@ -93,7 +112,7 @@ impl MeshImportCursor {
     pub fn new(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>, tolerance: f64) -> Result<Self,KernelError> {
         Self::validate_admission_counts(positions.len(),indices.len(),tolerance)?;
         let triangles=indices.len()/3;
-        Ok(Self { active:false,positions,positions64:Vec::new(),normals64:Vec::new(),normals,indices,phase:0,cursor:0,volume:0.0,faces:Vec::new(),shell:None,solid:None,recorder:OpRecorder::new(),cancelled:false,fault:None,units:0,retired:false,retirement:Default::default(),released_buffers:false,triangles,provenance_credit:None,vertex_map:Default::default(),edge_map:Default::default(),boundary_edges:0 })
+        Ok(Self { active:false,positions,positions64:Vec::new(),normals64:Vec::new(),normals,indices,phase:0,cursor:0,volume:0.0,faces:Vec::new(),shell:None,solid:None,recorder:OpRecorder::new(),cancelled:false,units:0,retired:false,retirement:None,retirement_stage:0,triangles,vertex_map:Default::default(),edge_map:Default::default(),boundary_edges:0 })
     }
     /// 📦 Admits the existing owned f64 triangle representation without narrowing coordinates.
     pub fn from_triangle_mesh(mesh:TriangleMesh,tolerance:f64)->Result<Self,KernelError> {
@@ -102,13 +121,14 @@ impl MeshImportCursor {
     }
     /// 📈 Returns the exact retained mutation phase and completed bounded units.
     pub fn progress(&self)->(usize,usize,&'static str) {
-        let phase=if self.cancelled || self.fault.is_some() { "mesh-to-brep-retire" } else {match self.phase {0=>"mesh-to-brep-admit",1=>"mesh-to-brep-triangles",2=>"mesh-to-brep-shell",3=>"mesh-to-brep-solid",_=>"mesh-to-brep-ready"}};
+        let phase=if self.cancelled { "mesh-to-brep-retire" } else {match self.phase {0=>"mesh-to-brep-admit",1=>"mesh-to-brep-triangles",2=>"mesh-to-brep-shell",3=>"mesh-to-brep-solid",_=>"mesh-to-brep-ready"}};
         (self.units,self.units.max(self.triangles*2+4),phase)
     }
     /// 🛑 Requests rollback without dropping or publishing this private mutation.
     pub fn cancel(&mut self) { self.cancelled=true; }
     /// 🧹️ Reports cancellation only after every owned body entity has been retired.
-    pub fn retirement_complete(&self)->bool {self.retired}
+    pub fn retirement_complete(&self)->bool {self.retired && self.cancelled}
+    pub(super) fn cleanup_complete(&self)->bool {self.retired}
     fn points(&self)->Result<[Pnt3;3],KernelError> {
         let mut points=[Pnt3::new(0.0,0.0,0.0);3];
         for (point,index) in points.iter_mut().zip(&self.indices[self.cursor..self.cursor+3]) {
@@ -120,34 +140,74 @@ impl MeshImportCursor {
         }
         Ok(points)
     }
-    /// ⏱️ Advances at most the admitted budget, including cancellation and fault rollback.
-    pub fn step(&mut self,body:&mut Body,budget:usize)->Result<MeshImportStep,KernelError> {self.close_step(body,budget,4096)}
-    /// 🎟️ Advances the same import cursor with explicit payload-byte credit.
-    pub fn close_step(&mut self,body:&mut Body,budget:usize,bytes:usize)->Result<MeshImportStep,KernelError> {
-        if bytes==0 {return Ok(MeshImportStep::Working);}
+    /// ⏱️ Advances production work; cleanup admits each original physical demand separately.
+    pub fn step(&mut self,body:&mut Body,budget:usize)->Result<MeshImportStep,KernelError> {
         for _ in 0..budget {
-            if self.cancelled || self.fault.is_some() {
-                self.release_buffers();let empty=self.recorder.retire_step(body,1,&mut self.retirement);
-                if empty {self.retirement.close_step(1,bytes);}
-                self.units=self.units.saturating_add(1);
-                if empty && self.retirement.terminal_is_empty() { self.retired=true;if let Some(error)=self.fault.take() {return Err(error);} return Ok(MeshImportStep::Cancelled); }
-                continue;
-            }
-            let result=self.advance(body,bytes);
+            if self.cancelled || self.phase>=4 {
+                let copy=self.next_close_copy_byte_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?;
+                let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_close_capacity_byte_demand(body,copy).map_err(|error|KernelError::Operation(error.to_string()))?,maximum_release_bytes:self.next_close_release_byte_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?,maximum_depth:self.next_close_depth_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?};
+                self.close_step(body,grant).map_err(|error|KernelError::Operation(error.to_string()))?;
+                if self.retired {return Ok(if self.cancelled {MeshImportStep::Cancelled}else {MeshImportStep::Done(if let Some(solid)=self.solid.take() {crate::brep::representation::topology::EntityRef::Solid(solid)}else {crate::brep::representation::topology::EntityRef::Shell(self.shell.take().expect("original completed import shell"))})});}
+            } else {if let Err(error)=self.advance(body) {self.cancelled=true;return Err(error);}}
             self.units=self.units.saturating_add(1);
-            match result {
-                Ok(Some(solid))=>return Ok(MeshImportStep::Done(solid)),
-                Ok(None)=>{},
-                Err(error)=>self.fault=Some(error),
-            }
         }
         Ok(MeshImportStep::Working)
     }
-    fn release_buffers(&mut self) {
-        if self.released_buffers {return;}self.released_buffers=true;
-        self.retirement.pod(std::mem::take(&mut self.positions));self.retirement.pod(std::mem::take(&mut self.positions64));self.retirement.pod(std::mem::take(&mut self.normals64));self.retirement.pod(std::mem::take(&mut self.normals));self.retirement.pod(std::mem::take(&mut self.indices));self.retirement.pod(std::mem::take(&mut self.faces));self.retirement.frontier(ImportIndexRetirement {vertices:std::mem::take(&mut self.vertex_map),edges:std::mem::take(&mut self.edge_map)});
+    /// 🎟️ Borrows the original rollback slot's two independent backing costs.
+    fn removal_demand(&self,body:&Body)->(usize,usize) {
+        if self.retirement_stage!=2 || !self.cancelled {return (0,0);}
+        match self.recorder.last_owned() {
+            Some(crate::brep::representation::topology::EntityRef::Vertex(id))=>body.vertices.remove_backing_demand(id),
+            Some(crate::brep::representation::topology::EntityRef::Edge(id))=>body.edges.remove_backing_demand(id),
+            Some(crate::brep::representation::topology::EntityRef::Coedge(id))=>body.coedges.remove_backing_demand(id),
+            Some(crate::brep::representation::topology::EntityRef::Loop(id))=>body.loops.remove_backing_demand(id),
+            Some(crate::brep::representation::topology::EntityRef::Face(id))=>body.faces.remove_backing_demand(id),
+            Some(crate::brep::representation::topology::EntityRef::Shell(id))=>body.shells.remove_backing_demand(id),
+            Some(crate::brep::representation::topology::EntityRef::Solid(id))=>body.solids.remove_backing_demand(id),
+            Some(crate::brep::representation::topology::EntityRef::Curve3(id))=>body.curves3.remove_backing_demand(id),
+            Some(crate::brep::representation::topology::EntityRef::Curve2(id))=>body.curves2.remove_backing_demand(id),
+            Some(crate::brep::representation::topology::EntityRef::Surface(id))=>body.surfaces.remove_backing_demand(id),
+            None=>(0,0),
+        }
     }
-    fn advance(&mut self,body:&mut Body,bytes:usize)->Result<Option<crate::brep::representation::topology::EntityRef>,KernelError> {
+    pub fn next_close_copy_byte_demand(&self,_body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(0),|owner|owner.owner().next_copy_byte_demand())}
+    pub fn next_close_capacity_byte_demand(&self,body:&Body,copy:usize)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(self.removal_demand(body).0),|owner|owner.owner().next_capacity_byte_demand(copy))}
+    pub fn next_close_release_byte_demand(&self,body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(self.removal_demand(body).1),|owner|owner.owner().next_release_byte_demand())}
+    pub fn next_close_depth_demand(&self,_body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(usize::from(!self.retired)),|owner|owner.owner().next_depth_demand())}
+    /// 🧹️ Retains the actual scratch, removed entity and recorder until their full grants arrive.
+    pub fn close_step(&mut self,body:&mut Body,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        if self.retired {return Ok(RetainedCloneStep::Complete(Default::default()));}
+        if grant.maximum_items==0 || grant.maximum_depth==0 || (!self.cancelled && self.phase<4) {return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if let Some(owner)=self.retirement.as_mut() {
+            if owner.owner().terminal_is_empty() {self.retirement=None;return Ok(import_progress());}
+            return owner.owner_mut().close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));
+        }
+        match self.retirement_stage {
+            0=>{let scratch=ImportScratch {positions:std::mem::take(&mut self.positions),positions64:std::mem::take(&mut self.positions64),normals64:std::mem::take(&mut self.normals64),normals:std::mem::take(&mut self.normals),indices:std::mem::take(&mut self.indices),faces:std::mem::take(&mut self.faces),vertices:std::mem::take(&mut self.vertex_map),edges:std::mem::take(&mut self.edge_map)};self.retirement=Some(ImportCloseOwner::Scratch(import_controller(scratch)));self.retirement_stage=2;Ok(import_progress())}
+            2=>{
+                if let Some(entity)=self.recorder.last_owned().filter(|_|self.cancelled) {
+                    let (removed,progress)=match entity {
+                        crate::brep::representation::topology::EntityRef::Vertex(id)=>{let (value,progress)=body.vertices.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Vertex{value}),progress)},
+                        crate::brep::representation::topology::EntityRef::Edge(id)=>{let (value,progress)=body.edges.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Edge{value}),progress)},
+                        crate::brep::representation::topology::EntityRef::Coedge(id)=>{let (value,progress)=body.coedges.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Coedge{value}),progress)},
+                        crate::brep::representation::topology::EntityRef::Loop(id)=>{let (value,progress)=body.loops.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Loop{value}),progress)},
+                        crate::brep::representation::topology::EntityRef::Face(id)=>{let (value,progress)=body.faces.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Face{value}),progress)},
+                        crate::brep::representation::topology::EntityRef::Shell(id)=>{let (value,progress)=body.shells.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Shell{value}),progress)},
+                        crate::brep::representation::topology::EntityRef::Solid(id)=>{let (value,progress)=body.solids.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Solid{value}),progress)},
+                        crate::brep::representation::topology::EntityRef::Curve3(id)=>{let (value,progress)=body.curves3.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Curve3{value}),progress)},
+                        crate::brep::representation::topology::EntityRef::Curve2(id)=>{let (value,progress)=body.curves2.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Curve2{value}),progress)},
+                        crate::brep::representation::topology::EntityRef::Surface(id)=>{let (value,progress)=body.surfaces.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Surface{value}),progress)},
+                    };
+                    if progress==Default::default() {return Ok(RetainedCloneStep::Progress(progress));}
+                    self.recorder.pop_retired_owned(entity);
+                    if let Some(value)=removed {self.retirement=Some(ImportCloseOwner::Entity(import_controller(value)));}
+                    Ok(RetainedCloneStep::Progress(progress))
+                } else {self.retirement=Some(ImportCloseOwner::Recorder(import_controller(std::mem::take(&mut self.recorder))));self.retirement_stage=3;Ok(import_progress())}
+            }
+            _=>{self.retired=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,..Default::default()}))}
+        }
+    }
+    fn advance(&mut self,body:&mut Body)->Result<Option<crate::brep::representation::topology::EntityRef>,KernelError> {
         use crate::brep::representation::topology::EntityRef;
         match self.phase {
             0=>{
@@ -177,9 +237,6 @@ impl MeshImportCursor {
             }
             2=>{let mut local=OpRecorder::new();let shell=add_shell(body,std::mem::take(&mut self.faces),&mut local);local.own_entity(EntityRef::Shell(shell));self.recorder.append_disjoint(local);self.shell=Some(shell);self.phase=if self.boundary_edges==0 {3}else {4};}
             3=>{let mut local=OpRecorder::new();let solid=add_solid(body,self.shell.expect("retained shell"),Vec::new(),&mut local);local.own_entity(EntityRef::Solid(solid));self.recorder.append_disjoint(local);self.solid=Some(solid);self.phase=4;}
-            4=>{self.release_buffers();self.retirement.close_step(1,bytes);if self.retirement.terminal_is_empty() {self.phase=5;self.provenance_credit=Some(self.recorder.retirement_bytes());}}
-            5=>{let credit=self.provenance_credit.as_mut().expect("retained provenance credit");*credit=credit.saturating_sub(bytes);if *credit==0 {self.phase=6;}}
-            6=>{self.phase=7;return Ok(Some(if let Some(solid)=self.solid.take() {EntityRef::Solid(solid)}else {EntityRef::Shell(self.shell.take().expect("retained shell"))}));}
             _=>return Err(KernelError::InvalidInput("triangle import already published".into())),
         }
         Ok(None)

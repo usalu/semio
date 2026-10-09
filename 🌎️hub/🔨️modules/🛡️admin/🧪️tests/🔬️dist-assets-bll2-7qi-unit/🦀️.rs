@@ -116,7 +116,7 @@ async fn pump_drives_one_turn_per_actor_and_reports_it_as_a_shard_outcome() {
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
 
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
     assert!(shard.is_registered(actor).await);
 
@@ -142,7 +142,7 @@ async fn pump_reports_an_envelope_for_an_unregistered_actor_as_a_fault_not_a_sil
     let stranger = ActorId(99);
     probe.push_inbound(encode_event_envelope(stranger, 1, &fixture_instance_close_event()).await).await;
 
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     let driven = pump(&mut shard).await.expect("pump succeeds even with an unknown actor");
     assert_eq!(driven, 0, "an envelope for an unregistered actor drives nothing");
 
@@ -160,7 +160,7 @@ async fn unregister_drops_the_instance_and_shrinks_actor_count() {
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("mock instantiate");
     let (transport, _probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
     assert_eq!(shard.actor_count().await, 1);
     shard.unregister(actor).await;
@@ -215,7 +215,7 @@ async fn spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completi
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
 
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
 
     let driven1 = pump(&mut shard).await.expect("pump 1");
@@ -293,7 +293,7 @@ async fn cancel_job_effect_stops_a_job_before_it_is_ever_stepped() {
 
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
 
     let driven = pump(&mut shard).await.expect("pump");
@@ -330,7 +330,7 @@ async fn cancel_job_effect_failure_retires_the_actor_and_surfaces_the_typed_faul
 
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
 
     assert_eq!(pump(&mut shard).await.expect("spawn turn"), 1);
@@ -376,7 +376,7 @@ async fn suspend_with_checkpoint_true_surfaces_checkpoint_bytes_in_the_outcome()
     let operation = test_job_operation(actor, 0, 0);
     probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { operation, applied_progress: 73 }).await).await;
 
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
 
     let driven = pump(&mut shard).await.expect("pump");
@@ -414,7 +414,7 @@ async fn suspend_then_resume_round_trips_byte_identical_checkpoint_state() {
     let (transport, probe) = LoopbackTransport::paired().await;
     let operation = test_job_operation(actor, 0, 0);
     probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { operation, applied_progress: 19 }).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
     pump(&mut shard).await.expect("pump suspend");
 
@@ -460,7 +460,7 @@ async fn cancel_unregisters_the_instance_and_no_further_step_job_happens() {
 
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
 
     let driven1 = pump(&mut shard).await.expect("pump 1");
@@ -508,7 +508,7 @@ async fn actor_cancel_failure_retires_the_instance_and_reports_fault_instead_of_
 
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
     assert_eq!(pump(&mut shard).await.expect("spawn turn"), 1);
     let authority = retain_replay_seed(&mut shard, actor, job_id).await;
@@ -562,7 +562,7 @@ async fn exclusive_placement_is_stepped_before_inline_placement_admitted_the_sam
 
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(encode_event_envelope(actor, 1, &fixture_instance_close_event()).await).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
 
     let driven = pump(&mut shard).await.expect("pump");
@@ -716,7 +716,7 @@ async fn grant_with_no_envelopes_still_records_the_budget() {
     ShardFrame::Grant { actor, budget, envelopes: vec![] }.pack_encode(&mut bytes).await;
     probe.push_inbound(bytes).await;
 
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
     let driven = pump(&mut shard).await.expect("pump");
     assert_eq!(driven, 0, "no envelopes bundled — nothing to drive yet");
@@ -742,7 +742,7 @@ async fn a_grants_budget_is_what_the_turn_actually_executes_under() {
     let instance = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
 
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
 
     let mut first_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
@@ -800,7 +800,7 @@ async fn job_step_uses_the_owning_actors_last_granted_budget() {
     let instance = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
 
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
 
     let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
@@ -836,7 +836,7 @@ async fn job_step_uses_the_owning_actors_last_granted_budget() {
 async fn an_actor_never_granted_a_budget_falls_back_to_the_maintenance_lane_default() {
     let mock = Arc::new(MockGuestRuntime::new().await);
     let actor = ActorId(73);
-    let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(LoopbackTransport::default())).await;
+    let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(LoopbackTransport::default()),original_test_shard_issuer()).await;
     let expected = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
     assert_eq!(shard.granted_budget(actor.0), expected);
 }
@@ -854,7 +854,7 @@ async fn unregister_frame_drops_the_instance_exactly_like_the_direct_call() {
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("mock instantiate");
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
     assert!(shard.is_registered(actor).await);
 
@@ -876,7 +876,7 @@ async fn register_frame_is_accepted_without_error_and_has_no_local_side_effect()
     let mut bytes = Vec::new();
     ShardFrame::Register { actor }.pack_encode(&mut bytes).await;
     probe.push_inbound(bytes).await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     let driven = pump(&mut shard).await.expect("pump must not error on a Register frame");
     assert_eq!(driven, 0);
     assert!(!shard.is_registered(actor).await, "Register never instantiates locally — see its own doc");
@@ -1001,7 +1001,7 @@ async fn an_interactive_grant_is_executed_before_background_grants_queued_the_sa
     const BACKGROUND_ACTORS: u64 = 5;
     let mock = Arc::new(MockGuestRuntime::new().await);
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
 
     let package = PackageRef { package: PackageId("lane-priority".to_string()), hash: PackageHash([90u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
@@ -1079,7 +1079,7 @@ async fn a_turn_that_hits_its_epoch_deadline_yields_more_work_not_a_fault_and_st
     mock.script_deadline_exceeded(actor).await;
 
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
     probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Event { bytes: serde_json::to_vec(&fixture_instance_close_event()).expect("encode") }).await).await;
 
@@ -1142,7 +1142,7 @@ async fn malformed_frame_terminalizes_once_without_self_resubmission_readiness()
     let (transport, probe) = LoopbackTransport::paired().await;
     probe.push_inbound(raw.clone()).await;
     let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
-    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
 
     match shard.drive_one().await {
         ShardDrive::Fault { consumed_epoch: Some(1), work_remains: false, terminal_frame: true, .. } => {}
@@ -1157,7 +1157,7 @@ async fn malformed_frame_terminalizes_once_without_self_resubmission_readiness()
 async fn terminal_capacity_plus_one_parks_then_rearms_once_at_the_fifo_tail() {
     let (transport, probe) = LoopbackTransport::paired().await;
     let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
-    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     for epoch in 1..=SHARD_DEFERRED_ITEMS as u64 {
         let raw = vec![0xff, (epoch >> 8) as u8, epoch as u8];
         probe.push_inbound(raw).await;
@@ -1189,7 +1189,7 @@ async fn permanently_over_capacity_frame_uses_the_same_bounded_overflow_handoff(
     let actor = ActorId(54);
     let (transport, probe) = LoopbackTransport::paired().await;
     let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
-    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     for index in 0..SHARD_DEFERRED_ITEMS {
         let raw = vec![0xfd, index as u8];
         shard.terminal_frames.try_push(raw.clone(), raw.len()).expect("fill terminal ring exactly");
@@ -1226,7 +1226,7 @@ async fn transient_frame_rejection_keeps_its_original_epoch_until_admission() {
     let mut bytes = Vec::new();
     ShardFrame::Register { actor }.pack_encode(&mut bytes).await;
     let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
-    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(LoopbackTransport::default())).await;
+    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(LoopbackTransport::default()),original_test_shard_issuer()).await;
     shard.rejected_frame = Some((9, bytes));
 
     match shard.drive_one().await {
@@ -1337,7 +1337,7 @@ async fn replay_failure_and_actor_loss_enter_one_close_funnel_before_reporting()
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
     let (transport, probe) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
     let turn = test_job_turn(actor, 24, 0, 0);
     let kind = "close-funnel".to_string();
@@ -1390,7 +1390,7 @@ async fn mounted_replay_rejects_wrong_route_seed_generation_and_worker_before_wo
     let process_pages_before = JOB_REPLAY_SEED_PAGES.load(Ordering::Acquire);
     let abi_bytes_before = JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire);
     let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
-    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(LoopbackTransport::default())).await;
+    let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(LoopbackTransport::default()),original_test_shard_issuer()).await;
     shard.replay_seeds[0] = Some(MountedReplaySeed::new(actor.0, job, turn, request, JobPlacement::Inline, kind, input).expect("fixed mounted replay seed"));
 
     let initial_phase = shard.replay_seeds[0].as_ref().expect("mounted seed").phase;
@@ -1441,7 +1441,7 @@ async fn mounted_cancel_marks_the_exact_replay_seed_for_incremental_close_before
     let process_pages_before = JOB_REPLAY_SEED_PAGES.load(Ordering::Acquire);
     let abi_bytes_before = JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire);
     let (transport, _) = LoopbackTransport::paired().await;
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport),original_test_shard_issuer()).await;
     shard.register(actor, instance);
     let mut seed = MountedReplaySeed::new(actor.0, job, turn, request, JobPlacement::Inline, kind, input).expect("fixed mounted replay seed");
     seed.phase = ReplaySeedPhase::Retained;
@@ -1469,3 +1469,8 @@ async fn mounted_cancel_marks_the_exact_replay_seed_for_incremental_close_before
     assert_eq!(JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire), abi_bytes_before);
 }
 //#endregion 🔖️LanePriorityAndEpochYield
+
+fn original_test_shard_issuer()->semio_framework_plugin_host::shard::OriginalShardIdentityIssuer{
+ let policy=serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json")).expect("original independent fixture identity policy");
+ semio_framework_plugin_host::shard::native_identity_issuer(policy,|_|Box::new(|_|true))
+}

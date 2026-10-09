@@ -1,0 +1,30 @@
+{
+  "sessionId": 55427,
+  "nxExitCode": 1,
+  "duration": "58.9s",
+  "modules": 4727,
+  "scopes": 3755,
+  "findings": [
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json",
+      "detail": "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+      "detail": "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+      "detail": "The document defines a test corpus contract outside the admitted schema facets."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧬️schema/🔣️.json",
+      "detail": "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+    }
+  ],
+  "writerIdentified": false
+}

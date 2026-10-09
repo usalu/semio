@@ -1,0 +1,11 @@
+# Independent Current BIM Counts and Remodeling Table Ownership
+
+[Literal domain role counts](📥️inputs/bim-current-counts.json) derive solely from the proposed current witness and authored schemas, with no provider imports or provider-generated rows. They bind the witness SHA-256 and list top-level map rows, named nested owner occurrences, ordered item counts including empty parents, keyed entries, scalar slots, and variant occurrences. Fixed Point2/Rgb-like records may be flattened cells; these counts must not be summed into a SQL total until the expanded contract explicitly chooses each row role. The current literal DDL readback still contains 44 historical tables, so an exact full-current SQL total would presently invent missing tables.
+
+## Remodeling positional table mismatch
+
+Actual Source Reader.create at `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts:122` pairs `database.tables[i].name` with `artifactSqliteTables(...)[i]`. Framework helper at `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts:219–239` returns rows in parsed authored-schema order by name lookup, independent of physical database order.
+
+A bounded actual Source probe on defaultRemodelingSnapshot observed `[DEBUG] authored admitted` and `[DEBUG] reverse refused Remodeling SQLite one document required`. It projected once, reversed only the physical tables array, then called the same restore function. This is an actual provider defect, not a missing qualification. No production edits.
+
+The narrow repair must pair helper rows with the parsed authored schema names (or return a named validated index from the helper); do not zip with the supplied physical order. Owning before/after law: construct a valid independently expected database, reverse and rotate physical table order while preserving names/schema/rows, restore identical complete state; export again must retain all rows and table ownership. Include a malformed renamed table refusal so the fix preserves schema validation. The existing Source owning test file is adjacent `🧪️tests/🟦️.ts`; a public IO SQLite import/export variant should exercise the same reader with both native encodings.

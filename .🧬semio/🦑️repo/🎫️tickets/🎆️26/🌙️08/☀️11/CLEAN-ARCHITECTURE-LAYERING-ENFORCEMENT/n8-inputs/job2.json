@@ -1,0 +1,56 @@
+[
+  {
+    "name": "🧵️ Job full retained ownership 4 🧪️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/umbrella-native-inputs/📜️script.ts\" native-job-retirement 4",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+    "env": {
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_DAEMON": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8j4/nd",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8j4/nc"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.7457
+    }
+  },
+  {
+    "name": "🧵️ Job full retained ownership 5 🧪️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/umbrella-native-inputs/📜️script.ts\" native-job-retirement 5",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+    "env": {
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_DAEMON": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8j5/nd",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8j5/nc"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.7458
+    }
+  },
+  {
+    "name": "🧵️ Job full retained ownership 6 🧪️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/umbrella-native-inputs/📜️script.ts\" native-job-retirement 6",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+    "env": {
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_DAEMON": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8j6/nd",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n8j6/nc"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.7459
+    }
+  }
+]

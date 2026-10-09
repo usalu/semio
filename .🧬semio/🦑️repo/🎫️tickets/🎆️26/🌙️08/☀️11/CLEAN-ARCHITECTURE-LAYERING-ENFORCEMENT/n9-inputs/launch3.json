@@ -1,0 +1,104 @@
+{
+  "configurations": [
+    {
+      "name": "\ud83d\uddbc\ufe0f Frame full close receiving 9 \ud83e\uddea\ufe0f",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/n9-inputs/\ud83d\udcdc\ufe0fscript.ts\" portable 9",
+      "cwd": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p9/nd",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p9/nc",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p9",
+        "CARGO_PROFILE_DEV_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "CARGO_BUILD_JOBS": "2",
+        "RUST_MIN_STACK": "134217728",
+        "SEMIO_TEST_LEVEL": "long",
+        "SEMIO_COVERAGE": "0"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7609
+      }
+    },
+    {
+      "name": "\ud83d\uddbc\ufe0f Frame full close receiving 10 \ud83e\uddea\ufe0f",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/n9-inputs/\ud83d\udcdc\ufe0fscript.ts\" portable 10",
+      "cwd": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p10/nd",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p10/nc",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p10",
+        "CARGO_PROFILE_DEV_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "CARGO_BUILD_JOBS": "2",
+        "RUST_MIN_STACK": "134217728",
+        "SEMIO_TEST_LEVEL": "long",
+        "SEMIO_COVERAGE": "0"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.761
+      }
+    },
+    {
+      "name": "\ud83d\uddbc\ufe0f Frame full close receiving 11 \ud83e\uddea\ufe0f",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/n9-inputs/\ud83d\udcdc\ufe0fscript.ts\" portable 11",
+      "cwd": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p11/nd",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p11/nc",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p11",
+        "CARGO_PROFILE_DEV_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "CARGO_BUILD_JOBS": "2",
+        "RUST_MIN_STACK": "134217728",
+        "SEMIO_TEST_LEVEL": "long",
+        "SEMIO_COVERAGE": "0"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7610999999999
+      }
+    },
+    {
+      "name": "\ud83d\uddbc\ufe0f Frame full close receiving 12 \ud83e\uddea\ufe0f",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/n9-inputs/\ud83d\udcdc\ufe0fscript.ts\" portable 12",
+      "cwd": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p12/nd",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p12/nc",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9p12",
+        "CARGO_PROFILE_DEV_DEBUG": "0",
+        "CARGO_INCREMENTAL": "0",
+        "CARGO_BUILD_JOBS": "2",
+        "RUST_MIN_STACK": "134217728",
+        "SEMIO_TEST_LEVEL": "long",
+        "SEMIO_COVERAGE": "0"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7612
+      }
+    }
+  ]
+}

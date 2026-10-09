@@ -34,3 +34,24 @@ fn viewport_borrowed_metadata_matches_the_neutral_record_law() {
     check::<Viewport2d>("Viewport2d",&fixture);
     check::<Viewport3dOrbit>("Viewport3dOrbit",&fixture);
 }
+
+/// 🌲️ Native canonical children borrow actual planar fields and agree with independent Serde.
+#[test]
+fn viewport_native_canonical_tree_borrows_original_planar_schema_fields(){
+ use semio_framework_pack_json::{ArtifactCanonicalJsonTree as Tree,ArtifactCanonicalJsonNode as Node,ArtifactCanonicalJsonText as Text};
+ let fixture=fixture();
+ for case in fixture["cases"].as_array().unwrap().iter().filter(|case|case["type"]=="Viewport2d"){
+  let pose:Viewport2d=serde_json::from_value(case["value"].clone()).unwrap();assert!(matches!(pose.canonical_tree_node().unwrap(),Node::Object(3)));
+  let mut projected=serde_json::Map::new();
+  for(ordinal,(key,field))in[("x",&pose.x),("y",&pose.y),("zoom",&pose.zoom)].into_iter().enumerate(){
+   let child=pose.canonical_tree_child(ordinal).unwrap();assert_eq!(child as *const dyn Tree as *const (),field as *const f64 as *const ());let Node::F64(value)=child.canonical_tree_node().unwrap()else{panic!("original native float child")};let Text::Contiguous(actual_key)=pose.canonical_tree_key(ordinal).unwrap()else{panic!("schema-owned contiguous key")};assert_eq!(actual_key,key);projected.insert(key.into(),serde_json::to_value(value).unwrap());
+  }
+  assert_eq!(serde_json::Value::Object(projected),serde_json::to_value(pose).unwrap());assert!(pose.canonical_tree_child(3).is_err());assert!(pose.canonical_tree_key(3).is_err());
+  println!("[DEBUG] Viewport2d original native x/y/zoom borrowedFields=true independentSerde=true case={}",case["id"]);
+ }
+ let poses:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪟️poses/🔣️.json")).unwrap();
+ for case in poses["cases"].as_array().unwrap().iter().filter(|case|case["dimension"]=="2d"&&case["value"].as_object().is_some_and(|fields|fields.len()==3&&["x","y","zoom"].iter().all(|key|fields.get(*key).is_some_and(|value|value.as_f64().is_some())))){
+  let value=&case["value"];let pose=Viewport2d{x:value["x"].as_f64().unwrap(),y:value["y"].as_f64().unwrap(),zoom:value["zoom"].as_f64().unwrap()};assert_eq!(pose.canonical_tree_node().is_ok(),serde_json::from_value::<Viewport2d>(value.clone()).is_ok());assert_eq!(pose.canonical_tree_node().is_ok(),case["valid"].as_bool().unwrap());
+ }
+ for value in [f64::NAN,f64::INFINITY,f64::NEG_INFINITY]{for pose in [Viewport2d{x:value,..Default::default()},Viewport2d{y:value,..Default::default()},Viewport2d{zoom:value,..Default::default()}]{assert!(pose.canonical_tree_node().is_err());}}
+}

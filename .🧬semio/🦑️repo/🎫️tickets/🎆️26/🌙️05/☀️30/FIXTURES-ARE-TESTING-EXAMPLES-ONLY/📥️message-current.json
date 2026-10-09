@@ -1,0 +1,46 @@
+{
+  "utc": "2026-10-09T05:40:22.231339+00:00",
+  "qualification": "source-only; new native laws unrun; shared Root/Unit hashes observer-only",
+  "sourceCopies": false,
+  "sources": [
+    {
+      "role": "root",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "observedSha256": "d6dd4d157ac677e7957bcf2a4e5bc39c180e5919118090d31d4a5ec8086a8501"
+    },
+    {
+      "role": "HN",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+      "observedSha256": "b16a3b69f40456593611c059e1acb26a6cc6a22ae22a9babc642eb58fb073e3a"
+    },
+    {
+      "role": "HF",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📏️physical-demand/🔣️.json",
+      "observedSha256": "78fc7e7f6aafc83fcc5165e65f3e29c3d7c35eaae28eb79755db2306700017e8"
+    },
+    {
+      "role": "ts",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "observedSha256": "9698a9df4b795490eb6fd2cab9db7fca33b8b3f8e957ad0175b068d4d3e64262"
+    },
+    {
+      "role": "unit",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "observedSha256": "784ac84807800eed81924ed5fd881d61d0ebbd50f5637b4e92f0d6de3645719a"
+    }
+  ],
+  "red": {
+    "session": 63702,
+    "nxExit": 1,
+    "duration": "982ms",
+    "log": "🗑️generated/message-red.log"
+  },
+  "currentGreen": {
+    "session": 90395,
+    "nxExit": 0,
+    "duration": "3.4s",
+    "cases": 4,
+    "assertions": 1492,
+    "log": "🗑️generated/message-current.log"
+  }
+}

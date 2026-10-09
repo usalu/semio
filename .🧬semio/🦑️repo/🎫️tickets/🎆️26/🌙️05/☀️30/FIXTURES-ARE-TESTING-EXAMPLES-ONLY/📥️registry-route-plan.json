@@ -1,0 +1,25 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "📜️script.ts",
+      "sha256": "953194226790749673069f04a000449066091ed54bf5a1330dd7df006bfd481b"
+    },
+    {
+      "path": "📋️project.json",
+      "sha256": "28dc133c4b9d356944ab22edc3a76651e429b4aae6918d6fed6679b57d806e25"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/🦀️.rs",
+      "sha256": "d1295f286264d4742bea50dd097fd5434648b7f4f6e7518f2cedd40afda59ab3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "d5e2bc599117cafbfa2a17499ab8449862292f184a1bb5cd9c6a2362aa98d8bc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "1f9e7ef4cd2010710825b7a937c94287769dd3f5bae33c58736f2cce3a97f41d"
+    }
+  ]
+}

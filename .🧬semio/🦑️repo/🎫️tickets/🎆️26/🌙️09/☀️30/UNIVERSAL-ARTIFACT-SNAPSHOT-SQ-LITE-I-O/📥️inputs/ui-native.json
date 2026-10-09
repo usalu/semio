@@ -1,0 +1,13 @@
+{
+  "command": "bun nx exec --projects=@semio-tech/ui-contract-rs --excludeTaskDependencies -- bun \"/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📜️script.ts\" test long --lib -E \"test(worker_retirement_)\" --success-output immediate",
+  "environment": {
+    "NX_DAEMON": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "NX_CACHE_PROJECT_GRAPH": "false",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/ui-worker",
+    "SEMIO_TEST_RETAIN_ARTIFACTS": "true",
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned",
+    "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"nextest\":true,\"configPath\":\"/Users/ueli/Documents/semio/\\ud83e\\uddf0\\ufe0fframework/.config/nextest.toml\",\"level\":\"long\",\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"/Users/ueli/Documents/semio/.\\ud83e\\uddecsemio/\\ud83e\\udd91\\ufe0frepo/\\ud83c\\udfab\\ufe0ftickets/\\ud83c\\udf86\\ufe0f26/\\ud83c\\udf19\\ufe0f09/\\u2600\\ufe0f30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/\\ud83d\\uddd1\\ufe0fgenerated/ui-worker\",\"retainArtifacts\":true,\"coveragePath\":null,\"rustMinStack\":\"134217728\",\"manifestPath\":\"/Users/ueli/Documents/semio/\\ud83e\\uddf0\\ufe0fframework/\\ud83d\\udd28\\ufe0fmodules/\\ud83d\\uddb1\\ufe0fui/\\ud83e\\uddec\\ufe0fcontract/\\ud83d\\udce6\\ufe0fpackages/\\ud83e\\udd80\\ufe0frust/Cargo.toml\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"coverageEnabled\":false,\"targetDirectory\":\"/Users/ueli/Documents/semio/.\\ud83e\\uddecsemio/\\ud83e\\udd91\\ufe0frepo/\\ud83c\\udfab\\ufe0ftickets/\\ud83c\\udf86\\ufe0f26/\\ud83c\\udf19\\ufe0f09/\\u2600\\ufe0f30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/\\ud83d\\uddd1\\ufe0fgenerated/cargo-root-norm-owned\",\"buildDirectory\":\"/Users/ueli/Documents/semio/.\\ud83e\\uddecsemio/\\ud83e\\udd91\\ufe0frepo/\\ud83c\\udfab\\ufe0ftickets/\\ud83c\\udf86\\ufe0f26/\\ud83c\\udf19\\ufe0f09/\\u2600\\ufe0f30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/\\ud83d\\uddd1\\ufe0fgenerated/cargo-root-norm-owned\",\"leaseDirectory\":\"/Users/ueli/Documents/semio/.\\ud83e\\uddecsemio/\\ud83e\\udd91\\ufe0frepo/\\ud83c\\udfab\\ufe0ftickets/\\ud83c\\udf86\\ufe0f26/\\ud83c\\udf19\\ufe0f09/\\u2600\\ufe0f30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/\\ud83d\\uddd1\\ufe0fgenerated/ui-lease\"}"
+  }
+}

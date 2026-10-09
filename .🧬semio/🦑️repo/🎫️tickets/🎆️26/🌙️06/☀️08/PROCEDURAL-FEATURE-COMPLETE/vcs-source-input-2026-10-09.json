@@ -1,0 +1,37 @@
+{
+  "native1": {
+    "handle": 13180,
+    "exitCode": 1,
+    "qualification": "PREASSERT UI named Refused caller floor"
+  },
+  "syntax1": {
+    "handle": 78314,
+    "exitCode": 0,
+    "parsedOwners": 7
+  },
+  "portable1": {
+    "handle": 79516,
+    "exitCode": 0,
+    "strictAjv": true,
+    "negativeAuthorities": 7
+  },
+  "portable2": {
+    "handle": 83710,
+    "exitCode": 0,
+    "strictAjv": false,
+    "negativeAuthorities": 8,
+    "qualification": "ordinary JSONPatch/UTF8 only; source schema and strict checks removed before execution"
+  },
+  "sourceHashes": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️.rs": "e3048da2a4697cda4027ff3a855e79327b683977e5809ce987ae406fea38fdb3",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🦀️.rs": "ea8be126ee59e1ffac62f7c3e5a998ebfc27b4248d7151aa60131cbca9b8e6fe",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs": "cd20313fbdcc29a5a9e5d97ad52c07b894e3ac73fa5f76a40dd8510338fc7257",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️.rs": "046531eba9fc1e52ec12913e3af5e452abb655f0709c84f639d6c29a56ab0fab",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol/🦀️.rs": "144836a329115a003d12f79c99c47d9be18ef801aa2afed9f25ea7bb5feae94a",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔬️component-domain-laws/🦀️.rs": "1bd19d9675222fc82cb4a2ad546a677a96b7ca82004350a40bc7808933b6f5a6",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔬️protocol-unit/🦀️.rs": "6f84e200b47fcaba73486cf0c0d175ce69089b7fb87c49364e1affe7bf0aaec2",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧫️fixtures/🔣️.json": "96495ed2856610e1b3f4cde270fc740003a0d82394b02920514c79d33803f741",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json": "810c25329cb6fc9d366598ab606af4d4d45eddb32a47f8f410f6d7824ead44ef",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🟦️.ts": "aadc244125a645fa1cd72869f60eb39f073a6646291d16835e4cc0a588f39f70"
+  }
+}

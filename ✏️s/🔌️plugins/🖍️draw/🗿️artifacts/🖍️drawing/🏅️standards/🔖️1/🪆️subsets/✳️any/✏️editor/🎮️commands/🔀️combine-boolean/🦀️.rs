@@ -14,7 +14,7 @@ pub struct CombineBoolean {
     pub ids: Vec<String>,
 }
 
-pub fn plan(document:&DrawingSnapshot,ids:&[String],operation:&str)->Result<(Vec<DrawingMutation>,String),Fault> {
+pub fn plan(document:&DrawingSnapshot,ids:&[String],operation:&str,admission:&semio_framework_plugin::AppOperationContext,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(Vec<DrawingMutation>,String),Fault> {
     if !crate::DRAWING_BOOLEAN_OPERATIONS.contains(&operation) {return Err(Fault::from("Choose Union, Difference, Intersection or Exclusive Or / Vereinigung, Differenz, Schnittmenge oder Exklusives Oder wählen"));}
     let unique=ids.iter().collect::<std::collections::BTreeSet<_>>();
     if ids.len()<2 || unique.len()!=ids.len() {return Err(Fault::from("Select at least two distinct geometric layers / Mindestens zwei verschiedene geometrische Ebenen auswählen"));}
@@ -31,18 +31,18 @@ pub fn plan(document:&DrawingSnapshot,ids:&[String],operation:&str)->Result<(Vec
             current=find_drawing_layer_location(document,&id).and_then(|location|location.parent_id);
         }
     }
-    let material=format!("{}:{operation}:{}",document.id,ids.join("/"));
-    let id=(0usize..).map(|ordinal|crate::schema::create_drawing_id("boolean",format!("{material}:{ordinal}").as_bytes())).find(|id|find_drawing_layer(document,id.as_str()).is_none()).ok_or_else(||Fault::from("Cannot assign Boolean identity"))?;
-    let mut layer=create_drawing_boolean_layer("Boolean",operation,ids.iter().map(|id|id.as_str().into()).collect());
-    layer_base_mut(&mut layer).id=id.as_str().into();
+    let identity=super::add_layer::prepare_identity(document,"boolean",admission,control)?;
+    let id=identity.key().to_string_owner();
+    let mut layer=create_drawing_boolean_layer(identity,"Boolean",operation,ids.iter().map(|id|id.as_str().into()).collect());
     layer_base_mut(&mut layer).attributes=layer_base(selected[0]).attributes.clone();
     let index=locations.iter().map(|location|location.index).max().unwrap()+1;
     Ok((vec![crate::mutations::create_layer(parent,Some(index),layer)],id))
 }
 
 pub fn handle(payload:&CombineBoolean,doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,session:&mut DrawingSession)->Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {
-    let ids=if payload.ids.is_empty(){&session.interaction.ids}else{&payload.ids};
-    let (mutations,id)=plan(doc.snapshot,ids,&payload.operation)?;
+    let ids=if payload.ids.is_empty(){session.interaction.ids.clone()}else{payload.ids.clone()};
+    let admission=doc.operation()?;
+    let (mutations,id)=session.with_identity_control(|control|plan(doc.snapshot,&ids,&payload.operation,admission,control))?;
     let mut emit=Emit::mutations(mutations);
     emit.effects.push(crate::editor::drawing::commands::canvas_pointer_down::interaction_select_effect(&[id],"replace"));
     Ok(emit)

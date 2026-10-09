@@ -75,7 +75,7 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     let agent = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:writer".to_string(), Vec::new(), empty_catalog()).expect("agent opens");
     let shell_host = store::sync::ArtifactHost::new(workspace_worker_pool());
     let shell_channels = shell_host
-        .open(store::sync::ArtifactActorConfig {
+        .open(store::sync::ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
             document_id: "shared-doc".to_string(),
             schema: PROBE_SCHEMA.to_string(),
             bindings: vec![store::sync::PersistenceBinding::Folder { path: dir.path().to_path_buf() }],
@@ -89,7 +89,7 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     shell_store.install_document_store_owners_exact(probe_store_owners());
     shell_store.attach_backbone(store::Backbones::Channel(shell_channels.channel_backbone)).await.expect("attach");
 
-    agent.ensure_probe_artifact("shared-doc", serde_json::json!({ "from": "agent" })).await.expect("agent commits headlessly");
+    agent.ensure_probe_artifact("shared-doc", serde_json::json!({ "from": "agent" }).into()).await.expect("agent commits headlessly");
 
     let storage = store::sync::FolderEventLogStorage::new(dir.path().to_path_buf());
     let write_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
@@ -127,7 +127,7 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     shell_store.tick().await.expect("shell ingests the propagated edit");
     assert_eq!(shell_store.snapshot().expect("shell snapshot").0["from"], "agent", "the shell's own store now sees the agent's headless commit");
 
-    agent.apply_probe_mutation("shared-doc", serde_json::json!({ "from": "agent", "revision": 2 })).await.expect("agent commits a second real mutation");
+    agent.apply_probe_mutation("shared-doc", serde_json::json!({ "from": "agent", "revision": 2 }).into()).await.expect("agent commits a second real mutation");
     let second_write_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
     loop {
         match storage.read_archive("shared-doc").await {

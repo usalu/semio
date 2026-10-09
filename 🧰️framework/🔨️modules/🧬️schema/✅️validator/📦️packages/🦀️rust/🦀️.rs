@@ -8,5 +8,9 @@ mod validator;
 pub use validator::*;
 
 #[cfg(test)]
+#[global_allocator]
+static SCHEMA_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+#[cfg(test)]
 #[path = "../../🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

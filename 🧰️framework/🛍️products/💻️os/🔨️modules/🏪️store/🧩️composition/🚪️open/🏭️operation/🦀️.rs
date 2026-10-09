@@ -12,9 +12,28 @@ use crate::{FromValue, Mutation, OpBinary, OpText, ToValue};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use std::{marker::PhantomData, mem::ManuallyDrop};
 
+/// 📥️ Funds one exact original contiguous input allocation before installing its retained owner.
+pub fn admit_member_input_buffer(source: &mut Option<Vec<u8>>, capacity: usize, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, ValueError> {
+    if source.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "member input buffer already retained")); }
+    if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_capacity_bytes < capacity { return Ok(None); }
+    std::alloc::Layout::array::<u8>(capacity).map_err(|_| ValueError::literal(ValueRefusalKind::OwnershipLimit, "member input buffer extent overflow"))?;
+    let mut buffer = Vec::new();
+    buffer.try_reserve_exact(capacity).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "member input buffer allocation refused"))?;
+    let progress = RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: buffer.capacity(), ..Default::default() };
+    *source = Some(buffer);
+    semio_framework_value::retained_clone::admit_retained_clone_progress(grant, progress, "original member input buffer birth")?;
+    Ok(Some(progress))
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MemberSnapshotOpenProgress {
+    pub opening: MemberOpenProgress,
+    pub retained_progress: RetainedCloneProgress,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MemberSnapshotOpenStep {
-    Pending(MemberOpenProgress),
+    Pending(MemberSnapshotOpenProgress),
     Ready,
     Rejected(MemberOpenDiagnostic),
 }
@@ -25,7 +44,7 @@ pub trait MemberSnapshotOpenOperation: ErasedSnapshotRetirement {
     fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError>
     where
         Self: Sized;
-    fn step(&mut self, cx: &mut StepContext<'_>) -> MemberSnapshotOpenStep;
+    fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> MemberSnapshotOpenStep;
     fn take_ready(&mut self, cx: &mut StepContext<'_>) -> Option<(Self::Snapshot, MemberOpenRequest)>;
 }
 
@@ -46,7 +65,7 @@ impl<P: Send> MemberSnapshotOpenOperation for UnsupportedMemberSnapshotOpen<P> {
         Ok(Self { request: ManuallyDrop::new(Some(request)), diagnostic: None, marker: PhantomData })
     }
 
-    fn step(&mut self, cx: &mut StepContext<'_>) -> MemberSnapshotOpenStep {
+    fn step(&mut self, cx: &mut StepContext<'_>, _grant: RetainedCloneGrant) -> MemberSnapshotOpenStep {
         let diagnostic = self.diagnostic.or_else(|| self.request.as_ref().and_then(|request| request.check_step_authority(cx).err())).unwrap_or(MemberOpenDiagnostic::Decode);
         self.diagnostic = Some(diagnostic);
         MemberSnapshotOpenStep::Rejected(diagnostic)
@@ -94,6 +113,13 @@ pub struct PackMemberSnapshotOpen<P> {
 const PACK_MEMBER_SNAPSHOT_CHUNK_BYTES: usize = 4_096;
 
 impl<P> PackMemberSnapshotOpen<P> {
+    fn publish_input(&mut self, opening: MemberOpenProgress, progress: RetainedCloneProgress, cx: &mut StepContext<'_>) -> MemberSnapshotOpenStep {
+        if cx.consume_retained(progress).is_err() { return self.reject(MemberOpenDiagnostic::Initialization); }
+        MemberSnapshotOpenStep::Pending(MemberSnapshotOpenProgress { opening, retained_progress: progress })
+    }
+    fn pending(&mut self, total: usize, progress: RetainedCloneProgress, cx: &mut StepContext<'_>) -> MemberSnapshotOpenStep {
+        self.publish_input(MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: self.input.len() as u64, total: total as u64 }, progress, cx)
+    }
     fn reject(&mut self, diagnostic: MemberOpenDiagnostic) -> MemberSnapshotOpenStep {
         self.diagnostic.get_or_insert(diagnostic);
         MemberSnapshotOpenStep::Rejected(self.diagnostic.unwrap_or(diagnostic))
@@ -111,35 +137,48 @@ impl<P: ArtifactPack + semio_framework_value::retirement::RetireOwned> MemberSna
         Ok(Self { request: ManuallyDrop::new(Some(request)), snapshot: ManuallyDrop::new(None), active: ManuallyDrop::new(None), input: Vec::new(), expected_bytes: None, diagnostic: None, terminal: false })
     }
 
-    fn step(&mut self, cx: &mut StepContext<'_>) -> MemberSnapshotOpenStep {
+    fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> MemberSnapshotOpenStep {
+        let caller = cx.retained_grant();
+        let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(caller.maximum_items), maximum_copy_bytes: grant.maximum_copy_bytes.min(caller.maximum_copy_bytes), maximum_capacity_bytes: grant.maximum_capacity_bytes.min(caller.maximum_capacity_bytes), maximum_release_bytes: grant.maximum_release_bytes.min(caller.maximum_release_bytes), maximum_depth: grant.maximum_depth.min(caller.maximum_depth) };
         if let Some(diagnostic) = self.diagnostic {
             return MemberSnapshotOpenStep::Rejected(diagnostic);
         }
         if self.terminal {
             return MemberSnapshotOpenStep::Rejected(MemberOpenDiagnostic::Stale);
         }
+        if let Err(diagnostic) = self.request.as_ref().expect("pack member decoder retains its request").check_step_authority(cx) { return self.reject(diagnostic); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || cx.should_yield() { return self.pending(self.expected_bytes.unwrap_or(0), RetainedCloneProgress::default(), cx); }
+        let before = self.request.as_ref().expect("pack member decoder retains its request").input_offset;
         let frame = match self.request.as_mut().expect("pack member decoder retains its request").step_input(cx) {
             crate::os_store::MemberOpenInputStep::Framed(frame) => frame,
-            crate::os_store::MemberOpenInputStep::Pending(progress) => return MemberSnapshotOpenStep::Pending(progress),
+            crate::os_store::MemberOpenInputStep::Pending(progress) => return self.publish_input(progress, RetainedCloneProgress { copied_items: 1, ..Default::default() }, cx),
             crate::os_store::MemberOpenInputStep::Rejected(diagnostic) => return self.reject(diagnostic),
         };
         let expected_bytes = frame.snapshot_range().1;
+        if self.request.as_ref().expect("pack member decoder retains its request").input_offset != before { return self.pending(expected_bytes, RetainedCloneProgress { copied_items: 1, ..Default::default() }, cx); }
         if self.expected_bytes.is_none() {
-            if self.input.try_reserve_exact(expected_bytes).is_err() {
-                return self.reject(MemberOpenDiagnostic::Capacity);
-            }
-            self.expected_bytes = Some(expected_bytes);
+            let mut retained = None;
+            let result = admit_member_input_buffer(&mut retained, expected_bytes, grant);
+            if let Some(input) = retained { self.input = input; self.expected_bytes = Some(expected_bytes); }
+            return match result {
+                Ok(Some(progress)) => { cx.consume_fuel(progress.copied_items as u64); self.pending(expected_bytes, progress, cx) }
+                Ok(None) => self.pending(expected_bytes, RetainedCloneProgress::default(), cx),
+                Err(_) => self.reject(MemberOpenDiagnostic::Capacity),
+            };
         }
         cx.set_stage("member-open.pack-snapshot");
         if self.input.len() < expected_bytes {
             let mut chunk = [0u8; PACK_MEMBER_SNAPSHOT_CHUNK_BYTES];
-            let maximum = chunk.len().min(expected_bytes - self.input.len());
+            let maximum = chunk.len().min(expected_bytes - self.input.len()).min(grant.maximum_copy_bytes / 2).min(usize::try_from(cx.fuel_remaining() / 2).unwrap_or(usize::MAX));
+            if maximum == 0 { return self.pending(expected_bytes, RetainedCloneProgress::default(), cx); }
             let copied = match self.request.as_ref().expect("pack member decoder retains its request").copy_snapshot_chunk(self.input.len(), &mut chunk[..maximum], cx) {
                 Ok(copied) => copied,
                 Err(diagnostic) => return self.reject(diagnostic),
             };
             self.input.extend_from_slice(&chunk[..copied]);
-            return MemberSnapshotOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: self.input.len() as u64, total: expected_bytes as u64 });
+            cx.consume_fuel(copied as u64);
+            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: copied * 2, ..Default::default() };
+            return self.pending(expected_bytes, progress, cx);
         }
         if let Err(diagnostic) = self.request.as_ref().expect("pack member decoder retains its request").check_step_authority(cx) {
             return self.reject(diagnostic);
@@ -232,7 +271,7 @@ impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
     type Member = M;
 
     fn step(&mut self, cx: &mut StepContext<'_>, _grant: RetainedCloneGrant) -> MemberOpenStep<M> {
-        match self.snapshot.step(cx) {
+        match self.snapshot.step(cx, _grant) {
             MemberSnapshotOpenStep::Rejected(diagnostic) => MemberOpenStep::Rejected(diagnostic),
             _ => MemberOpenStep::Rejected(MemberOpenDiagnostic::Decode),
         }
@@ -307,6 +346,7 @@ where
     completed_history_bytes: u64,
     completed_history_records: u64,
     phase: Phase,
+    input_buffer_progress: RetainedCloneProgress,
     diagnostic: Option<MemberOpenDiagnostic>,
 }
 
@@ -427,6 +467,7 @@ where
             completed_history_bytes: 0,
             completed_history_records: 0,
             phase: if diagnostic.is_some() { Phase::Rejected } else { Phase::Snapshot },
+            input_buffer_progress: Default::default(),
             diagnostic,
         })
     }
@@ -465,8 +506,7 @@ where
         let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
         let step = if self.active.is_some() { crate::os_store::artifact_retirement_box_close_step(&mut self.active, child) } else { crate::os_store::artifact_retirement_admit_owned(&mut self.history_auxiliary, &mut self.active, child) }.map_err(|_| MemberOpenDiagnostic::Initialization)?;
         let progress = match step { RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => progress };
-        let fuel = progress.copied_items.checked_add(progress.copied_bytes).ok_or(MemberOpenDiagnostic::Capacity)?;
-        cx.consume_fuel(u64::try_from(fuel).map_err(|_| MemberOpenDiagnostic::Capacity)?);
+        super::record_member_step(cx, progress)?;
         Ok(true)
     }
 
@@ -491,6 +531,8 @@ where
     }
 
     pub fn step_store(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> MemberOpenStep<Box<ArtifactStore<P, M>>> {
+        let grant = super::member_step_grant(cx, grant);
+        self.input_buffer_progress = Default::default();
         if let Some(diagnostic) = self.diagnostic {
             return MemberOpenStep::Rejected(diagnostic);
         }
@@ -500,8 +542,7 @@ where
                 let demand = match owners.constructor_demands() { Ok(demand) => demand, Err(_) => return self.reject(MemberOpenDiagnostic::Capacity) };
                 if grant.maximum_items == 0 || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_depth < demand.depth { return MemberOpenStep::Pending(self.replay_progress()); }
                 let progress = match owners.admit_constructor(grant) { Ok(progress) => progress, Err(_) => return self.reject(MemberOpenDiagnostic::Capacity) };
-                let fuel = match progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::try_from(fuel).ok()) { Some(fuel) => fuel, None => return self.reject(MemberOpenDiagnostic::Capacity) };
-                cx.consume_fuel(fuel);
+                if let Err(diagnostic) = super::record_member_step(cx, progress) { return self.reject(diagnostic); }
                 return MemberOpenStep::Pending(self.replay_progress());
             }
         }
@@ -511,8 +552,11 @@ where
             Err(diagnostic) => return self.reject(diagnostic),
         }
         match self.phase {
-            Phase::Snapshot => match self.snapshot_open.as_mut().unwrap().step(cx) {
-                MemberSnapshotOpenStep::Pending(progress) => MemberOpenStep::Pending(progress),
+            Phase::Snapshot => {
+                let Some(depth) = grant.maximum_depth.checked_sub(1) else { return MemberOpenStep::Pending(self.replay_progress()); };
+                let child = RetainedCloneGrant { maximum_depth: depth, ..grant };
+                match self.snapshot_open.as_mut().unwrap().step(cx, child) {
+                MemberSnapshotOpenStep::Pending(progress) => { if !progress.retained_progress.fits(child) { return self.reject(MemberOpenDiagnostic::Initialization); } MemberOpenStep::Pending(progress.opening) },
                 MemberSnapshotOpenStep::Rejected(diagnostic) => self.reject(diagnostic),
                 MemberSnapshotOpenStep::Ready => match self.snapshot_open.as_mut().unwrap().take_ready(cx) {
                     Some((snapshot, request)) => {
@@ -524,7 +568,7 @@ where
                     }
                     None => MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: 0, total: 1 }),
                 },
-            },
+            } },
             Phase::CaptureGenesis => {
                 let request = self.genesis_request.as_mut().expect("genesis copy retains the admitted request");
                 let frame = match request.step_input(cx) {
@@ -534,16 +578,23 @@ where
                 };
                 let total = frame.snapshot_range().1;
                 if self.genesis_pack.is_none() {
-                    let mut pack = Vec::new();
-                    if pack.try_reserve_exact(total).is_err() { return self.reject(MemberOpenDiagnostic::Capacity); }
-                    *self.genesis_pack = Some(pack);
+                    match admit_member_input_buffer(&mut self.genesis_pack, total, grant) {
+                        Ok(Some(progress)) => { self.input_buffer_progress = progress; if let Err(diagnostic) = super::record_member_step(cx, progress) { return self.reject(diagnostic); } }
+                        Ok(None) => {}
+                        Err(_) => return self.reject(MemberOpenDiagnostic::Capacity),
+                    }
+                    return MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: 0, total: total as u64 });
                 }
                 let offset = self.genesis_pack.as_ref().expect("genesis copy retains bytes").len();
                 if offset < total {
-                    let maximum = (total-offset).min(self.history_page.len());
-                    let copied = match request.copy_snapshot_chunk(offset, &mut self.history_page[..maximum], cx) { Ok(copied) => copied, Err(error) => return self.reject(error) };
+                    if grant.maximum_items == 0 || grant.maximum_depth == 0 { return MemberOpenStep::Pending(self.replay_progress()); }
+                    let maximum = (total-offset).min(self.history_page.len()).min(grant.maximum_copy_bytes / 2).min((cx.fuel_remaining().min(self.history_page.len() as u64 * 2) / 2) as usize);
+                    if maximum == 0 { return MemberOpenStep::Pending(self.replay_progress()); }
+                    let copied = match request.copy_snapshot_chunk(offset, &mut self.history_page[..maximum], cx) { Ok(copied) if copied != 0 => copied, Ok(_) => return MemberOpenStep::Pending(self.replay_progress()), Err(error) => return self.reject(error) };
                     self.genesis_hasher.update(&self.history_page[..copied]);
                     self.genesis_pack.as_mut().expect("genesis copy retains bytes").extend_from_slice(&self.history_page[..copied]);
+                    self.input_buffer_progress = RetainedCloneProgress { copied_items: 1, copied_bytes: copied * 2, ..Default::default() };
+                    if let Err(diagnostic) = super::record_member_step(cx, self.input_buffer_progress) { return self.reject(diagnostic); }
                     return MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: (offset+copied) as u64, total: total as u64 });
                 }
                 let request = self.genesis_request.take().expect("genesis copy retains request authority");
@@ -618,8 +669,11 @@ where
                     Err(_) => return self.reject(MemberOpenDiagnostic::Capacity),
                 };
                 if self.history_bytes.is_none() {
-                    *self.history_bytes = Some(Vec::with_capacity(total));
-                    cx.consume_fuel(1);
+                    match admit_member_input_buffer(&mut self.history_bytes, total, grant) {
+                        Ok(Some(progress)) => { self.input_buffer_progress = progress; if let Err(diagnostic) = super::record_member_step(cx, progress) { return self.reject(diagnostic); } }
+                        Ok(None) => {}
+                        Err(_) => return self.reject(MemberOpenDiagnostic::Capacity),
+                    }
                     return MemberOpenStep::Pending(self.replay_progress());
                 }
                 let offset = self.history_bytes.as_ref().unwrap().len();
@@ -633,13 +687,17 @@ where
                     cx.consume_fuel(1);
                     return MemberOpenStep::Pending(self.replay_progress());
                 }
-                let maximum = total.saturating_sub(offset).min(self.history_page.len());
+                if grant.maximum_items == 0 || grant.maximum_depth == 0 { return MemberOpenStep::Pending(self.replay_progress()); }
+                let maximum = total.saturating_sub(offset).min(self.history_page.len()).min(grant.maximum_copy_bytes / 2).min((cx.fuel_remaining().min(self.history_page.len() as u64 * 2) / 2) as usize);
+                if maximum == 0 { return MemberOpenStep::Pending(self.replay_progress()); }
                 let copied = match self.witness.as_mut().unwrap().copy_verified_history_chunk(offset, &mut self.history_page[..maximum], cx) {
                     Ok(copied) if copied != 0 => copied,
                     Ok(_) => return MemberOpenStep::Pending(self.replay_progress()),
                     Err(diagnostic) => return self.reject(diagnostic),
                 };
                 self.history_bytes.as_mut().unwrap().extend_from_slice(&self.history_page[..copied]);
+                self.input_buffer_progress = RetainedCloneProgress { copied_items: 1, copied_bytes: copied * 2, ..Default::default() };
+                cx.consume_fuel(copied as u64);
                 MemberOpenStep::Pending(self.replay_progress())
             }
             Phase::DecodeHistory => {
@@ -750,8 +808,7 @@ where
                         Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),
                     };
                     let progress = step.progress();
-                    let Some(fuel) = progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::try_from(fuel).ok()) else { return self.reject(MemberOpenDiagnostic::Capacity); };
-                    cx.consume_fuel(fuel);
+                    if let Err(diagnostic) = super::record_member_step(cx, progress) { return self.reject(diagnostic); }
                 } else {
                     self.phase = Phase::RetireInput;
                 }
@@ -767,8 +824,7 @@ where
                     Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),
                 };
                 let progress = match step { RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => progress };
-                let Some(fuel) = progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::try_from(fuel).ok()) else { return self.reject(MemberOpenDiagnostic::Capacity); };
-                cx.consume_fuel(fuel);
+                if let Err(diagnostic) = super::record_member_step(cx, progress) { return self.reject(diagnostic); }
                 if self.witness.is_none() {
                     self.phase = Phase::Ready;
                     MemberOpenStep::Ready(self.member.take().expect("initialized member handoff remains exact"))
@@ -904,5 +960,95 @@ where
     /// whole process; the drop bomb still fires for every non-unwinding drop.
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.ownership_is_empty(), "member-open operation dropped before exact member handoff or bounded close");
+    }
+}
+
+
+#[cfg(test)]
+mod snapshot_input_tests {
+    use super::*;
+    use semio_framework_job::{root_cancel_token, Generation, OperationId, StepBudget};
+    use semio_framework_trace::observe_heap_allocations_on_this_thread;
+
+    #[test]
+    fn member_actual_snapshot_input_turns_preserve_original_grants_and_system_receipts() {
+        let plain: serde_json::Value = serde_json::from_str(include_str!("📏️birth/🧫️fixtures/🔣️.json")).unwrap();
+        let row = &plain["snapshotInput"];
+        let policy = &row["policy"];
+        let policy = RetainedCloneGrant { maximum_items: policy["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: policy["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: policy["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: policy["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: policy["maximumDepth"].as_u64().unwrap() as usize };
+        let bytes = row["payloadBytes"].as_u64().unwrap() as usize;
+        assert!(bytes < 128);
+        for copy in row["copyGrants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
+            let mut source = vec![7; bytes + 1]; source[0] = bytes as u8;
+            let request = super::super::tests::request_for(&source);
+            let mut decoder = PackMemberSnapshotOpen::<crate::DslValue>::begin(request).unwrap_or_else(|_| panic!("original paid snapshot input"));
+            let source_identity = decoder.request.as_ref().unwrap().pages.as_ref().unwrap() as *const _;
+            let cancel = root_cancel_token(); let mut sequence = 0;
+            for blocked in [RetainedCloneGrant { maximum_items: 0, ..policy }, RetainedCloneGrant { maximum_capacity_bytes: bytes - 1, ..policy }, RetainedCloneGrant { maximum_depth: 0, ..policy }] {
+                let mut actual_retained_progress = RetainedCloneProgress::default();
+                let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(512, 999, policy), cancel.clone(), || Some(1), &mut sequence, &mut actual_retained_progress);
+                let (step, heap) = observe_heap_allocations_on_this_thread(|| decoder.step(&mut cx, blocked));
+                assert!(matches!(step, MemberSnapshotOpenStep::Pending(_)));
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                assert_eq!(decoder.input.capacity(), 0);
+                assert_eq!(decoder.request.as_ref().unwrap().pages.as_ref().unwrap() as *const _, source_identity);
+            }
+            let mut born = 0;
+            for turn in 0..4 {
+                let mut actual_retained_progress = RetainedCloneProgress::default();
+                let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(512, 999, policy), cancel.clone(), || Some(1), &mut sequence, &mut actual_retained_progress);
+                let (step, heap) = observe_heap_allocations_on_this_thread(|| decoder.step(&mut cx, policy));
+                let MemberSnapshotOpenStep::Pending(step) = step else { panic!("snapshot input remains pending before typed decode") };
+                assert!(step.retained_progress.fits(policy)); assert_eq!(cx.retained_progress(),step.retained_progress);
+                let before = (decoder.input.len(),decoder.input.capacity());
+                let (second,heap_second)=observe_heap_allocations_on_this_thread(||decoder.step(&mut cx,policy));
+                let MemberSnapshotOpenStep::Pending(second)=second else {panic!("same original input wallet remains denied after its single item")};
+                assert_eq!(second.retained_progress,Default::default());assert_eq!((heap_second.requested_bytes,heap_second.released_bytes),(0,0));assert_eq!((decoder.input.len(),decoder.input.capacity()),before);
+                assert_eq!(heap.requested_bytes, step.retained_progress.retained_capacity_bytes);
+                assert_eq!(heap.released_bytes, step.retained_progress.released_bytes);
+                born += heap.requested_bytes;
+                if born != 0 { break; }
+                assert!(turn < 3);
+            }
+            assert_eq!(born, bytes);
+            let pointer = decoder.input.as_ptr(); let mut copied = 0;
+            let copy_policy = RetainedCloneGrant { maximum_copy_bytes: copy, maximum_capacity_bytes: 0, ..policy };
+            for turn in 0..bytes.max(1) {
+                let before = decoder.input.len();
+                let mut actual_retained_progress = RetainedCloneProgress::default();
+                let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(512, 999, policy), cancel.clone(), || Some(1), &mut sequence, &mut actual_retained_progress);
+                let (step, heap) = observe_heap_allocations_on_this_thread(|| decoder.step(&mut cx, copy_policy));
+                let MemberSnapshotOpenStep::Pending(step) = step else { panic!("only actual input turns are selected") };
+                let progress = step.retained_progress;
+                assert!(progress.fits(copy_policy));assert_eq!(cx.retained_progress(),progress);
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                assert_eq!(progress.copied_bytes, (decoder.input.len() - before) * 2);
+                assert_eq!(decoder.input.as_ptr(), pointer);
+                assert_eq!(decoder.input.as_slice(), &source[1..1 + decoder.input.len()]);
+                copied += progress.copied_bytes;
+                if copy < 2 { assert_eq!(decoder.input.len(), before); break; }
+                if decoder.input.len() == bytes { assert_eq!(copied, bytes * 2); break; }
+                assert!(turn + 1 < bytes);
+            }
+            cancel.cancel_now();
+            let mut actual_retained_progress = RetainedCloneProgress::default();
+                let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(512, 999, policy), cancel.clone(), || Some(1), &mut sequence, &mut actual_retained_progress);
+            let (step, heap) = observe_heap_allocations_on_this_thread(|| decoder.step(&mut cx, RetainedCloneGrant::default()));
+            assert!(matches!(step, MemberSnapshotOpenStep::Rejected(MemberOpenDiagnostic::Cancelled)));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            assert_eq!(decoder.input.as_ptr(), pointer);
+            for turn in 0..512 {
+                let (step, heap) = observe_heap_allocations_on_this_thread(|| decoder.close_step(policy).unwrap());
+                let progress = step.progress(); assert!(progress.fits(policy));
+                assert_eq!(heap.requested_bytes, progress.retained_capacity_bytes);
+                assert_eq!(heap.released_bytes, progress.released_bytes);
+                if decoder.terminal_is_empty() { break; }
+                assert!(turn + 1 < 512);
+            }
+            assert!(decoder.terminal_is_empty());
+            let (_, heap) = observe_heap_allocations_on_this_thread(|| drop(decoder));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            println!("[DEBUG] actual snapshot input copy={copy} originalBytes={bytes} born={born} retained source and pointer=true funded System receipts=true cancelBeforeTypedDecode=true terminalDrop0");
+        }
     }
 }

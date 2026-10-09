@@ -316,7 +316,7 @@ fn graph_host_sync_interaction_sets_hover_node_only() {
     let hover = DomainHover { channel: "pointer".into(), ids: vec!["a".into()] };
     host.sync_interaction(None, Some(&hover));
     assert_eq!(host.hovered_node_id().as_deref(), Some("a"));
-    assert_eq!(host.hovered_channel_json(), "null");
+    assert_eq!(host.hover_facts(),crate::infinite::board::schema::dag_input::DagHoverFacts::default());
 }
 
 #[test]

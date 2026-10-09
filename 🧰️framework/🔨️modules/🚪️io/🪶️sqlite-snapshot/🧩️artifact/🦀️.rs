@@ -62,9 +62,9 @@ fn copy_text(text:&str,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapsh
 }
 
 fn copy_blob(blob:&[u8],control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<Vec<u8>,ValueError>{
- control.allocation_stage(phase,|remaining,progress|{
+ control.allocation_stage(phase,|remaining,progress,allocation|{
   let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|progress(event.completed,event.total);
-  let mut native=semio_framework_value::NativeEncodeControl::new(remaining,&mut callback);let result=native.copy_bytes(blob);(result,native.owned_bytes())
+  let mut native_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);let result=native.copy_bytes(blob);(result,native.owned_bytes())
  })?
 }
 
@@ -354,9 +354,9 @@ impl<'c, 'p> Reconstruction<'c, 'p> {
     /// 🧵️ Constructs native paged text with each actual chunk and backing page admitted independently.
     pub fn paged_text(&mut self, text: &str) -> Result<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, ValueError> {
         self.reserve(text.len())?;
-        self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, progress| {
+        self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, progress,allocation|{
             let mut callback = |event: semio_framework_value::native_decoding::NativeDecodeProgress| progress(event.completed, event.total);
-            let mut native = semio_framework_value::NativeDecodeControl::new(remaining, &mut callback);
+            let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
             let result = semio_framework_value::paged::PagedUtf8::try_from_str_controlled(text, &mut native);
             (result, native.owned_bytes())
         })?

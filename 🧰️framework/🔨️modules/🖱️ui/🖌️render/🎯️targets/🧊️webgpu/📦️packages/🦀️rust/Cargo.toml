@@ -24,6 +24,7 @@ backend-testing = ["ui_render/backend-testing"]
 [dependencies]
 bytemuck = { version = "1.24.0", features = ["derive"] }
 ui_render = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 
 # 🌐️ wgpu is confined to THIS crate and to browser builds. Natively we hand-write D3D12/Metal/Vulkan,
 # so a wgpu edge anywhere else in the graph is a boundary violation the CI `cargo tree` gate fails on.

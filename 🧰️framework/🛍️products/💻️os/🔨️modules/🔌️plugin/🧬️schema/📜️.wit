@@ -19,6 +19,8 @@ interface types {
 
   variant plugin-error {
     fault(pack),
+    /// 🛑️ Original admission refusal carries its fixed code without allocating a failure payload.
+    operation-refusal(u32),
   }
 
   /// 🎯️ Where a `send-message` effect or `event.message`/`event.request` addresses. Replaces
@@ -36,6 +38,15 @@ interface types {
     cold,
     incremental,
     bypass,
+  }
+
+  /// 🎟️ Independent caller authority; every zero axis remains zero through inference dispatch.
+  record retained-clone-grant {
+    maximum-items: u64,
+    maximum-copy-bytes: u64,
+    maximum-capacity-bytes: u64,
+    maximum-release-bytes: u64,
+    maximum-depth: u64,
   }
 
   record inference-budget {
@@ -80,6 +91,7 @@ interface types {
     source-dialect: string,
     policy: list<u8>,
     budgets: inference-budget,
+    retained: retained-clone-grant,
     cancellation-id: string,
     previous-state: option<list<u8>>,
     requested-cache-mode: inference-cache-mode,
@@ -87,7 +99,15 @@ interface types {
     dependencies: list<tuple<string, list<u8>>>,
   }
 
+  record retained-clone-progress {
+    copied-items: u64,
+    copied-bytes: u64,
+    retained-capacity-bytes: u64,
+    released-bytes: u64,
+  }
+
   record artifact-inference-result {
+    retirement-progress: retained-clone-progress,
     wire-version: u32,
     owner: string,
     artifact-kind: string,
@@ -104,6 +124,7 @@ interface types {
     source-dialect: string,
     policy: list<u8>,
     budgets: inference-budget,
+    retained: retained-clone-grant,
     previous-state: option<list<u8>>,
     requested-cache-mode: inference-cache-mode,
     canonical-payload: list<u8>,
@@ -919,6 +940,18 @@ interface pure {
   log: func(level: string, message: string);
   now-ms: func() -> s64;
   trace-span: func(name: string);
+  /// 🎟️ Begins only a receiving operation already owned by the caller's original authority.
+  operation-begin: async func() -> result<u64, u32>;
+  /// 📊️ Reports real producer work through the original observer before continuing.
+  operation-progress: async func(completed: u64, total: u64, owned: u64) -> u32;
+  /// 🛂️ Requests original receiving admission before a physical guest allocation.
+  operation-allocation: async func(bytes: u64, owned: u64, next: u64, maximum: u64) -> u32;
+  /// 📐️ Closed physical allocation classes in the real borrowed return DTO.
+  enum operation-return-allocation { bytes, string-bytes, u64-list, ui-patch-list, patch-op-list, effect-list, presence-update-list, string-pair-list }
+  /// 📤️ Reserves host-native storage before canonical result lifting can allocate it.
+  operation-reserve-return: async func(kind: operation-return-allocation, count: u64) -> u32;
+  /// ⏸️ Returns the actual admitted ownership before another host phase can begin.
+  operation-finish: async func(owned: u64) -> u32;
 }
 
 /// 📄️ Fixed neutral bytes only; callers separately own command, return and acknowledgement authority.
@@ -1396,7 +1429,8 @@ interface describe {
 ///
 /// ⛽️ Every function here is pure: it reads no storage, opens no window, emits no effect, and is
 /// answerable with `pure` imports alone — the same contract `describe` states. A host calls them
-/// on a throwaway instance with a fuel cap and throws the instance away afterwards.
+/// with a fuel cap. SQLite calls retain their same instance and ticket through result handoff and
+/// admitted native retirement. The other pure codec functions complete on a transient instance.
 interface codec {
   enum snapshot-encoding { binary, text }
   record snapshot-limits {
@@ -1414,16 +1448,26 @@ interface codec {
   record snapshot-payload { encoding: snapshot-encoding, bytes: list<u8>, diagnostics: pack }
   enum value-refusal-kind { invalid-value, canceled, ownership-limit, allocation-failed, work-limit, depth-limit, unsupported-owner, invariant-violated }
   record snapshot-rejection { kind: value-refusal-kind, message: string, diagnostics: pack }
-  variant snapshot-file-result { done(snapshot-file), rejected(snapshot-rejection) }
-  variant snapshot-payload-result { done(snapshot-payload), rejected(snapshot-rejection) }
+  record snapshot-demands { items: u64, copy-bytes: u64, capacity-bytes: u64, release-bytes: u64, depth: u64 }
+  record snapshot-retirement { ticket: u64, owned-bytes: u64,
+    refusal: u32, native-pending: bool, output-pending: bool, terminal: bool, demands: snapshot-demands }
+  record snapshot-close-receipt { retirement: snapshot-retirement, progress: retained-clone-progress, refusal: u32 }
+  variant snapshot-file-result { done(snapshot-file), rejected(snapshot-rejection), pending(snapshot-retirement) }
+  variant snapshot-payload-result { done(snapshot-payload), rejected(snapshot-rejection), pending(snapshot-retirement) }
   /// 🏛️ The exact dialect's handwritten domain SQL declaration.
   sqlite-schema: async func(dialect: string) -> result<string, plugin-error>;
   /// 📤️ Projects one native snapshot through its individually declared semantic schema.
-  sqlite-export: async func(dialect: string, encoding: snapshot-encoding, snapshot: list<u8>, limits: snapshot-limits) -> result<snapshot-file-result, plugin-error>;
+  sqlite-export: async func(dialect: string, encoding: snapshot-encoding, snapshot: list<u8>, limits: snapshot-limits, native: retained-clone-grant) -> result<snapshot-file-result, plugin-error>;
   /// 📥️ Reconstructs one native snapshot after exact dialect and schema validation.
-  sqlite-import: async func(dialect: string, file: list<u8>, limits: snapshot-limits) -> result<snapshot-payload-result, plugin-error>;
+  sqlite-import: async func(dialect: string, file: list<u8>, limits: snapshot-limits, native: retained-clone-grant) -> result<snapshot-payload-result, plugin-error>;
+  /// 👓️ Quotes actual retained ownership in this same component invocation.
+  sqlite-take-file: async func(ticket: u64) -> result<snapshot-file-result, plugin-error>;
+  sqlite-take-payload: async func(ticket: u64) -> result<snapshot-payload-result, plugin-error>;
+  sqlite-retirement: async func(copy-bytes: u64) -> result<snapshot-retirement, u32>;
+  /// ♻️ Executes one independently funded turn against the same original receiving ticket.
+  sqlite-close: async func(ticket: u64, native: retained-clone-grant) -> result<snapshot-close-receipt, u32>;
 
-  use types.{plugin-error, pack};
+  use types.{plugin-error, pack, retained-clone-grant, retained-clone-progress};
 
   /// 📦️ One document's authoritative binary pair. `pack` is the snapshot container, `spr` the
   /// history log; together they are exactly what `store::print_document_pack` writes.

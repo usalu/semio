@@ -142,7 +142,7 @@ pub enum HistoryTransition {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EffectiveSupersession {
     pub transition_id: String,
-    pub actor: String,
+    pub actor: semio_framework_value::SharedUtf8,
     pub timestamp: HybridLogicalTimestamp,
     pub scope: Option<String>,
     pub replacement: InputReplacement,
@@ -213,7 +213,7 @@ impl crate::value::FromValue for EffectiveSupersession {
         for (key, entry) in fields {
             match key.as_str() {
                 "transitionId" => transition_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("transitionId"))?),
-                "actor" => actor = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
+                "actor" => actor = Some(<semio_framework_value::SharedUtf8 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
                 "timestamp" => timestamp = Some(<HybridLogicalTimestamp as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("timestamp"))?),
                 "scope" => scope = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("scope"))?,
                 "replacement" => replacement = Some(<InputReplacement as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("replacement"))?),
@@ -489,7 +489,7 @@ pub fn history_transition_from_envelope(envelope: &super::MutationEnvelope) -> R
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FoldEdit {
     pub id: String,
-    pub actor: Option<String>,
+    pub actor: Option<semio_framework_value::SharedUtf8>,
     pub timestamp: HybridLogicalTimestamp,
     pub mutation_ids: Vec<MutationId>,
     /// 🌿️ The alternative this edit was authored on. `None` and the trunk id are the trunk.

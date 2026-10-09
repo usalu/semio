@@ -4,11 +4,16 @@ use neural_engine as neural;
 
 use neural::{Neuron, Synapse};
 use crate::retained::{FlowOwner, FlowRetirement};
-use protocol::value::ordered::{RetirementStep as LayoutRetirementStep, UpdateCursor as LayoutUpdate};
-use semio_framework_value::retained_clone::RetainedCloneGrant;
+use protocol::value::ordered::UpdateCursor as LayoutUpdate;
+use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 
 use semio_framework_artifact_flow_flow::*;
-use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementStep};
+
+
+#[path="♻️retirement/🦀️.rs"]
+mod original_retirement;
+pub use original_retirement::{FlowVcsCloseDemands,FlowVcsCloseFailure};
+use original_retirement::{FlowVcsClosingOwner,FlowVcsRetirement,owner_demands,owner_step,admit_turn,retain_owner};
 
 //#region 🌊️RetainedVcs
 
@@ -113,6 +118,7 @@ pub struct FlowVcsHandle {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FlowVcsGrant {
+    pub retained: RetainedCloneGrant,
     pub items: usize,
     pub bytes: usize,
     pub outputs: usize,
@@ -267,7 +273,7 @@ fn flow_vcs_release_count(owner: &mut usize) -> bool {
     true
 }
 
-#[derive(Debug)]
+#[derive(Debug,semio_framework_value::RetireOwned)]
 enum FlowVcsAction {
     InsertWidget { index: usize, item: Widget },
     RemoveWidget { id: String },
@@ -409,7 +415,7 @@ struct FlowVcsOperation {
     action: Option<FlowVcsAction>,
     rollback_owner: Option<FlowVcsAction>,
     layout_update: Option<LayoutUpdate<WidgetLayout>>,
-    retirement: FlowRetirement,
+    retirement: FlowVcsRetirement,
     cursor: FlowVcsCursor,
     page: Option<FlowVcsPage>,
     page_leased: bool,
@@ -514,7 +520,7 @@ pub struct FlowRetainedVcs {
     redo: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
     retired_actions: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
     retired_surfaces: FlowFixedOwners<FlowSurfaceOwner, FLOW_VCS_MAX_HISTORY>,
-    retirement: FlowRetirement,
+    retirement: FlowVcsRetirement,
     closing: bool,
 }
 
@@ -532,7 +538,7 @@ impl FlowRetainedVcs {
             redo: FlowFixedOwners::new(),
             retired_actions: FlowFixedOwners::new(),
             retired_surfaces: FlowFixedOwners::new(),
-            retirement: FlowRetirement::default(),
+            retirement: None,
             closing: false,
         }
     }
@@ -824,31 +830,34 @@ impl FlowRetainedVcs {
         Err(FlowVcsFault::StaleHandle)
     }
 
-    pub fn close_operation_step(&mut self, handle: FlowVcsHandle, grant: FlowVcsGrant) -> Result<bool, FlowVcsFault> {
-        if grant.controls == 0 || !grant.permits_work() {
-            return Err(FlowVcsFault::InsufficientGrant);
+    /// 📏️ Quotes the exact original operation owner without moving or allocating source data.
+    pub fn next_close_operation_demands(&self,handle:FlowVcsHandle,copy:usize)->Result<FlowVcsCloseDemands,FlowVcsCloseFailure>{
+        let slot=self.slot(handle)?;let operation=self.operations[slot].as_ref().unwrap();
+        if operation.retirement.is_some(){return owner_demands(&operation.retirement,copy)}
+        let mut demands=FlowVcsCloseDemands{depth:1,..Default::default()};
+        if operation.layout_update.is_none()&&operation.cursor.phase==FlowVcsCursorPhase::Rollback&&operation.cursor.mutated&&!operation.cursor.visibility_published&&!operation.cursor.surface_transferred&&!operation.cursor.history_transferred&&operation.cursor.redo_retired==0{
+            demands.copy_bytes=match operation.cursor.kind{
+                FlowVcsCursorKind::MoveWidget|FlowVcsCursorKind::RemoveWidget if operation.cursor.current!=operation.cursor.origin=>2*size_of::<Widget>(),
+                FlowVcsCursorKind::MoveSynapse|FlowVcsCursorKind::RemoveSynapse if operation.cursor.current!=operation.cursor.origin=>2*size_of::<SynapseSpec>(),
+                FlowVcsCursorKind::PatchWidget=>2*size_of::<Widget>(),
+                FlowVcsCursorKind::PatchSynapse=>2*size_of::<SynapseSpec>(),
+                _=>0,
+            };
         }
-        let slot = self.slot(handle)?;
-        let stage = self.operations[slot].as_ref().expect("validated Flow VCS operation").stage;
-        if !matches!(stage, FlowVcsStage::Complete | FlowVcsStage::Cancelled | FlowVcsStage::Faulted | FlowVcsStage::Closing) {
-            return Err(FlowVcsFault::ClosePending);
-        }
-        let operation = self.operations[slot].as_mut().expect("validated Flow VCS operation");
-        let rolling_back = operation.cursor.phase == FlowVcsCursorPhase::Rollback;
-        operation.stage = if rolling_back { stage } else { FlowVcsStage::Closing };
-        if let Some(update) = operation.layout_update.as_mut() {
-            update.begin_close();
-            let demand = update.next_close_byte_demand().map_err(|_| FlowVcsFault::ClosePending)?;
-            let step = update.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: grant.bytes, maximum_capacity_bytes: 0, maximum_release_bytes: grant.bytes.max(demand), maximum_depth: update.next_close_depth_demand() });
-            if matches!(step, LayoutRetirementStep::Failure(_)) { return Err(FlowVcsFault::ClosePending); }
-            if update.terminal_is_empty() { operation.layout_update = None; }
-            return Ok(false);
-        }
-        if !operation.retirement.terminal_is_empty() {
-            let demand = operation.retirement.next_close_byte_demand().map_err(|_| FlowVcsFault::ClosePending)?;
-            operation.retirement.close_page(1, grant.bytes.max(demand)).map_err(|_| FlowVcsFault::ClosePending)?;
-            return Ok(false);
-        }
+        Ok(demands)
+    }
+
+    /// 🧹️ Advances one original operation close under its exact caller wallet.
+    pub fn close_operation_step(&mut self,handle:FlowVcsHandle,grant:FlowVcsGrant)->Result<RetainedCloneStep,FlowVcsCloseFailure>{
+        if grant.controls==0||!grant.permits_work(){return Err(FlowVcsFault::InsufficientGrant.into())}
+        let slot=self.slot(handle)?;let stage=self.operations[slot].as_ref().unwrap().stage;
+        if !matches!(stage,FlowVcsStage::Complete|FlowVcsStage::Cancelled|FlowVcsStage::Faulted|FlowVcsStage::Closing){return Err(FlowVcsFault::ClosePending.into())}
+        let demands=self.next_close_operation_demands(handle,grant.retained.maximum_copy_bytes)?;
+        if self.operations[slot].as_ref().unwrap().retirement.is_some(){return owner_step(&mut self.operations[slot].as_mut().unwrap().retirement,grant.retained)}
+        if !admit_turn(grant.retained,demands)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demands.copy_bytes,..Default::default()};
+        let operation=self.operations[slot].as_mut().unwrap();
+        if let Some(update)=operation.layout_update.take(){retain_owner(&mut operation.retirement,FlowVcsClosingOwner::LayoutUpdate(update));return Ok(RetainedCloneStep::Progress(progress))}
         if operation.cursor.phase == FlowVcsCursorPhase::Rollback {
             if operation.cursor.visibility_published {
                 let document = self.document.as_mut().ok_or(FlowVcsFault::Closed)?;
@@ -857,13 +866,13 @@ impl FlowRetainedVcs {
                 document.generation = operation.cursor.prior_generation;
                 document.committed_digest = operation.cursor.prior_digest;
                 operation.cursor.visibility_published = false;
-                return Ok(false);
+                return Ok(RetainedCloneStep::Progress(progress));
             }
             if operation.cursor.surface_transferred {
                 let surface = self.retired_surfaces.pop().ok_or(FlowVcsFault::InvalidMutation)?;
                 self.document.as_mut().ok_or(FlowVcsFault::Closed)?.surface = Some(surface);
                 operation.cursor.surface_transferred = false;
-                return Ok(false);
+                return Ok(RetainedCloneStep::Progress(progress));
             }
             if operation.cursor.history_transferred {
                 let action = match operation.cursor.history_mode {
@@ -874,17 +883,17 @@ impl FlowRetainedVcs {
                 .ok_or(FlowVcsFault::InvalidMutation)?;
                 operation.action = Some(action);
                 operation.cursor.history_transferred = false;
-                return Ok(false);
+                return Ok(RetainedCloneStep::Progress(progress));
             }
             if operation.cursor.redo_retired > 0 {
                 let action = self.retired_actions.pop().ok_or(FlowVcsFault::InvalidMutation)?;
                 self.redo.push(action).map_err(|_| FlowVcsFault::Full)?;
                 operation.cursor.redo_retired -= 1;
-                return Ok(false);
+                return Ok(RetainedCloneStep::Progress(progress));
             }
             let document = self.document.as_mut().ok_or(FlowVcsFault::Closed)?;
             if !flow_vcs_step_rollback(document, operation)? {
-                return Ok(false);
+                return Ok(RetainedCloneStep::Progress(progress));
             }
             if operation.cursor.owns_edit {
                 document.edit_owner = None;
@@ -902,102 +911,54 @@ impl FlowRetainedVcs {
                 operation.cursor.history_loaded = false;
             }
             operation.cursor.phase = FlowVcsCursorPhase::Scan;
-            return Ok(false);
+            return Ok(RetainedCloneStep::Progress(progress));
         }
-        match operation.close_phase {
-            0 => {
-                operation.page = None;
-                operation.page_leased = false;
-                operation.close_phase = 1;
-                Ok(false)
+        match operation.close_phase{
+            0=>{operation.page=None;operation.page_leased=false;operation.close_phase=1;Ok(RetainedCloneStep::Progress(progress))}
+            1=>{
+                if operation.action.is_some()&&self.retired_actions.is_full(){return Err(FlowVcsFault::Full.into())}
+                if let Some(action)=operation.action.take(){self.retired_actions.push(action).map_err(|action|{operation.action=Some(action);FlowVcsFault::Full})?}
+                operation.close_phase=2;Ok(RetainedCloneStep::Progress(progress))
             }
-            1 => {
-                if let Some(action) = operation.action.take() {
-                    if self.retired_actions.len() == FLOW_VCS_MAX_HISTORY {
-                        operation.action = Some(action);
-                        return Err(FlowVcsFault::Full);
-                    }
-                    self.retired_actions.push(action).map_err(|action| {
-                        operation.action = Some(action);
-                        FlowVcsFault::Full
-                    })?;
-                }
-                operation.close_phase = 2;
-                Ok(false)
-            }
-            _ => {
-                if let Some(action) = operation.rollback_owner.take() {
-                    flow_vcs_retire_action(action, &mut operation.retirement);
-                    return Ok(false);
-                }
-                let operation = self.operations[slot].take().expect("validated Flow VCS operation");
-                self.hand_back(operation.source, operation.delivery_held);
-                self.slot_generations[slot] = self.slot_generations[slot].checked_add(1).ok_or(FlowVcsFault::Limit)?;
-                Ok(true)
+            _=>{
+                if let Some(action)=operation.rollback_owner.take(){retain_owner(&mut operation.retirement,FlowVcsClosingOwner::Action(action));return Ok(RetainedCloneStep::Progress(progress))}
+                let generation=self.slot_generations[slot].checked_add(1).ok_or(FlowVcsFault::Limit)?;
+                let operation=self.operations[slot].take().unwrap();self.hand_back(operation.source,operation.delivery_held);self.slot_generations[slot]=generation;
+                Ok(RetainedCloneStep::Complete(progress))
             }
         }
     }
 
-    pub fn close_retired_step(&mut self, grant: FlowVcsGrant) -> Result<bool, FlowVcsFault> {
-        if self.terminal_is_empty() {
-            return Ok(true);
-        }
-        if grant.controls == 0 || !grant.permits_work() {
-            return Err(FlowVcsFault::InsufficientGrant);
-        }
-        if self.credits.operations > 0 {
-            return Err(FlowVcsFault::ClosePending);
-        }
-        if !self.retirement.terminal_is_empty() {
-            let demand = self.retirement.next_close_byte_demand().map_err(|_| FlowVcsFault::ClosePending)?;
-            let step = self.retirement.close_page(1, grant.bytes.max(demand)).map_err(|_| FlowVcsFault::ClosePending)?;
-            if matches!(step, SnapshotRetirementStep::Blocked) {
-                return Err(FlowVcsFault::ClosePending);
-            }
-            return Ok(false);
-        }
-        if let Some(surface) = self.retired_surfaces.last_mut() {
-            if surface.close_one() {
-                self.retired_surfaces.pop();
-            }
-            return Ok(false);
-        }
-        if let Some(action) = self.retired_actions.pop() {
-            flow_vcs_retire_action(action, &mut self.retirement);
-            return Ok(false);
-        }
-        if self.closing {
-            if let Some(action) = self.undo.pop().or_else(|| self.redo.pop()) {
-                flow_vcs_retire_action(action, &mut self.retirement);
-                return Ok(false);
-            }
-        }
-        if self.closing && self.credits.operations == 0 {
-            let document = self.document.as_mut().ok_or(FlowVcsFault::Closed)?;
-            if let Some(surface) = document.surface.take() {
-                self.retired_surfaces.push(surface).map_err(|surface| {
-                    document.surface = Some(surface);
-                    FlowVcsFault::Full
-                })?;
-                return Ok(false);
-            }
-            if let Some(host_snapshot) = document.versions.pop() {
-                self.retirement.push(FlowOwner::HostSnapshot(host_snapshot));
-                return Ok(false);
-            }
-            self.document = None;
-        }
-        Ok(true)
+    /// 📏️ Quotes the original retained action, layout or document frontier without effects.
+    pub fn next_close_retired_demands(&self,copy:usize)->Result<FlowVcsCloseDemands,FlowVcsCloseFailure>{
+        if self.terminal_is_empty(){return Ok(Default::default())}
+        if self.retirement.is_some(){return owner_demands(&self.retirement,copy)}
+        Ok(FlowVcsCloseDemands{depth:1,..Default::default()})
     }
 
-    /// 🪜️ Names the rung [`FlowRetainedVcs::close_retired_step`] would take next, in that method's
-    /// own branch order.
-    ///
-    /// A retirement hands nothing back across the ABI, so the bytes under a retained item are not a
-    /// close turn's currency — the structure above them is. A driver that ends its turn when this
-    /// phase changes retires a whole retained item per turn and costs turns proportional to the
-    /// SURFACES a session holds rather than to their payload
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// 🌿️ Physically closes one original retained frontier and returns every actual effect.
+    pub fn close_retired_step(&mut self,grant:FlowVcsGrant)->Result<RetainedCloneStep,FlowVcsCloseFailure>{
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+        if grant.controls==0||!grant.permits_work(){return Err(FlowVcsFault::InsufficientGrant.into())}
+        if self.credits.operations>0{return Err(FlowVcsFault::ClosePending.into())}
+        if self.retirement.is_some(){return owner_step(&mut self.retirement,grant.retained)}
+        let demands=self.next_close_retired_demands(grant.retained.maximum_copy_bytes)?;
+        if !admit_turn(grant.retained,demands)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        let progress=RetainedCloneProgress{copied_items:1,..Default::default()};
+        if let Some(surface)=self.retired_surfaces.last_mut(){if surface.close_one(){self.retired_surfaces.pop();}return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(action)=self.retired_actions.pop(){retain_owner(&mut self.retirement,FlowVcsClosingOwner::Action(action));return Ok(RetainedCloneStep::Progress(progress))}
+        if self.closing{if let Some(action)=self.undo.pop().or_else(||self.redo.pop()){retain_owner(&mut self.retirement,FlowVcsClosingOwner::Action(action));return Ok(RetainedCloneStep::Progress(progress))}}
+        if self.closing{
+            let document=self.document.as_mut().ok_or(FlowVcsFault::Closed)?;
+            if document.surface.is_some()&&self.retired_surfaces.is_full(){return Err(FlowVcsFault::Full.into())}
+            if let Some(surface)=document.surface.take(){self.retired_surfaces.push(surface).map_err(|surface|{document.surface=Some(surface);FlowVcsFault::Full})?;return Ok(RetainedCloneStep::Progress(progress))}
+            if let Some(snapshot)=document.versions.pop(){retain_owner(&mut self.retirement,FlowVcsClosingOwner::Snapshot(snapshot));return Ok(RetainedCloneStep::Progress(progress))}
+            self.document=None;
+        }
+        Ok(RetainedCloneStep::Complete(progress))
+    }
+
+    /// 🪜️ Names the original custody frontier that the next full-wallet turn visits.
     pub fn close_phase(&self) -> FlowVcsClosePhase {
         if self.terminal_is_empty() {
             return FlowVcsClosePhase::Complete;
@@ -1005,7 +966,7 @@ impl FlowRetainedVcs {
         if self.credits.operations > 0 {
             return FlowVcsClosePhase::Operations;
         }
-        if !self.retirement.terminal_is_empty() {
+        if self.retirement.is_some() {
             return FlowVcsClosePhase::Backing;
         }
         if !self.retired_surfaces.is_empty() {
@@ -1033,7 +994,7 @@ impl FlowRetainedVcs {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.document.is_none() && self.credits.operations == 0 && self.credits == FlowVcsCredits::default() && self.undo.is_empty() && self.redo.is_empty() && self.retired_actions.is_empty() && self.retired_surfaces.is_empty() && self.retirement.terminal_is_empty()
+        self.closing && self.document.is_none() && self.credits.operations == 0 && self.credits == FlowVcsCredits::default() && self.undo.is_empty() && self.redo.is_empty() && self.retired_actions.is_empty() && self.retired_surfaces.is_empty() && self.retirement.is_none() && self.operations.iter().all(Option::is_none)
     }
 
     fn preflight(&self, census: FlowVcsCensus) -> Result<(), FlowVcsFault> {
@@ -1070,7 +1031,7 @@ impl FlowRetainedVcs {
         let handle = FlowVcsHandle { operation: self.next_operation, slot: slot as u8, generation: self.slot_generations[slot] };
         self.charge(source);
         let cursor = FlowVcsCursor::new(&action);
-        self.operations[slot] = Some(FlowVcsOperation { handle, authority, source, action: Some(action), rollback_owner: None, layout_update: None, retirement: FlowRetirement::default(), cursor, page: None, page_leased: false, delivery_held: true, stage: FlowVcsStage::Admitted, close_phase: 0 });
+        self.operations[slot] = Some(FlowVcsOperation { handle, authority, source, action: Some(action), rollback_owner: None, layout_update: None, retirement: None, cursor, page: None, page_leased: false, delivery_held: true, stage: FlowVcsStage::Admitted, close_phase: 0 });
         self.next_operation += 1;
         Ok(handle)
     }
@@ -1785,7 +1746,7 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
                 return Err(FlowVcsFault::ClosePending);
             }
             let candidate = document.versions.pop().ok_or(FlowVcsFault::InvalidMutation)?;
-            operation.retirement.push(FlowOwner::HostSnapshot(candidate));
+            retain_owner(&mut operation.retirement,FlowVcsClosingOwner::Snapshot(candidate));
         }
         FlowVcsCursorKind::None => {}
     }
@@ -1797,26 +1758,6 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
 }
 //#endregion 🌊️RetainedActionCursor
 
-fn flow_vcs_retire_action(action: FlowVcsAction, retirement: &mut FlowRetirement) {
-    match action {
-        FlowVcsAction::ReplaceDocument(host_snapshot) => retirement.push(FlowOwner::HostSnapshot(host_snapshot)),
-        FlowVcsAction::LayoutRoot(layout) => retirement.push(FlowOwner::Layouts(layout)),
-        FlowVcsAction::SetLayout(entry) => retirement.text(entry.id),
-        FlowVcsAction::InsertWidget { item, .. } => retirement.push(FlowOwner::Widget(item)),
-        FlowVcsAction::PatchWidget { id, item } => {
-            retirement.text(id);
-            retirement.push(FlowOwner::Widget(item));
-        }
-        FlowVcsAction::InsertSynapse { item, .. } => retirement.push(FlowOwner::Specs(vec![item])),
-        FlowVcsAction::PatchSynapse { id, item } => {
-            retirement.text(id);
-            retirement.push(FlowOwner::Specs(vec![item]));
-        }
-        FlowVcsAction::RemoveWidget { id } | FlowVcsAction::MoveWidget { id, .. }
-        | FlowVcsAction::RemoveSynapse { id } | FlowVcsAction::MoveSynapse { id, .. } => retirement.text(id),
-        _ => {}
-    }
-}
 
 fn flow_vcs_fixture_census(host_snapshot: &FlowHostSnapshot) -> FlowVcsCensus {
     let items = 1usize.saturating_add(host_snapshot.widgets.len()).saturating_add(host_snapshot.synapses.len()).saturating_add(host_snapshot.layout.len());

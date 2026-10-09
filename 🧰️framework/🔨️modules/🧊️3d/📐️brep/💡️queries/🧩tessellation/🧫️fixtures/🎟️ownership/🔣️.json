@@ -68,5 +68,29 @@
     "handoffCapacityBytes": 0,
     "handoffReleaseBytes": 0,
     "minimumRetainedBytes": 1
+  },
+  "meshImport": {
+    "positions": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    "indices": [
+      0,
+      1,
+      2
+    ],
+    "area": 0.5,
+    "warmTurns": 3,
+    "cancelCapacityBytes": 0,
+    "cancelReleaseBytes": 0,
+    "handoffCapacityBytes": 0,
+    "maximumReleaseBytes": 8
   }
 }

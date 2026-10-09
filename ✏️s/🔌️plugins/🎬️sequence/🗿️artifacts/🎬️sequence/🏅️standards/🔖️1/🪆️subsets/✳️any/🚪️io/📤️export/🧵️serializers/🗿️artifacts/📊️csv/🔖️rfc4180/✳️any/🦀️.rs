@@ -18,7 +18,7 @@ pub struct SequenceIntoCsv;
 impl Serializer<SequenceSnapshot> for SequenceIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &SequenceSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &SequenceSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let fixture = from.try_to_host_snapshot().map_err(|error| IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner, format!("SequenceIntoCsv: {error}"))))?;
         let records = fixture
             .steps

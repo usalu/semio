@@ -1,0 +1,200 @@
+{
+  "originalRetirementGrant":{"items":1,"copy":4096,"capacity":65536,"release":8388608,"depth":256},
+  "discardHeaderCustody":[{"phase":"admitted","headers":["event","cursor"]},{"phase":"validated","headers":["bound","plannedStage","phase"]},{"phase":"sessionCommitted","headers":["session","sessionCursor","phase","result"]},{"phase":"pendingCommitted","headers":["pending","pendingCursor","stage","phase","result"]},{"phase":"closing","headers":["closing","phase"]},{"phase":"terminal","headers":["event","bound","plannedStage","done"]}],
+  "pendingCommandGrant":{"items":1,"copy":4096,"capacity":65536,"release":262144,"depth":128},
+  "wire": {
+    "id": 1,
+    "generation": 3,
+    "base": {
+      "contentRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "stage": "reviewing",
+    "accepted": [
+      {
+        "target": {
+          "mutation": "node.α\u0000😀",
+          "position": 0
+        },
+        "replacement": {
+          "kind": "input",
+          "schema": "native.v1",
+          "payload": [
+            0,
+            34,
+            255
+          ]
+        }
+      }
+    ],
+    "pending": null,
+    "report": {
+      "fromPosition": 0,
+      "outcomes": [
+        {
+          "mutationId": "node.α\u0000😀",
+          "editId": "edit.α",
+          "opIndex": 0,
+          "worst": "error",
+          "messages": [
+            {
+              "level": "error",
+              "code": "mutation.target-missing",
+              "message": "node \"α\u0000😀\" not found",
+              "target": [
+                ""
+              ],
+              "opIndex": 0
+            }
+          ],
+          "superseded": false,
+          "withdrawn": false
+        }
+      ],
+      "worst": "error"
+    },
+    "progress": {
+      "done": 1,
+      "total": 2
+    },
+    "fault": "timeTravel.cancelled"
+  },
+  "capacities": [
+    0,
+    8192,
+    65536
+  ],
+  "copyGrants": [
+    1,
+    17,
+    4096
+  ],
+  "cancelCuts": [
+    0,
+    3
+  ],
+  "discardAdmission": [
+    {
+      "phase": "received",
+      "sessionChanged": false,
+      "effectsMayPrepare": false,
+      "committed": false
+    },
+    {
+      "phase": "validated",
+      "sessionChanged": false,
+      "effectsMayPrepare": true,
+      "committed": false
+    },
+    {
+      "phase": "effectsAdmitted",
+      "sessionChanged": false,
+      "effectsMayPrepare": false,
+      "committed": false
+    },
+    {
+      "phase": "committed",
+      "sessionChanged": true,
+      "effectsMayPrepare": false,
+      "committed": true
+    }
+  ],
+  "discardCompletion": [
+    {
+      "phase": "received",
+      "originalHeld": true,
+      "acknowledged": false
+    },
+    {
+      "phase": "validated",
+      "originalHeld": true,
+      "acknowledged": false
+    },
+    {
+      "phase": "committed",
+      "originalHeld": true,
+      "acknowledged": false
+    },
+    {
+      "phase": "retiring",
+      "originalHeld": true,
+      "acknowledged": false
+    },
+    {
+      "phase": "completed",
+      "originalHeld": false,
+      "acknowledged": true
+    }
+  ],
+  "discardCases": [
+    {
+      "id": "illegal",
+      "context": "inactive",
+      "generation": 5,
+      "rejection": "timeTravel.illegal"
+    },
+    {
+      "id": "inactive-changed",
+      "context": "editing.fromInactive.changed",
+      "generation": 5,
+      "stage": "inactive",
+      "increment": true
+    },
+    {
+      "id": "inactive-unchanged",
+      "context": "editing.fromInactive.unchanged",
+      "generation": 5,
+      "stage": "inactive",
+      "increment": true
+    },
+    {
+      "id": "review-changed",
+      "context": "editing.fromReviewing.changed",
+      "generation": 5,
+      "stage": "reviewing",
+      "increment": false
+    },
+    {
+      "id": "review-unchanged",
+      "context": "editing.fromReviewing.unchanged",
+      "generation": 5,
+      "stage": "reviewing",
+      "increment": false
+    },
+    {
+      "id": "replay-frontier",
+      "context": "editing.fromReviewing.unchanged.reportLost",
+      "generation": 5,
+      "unsupported": true,
+      "stage": "replaying",
+      "increment": true
+    },
+    {
+      "id": "stale",
+      "context": "editing.fromInactive.changed",
+      "generation": 4,
+      "rejection": "timeTravel.stale"
+    }
+  ],
+  "discardStageContention": [
+    {
+      "prepared": "inactive",
+      "current": "inactive",
+      "mayCommit": true
+    },
+    {
+      "prepared": "inactive",
+      "current": "reviewing",
+      "mayCommit": false
+    },
+    {
+      "prepared": "reviewing",
+      "current": "inactive",
+      "mayCommit": false
+    },
+    {
+      "prepared": "reviewing",
+      "current": "reviewing",
+      "mayCommit": true
+    }
+  ]
+}

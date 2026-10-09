@@ -1,0 +1,77 @@
+{
+  "meaningfulRed": "🗑️generated/native-b12-red2.log Nx1 exact two physical authority assertion before mutation",
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧪️tests/🟦️.ts",
+      "beforeSha256": "26ae485814f921ab2bed13e4bd53810c24d53bd1134e0010ca68176b2e664ae6",
+      "afterSha256": "55337f4711e569feca7bd54d4607566a080668f453aa59757a37fc4e4af87189",
+      "blocks": [
+        {
+          "before": "import {createRequire} from \"node:module\";\n",
+          "after": ""
+        },
+        {
+          "before": "import schema from \"../🧬️schema/🔣️.json\";\n",
+          "after": ""
+        },
+        {
+          "before": "const require=createRequire(import.meta.url),validate=new(require(\"ajv\"))({strict:true,allErrors:true}).compile(schema);\n\n",
+          "after": ""
+        },
+        {
+          "before": "  expect(validate(fixture)).toBe(true);\n",
+          "after": ""
+        },
+        {
+          "before": "    for(const key of [\"maximumBytes\",\"maximumAllocationBytes\",\"maximumDepth\",\"maximumItems\"]){\n      const missing=structuredClone(fixture);delete (missing.cases[0]!.limits as Record<string,number>)[key];expect(validate(missing)).toBe(false);\n    }\n    const extra=structuredClone(fixture);Object.assign(extra.cases[0]!.limits,{default:true});expect(validate(extra)).toBe(false);\n    const old=structuredClone(fixture);Object.assign(old,{constructor:\"optionalLimits\"});expect(validate(old)).toBe(false);\n",
+          "after": ""
+        },
+        {
+          "before": "    expect(validate({version:1,constructor:\"sourcePolicyLimits\",cases:[{id:\"original-owning-source\",source:original.source,limits:original.readLimits,expected:\"admitted\"}]})).toBe(true);\n",
+          "after": ""
+        },
+        {
+          "before": "test(\"complete source policy matches independent UTF8 admission and rejects omitted authority\"",
+          "after": "test(\"complete source policy matches independent UTF8 admission\""
+        },
+        {
+          "before": "[DEBUG] JSON complete source policy5 matches independent SQLite UTF8 and strict Ajv missing-owner refusals",
+          "after": "[DEBUG] JSON complete source policy5 matches independent SQLite UTF8; wholeCorpus=false originalNativePolicyLaws=preserved"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/✅️output/🧪️tests/🟦️.ts",
+      "beforeSha256": "871fcba93c3b3564c4a3094efb1a7babaeb4dd7520361c1ff4b4921d03135c1d",
+      "afterSha256": "c230811245e486f83e04e8f8f8f5bf3e5740035309f0ff27d38a3e8d2f9ff254",
+      "blocks": [
+        {
+          "before": "import schema from \"../🧬️schema/🔣️.json\";\n",
+          "after": ""
+        },
+        {
+          "before": " const ajv=new Ajv({strict:true,allErrors:true}),validate=ajv.compile(schema);expect(validate(fixture)).toBe(true);expect(validate({...fixture,unknown:true})).toBe(false);",
+          "after": " const ajv=new Ajv({strict:true,allErrors:true});"
+        },
+        {
+          "before": "[DEBUG] Original output contract strictAjv=true independentCases=14 originalNative=unqualified",
+          "after": "[DEBUG] Original output contract perValueStrictAjv=true wholeCorpus=false independentCases=14 originalNative=unqualified"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧬️schema/🔣️.json",
+      "beforeSha256": "0ba717c1234feafc62d33c7bdc19f1857d0733263ca86dc48dd2d462f66259e4",
+      "after": "absent",
+      "action": "Remove exclusive whole-test-corpus authority; real Rust/production/per-output contracts preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/✅️output/🧬️schema/🔣️.json",
+      "beforeSha256": "84e94b1bbba81048a367c88424eb981a97658db37fee09e52b6dab2214bca4af",
+      "after": "absent",
+      "action": "Remove exclusive whole-test-corpus authority; real Rust/production/per-output contracts preserved"
+    }
+  ],
+  "plainInputs": "unchanged; fresh final checks required",
+  "Rust": "no edits"
+}

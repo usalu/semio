@@ -1,0 +1,23 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\udd80\ufe0f.rs",
+  "beforeSHA": "e5b45ed9a69612c957e5cc9da4b55c3f32d36364a5223675819292dea9e0160b",
+  "afterSHA": "b23ee179a0b30569f8f495befb20020ab4cfa9990b9ee2711034b7f0302c1d6a",
+  "actions": [
+    {
+      "scope": "OwnedSchemaDecodePages directory release and physical terminal",
+      "beforeBlockSHA": "9e67857cddc0c2199310ea97b9e9582efc78d496470947557d60c9ee15d7def2",
+      "afterBlockSHA": "daa135dbd3fe16ebdc311663e27bf799cdc0c137820d05f98bf0a5a8a1373714"
+    },
+    {
+      "scope": "OwnedSchemaTokenCursor supplied close and four physical frontier observers",
+      "beforeBlockSHA": "630610065930f4130ed12eac4be6fbe555cd2a3722d1cbc5092f6e3ef29fbf6f",
+      "afterBlockSHA": "1cf4dd52e4188068ce6213b310016098f581f1cde02d4f34f57e8fc17116cf98"
+    },
+    {
+      "scope": "OwnedSchemaRecordCursor actual same-owner physical frontier forwarding",
+      "beforeBlockSHA": "60ece3ac3928fa5ac80ab341007435e55560824c99cb115c6714e69a3a60146d",
+      "afterBlockSHA": "d79cb7d3767dde88bd04cd78def65ece95766dafef186820737a4e4d4ae3b157"
+    }
+  ],
+  "nativeExecuted": false
+}

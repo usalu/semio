@@ -1,0 +1,22 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+    "beforeSha256": "b85ccacf80566acb682f1bff6f40b6bc22980650783b07d19f9e8ed2fd459153",
+    "afterSha256": "aed20cd9301a168983b16dc7c8736780e689bc48eaf0c3ef66a8190672a54e49",
+    "logicalBlock": "    /// 🫴️ Copies into the caller's original slot so cancellation retains every born buffer.\n    pub fn copy_bytes_into(&mut self,bytes:&[u8],output:&mut Vec<u8>)->Result<(),ValueError>{\n        if !output.is_empty()||output.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,\"native copied buffer slot must be empty\"))}\n        self.charge(bytes.len())?;self.copy_checkpoint(0,bytes.len())?;\n        output.try_reserve_exact(bytes.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,\"native decoding collection allocation failed\"))?;\n        for chunk in bytes.chunks(65536){output.extend_from_slice(chunk);self.copy_checkpoint(output.len(),bytes.len())?;}Ok(())\n    }\n",
+    "action": "funded-copy-bytes-into-original-slot",
+    "priorGuardFailure": "following consumer guard refused because fresh peer constructor changed; helper alone written"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "beforeSha256": "d6b80a5826d8e24bf6f2ff661f6feb72c89340a35f55db47f1d9dc8d1ab5962a",
+    "afterSha256": "f221982241db3ac96d096bbe99250c28c74b202b9b8d6555ff1d196944798cea",
+    "block": "preserve peer caller-grant/recipient/manual RetireOwned; remove duplicate derive; original output slot before allocation and canonical copy_bytes_into"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "beforeSha256": "a94e10bcc68a7b8b2bfa3820ff52d4bdb19788de84bbf7674f93b06505771200",
+    "afterSha256": "540493a6c1f91e96ba011c12c6c465bdedbc4c54a5e188a017a0c1c6a4a612c0",
+    "block": "source-shape observes actual genuine peer manual owner and naming, independent before-birth custody rule unchanged"
+  }
+]

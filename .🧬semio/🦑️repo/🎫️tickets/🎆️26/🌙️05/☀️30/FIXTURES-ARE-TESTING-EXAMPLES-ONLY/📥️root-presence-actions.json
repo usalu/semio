@@ -1,0 +1,75 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "beforeSha256": "3e613dd454e6c4bc84b13148d96d0f688a2d976c57697101c6ba648b3a3954f7",
+    "afterSha256": "289a40dc8ebdc90161f88c887b7fc4afbbd3014bcec19ff47505d046c85b0aef",
+    "action": "fresh exact narrow defining edits: explicit displaced/base-alias custody; paid atomic Arc handoff preserves final nested payload; test-only helper module"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs",
+    "beforeSha256": "43fdf1b83b20951f49ed6187923330d3375763e0cbaba16d051ae476aef34d17",
+    "afterSha256": "8a42b905cedf9e341fbfb3ec22ccd814703af3c409cd43a1ab679b69410b1a15",
+    "action": "current rejected commit base alias has distinct custody from displaced snapshot; preserves live Store progress and captured reader blocker"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🦀️.rs",
+    "beforeSha256": "693b4cd5ea9b83cc7a0c3437460e4f42f9db9e375f74a034ef5c534f8e8ce28e",
+    "afterSha256": "7a881aa6eff2604a4e7b1200d3a552c670041177408ce2e0ac3ac10a7f93f51e",
+    "action": "preserve actual final physical registry frame receipt using defining Controlled canonical adapter"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "c81a492be829f4f116124e5c10638f89fdcbfa7ca00d17581e605d7d4efe8343",
+    "afterSha256": "4cda6ae59bd7004fdd444e08790e5b7d90738ab8e334632a670d473cfb931ea7",
+    "action": "original Presence current tests: genuine full-grant factory, actual controlled reads/witnesses, fixed policy and physical System receipts; preserve Serde, UTF8, cancellation, alias/barrier, factory binding oracles; no old scalar API"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "d5e7a22b2dbc9f93ba3d7b8b960eea43fc96a0a9ba1d2001c59d1e3381780136",
+    "afterSha256": "f2137c6d1f046740d317d71990a13e2cc82c6900e53bb9c0d9ac06fdc74cdff9",
+    "action": "rejection tests use genuine funded constructor refusal with original pointer/capacity/payload/factory preserved; separate UTF8 body and System backing currency, actual terminal Box release"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🧹️retirement.json",
+    "beforeSha256": "0a5a72ba3400773d10376534baa1d4da1f5596076606a7a9b3619fac430e2fb1",
+    "afterSha256": "e39f510c216875a1f544781dabcc0f61205919ab1f080cd0a680224ee450062b",
+    "action": "handcrafted neutral examples declare fixed independent five-axis policy, original allocation refusal currencies and terminal receipt expectation; no test schema"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🛂️peer-admission.json",
+    "beforeSha256": "d2d9dc9ab0edebbe978f7bf232c804347962e71be02c71b61e48396312602294",
+    "afterSha256": "e3e0f1b622c3880d2456c2304e3a5492dee741d1307d9e4ea61b418e92ee0d37",
+    "action": "handcrafted neutral examples declare fixed independent five-axis policy, original allocation refusal currencies and terminal receipt expectation; no test schema"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "24ad1b3245e4c956a1d21995a03a01375689df604d1d91d9a61028ef708429c2",
+    "afterSha256": "fa25d6d90a94fead290a1b4a2871a10326dba554b6914c7ac7910063c43020b1",
+    "action": "original read-source consumer uses paid returned-root admission and funded Registry/Box close; actual System regression retains nonzero Complete frame receipt"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "fa25d6d90a94fead290a1b4a2871a10326dba554b6914c7ac7910063c43020b1",
+    "afterSha256": "4025e9834fa3c09303038d3611c81ce070ff5e1b0ecfc7834d163aeafcdb81d4",
+    "action": "borrowed demand compared against fixed independent original test grant; exact original neutral regression include path"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs",
+    "beforeSha256": null,
+    "afterSha256": "01f4e442b6a9af76ec2d425af36aef7a8bb362b69a8a21db1e9441702e79bd72",
+    "action": "created shared cfg(test)-only genuine paid scalar/counter factory and physical System observation helpers; no runtime fixture owner"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "a54cc72c859278eb28dccfc8603f164cbdd0e77055bf1598bdb22e521d574aca",
+    "afterSha256": "a384b405cae4edeb3f67d9a7044ffabf1b63c281bafedfb478d2aeae6a79aec7",
+    "action": "exact borrowed mutable driver and original neutral independent policy law; do not confuse legitimate child terminal zero receipt with blocked root"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+    "beforeSha256": null,
+    "afterSha256": "d2dd21b4a281b608ba962b55a2f28863093eb2795c8925e87b8de46a8ff6d1e9",
+    "beforeQualification": "Root append only to original shared TS file; before hash not captured, previous two tests preserved",
+    "action": "independent actual JSON/Buffer/TextEncoder seven neutral examples and seven original Rust grammar parses through existing Unit Source route; no runtime type claim"
+  }
+]

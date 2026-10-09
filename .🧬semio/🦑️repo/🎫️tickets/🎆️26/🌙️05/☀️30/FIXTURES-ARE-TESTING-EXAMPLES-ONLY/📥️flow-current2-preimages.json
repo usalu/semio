@@ -1,0 +1,17 @@
+{
+  "observed": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "sha256": "f6d7ebe6547f00c25af4d698392ce9ea2a9bdc7a0d25dd39ab1e2858df0f6c2f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "sha256": "63ae4f3433874d5f51ed31f62c7b8f2780a5ce574b6bab4311bcc33ba1e30369"
+    }
+  ],
+  "fixtureObserver": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+    "sha256": "df7fa3e6c9d01270f25212b75ab601795a53613c93d48bed9d2d7fb6645ad277",
+    "owned": false
+  }
+}

@@ -46,12 +46,16 @@ fn drive_layout_with(ui: &mut Ui, atlas: &mut FontAtlas, pool: &semio_framework_
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
-    for _ in 0..262_144 {
+    for turn in 0..262_144 {
         if ui.layout_is_dirty("fixture") {
             ui.request_layout("fixture");
         }
-        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
-        if matches!(ui.step_layouts(pool, atlas, &mut cx), UiLayoutStep::Idle) && !ui.layout_is_dirty("fixture") {
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview_sequence,&mut actual_retained_progress);
+        let step=ui.step_layouts(pool, atlas, &mut cx);
+        if let UiLayoutStep::Refused{refusal,..}=&step{eprintln!("[DEBUG] retained disclosure original close refused turn={turn} stage={} kind={:?} progress={:?}",refusal.stage,refusal.kind,refusal.progress);}
+        if matches!(step, UiLayoutStep::Idle) && !ui.layout_is_dirty("fixture") {
+            eprintln!("[DEBUG] retained disclosure original layout settled turns={} fixed original retirement policy every return witness checked",turn+1);
             return;
         }
     }
@@ -66,7 +70,8 @@ fn advance_to_checked_out_layout(ui: &mut Ui, atlas: &mut FontAtlas, pool: &semi
         if ui.layout_is_dirty("fixture") {
             ui.request_layout("fixture");
         }
-        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview_sequence,&mut actual_retained_progress);
         let _ = ui.step_layouts(pool, atlas, &mut cx);
         let checked_out = ui.windows.get("fixture").and_then(|window| window.layout_session.as_ref().filter(|session| session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut).map(|_| window.layout_generation));
         if let Some(generation) = checked_out {

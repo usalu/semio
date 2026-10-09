@@ -257,7 +257,7 @@ fn cancelled_frame_releases_owner_and_returns_paged_cancel_outcome() {
 fn interrupted_callback_and_rejected_send_retain_exact_state_for_retry() {
     let mut adapter = WebGpuSurfaceAdapter::new(MockPort::default());
     push(&mut adapter, request(GPU_SURFACE_OPERATION_CREATE, 1, 1, create_body(0, 1, 1, 1, 640, 480)));
-    assert_eq!(adapter.advance(AbiWorkBudget { byte_credit: 64, now_ms: 0, deadline_ms: None, cancelled: false, interrupted: true }), Err(AbiErrorCode::Interrupted));
+    assert_eq!(adapter.advance(AbiWorkBudget { byte_credit: 64, retained:AbiWorkBudget::credits(0).retained, now_ms: 0, deadline_ms: None, cancelled: false, interrupted: true }), Err(AbiErrorCode::Interrupted));
     assert!(matches!(run_request(&mut adapter), GpuOutcome::Created { .. }));
     adapter.port.reject_send = true;
     assert_eq!(adapter.advance(AbiWorkBudget::credits(1)), Err(AbiErrorCode::Interrupted));

@@ -93,7 +93,7 @@ struct OuterPackField {
 
 impl OuterPackField {
     fn diagnostic(code: &'static str) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT }
+        store::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 }
 
@@ -256,7 +256,7 @@ struct RefusedSnapshotOwner {
 
 impl RefusedSnapshotOwner {
     fn diagnostic() -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code: "generation2d-retained-pack.refused-snapshot-not-readable", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT }
+        store::OwnedSchemaDecodeDiagnostic { code: "generation2d-retained-pack.refused-snapshot-not-readable", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 }
 

@@ -60,6 +60,30 @@ impl Drop for FailClosedOp {
     }
 }
 
+/// 🧹️ Preserves the original fixture operation until its complete inline turn is admitted.
+struct FailClosedOpRetirement(Option<FailClosedOp>);
+impl semio_framework_value::retirement::RetirementCursor for FailClosedOpRetirement {
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
+        use semio_framework_value::retirement::RetirementStep;
+        if self.0.is_none(){return RetirementStep::Complete;}
+        if grant.maximum_items==0||grant.maximum_copy_bytes<std::mem::size_of::<FailClosedOp>(){return RetirementStep::BudgetExhausted;}
+        if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original fixture operation requires its supplied depth"));}
+        self.0.take().expect("original admitted operation").retire_cold();
+        RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<FailClosedOp>(),..Default::default()})
+    }
+    fn terminal_is_empty(&self)->bool{self.0.is_none()}
+    fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.0.is_some(){std::mem::size_of::<FailClosedOp>()}else{0})}
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+    fn terminal_release_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}
+}
+impl semio_framework_value::retirement::RetireOwned for FailClosedOp {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(FailClosedOpRetirement(Some(self)))}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<FailClosedOpRetirement>())}
+    fn controlled_retirement_supported()->bool{true}
+    fn retirement_element_copy_bytes()->usize{std::mem::size_of::<Self>()}
+}
+
 impl ToValue for FailClosedOp {
     fn to_value(&self) -> DslValue {
         self.operation.to_value()

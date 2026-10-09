@@ -1,0 +1,33 @@
+{
+  "sourceCopied": false,
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "scope": "prepared read grant refusal kinds before exact original transfer",
+      "startLine": 27995,
+      "beforeBlockSha256": "d93539dc6381f27055890154b305b0f88c08a0707598f96025cf1142614f1f74",
+      "beforeFileSha256": "88cecac27b93a261e3f5dc55bc77a9ad3a975cbba8528068cfb086f7ea7c3095",
+      "afterBlockSha256": "affa9ac3b3240ddc1716b6c28b51914e8e245f117a09f53f60b91abef9034c3f",
+      "afterFileSha256": "5475f5d48cbd0db58e35f6cd1fddcdf352aede8ded58033b8fb3b61a8b70d6bd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "scope": "private read native laws use original tuple and real item/depth refusal; inline lease has no one-below physical allocation",
+      "startLine": 3183,
+      "beforeBlockSha256": "3498a470233e46ccf99b258c9c680ae1ab49a046cc4c8adb2334222056c800ca",
+      "beforeFileSha256": "042255b6e91c6a54c5742e2944383f2ff77afd89fef28d3bb1427dbb7a459f0b",
+      "afterBlockSha256": "f864b92bd8106ab890f3b33484adafb29808e106e1dfcae59cda0c71fc780673",
+      "afterFileSha256": "f232aca2bf2fc0e1370ee7bfc404f518e818c8b2e00ed8c11e7d7c5b34983360"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "scope": "erased live read law retains actual factory capability and separately funded terminal Box",
+      "startLine": 3853,
+      "beforeBlockSha256": "d381205ea756744b2a5f54fa71adff79de293620ccee39d73e1ca08d492bc0c4",
+      "beforeFileSha256": "f232aca2bf2fc0e1370ee7bfc404f518e818c8b2e00ed8c11e7d7c5b34983360",
+      "afterBlockSha256": "72241bdd31b7f573aad9f01de83b4ad4e69d4f0ef75cc301898cddaba1cd9826",
+      "afterFileSha256": "95594233242d71844a0f52408e2c3520d00911c894f81376c9fb0be59ead491b"
+    }
+  ],
+  "nativeExecuted": false
+}

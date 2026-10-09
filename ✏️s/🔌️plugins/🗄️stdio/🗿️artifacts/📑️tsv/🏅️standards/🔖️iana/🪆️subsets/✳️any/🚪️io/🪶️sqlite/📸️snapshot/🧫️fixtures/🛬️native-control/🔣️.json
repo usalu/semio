@@ -33,5 +33,30 @@
   "copyTextBoundary": 65534,
   "copyTextCancelAfter": 65530,
   "maxAllocationBytes": 1,
-  "allocationRole": "cumulativeOwnedBacking"
+  "allocationRole": "cumulativeOwnedBacking",
+  "typedDestination": {
+    "cancelAt": [
+      0,
+      65534,
+      131068,
+      null
+    ],
+    "normalGrant": {
+      "maximumItems": 16,
+      "maximumCopyBytes": 262144,
+      "maximumCapacityBytes": 262144,
+      "maximumReleaseBytes": 0,
+      "maximumDepth": 5
+    },
+    "closeGrant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 65536,
+      "maximumCapacityBytes": 1048576,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 64
+    },
+    "maximumTurns": 100000,
+    "terminalDropBytes": 0,
+    "quoteCancelCheckpoint": 3
+  }
 }

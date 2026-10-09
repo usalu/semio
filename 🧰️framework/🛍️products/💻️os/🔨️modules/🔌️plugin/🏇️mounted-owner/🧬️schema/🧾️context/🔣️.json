@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/plugin/mounted-original-context-receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "depthIsNotConsumed",
+    "sameOriginalRecipient",
+    "policyCannotIncreaseCaller",
+    "successfulChildDebitedOnce",
+    "nestedJobs",
+    "vectors"
+  ],
+  "properties": {
+    "contract": {
+      "const": "framework.plugin.mounted-original-context-receipt"
+    },
+    "depthIsNotConsumed": {
+      "const": true
+    },
+    "sameOriginalRecipient": {
+      "const": true
+    },
+    "policyCannotIncreaseCaller": {
+      "const": true
+    },
+    "successfulChildDebitedOnce": {
+      "const": true
+    },
+    "nestedJobs": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "debit",
+          "receipt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "debit": {
+            "enum": [
+              "owner",
+              "child",
+              "partial",
+              "foreign"
+            ]
+          },
+          "receipt": {
+            "$ref": "#/$defs/Progress"
+          }
+        }
+      }
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "policy",
+          "context",
+          "already",
+          "receipt",
+          "remaining"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/$defs/Grant"
+          },
+          "context": {
+            "$ref": "#/$defs/Grant"
+          },
+          "already": {
+            "$ref": "#/$defs/Progress"
+          },
+          "receipt": {
+            "$ref": "#/$defs/Progress"
+          },
+          "remaining": {
+            "$ref": "#/$defs/Grant"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "retainedCapacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    }
+  }
+}

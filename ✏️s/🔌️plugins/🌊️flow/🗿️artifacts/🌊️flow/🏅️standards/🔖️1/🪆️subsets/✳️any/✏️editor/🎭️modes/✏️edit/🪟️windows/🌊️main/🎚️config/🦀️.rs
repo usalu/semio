@@ -81,7 +81,7 @@ impl semio_framework_plugin::WindowConfigOwner for FlowMainWindowConfigOwner {
     type State = FlowMainWindowConfig;
     type Mutation = FlowMainWindowConfigMutation;
 
-    fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> {
+    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()
     }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {

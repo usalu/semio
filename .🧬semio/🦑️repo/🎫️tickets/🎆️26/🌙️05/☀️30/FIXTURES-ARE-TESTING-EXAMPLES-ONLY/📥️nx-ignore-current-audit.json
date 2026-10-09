@@ -1,0 +1,31 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": ".nxignore",
+      "sha256": "e69deb121e72bb6487b559fb922100c54cb7a7fb8e4d7c7967d6f8dbdacb52ad"
+    },
+    {
+      "path": "node_modules/nx/dist/src/utils/ignore.js",
+      "sha256": "9920369d089cfaa4bcb31e25629b415df2a7ee5d95297ec38f0283ab1b1f5fc5"
+    },
+    {
+      "path": "node_modules/nx/dist/src/plugins/project-json/build-nodes/project-json.js",
+      "sha256": "d195e6aa4fe85e042ed75d1cd03d18a97f795c12637cc5cc8996f265dbf0c49e"
+    },
+    {
+      "path": "node_modules/nx/dist/src/plugins/package-json/create-nodes.js",
+      "sha256": "14a60290d97a2541673621fb136b9e472f8664960370380313f9b6696f51cd4f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "sha256": "6d7e248129c033ac99d6db41f88302158153427556a6380bef7aca28db953293"
+    }
+  ],
+  "executedOracle": "bun require(ignore) and minimatch pure in-memory pattern check; no Source writes or graph/build",
+  "result": {
+    "extglobIgnoreMatches": false,
+    "extglobMinimatchMatches": true,
+    "broadModuleReincludeAdmitsNestedOtherCollection": true
+  }
+}

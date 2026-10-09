@@ -1,0 +1,36 @@
+{
+  "executed": false,
+  "authored": false,
+  "observations": [
+    {
+      "path": ".nxignore",
+      "authored": false,
+      "sha256": "e69deb121e72bb6487b559fb922100c54cb7a7fb8e4d7c7967d6f8dbdacb52ad"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "authored": false,
+      "sha256": "6d7e248129c033ac99d6db41f88302158153427556a6380bef7aca28db953293"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+      "authored": false,
+      "sha256": "fca92734b6f53cff2379fb0bac6e45129019317e16fd108d2a4baebb04ba78fc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+      "authored": false,
+      "sha256": "a27d89099e73263de63d4a1b61cdd26d2b17c3b2b9f407b6035dd947d700611f"
+    }
+  ],
+  "canonicalCollections": [
+    "🧫️fixtures",
+    "🧫️examples",
+    "🧪️fixtures",
+    "🧪️examples"
+  ],
+  "moduleNameException": "immediately beneath 🔨️modules",
+  "currentGraphCanonicalCollectionRootCount": 0,
+  "confirmedProductionDataReadEdges": [],
+  "sourceGap": "inferenceCandidates lacks canonical collection ancestry rejection; production/nativeSources filters cover only emoji fixtures and tests"
+}

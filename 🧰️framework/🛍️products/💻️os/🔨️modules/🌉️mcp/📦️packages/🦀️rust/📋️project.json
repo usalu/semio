@@ -93,6 +93,22 @@
         "command": "bun ./📜️script.ts test exhaustive"
       }
     },
+    "probe-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts probe-sqlite-source"
+      }
+    },
+    "probe-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts probe-sqlite-native"
+      }
+    },
     "canonical-pair-check": {
       "executor": "nx:run-commands",
       "cache": true,

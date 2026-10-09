@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:fresh-process-policy:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "storage",
+    "command"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "storage": {
+      "$ref": "semio:cargo-preparation-storage:v1"
+    },
+    "command": {
+      "$ref": "semio:cargo-command-entrypoint:v1"
+    }
+  }
+}

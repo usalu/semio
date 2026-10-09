@@ -1,0 +1,42 @@
+{
+  "id": "original-ordered-mixed-full-receipt",
+  "key": "mixed",
+  "payloadByte": 7,
+  "sourceCapacityBytes": 32,
+  "replacementCapacityBytes": 96,
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "minimumReleaseGrantBytes": 32,
+  "expected": {
+    "mixedProgress": {
+      "copiedItems": 1,
+      "copiedBytes": 1,
+      "retainedCapacityBytes": 96,
+      "releasedBytes": 32
+    },
+    "sourcePointerPreserved": true,
+    "reportedReceiptEqualsAllocator": true,
+    "releasedEqualsSourcePlusAdmitted": true,
+    "terminalDropReleasedBytes": 0
+  },
+  "expectedMixedDemand": {
+    "copyBytes": 1,
+    "capacityBytes": 96,
+    "releaseBytes": 32,
+    "depth": 2
+  },
+  "deque": {
+    "source": [
+      "雪😀",
+      "retained"
+    ],
+    "containerCapacity": 8,
+    "payloadCapacity": 64,
+    "canonicalSource": "[\"雪😀\",\"retained\"]",
+    "expectedMissingReleaseDemands": 0,
+    "terminalDropReleasedBytes": 0
+  }
+}

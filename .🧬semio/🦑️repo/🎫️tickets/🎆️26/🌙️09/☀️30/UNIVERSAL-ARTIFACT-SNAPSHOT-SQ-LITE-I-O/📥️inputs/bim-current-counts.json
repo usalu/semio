@@ -1,0 +1,2247 @@
+{
+  "qualification": "Independent literal domain witness counts only; no provider imports/output. Current SQL still historical 44-table contract, expanded table mapping must be authored by root. Fixed structs may be flattened cells rather than rows. Counts are role identities, not a guessed total SQL row count.",
+  "witnessSha256": "b4cff8dfabaac3f0ff5c60f19afefd2a04baa78cd7afbcc5cba8ba15426bc680",
+  "currentDDLTableCount": 44,
+  "topLevelMapRows": {
+    "materials": 20,
+    "wall_types": 11,
+    "slab_types": 11,
+    "roof_types": 11,
+    "column_types": 23,
+    "beam_types": 23,
+    "window_types": 3,
+    "door_types": 6,
+    "curtain_wall_types": 59,
+    "sites": 5,
+    "buildings": 4,
+    "storeys": 4,
+    "grids": 5,
+    "walls": 42,
+    "curtain_walls": 44,
+    "curtain_panel_overrides": 12,
+    "columns": 25,
+    "beams": 15,
+    "slabs": 15,
+    "roofs": 25,
+    "openings": 13,
+    "stairs": 43,
+    "railings": 70,
+    "ramps": 22,
+    "spaces": 17,
+    "ceiling_types": 9,
+    "ceilings": 10,
+    "zones": 2,
+    "area_schemes": 5,
+    "views": 31,
+    "sheets": 12,
+    "viewports": 6,
+    "sheet_revisions": 2,
+    "dimensions": 27,
+    "tags": 6,
+    "text_notes": 3,
+    "leaders": 26,
+    "annotation_styles": 6,
+    "families": 10,
+    "family_parameters": 8,
+    "family_solids": 57,
+    "wall_sweeps": 20,
+    "schedules": 192,
+    "property_templates": 84,
+    "classification_systems": 4,
+    "properties": 3,
+    "classifications": 2
+  },
+  "referencedDomainTypeInstances": {
+    "AnchorEnd": 9,
+    "AnnotationAnchor": 57,
+    "AnnotationStyle": 6,
+    "AreaMeasure": 5,
+    "AreaScheme": 5,
+    "Axis": 101,
+    "Baluster": 69,
+    "Beam": 15,
+    "BeamType": 23,
+    "Building": 4,
+    "Ceiling": 10,
+    "CeilingType": 9,
+    "ClassificationItem": 2,
+    "ClassificationSet": 2,
+    "ClassificationSystem": 4,
+    "Column": 25,
+    "ColumnType": 23,
+    "CurtainGrid": 204,
+    "CurtainPanel": 71,
+    "CurtainPanelOverride": 12,
+    "CurtainWall": 44,
+    "CurtainWallType": 59,
+    "DetailLevel": 31,
+    "Dimension": 27,
+    "DimensionUnit": 6,
+    "DoorLeaves": 6,
+    "DoorType": 6,
+    "EndJoin": 82,
+    "ExprPoint": 25,
+    "ExprPoint3": 57,
+    "Family": 10,
+    "FamilyCategory": 10,
+    "FamilyParameter": 8,
+    "FamilySolid": 57,
+    "GridLine": 5,
+    "HostSide": 69,
+    "Infill": 70,
+    "IsoSize": 9,
+    "Layer": 49,
+    "LayerFunction": 49,
+    "Leader": 26,
+    "LocationLine": 42,
+    "Material": 20,
+    "MaterialCategory": 20,
+    "Opening": 13,
+    "OpeningKind": 13,
+    "Orientation": 12,
+    "Paper": 12,
+    "ParameterKind": 8,
+    "ParametricProfile": 54,
+    "Phase": 516,
+    "Point2": 747,
+    "Profile": 393,
+    "Project": 1,
+    "PropertyDef": 82,
+    "PropertyKind": 82,
+    "PropertySet": 3,
+    "PropertyTemplate": 84,
+    "PropertyValue": 169,
+    "Railing": 70,
+    "RailingHost": 69,
+    "Ramp": 22,
+    "Rgb": 20,
+    "RiserKind": 43,
+    "Roof": 25,
+    "RoofShape": 25,
+    "RoofType": 11,
+    "Schedule": 192,
+    "ScheduleCategory": 192,
+    "ScheduleColumn": 190,
+    "ScheduleField": 748,
+    "ScheduleFilter": 190,
+    "ScheduleGroup": 190,
+    "ScheduleKey": 760,
+    "ScheduleOp": 190,
+    "ScheduleSort": 190,
+    "Sheet": 12,
+    "SheetRevision": 2,
+    "Site": 5,
+    "Slab": 15,
+    "SlabType": 11,
+    "Slope": 47,
+    "SolidAxis": 18,
+    "SolidShape": 57,
+    "Space": 17,
+    "SpaceBoundary": 17,
+    "Stair": 43,
+    "StairFlight": 43,
+    "StairStringer": 43,
+    "Storey": 4,
+    "StringerKind": 43,
+    "Swing": 6,
+    "Tag": 6,
+    "TagCategory": 6,
+    "TemplateTarget": 82,
+    "Terminator": 6,
+    "TextNote": 3,
+    "TopConstraint": 176,
+    "Turn": 6,
+    "Vertex": 166,
+    "View": 31,
+    "ViewCamera": 30,
+    "ViewCategory": 29,
+    "ViewCrop": 35,
+    "ViewKind": 31,
+    "ViewPlane": 30,
+    "Viewport": 6,
+    "Wall": 42,
+    "WallSide": 29,
+    "WallSweep": 20,
+    "WallType": 11,
+    "WindowType": 3,
+    "Zone": 2
+  },
+  "ownedRecordRoles": {
+    "model/annotation_styles/entry": {
+      "AnnotationStyle": 6
+    },
+    "model/annotation_styles/entry/terminator": {
+      "Terminator": 6
+    },
+    "model/annotation_styles/entry/unit": {
+      "DimensionUnit": 6
+    },
+    "model/area_schemes/entry": {
+      "AreaScheme": 5
+    },
+    "model/area_schemes/entry/measure": {
+      "AreaMeasure": 5
+    },
+    "model/beam_types/entry": {
+      "BeamType": 23
+    },
+    "model/beam_types/entry/profile": {
+      "Profile": 23
+    },
+    "model/beam_types/entry/profile/Custom/outline/item": {
+      "Vertex": 8
+    },
+    "model/beam_types/entry/profile/Custom/outline/item/point": {
+      "Point2": 8
+    },
+    "model/beams/entry": {
+      "Beam": 15
+    },
+    "model/beams/entry/axis": {
+      "Axis": 15
+    },
+    "model/beams/entry/axis/Arc/end": {
+      "Point2": 5
+    },
+    "model/beams/entry/axis/Arc/start": {
+      "Point2": 5
+    },
+    "model/beams/entry/axis/Line/end": {
+      "Point2": 10
+    },
+    "model/beams/entry/axis/Line/start": {
+      "Point2": 10
+    },
+    "model/beams/entry/phase": {
+      "Phase": 15
+    },
+    "model/buildings/entry": {
+      "Building": 4
+    },
+    "model/buildings/entry/origin": {
+      "Point2": 4
+    },
+    "model/ceiling_types/entry": {
+      "CeilingType": 9
+    },
+    "model/ceiling_types/entry/layers/item": {
+      "Layer": 7
+    },
+    "model/ceiling_types/entry/layers/item/function": {
+      "LayerFunction": 7
+    },
+    "model/ceilings/entry": {
+      "Ceiling": 10
+    },
+    "model/ceilings/entry/boundary/item": {
+      "Vertex": 8
+    },
+    "model/ceilings/entry/boundary/item/point": {
+      "Point2": 8
+    },
+    "model/ceilings/entry/holes/item/item": {
+      "Vertex": 7
+    },
+    "model/ceilings/entry/holes/item/item/point": {
+      "Point2": 7
+    },
+    "model/ceilings/entry/slope": {
+      "Slope": 9
+    },
+    "model/classification_systems/entry": {
+      "ClassificationSystem": 4
+    },
+    "model/classification_systems/entry/entries/item": {
+      "ClassificationItem": 2
+    },
+    "model/classifications/entry": {
+      "ClassificationSet": 2
+    },
+    "model/column_types/entry": {
+      "ColumnType": 23
+    },
+    "model/column_types/entry/profile": {
+      "Profile": 23
+    },
+    "model/column_types/entry/profile/Custom/outline/item": {
+      "Vertex": 8
+    },
+    "model/column_types/entry/profile/Custom/outline/item/point": {
+      "Point2": 8
+    },
+    "model/columns/entry": {
+      "Column": 25
+    },
+    "model/columns/entry/phase": {
+      "Phase": 25
+    },
+    "model/columns/entry/position": {
+      "Point2": 25
+    },
+    "model/columns/entry/tilt": {
+      "Slope": 24
+    },
+    "model/columns/entry/top": {
+      "TopConstraint": 25
+    },
+    "model/curtain_panel_overrides/entry": {
+      "CurtainPanelOverride": 12
+    },
+    "model/curtain_panel_overrides/entry/panel": {
+      "CurtainPanel": 12
+    },
+    "model/curtain_wall_types/entry": {
+      "CurtainWallType": 59
+    },
+    "model/curtain_wall_types/entry/border_mullion": {
+      "Profile": 59
+    },
+    "model/curtain_wall_types/entry/border_mullion/Custom/outline/item": {
+      "Vertex": 4
+    },
+    "model/curtain_wall_types/entry/border_mullion/Custom/outline/item/point": {
+      "Point2": 4
+    },
+    "model/curtain_wall_types/entry/interior_mullion": {
+      "Profile": 59
+    },
+    "model/curtain_wall_types/entry/interior_mullion/Custom/outline/item": {
+      "Vertex": 4
+    },
+    "model/curtain_wall_types/entry/interior_mullion/Custom/outline/item/point": {
+      "Point2": 4
+    },
+    "model/curtain_wall_types/entry/panel": {
+      "CurtainPanel": 59
+    },
+    "model/curtain_wall_types/entry/u_grid": {
+      "CurtainGrid": 59
+    },
+    "model/curtain_wall_types/entry/v_grid": {
+      "CurtainGrid": 59
+    },
+    "model/curtain_walls/entry": {
+      "CurtainWall": 44
+    },
+    "model/curtain_walls/entry/axis": {
+      "Axis": 44
+    },
+    "model/curtain_walls/entry/axis/Arc/end": {
+      "Point2": 6
+    },
+    "model/curtain_walls/entry/axis/Arc/start": {
+      "Point2": 6
+    },
+    "model/curtain_walls/entry/axis/Line/end": {
+      "Point2": 38
+    },
+    "model/curtain_walls/entry/axis/Line/start": {
+      "Point2": 38
+    },
+    "model/curtain_walls/entry/phase": {
+      "Phase": 44
+    },
+    "model/curtain_walls/entry/top": {
+      "TopConstraint": 44
+    },
+    "model/curtain_walls/entry/u_grid": {
+      "CurtainGrid": 43
+    },
+    "model/curtain_walls/entry/v_grid": {
+      "CurtainGrid": 43
+    },
+    "model/dimensions/entry": {
+      "Dimension": 27
+    },
+    "model/dimensions/entry/anchors/item": {
+      "AnnotationAnchor": 31
+    },
+    "model/dimensions/entry/anchors/item/Point/point": {
+      "Point2": 5
+    },
+    "model/dimensions/entry/anchors/item/WallEnd/end": {
+      "AnchorEnd": 5
+    },
+    "model/dimensions/entry/anchors/item/WallFace/side": {
+      "WallSide": 5
+    },
+    "model/door_types/entry": {
+      "DoorType": 6
+    },
+    "model/door_types/entry/leaves": {
+      "DoorLeaves": 6
+    },
+    "model/door_types/entry/swing": {
+      "Swing": 6
+    },
+    "model/families/entry": {
+      "Family": 10
+    },
+    "model/families/entry/category": {
+      "FamilyCategory": 10
+    },
+    "model/family_parameters/entry": {
+      "FamilyParameter": 8
+    },
+    "model/family_parameters/entry/kind": {
+      "ParameterKind": 8
+    },
+    "model/family_solids/entry": {
+      "FamilySolid": 57
+    },
+    "model/family_solids/entry/offset": {
+      "ExprPoint3": 57
+    },
+    "model/family_solids/entry/shape": {
+      "SolidShape": 57
+    },
+    "model/family_solids/entry/shape/Extrusion/profile": {
+      "ParametricProfile": 18
+    },
+    "model/family_solids/entry/shape/Extrusion/profile/Polygon/points/item": {
+      "ExprPoint": 3
+    },
+    "model/family_solids/entry/shape/Revolution/axis": {
+      "SolidAxis": 18
+    },
+    "model/family_solids/entry/shape/Revolution/profile": {
+      "ParametricProfile": 18
+    },
+    "model/family_solids/entry/shape/Revolution/profile/Polygon/points/item": {
+      "ExprPoint": 3
+    },
+    "model/family_solids/entry/shape/Sweep/path/item": {
+      "ExprPoint": 16
+    },
+    "model/family_solids/entry/shape/Sweep/profile": {
+      "ParametricProfile": 18
+    },
+    "model/family_solids/entry/shape/Sweep/profile/Polygon/points/item": {
+      "ExprPoint": 3
+    },
+    "model/grids/entry": {
+      "GridLine": 5
+    },
+    "model/grids/entry/end": {
+      "Point2": 5
+    },
+    "model/grids/entry/start": {
+      "Point2": 5
+    },
+    "model/leaders/entry": {
+      "Leader": 26
+    },
+    "model/leaders/entry/anchor": {
+      "AnnotationAnchor": 26
+    },
+    "model/leaders/entry/anchor/Point/point": {
+      "Point2": 6
+    },
+    "model/leaders/entry/anchor/WallEnd/end": {
+      "AnchorEnd": 4
+    },
+    "model/leaders/entry/anchor/WallFace/side": {
+      "WallSide": 4
+    },
+    "model/leaders/entry/offset": {
+      "Point2": 26
+    },
+    "model/materials/entry": {
+      "Material": 20
+    },
+    "model/materials/entry/category": {
+      "MaterialCategory": 20
+    },
+    "model/materials/entry/color": {
+      "Rgb": 20
+    },
+    "model/openings/entry": {
+      "Opening": 13
+    },
+    "model/openings/entry/kind": {
+      "OpeningKind": 13
+    },
+    "model/project": {
+      "Project": 1
+    },
+    "model/properties/entry": {
+      "PropertySet": 3
+    },
+    "model/properties/entry/entry/entry": {
+      "PropertyValue": 8
+    },
+    "model/property_templates/entry": {
+      "PropertyTemplate": 84
+    },
+    "model/property_templates/entry/applies_to/item": {
+      "TemplateTarget": 82
+    },
+    "model/property_templates/entry/properties/item": {
+      "PropertyDef": 82
+    },
+    "model/property_templates/entry/properties/item/allowed/item": {
+      "PropertyValue": 80
+    },
+    "model/property_templates/entry/properties/item/default_value": {
+      "PropertyValue": 81
+    },
+    "model/property_templates/entry/properties/item/kind": {
+      "PropertyKind": 82
+    },
+    "model/railings/entry": {
+      "Railing": 70
+    },
+    "model/railings/entry/baluster": {
+      "Baluster": 69
+    },
+    "model/railings/entry/baluster/profile": {
+      "Profile": 69
+    },
+    "model/railings/entry/baluster/profile/Custom/outline/item": {
+      "Vertex": 4
+    },
+    "model/railings/entry/baluster/profile/Custom/outline/item/point": {
+      "Point2": 4
+    },
+    "model/railings/entry/host": {
+      "RailingHost": 69
+    },
+    "model/railings/entry/host/side": {
+      "HostSide": 69
+    },
+    "model/railings/entry/infill": {
+      "Infill": 70
+    },
+    "model/railings/entry/path/item": {
+      "Point2": 71
+    },
+    "model/railings/entry/phase": {
+      "Phase": 70
+    },
+    "model/railings/entry/post_profile": {
+      "Profile": 70
+    },
+    "model/railings/entry/post_profile/Custom/outline/item": {
+      "Vertex": 16
+    },
+    "model/railings/entry/post_profile/Custom/outline/item/point": {
+      "Point2": 16
+    },
+    "model/railings/entry/profile": {
+      "Profile": 70
+    },
+    "model/railings/entry/profile/Custom/outline/item": {
+      "Vertex": 4
+    },
+    "model/railings/entry/profile/Custom/outline/item/point": {
+      "Point2": 4
+    },
+    "model/ramps/entry": {
+      "Ramp": 22
+    },
+    "model/ramps/entry/path/item": {
+      "Vertex": 20
+    },
+    "model/ramps/entry/path/item/point": {
+      "Point2": 20
+    },
+    "model/ramps/entry/top": {
+      "TopConstraint": 22
+    },
+    "model/roof_types/entry": {
+      "RoofType": 11
+    },
+    "model/roof_types/entry/layers/item": {
+      "Layer": 14
+    },
+    "model/roof_types/entry/layers/item/function": {
+      "LayerFunction": 14
+    },
+    "model/roofs/entry": {
+      "Roof": 25
+    },
+    "model/roofs/entry/footprint/item": {
+      "Vertex": 38
+    },
+    "model/roofs/entry/footprint/item/point": {
+      "Point2": 38
+    },
+    "model/roofs/entry/phase": {
+      "Phase": 25
+    },
+    "model/roofs/entry/shape": {
+      "RoofShape": 25
+    },
+    "model/schedules/entry": {
+      "Schedule": 192
+    },
+    "model/schedules/entry/category": {
+      "ScheduleCategory": 192
+    },
+    "model/schedules/entry/columns/item": {
+      "ScheduleColumn": 190
+    },
+    "model/schedules/entry/columns/item/key": {
+      "ScheduleKey": 190
+    },
+    "model/schedules/entry/columns/item/key/Field/field": {
+      "ScheduleField": 187
+    },
+    "model/schedules/entry/filter/item": {
+      "ScheduleFilter": 190
+    },
+    "model/schedules/entry/filter/item/key": {
+      "ScheduleKey": 190
+    },
+    "model/schedules/entry/filter/item/key/Field/field": {
+      "ScheduleField": 187
+    },
+    "model/schedules/entry/filter/item/op": {
+      "ScheduleOp": 190
+    },
+    "model/schedules/entry/group/item": {
+      "ScheduleGroup": 190
+    },
+    "model/schedules/entry/group/item/key": {
+      "ScheduleKey": 190
+    },
+    "model/schedules/entry/group/item/key/Field/field": {
+      "ScheduleField": 187
+    },
+    "model/schedules/entry/phases/item": {
+      "Phase": 190
+    },
+    "model/schedules/entry/sort/item": {
+      "ScheduleSort": 190
+    },
+    "model/schedules/entry/sort/item/key": {
+      "ScheduleKey": 190
+    },
+    "model/schedules/entry/sort/item/key/Field/field": {
+      "ScheduleField": 187
+    },
+    "model/sheet_revisions/entry": {
+      "SheetRevision": 2
+    },
+    "model/sheets/entry": {
+      "Sheet": 12
+    },
+    "model/sheets/entry/orientation": {
+      "Orientation": 12
+    },
+    "model/sheets/entry/paper": {
+      "Paper": 12
+    },
+    "model/sheets/entry/paper/Iso/size": {
+      "IsoSize": 9
+    },
+    "model/sites/entry": {
+      "Site": 5
+    },
+    "model/sites/entry/boundary/item": {
+      "Point2": 5
+    },
+    "model/slab_types/entry": {
+      "SlabType": 11
+    },
+    "model/slab_types/entry/layers/item": {
+      "Layer": 14
+    },
+    "model/slab_types/entry/layers/item/function": {
+      "LayerFunction": 14
+    },
+    "model/slabs/entry": {
+      "Slab": 15
+    },
+    "model/slabs/entry/boundary/item": {
+      "Vertex": 16
+    },
+    "model/slabs/entry/boundary/item/point": {
+      "Point2": 16
+    },
+    "model/slabs/entry/holes/item/item": {
+      "Vertex": 16
+    },
+    "model/slabs/entry/holes/item/item/point": {
+      "Point2": 16
+    },
+    "model/slabs/entry/phase": {
+      "Phase": 15
+    },
+    "model/slabs/entry/slope": {
+      "Slope": 14
+    },
+    "model/spaces/entry": {
+      "Space": 17
+    },
+    "model/spaces/entry/boundary": {
+      "SpaceBoundary": 17
+    },
+    "model/spaces/entry/boundary/Bounded/seed": {
+      "Point2": 9
+    },
+    "model/spaces/entry/boundary/Explicit/outline/item": {
+      "Vertex": 9
+    },
+    "model/spaces/entry/boundary/Explicit/outline/item/point": {
+      "Point2": 9
+    },
+    "model/spaces/entry/phase": {
+      "Phase": 17
+    },
+    "model/stairs/entry": {
+      "Stair": 43
+    },
+    "model/stairs/entry/flight": {
+      "StairFlight": 43
+    },
+    "model/stairs/entry/flight/LTurn/turn": {
+      "Turn": 6
+    },
+    "model/stairs/entry/phase": {
+      "Phase": 43
+    },
+    "model/stairs/entry/riser": {
+      "RiserKind": 43
+    },
+    "model/stairs/entry/start": {
+      "Point2": 43
+    },
+    "model/stairs/entry/stringer": {
+      "StairStringer": 43
+    },
+    "model/stairs/entry/stringer/kind": {
+      "StringerKind": 43
+    },
+    "model/stairs/entry/top": {
+      "TopConstraint": 43
+    },
+    "model/storeys/entry": {
+      "Storey": 4
+    },
+    "model/tags/entry": {
+      "Tag": 6
+    },
+    "model/tags/entry/category": {
+      "TagCategory": 6
+    },
+    "model/tags/entry/offset": {
+      "Point2": 6
+    },
+    "model/text_notes/entry": {
+      "TextNote": 3
+    },
+    "model/text_notes/entry/position": {
+      "Point2": 3
+    },
+    "model/viewports/entry": {
+      "Viewport": 6
+    },
+    "model/viewports/entry/crop": {
+      "ViewCrop": 5
+    },
+    "model/viewports/entry/crop/max": {
+      "Point2": 5
+    },
+    "model/viewports/entry/crop/min": {
+      "Point2": 5
+    },
+    "model/viewports/entry/position": {
+      "Point2": 6
+    },
+    "model/views/entry": {
+      "View": 31
+    },
+    "model/views/entry/camera": {
+      "ViewCamera": 30
+    },
+    "model/views/entry/camera/target": {
+      "Point2": 30
+    },
+    "model/views/entry/crop": {
+      "ViewCrop": 30
+    },
+    "model/views/entry/crop/max": {
+      "Point2": 30
+    },
+    "model/views/entry/crop/min": {
+      "Point2": 30
+    },
+    "model/views/entry/detail": {
+      "DetailLevel": 31
+    },
+    "model/views/entry/hidden/item": {
+      "ViewCategory": 29
+    },
+    "model/views/entry/kind": {
+      "ViewKind": 31
+    },
+    "model/views/entry/phase": {
+      "Phase": 30
+    },
+    "model/views/entry/plane": {
+      "ViewPlane": 30
+    },
+    "model/views/entry/plane/end": {
+      "Point2": 30
+    },
+    "model/views/entry/plane/start": {
+      "Point2": 30
+    },
+    "model/wall_sweeps/entry": {
+      "WallSweep": 20
+    },
+    "model/wall_sweeps/entry/profile": {
+      "Profile": 20
+    },
+    "model/wall_sweeps/entry/profile/Custom/outline/item": {
+      "Vertex": 4
+    },
+    "model/wall_sweeps/entry/profile/Custom/outline/item/point": {
+      "Point2": 4
+    },
+    "model/wall_sweeps/entry/side": {
+      "WallSide": 20
+    },
+    "model/wall_types/entry": {
+      "WallType": 11
+    },
+    "model/wall_types/entry/layers/item": {
+      "Layer": 14
+    },
+    "model/wall_types/entry/layers/item/function": {
+      "LayerFunction": 14
+    },
+    "model/walls/entry": {
+      "Wall": 42
+    },
+    "model/walls/entry/axis": {
+      "Axis": 42
+    },
+    "model/walls/entry/axis/Arc/end": {
+      "Point2": 7
+    },
+    "model/walls/entry/axis/Arc/start": {
+      "Point2": 7
+    },
+    "model/walls/entry/axis/Line/end": {
+      "Point2": 35
+    },
+    "model/walls/entry/axis/Line/start": {
+      "Point2": 35
+    },
+    "model/walls/entry/end_join": {
+      "EndJoin": 41
+    },
+    "model/walls/entry/location": {
+      "LocationLine": 42
+    },
+    "model/walls/entry/phase": {
+      "Phase": 42
+    },
+    "model/walls/entry/start_join": {
+      "EndJoin": 41
+    },
+    "model/walls/entry/top": {
+      "TopConstraint": 42
+    },
+    "model/window_types/entry": {
+      "WindowType": 3
+    },
+    "model/zones/entry": {
+      "Zone": 2
+    }
+  },
+  "orderedCollectionRoles": {
+    "model/area_schemes/entry/usages": {
+      "parents": 5,
+      "emptyParents": 2,
+      "items": 3
+    },
+    "model/area_schemes/entry/zones": {
+      "parents": 5,
+      "emptyParents": 2,
+      "items": 3
+    },
+    "model/beam_types/entry/profile/Custom/outline": {
+      "parents": 7,
+      "emptyParents": 2,
+      "items": 8
+    },
+    "model/ceiling_types/entry/layers": {
+      "parents": 9,
+      "emptyParents": 2,
+      "items": 7
+    },
+    "model/ceilings/entry/boundary": {
+      "parents": 10,
+      "emptyParents": 2,
+      "items": 8
+    },
+    "model/ceilings/entry/holes": {
+      "parents": 10,
+      "emptyParents": 2,
+      "items": 8
+    },
+    "model/ceilings/entry/holes/item": {
+      "parents": 8,
+      "emptyParents": 1,
+      "items": 7
+    },
+    "model/classification_systems/entry/entries": {
+      "parents": 4,
+      "emptyParents": 2,
+      "items": 2
+    },
+    "model/column_types/entry/profile/Custom/outline": {
+      "parents": 7,
+      "emptyParents": 2,
+      "items": 8
+    },
+    "model/curtain_wall_types/entry/border_mullion/Custom/outline": {
+      "parents": 6,
+      "emptyParents": 2,
+      "items": 4
+    },
+    "model/curtain_wall_types/entry/interior_mullion/Custom/outline": {
+      "parents": 6,
+      "emptyParents": 2,
+      "items": 4
+    },
+    "model/curtain_wall_types/entry/u_grid/Lines/positions": {
+      "parents": 4,
+      "emptyParents": 2,
+      "items": 2
+    },
+    "model/curtain_wall_types/entry/v_grid/Lines/positions": {
+      "parents": 4,
+      "emptyParents": 2,
+      "items": 2
+    },
+    "model/curtain_walls/entry/u_grid/Lines/positions": {
+      "parents": 4,
+      "emptyParents": 2,
+      "items": 2
+    },
+    "model/curtain_walls/entry/v_grid/Lines/positions": {
+      "parents": 4,
+      "emptyParents": 2,
+      "items": 2
+    },
+    "model/dimensions/entry/anchors": {
+      "parents": 27,
+      "emptyParents": 2,
+      "items": 31
+    },
+    "model/family_solids/entry/shape/Extrusion/profile/Polygon/points": {
+      "parents": 5,
+      "emptyParents": 2,
+      "items": 3
+    },
+    "model/family_solids/entry/shape/Revolution/profile/Polygon/points": {
+      "parents": 5,
+      "emptyParents": 2,
+      "items": 3
+    },
+    "model/family_solids/entry/shape/Sweep/path": {
+      "parents": 18,
+      "emptyParents": 2,
+      "items": 16
+    },
+    "model/family_solids/entry/shape/Sweep/profile/Polygon/points": {
+      "parents": 5,
+      "emptyParents": 2,
+      "items": 3
+    },
+    "model/project/phase_names": {
+      "parents": 1,
+      "emptyParents": 0,
+      "items": 2
+    },
+    "model/property_templates/entry/applies_to": {
+      "parents": 84,
+      "emptyParents": 2,
+      "items": 82
+    },
+    "model/property_templates/entry/properties": {
+      "parents": 84,
+      "emptyParents": 2,
+      "items": 82
+    },
+    "model/property_templates/entry/properties/item/allowed": {
+      "parents": 82,
+      "emptyParents": 2,
+      "items": 80
+    },
+    "model/railings/entry/baluster/profile/Custom/outline": {
+      "parents": 6,
+      "emptyParents": 2,
+      "items": 4
+    },
+    "model/railings/entry/path": {
+      "parents": 70,
+      "emptyParents": 2,
+      "items": 71
+    },
+    "model/railings/entry/post_profile/Custom/outline": {
+      "parents": 9,
+      "emptyParents": 2,
+      "items": 16
+    },
+    "model/railings/entry/profile/Custom/outline": {
+      "parents": 6,
+      "emptyParents": 2,
+      "items": 4
+    },
+    "model/ramps/entry/path": {
+      "parents": 22,
+      "emptyParents": 2,
+      "items": 20
+    },
+    "model/roof_types/entry/layers": {
+      "parents": 11,
+      "emptyParents": 2,
+      "items": 14
+    },
+    "model/roofs/entry/footprint": {
+      "parents": 25,
+      "emptyParents": 2,
+      "items": 38
+    },
+    "model/schedules/entry/columns": {
+      "parents": 192,
+      "emptyParents": 2,
+      "items": 190
+    },
+    "model/schedules/entry/filter": {
+      "parents": 192,
+      "emptyParents": 2,
+      "items": 190
+    },
+    "model/schedules/entry/group": {
+      "parents": 192,
+      "emptyParents": 2,
+      "items": 190
+    },
+    "model/schedules/entry/phases": {
+      "parents": 192,
+      "emptyParents": 2,
+      "items": 190
+    },
+    "model/schedules/entry/sort": {
+      "parents": 192,
+      "emptyParents": 2,
+      "items": 190
+    },
+    "model/schedules/entry/storeys": {
+      "parents": 192,
+      "emptyParents": 2,
+      "items": 190
+    },
+    "model/sites/entry/boundary": {
+      "parents": 5,
+      "emptyParents": 2,
+      "items": 5
+    },
+    "model/slab_types/entry/layers": {
+      "parents": 11,
+      "emptyParents": 2,
+      "items": 14
+    },
+    "model/slabs/entry/boundary": {
+      "parents": 15,
+      "emptyParents": 2,
+      "items": 16
+    },
+    "model/slabs/entry/holes": {
+      "parents": 15,
+      "emptyParents": 2,
+      "items": 14
+    },
+    "model/slabs/entry/holes/item": {
+      "parents": 14,
+      "emptyParents": 1,
+      "items": 16
+    },
+    "model/spaces/entry/boundary/Explicit/outline": {
+      "parents": 8,
+      "emptyParents": 2,
+      "items": 9
+    },
+    "model/views/entry/hidden": {
+      "parents": 31,
+      "emptyParents": 2,
+      "items": 29
+    },
+    "model/wall_sweeps/entry/profile/Custom/outline": {
+      "parents": 6,
+      "emptyParents": 2,
+      "items": 4
+    },
+    "model/wall_types/entry/layers": {
+      "parents": 11,
+      "emptyParents": 2,
+      "items": 14
+    }
+  },
+  "keyedCollectionRoles": {
+    "model/annotation_styles": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 6
+    },
+    "model/area_schemes": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 5
+    },
+    "model/beam_types": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 23
+    },
+    "model/beams": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 15
+    },
+    "model/buildings": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 4
+    },
+    "model/ceiling_types": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 9
+    },
+    "model/ceilings": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 10
+    },
+    "model/classification_systems": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 4
+    },
+    "model/classifications": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 2
+    },
+    "model/classifications/entry": {
+      "parents": 2,
+      "emptyParents": 1,
+      "entries": 3
+    },
+    "model/column_types": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 23
+    },
+    "model/columns": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 25
+    },
+    "model/curtain_panel_overrides": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 12
+    },
+    "model/curtain_wall_types": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 59
+    },
+    "model/curtain_walls": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 44
+    },
+    "model/dimensions": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 27
+    },
+    "model/door_types": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 6
+    },
+    "model/families": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 10
+    },
+    "model/family_parameters": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 8
+    },
+    "model/family_solids": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 57
+    },
+    "model/grids": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 5
+    },
+    "model/leaders": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 26
+    },
+    "model/materials": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 20
+    },
+    "model/openings": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 13
+    },
+    "model/properties": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 3
+    },
+    "model/properties/entry": {
+      "parents": 3,
+      "emptyParents": 2,
+      "entries": 2
+    },
+    "model/properties/entry/entry": {
+      "parents": 2,
+      "emptyParents": 1,
+      "entries": 8
+    },
+    "model/property_templates": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 84
+    },
+    "model/railings": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 70
+    },
+    "model/ramps": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 22
+    },
+    "model/roof_types": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 11
+    },
+    "model/roofs": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 25
+    },
+    "model/schedules": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 192
+    },
+    "model/sheet_revisions": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 2
+    },
+    "model/sheets": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 12
+    },
+    "model/sites": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 5
+    },
+    "model/slab_types": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 11
+    },
+    "model/slabs": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 15
+    },
+    "model/spaces": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 17
+    },
+    "model/stairs": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 43
+    },
+    "model/storeys": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 4
+    },
+    "model/tags": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 6
+    },
+    "model/text_notes": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 3
+    },
+    "model/viewports": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 6
+    },
+    "model/views": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 31
+    },
+    "model/wall_sweeps": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 20
+    },
+    "model/wall_types": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 11
+    },
+    "model/walls": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 42
+    },
+    "model/window_types": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 3
+    },
+    "model/zones": {
+      "parents": 1,
+      "emptyParents": 0,
+      "entries": 2
+    }
+  },
+  "variantInstances": {
+    "AnchorEnd.End": 2,
+    "AnchorEnd.Start": 7,
+    "AnnotationAnchor.ColumnCentre": 7,
+    "AnnotationAnchor.Grid": 7,
+    "AnnotationAnchor.OpeningCentre": 7,
+    "AnnotationAnchor.Point": 11,
+    "AnnotationAnchor.WallAxis": 7,
+    "AnnotationAnchor.WallEnd": 9,
+    "AnnotationAnchor.WallFace": 9,
+    "AreaMeasure.Gross": 4,
+    "AreaMeasure.Net": 1,
+    "Axis.Arc": 18,
+    "Axis.Line": 83,
+    "CurtainGrid.Lines": 16,
+    "CurtainGrid.Spacing": 188,
+    "CurtainPanel.Door": 6,
+    "CurtainPanel.Empty": 2,
+    "CurtainPanel.Glass": 51,
+    "CurtainPanel.Solid": 6,
+    "CurtainPanel.Window": 6,
+    "DetailLevel.Coarse": 29,
+    "DetailLevel.Fine": 1,
+    "DetailLevel.Medium": 1,
+    "DimensionUnit.Centimetre": 1,
+    "DimensionUnit.Metre": 4,
+    "DimensionUnit.Millimetre": 1,
+    "DoorLeaves.Double": 2,
+    "DoorLeaves.Single": 4,
+    "EndJoin.Butt": 2,
+    "EndJoin.Miter": 78,
+    "EndJoin.None": 2,
+    "FamilyCategory.Casework": 1,
+    "FamilyCategory.Electrical": 1,
+    "FamilyCategory.Equipment": 1,
+    "FamilyCategory.Furniture": 2,
+    "FamilyCategory.Generic": 1,
+    "FamilyCategory.Lighting": 1,
+    "FamilyCategory.Mechanical": 1,
+    "FamilyCategory.Plumbing": 1,
+    "FamilyCategory.Profile": 1,
+    "HostSide.Left": 68,
+    "HostSide.Right": 1,
+    "Infill.Glass": 4,
+    "Infill.None": 62,
+    "Infill.Panel": 4,
+    "IsoSize.A0": 5,
+    "IsoSize.A1": 1,
+    "IsoSize.A2": 1,
+    "IsoSize.A3": 1,
+    "IsoSize.A4": 1,
+    "LayerFunction.Core": 7,
+    "LayerFunction.Finish": 7,
+    "LayerFunction.Insulation": 7,
+    "LayerFunction.Membrane": 7,
+    "LayerFunction.Structure": 14,
+    "LayerFunction.Substrate": 7,
+    "LocationLine.Center": 36,
+    "LocationLine.CoreCenter": 2,
+    "LocationLine.Exterior": 2,
+    "LocationLine.Interior": 2,
+    "MaterialCategory.Concrete": 4,
+    "MaterialCategory.Finish": 2,
+    "MaterialCategory.Glass": 2,
+    "MaterialCategory.Insulation": 2,
+    "MaterialCategory.Masonry": 2,
+    "MaterialCategory.Membrane": 2,
+    "MaterialCategory.Metal": 2,
+    "MaterialCategory.Other": 2,
+    "MaterialCategory.Wood": 2,
+    "OpeningKind.Door": 4,
+    "OpeningKind.Void": 4,
+    "OpeningKind.Window": 5,
+    "Orientation.Landscape": 11,
+    "Orientation.Portrait": 1,
+    "Paper.Custom": 3,
+    "Paper.Iso": 9,
+    "ParameterKind.Angle": 1,
+    "ParameterKind.Boolean": 1,
+    "ParameterKind.Integer": 1,
+    "ParameterKind.Length": 2,
+    "ParameterKind.Material": 1,
+    "ParameterKind.Real": 1,
+    "ParameterKind.Text": 1,
+    "ParametricProfile.Circle": 9,
+    "ParametricProfile.IShape": 9,
+    "ParametricProfile.Polygon": 15,
+    "ParametricProfile.Rectangle": 21,
+    "Phase.Demolished": 12,
+    "Phase.Existing": 480,
+    "Phase.New": 12,
+    "Phase.Temporary": 12,
+    "Profile.Circle": 29,
+    "Profile.Custom": 53,
+    "Profile.Family": 24,
+    "Profile.IShape": 29,
+    "Profile.Rectangle": 258,
+    "PropertyKind.Angle": 1,
+    "PropertyKind.Area": 1,
+    "PropertyKind.Boolean": 1,
+    "PropertyKind.Integer": 1,
+    "PropertyKind.Length": 1,
+    "PropertyKind.Real": 1,
+    "PropertyKind.Text": 75,
+    "PropertyKind.Volume": 1,
+    "PropertyValue.Angle": 7,
+    "PropertyValue.Area": 7,
+    "PropertyValue.Boolean": 7,
+    "PropertyValue.Integer": 7,
+    "PropertyValue.Length": 7,
+    "PropertyValue.Real": 7,
+    "PropertyValue.Text": 120,
+    "PropertyValue.Volume": 7,
+    "RiserKind.Closed": 3,
+    "RiserKind.Open": 40,
+    "RoofShape.Flat": 9,
+    "RoofShape.Gable": 4,
+    "RoofShape.Hip": 4,
+    "RoofShape.Mansard": 4,
+    "RoofShape.Shed": 4,
+    "ScheduleCategory.Beam": 1,
+    "ScheduleCategory.Column": 1,
+    "ScheduleCategory.CurtainWall": 1,
+    "ScheduleCategory.Door": 1,
+    "ScheduleCategory.Finish": 1,
+    "ScheduleCategory.Material": 1,
+    "ScheduleCategory.Railing": 1,
+    "ScheduleCategory.Roof": 1,
+    "ScheduleCategory.Slab": 1,
+    "ScheduleCategory.Space": 1,
+    "ScheduleCategory.Stair": 1,
+    "ScheduleCategory.Void": 1,
+    "ScheduleCategory.Wall": 179,
+    "ScheduleCategory.Window": 1,
+    "ScheduleField.Count": 4,
+    "ScheduleField.FinishArea": 4,
+    "ScheduleField.GrossArea": 4,
+    "ScheduleField.GrossSideArea": 4,
+    "ScheduleField.GrossVolume": 4,
+    "ScheduleField.Height": 4,
+    "ScheduleField.Host": 4,
+    "ScheduleField.Id": 612,
+    "ScheduleField.Kind": 4,
+    "ScheduleField.LayerArea": 4,
+    "ScheduleField.LayerMass": 4,
+    "ScheduleField.LayerVolume": 4,
+    "ScheduleField.Leaves": 4,
+    "ScheduleField.Length": 4,
+    "ScheduleField.Level": 4,
+    "ScheduleField.Mass": 4,
+    "ScheduleField.Material": 4,
+    "ScheduleField.Name": 4,
+    "ScheduleField.NetArea": 4,
+    "ScheduleField.NetSideArea": 4,
+    "ScheduleField.NetVolume": 4,
+    "ScheduleField.Number": 4,
+    "ScheduleField.OpeningArea": 4,
+    "ScheduleField.Panes": 4,
+    "ScheduleField.Perimeter": 4,
+    "ScheduleField.Phase": 4,
+    "ScheduleField.Risers": 4,
+    "ScheduleField.Storey": 4,
+    "ScheduleField.Surface": 4,
+    "ScheduleField.SurfaceArea": 4,
+    "ScheduleField.Swing": 4,
+    "ScheduleField.Thickness": 4,
+    "ScheduleField.Type": 4,
+    "ScheduleField.Usage": 4,
+    "ScheduleField.Width": 4,
+    "ScheduleKey.Field": 748,
+    "ScheduleKey.Property": 12,
+    "ScheduleOp.Contains": 1,
+    "ScheduleOp.Empty": 1,
+    "ScheduleOp.Equals": 182,
+    "ScheduleOp.Greater": 1,
+    "ScheduleOp.GreaterOrEqual": 1,
+    "ScheduleOp.Less": 1,
+    "ScheduleOp.LessOrEqual": 1,
+    "ScheduleOp.NotEmpty": 1,
+    "ScheduleOp.NotEquals": 1,
+    "SolidAxis.X": 16,
+    "SolidAxis.Y": 1,
+    "SolidAxis.Z": 1,
+    "SolidShape.Cuboid": 3,
+    "SolidShape.Extrusion": 18,
+    "SolidShape.Revolution": 18,
+    "SolidShape.Sweep": 18,
+    "SpaceBoundary.Bounded": 9,
+    "SpaceBoundary.Explicit": 8,
+    "StairFlight.LTurn": 6,
+    "StairFlight.Spiral": 4,
+    "StairFlight.Straight": 29,
+    "StairFlight.UTurn": 4,
+    "StringerKind.Closed": 2,
+    "StringerKind.Mono": 2,
+    "StringerKind.None": 37,
+    "StringerKind.Open": 2,
+    "Swing.Left": 4,
+    "Swing.Right": 2,
+    "TagCategory.Name": 3,
+    "TagCategory.Number": 1,
+    "TagCategory.Size": 1,
+    "TagCategory.Type": 1,
+    "TemplateTarget.Beam": 1,
+    "TemplateTarget.BeamType": 1,
+    "TemplateTarget.Building": 1,
+    "TemplateTarget.Ceiling": 1,
+    "TemplateTarget.CeilingType": 1,
+    "TemplateTarget.Column": 1,
+    "TemplateTarget.ColumnType": 1,
+    "TemplateTarget.CurtainWall": 1,
+    "TemplateTarget.Door": 1,
+    "TemplateTarget.DoorType": 1,
+    "TemplateTarget.Railing": 1,
+    "TemplateTarget.Ramp": 1,
+    "TemplateTarget.Roof": 1,
+    "TemplateTarget.RoofType": 1,
+    "TemplateTarget.Site": 57,
+    "TemplateTarget.Slab": 1,
+    "TemplateTarget.SlabType": 1,
+    "TemplateTarget.Space": 1,
+    "TemplateTarget.Stair": 1,
+    "TemplateTarget.Storey": 1,
+    "TemplateTarget.Void": 1,
+    "TemplateTarget.Wall": 1,
+    "TemplateTarget.WallType": 1,
+    "TemplateTarget.Window": 1,
+    "TemplateTarget.WindowType": 1,
+    "TemplateTarget.Zone": 1,
+    "Terminator.Arrow": 1,
+    "Terminator.Dot": 1,
+    "Terminator.Tick": 4,
+    "TopConstraint.Ceiling": 15,
+    "TopConstraint.Roof": 15,
+    "TopConstraint.Slab": 15,
+    "TopConstraint.Storey": 23,
+    "TopConstraint.StoreyTop": 16,
+    "TopConstraint.Unconnected": 92,
+    "Turn.Left": 4,
+    "Turn.Right": 2,
+    "ViewCategory.Beams": 1,
+    "ViewCategory.Columns": 1,
+    "ViewCategory.CurtainWalls": 1,
+    "ViewCategory.Grids": 1,
+    "ViewCategory.Openings": 1,
+    "ViewCategory.Railings": 1,
+    "ViewCategory.Roofs": 1,
+    "ViewCategory.Slabs": 1,
+    "ViewCategory.Spaces": 1,
+    "ViewCategory.Stairs": 1,
+    "ViewCategory.Walls": 19,
+    "ViewKind.CeilingPlan": 1,
+    "ViewKind.Elevation": 1,
+    "ViewKind.Orthographic": 1,
+    "ViewKind.Perspective": 1,
+    "ViewKind.Plan": 26,
+    "ViewKind.Section": 1,
+    "WallSide.Left": 26,
+    "WallSide.Right": 3
+  },
+  "scalarRoleCounts": {
+    "model/annotation_styles/entry/gap": 6,
+    "model/annotation_styles/entry/mark_size": 6,
+    "model/annotation_styles/entry/name": 6,
+    "model/annotation_styles/entry/overshoot": 6,
+    "model/annotation_styles/entry/precision": 6,
+    "model/annotation_styles/entry/terminator": 6,
+    "model/annotation_styles/entry/text_height": 6,
+    "model/annotation_styles/entry/unit": 6,
+    "model/area_schemes/entry/measure": 5,
+    "model/area_schemes/entry/name": 5,
+    "model/area_schemes/entry/usages/item": 3,
+    "model/area_schemes/entry/zones/item": 3,
+    "model/beam_types/entry/material": 23,
+    "model/beam_types/entry/name": 23,
+    "model/beam_types/entry/profile/Circle/diameter": 4,
+    "model/beam_types/entry/profile/Custom/outline/item/bulge": 8,
+    "model/beam_types/entry/profile/Custom/outline/item/point/x": 8,
+    "model/beam_types/entry/profile/Custom/outline/item/point/y": 8,
+    "model/beam_types/entry/profile/Family/family": 3,
+    "model/beam_types/entry/profile/IShape/depth": 4,
+    "model/beam_types/entry/profile/IShape/flange": 4,
+    "model/beam_types/entry/profile/IShape/web": 4,
+    "model/beam_types/entry/profile/IShape/width": 4,
+    "model/beam_types/entry/profile/Rectangle/depth": 5,
+    "model/beam_types/entry/profile/Rectangle/width": 5,
+    "model/beams/entry/axis/Arc/bulge": 5,
+    "model/beams/entry/axis/Arc/end/x": 5,
+    "model/beams/entry/axis/Arc/end/y": 5,
+    "model/beams/entry/axis/Arc/start/x": 5,
+    "model/beams/entry/axis/Arc/start/y": 5,
+    "model/beams/entry/axis/Line/end/x": 10,
+    "model/beams/entry/axis/Line/end/y": 10,
+    "model/beams/entry/axis/Line/start/x": 10,
+    "model/beams/entry/axis/Line/start/y": 10,
+    "model/beams/entry/beam_type": 15,
+    "model/beams/entry/end_top_offset": 14,
+    "model/beams/entry/name": 15,
+    "model/beams/entry/phase": 15,
+    "model/beams/entry/storey": 15,
+    "model/beams/entry/top_offset": 15,
+    "model/buildings/entry/elevation": 4,
+    "model/buildings/entry/name": 4,
+    "model/buildings/entry/origin/x": 4,
+    "model/buildings/entry/origin/y": 4,
+    "model/buildings/entry/rotation": 4,
+    "model/buildings/entry/site": 4,
+    "model/ceiling_types/entry/layers/item/function": 7,
+    "model/ceiling_types/entry/layers/item/material": 7,
+    "model/ceiling_types/entry/layers/item/thickness": 7,
+    "model/ceiling_types/entry/name": 9,
+    "model/ceilings/entry/boundary/item/bulge": 8,
+    "model/ceilings/entry/boundary/item/point/x": 8,
+    "model/ceilings/entry/boundary/item/point/y": 8,
+    "model/ceilings/entry/ceiling_type": 10,
+    "model/ceilings/entry/holes/item/item/bulge": 7,
+    "model/ceilings/entry/holes/item/item/point/x": 7,
+    "model/ceilings/entry/holes/item/item/point/y": 7,
+    "model/ceilings/entry/name": 10,
+    "model/ceilings/entry/offset": 10,
+    "model/ceilings/entry/slope/angle": 9,
+    "model/ceilings/entry/slope/direction": 9,
+    "model/ceilings/entry/storey": 10,
+    "model/classification_systems/entry/edition": 4,
+    "model/classification_systems/entry/entries/item/code": 2,
+    "model/classification_systems/entry/entries/item/parent": 1,
+    "model/classification_systems/entry/entries/item/title": 2,
+    "model/classification_systems/entry/name": 4,
+    "model/classification_systems/entry/source": 3,
+    "model/classifications/entry/entry": 3,
+    "model/column_types/entry/material": 23,
+    "model/column_types/entry/name": 23,
+    "model/column_types/entry/profile/Circle/diameter": 4,
+    "model/column_types/entry/profile/Custom/outline/item/bulge": 8,
+    "model/column_types/entry/profile/Custom/outline/item/point/x": 8,
+    "model/column_types/entry/profile/Custom/outline/item/point/y": 8,
+    "model/column_types/entry/profile/Family/family": 3,
+    "model/column_types/entry/profile/IShape/depth": 4,
+    "model/column_types/entry/profile/IShape/flange": 4,
+    "model/column_types/entry/profile/IShape/web": 4,
+    "model/column_types/entry/profile/IShape/width": 4,
+    "model/column_types/entry/profile/Rectangle/depth": 5,
+    "model/column_types/entry/profile/Rectangle/width": 5,
+    "model/columns/entry/base_offset": 25,
+    "model/columns/entry/column_type": 25,
+    "model/columns/entry/name": 25,
+    "model/columns/entry/phase": 25,
+    "model/columns/entry/position/x": 25,
+    "model/columns/entry/position/y": 25,
+    "model/columns/entry/rotation": 25,
+    "model/columns/entry/storey": 25,
+    "model/columns/entry/tilt/angle": 24,
+    "model/columns/entry/tilt/direction": 24,
+    "model/columns/entry/top/Ceiling/ceiling": 3,
+    "model/columns/entry/top/Ceiling/offset": 3,
+    "model/columns/entry/top/Roof/offset": 3,
+    "model/columns/entry/top/Roof/roof": 3,
+    "model/columns/entry/top/Slab/offset": 3,
+    "model/columns/entry/top/Slab/slab": 3,
+    "model/columns/entry/top/Storey/offset": 4,
+    "model/columns/entry/top/Storey/storey": 4,
+    "model/columns/entry/top/StoreyTop/offset": 3,
+    "model/columns/entry/top/Unconnected/height": 9,
+    "model/curtain_panel_overrides/entry/curtain": 12,
+    "model/curtain_panel_overrides/entry/panel": 3,
+    "model/curtain_panel_overrides/entry/panel/Door/door_type": 3,
+    "model/curtain_panel_overrides/entry/panel/Solid/material": 3,
+    "model/curtain_panel_overrides/entry/panel/Window/window_type": 3,
+    "model/curtain_panel_overrides/entry/u": 12,
+    "model/curtain_panel_overrides/entry/v": 12,
+    "model/curtain_wall_types/entry/border_mullion/Circle/diameter": 3,
+    "model/curtain_wall_types/entry/border_mullion/Custom/outline/item/bulge": 4,
+    "model/curtain_wall_types/entry/border_mullion/Custom/outline/item/point/x": 4,
+    "model/curtain_wall_types/entry/border_mullion/Custom/outline/item/point/y": 4,
+    "model/curtain_wall_types/entry/border_mullion/Family/family": 3,
+    "model/curtain_wall_types/entry/border_mullion/IShape/depth": 4,
+    "model/curtain_wall_types/entry/border_mullion/IShape/flange": 4,
+    "model/curtain_wall_types/entry/border_mullion/IShape/web": 4,
+    "model/curtain_wall_types/entry/border_mullion/IShape/width": 4,
+    "model/curtain_wall_types/entry/border_mullion/Rectangle/depth": 43,
+    "model/curtain_wall_types/entry/border_mullion/Rectangle/width": 43,
+    "model/curtain_wall_types/entry/interior_mullion/Circle/diameter": 3,
+    "model/curtain_wall_types/entry/interior_mullion/Custom/outline/item/bulge": 4,
+    "model/curtain_wall_types/entry/interior_mullion/Custom/outline/item/point/x": 4,
+    "model/curtain_wall_types/entry/interior_mullion/Custom/outline/item/point/y": 4,
+    "model/curtain_wall_types/entry/interior_mullion/Family/family": 3,
+    "model/curtain_wall_types/entry/interior_mullion/IShape/depth": 4,
+    "model/curtain_wall_types/entry/interior_mullion/IShape/flange": 4,
+    "model/curtain_wall_types/entry/interior_mullion/IShape/web": 4,
+    "model/curtain_wall_types/entry/interior_mullion/IShape/width": 4,
+    "model/curtain_wall_types/entry/interior_mullion/Rectangle/depth": 43,
+    "model/curtain_wall_types/entry/interior_mullion/Rectangle/width": 43,
+    "model/curtain_wall_types/entry/mullion_material": 59,
+    "model/curtain_wall_types/entry/name": 59,
+    "model/curtain_wall_types/entry/panel": 50,
+    "model/curtain_wall_types/entry/panel/Door/door_type": 3,
+    "model/curtain_wall_types/entry/panel/Solid/material": 3,
+    "model/curtain_wall_types/entry/panel/Window/window_type": 3,
+    "model/curtain_wall_types/entry/panel_material": 59,
+    "model/curtain_wall_types/entry/u_grid/Lines/positions/item": 2,
+    "model/curtain_wall_types/entry/u_grid/Spacing/spacing": 55,
+    "model/curtain_wall_types/entry/v_grid/Lines/positions/item": 2,
+    "model/curtain_wall_types/entry/v_grid/Spacing/spacing": 55,
+    "model/curtain_walls/entry/axis/Arc/bulge": 6,
+    "model/curtain_walls/entry/axis/Arc/end/x": 6,
+    "model/curtain_walls/entry/axis/Arc/end/y": 6,
+    "model/curtain_walls/entry/axis/Arc/start/x": 6,
+    "model/curtain_walls/entry/axis/Arc/start/y": 6,
+    "model/curtain_walls/entry/axis/Line/end/x": 38,
+    "model/curtain_walls/entry/axis/Line/end/y": 38,
+    "model/curtain_walls/entry/axis/Line/start/x": 38,
+    "model/curtain_walls/entry/axis/Line/start/y": 38,
+    "model/curtain_walls/entry/base_offset": 44,
+    "model/curtain_walls/entry/curtain_wall_type": 44,
+    "model/curtain_walls/entry/name": 44,
+    "model/curtain_walls/entry/phase": 44,
+    "model/curtain_walls/entry/storey": 44,
+    "model/curtain_walls/entry/top/Ceiling/ceiling": 3,
+    "model/curtain_walls/entry/top/Ceiling/offset": 3,
+    "model/curtain_walls/entry/top/Roof/offset": 3,
+    "model/curtain_walls/entry/top/Roof/roof": 3,
+    "model/curtain_walls/entry/top/Slab/offset": 3,
+    "model/curtain_walls/entry/top/Slab/slab": 3,
+    "model/curtain_walls/entry/top/Storey/offset": 4,
+    "model/curtain_walls/entry/top/Storey/storey": 4,
+    "model/curtain_walls/entry/top/StoreyTop/offset": 3,
+    "model/curtain_walls/entry/top/Unconnected/height": 28,
+    "model/curtain_walls/entry/u_grid/Lines/positions/item": 2,
+    "model/curtain_walls/entry/u_grid/Spacing/spacing": 39,
+    "model/curtain_walls/entry/v_grid/Lines/positions/item": 2,
+    "model/curtain_walls/entry/v_grid/Spacing/spacing": 39,
+    "model/dimensions/entry/anchors/item/ColumnCentre/column": 4,
+    "model/dimensions/entry/anchors/item/Grid/grid": 4,
+    "model/dimensions/entry/anchors/item/OpeningCentre/opening": 4,
+    "model/dimensions/entry/anchors/item/Point/point/x": 5,
+    "model/dimensions/entry/anchors/item/Point/point/y": 5,
+    "model/dimensions/entry/anchors/item/WallAxis/wall": 4,
+    "model/dimensions/entry/anchors/item/WallEnd/end": 5,
+    "model/dimensions/entry/anchors/item/WallEnd/wall": 5,
+    "model/dimensions/entry/anchors/item/WallFace/side": 5,
+    "model/dimensions/entry/anchors/item/WallFace/wall": 5,
+    "model/dimensions/entry/angle": 27,
+    "model/dimensions/entry/lock": 26,
+    "model/dimensions/entry/name": 27,
+    "model/dimensions/entry/offset": 27,
+    "model/dimensions/entry/storey": 27,
+    "model/dimensions/entry/style": 27,
+    "model/door_types/entry/frame_depth": 6,
+    "model/door_types/entry/frame_width": 6,
+    "model/door_types/entry/height": 6,
+    "model/door_types/entry/leaves": 6,
+    "model/door_types/entry/material": 6,
+    "model/door_types/entry/name": 6,
+    "model/door_types/entry/swing": 6,
+    "model/door_types/entry/width": 6,
+    "model/families/entry/category": 10,
+    "model/families/entry/name": 10,
+    "model/family_parameters/entry/family": 8,
+    "model/family_parameters/entry/kind": 8,
+    "model/family_parameters/entry/name": 8,
+    "model/family_parameters/entry/value": 8,
+    "model/family_solids/entry/family": 57,
+    "model/family_solids/entry/material": 57,
+    "model/family_solids/entry/name": 57,
+    "model/family_solids/entry/offset/x": 57,
+    "model/family_solids/entry/offset/y": 57,
+    "model/family_solids/entry/offset/z": 57,
+    "model/family_solids/entry/shape/Cuboid/depth": 3,
+    "model/family_solids/entry/shape/Cuboid/height": 3,
+    "model/family_solids/entry/shape/Cuboid/width": 3,
+    "model/family_solids/entry/shape/Cuboid/x": 3,
+    "model/family_solids/entry/shape/Cuboid/y": 3,
+    "model/family_solids/entry/shape/Cuboid/z": 3,
+    "model/family_solids/entry/shape/Extrusion/base": 18,
+    "model/family_solids/entry/shape/Extrusion/height": 18,
+    "model/family_solids/entry/shape/Extrusion/profile/Circle/diameter": 3,
+    "model/family_solids/entry/shape/Extrusion/profile/IShape/depth": 3,
+    "model/family_solids/entry/shape/Extrusion/profile/IShape/flange": 3,
+    "model/family_solids/entry/shape/Extrusion/profile/IShape/web": 3,
+    "model/family_solids/entry/shape/Extrusion/profile/IShape/width": 3,
+    "model/family_solids/entry/shape/Extrusion/profile/Polygon/points/item/x": 3,
+    "model/family_solids/entry/shape/Extrusion/profile/Polygon/points/item/y": 3,
+    "model/family_solids/entry/shape/Extrusion/profile/Rectangle/depth": 7,
+    "model/family_solids/entry/shape/Extrusion/profile/Rectangle/width": 7,
+    "model/family_solids/entry/shape/Revolution/angle": 18,
+    "model/family_solids/entry/shape/Revolution/axis": 18,
+    "model/family_solids/entry/shape/Revolution/profile/Circle/diameter": 3,
+    "model/family_solids/entry/shape/Revolution/profile/IShape/depth": 3,
+    "model/family_solids/entry/shape/Revolution/profile/IShape/flange": 3,
+    "model/family_solids/entry/shape/Revolution/profile/IShape/web": 3,
+    "model/family_solids/entry/shape/Revolution/profile/IShape/width": 3,
+    "model/family_solids/entry/shape/Revolution/profile/Polygon/points/item/x": 3,
+    "model/family_solids/entry/shape/Revolution/profile/Polygon/points/item/y": 3,
+    "model/family_solids/entry/shape/Revolution/profile/Rectangle/depth": 7,
+    "model/family_solids/entry/shape/Revolution/profile/Rectangle/width": 7,
+    "model/family_solids/entry/shape/Sweep/path/item/x": 16,
+    "model/family_solids/entry/shape/Sweep/path/item/y": 16,
+    "model/family_solids/entry/shape/Sweep/profile/Circle/diameter": 3,
+    "model/family_solids/entry/shape/Sweep/profile/IShape/depth": 3,
+    "model/family_solids/entry/shape/Sweep/profile/IShape/flange": 3,
+    "model/family_solids/entry/shape/Sweep/profile/IShape/web": 3,
+    "model/family_solids/entry/shape/Sweep/profile/IShape/width": 3,
+    "model/family_solids/entry/shape/Sweep/profile/Polygon/points/item/x": 3,
+    "model/family_solids/entry/shape/Sweep/profile/Polygon/points/item/y": 3,
+    "model/family_solids/entry/shape/Sweep/profile/Rectangle/depth": 7,
+    "model/family_solids/entry/shape/Sweep/profile/Rectangle/width": 7,
+    "model/family_solids/entry/visible": 57,
+    "model/grids/entry/building": 5,
+    "model/grids/entry/end/x": 5,
+    "model/grids/entry/end/y": 5,
+    "model/grids/entry/label": 5,
+    "model/grids/entry/start/x": 5,
+    "model/grids/entry/start/y": 5,
+    "model/leaders/entry/anchor/ColumnCentre/column": 3,
+    "model/leaders/entry/anchor/Grid/grid": 3,
+    "model/leaders/entry/anchor/OpeningCentre/opening": 3,
+    "model/leaders/entry/anchor/Point/point/x": 6,
+    "model/leaders/entry/anchor/Point/point/y": 6,
+    "model/leaders/entry/anchor/WallAxis/wall": 3,
+    "model/leaders/entry/anchor/WallEnd/end": 4,
+    "model/leaders/entry/anchor/WallEnd/wall": 4,
+    "model/leaders/entry/anchor/WallFace/side": 4,
+    "model/leaders/entry/anchor/WallFace/wall": 4,
+    "model/leaders/entry/offset/x": 26,
+    "model/leaders/entry/offset/y": 26,
+    "model/leaders/entry/storey": 26,
+    "model/leaders/entry/style": 26,
+    "model/leaders/entry/text": 26,
+    "model/materials/entry/category": 20,
+    "model/materials/entry/color/b": 20,
+    "model/materials/entry/color/g": 20,
+    "model/materials/entry/color/r": 20,
+    "model/materials/entry/conductivity": 20,
+    "model/materials/entry/density": 20,
+    "model/materials/entry/name": 20,
+    "model/materials/entry/specific_heat": 20,
+    "model/openings/entry/flip_facing": 13,
+    "model/openings/entry/flip_hand": 13,
+    "model/openings/entry/height": 12,
+    "model/openings/entry/host": 13,
+    "model/openings/entry/kind/Door/door_type": 4,
+    "model/openings/entry/kind/Void/height": 4,
+    "model/openings/entry/kind/Void/width": 4,
+    "model/openings/entry/kind/Window/window_type": 5,
+    "model/openings/entry/name": 13,
+    "model/openings/entry/offset": 13,
+    "model/openings/entry/reveal_depth": 12,
+    "model/openings/entry/reveal_material": 12,
+    "model/openings/entry/sill_override": 12,
+    "model/openings/entry/width": 12,
+    "model/project/author": 1,
+    "model/project/description": 1,
+    "model/project/name": 1,
+    "model/project/organization": 1,
+    "model/project/phase_names/item": 2,
+    "model/properties/entry/entry/entry/Angle/value": 1,
+    "model/properties/entry/entry/entry/Area/value": 1,
+    "model/properties/entry/entry/entry/Boolean/value": 1,
+    "model/properties/entry/entry/entry/Integer/value": 1,
+    "model/properties/entry/entry/entry/Length/value": 1,
+    "model/properties/entry/entry/entry/Real/value": 1,
+    "model/properties/entry/entry/entry/Text/value": 1,
+    "model/properties/entry/entry/entry/Volume/value": 1,
+    "model/property_templates/entry/applies_to/item": 82,
+    "model/property_templates/entry/name": 84,
+    "model/property_templates/entry/properties/item/allowed/item/Angle/value": 3,
+    "model/property_templates/entry/properties/item/allowed/item/Area/value": 3,
+    "model/property_templates/entry/properties/item/allowed/item/Boolean/value": 3,
+    "model/property_templates/entry/properties/item/allowed/item/Integer/value": 3,
+    "model/property_templates/entry/properties/item/allowed/item/Length/value": 3,
+    "model/property_templates/entry/properties/item/allowed/item/Real/value": 3,
+    "model/property_templates/entry/properties/item/allowed/item/Text/value": 59,
+    "model/property_templates/entry/properties/item/allowed/item/Volume/value": 3,
+    "model/property_templates/entry/properties/item/default_value/Angle/value": 3,
+    "model/property_templates/entry/properties/item/default_value/Area/value": 3,
+    "model/property_templates/entry/properties/item/default_value/Boolean/value": 3,
+    "model/property_templates/entry/properties/item/default_value/Integer/value": 3,
+    "model/property_templates/entry/properties/item/default_value/Length/value": 3,
+    "model/property_templates/entry/properties/item/default_value/Real/value": 3,
+    "model/property_templates/entry/properties/item/default_value/Text/value": 60,
+    "model/property_templates/entry/properties/item/default_value/Volume/value": 3,
+    "model/property_templates/entry/properties/item/description": 81,
+    "model/property_templates/entry/properties/item/kind": 82,
+    "model/property_templates/entry/properties/item/maximum": 81,
+    "model/property_templates/entry/properties/item/minimum": 81,
+    "model/property_templates/entry/properties/item/name": 82,
+    "model/property_templates/entry/properties/item/required": 82,
+    "model/property_templates/entry/properties/item/unit": 81,
+    "model/railings/entry/baluster/profile/Circle/diameter": 5,
+    "model/railings/entry/baluster/profile/Custom/outline/item/bulge": 4,
+    "model/railings/entry/baluster/profile/Custom/outline/item/point/x": 4,
+    "model/railings/entry/baluster/profile/Custom/outline/item/point/y": 4,
+    "model/railings/entry/baluster/profile/Family/family": 3,
+    "model/railings/entry/baluster/profile/IShape/depth": 3,
+    "model/railings/entry/baluster/profile/IShape/flange": 3,
+    "model/railings/entry/baluster/profile/IShape/web": 3,
+    "model/railings/entry/baluster/profile/IShape/width": 3,
+    "model/railings/entry/baluster/profile/Rectangle/depth": 52,
+    "model/railings/entry/baluster/profile/Rectangle/width": 52,
+    "model/railings/entry/baluster/spacing": 69,
+    "model/railings/entry/base_offset": 70,
+    "model/railings/entry/height": 70,
+    "model/railings/entry/host/edge": 69,
+    "model/railings/entry/host/element": 69,
+    "model/railings/entry/host/inset": 69,
+    "model/railings/entry/host/side": 69,
+    "model/railings/entry/infill": 62,
+    "model/railings/entry/infill/Glass/thickness": 4,
+    "model/railings/entry/infill/Panel/thickness": 4,
+    "model/railings/entry/material": 70,
+    "model/railings/entry/name": 70,
+    "model/railings/entry/path/item/x": 71,
+    "model/railings/entry/path/item/y": 71,
+    "model/railings/entry/phase": 70,
+    "model/railings/entry/post_profile/Circle/diameter": 3,
+    "model/railings/entry/post_profile/Custom/outline/item/bulge": 16,
+    "model/railings/entry/post_profile/Custom/outline/item/point/x": 16,
+    "model/railings/entry/post_profile/Custom/outline/item/point/y": 16,
+    "model/railings/entry/post_profile/Family/family": 3,
+    "model/railings/entry/post_profile/IShape/depth": 3,
+    "model/railings/entry/post_profile/IShape/flange": 3,
+    "model/railings/entry/post_profile/IShape/web": 3,
+    "model/railings/entry/post_profile/IShape/width": 3,
+    "model/railings/entry/post_profile/Rectangle/depth": 52,
+    "model/railings/entry/post_profile/Rectangle/width": 52,
+    "model/railings/entry/post_spacing": 70,
+    "model/railings/entry/profile/Circle/diameter": 4,
+    "model/railings/entry/profile/Custom/outline/item/bulge": 4,
+    "model/railings/entry/profile/Custom/outline/item/point/x": 4,
+    "model/railings/entry/profile/Custom/outline/item/point/y": 4,
+    "model/railings/entry/profile/Family/family": 3,
+    "model/railings/entry/profile/IShape/depth": 4,
+    "model/railings/entry/profile/IShape/flange": 4,
+    "model/railings/entry/profile/IShape/web": 4,
+    "model/railings/entry/profile/IShape/width": 4,
+    "model/railings/entry/profile/Rectangle/depth": 53,
+    "model/railings/entry/profile/Rectangle/width": 53,
+    "model/railings/entry/storey": 70,
+    "model/ramps/entry/base_offset": 22,
+    "model/ramps/entry/landing_end": 22,
+    "model/ramps/entry/landing_start": 22,
+    "model/ramps/entry/landing_turn": 22,
+    "model/ramps/entry/material": 22,
+    "model/ramps/entry/max_slope": 22,
+    "model/ramps/entry/name": 22,
+    "model/ramps/entry/path/item/bulge": 20,
+    "model/ramps/entry/path/item/point/x": 20,
+    "model/ramps/entry/path/item/point/y": 20,
+    "model/ramps/entry/railing_left": 22,
+    "model/ramps/entry/railing_right": 22,
+    "model/ramps/entry/storey": 22,
+    "model/ramps/entry/thickness": 22,
+    "model/ramps/entry/top/Ceiling/ceiling": 3,
+    "model/ramps/entry/top/Ceiling/offset": 3,
+    "model/ramps/entry/top/Roof/offset": 3,
+    "model/ramps/entry/top/Roof/roof": 3,
+    "model/ramps/entry/top/Slab/offset": 3,
+    "model/ramps/entry/top/Slab/slab": 3,
+    "model/ramps/entry/top/Storey/offset": 3,
+    "model/ramps/entry/top/Storey/storey": 3,
+    "model/ramps/entry/top/StoreyTop/offset": 3,
+    "model/ramps/entry/top/Unconnected/height": 7,
+    "model/ramps/entry/width": 22,
+    "model/roof_types/entry/layers/item/function": 14,
+    "model/roof_types/entry/layers/item/material": 14,
+    "model/roof_types/entry/layers/item/thickness": 14,
+    "model/roof_types/entry/name": 11,
+    "model/roofs/entry/base_offset": 25,
+    "model/roofs/entry/footprint/item/bulge": 38,
+    "model/roofs/entry/footprint/item/point/x": 38,
+    "model/roofs/entry/footprint/item/point/y": 38,
+    "model/roofs/entry/name": 25,
+    "model/roofs/entry/overhang": 25,
+    "model/roofs/entry/phase": 25,
+    "model/roofs/entry/roof_type": 25,
+    "model/roofs/entry/shape": 9,
+    "model/roofs/entry/shape/Gable/pitch": 4,
+    "model/roofs/entry/shape/Gable/ridge_direction": 4,
+    "model/roofs/entry/shape/Hip/pitch": 4,
+    "model/roofs/entry/shape/Mansard/break_height": 4,
+    "model/roofs/entry/shape/Mansard/lower_pitch": 4,
+    "model/roofs/entry/shape/Mansard/upper_pitch": 4,
+    "model/roofs/entry/shape/Shed/direction": 4,
+    "model/roofs/entry/shape/Shed/pitch": 4,
+    "model/roofs/entry/storey": 25,
+    "model/schedules/entry/category": 192,
+    "model/schedules/entry/columns/item/heading": 189,
+    "model/schedules/entry/columns/item/key/Field/field": 187,
+    "model/schedules/entry/columns/item/key/Property/name": 3,
+    "model/schedules/entry/columns/item/key/Property/set": 3,
+    "model/schedules/entry/columns/item/total": 190,
+    "model/schedules/entry/filter/item/key/Field/field": 187,
+    "model/schedules/entry/filter/item/key/Property/name": 3,
+    "model/schedules/entry/filter/item/key/Property/set": 3,
+    "model/schedules/entry/filter/item/op": 190,
+    "model/schedules/entry/filter/item/value": 190,
+    "model/schedules/entry/group/item/key/Field/field": 187,
+    "model/schedules/entry/group/item/key/Property/name": 3,
+    "model/schedules/entry/group/item/key/Property/set": 3,
+    "model/schedules/entry/itemize": 192,
+    "model/schedules/entry/name": 192,
+    "model/schedules/entry/phases/item": 190,
+    "model/schedules/entry/sort/item/descending": 190,
+    "model/schedules/entry/sort/item/key/Field/field": 187,
+    "model/schedules/entry/sort/item/key/Property/name": 3,
+    "model/schedules/entry/sort/item/key/Property/set": 3,
+    "model/schedules/entry/storeys/item": 190,
+    "model/schema": 1,
+    "model/sheet_revisions/entry/author": 2,
+    "model/sheet_revisions/entry/date": 2,
+    "model/sheet_revisions/entry/description": 2,
+    "model/sheet_revisions/entry/number": 2,
+    "model/sheet_revisions/entry/sheet": 2,
+    "model/sheets/entry/checked_by": 12,
+    "model/sheets/entry/date": 12,
+    "model/sheets/entry/drawn_by": 12,
+    "model/sheets/entry/name": 12,
+    "model/sheets/entry/number": 12,
+    "model/sheets/entry/orientation": 12,
+    "model/sheets/entry/paper/Custom/height": 3,
+    "model/sheets/entry/paper/Custom/width": 3,
+    "model/sheets/entry/paper/Iso/size": 9,
+    "model/sheets/entry/project": 12,
+    "model/sheets/entry/revision": 12,
+    "model/sheets/entry/scale_label": 12,
+    "model/sites/entry/boundary/item/x": 5,
+    "model/sites/entry/boundary/item/y": 5,
+    "model/sites/entry/elevation": 5,
+    "model/sites/entry/latitude": 5,
+    "model/sites/entry/longitude": 5,
+    "model/sites/entry/name": 5,
+    "model/sites/entry/true_north": 5,
+    "model/slab_types/entry/layers/item/function": 14,
+    "model/slab_types/entry/layers/item/material": 14,
+    "model/slab_types/entry/layers/item/thickness": 14,
+    "model/slab_types/entry/name": 11,
+    "model/slabs/entry/boundary/item/bulge": 16,
+    "model/slabs/entry/boundary/item/point/x": 16,
+    "model/slabs/entry/boundary/item/point/y": 16,
+    "model/slabs/entry/holes/item/item/bulge": 16,
+    "model/slabs/entry/holes/item/item/point/x": 16,
+    "model/slabs/entry/holes/item/item/point/y": 16,
+    "model/slabs/entry/name": 15,
+    "model/slabs/entry/offset": 15,
+    "model/slabs/entry/phase": 15,
+    "model/slabs/entry/slab_type": 15,
+    "model/slabs/entry/slope/angle": 14,
+    "model/slabs/entry/slope/direction": 14,
+    "model/slabs/entry/storey": 15,
+    "model/spaces/entry/boundary/Bounded/seed/x": 9,
+    "model/spaces/entry/boundary/Bounded/seed/y": 9,
+    "model/spaces/entry/boundary/Explicit/outline/item/bulge": 9,
+    "model/spaces/entry/boundary/Explicit/outline/item/point/x": 9,
+    "model/spaces/entry/boundary/Explicit/outline/item/point/y": 9,
+    "model/spaces/entry/ceiling_finish": 16,
+    "model/spaces/entry/floor_finish": 16,
+    "model/spaces/entry/name": 17,
+    "model/spaces/entry/number": 17,
+    "model/spaces/entry/phase": 17,
+    "model/spaces/entry/storey": 17,
+    "model/spaces/entry/usage": 17,
+    "model/spaces/entry/wall_finish": 16,
+    "model/spaces/entry/zone": 16,
+    "model/stairs/entry/direction": 43,
+    "model/stairs/entry/flight": 29,
+    "model/stairs/entry/flight/LTurn/split": 6,
+    "model/stairs/entry/flight/LTurn/turn": 6,
+    "model/stairs/entry/flight/Spiral/radius": 4,
+    "model/stairs/entry/flight/Spiral/sweep": 4,
+    "model/stairs/entry/flight/UTurn/gap": 4,
+    "model/stairs/entry/landing_depth": 43,
+    "model/stairs/entry/max_riser": 43,
+    "model/stairs/entry/min_tread": 43,
+    "model/stairs/entry/name": 43,
+    "model/stairs/entry/nosing": 43,
+    "model/stairs/entry/phase": 43,
+    "model/stairs/entry/riser": 43,
+    "model/stairs/entry/start/x": 43,
+    "model/stairs/entry/start/y": 43,
+    "model/stairs/entry/storey": 43,
+    "model/stairs/entry/stringer/depth": 43,
+    "model/stairs/entry/stringer/kind": 43,
+    "model/stairs/entry/stringer/width": 43,
+    "model/stairs/entry/top/Ceiling/ceiling": 3,
+    "model/stairs/entry/top/Ceiling/offset": 3,
+    "model/stairs/entry/top/Roof/offset": 3,
+    "model/stairs/entry/top/Roof/roof": 3,
+    "model/stairs/entry/top/Slab/offset": 3,
+    "model/stairs/entry/top/Slab/slab": 3,
+    "model/stairs/entry/top/Storey/offset": 8,
+    "model/stairs/entry/top/Storey/storey": 8,
+    "model/stairs/entry/top/StoreyTop/offset": 3,
+    "model/stairs/entry/top/Unconnected/height": 23,
+    "model/stairs/entry/tread_thickness": 43,
+    "model/stairs/entry/width": 43,
+    "model/storeys/entry/building": 4,
+    "model/storeys/entry/cut_height": 3,
+    "model/storeys/entry/height": 4,
+    "model/storeys/entry/level": 4,
+    "model/storeys/entry/name": 4,
+    "model/tags/entry/category": 6,
+    "model/tags/entry/element": 6,
+    "model/tags/entry/offset/x": 6,
+    "model/tags/entry/offset/y": 6,
+    "model/tags/entry/storey": 6,
+    "model/tags/entry/style": 6,
+    "model/text_notes/entry/position/x": 3,
+    "model/text_notes/entry/position/y": 3,
+    "model/text_notes/entry/rotation": 3,
+    "model/text_notes/entry/storey": 3,
+    "model/text_notes/entry/style": 3,
+    "model/text_notes/entry/text": 3,
+    "model/viewports/entry/crop/max/x": 5,
+    "model/viewports/entry/crop/max/y": 5,
+    "model/viewports/entry/crop/min/x": 5,
+    "model/viewports/entry/crop/min/y": 5,
+    "model/viewports/entry/label": 5,
+    "model/viewports/entry/position/x": 6,
+    "model/viewports/entry/position/y": 6,
+    "model/viewports/entry/scale": 6,
+    "model/viewports/entry/sheet": 6,
+    "model/viewports/entry/view": 6,
+    "model/views/entry/building": 31,
+    "model/views/entry/camera/azimuth": 30,
+    "model/views/entry/camera/distance": 30,
+    "model/views/entry/camera/pitch": 30,
+    "model/views/entry/camera/target/x": 30,
+    "model/views/entry/camera/target/y": 30,
+    "model/views/entry/camera/target_height": 30,
+    "model/views/entry/crop/max/x": 30,
+    "model/views/entry/crop/max/y": 30,
+    "model/views/entry/crop/min/x": 30,
+    "model/views/entry/crop/min/y": 30,
+    "model/views/entry/cut_height": 30,
+    "model/views/entry/depth": 31,
+    "model/views/entry/detail": 31,
+    "model/views/entry/hidden/item": 29,
+    "model/views/entry/kind": 31,
+    "model/views/entry/name": 31,
+    "model/views/entry/phase": 30,
+    "model/views/entry/plane/end/x": 30,
+    "model/views/entry/plane/end/y": 30,
+    "model/views/entry/plane/start/x": 30,
+    "model/views/entry/plane/start/y": 30,
+    "model/views/entry/scale": 31,
+    "model/views/entry/storey": 30,
+    "model/wall_sweeps/entry/height": 20,
+    "model/wall_sweeps/entry/host": 20,
+    "model/wall_sweeps/entry/inset": 20,
+    "model/wall_sweeps/entry/material": 20,
+    "model/wall_sweeps/entry/name": 20,
+    "model/wall_sweeps/entry/profile/Circle/diameter": 3,
+    "model/wall_sweeps/entry/profile/Custom/outline/item/bulge": 4,
+    "model/wall_sweeps/entry/profile/Custom/outline/item/point/x": 4,
+    "model/wall_sweeps/entry/profile/Custom/outline/item/point/y": 4,
+    "model/wall_sweeps/entry/profile/Family/family": 3,
+    "model/wall_sweeps/entry/profile/IShape/depth": 3,
+    "model/wall_sweeps/entry/profile/IShape/flange": 3,
+    "model/wall_sweeps/entry/profile/IShape/web": 3,
+    "model/wall_sweeps/entry/profile/IShape/width": 3,
+    "model/wall_sweeps/entry/profile/Rectangle/depth": 5,
+    "model/wall_sweeps/entry/profile/Rectangle/width": 5,
+    "model/wall_sweeps/entry/side": 20,
+    "model/wall_types/entry/layers/item/function": 14,
+    "model/wall_types/entry/layers/item/material": 14,
+    "model/wall_types/entry/layers/item/thickness": 14,
+    "model/wall_types/entry/name": 11,
+    "model/walls/entry/axis/Arc/bulge": 7,
+    "model/walls/entry/axis/Arc/end/x": 7,
+    "model/walls/entry/axis/Arc/end/y": 7,
+    "model/walls/entry/axis/Arc/start/x": 7,
+    "model/walls/entry/axis/Arc/start/y": 7,
+    "model/walls/entry/axis/Line/end/x": 35,
+    "model/walls/entry/axis/Line/end/y": 35,
+    "model/walls/entry/axis/Line/start/x": 35,
+    "model/walls/entry/axis/Line/start/y": 35,
+    "model/walls/entry/base_offset": 42,
+    "model/walls/entry/base_slab": 41,
+    "model/walls/entry/end_join": 41,
+    "model/walls/entry/location": 42,
+    "model/walls/entry/name": 42,
+    "model/walls/entry/phase": 42,
+    "model/walls/entry/start_join": 41,
+    "model/walls/entry/storey": 42,
+    "model/walls/entry/top/Ceiling/ceiling": 3,
+    "model/walls/entry/top/Ceiling/offset": 3,
+    "model/walls/entry/top/Roof/offset": 3,
+    "model/walls/entry/top/Roof/roof": 3,
+    "model/walls/entry/top/Slab/offset": 3,
+    "model/walls/entry/top/Slab/slab": 3,
+    "model/walls/entry/top/Storey/offset": 4,
+    "model/walls/entry/top/Storey/storey": 4,
+    "model/walls/entry/top/StoreyTop/offset": 4,
+    "model/walls/entry/top/Unconnected/height": 25,
+    "model/walls/entry/wall_type": 42,
+    "model/window_types/entry/frame_depth": 3,
+    "model/window_types/entry/frame_width": 3,
+    "model/window_types/entry/height": 3,
+    "model/window_types/entry/material": 3,
+    "model/window_types/entry/name": 3,
+    "model/window_types/entry/panes": 3,
+    "model/window_types/entry/sill": 3,
+    "model/window_types/entry/width": 3,
+    "model/zones/entry/category": 2,
+    "model/zones/entry/name": 2,
+    "model/zones/entry/occupancy_density": 2
+  },
+  "canonicalDefaultArrayChangeCount": 43
+}

@@ -125,6 +125,7 @@ struct UiWindow {
     layout_session: Option<semio_framework_job::MountedWorkerJobSession<MountedLayoutJob>>,
     layout_rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<MountedLayoutJob>>,
     layout_closing: bool,
+    layout_retirement_refusal: Option<UiWorkerRetirementRefusal>,
     layout_preview: Option<MountedLayoutResult>,
     glyph_preview: Option<RetainedGlyphPreview>,
     lane: SurfaceLane,
@@ -182,6 +183,7 @@ impl UiWindow {
             layout_session: None,
             layout_rejected: None,
             layout_closing: false,
+            layout_retirement_refusal: None,
             layout_preview: None,
             glyph_preview: None,
             lane: SurfaceLane::UserVisible,
@@ -489,7 +491,48 @@ enum UiSurfaceClosePhase {
 pub enum UiSurfaceCloseStep {
     Pending,
     RetiredScene(UiRetiredComponentScene),
+    Refused(UiWorkerRetirementRefusal),
     Complete,
+}
+
+/// 🚨️ Retains the original close owner while exposing the exact structural refusal.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UiWorkerRetirementRefusal { pub stage: &'static str, pub kind: semio_framework_value::ValueRefusalKind, pub progress:semio_framework_value::RetainedCloneProgress }
+
+fn close_layout_worker_session(session: &mut semio_framework_job::MountedWorkerJobSession<MountedLayoutJob>, grant: semio_framework_job::RetainedCloneGrant) -> Result<Option<semio_framework_value::RetainedCloneProgress>, semio_framework_value::ValueError> {
+    use semio_framework_job::{WorkerJobDemandError, WorkerJobCloseStep};
+    use semio_framework_value::ValueRefusalKind;
+    session.begin_close();
+    let demand = match session.retirement_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(WorkerJobDemandError::Contention(_)) => return Ok(None), Err(WorkerJobDemandError::Refused(error)) => return Err(error) };
+    if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(Some(Default::default())); }
+    let step = session.close_step(grant);
+    match step {
+        WorkerJobCloseStep::Pending { progress } if progress.fits(grant) => Ok(Some(progress)),
+        WorkerJobCloseStep::Complete { progress } if progress.fits(grant) && session.terminal_is_empty() => Ok(Some(progress)),
+        WorkerJobCloseStep::Blocked => Ok(None),
+        WorkerJobCloseStep::Refused { kind, progress } => Err(semio_framework_value::ValueError::literal(kind, "UI original worker retirement refused").with_retained_progress(progress)),
+        _ => Err(semio_framework_value::ValueError::literal(ValueRefusalKind::InvariantViolated, "UI original worker retirement receipt invariant violated").with_retained_progress(step.progress())),
+    }
+}
+
+fn close_layout_rejected_worker(rejected: &mut semio_framework_job::WorkerJobSessionAdmissionRejected<MountedLayoutJob>, grant: semio_framework_job::RetainedCloneGrant) -> Result<Option<semio_framework_value::RetainedCloneProgress>, semio_framework_value::ValueError> {
+    use semio_framework_job::InteractiveJobCloseStep;
+    use semio_framework_value::ValueRefusalKind;
+    let demand = rejected.retirement_demands(grant.maximum_copy_bytes)?;
+    if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(Some(Default::default())); }
+    let step = rejected.close_step(grant);
+    match step {
+        InteractiveJobCloseStep::Pending { progress } if progress.fits(grant) => Ok(Some(progress)),
+        InteractiveJobCloseStep::Complete { progress } if progress.fits(grant) && rejected.terminal_is_empty() => Ok(Some(progress)),
+        InteractiveJobCloseStep::Blocked => Ok(None),
+        InteractiveJobCloseStep::Refused { kind, progress } => Err(semio_framework_value::ValueError::literal(kind, "UI original rejected worker retirement refused").with_retained_progress(progress)),
+        _ => Err(semio_framework_value::ValueError::literal(ValueRefusalKind::InvariantViolated, "UI original rejected worker retirement receipt invariant violated").with_retained_progress(step.progress())),
+    }
+}
+
+/// 🧾️ Records one original worker close receipt before a child error crosses the layout boundary.
+fn consume_layout_retirement(context:&mut semio_framework_job::StepContext<'_>,step:Result<Option<semio_framework_value::RetainedCloneProgress>,semio_framework_value::ValueError>)->Result<bool,semio_framework_value::ValueError>{
+    match step{Ok(Some(progress))=>{context.consume_retained(progress)?;Ok(true)},Ok(None)=>Ok(false),Err(error)=>{context.consume_retained(error.retained_progress())?;Err(error)}}
 }
 
 const RETAINED_PAINT_DEPTH_CREDITS: usize = 64;
@@ -1155,6 +1198,7 @@ pub enum UiLayoutStep {
     Awaiting { window_id: SurfaceId, lane: SurfaceLane },
     Ready { window_id: SurfaceId, lane: SurfaceLane },
     Cancelled { window_id: SurfaceId, lane: SurfaceLane },
+    Refused { window_id: SurfaceId, lane: SurfaceLane, refusal: UiWorkerRetirementRefusal },
 }
 
 fn stage_label(stage: LayoutJobStage) -> &'static str {
@@ -1363,7 +1407,7 @@ impl Ui {
             return false;
         };
         let UiNode::ComponentScene(scene) = &node.spec.0 else { return false };
-        node.key == *witness.key && node.component_generation() == witness.component_generation && scene.host_id == witness.host_id && scene.component_kind == witness.kind && scene.surface_id == witness.surface_id
+        node.key.borrowed() == witness.key && node.component_generation() == witness.component_generation && scene.host_id == witness.host_id && scene.component_kind == witness.kind && scene.surface_id == witness.surface_id
     }
 
     /// 📐️ Resolves the exact candidate scene node and painted rectangle for one presented node.
@@ -1434,6 +1478,9 @@ impl Ui {
         matched || (self.sealed_visibility_candidate.is_none() && !self.windows.values().any(|window| window.sealed_input_candidate.is_some()))
     }
 
+    /// 🔭️ Observes a retained worker refusal without advancing or releasing its owner.
+    pub fn layout_retirement_refusal(&self, window_id: &str) -> Option<UiWorkerRetirementRefusal> { self.windows.get(window_id).and_then(|window| window.layout_retirement_refusal) }
+
     /// 🛑️ Latches retirement before topology removal and refuses further surface admission.
     pub fn begin_surface_close(&mut self, token: UiSurfaceToken) -> bool {
         let Some(window) = self.windows.get_token_mut(token) else { return false };
@@ -1448,6 +1495,7 @@ impl Ui {
     pub fn close_surface_one(&mut self, token: UiSurfaceToken) -> UiSurfaceCloseStep {
         let Some(window) = self.windows.get_token_mut(token) else { return UiSurfaceCloseStep::Complete };
         let Some(phase) = window.closing else { return UiSurfaceCloseStep::Pending };
+        if let Some(refusal) = window.layout_retirement_refusal { return UiSurfaceCloseStep::Refused(refusal); }
         if let Some(retirement) = window.scene_retirements.pop_front() {
             return UiSurfaceCloseStep::RetiredScene(retirement);
         }
@@ -1472,8 +1520,11 @@ impl Ui {
             }
             UiSurfaceClosePhase::LayoutRejected => {
                 if let Some(rejected) = window.layout_rejected.as_mut() {
-                    let _ = rejected.next_close_demands(0).map(|grant|rejected.close_step(grant));
-                    if rejected.terminal_is_empty() {
+                    let admitted = match close_layout_rejected_worker(rejected, ui_contract::UI_WORKER_RETIREMENT_POLICY) {
+                        Ok(progress) => progress.is_some(),
+                        Err(error) => { let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseRejected", kind:error.kind,progress:error.retained_progress() }; window.layout_retirement_refusal = Some(refusal); return UiSurfaceCloseStep::Refused(refusal); }
+                    };
+                    if admitted && rejected.terminal_is_empty() {
                         window.layout_rejected = None;
                     }
                     return UiSurfaceCloseStep::Pending;
@@ -1483,8 +1534,11 @@ impl Ui {
             UiSurfaceClosePhase::LayoutSession => {
                 if let Some(session) = window.layout_session.as_mut() {
                     session.begin_close();
-                    let _ = session.next_close_demands(0).map(|grant|session.close_step(grant));
-                    if session.terminal_is_empty() {
+                    let admitted = match close_layout_worker_session(session, ui_contract::UI_WORKER_RETIREMENT_POLICY) {
+                        Ok(progress) => progress.is_some(),
+                        Err(error) => { let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseSession", kind:error.kind,progress:error.retained_progress() }; window.layout_retirement_refusal = Some(refusal); return UiSurfaceCloseStep::Refused(refusal); }
+                    };
+                    if admitted && session.terminal_is_empty() {
                         window.layout_session = None;
                     }
                     return UiSurfaceCloseStep::Pending;
@@ -2126,6 +2180,7 @@ impl Ui {
         let theme = self.theme;
         let Some(window) = self.windows.get_token_mut(token) else { return UiLayoutStep::Idle };
         window.queued = false;
+        if let Some(refusal) = window.layout_retirement_refusal { return UiLayoutStep::Refused { window_id, lane, refusal }; }
         let Some(root) = window.tree.root else { return UiLayoutStep::Idle };
         if cx.is_cancelled() {
             if let Some(session) = window.layout_session.as_mut() {
@@ -2139,8 +2194,11 @@ impl Ui {
             return UiLayoutStep::Cancelled { window_id, lane };
         }
         if let Some(rejected) = window.layout_rejected.as_mut() {
-            let _ = rejected.next_close_demands(0).map(|grant|rejected.close_step(grant));
-            if rejected.terminal_is_empty() {
+            let admitted = match {let step=close_layout_rejected_worker(rejected,cx.retained_grant());consume_layout_retirement(cx,step)} {
+                        Ok(admitted) => admitted,
+                        Err(error) => { let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseRejected", kind:error.kind,progress:error.retained_progress() }; window.layout_retirement_refusal = Some(refusal); return UiLayoutStep::Refused { window_id, lane, refusal }; }
+                    };
+            if admitted && rejected.terminal_is_empty() {
                 window.layout_rejected = None;
             }
             self.enqueue_layout(window_id.as_ref());
@@ -2152,8 +2210,35 @@ impl Ui {
                 window.layout_closing = true;
             }
             if window.layout_closing {
-                let _ = session.next_close_demands(0).map(|grant|session.close_step(grant));
-                if session.terminal_is_empty() {
+                let witness=cx.cancel_token();
+                let alias=match session.has_original_cancel_alias_witness(&witness){Ok(true)=>session.return_original_cancel_alias_step(&witness,cx.retained_grant()),Ok(false)=>Ok(None),Err(error)=>Err(error)};
+                match alias {
+                    Ok(Some(step)) => {
+                        let progress = step.progress();
+                        if let Err(error) = cx.consume_retained(progress) {
+                            let refusal = UiWorkerRetirementRefusal { stage: "Layout.ReturnOriginalCancel", kind: error.kind, progress };
+                            window.layout_retirement_refusal = Some(refusal);
+                            return UiLayoutStep::Refused { window_id, lane, refusal };
+                        }
+                        self.enqueue_layout(window_id.as_ref());
+                        return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.ReturnOriginalCancel", nodes: progress.copied_items, glyphs: 0 };
+                    }
+                    Ok(None) => {}
+                    Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => {
+                        self.enqueue_layout(window_id.as_ref());
+                        return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.ReturnOriginalCancel", nodes: 0, glyphs: 0 };
+                    }
+                    Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => {
+                        let refusal = UiWorkerRetirementRefusal { stage: "Layout.ReturnOriginalCancel", kind: error.kind, progress: error.retained_progress() };
+                        window.layout_retirement_refusal = Some(refusal);
+                        return UiLayoutStep::Refused { window_id, lane, refusal };
+                    }
+                }
+                let admitted = match {let step=close_layout_worker_session(session,cx.retained_grant());consume_layout_retirement(cx,step)} {
+                        Ok(admitted) => admitted,
+                        Err(error) => { let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseSession", kind:error.kind,progress:error.retained_progress() }; window.layout_retirement_refusal = Some(refusal); return UiLayoutStep::Refused { window_id, lane, refusal }; }
+                    };
+                if admitted && session.terminal_is_empty() {
                     window.layout_session = None;
                     window.layout_closing = false;
                 }
@@ -2221,7 +2306,7 @@ impl Ui {
                     operation: cx.operation(),
                     generation: semio_framework_job::Generation(generation),
                     cancel: cx.cancel_token(),
-                    config: semio_framework_job::BatchDriveConfig { site: "ui.layout-text.worker", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+                    config: semio_framework_job::BatchDriveConfig { retained: cx.retained_grant(), site: "ui.layout-text.worker", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
                     now_us: semio_framework_job::default_now_us,
                 };
                 match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
@@ -2351,7 +2436,7 @@ impl Ui {
 
     fn enqueue_layout_token(&mut self, token: UiSurfaceToken, reason: SurfaceLayoutReason) {
         let Some(window) = self.windows.get_token_mut(token) else { return };
-        if window.queued || window.closing.is_some() {
+        if window.queued || window.closing.is_some() || window.layout_retirement_refusal.is_some() {
             return;
         }
         window.queued = true;

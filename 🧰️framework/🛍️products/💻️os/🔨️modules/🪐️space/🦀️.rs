@@ -123,21 +123,14 @@ impl DraftCatalog {
         Self::default()
     }
 
-    /// 🌱️ Mints a fresh draft id and registers its bookkeeping. `now_ms`/`ttl_ms` are caller-supplied
-    /// (this crate is pure data plus pure functions — no wall-clock reads, matching `vcs`'s own doc
-    /// comment convention).
-    pub fn create_draft(&self, kind_id: &str, schema: &str, name: &str, now_ms: u64, ttl_ms: Option<u64>) -> DraftEntry {
+    /// 🌱️ Registers bookkeeping only after the caller's original authority admits the draft identity.
+    pub fn create_draft(&self, kind_id: &str, schema: &str, name: &str, now_ms: u64, ttl_ms: Option<u64>, identity: &mut vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<DraftEntry, vcs::VcsError> {
         static DRAFT_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
         let seq = DRAFT_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        // 🌉️ `vcs::content_addressed_entity_id` turned `async fn` under the runtime-dependency sweep;
-        // this is a pure hash-of-bytes computation with no real suspension, so it's resolved
-        // synchronously the same way `SpaceBackbonePort`'s blanket impl resolves its callee futures
-        // above — this catalog stays a pure, synchronous type (see this fn's own doc: "no wall-clock
-        // reads", matching `vcs`'s own convention).
-        let artifact_id = crate::host::resolve_kernel_future(vcs::io::binary::entity_identity::content_addressed_entity_id("draft", format!("{kind_id}\0{schema}\0{name}\0{now_ms}\0{seq}").as_bytes()));
+        let artifact_id = identity.encode(|control| vcs::io::binary::entity_identity::mint_draft_id(kind_id, schema, name, now_ms, seq, control))?;
         let entry = DraftEntry { artifact_id, kind_id: kind_id.into(), schema: schema.into(), name: name.into(), created_at_ms: now_ms, expires_at_ms: ttl_ms.map(|ttl| now_ms + ttl) };
         self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(entry.artifact_id.clone(), entry.clone());
-        entry
+        Ok(entry)
     }
 
     pub fn list_drafts(&self) -> Vec<DraftEntry> {

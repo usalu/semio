@@ -1,0 +1,41 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+  "logicalScope": "only funded original batch publisher Source oracle/hostile block; no peer Rust adoption",
+  "beforeSha256": "fe40a507e64b8afd1253bae9d8cee25c0ea4eb7f073025ca68f3cc101dca9bb7",
+  "afterSha256": "23d854a3d2e81cb262093535ce730194015e02c15e2efa2f03201a08422b6eaa",
+  "beforeBlockSha256": "e089a81da5d42e64ba374fddb7822db933e3b362173010f606d2bfb98af71643",
+  "afterBlockSha256": "12b93d68a6852bb7da5588fb103446c28ea9d49ad57c4c8bef04b9f899b1a963",
+  "sourceCopies": false,
+  "red": {
+    "session": 69567,
+    "Nx": 1,
+    "duration": "39.4s",
+    "log": "🗑️generated/m-red.log",
+    "cause": "old take/restore mutation anchor does not occur in actual borrowed owned ingress"
+  },
+  "terminalReceipts": [
+    {
+      "session": 69567,
+      "Nx": 1,
+      "duration": "39.4s",
+      "log": "🗑️generated/m-red.log",
+      "qualification": "obsolete take/restore hostile anchor; qualified Source failure"
+    },
+    {
+      "session": 9620,
+      "Nx": 1,
+      "duration": "22.1s",
+      "log": "🗑️generated/m-current.log",
+      "qualification": "fixed call count contradicted current real additional admissions; corrected oracle without producer change"
+    },
+    {
+      "session": 7801,
+      "Nx": 1,
+      "duration": "27.5s",
+      "log": "🗑️generated/m-admission.log",
+      "qualification": "real current original owner loss: foreign publisher clears artifact mutations; Buffer/Child and nine current clone/empty/drop hostiles reached"
+    }
+  ],
+  "nativeCredit": false,
+  "producerEdits": []
+}

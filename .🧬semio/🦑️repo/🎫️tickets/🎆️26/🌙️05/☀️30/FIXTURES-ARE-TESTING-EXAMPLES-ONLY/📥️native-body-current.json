@@ -1,0 +1,57 @@
+{
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+      "sha256": "e01deb1911e0debe1515bc56920bf3e172731ac90e0fed953fbc59ff25dad44f",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs",
+      "sha256": "3ee99e16f43b5c6af0aa04e94241784bf1f9f6c3492cd7c483e258d28f915ba9",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🪆️receiving/🔣️.json",
+      "sha256": "4334312f31766785a3a0b72304db33c2be718d6c7b3ba237c47fb1778a71269b",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+      "sha256": "ca0e18ddd77f14d5c2bd7c103e7410e9ad0a64fc269d3ffc6f0ef662acd7590e",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "24d17f507c4c3e3839f1aa7289f0aed1dcb79a27acf543c402f23b20ef17a167",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "37a8d9880c42b9012f4a3a5e209bba1b87cd16b3b0d065d96f8670194a0c9edd",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    }
+  ],
+  "actions": [
+    "native-body-test-actions.json",
+    "native-body-native-test-action.json",
+    "native-body-helper-action.json",
+    "native-body-producer-action.json",
+    "native-field-source-test-action.json",
+    "native-field-action.json"
+  ],
+  "SourceRED": {
+    "body": "50713 Nx1/829ms after13 oracle assertions; missing genuine helper",
+    "field": "71489 Nx1/1.8s after genuine raw-progress Ajv/JSONPatch before legal maximum assertion",
+    "qualifiedHarness": "35380 nonexistent Progress schema reference;43796 wrong ordered Progress DTO requiring complete; both no product RED credit"
+  },
+  "SourceGREEN": {
+    "session": 18632,
+    "Nx": 0,
+    "duration": "2.4s",
+    "selectedLaws": 2,
+    "assertions": 37,
+    "extraDepthAssertions": 612,
+    "log": "🗑️generated/native-body-field-green.log"
+  },
+  "native": "new named body law UNRUN; existing field k8b failure actual RED; original wallet/cursor actual PASS belongs Root k8b"
+}

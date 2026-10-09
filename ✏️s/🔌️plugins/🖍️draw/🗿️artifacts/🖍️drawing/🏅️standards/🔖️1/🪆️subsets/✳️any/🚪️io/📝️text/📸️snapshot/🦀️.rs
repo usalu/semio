@@ -107,7 +107,6 @@ use crate::{
     DrawingRect, DrawingShapeBody, DrawingSnapshot, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA,
 };
 use framework_schema::ArtifactSchema;
-use std::collections::hash_map::DefaultHasher;
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 use geometry::affine::{drawing_transform_to_matrix,drawing_matrix_to_transform};

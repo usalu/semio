@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.cargo.owned-toml.v1",
+  "$ref": "#/$defs/Table",
+  "$defs": {
+    "Value": {"oneOf": [{"type": "string"}, {"type": "number", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "boolean"}, {"type": "array", "items": {"$ref": "#/$defs/Value"}}, {"$ref": "#/$defs/Table"}]},
+    "Table": {"type": "object", "additionalProperties": {"$ref": "#/$defs/Value"}}
+  }
+}

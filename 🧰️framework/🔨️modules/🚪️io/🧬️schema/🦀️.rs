@@ -7,19 +7,12 @@ use semio_framework_value::serde::{Deserialize, Serialize};
 
 
 use semio_framework_artifact_reference::{ArtifactDialect,ArtifactRef,Dialect,StandardId,SubsetId};
+#[path="♻️retirement/🦀️.rs"]mod retirement;
 
 //#region 🔖️Payload
-/// 📦️ The one payload envelope the whole io mechanism moves. **Payload law**: the `IoPayload` of
-/// dialect D is D's own *native* encoding — `Binary` = its pack, `Text` = its DSL — EXCEPT for the
-/// two carrier dialects (`CARRIER_BINARY`, `CARRIER_TEXT`), whose native encoding IS the raw
-/// external file content. So: **open a file** = `io_identify(bytes)` → `io_run(io_route(carrier →
-/// D))`; **save a file** = `io_run(io_route(D → carrier))`. This is the rule that stops an export
-/// writing pack bytes into a `.gif`/`.png` file.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-pub enum IoPayload {
-    Text(String),
-    Binary(Vec<u8>),
-}
+#[path="../📦️payload/🧬️schema/🦀️.rs"]
+mod payload;
+pub use payload::IoPayload;
 
 /// 🗄️ Carrier dialect for raw untyped bytes — the payload law's binary exception.
 pub const CARRIER_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -168,6 +161,10 @@ impl IoError {
             Ok(Self { cause: ValueError::new(error.kind, message), diagnostics })
         })
     }
+}
+
+impl From<ValueError> for IoError {
+    fn from(cause:ValueError)->Self{Self::from_value_error(cause)}
 }
 
 #[derive(Clone, Debug, PartialEq)]

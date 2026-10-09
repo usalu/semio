@@ -15,7 +15,7 @@ fn vcs_guest_descriptor_has_one_canonical_native_openable_identity() {
     let record = <semio_s_artifact_vcs_vcs::VcsSnapshot as semio_framework_os_kernel::ArtifactPack>::record_spec().expect("VCS schema-owned record");
     assert_eq!(codec.pack_schema_hash, semio_framework_os_kernel::os_pack::schema_hash(&record));
     assert_ne!(codec.pack_schema_hash, [0; 32]);
-    let runtime = PluginRuntime::<semio_hub_vcs::VcsApps>::new();
+    let runtime = PluginRuntime::<semio_hub_vcs::VcsApps>::new({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     install_plugin_bundle_result(&runtime, Ok(bundle));
     let bytes = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
     let wire = semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).expect("guest descriptor bytes");

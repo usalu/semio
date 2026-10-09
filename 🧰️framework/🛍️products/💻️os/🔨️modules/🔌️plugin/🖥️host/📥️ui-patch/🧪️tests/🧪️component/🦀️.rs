@@ -21,7 +21,7 @@ fn budget() -> Budget {
     Budget { fuel: 50_000_000, deadline_ms: 10_000, max_effects: 8, max_patch_bytes: 2_097_152, max_frames: 1 }
 }
 
-async fn open_live(config: serde_json::Value) -> (WasmtimeRuntime, GuestInstance, ActorInstanceLifetime) {
+async fn open_live(config: serde_json::Value, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (WasmtimeRuntime, GuestInstance, ActorInstanceLifetime) {
     let bytes = fixture_bytes();
     let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
     let package = PackageRef { package: PackageId("semio:scale-ui-patch".to_string()), hash: PackageHash(*semio_framework_hash::hash(&bytes).as_bytes()) };
@@ -36,7 +36,7 @@ async fn open_live(config: serde_json::Value) -> (WasmtimeRuntime, GuestInstance
         capabilities: Vec::new(),
         quotas: QuotaSchema::default(),
     };
-    let captured_turn = runtime.execute_turn(&mut instance, &[open], budget()).await.expect("open produces capture");
+    let captured_turn = runtime.execute_turn(&mut instance, &[open], budget(), &mut *identity).await.expect("open produces capture");
     assert!(captured_turn.ui_patches.is_empty());
     assert_eq!(captured_turn.ui_patch_receipt, None);
     let captured = captured_turn.lifecycle_receipt.expect("component captures lifecycle");
@@ -51,7 +51,7 @@ async fn open_live(config: serde_json::Value) -> (WasmtimeRuntime, GuestInstance
         _ => panic!("open must return captured lifecycle receipt"),
     };
     let ack = Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: captured });
-    let ack_turn = runtime.execute_turn(&mut instance, &[ack], budget()).await.expect("exact capture acknowledgement");
+    let ack_turn = runtime.execute_turn(&mut instance, &[ack], budget(), &mut *identity).await.expect("exact capture acknowledgement");
     assert!(ack_turn.ui_patches.is_empty());
     assert_eq!(ack_turn.lifecycle_receipt, None);
     assert_eq!(ack_turn.ui_patch_receipt, None);
@@ -82,27 +82,42 @@ async fn assert_single_claim_transport(result: TurnResult, lifetime: ActorInstan
 
 #[semio_framework_async_macros::async_test]
 async fn genuine_component_returned_and_imported_patches_keep_channel_order_and_exact_authority() {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
     for (config, root, session) in [(serde_json::json!({ "profile": "ui" }), 201, SESSION), (serde_json::json!({ "profile": "ui", "uiImportSink": true }), 101, SESSION + 1)] {
-        let (runtime, mut instance, lifetime) = open_live(config).await;
-        let turn = runtime.execute_turn(&mut instance, &[Event::Wake], budget()).await.expect("genuine component patch");
+        let (runtime, mut instance, lifetime) = open_live(config, &mut identity).await;
+        let turn = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect("genuine component patch");
         assert_single_claim_transport(turn, lifetime, root, 1, session).await;
     }
+    crate::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn imported_then_returned_channels_refuse_atomically_without_a_transport_token() {
-    let (runtime, mut instance, _) = open_live(serde_json::json!({ "profile": "ui", "uiImportSink": true, "uiReturnWithImport": true })).await;
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
+    let (runtime, mut instance, _) = open_live(serde_json::json!({ "profile": "ui", "uiImportSink": true, "uiReturnWithImport": true }), &mut identity).await;
     for _ in 0..2 {
-        let error = runtime.execute_turn(&mut instance, &[Event::Wake], budget()).await.expect_err("one turn never mixes the imported and returned channels");
+        let error = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect_err("one turn never mixes the imported and returned channels");
         assert!(error.to_string().contains("mixes the imported and returned channels"), "{error}");
     }
+    crate::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn malformed_import_is_drained_before_the_next_exact_patch_owner_is_published() {
-    let (runtime, mut instance, lifetime) = open_live(serde_json::json!({ "profile": "ui", "uiImportSink": true, "uiMalformedFirst": true })).await;
-    let error = runtime.execute_turn(&mut instance, &[Event::Wake], budget()).await.expect_err("non-canonical imported payload");
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
+    let (runtime, mut instance, lifetime) = open_live(serde_json::json!({ "profile": "ui", "uiImportSink": true, "uiMalformedFirst": true }), &mut identity).await;
+    let error = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect_err("non-canonical imported payload");
     assert!(error.to_string().contains("ui patch upsert node"));
-    let recovered = runtime.execute_turn(&mut instance, &[Event::Wake], budget()).await.expect("next imported patch is isolated from malformed sink");
+    let recovered = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect("next imported patch is isolated from malformed sink");
     assert_single_claim_transport(recovered, lifetime, 302, 2, SESSION + 2).await;
+    crate::test_native_authority::close(&mut identity);
 }

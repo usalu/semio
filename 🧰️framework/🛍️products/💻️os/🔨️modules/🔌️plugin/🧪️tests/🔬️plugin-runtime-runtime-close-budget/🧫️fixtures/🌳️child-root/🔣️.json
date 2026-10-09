@@ -1,0 +1,16 @@
+{
+  "schema": "framework.plugin.original-child-root-retirement",
+  "currencies": ["items", "copy", "capacity", "release", "depth"],
+  "phases": ["borrowed-retainer-table", "original-child-step", "paid-registry-removal", "paid-empty-backing"],
+  "retainers": ["current-root", "sibling-retirements", "member-preview", "saved-reviewed-preview"],
+  "queryHasEffects": false,
+  "childCompleteIsParentComplete": false,
+  "originalGrant": [1, 4096, 65536, 262144, 64],
+  "borrowedTableReceipt": [0, 552, 0, 0],
+  "childReceipt": [1, 24, 0, 32],
+  "composedReceipt": [1, 576, 0, 32],
+  "borrowedTableDepth": 1,
+  "childDepth": 2,
+  "composedDepth": 3,
+  "remaining": [0, 3520, 65536, 262112, 64]
+}

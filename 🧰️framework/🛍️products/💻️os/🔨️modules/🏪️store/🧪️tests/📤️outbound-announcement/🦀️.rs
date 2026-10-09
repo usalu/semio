@@ -84,7 +84,7 @@ async fn publish_outbound_gesture(store: &mut ArtifactStore<DemoSnapshot, DemoMu
     let mut publication = store
         .begin_outbound_apply_batch(semio_framework_job::OperationId(operation), store.generation_now(), store.content_revision_now(), store.local_actor_id().0.clone(), mutations, Some(&factory), None)
         .unwrap_or_else(|rejected| panic!("outbound batch admission: {}", rejected.reason));
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 512, ..one_item_test_policy() };
     for _ in 0..4_096 {
         if let ArtifactStoreOneItemAdvance::Published(_) = store.advance_apply_batch(&mut publication, grant).expect("bounded batch step") {
             break;
@@ -99,6 +99,9 @@ async fn publish_outbound_gesture(store: &mut ArtifactStore<DemoSnapshot, DemoMu
 
 #[semio_framework_async_macros::async_test]
 async fn every_locally_authored_operation_is_announced_exactly_once() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/📤️outbound-announcement/🔣️.json")).expect("outbound announcement fixture");
     assert_eq!(fixture.schema, "semio.store.outbound-announcement/v1");
     let mut steps = 0usize;
@@ -114,7 +117,7 @@ async fn every_locally_authored_operation_is_announced_exactly_once() {
             match (&step.gesture, step.undo, &step.remote) {
                 (Some(gesture), None, None) => publish_outbound_gesture(&mut store, index as u64 + 1, gesture, &mut next_value).await,
                 (None, Some(true), None) => {
-                    store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+                    store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo");
                 }
                 (None, None, Some(arriving)) => {
                     next_value += 1;

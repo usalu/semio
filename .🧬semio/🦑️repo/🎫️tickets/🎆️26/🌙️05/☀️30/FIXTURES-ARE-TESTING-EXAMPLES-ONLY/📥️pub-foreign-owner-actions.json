@@ -1,0 +1,28 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+      "beforeSha256": "f638a3ca07794e319b755d7a3a1ed85ea1a55bb95a510f364c5a4530fa2427f6",
+      "beforeLogicalSha256": "6bfe626c708741ef52a023736c6066e0b0c4998089997badf3d406b5fd94475b",
+      "action": "extract exact genuine foreign payload definitions to their owner and explicitly reexport current types",
+      "afterSha256": "d6474ff5e085932a4f89511632bb4d51166b95928c9cc64a64d6f73a23796e1e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🦀️.rs",
+      "beforeSha256": "6ede1c8f9e7fc0588c9ec56a4b2239a908544cf69cbf9a94979144df6738dad5",
+      "action": "own actual ForeignTarget/ForeignStep definitions and identical payload admission/emission bodies alongside paid output owner",
+      "afterSha256": "032c9f17ac68d794805cbf63816ca8b0893405535cd33674adea387bd06bb795"
+    }
+  ],
+  "movedDefinitionsSha256": "fc2026dcad5c0ea675724304619124af534d2a7e2d367db752eec43160ef5dbc",
+  "sourceCopies": false,
+  "payloadBodiesPreserved": true,
+  "originalParentDefinitionsAbsent": true,
+  "sourceReceipt": {
+    "session": 29327,
+    "exitCode": 0,
+    "duration": "1.4s",
+    "log": "🗑️generated/pub-foreign-owner-source.log",
+    "qualification": "current exact owner relocation plus independent payload and grammar; native64741 remains earlier source epoch"
+  }
+}

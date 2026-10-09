@@ -1,0 +1,36 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♻️frame-close/🔣️.json",
+      "beforeSHA": "2fcb116b4ee26c00828ba11ab914fa599ed83585b1b9a7e0422a7bcc984867ed",
+      "action": "delete current exclusive whole-trial authority",
+      "afterSHA": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+      "beforeSHA": "24ec620a4c37c1dddb652f66cdc51f0dd009ddcdfb8a2f20ac27ee436d0cfb90",
+      "action": "delete current exclusive whole-trial authority",
+      "afterSHA": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "owner": "two whole-trial admission tests",
+      "beforeBlockSHA": "d300ee87a1a66a77a6102b7e7ef417aad1d06ba3a185f16cc8b7fea71370e122",
+      "afterBlockSHA": "a2f313a3f659ef54d681f7d8d680e67002bdc67c2164191947afcd80c3e2a729",
+      "action": "validate only actual five-axis grant payload against genuine Value grant production authority, preserve SQL/full receipt and all source/native laws"
+    }
+  ],
+  "plain": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/♻️frame-close/🔣️.json",
+      "observedSHA": "56c4a1515716f7a99458531a2ef5dee2b3eb08401226a12a0a9230dc046f49b9",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json",
+      "observedSHA": "ade2fca3a45be774dc960c801cf0b610df33fac1a12f9f0eb14a09e005409d7d",
+      "authored": false
+    }
+  ],
+  "boundaryRED": "8203, fixture-boundary8 Nx1/2m4s"
+}

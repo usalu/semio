@@ -1,0 +1,56 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📽️projection/🟦️.ts",
+    "exists": true,
+    "sha256": "d6721583337d55016fcb514fafe538912187a0af0265a231f48ee6353917f66a",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🦀️.rs",
+    "exists": true,
+    "sha256": "2f400cfcff3092574a8f9a4f9649cf3451d71e301d62923c2f6db005e1cfded9",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs",
+    "exists": true,
+    "sha256": "3cc9d4edaa4e60dc28567de3cc44950dae73c581c8505ce84f9e8877695d7b2e",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/🦀️.rs",
+    "exists": true,
+    "sha256": "dbcf49a135b17e8d01236402ba936266005c417d02198b3950b1007391720fe9",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🏷️entity-kinds/🟦️.ts",
+    "exists": true,
+    "sha256": "e6d11649013a5aa2ff23b2cf4230604606d83dcda7be48457a5060034b87c601",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json",
+    "exists": true,
+    "sha256": "c0601ba8dbbb50df15b149acc9b2021ee36caa9f1879d9c68309484e5bc8af81",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts",
+    "exists": true,
+    "sha256": "5006c565646aa889bec88da60cf7f9a032b84bab142368eb90603f1083807b4a",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+    "exists": true,
+    "sha256": "9bb2a6c5b30e1190bd00e96387255911248f35dd6ac0dc60c6e5f8efa98b3085",
+    "authored": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+    "exists": true,
+    "sha256": "0bb79433f345d6647907550c83e8afc5c8c62cdabcd24a955a6657854a72bf01",
+    "authored": false
+  }
+]

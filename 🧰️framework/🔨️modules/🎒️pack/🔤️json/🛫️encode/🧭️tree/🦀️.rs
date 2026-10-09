@@ -28,6 +28,32 @@ impl ArtifactCanonicalJsonTree for bool { fn canonical_tree_node(&self) -> Resul
 impl ArtifactCanonicalJsonTree for u64 { fn canonical_tree_node(&self) -> Result<Node<'_>, ValueError> { Ok(Node::U64(*self)) } }
 impl ArtifactCanonicalJsonTree for i64 { fn canonical_tree_node(&self) -> Result<Node<'_>, ValueError> { Ok(Node::I64(*self)) } }
 
+impl ArtifactCanonicalJsonTree for String { fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::String(self))} }
+impl ArtifactCanonicalJsonTree for semio_framework_value::SharedUtf8 {fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Text(ArtifactCanonicalJsonText::Native(self)))}}
+impl ArtifactCanonicalJsonTree for &'static str { fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::String(self))} }
+impl<T:ArtifactCanonicalJsonTree> ArtifactCanonicalJsonTree for Vec<T> {
+ fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Array(self.len()))}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get(ordinal).map(|value|value as &dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical original vector ordinal is absent"))}
+}
+impl<T:ArtifactCanonicalJsonTree,const N:usize> ArtifactCanonicalJsonTree for [T;N] {
+ fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Array(N))}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get(ordinal).map(|value|value as &dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical original fixed array ordinal is absent"))}
+}
+impl<T:ArtifactCanonicalJsonTree> ArtifactCanonicalJsonTree for Option<T> {
+ fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{self.as_ref().map_or(Ok(Node::Null),|value|value.canonical_tree_node())}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.as_ref().ok_or_else(||refusal("canonical absent optional field has no child"))?.canonical_tree_child(ordinal)}
+ fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.as_ref().ok_or_else(||refusal("canonical absent optional field has no key"))?.canonical_tree_key(ordinal)}
+}
+impl<T:ArtifactCanonicalJsonTree> ArtifactCanonicalJsonTree for Box<T> {
+ fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{self.as_ref().canonical_tree_node()}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.as_ref().canonical_tree_child(ordinal)}
+ fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.as_ref().canonical_tree_key(ordinal)}
+}
+impl ArtifactCanonicalJsonTree for f64 {fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::F64(*self))}}
+impl ArtifactCanonicalJsonTree for i32 {fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::I64(i64::from(*self)))}}
+impl ArtifactCanonicalJsonTree for usize {fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::U64(u64::try_from(*self).map_err(|_|refusal("canonical native ordinal exceeds unsigned64"))?))}}
+impl ArtifactCanonicalJsonTree for u8 {fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::U64(u64::from(*self)))}}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Phase { Inspect, Scalar, Text, ArrayStart, ArrayNext, ArrayChild, ObjectStart, ObjectNext, ObjectKey, ObjectColon, ObjectChild, Complete }
 
@@ -210,4 +236,3 @@ impl Drop for ArtifactCanonicalJsonTreeCursor { fn drop(&mut self) { assert!(sel
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

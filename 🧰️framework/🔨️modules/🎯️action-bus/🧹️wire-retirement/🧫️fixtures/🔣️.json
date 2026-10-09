@@ -1,6 +1,13 @@
 {
   "version": 2,
   "pageBytes": 4096,
+  "stepGrant": {
+    "maximum_items": 8,
+    "maximum_copy_bytes": 4096,
+    "maximum_capacity_bytes": 8192,
+    "maximum_release_bytes": 4096,
+    "maximum_depth": 4
+  },
   "wordBytes": [
     4,
     8
@@ -16,6 +23,12 @@
     "release",
     "depth"
   ],
+  "completedInput": {
+    "wireHex": "040506",
+    "capacityBytes": 64,
+    "retainedAfterCompletion": true,
+    "releasedAfterClose": 64
+  },
   "shortClose": {
     "wireHex": "2a00000000000000",
     "logicalBytes": 8,

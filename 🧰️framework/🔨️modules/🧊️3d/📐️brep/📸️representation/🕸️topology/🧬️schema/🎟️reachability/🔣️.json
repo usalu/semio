@@ -1,0 +1,192 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "box",
+    "copyGrants",
+    "deniedReleaseBytes",
+    "handoffBirthBytes",
+    "handoffReleaseBytes",
+    "terminalDropBytes",
+    "orphanVertices",
+    "staleGenerationProtected",
+    "physical",
+    "incremental",
+    "retention",
+    "compaction",
+    "arenaRemoval",
+    "arenaGrowth"
+  ],
+  "properties": {
+    "arenaGrowth": {"type":"object","additionalProperties":false,"required":["slots","sameOriginalSlots","sameRefusedValue","itemsPerTurn","copyBytesPerTransfer","releaseBytesPerReserve","terminalDropBytes"],"properties":{"slots":{"const":1337},"sameOriginalSlots":{"const":true},"sameRefusedValue":{"const":true},"itemsPerTurn":{"const":1},"copyBytesPerTransfer":{"const":0},"releaseBytesPerReserve":{"const":0},"terminalDropBytes":{"const":0}}},
+    "version": {
+      "const": 1
+    },
+    "box": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vertices",
+        "edges",
+        "coedges",
+        "loops",
+        "faces",
+        "shells",
+        "solids",
+        "curves3",
+        "curves2",
+        "surfaces",
+        "area",
+        "volume"
+      ],
+      "properties": {
+        "vertices": {
+          "const": 8
+        },
+        "edges": {
+          "const": 12
+        },
+        "coedges": {
+          "const": 24
+        },
+        "loops": {
+          "const": 6
+        },
+        "faces": {
+          "const": 6
+        },
+        "shells": {
+          "const": 1
+        },
+        "solids": {
+          "const": 1
+        },
+        "curves3": {
+          "const": 12
+        },
+        "curves2": {
+          "const": 24
+        },
+        "surfaces": {
+          "const": 6
+        },
+        "area": {
+          "const": 6
+        },
+        "volume": {
+          "const": 1
+        }
+      }
+    },
+    "copyGrants": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "deniedReleaseBytes": {
+      "const": 8
+    },
+    "handoffBirthBytes": {
+      "const": 0
+    },
+    "handoffReleaseBytes": {
+      "const": 0
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "orphanVertices": {
+      "const": 1
+    },
+    "staleGenerationProtected": {
+      "const": true
+    },
+    "physical": {
+      "const": "sourcePlusAdmittedFrames"
+    },
+    "compaction": {
+      "const": {
+        "itemsPerTurn": 1,
+        "constructorBirthBytes": 0,
+        "constructorReleaseBytes": 0,
+        "cancelBirthBytes": 0,
+        "cancelReleaseBytes": 0,
+        "unreachableBoxes": 1,
+        "cancelTurns": [
+          0,
+          1,
+          9,
+          37,
+          101
+        ],
+        "keptIdsUnchanged": true,
+        "sameBody": true,
+        "terminalIncludesMembership": true,
+        "terminalDropBytes": 0
+      }
+    },
+    "retention": {
+      "const": {
+        "itemsPerTurn": 1,
+        "constructorBirthBytes": 0,
+        "constructorReleaseBytes": 0,
+        "keptBoxes": 1,
+        "removedBoxes": 1,
+        "sourceChangesRestart": true,
+        "noRootDirectory": true,
+        "terminalDropBytes": 0
+      }
+    },
+    "incremental": {
+      "const": {
+        "itemsPerTurn": 1,
+        "constructorBirthBytes": 0,
+        "constructorReleaseBytes": 0,
+        "cancelBirthBytes": 0,
+        "cancelReleaseBytes": 0,
+        "cancelTurns": [
+          0,
+          1,
+          9,
+          37,
+          101
+        ],
+        "sameBody": true,
+        "boundedFrames": 7
+      }
+    },
+    "arenaRemoval": {
+      "const": {
+        "slots": 64,
+        "cycles": 32,
+        "removeOrder": [
+          3,
+          17,
+          1,
+          31,
+          8,
+          4
+        ],
+        "reuseOrder": [
+          4,
+          8,
+          31,
+          1,
+          17,
+          3
+        ],
+        "itemsPerTurn": 1,
+        "capacityBytesPerRemoval": 0,
+        "releaseBytesPerRemoval": 0,
+        "copyBytesPerRemoval": 0,
+        "sameOriginalSlots": true,
+        "staleGenerationRejected": true,
+        "terminalDropBytes": 0
+      }
+    }
+  }
+}

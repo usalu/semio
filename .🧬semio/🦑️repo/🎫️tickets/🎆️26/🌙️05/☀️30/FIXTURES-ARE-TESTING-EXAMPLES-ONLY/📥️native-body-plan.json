@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+    "sha256": "a2d59bb17e6e7dde7d596bc31b7c1da8ed870bcc2c47a9424a8743275884f8db",
+    "role": "read-only current plan observation"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "sha256": "bd0b4f1555918379067f6c11e3fd961a7778d5d654eb97158364294d903919b1",
+    "role": "read-only current plan observation"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "248afaed3e89d75b4f1b07dc8606d4e7e5375116c15dc3e86bc663bb84e9c158",
+    "role": "read-only current plan observation"
+  }
+]

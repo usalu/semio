@@ -17,6 +17,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 ui_render = { path = "../../../🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
 ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 raw-window-handle = "0.6"

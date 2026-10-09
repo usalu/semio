@@ -22,11 +22,11 @@ fn visit_rows(snapshot:&EpwSnapshot,out:&mut store::sqlite_snapshot::artifact::R
 }
 
 impl ArtifactSqliteSnapshot for EpwSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let limits=control.limits();semantic::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{semantic::borrowed(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)},control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();semantic::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {semantic::borrowed(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   semantic::typed(self,SqliteSnapshotPhase::EncodeNative,control)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
 
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::typed(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut bound=NativeEncodingBound::file_only(control)?;bound.add(32768)?;for value in [&self.schema,&self.design_conditions,&self.typical_extreme_periods,&self.ground_temperatures,&self.holidays_dst,&self.comments_1,&self.comments_2]{bound.repeated(value.len(),24)?;}let location=&self.location;bound.add(2048)?;for value in [&location.city,&location.state_province,&location.country,&location.source,&location.wmo,&location.latitude,&location.longitude,&location.time_zone,&location.elevation]{bound.repeated(value.len(),24)?;}for period in &self.data_periods.periods{bound.add(1024)?;for value in [&period.name,&period.start_day_of_week,&period.start_date,&period.end_date]{bound.repeated(value.len(),24)?;}}for record in &self.records{bound.add(8192)?;for value in record.fields(){bound.repeated(value.len(),24)?;}}bound.finish()}
@@ -43,4 +43,3 @@ impl ArtifactSqliteSnapshot for EpwSnapshot{
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

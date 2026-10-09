@@ -113,4 +113,4 @@ pub(crate) fn reconstruct_record_controlled(record:&semio_framework_dsl_record::
 /// 🏭️ Supplies the actual controlled metadata authority without constructing ordinary metadata.
 pub(crate) fn controlled_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{encoding::spec_producer()}
 /// 🛫️ Emits every literal logical field through the declared controlled native output terminal.
-pub(crate) fn encode_native(value:&GltfSnapshot,kind:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<store::io::IoPayload,ValueError>{encoding::encode_native(value,kind,control)}
+pub(crate) fn encode_native(value:&GltfSnapshot,kind:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encoding::encode_native(value,kind,control,native_owner)}

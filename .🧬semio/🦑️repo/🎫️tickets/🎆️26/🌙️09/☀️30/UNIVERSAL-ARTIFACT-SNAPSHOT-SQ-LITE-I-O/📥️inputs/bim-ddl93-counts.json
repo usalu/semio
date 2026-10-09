@@ -1,0 +1,384 @@
+{
+  "qualification": "Handwritten domain-to-table role mapping from literal witness; no provider imports/output",
+  "tableCount": 93,
+  "totalRows": 3972,
+  "witnessSha256": "b4cff8dfabaac3f0ff5c60f19afefd2a04baa78cd7afbcc5cba8ba15426bc680",
+  "ddlSha256": "826becf69097838e1ae1b319d9afad3bf230c24eb3f9f0be769c0bb7be8524c6",
+  "tables": {
+    "bim_document": {
+      "rows": 1,
+      "formula": "one model"
+    },
+    "bim_project": {
+      "rows": 1,
+      "formula": "one project"
+    },
+    "bim_phase_name": {
+      "rows": 2,
+      "formula": "count(project.phase_names)"
+    },
+    "bim_material": {
+      "rows": 20,
+      "formula": "count(model.materials)"
+    },
+    "bim_wall_type": {
+      "rows": 11,
+      "formula": "count(model.wall_types)"
+    },
+    "bim_slab_type": {
+      "rows": 11,
+      "formula": "count(model.slab_types)"
+    },
+    "bim_roof_type": {
+      "rows": 11,
+      "formula": "count(model.roof_types)"
+    },
+    "bim_column_type": {
+      "rows": 23,
+      "formula": "count(model.column_types)"
+    },
+    "bim_beam_type": {
+      "rows": 23,
+      "formula": "count(model.beam_types)"
+    },
+    "bim_window_type": {
+      "rows": 3,
+      "formula": "count(model.window_types)"
+    },
+    "bim_door_type": {
+      "rows": 6,
+      "formula": "count(model.door_types)"
+    },
+    "bim_site": {
+      "rows": 5,
+      "formula": "count(model.sites)"
+    },
+    "bim_building": {
+      "rows": 4,
+      "formula": "count(model.buildings)"
+    },
+    "bim_storey": {
+      "rows": 4,
+      "formula": "count(model.storeys)"
+    },
+    "bim_grid": {
+      "rows": 5,
+      "formula": "count(model.grids)"
+    },
+    "bim_wall": {
+      "rows": 42,
+      "formula": "count(model.walls)"
+    },
+    "bim_curtain_wall": {
+      "rows": 44,
+      "formula": "count(model.curtain_walls)"
+    },
+    "bim_column": {
+      "rows": 25,
+      "formula": "count(model.columns)"
+    },
+    "bim_beam": {
+      "rows": 15,
+      "formula": "count(model.beams)"
+    },
+    "bim_slab": {
+      "rows": 15,
+      "formula": "count(model.slabs)"
+    },
+    "bim_roof": {
+      "rows": 25,
+      "formula": "count(model.roofs)"
+    },
+    "bim_opening": {
+      "rows": 13,
+      "formula": "count(model.openings)"
+    },
+    "bim_stair": {
+      "rows": 43,
+      "formula": "count(model.stairs)"
+    },
+    "bim_railing": {
+      "rows": 70,
+      "formula": "count(model.railings)"
+    },
+    "bim_space": {
+      "rows": 17,
+      "formula": "count(model.spaces)"
+    },
+    "bim_property_element": {
+      "rows": 3,
+      "formula": "count(model.properties)"
+    },
+    "bim_wall_layer": {
+      "rows": 14,
+      "formula": "sum(count(model.wall_types[].layers))"
+    },
+    "bim_slab_layer": {
+      "rows": 14,
+      "formula": "sum(count(model.slab_types[].layers))"
+    },
+    "bim_roof_layer": {
+      "rows": 14,
+      "formula": "sum(count(model.roof_types[].layers))"
+    },
+    "bim_site_boundary": {
+      "rows": 5,
+      "formula": "sum(count(model.sites[].boundary))"
+    },
+    "bim_axis": {
+      "rows": 101,
+      "formula": "one shared axis per wall/curtain wall/beam"
+    },
+    "bim_top": {
+      "rows": 176,
+      "formula": "one shared top per wall/curtain wall/column/stair/ramp"
+    },
+    "bim_baluster": {
+      "rows": 69,
+      "formula": "one per present railing.baluster"
+    },
+    "bim_profile": {
+      "rows": 393,
+      "formula": "one per 8 named profile owner slots"
+    },
+    "bim_profile_outline": {
+      "rows": 52,
+      "formula": "one per Custom.outline vertex"
+    },
+    "bim_slab_boundary": {
+      "rows": 16,
+      "formula": "sum(count(model.slabs[].boundary))"
+    },
+    "bim_slab_hole": {
+      "rows": 14,
+      "formula": "one parent per slabs[].holes[] including empty loops"
+    },
+    "bim_slab_hole_vertex": {
+      "rows": 16,
+      "formula": "one vertex per slabs[].holes[][]"
+    },
+    "bim_roof_footprint": {
+      "rows": 38,
+      "formula": "sum(count(model.roofs[].footprint))"
+    },
+    "bim_railing_path": {
+      "rows": 71,
+      "formula": "sum(count(model.railings[].path))"
+    },
+    "bim_space_outline": {
+      "rows": 9,
+      "formula": "one per Explicit space outline vertex"
+    },
+    "bim_property_set": {
+      "rows": 2,
+      "formula": "one per properties[element][set], including empty sets"
+    },
+    "bim_property_value": {
+      "rows": 8,
+      "formula": "one per properties[element][set][name]"
+    },
+    "bim_curtain_wall_type": {
+      "rows": 59,
+      "formula": "count(model.curtain_wall_types)"
+    },
+    "bim_curtain_panel_override": {
+      "rows": 12,
+      "formula": "count(model.curtain_panel_overrides)"
+    },
+    "bim_ramp": {
+      "rows": 22,
+      "formula": "count(model.ramps)"
+    },
+    "bim_ceiling_type": {
+      "rows": 9,
+      "formula": "count(model.ceiling_types)"
+    },
+    "bim_ceiling": {
+      "rows": 10,
+      "formula": "count(model.ceilings)"
+    },
+    "bim_zone": {
+      "rows": 2,
+      "formula": "count(model.zones)"
+    },
+    "bim_area_scheme": {
+      "rows": 5,
+      "formula": "count(model.area_schemes)"
+    },
+    "bim_view": {
+      "rows": 31,
+      "formula": "count(model.views)"
+    },
+    "bim_sheet": {
+      "rows": 12,
+      "formula": "count(model.sheets)"
+    },
+    "bim_viewport": {
+      "rows": 6,
+      "formula": "count(model.viewports)"
+    },
+    "bim_sheet_revision": {
+      "rows": 2,
+      "formula": "count(model.sheet_revisions)"
+    },
+    "bim_dimension": {
+      "rows": 27,
+      "formula": "count(model.dimensions)"
+    },
+    "bim_tag": {
+      "rows": 6,
+      "formula": "count(model.tags)"
+    },
+    "bim_text_note": {
+      "rows": 3,
+      "formula": "count(model.text_notes)"
+    },
+    "bim_leader": {
+      "rows": 26,
+      "formula": "count(model.leaders)"
+    },
+    "bim_annotation_style": {
+      "rows": 6,
+      "formula": "count(model.annotation_styles)"
+    },
+    "bim_wall_sweep": {
+      "rows": 20,
+      "formula": "count(model.wall_sweeps)"
+    },
+    "bim_schedule": {
+      "rows": 192,
+      "formula": "count(model.schedules)"
+    },
+    "bim_family": {
+      "rows": 10,
+      "formula": "count(model.families)"
+    },
+    "bim_family_parameter": {
+      "rows": 8,
+      "formula": "count(model.family_parameters)"
+    },
+    "bim_family_solid": {
+      "rows": 57,
+      "formula": "count(model.family_solids)"
+    },
+    "bim_property_template": {
+      "rows": 84,
+      "formula": "count(model.property_templates)"
+    },
+    "bim_classification_system": {
+      "rows": 4,
+      "formula": "count(model.classification_systems)"
+    },
+    "bim_classification_element": {
+      "rows": 2,
+      "formula": "count(model.classifications)"
+    },
+    "bim_curtain_grid": {
+      "rows": 204,
+      "formula": "one per 4 named required/optional curtain-grid owner slots"
+    },
+    "bim_curtain_grid_position": {
+      "rows": 8,
+      "formula": "one per Lines.positions[]"
+    },
+    "bim_ceiling_layer": {
+      "rows": 7,
+      "formula": "sum(count(model.ceiling_types[].layers))"
+    },
+    "bim_ceiling_boundary": {
+      "rows": 8,
+      "formula": "sum(count(model.ceilings[].boundary))"
+    },
+    "bim_ceiling_hole": {
+      "rows": 8,
+      "formula": "one parent per ceilings[].holes[] including empty loops"
+    },
+    "bim_ceiling_hole_vertex": {
+      "rows": 7,
+      "formula": "one vertex per ceilings[].holes[][]"
+    },
+    "bim_ramp_path": {
+      "rows": 20,
+      "formula": "sum(count(model.ramps[].path))"
+    },
+    "bim_area_usage": {
+      "rows": 3,
+      "formula": "sum(count(model.area_schemes[].usages))"
+    },
+    "bim_area_zone": {
+      "rows": 3,
+      "formula": "sum(count(model.area_schemes[].zones))"
+    },
+    "bim_view_hidden": {
+      "rows": 29,
+      "formula": "sum(count(model.views[].hidden))"
+    },
+    "bim_annotation_anchor": {
+      "rows": 57,
+      "formula": "one ordered anchor per Dimension.anchors[] and one ordinal-zero Leader.anchor"
+    },
+    "bim_parametric_profile": {
+      "rows": 54,
+      "formula": "one per Extrusion/Revolution/Sweep shape.profile; none Cuboid"
+    },
+    "bim_parametric_polygon_point": {
+      "rows": 9,
+      "formula": "one per parametric Polygon.points[]"
+    },
+    "bim_solid_sweep_point": {
+      "rows": 16,
+      "formula": "one per Sweep.path[]"
+    },
+    "bim_schedule_column": {
+      "rows": 190,
+      "formula": "sum(count(model.schedules[].columns))"
+    },
+    "bim_schedule_sort": {
+      "rows": 190,
+      "formula": "sum(count(model.schedules[].sort))"
+    },
+    "bim_schedule_filter": {
+      "rows": 190,
+      "formula": "sum(count(model.schedules[].filter))"
+    },
+    "bim_schedule_group": {
+      "rows": 190,
+      "formula": "sum(count(model.schedules[].group))"
+    },
+    "bim_schedule_storey": {
+      "rows": 190,
+      "formula": "sum(count(model.schedules[].storeys))"
+    },
+    "bim_schedule_phase": {
+      "rows": 190,
+      "formula": "sum(count(model.schedules[].phases))"
+    },
+    "bim_template_target": {
+      "rows": 82,
+      "formula": "sum(count(model.property_templates[].applies_to))"
+    },
+    "bim_property_def": {
+      "rows": 82,
+      "formula": "sum(count(model.property_templates[].properties))"
+    },
+    "bim_property_default": {
+      "rows": 81,
+      "formula": "one per present PropertyDef.default_value"
+    },
+    "bim_property_allowed": {
+      "rows": 80,
+      "formula": "one per PropertyDef.allowed[]"
+    },
+    "bim_classification_item": {
+      "rows": 2,
+      "formula": "sum(count(model.classification_systems[].entries))"
+    },
+    "bim_classification_assignment": {
+      "rows": 3,
+      "formula": "one per ClassificationSet[system_key], empty set retains element parent"
+    }
+  },
+  "previousWitnessSha256": "2e7a8baf37473afbc9fd97096236b3fc08a58b4210f285b031a9eb38b134b3d8",
+  "canonicalDefaultArrayChangeCount": 43,
+  "independentRowCountProof": "Only43 absent optional arrays became zero-length arrays; all row formulas use count(array) with absence as0, so each of93 per-table counts and total3972 remains identical."
+}

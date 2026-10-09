@@ -1,0 +1,43 @@
+{
+  "owner": "originalFrameworkReservedJob",
+  "payloadBytes": 8193,
+  "backingBytes": 16384,
+  "grant": {
+    "items": 1,
+    "copyBytes": 4096,
+    "capacityBytes": 0,
+    "releaseBytes": 16384,
+    "depth": 1
+  },
+  "turns": [
+    {
+      "copiedItems": 1,
+      "copiedBytes": 4096,
+      "capacityBytes": 0,
+      "releaseBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 4096,
+      "capacityBytes": 0,
+      "releaseBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 1,
+      "capacityBytes": 0,
+      "releaseBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "capacityBytes": 0,
+      "releaseBytes": 16384
+    }
+  ],
+  "zeroItems": "sameOwnerEmptyReceipt",
+  "shortCopy": "samePayloadEmptyReceipt",
+  "shortRelease": "sameBackingEmptyReceipt",
+  "zeroDepth": "sameOwnerDepthLimit",
+  "terminal": "wholeBackingReleasedThenEmptyComplete"
+}

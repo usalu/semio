@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { existsSync, realpathSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { acquireQueuedResourceLease, type LeaseWait, type ResourceLease } from "../../../🔒️leases/🟦️.ts";
@@ -36,5 +36,5 @@ export function cargoBuildLeaseIdentityV1(buildDirectory: string, args: readonly
 export async function acquireCargoBuildLeaseV1(options: { readonly directory: string; readonly buildDirectory: string; readonly args: readonly string[]; readonly signal: AbortSignal; readonly onWait?: (progress: LeaseWait) => void }): Promise<ResourceLease> {
   const identity = cargoBuildLeaseIdentityV1(options.buildDirectory, options.args);
   const resource = JSON.stringify([schema.definitions.Protocol.const.namespace, identity.buildDirectory, identity.profile]);
-  return acquireQueuedResourceLease({ directory: options.directory, resource, mode: identity.mode, owner: randomUUID(), signal: options.signal, onWait: options.onWait });
+  return acquireQueuedResourceLease({ directory: options.directory, resource, mode: identity.mode, owner: randomBytes(16).toString("base64url"), signal: options.signal, onWait: options.onWait });
 }

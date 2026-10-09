@@ -4806,6 +4806,7 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework-trace",
+ "semio-framework-value",
  "wasm-bindgen",
 ]
 
@@ -4924,6 +4925,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-expression"
+version = "0.1.0"
+
+[[package]]
 name = "semio-framework-geometry"
 version = "0.1.0"
 
@@ -4973,6 +4978,7 @@ name = "semio-framework-io-binary-source"
 version = "0.1.0"
 dependencies = [
  "semio-framework-io-base64",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -5360,6 +5366,7 @@ dependencies = [
  "semio-framework-deflate",
  "semio-framework-io-base64",
  "semio-framework-io-binary-source",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -5380,6 +5387,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
+ "semio-framework-plugin-mounted-owner",
  "semio-framework-replication",
  "semio-framework-schema",
  "semio-framework-schema-composition",
@@ -5430,6 +5438,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-mounted-owner"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-raster"
 version = "0.1.0"
 dependencies = [
@@ -5447,6 +5463,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack-error",
+ "semio-framework-pack-json",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-trace",
@@ -5562,6 +5579,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-machine",
  "semio-framework-replication",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -5625,6 +5643,7 @@ version = "0.1.0"
 dependencies = [
  "bytemuck",
  "semio-framework-ui-render",
+ "semio-framework-value",
  "wgpu",
 ]
 
@@ -5692,6 +5711,7 @@ name = "semio-framework-ui-viewport"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-pack-json",
  "semio-framework-value",
  "serde",
 ]
@@ -6981,7 +7001,9 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-expression",
  "semio-framework-geometry",
+ "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
@@ -6997,6 +7019,8 @@ dependencies = [
  "semio-s-artifact-stdio-csv",
  "semio-s-artifact-stdio-gltf",
  "semio-s-artifact-stdio-ifc",
+ "semio-s-artifact-stdio-json",
+ "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-xml",
 ]

@@ -213,10 +213,10 @@ export type SchemaExportEntry = {
 };
 
 /** 🪪️ Taxonomy `schemaExportResolution.rustEntriesContractId` — the only `contractId` a registry dump
- * may carry, and the value `schema verify --rust-entries` refuses to read under any other name. */
+ * may carry, and the value `schema verify` refuses to read under any other name. */
 export const SCHEMA_EXPORT_ENTRIES_CONTRACT_ID = "schema-export-registry-entries-v1";
 
-/** 📤️ The runtime export registry rendered for `schema verify --rust-entries` — TS twin of Rust
+/** 📤️ The runtime export registry rendered for `schema verify` — TS twin of Rust
  * `SchemaExportEntries`, sorted and deduplicated by `(scope, export, format)`. */
 export type SchemaExportEntries = {
   readonly contractId: typeof SCHEMA_EXPORT_ENTRIES_CONTRACT_ID;

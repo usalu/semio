@@ -5,12 +5,7 @@
 //! `🔺️diff/🚫️.absent` instead of a diff encoding, and `➡️after` is byte-identical to
 //! `⬅️before`.
 //!
-//! ⚠️ Why this verb's covering case is the REJECTION branch and not a successful duplicate: the
-//! duplicate's id is content-addressed through `create_drawing_id`/`DefaultHasher`
-//! (`🧬️schema/🦀️component.rs`, `drawing_id_hex`). A hand-authored `➡️after` would have to embed that
-//! hash, i.e. hand-forge a value produced by `std`'s deliberately unspecified default hasher — the
-//! same class of forbidden hand-reimplementation the recipe bans for the binary codecs. The
-//! `target-missing` branch reaches no hash at all, so it is the branch this fixture pins.
+//! 📋️ Missing source remains the authored refusal; positive duplication carries explicit target identities.
 
 use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
 use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
@@ -95,7 +90,7 @@ async fn declared_outcome_holds() {
 /// ⚖️ A duplicate of a present layer sums its inverse diffs to exactly the negative of the forward insert.
 #[semio_framework_async_macros::async_test]
 async fn a_present_source_inverse_sums_to_the_negative_diff() {
-    let base = DrawingSnapshot { layers: vec![crate::schema::create_drawing_shape_layer_rect("Rect")].into(), ..Default::default() };
+    let base = DrawingSnapshot { layers: vec![crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect")].into(), ..Default::default() };
     let source = crate::schema::layer_id(&base.layers[0]).clone();
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&crate::mutations::duplicate_layer(source.into()), &base).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&crate::mutations::duplicate_layer(source.clone(),vec![crate::schema::identity::DrawingIdentityAssignment{source:source.clone(),target:"duplicate-target".into()}].into()), &base).await;
 }

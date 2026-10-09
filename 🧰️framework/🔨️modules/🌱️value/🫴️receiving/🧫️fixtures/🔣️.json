@@ -1,0 +1,10 @@
+{
+ "schema":"value.original-native-receiving/v1",
+ "maximumBytes":64,
+ "initialBytes":7,
+ "text":"雪",
+ "expectedBytes":10,
+ "parentCompleted":2,
+ "parentTotal":5,
+ "cases":["full","portRefused","cancelBefore","cancelAfter","zeroRemaining","invalidOffset","unwind"]
+}

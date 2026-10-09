@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "copiedItems",
+    "copiedBytes",
+    "retainedCapacityBytes",
+    "releasedBytes"
+  ],
+  "properties": {
+    "copiedItems": {
+      "const": 1
+    },
+    "copiedBytes": {
+      "const": 0
+    },
+    "retainedCapacityBytes": {
+      "const": 64
+    },
+    "releasedBytes": {
+      "const": 0
+    }
+  }
+}

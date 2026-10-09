@@ -1,0 +1,21 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "nx.json",
+      "sha256": "8d5b1ad39a0199e7ddb180d8e3040091d496966287fb08a474668f436a3fe9ee"
+    },
+    {
+      "path": "📋️project.json",
+      "sha256": "28dc133c4b9d356944ab22edc3a76651e429b4aae6918d6fed6679b57d806e25"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "sha256": "b91633467acfb794bce4dfca15979a4c0620f61c86d892fecb3aceb0ea4f1001"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "sha256": "1522e4d01f44a308f047bf13bf56b927c5dc0cba5ab317122f41fc4296ea3199"
+    }
+  ]
+}

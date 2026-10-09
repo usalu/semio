@@ -77,17 +77,49 @@
         assert!(size_of::<semio_framework_job::MountedWorkerJobSession<BoardFillJob>>() <= 32 * 1_024);
         assert!(size_of::<semio_framework_job::WorkerJobSessionAdmissionRejected<BoardFillJob>>() <= 32 * 1_024);
         assert!(size_of::<Result<semio_framework_job::MountedWorkerJobSession<BoardFillJob>, semio_framework_job::WorkerJobSessionAdmissionRejected<BoardFillJob>>>() <= 32 * 1_024);
-        assert!(sources.terminal_is_empty());
-        assert!(virtual_handles.terminal_is_empty());
+        assert!(!sources.terminal_is_empty());
+        assert!(!virtual_handles.terminal_is_empty());
         assert!(BoardFillFixedPages::<u8, { usize::MAX }>::try_new().is_err());
+    }
+
+#[cfg(test)]
+    #[test]
+    fn board_fill_descriptor_retirement_needs_original_release_and_depth_authority() {
+        use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
+        let law:serde_json::Value=serde_json::from_str(include_str!("🧫️descriptor.json")).unwrap();
+        let mut pages=BoardFillFixedPages::<u64,4>::new();
+        let identity=pages.pages.as_ptr();
+        let bytes=std::mem::size_of_val(pages.pages.as_ref());
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:bytes,maximum_depth:1};
+        for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_release_bytes:bytes-1,..grant},RetainedCloneGrant{maximum_depth:0,..grant}] {
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||pages.retire_descriptor(denied).unwrap());
+            assert_eq!(step.progress(),RetainedCloneProgress::default());
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+            assert_eq!(pages.pages.as_ptr(),identity);
+        }
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||pages.retire_descriptor(grant).unwrap());
+        assert_eq!(step.progress(),RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()});
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(0,bytes));
+        assert!(pages.terminal_is_empty());
+        let reference=vec![0_u8;bytes].into_boxed_slice();
+        let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(reference));
+        assert_eq!(heap.released_bytes,step.progress().released_bytes);
+        assert_eq!(serde_json::json!({"copiedItems":step.progress().copied_items,"birthBytes":0,"releaseMatchesOriginal":heap.released_bytes==bytes,"terminal":pages.terminal_is_empty()}),law["accepted"]);
+        eprintln!("[DEBUG] original fill descriptor release={bytes} denied turns preserve pointer and backing");
     }
 
 #[cfg(test)]
     fn with_board_step_context<T>(fuel: u64, cancel: semio_framework_job::CancelToken, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
         let mut sequence = 0;
+        let mut receipt=semio_framework_value::RetainedCloneProgress::default();
+        let policy:serde_json::Value=serde_json::from_str(include_str!("🧫️descriptor.json")).unwrap();
+        let axis=|name:&str|policy["contextGrant"][name].as_u64().unwrap()as usize;
+        let grant=semio_framework_value::RetainedCloneGrant{maximum_items:axis("items"),maximum_copy_bytes:axis("copyBytes"),maximum_capacity_bytes:axis("capacityBytes"),maximum_release_bytes:axis("releaseBytes"),maximum_depth:axis("depth")};
         let mut context =
-            semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fuel, u64::MAX), cancel, semio_framework_job::default_now_us, &mut sequence);
-        step(&mut context)
+            semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fuel, u64::MAX,grant), cancel, semio_framework_job::default_now_us, &mut sequence,&mut receipt);
+        let result=step(&mut context);
+        assert!(context.retained_progress().fits(grant));
+        result
     }
 
 #[cfg(test)]
@@ -1719,3 +1751,43 @@ fn draft_referenced_ids_paint_highlighted_without_publishing() {
     assert_eq!((style(&host, "node-a"), host.highlighted_ids_json().expect("highlighted ids")), (BoardElementStyleKind::Neutral, "[]".to_string()), "the empty set clears it");
 }
 //#endregion 🔗️DraftReferences
+
+#[cfg(test)]
+#[test]
+fn empty_fill_capture_and_ingress_keep_every_original_descriptor_until_admitted() {
+    use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
+    let(mut capture,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||BoardFillSnapshotCapture::new(0.0));
+    let mut released=0;
+    for turn in 0..16{
+        let release=capture.next_close_release_byte_demand();
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:release,maximum_depth:1};
+        if release!=0{
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||capture.close_step(RetainedCloneGrant{maximum_release_bytes:release-1,..grant}));
+            assert_eq!(step.progress(),RetainedCloneProgress::default());
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+            assert_eq!(capture.next_close_release_byte_demand(),release);
+        }
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||capture.close_step(grant));
+        assert!(step.progress().fits(grant));
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(0,step.progress().released_bytes));
+        released+=heap.released_bytes;
+        if capture.terminal_is_empty(){break;}
+        assert!(turn<15);
+    }
+    assert!(capture.terminal_is_empty());
+    assert_eq!(released,birth.requested_bytes);
+    let(mut ingress,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||BoardFillSnapshotIngress::new(0.0));
+    let mut released=0;
+    for turn in 0..16{
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:ingress.next_close_release_byte_demand(),maximum_depth:1};
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ingress.close_step(grant));
+        assert!(step.progress().fits(grant));
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(0,step.progress().released_bytes));
+        released+=heap.released_bytes;
+        if ingress.terminal_is_empty(){break;}
+        assert!(turn<15);
+    }
+    assert!(ingress.terminal_is_empty());
+    assert_eq!(released,birth.requested_bytes);
+    eprintln!("[DEBUG] empty fill ingress and capture retain all descriptor custody until exact physical release");
+}

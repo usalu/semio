@@ -1,0 +1,57 @@
+{
+  "recordedAt": "2026-10-09 05:36:29 UTC",
+  "rootOct9BimPublicMissingBefore": {
+    "session": 66817,
+    "pending": false,
+    "exitCode": 1,
+    "hookHeld": true,
+    "qualification": "Compiler-only obsolete Playbook and shared Plugin216 errors; no BIM missing-capability runtime"
+  },
+  "rootOct9GenerationPrerequisite": {
+    "sourceSession": 46061,
+    "sourceExitCode": 0,
+    "sourceChecks": 17,
+    "nativeSession": 96463,
+    "nativeExitCode": 0,
+    "nativePassed": 6,
+    "nativeSkipped": 8,
+    "ownerLaws": 4,
+    "qualification": "Original compiled per-root lease custody and physical conservation; no universal registered IO",
+    "after3": {
+      "session": 27533,
+      "pending": true,
+      "reason": "Added physical depth and work undergrant tests"
+    }
+  },
+  "rootOct9JpgPublication": {
+    "nativeBefore": {
+      "session": 39174,
+      "exitCode": 1,
+      "qualification": "Compiler-only Plugin283 errors; no JPG Nextest"
+    },
+    "independentOriginalOracle": {
+      "session": 86871,
+      "exitCode": 0,
+      "semanticTables": 6
+    },
+    "permanentRefresh": {
+      "session": 71785,
+      "pending": true,
+      "actualOuterAndInnerDispatchObserved": true
+    },
+    "guiSeedOrder": 900.05809481,
+    "published": false,
+    "manualDigestEdit": false
+  },
+  "rootOct9WindowPagedRegistry": {
+    "sourceSession": 51676,
+    "pending": true,
+    "nativeSelector": "window_config_paged_registry",
+    "guiSeedOrders": [
+      900.0366011,
+      900.0366012
+    ],
+    "wholeOwnerQualified": false
+  },
+  "rootCurrentUniversalGoalIncomplete": true
+}

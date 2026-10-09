@@ -398,9 +398,20 @@ impl ArtifactApp for DummyApp {
     }
 }
 
+/// 🎟️ Supplies the neutral fixture's independent caller ceilings before any artifact work.
+fn dummy_fixture_caller() -> (crate::MountedOwnerPolicyV1, usize) {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();
+    let grant = &law["native"]["grant"];
+    let original = semio_framework_value::RetainedCloneGrant { maximum_items: grant[0].as_u64().unwrap() as usize, maximum_copy_bytes: grant[1].as_u64().unwrap() as usize, maximum_capacity_bytes: grant[2].as_u64().unwrap() as usize, maximum_release_bytes: grant[3].as_u64().unwrap() as usize, maximum_depth: grant[4].as_u64().unwrap() as usize };
+    (crate::MountedOwnerPolicyV1 { preparation: original, maintenance: original, close: original }.validate().unwrap(), law["native"]["maximumIdentityBytes"].as_u64().unwrap() as usize)
+}
+
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_the_registered_catalogue_without_a_declared_action() {
-    let mut app = new_app::<DummyApp>(protocol::ActorId("actor".into())).await;
+    let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
+    let mut observer = |_| true;
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    let mut app = new_app::<DummyApp>(protocol::ActorId("actor".into()), mounted_policy, &mut identity).await;
     let args = semio_framework_value::DslValue::object([("exampleId".to_string(), semio_framework_value::DslValue::String("four".to_string()))]);
     let result = app.dispatch_action("setActiveExample", Some(&args), &meta("actor")).await.expect("catalogue load");
     let semio_framework::kernel::Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("load effect") else {
@@ -411,7 +422,7 @@ async fn set_active_example_loads_the_registered_catalogue_without_a_declared_ac
     let missing = semio_framework_value::DslValue::object([("exampleId".to_string(), semio_framework_value::DslValue::String("missing".to_string()))]);
     let refused = app.dispatch_action("setActiveExample", Some(&missing), &meta("actor")).await.expect_err("unknown example");
     assert_eq!(refused.code.0, "app.example.unknown");
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut app, mounted_policy);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -423,29 +434,41 @@ async fn meta_carries_actor_and_local_instance_id() {
 
 #[semio_framework_async_macros::async_test]
 async fn new_app_constructs_a_registry_less_wrapper() {
-    let mut app = new_app::<DummyApp>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
+    let mut observer = |_| true;
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    let mut app = new_app::<DummyApp>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
     let error = app.dispatch_typed(DummyCommand::Increment, &meta("local")).await.expect_err("registry-less wrapper must fail closed");
     assert_eq!(error.code.0, "interactive-job.unknown-key");
     assert!(error.message.contains("no exact manifest declaration"), "the registry-less wrapper fails on the missing declaration, not on a missing factory: {}", error.message);
     assert_eq!(app.snapshot().unwrap().count, 0, "a fail-closed dispatch never reaches the reducer");
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut app, mounted_policy);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
-    let mut app = new_registered_app::<DummyApp, _>(dummy_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
-    assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1).await;
-    close_registered_fixture_app(&mut app);
+    let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
+    let mut observer = |_| true;
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    let mut app = new_registered_app::<DummyApp, _>(dummy_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+    assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1, mounted_policy).await;
+    close_registered_fixture_app(&mut app, mounted_policy);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn assert_two_instances_converge_on_disjoint_edits() {
-    assert_two_registered_instances_converge::<DummyApp, i32, _, _>("mem://testkit-converge", dummy_manifest, DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
+    let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
+    let mut observer = |_| true;
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    assert_two_registered_instances_converge::<DummyApp, i32, _, _>("mem://testkit-converge", dummy_manifest, DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count, mounted_policy, &mut identity).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn assert_ingest_idempotent_does_not_double_apply() {
-    assert_registered_ingest_idempotent::<DummyApp, i32, _, _>(dummy_manifest, DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
+    let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
+    let mut observer = |_| true;
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    assert_registered_ingest_idempotent::<DummyApp, i32, _, _>(dummy_manifest, DummyCommand::Increment, |app| app.snapshot().unwrap().count, mounted_policy, &mut identity).await;
 }
 
 //#region 🧬️MembersRoster
@@ -488,6 +511,9 @@ impl store::MemberStoreOwner<DummyMutation> for DummySnapshot {
 /// threaded through every rung and not just accepted at the signature.
 #[semio_framework_async_macros::async_test]
 async fn registered_laws_accept_an_explicit_member_roster() {
-    assert_two_registered_instances_converge_with_members::<DummyApp, DummyMembers, i32, _, _>("mem://testkit-converge-members", dummy_manifest, DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
-    assert_registered_ingest_idempotent_with_members::<DummyApp, DummyMembers, i32, _, _>(dummy_manifest, DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
+    let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
+    let mut observer = |_| true;
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    assert_two_registered_instances_converge_with_members::<DummyApp, DummyMembers, i32, _, _>("mem://testkit-converge-members", dummy_manifest, DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count, mounted_policy, &mut identity).await;
+    assert_registered_ingest_idempotent_with_members::<DummyApp, DummyMembers, i32, _, _>(dummy_manifest, DummyCommand::Increment, |app| app.snapshot().unwrap().count, mounted_policy, &mut identity).await;
 }

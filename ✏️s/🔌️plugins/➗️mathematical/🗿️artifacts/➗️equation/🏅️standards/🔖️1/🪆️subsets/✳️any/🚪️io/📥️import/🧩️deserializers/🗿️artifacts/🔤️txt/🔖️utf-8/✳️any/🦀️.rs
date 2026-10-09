@@ -12,7 +12,7 @@ pub struct TxtIntoEquation;
 impl Deserializer<EquationSnapshot> for TxtIntoEquation {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<EquationSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<EquationSnapshot> {
         deserialize_dsl_txt(payload)
     }
 }

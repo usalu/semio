@@ -16,7 +16,8 @@ use semio_framework_job::{
     root_cancel_token, BatchDriveConfig, BatchJobParams, BatchJobSession, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, WorkerJobSessionAdmissionRejected, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US,
 };
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
-use std::sync::Arc;
+use std::{mem::size_of, sync::Arc};
+use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress};
 
 //#region 📥️FrameBuildInputs
 /// 📥️ The fixed scalar `Send`-safe slice of `AppRuntime` this job needs.
@@ -55,24 +56,7 @@ impl FrameBuildJob {
         self.complete.take()
     }
 
-    fn close_step(&mut self) -> bool {
-        if let Some(directives) = self.complete.as_mut() {
-            if !directives.close_step() {
-                return false;
-            }
-            self.complete = None;
-            return false;
-        }
-        true
-    }
-}
 
-impl FrameDirectives {
-    /// ♻️ Incremental retirement of the directive owner — driven by `🧊️renderer/🦀️.rs`'s own frame
-    /// close ladder, so it is crate-visible rather than module-private.
-    pub(crate) fn close_step(&mut self) -> bool {
-        true
-    }
 }
 
 impl InteractiveJob for FrameBuildJob {
@@ -92,15 +76,34 @@ impl InteractiveJob for FrameBuildJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 && self.complete.is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if self.complete.is_none() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        if FrameBuildJob::close_step(self) {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < size_of::<FrameDirectives>() {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
         }
+        if grant.maximum_depth == 0 {
+            return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() };
+        }
+        self.complete = None;
+        InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<FrameDirectives>(), ..RetainedCloneProgress::default() } }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(if self.complete.is_some() { size_of::<FrameDirectives>() } else { 0 })
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(usize::from(self.complete.is_some()))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -117,8 +120,8 @@ fn now_us() -> Option<u64> {
 
 /// ⏱️ One frame-build step's grant: the interactive lane's fuel and wall budget, charged per retained
 /// Worker turn by [`ActiveFrameBuild::step`].
-fn batch_params(operation: OperationId, generation: Generation, cancel: CancelToken) -> BatchJobParams {
-    BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { site: "os_renderer_frame_build", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US }, now_us }
+fn batch_params(operation: OperationId, generation: Generation, cancel: CancelToken, retained: RetainedCloneGrant) -> BatchJobParams {
+    BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { retained, site: "os_renderer_frame_build", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US }, now_us }
 }
 //#endregion ⏱️Clock
 
@@ -129,6 +132,7 @@ fn batch_params(operation: OperationId, generation: Generation, cancel: CancelTo
 /// successfully computed ones. One job is in flight at a time; a still-running job is left alone (not
 /// cancelled) and re-checked next call rather than submitting a second overlapping one.
 pub(crate) struct FrameBuildHandle {
+    retained: RetainedCloneGrant,
     session: Option<semio_framework_job::WorkerJobSession<ActiveFrameBuild>>,
     rejected: Option<WorkerJobSessionAdmissionRejected<ActiveFrameBuild>>,
     ticket: Option<semio_framework_job::WorkerJobTicket>,
@@ -160,6 +164,7 @@ enum ActiveFramePhase {
 }
 
 struct ActiveFrameBuild {
+    retained: RetainedCloneGrant,
     runtime: crate::RuntimeMailbox,
     handle: crate::AppHandle,
     operation: OperationId,
@@ -177,63 +182,86 @@ enum ActiveFrameStep {
     Complete(Option<crate::AppFramePresentation>),
 }
 
-fn run_frame_owner_turn(cx: &mut StepContext<'_>, advance: impl FnOnce() -> ActiveFrameStep) -> Option<ActiveFrameStep> {
+fn run_frame_owner_turn(cx: &mut StepContext<'_>, advance: impl FnOnce(&mut StepContext<'_>) -> ActiveFrameStep) -> Option<ActiveFrameStep> {
     if cx.should_yield() {
         return None;
     }
-    let step = advance();
+    let step = advance(cx);
     cx.consume_fuel(1);
     Some(step)
 }
 
-fn retire_active_phase(phase: &mut ActiveFramePhase) -> bool {
-    match phase {
+fn worker_close_step(step: semio_framework_job::WorkerJobCloseStep, grant: RetainedCloneGrant, terminal: bool) -> InteractiveJobCloseStep {
+    use semio_framework_job::WorkerJobCloseStep;
+    match step {
+        WorkerJobCloseStep::Pending { progress } => InteractiveJobCloseStep::Pending { progress },
+        WorkerJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Complete { progress },
+        WorkerJobCloseStep::Blocked => InteractiveJobCloseStep::Blocked,
+        WorkerJobCloseStep::Refused { kind, progress } => InteractiveJobCloseStep::Refused { kind, progress },
+    }.admit(grant, terminal)
+}
+
+fn retire_active_phase(phase: &mut ActiveFramePhase, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+    let empty = match phase {
         ActiveFramePhase::Deadlines(session) => {
             if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
                 session.begin_close();
-                return false;
+                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
             }
-            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            session.terminal_is_empty()
+            if !session.terminal_is_empty() { return crate::frame_child_step(worker_close_step(session.close_step(grant), grant, session.terminal_is_empty()), grant, session.terminal_is_empty()); }
+            true
         }
         ActiveFramePhase::DeadlineAdmissionRejected(rejected) => {
-            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            rejected.terminal_is_empty()
+            if !rejected.terminal_is_empty() { return crate::frame_child_step(rejected.close_step(grant), grant, rejected.terminal_is_empty()); }
+            true
         }
-        ActiveFramePhase::ApplyPending(directives) => directives.close_step(),
-        ActiveFramePhase::Build(transaction) => transaction.close_step() && transaction.terminal_is_empty(),
-        ActiveFramePhase::Prepare(preparation) => preparation.close_step() && preparation.terminal_is_empty(),
-        ActiveFramePhase::Terminal => true,
+        ActiveFramePhase::ApplyPending(_) => true,
+        ActiveFramePhase::Build(transaction) => {
+            if !transaction.terminal_is_empty() { return crate::frame_child_step(transaction.close_step(grant), grant, transaction.terminal_is_empty()); }
+            true
+        }
+        ActiveFramePhase::Prepare(preparation) => {
+            if !preparation.terminal_is_empty() { return crate::frame_child_step(preparation.close_step(grant), grant, preparation.terminal_is_empty()); }
+            true
+        }
+        ActiveFramePhase::Terminal => return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() },
+    };
+    if empty {
+        let bytes = size_of::<ActiveFramePhase>();
+        if let Some(step) = crate::frame_inline_gate(grant, bytes) { return step; }
+        *phase = ActiveFramePhase::Terminal;
+        return crate::frame_inline_progress(bytes);
     }
+    InteractiveJobCloseStep::Blocked
 }
 
 impl ActiveFrameBuild {
-    fn new(runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, cancel: CancelToken) -> Self {
+    fn new(runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, cancel: CancelToken, retained: RetainedCloneGrant) -> Self {
         let handle = runtime.downgrade();
-        let phase = match BatchJobSession::try_new(FrameBuildJob::new(inputs), batch_params(operation, generation, cancel.clone())) {
+        let phase = match BatchJobSession::try_new(FrameBuildJob::new(inputs), batch_params(operation, generation, cancel.clone(), retained)) {
             Ok(session) => ActiveFramePhase::Deadlines(session),
             Err(mut rejected) => {
                 rejected.begin_close();
                 ActiveFramePhase::DeadlineAdmissionRejected(rejected)
             }
         };
-        Self { runtime, handle, operation, generation, cancel, preview_sequence: 0, phase, overruns: semio_framework_trace::StepOverrunLedger::new(), completed: None, closing: false }
+        Self { retained, runtime, handle, operation, generation, cancel, preview_sequence: 0, phase, overruns: semio_framework_trace::StepOverrunLedger::new(), completed: None, closing: false }
     }
 
     fn cancel(&self) {
         self.cancel.cancel_now();
     }
 
-    fn retire_cancelled_phase(&mut self) -> bool {
+    fn retire_cancelled_phase(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         let candidate_returned = match &mut self.phase {
             ActiveFramePhase::Build(transaction) => transaction.discard_presented_input_candidate(&self.runtime),
             ActiveFramePhase::Prepare(preparation) => preparation.discard_presented_input_candidate(&self.runtime),
             _ => true,
         };
         if !candidate_returned {
-            return false;
+            return InteractiveJobCloseStep::Blocked;
         }
-        retire_active_phase(&mut self.phase)
+        retire_active_phase(&mut self.phase, grant)
     }
 
     /// 🛑️ Terminates the frame for an overrun its own `StepOverrunLedger` attributed to the step —
@@ -281,9 +309,12 @@ impl ActiveFrameBuild {
     /// (`🧊️renderer/🦀️.rs`), which outlives every candidate.
     ///
     /// 🩺️ A refused preparation is the ONE terminal this build cannot explain by itself.
-    fn advance(&mut self) -> ActiveFrameStep {
+    fn advance(&mut self, cx: &mut StepContext<'_>) -> ActiveFrameStep {
         if self.cancel.is_cancelled_now() {
-            if self.retire_cancelled_phase() {
+            let grant = cx.retained_grant();
+            let step = self.retire_cancelled_phase(grant);
+            if cx.consume_retained(step.progress()).is_err() { return ActiveFrameStep::Pending; }
+            if matches!(step, InteractiveJobCloseStep::Complete { .. }) {
                 self.phase = ActiveFramePhase::Terminal;
                 return ActiveFrameStep::Complete(None);
             }
@@ -297,7 +328,7 @@ impl ActiveFrameBuild {
                 ActiveFramePhase::ApplyPending(directives) => std::mem::take(directives),
                 _ => return ActiveFrameStep::Pending,
             };
-            self.phase = ActiveFramePhase::Build(crate::FrameTransaction::new(directives, self.operation, self.generation));
+            self.phase = ActiveFramePhase::Build(crate::FrameTransaction::new(directives, self.operation, self.generation, self.retained));
             return ActiveFrameStep::Pending;
         }
         match &mut self.phase {
@@ -331,7 +362,9 @@ impl ActiveFrameBuild {
                 }
             }
             ActiveFramePhase::DeadlineAdmissionRejected(rejected) => {
-                let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let grant = cx.retained_grant();
+                let step = rejected.close_step(grant).admit(grant, rejected.terminal_is_empty());
+                if cx.consume_retained(step.progress()).is_err() { return ActiveFrameStep::Pending; }
                 if rejected.terminal_is_empty() {
                     self.phase = ActiveFramePhase::Terminal;
                     ActiveFrameStep::Complete(None)
@@ -346,18 +379,7 @@ impl ActiveFrameBuild {
                     self.quarantine_overrun("os_renderer.frame.transaction has no monotonic clock");
                     return ActiveFrameStep::Pending;
                 }
-                let transaction_step = {
-                    let now = now_us();
-                    let mut context = StepContext::new(
-                        self.operation,
-                        self.generation,
-                        now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, INTERACTIVE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
-                        self.cancel.clone(),
-                        now_us,
-                        &mut self.preview_sequence,
-                    );
-                    transaction.step(&self.runtime, &self.handle, &mut context)
-                };
+                let transaction_step = transaction.step(&self.runtime, &self.handle, cx);
                 if self.overruns.admit(&watchdog.finish()).is_terminal() {
                     if let crate::AppFrameTransactionStep::Complete(frame) = transaction_step {
                         let preparation = frame.into_preparation();
@@ -386,7 +408,7 @@ impl ActiveFrameBuild {
                 }
             }
             ActiveFramePhase::Prepare(preparation) => {
-                let outcome = preparation.drive_step(self.operation, self.generation, self.cancel.clone(), &mut self.preview_sequence);
+                let outcome = preparation.drive_step(self.operation, self.generation, self.cancel.clone(), self.retained, &mut self.preview_sequence);
                 let prepare_verdict = preparation.callback_verdict().copied();
                 if prepare_verdict.is_some_and(|verdict| self.overruns.admit(&verdict).is_terminal()) {
                     self.quarantine_overrun("os_renderer.prepare.worker overran the interactive ceiling");
@@ -419,7 +441,7 @@ impl InteractiveJob for ActiveFrameBuild {
         if cx.is_cancelled() {
             self.cancel();
         }
-        match run_frame_owner_turn(cx, || self.advance()) {
+        match run_frame_owner_turn(cx, |cx| self.advance(cx)) {
             None | Some(ActiveFrameStep::Pending) => StepOutcome::Yield,
             Some(ActiveFrameStep::Complete(frame)) => {
                 self.completed = frame;
@@ -436,26 +458,17 @@ impl InteractiveJob for ActiveFrameBuild {
         self.cancel();
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.begin_close();
-        if maximum_items == 0 {
-            return if self.terminal_is_empty() { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 } };
-        }
         if let Some(frame) = self.completed.as_mut() {
-            if !frame.discard_presented_input_candidate(&self.runtime) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            if !frame.close_step() || !frame.terminal_is_empty() {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-            }
+            if !frame.discard_presented_input_candidate(&self.runtime) { return InteractiveJobCloseStep::Blocked; }
+            if !frame.terminal_is_empty() { return crate::frame_child_step(frame.close_step(grant), grant, frame.terminal_is_empty()); }
+            let bytes = size_of::<Option<crate::AppFramePresentation>>();
+            if let Some(step) = crate::frame_inline_gate(grant, bytes) { return step; }
             self.completed = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return crate::frame_inline_progress(bytes);
         }
-        if !self.retire_cancelled_phase() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        self.phase = ActiveFramePhase::Terminal;
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        self.retire_cancelled_phase(grant)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -468,8 +481,9 @@ fn generation_is_fresh(requested: Generation, completed: Generation) -> bool {
 }
 
 impl FrameBuildHandle {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(retained: RetainedCloneGrant) -> Self {
         Self {
+            retained,
             session: None,
             rejected: None,
             ticket: None,
@@ -490,7 +504,7 @@ impl FrameBuildHandle {
     }
 
     fn admit_active(&mut self, active: ActiveFrameBuild) {
-        let params = batch_params(active.operation, active.generation, active.cancel.clone());
+        let params = batch_params(active.operation, active.generation, active.cancel.clone(), active.retained);
         match semio_framework_job::WorkerJobSession::try_new(active, params) {
             Ok(session) => self.session = Some(session),
             Err(mut rejected) => {
@@ -507,7 +521,7 @@ impl FrameBuildHandle {
         }
         self.latest_requested_generation = generation;
         if let Some(rejected) = self.rejected.as_mut() {
-            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let _ = rejected.close_step(self.retained);
             if rejected.terminal_is_empty() {
                 self.rejected = None;
             }
@@ -519,7 +533,7 @@ impl FrameBuildHandle {
                 if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
                     let _ = session.begin_close();
                 } else {
-                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    let _ = session.close_step(self.retained);
                     if session.terminal_is_empty() {
                         self.session = None;
                     }
@@ -572,7 +586,7 @@ impl FrameBuildHandle {
                     }
                 }
                 semio_framework_job::WorkerJobPoll::Closing => {
-                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    let _ = session.close_step(self.retained);
                     if session.terminal_is_empty() {
                         self.session = None;
                     }
@@ -583,7 +597,7 @@ impl FrameBuildHandle {
         }
         if self.last_submitted_generation != Some(generation) {
             self.cancel = root_cancel_token();
-            self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone()));
+            self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone(), self.retained));
             self.last_submitted_generation = Some(generation);
         }
         None
@@ -627,7 +641,7 @@ impl FrameBuildHandle {
         }
         self.latest_requested_generation = generation;
         if let Some(rejected) = self.rejected.as_mut() {
-            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let _ = rejected.close_step(self.retained);
             if rejected.terminal_is_empty() {
                 self.rejected = None;
             }
@@ -677,7 +691,7 @@ impl FrameBuildHandle {
                     }
                 }
                 semio_framework_job::WorkerJobPoll::Closing => {
-                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    let _ = session.close_step(self.retained);
                     retire_session = session.terminal_is_empty();
                 }
                 semio_framework_job::WorkerJobPoll::TerminalEmpty => retire_session = true,
@@ -690,7 +704,7 @@ impl FrameBuildHandle {
         }
         crate::log_debug_diagnostic(&format!("[TRACE] frame build admitted generation={generation:?}"));
         self.cancel = root_cancel_token();
-        self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone()));
+        self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone(), self.retained));
         self.last_submitted_generation = Some(generation);
         None
     }
@@ -706,7 +720,7 @@ impl FrameBuildHandle {
     pub(crate) fn retire_for_component_surface_close_step(&mut self) -> bool {
         self.cancel.cancel_now();
         if let Some(rejected) = self.rejected.as_mut() {
-            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let _ = rejected.close_step(self.retained);
             if rejected.terminal_is_empty() {
                 self.rejected = None;
             }
@@ -715,7 +729,7 @@ impl FrameBuildHandle {
                 let _ = session.begin_close();
                 return false;
             }
-            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let _ = session.close_step(self.retained);
             if session.terminal_is_empty() {
                 self.session = None;
                 self.ticket = None;
@@ -735,7 +749,7 @@ impl FrameBuildHandle {
             return false;
         }
         if let Some(rejected) = self.rejected.as_mut() {
-            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let _ = rejected.close_step(self.retained);
             if rejected.terminal_is_empty() {
                 self.rejected = None;
             }
@@ -746,7 +760,7 @@ impl FrameBuildHandle {
                 let _ = session.begin_close();
                 return false;
             }
-            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let _ = session.close_step(self.retained);
             if session.terminal_is_empty() {
                 self.session = None;
             }

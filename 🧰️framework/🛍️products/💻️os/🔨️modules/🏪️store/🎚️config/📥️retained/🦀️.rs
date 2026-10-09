@@ -65,6 +65,7 @@ where
     fold_job: ManuallyDrop<Option<crate::os_spr::HistoryFoldJob<'static, crate::os_spr::history::RetainedHistoryFold>>>,
     fold: ManuallyDrop<Option<crate::os_spr::HistoryFold>>,
     normalized_transitions: ManuallyDrop<Option<Vec<crate::os_spr::MutationEnvelope>>>,
+    fold_auxiliary: ManuallyDrop<Option<(Vec<String>, Vec<crate::os_spr::Conflict>)>>,
     fold_completed: u64,
     progress_high_water: std::cell::Cell<u64>,
     source_edits: ManuallyDrop<Option<super::resident_backing::SourceIterator<crate::os_spr::HistoryEdit>>>,
@@ -127,6 +128,7 @@ where
             fold_job: ManuallyDrop::new(None),
             fold: ManuallyDrop::new(None),
             normalized_transitions: ManuallyDrop::new(None),
+            fold_auxiliary: ManuallyDrop::new(None),
             fold_completed: 0,
             progress_high_water: std::cell::Cell::new(0),
             source_edits: ManuallyDrop::new(None),
@@ -165,7 +167,7 @@ where
     fn metadata_retained_bytes(source: &crate::os_spr::HistoryOpMeta) -> usize {
         source.op_id.as_ref().map_or(0, String::len)
             + source.dependencies.iter().map(String::len).sum::<usize>()
-            + source.author_id.as_ref().map_or(0, String::len)
+            + source.author_id.as_ref().map_or(0, semio_framework_value::SharedUtf8::len)
             + source.group_id.as_ref().map_or(0, String::len)
             + source.messages.iter().map(|message| message.code.len() + message.message.len() + message.target.iter().map(String::len).sum::<usize>()).sum::<usize>()
     }
@@ -266,6 +268,18 @@ where
             Ok(None) => {}
             Err(diagnostic) => return self.reject(diagnostic),
         }
+        if self.fold_auxiliary.is_some() {
+            match Self::admit_input(&mut self.fold_auxiliary, grant) {
+                Ok(Some((owner, progress))) => {
+                    *self.active = Some(owner);
+                    if !progress.fits(grant) { return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
+                    self.last_retirement_progress = progress;
+                }
+                Ok(None) => {}
+                Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Initialization),
+            }
+            return ConfigStoreHydrationStep::Pending(self.progress());
+        }
         if self.retired_messages.is_some() {
             let capacity = std::mem::size_of::<super::ArtifactStoreMessageLedgerRetirement>();
             if grant.maximum_depth < 2 { return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
@@ -330,12 +344,14 @@ where
                 self.fold_completed = job.completed();
                 match result {
                     Ok(crate::os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(grant) => { self.last_retirement_progress = progress; }
-                    Ok(crate::os_spr::HistoryFoldJobStep::Ready((fold, transitions, replay_order, conflicts))) => {
-                        self.fold_job.take();
-                        assert!(conflicts.is_empty(), "config histories do not admit conflict owners");
-                        assert!(replay_order.is_empty(), "config histories do not prepare document replay owners");
+                    Ok(crate::os_spr::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), progress }) => {
+                        let valid_auxiliary = replay_order.is_empty() && conflicts.is_empty();
                         *self.fold = Some(fold);
                         *self.normalized_transitions = Some(transitions);
+                        if replay_order.capacity() != 0 || conflicts.capacity() != 0 { *self.fold_auxiliary = Some((replay_order, conflicts)); }
+                        if !progress.fits(grant) || !valid_auxiliary || !self.fold_job.as_ref().is_some_and(ErasedSnapshotRetirement::terminal_is_empty) { return self.reject(ConfigStoreHydrationDiagnostic::Replay); }
+                        self.last_retirement_progress = progress;
+                        self.fold_job.take();
                         self.phase = Phase::BindGenesis;
                     }
                     _ => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
@@ -716,6 +732,7 @@ where
         if let Some(owner) = self.fold_job.as_ref() { return child(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(copy)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }); }
         if let Some(value) = self.normalized_transitions.as_ref() { return controlled(value); }
         if let Some(value) = self.fold.as_ref() { return controlled(value); }
+        if let Some(value) = self.fold_auxiliary.as_ref() { return controlled(value); }
         if let Some(value) = self.source_edits.as_ref() { return child(value.demands(copy)?); }
         if let Some(value) = self.source_forwards.as_ref() { return child(value.demands(copy)?); }
         if let Some(value) = self.source_inverse.as_ref() { return child(value.demands(copy)?); }
@@ -725,18 +742,18 @@ where
         if let Some(value) = self.pending_retired_payload.as_ref() { return controlled(value); }
         if let Some(value) = self.pending_payload.as_ref() { return controlled(value); }
         if let Some(value) = self.pending_metadata.as_ref() { return controlled(value); }
-        let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
         if let Some(owner) = self.runtime.as_ref() { return child(owner.initialization_retirement_demands(copy)?); }
         if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
         if self.retired_messages.is_some() || self.pending_messages.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreMessageLedgerRetirement>(), depth: 2, ..Default::default() }); }
-        if let Some(value) = self.pending_snapshot.as_ref().or_else(|| self.validation.as_ref()).or_else(|| self.current.as_ref()) { return Ok(RetirementDemand { capacity_bytes: owners.initial_snapshot_retirement.retirement_birth_bytes(value), depth: 2, ..Default::default() }); }
+        if let Some(value) = self.pending_snapshot.as_ref().or_else(|| self.validation.as_ref()).or_else(|| self.current.as_ref()) { let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?; return Ok(RetirementDemand { capacity_bytes: owners.initial_snapshot_retirement.retirement_birth_bytes(value), depth: 2, ..Default::default() }); }
         if self.envelope.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreEnvelopeRetirement<P, M>>(), depth: 2, ..Default::default() }); }
         if self.initial.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactGenesisRetirement<P>>(), depth: 2, ..Default::default() }); }
         if let Some(value) = self.history.as_ref() { return controlled(value); }
         if let Some(value) = self.edit_lookup.as_ref() { return controlled(value); }
         if let Some(value) = self.expected_id.as_ref() { return controlled(value); }
-        if self.actor.0.capacity() != 0 { return controlled(&self.actor.0); }
+        if self.actor.0.has_owner() { return controlled(&self.actor.0); }
         if let Some(value) = self.schema.as_ref() { return controlled(value); }
+        let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
         child(owners.uninstalled_owners_demands(copy)?)
     }
 }
@@ -781,6 +798,7 @@ where
         }
         controlled!(normalized_transitions);
         controlled!(fold);
+        controlled!(fold_auxiliary);
         if let Some(owner) = self.source_edits.as_mut() {
             let step = owner.close_step(child)?;
             let terminal = owner.terminal_is_empty();
@@ -814,15 +832,17 @@ where
         controlled!(pending_retired_payload);
         controlled!(pending_payload);
         controlled!(pending_metadata);
-        let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
         if let Some(owner) = self.runtime.as_mut() {
+            let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
             let step = owner.close_step(&owners.initial_snapshot_retirement, child)?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original config initialization")?;
             if terminal { drop(self.runtime.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(edit) = self.pending_edit.take() {
+        if self.pending_edit.is_some() {
+            let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
+            let edit = self.pending_edit.take().expect("observed original config pending_edit");
             match owners.retire_decoded_edit(edit, child) {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, edit)) => { *self.pending_edit = Some(edit); return Err(error); }
@@ -840,31 +860,41 @@ where
                 Err((error, messages)) => { *self.pending_messages = Some(messages); return Err(error); }
             }
         }
-        if let Some(value) = self.pending_snapshot.take() {
+        if self.pending_snapshot.is_some() {
+            let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
+            let value = self.pending_snapshot.take().expect("observed original config pending_snapshot");
             match owners.retire_initial_snapshot_owned(value, child) {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, value)) => { *self.pending_snapshot = Some(value); return Err(error); }
             }
         }
-        if let Some(value) = self.validation.take() {
+        if self.validation.is_some() {
+            let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
+            let value = self.validation.take().expect("observed original config validation");
             match owners.retire_initial_snapshot_owned(value, child) {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, value)) => { *self.validation = Some(value); return Err(error); }
             }
         }
-        if let Some(value) = self.current.take() {
+        if self.current.is_some() {
+            let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
+            let value = self.current.take().expect("observed original config current");
             match owners.retire_initial_snapshot_owned(value, child) {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, value)) => { *self.current = Some(value); return Err(error); }
             }
         }
-        if let Some(value) = self.envelope.take() {
+        if self.envelope.is_some() {
+            let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
+            let value = self.envelope.take().expect("observed original config envelope");
             match owners.retire_decoded_envelope(value, child) {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, value)) => { *self.envelope = Some(value); return Err(error); }
             }
         }
-        if let Some(value) = self.initial.take() {
+        if self.initial.is_some() {
+            let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?;
+            let value = self.initial.take().expect("observed original config initial");
             match owners.retire_genesis_owned(value, child) {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, value)) => { *self.initial = Some(value); return Err(error); }
@@ -873,7 +903,7 @@ where
         controlled!(history);
         controlled!(edit_lookup);
         controlled!(expected_id);
-        if self.actor.0.capacity() != 0 {
+        if self.actor.0.has_owner() {
             let value = std::mem::take(&mut self.actor.0);
             match admit_typed_controlled_retirement(value, child) {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
@@ -891,7 +921,7 @@ where
 
     fn terminal_is_empty(&self) -> bool {
         self.terminal
-            && self.actor.0.is_empty()
+            && !self.actor.0.has_owner()
             && self.initial.is_none()
             && self.validation.is_none()
             && self.current.is_none()
@@ -899,6 +929,7 @@ where
             && self.fold_job.is_none()
             && self.fold.is_none()
             && self.normalized_transitions.is_none()
+            && self.fold_auxiliary.is_none()
             && self.source_edits.is_none()
             && self.source_forwards.is_none()
             && self.source_inverse.is_none()
@@ -939,7 +970,7 @@ where
 {
     fn terminal_is_empty_unbounded(&self) -> bool {
         self.terminal
-            && self.actor.0.is_empty()
+            && !self.actor.0.has_owner()
             && self.initial.is_none()
             && self.validation.is_none()
             && self.current.is_none()
@@ -947,6 +978,7 @@ where
             && self.fold_job.is_none()
             && self.fold.is_none()
             && self.normalized_transitions.is_none()
+            && self.fold_auxiliary.is_none()
             && self.source_edits.is_none()
             && self.source_forwards.is_none()
             && self.source_inverse.is_none()

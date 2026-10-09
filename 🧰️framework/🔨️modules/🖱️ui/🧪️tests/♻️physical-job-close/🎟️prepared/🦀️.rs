@@ -25,7 +25,7 @@ fn prepared_original_owner_closes_through_the_actual_job_full_grant_contract() {
             let progress = match step {
                 Close::Pending { progress } | Close::Complete { progress } => progress,
                 Close::Blocked => panic!("requested prepared close was blocked"),
-                Close::Refused(kind) => panic!("admitted prepared close refused: {kind:?}"),
+                Close::Refused { kind, progress } => panic!("admitted prepared close refused: {kind:?}, progress: {progress:?}"),
             };
             assert!(progress.fits(grant));
             assert_eq!((progress.retained_capacity_bytes, progress.released_bytes), (births, frees));
@@ -64,7 +64,7 @@ fn prepared_original_atlas_owner_preserves_denials_and_reports_every_physical_re
         for (items, released, depth) in [(0, release, 1), (1, release - 1, 1), (1, release, 0)] {
             let grant = RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: copy, maximum_capacity_bytes: 0, maximum_release_bytes: released, maximum_depth: depth };
             let (step, births, frees) = measured(|| InteractiveJob::close_step(&mut job, grant));
-            assert!(matches!(step, Close::Pending { progress } if progress == Default::default()) || matches!(step, Close::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)));
+            assert!(matches!(step, Close::Pending { progress } if progress == Default::default()) || matches!(step, Close::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress } if progress == Default::default()));
             assert_eq!((births, frees), (0, 0));
             let PreparedRenderUpload::GlyphAtlasPages { pixels } = job.input.as_ref().unwrap().uploads.get(0).unwrap() else { panic!("original atlas owner changed") };
             assert_eq!(pixels.page(0).unwrap().0.as_ptr(), original);
@@ -164,5 +164,21 @@ fn prepared_original_abandoned_owners_report_full_physical_grants() {
         assert!(PREPARED_ATLAS_ABANDONMENT_OWNER[slot].load(Ordering::Acquire).is_null());
         assert_eq!(PREPARED_ATLAS_ABANDONMENT_STATE[slot].load(Ordering::Acquire), 0);
         println!("[DEBUG] original abandoned input/atlas copy={copy} exactBoxAndBackingRelease=true custodyRetained=true");
+    }
+}
+
+#[test]
+fn prepared_close_gate_preserves_the_original_refusal_receipt() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["refusalReceipts"].as_array().unwrap() {
+        let progress = RetainedCloneProgress { copied_items: row["copiedItems"].as_u64().unwrap() as usize, copied_bytes: row["copiedBytes"].as_u64().unwrap() as usize, retained_capacity_bytes: row["retainedCapacityBytes"].as_u64().unwrap() as usize, released_bytes: row["releasedBytes"].as_u64().unwrap() as usize };
+        let original = ValueError::literal(ValueRefusalKind::InvariantViolated, "original child refusal").with_retained_progress(progress);
+        let step = prepared_close_gate(RetainedCloneGrant::default(), false, Err(original)).unwrap();
+        let Close::Refused { kind, progress: received } = step else { panic!("original refusal changed: {step:?}") };
+        assert_eq!(kind, ValueRefusalKind::InvariantViolated);
+        let oracle = serde_json::json!({"copiedItems": received.copied_items, "copiedBytes": received.copied_bytes, "retainedCapacityBytes": received.retained_capacity_bytes, "releasedBytes": received.released_bytes});
+        assert_eq!(&oracle, row);
+        assert_eq!(step.progress(), received);
+        println!("[DEBUG] prepared refusal receipt original={progress:?} received={received:?} independentSerde=true physicalProducer=false");
     }
 }

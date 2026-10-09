@@ -6,6 +6,8 @@
     "includedScripts": []
   },
   "scripts": {
+    "test-native-recipient-source": "nx run @semio-tech/value-rs:test-native-recipient-source",
+    "test-native-recipient": "nx run @semio-tech/value-rs:test-native-recipient",
     "test-portable": "nx run @semio-tech/value-rs:test-portable",
     "test-type-ownership": "nx run @semio-tech/value-rs:test-type-ownership",
     "test-decode-ownership": "nx run @semio-tech/value-rs:test-decode-ownership",

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Operation Retirement Measurement Projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "maximum",
+    "owned",
+    "finished",
+    "reserved_return",
+    "phase_start_owned",
+    "phase_start_reserved_return",
+    "received_output",
+    "received_input",
+    "received_retirement"
+  ],
+  "properties": {
+    "maximum": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "finished": {
+      "type": "boolean"
+    },
+    "owned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reserved_return": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "phase_start_owned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "phase_start_reserved_return": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "received_output": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "received_input": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "received_retirement": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kind": {
+      "const": "original-retirement-measurement"
+    }
+  }
+}

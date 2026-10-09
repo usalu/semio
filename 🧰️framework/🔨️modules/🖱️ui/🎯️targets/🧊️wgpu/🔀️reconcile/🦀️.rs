@@ -32,7 +32,7 @@ use crate::wgpu::component::ui::{
     UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow,
     UiTreeWindowRowExtent,
 };
-use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
+use crate::wgpu::tree::{Node, NodeFlags, NodeKey, NodeKeyRef, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
 use crate::wgpu::{IconName, UiIntentAddress, UiIntentBindings};
 use ui_contract::{UiDocumentNodePage, UiNodeId, UiNodeRecord, UI_DOCUMENT_NODES};
 
@@ -114,7 +114,7 @@ pub struct UiComponentSceneWitness<'a> {
     pub window_id: &'a str,
     pub window_generation: u64,
     pub component_generation: u64,
-    pub key: &'a NodeKey,
+    pub key: NodeKeyRef<'a>,
     pub kind: SurfaceKind,
     pub surface_id: &'a str,
 }

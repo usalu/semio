@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "beforeSha256": "d079567f793678d0eacae23712c381a5962d63e4c151096c42db9080396c4900"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
+      "beforeSha256": "f61dbd347a4fad9bf50a4586a1c2255a74e1474d596dadd775a589a5f198a179"
+    }
+  ]
+}

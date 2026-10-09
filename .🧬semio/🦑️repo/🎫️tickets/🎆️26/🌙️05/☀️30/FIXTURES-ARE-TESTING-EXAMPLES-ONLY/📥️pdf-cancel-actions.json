@@ -1,0 +1,17 @@
+{
+  "actions": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "beforeSha256": "0235f6841dd69de360fc81731f8ad5add60ca1f671db07e19015a920830f1078",
+      "afterSha256": "2dff4302ad3ca3c0a95c6953bf250c368135ab483bc4d2ad90d4d571b095413a",
+      "action": "Retire only PDF whole testing schedule definition/admission; retain genuine writer Root, all original cancellation phases/candidate/close behavior."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+      "beforeSha256": "7a3c37eb8a2a8a8e3ffd99bc8a71b590ae88e602e837344ee48e7c43b20f0e36",
+      "afterSha256": "10c8db99950ff89ccad405af9d315d3e596de1c11cb1ab5e961d0498f867a2d9",
+      "action": "Retire only PDF whole testing schedule definition/admission; retain genuine writer Root, all original cancellation phases/candidate/close behavior."
+    }
+  ],
+  "semanticEquality": "original decoded domain Schema minus definitions.cancellation only"
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+    "before": "00a84bab10acd4623ef00b5bc7f4658d73afe2cc713d920b1cbc0cc9bc36dfdf",
+    "after": "8363875b789588e036aa8c42f5d3e518cd4f46115b6e82cf4678a3e721000b8d",
+    "blocks": [
+      "genuine AllocationFailed kind",
+      "checked original byte allocation layout"
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+    "before": "7a490437f0c2676f2c643a66b9b3704119ac761f015c653bf46b85817915daaa",
+    "after": "e3916cf0690d269c8b786bd1291b0cb299214dc4d350ab2026c0a82afc2f7d2d",
+    "block": "Native actual buffer birth, pointer refusal and paid full lifecycle; not run"
+  }
+]

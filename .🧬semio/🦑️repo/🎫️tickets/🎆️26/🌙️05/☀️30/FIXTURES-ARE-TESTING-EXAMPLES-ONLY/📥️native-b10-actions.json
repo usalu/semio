@@ -1,0 +1,26 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🟦️.ts",
+    "action": "remove whole-trial schema admission only",
+    "before": "17df205dc94bcb878f64c4c6cfb12f2359398bedf5bef08cd76eae7368cee660",
+    "after": "aadc244125a645fa1cd72869f60eb39f073a6646291d16835e4cc0a588f39f70"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+    "action": "delete exact whole-trial schema",
+    "before": "399d20dbce53eeed594049d2ce63de6a7e7f8b81e609248b3265350dcfaed0cb",
+    "after": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧪️tests/🟦️.ts",
+    "action": "remove whole-trial schema admission only",
+    "before": "b5ab35c78ea796b09d23f9aa550d63e0ac99518f63717e7fbc0ffbabe5c1984b",
+    "after": "2779a682e531ee278b97e1b12df39b907b4fe5fca6e6bc73c445c2cd2172744f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧬️schema/🔣️.json",
+    "action": "delete exact whole-trial schema",
+    "before": "d2e4670925dba96b58dd5aab5bd1af12fc2bf6aefe8ccdbec778a2e19a888d8c",
+    "after": null
+  }
+]

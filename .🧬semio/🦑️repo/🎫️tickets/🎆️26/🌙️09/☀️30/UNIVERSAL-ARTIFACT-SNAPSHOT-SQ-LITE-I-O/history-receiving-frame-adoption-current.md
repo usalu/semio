@@ -1,0 +1,17 @@
+# History Receiving Frame Adoption
+
+Read-only current source; no tests run.
+
+Actual History types are SpaceHistorySnapshot, SpaceCheckpoint, SpaceAlternative and SpaceMemberPin (Store main Rust file29139–29210). No CheckpointEntry/ActionEntry declarations were found in framework source. Snapshot owns Vec<SpaceCheckpoint>, Vec<SpaceAlternative>, Option<String>. Checkpoint owns id/parent_id/message, Vec<Author>, timestamp, Vec<SpaceMemberPin>; Alternative owns id/name/Vec<String>; pin owns three Strings. Author (VCS main Rust40) owns id/name/Option<String>. These declarations derive ToValue/FromValue, not RetireOwned. No explicit RetireOwned for these types was found. Domain retire_decoded is separate from supported RetireOwned; genuine fieldwise adoption must include Author and timestamp's actual support.
+
+RecordSpec and RecordValue have actual supported RetireOwned in DSL schema retirement Rust5,51; DslValue has supported ValueRetirement at Value retirement Rust476–482. Actual tuple4 support exists296–299. Proposed four-part receiving frame requires genuine supported T, with frame/scaffold capacity and depth measured from actual type and supplied original grant.
+
+History native construct112–152 births local checkpoints/authors/members/alternatives/checkpoint_ids vectors and local Strings before final Snapshot. Failure drops these locals before T registration. Destination bind must install actual default Snapshot before births, then install each genuine nested row/field before fallible copying. copy_text's hidden local prefix cancellation remains unqualified until original destination producers are used.
+
+Current native decode_with260 receives raw NativeDecodeControl and returning two-argument bind. Text282 obtains completed JSON DslValue then local guard_decoded; it does not retain incomplete parser trees. Binary286–290 keeps local completed spec/record and borrows Value from record. Proposed frame should move completed text value into its DslValue slot; binary should borrow Value in retained record without cloning a second DslValue. Parser/spec incomplete allocations still need their actual destination ownership contract.
+
+Exact callers: native decode255 calls decode_with257; isolated admission test calls reexport decode_native_cst at SQLsnapshot tests599 (reexport SQLsnapshot16). Test callback currently returns Result<()>; new destination callback should retain genuine unit in output Option on successful admission under same explicit caller owner. No compatibility overload.
+
+Preserve tests483 interior cancellation,575/577 complete-column admission,599 isolated borrowed admission,606–617 original cumulative cancellation. At613 preserve original maximum1GiB, initial owned7, exact debit equality to both SQL allocation and reconstruction counters, and reached original cancellation callback. Replace raw wrappers with same original NativeDecodeControl borrowed into SnapshotDecodeOwner plus explicit neutral grant and actual recipient. Observe retained failure and funded close; do not substitute fresh control. Encoder616 already passes SnapshotEncodeOwner but recipient/failure custody remains a separate observation.
+
+Paths: Store root `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs`; History native `📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs`; History tests sibling `🧪️tests/🦀️.rs`; Value retirement `🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs`; DSL retirement `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/♻️retirement/🦀️.rs`.

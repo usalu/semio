@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumNativeBytes",
+    "maximumCloseTurns",
+    "grant"
+  ],
+  "properties": {
+    "maximumNativeBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumCloseTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

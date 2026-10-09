@@ -26,7 +26,7 @@ pub struct Block3dIntoJson;
 impl Serializer<Block3dSnapshot> for Block3dIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Block3dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &Block3dSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(IoPayload::Text(json_text(from))))
     }
 }

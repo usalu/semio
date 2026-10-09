@@ -1,0 +1,62 @@
+{
+  "contract": "semio.services.compute-retained.v1",
+  "callerGrant": {
+    "maximumItems": 4096,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 64
+  },
+  "laws": [
+    {
+      "name": "normal",
+      "sameGrant": true,
+      "deadlineChanged": false
+    },
+    {
+      "name": "cancel",
+      "sameGrant": true,
+      "retainsOriginalOnNoProgress": true
+    },
+    {
+      "name": "rejected",
+      "sameGrant": true,
+      "retainsOriginalOnRefusal": true
+    },
+    {
+      "name": "router-handoff",
+      "sameGrant": true,
+      "noDemandDerivedAuthority": true
+    }
+  ],
+  "scope": "per-transition; cumulative receipt is observation, not replenished operation authority",
+  "metadataTurn": {
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 1,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 0,
+      "maximumDepth": 1
+    },
+    "receipt": {
+      "copiedItems": 1,
+      "copiedBytes": 1,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    }
+  },
+  "nativeIoDenials": [
+    {
+      "axis": "items",
+      "refusal": "WorkLimit"
+    },
+    {
+      "axis": "release",
+      "refusal": "OwnershipLimit"
+    },
+    {
+      "axis": "depth",
+      "refusal": "DepthLimit"
+    }
+  ]
+}

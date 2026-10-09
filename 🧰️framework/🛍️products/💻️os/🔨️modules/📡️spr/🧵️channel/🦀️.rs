@@ -133,46 +133,12 @@ pub struct ChildHeadPackEntry {
 //#endregion 🔖️ChildPackEntry
 
 //#region 🔖️DocumentArchive
-pub const DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS: usize = 1_024;
-pub const DOCUMENT_ARCHIVE_MAXIMUM_BYTES: usize = 4 * 1_024 * 1_024;
-/// 🔰️ The leading byte of every encoded document archive (a snapshot pack starts with its magic `0x89` instead), so a reader tells
-/// a composed carrier from a plain pack by its first byte.
-pub const DOCUMENT_ARCHIVE_VERSION: u8 = 1;
-
-/// 🪪️ Full artifact identity carried by a recursive document archive without depending on a
-/// concrete store implementation.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct DocumentArchiveArtifactRef {
-    pub artifact_id: String,
-    pub artifact_kind: String,
-    pub standard: String,
-    pub subset: String,
-}
-
-/// 🪆️ Exact ownership edge for one archived member, including the parent's complete dialect.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct DocumentArchiveOwnerRef {
-    pub parent: DocumentArchiveArtifactRef,
-    pub slot: String,
-    pub child_id: String,
-}
-
-/// 📦️ One member of a complete recursive owned-document closure.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct OwnedDocumentMemberPackEntry {
-    pub ordinal: u32,
-    pub reference: DocumentArchiveArtifactRef,
-    pub owner: DocumentArchiveOwnerRef,
-    pub envelope_pack: Vec<u8>,
-}
-
-/// 🗃️ One root document envelope and its complete, bounded recursive owned-member closure.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct DocumentArchivePack {
-    pub parent_pack: Vec<u8>,
-    pub parent_spr: Vec<u8>,
-    pub members: Vec<OwnedDocumentMemberPackEntry>,
-}
+#[path="📦️archive/🧬️schema/🦀️.rs"]
+pub mod archive_schema;
+pub use archive_schema::{DocumentArchiveArtifactRef,DocumentArchiveOwnerRef,OwnedDocumentMemberPackEntry,DocumentArchivePack,DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS,DOCUMENT_ARCHIVE_MAXIMUM_BYTES,DOCUMENT_ARCHIVE_VERSION};
+#[path="📦️archive/🛬️decode/🦀️.rs"]
+pub mod archive_decoding;
+pub use archive_decoding::{decode_document_archive_bytes_controlled,decode_document_archive_head_controlled};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DocumentArchiveLoadState {
@@ -361,18 +327,19 @@ impl PresenceCommandCursor {
         Ok(self.page.as_ref().map(FixedCommandPage::len))
     }
 
-    pub fn close_release(&mut self, maximum_bytes: usize) -> (bool, usize) {
-        let Some(page_len) = self.page.as_ref().map(FixedCommandPage::len) else {
-            return (self.remaining == 0, 0);
-        };
-        if page_len > maximum_bytes {
-            return (false, 0);
-        }
-        let page = self.page.take().expect("presence page was present");
-        let released = page.len();
-        drop(page);
+    /// ♻️ Releases the exact original fixed-page backing only after all independent axes admit it.
+    pub fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::RetainedCloneStep {
+        use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep};
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return RetainedCloneStep::Complete(empty); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return RetainedCloneStep::Progress(empty); }
+        let copy = std::mem::size_of::<FixedCommandPage>();
+        let release = if self.page.is_some() { COMMAND_PAGE_MAXIMUM_BYTES } else { 0 };
+        if self.page.is_some() && grant.maximum_copy_bytes < copy || grant.maximum_release_bytes < release { return RetainedCloneStep::Progress(empty); }
+        let moved = self.page.is_some();
+        drop(self.page.take());
         self.remaining = 0;
-        (true, released)
+        RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: usize::from(moved) * copy, released_bytes: release, ..empty })
     }
 
     pub fn terminal_is_empty(&self) -> bool {

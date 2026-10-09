@@ -124,7 +124,7 @@ fn bundle() -> semio_framework_plugin::ExtensionBundle {
 }
 
 #[cfg(all(target_arch = "wasm32", feature = "extension-entry"))]
-semio_framework_plugin::extension_exports!(bundle);
+semio_framework_plugin::extension_exports!({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }, bundle);
 //#endregion 🔖️Bundle
 
 #[cfg(test)]

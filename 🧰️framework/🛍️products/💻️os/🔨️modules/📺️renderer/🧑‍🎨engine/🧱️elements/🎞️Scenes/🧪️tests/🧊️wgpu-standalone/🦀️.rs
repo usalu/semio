@@ -1,12 +1,40 @@
+/// 🧪️ Independent schema fixture authority is explicit at every original camera test boundary.
+pub(crate) fn camera_fixture_grant() -> semio_framework_job::RetainedCloneGrant {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../⏱️camera/🧫️fixtures/🔣️.json")).unwrap();
+    serde_json::from_value(fixture["rootGrant"].clone()).unwrap()
+}
+
+pub(crate) struct CameraFixtureLease { grant: semio_framework_job::RetainedCloneGrant }
+
+pub(crate) fn camera_fixture_lease(grant: semio_framework_job::RetainedCloneGrant) -> CameraFixtureLease {
+    install_scene_camera_authority(grant).unwrap();
+    CameraFixtureLease { grant }
+}
+
+pub(crate) fn clear_camera_fixture(grant: semio_framework_job::RetainedCloneGrant) {
+    install_scene_camera_authority(grant).unwrap();
+    for _ in 0..2048 {
+        let step = close_scene_camera_storage(grant).unwrap();
+        assert!(step.progress().fits(grant));
+        if scene_camera_storage_is_empty() { return; }
+    }
+    panic!("original camera fixture storage did not settle");
+}
+
+impl Drop for CameraFixtureLease { fn drop(&mut self) { clear_camera_fixture(self.grant); } }
+
 #[cfg(test)]
 pub fn sweep_expired_scene_camera_dispatches(now_ms: f64) -> Vec<ActionDescriptor> {
-    let mut cursor = SceneCameraDispatchCursor::begin(now_ms);
+    let grant = camera_fixture_grant();
+    let (mut cursor, admission) = SceneCameraDispatchCursor::begin(now_ms, grant).unwrap();
+    assert!(admission.fits(grant));
     let mut actions = Vec::new();
     loop {
-        match cursor.step() {
+        match cursor.step(grant).unwrap().0 {
             SceneCameraDispatchStep::Pending => {}
             SceneCameraDispatchStep::Action(action) => actions.push(action),
-            SceneCameraDispatchStep::Complete | SceneCameraDispatchStep::Fault(_) => return actions,
+            SceneCameraDispatchStep::Complete => return actions,
+            SceneCameraDispatchStep::Fault(_) => { while !matches!(cursor.close_step(grant), semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {} return actions; },
         }
     }
 }
@@ -29,6 +57,7 @@ fn queue_surface_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 #[cfg(test)]
 #[test]
 fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_only() {
+    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     const SCENES_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
     const INTERPRETER_SOURCE: &str = include_str!("../../../🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
     const ENGINE_CANVAS_SOURCE: &str = include_str!("../../../⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
@@ -75,6 +104,7 @@ fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_o
 #[cfg(test)]
 #[test]
 fn ink_event_pages_preserve_order_and_fail_before_exceeding_fixed_storage() {
+    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let mut pages = InkEventJsonPages::default();
     pages.push(&json!({ "operation": "first", "value": "quoted\\\"" })).unwrap();
     pages.push(&json!({ "operation": "second" })).unwrap();
@@ -92,6 +122,7 @@ fn ink_event_pages_preserve_order_and_fail_before_exceeding_fixed_storage() {
 #[cfg(test)]
 #[test]
 fn ink_raw_fragment_pages_are_single_slab_fifo_and_reject_max_plus_one() {
+    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let mut pages = InkRawPages::default();
     pages.push("{\"id\":\"first\"}").unwrap();
     pages.push("{\"id\":\"second\"}").unwrap();
@@ -110,6 +141,7 @@ fn ink_raw_fragment_pages_are_single_slab_fifo_and_reject_max_plus_one() {
 #[cfg(test)]
 #[test]
 fn ink_block_cursor_visits_nested_groups_in_stable_depth_first_order() {
+    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let source = json!({
         "blocks": [{
             "id": "group",
@@ -160,6 +192,7 @@ fn ink_block_cursor_visits_nested_groups_in_stable_depth_first_order() {
 #[cfg(test)]
 #[test]
 fn ink_nested_value_admission_rejects_hostile_depth() {
+    let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let mut value = Value::Null;
     for _ in 0..=ui_wgpu::wgpu::action::ACTION_DEPTH_CAPACITY {
         value = Value::Array(vec![value]);
@@ -1079,4 +1112,14 @@ fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
     }
     let line_count = text.lines().count();
     (line_count.saturating_sub(1), 0)
+}
+
+#[test]
+fn actual_camera_identity_directory_fits_the_original_bootstrap_policy() {
+    let grant = camera_fixture_grant();
+    let (copy, birth) = crate::camera_storage::DirectoryOwner::<Option<SceneCameraOwnerMetadata>>::transfer_demands();
+    assert!(copy + std::mem::size_of::<Option<&'static str>>() <= grant.maximum_copy_bytes);
+    assert!(birth <= grant.maximum_capacity_bytes);
+    assert!(birth <= grant.maximum_release_bytes);
+    eprintln!("[DEBUG] camera actual identity directory copy={} birth={} original-maximum={}", copy, birth, grant.maximum_capacity_bytes);
 }

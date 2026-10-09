@@ -797,7 +797,7 @@ function WasmEditorSurface({
         }
         const pack = reconciledRef.current.pack;
         if (session === null) return;
-        if (resync || syncedRef.current?.session !== session || !sameScenePackV1(syncedRef.current.pack, pack)) {
+        if (resync || syncedRef.current === null || syncedRef.current.session !== session || !sameScenePackV1(syncedRef.current.pack, pack)) {
           try {
             session.synchronizeScene(pack, 0, 16_777_216, 16_777_216, () => sessionRef.current === session && !renameActiveRef.current);
             syncedRef.current = { session, pack };
@@ -820,7 +820,7 @@ function WasmEditorSurface({
       const session = sessionRef.current;
       const pack = reconciledRef.current.pack;
       if (session === null) return;
-      if (!resync && syncedRef.current?.session === session && sameScenePackV1(syncedRef.current.pack, pack)) return;
+      if (!resync && syncedRef.current !== null && syncedRef.current.session === session && sameScenePackV1(syncedRef.current.pack, pack)) return;
       try {
         session.synchronizeScene(pack, 0, 16_777_216, 16_777_216, () => sessionRef.current === session && !renameActiveRef.current);
         syncedRef.current = { session, pack };

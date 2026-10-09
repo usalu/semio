@@ -4,6 +4,7 @@
   "pathMappings": {},
   "nxJsonPlugins": [],
   "fileMap": {
+    "nonProjectFiles": [],
     "projectFileMap": {
       "ticket-fixed-slots": [
         {
@@ -19,8 +20,7 @@
           "hash": "3103014494047373370"
         }
       ]
-    },
-    "nonProjectFiles": []
+    }
   },
   "externalNodesHash": "3244421341483603138",
   "dependencyResolutionAuthority": null

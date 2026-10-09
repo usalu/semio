@@ -16,8 +16,18 @@ mod laws {
     // 🚫️async: E4 fn-pointer slot — `IoEntry.run` is a bare `fn` pointer and this test double
     // never suspends, so it needs no `resolve_ready` wrapping either.
     #[allow(clippy::unnecessary_wraps, reason = "IoEntry test doubles must implement its fallible function-pointer contract")]
-    fn passthrough(payload: &IoPayload) -> IoResult<IoPayload> {
-        Ok(IoOutcome::clean(payload.clone()))
+    fn passthrough(payload: &IoPayload, control: &mut IoRunControl<'_ , '_>) -> IoResult<IoPayload> {
+        control.checkpoint().map_err(IoError::from_value_error)?;
+        Ok(IoOutcome::clean(match payload { IoPayload::Binary(bytes) => IoPayload::Binary(control.encode().map_err(IoError::from_value_error)?.copy_bytes(bytes).map_err(IoError::from_value_error)?), IoPayload::Text(text) => IoPayload::Text(control.encode().map_err(IoError::from_value_error)?.copy_text(text).map_err(IoError::from_value_error)?) }))
+    }
+
+    fn with_control<T>(operation:impl FnOnce(&mut IoRunControl<'_, '_>)->T)->T {
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/⏱️control/🔣️.json")).unwrap();
+        let maximum=fixture["nativeBytes"].as_u64().unwrap() as usize;
+        let mut receive=|_|true;let mut publish=|_|true;
+        let mut decode=semio_framework_value::NativeDecodeControl::new(maximum,&mut receive);
+        let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut publish);
+        operation(&mut IoRunControl::new(&mut decode,&mut encode,serde_json::from_value(fixture["snapshotGrant"].clone()).unwrap()))
     }
 
     async fn key(from: Dialect, into: Dialect) -> EntryKey {
@@ -143,11 +153,11 @@ mod laws {
         const FIDELITY: IoFidelity = IoFidelity::Exact;
         const CONFORMANCE: Option<fn(&semio_framework_value::DslValue) -> Vec<Diagnostic>> = Some(flag_non_object);
 
-        async fn deserialize(payload: &IoPayload) -> IoResult<semio_framework_value::DslValue> {
+        async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<semio_framework_value::DslValue> {
             let IoPayload::Text(text) = payload else {
                 return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"expected text payload")));
             };
-            let value: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(IoError::from_value_error)?;
+            let value: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str_controlled(text, semio_framework_pack_json::JsonMemberPolicy::Reject, control.decode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?;
             Ok(IoOutcome::clean(value))
         }
     }
@@ -165,7 +175,7 @@ mod laws {
         const INTO: Dialect = C;
         const FIDELITY: IoFidelity = IoFidelity::Exact;
 
-        async fn serialize(from: &semio_framework_value::DslValue, children: &ArchiveChildren) -> IoResult<IoPayload> {
+        async fn serialize(from: &semio_framework_value::DslValue, children: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
             let slots: Vec<String> = children.slots().into_iter().map(|(slot, child_id)| format!("{slot}/{child_id}")).collect();
             Ok(IoOutcome::clean(IoPayload::Text(format!("{from:?}|{}", slots.join(",")))))
         }
@@ -189,10 +199,10 @@ mod laws {
             IoPayload::Text(text) => text,
             IoPayload::Binary(_) => panic!("the echo serializes text"),
         };
-        assert_eq!(text((entry.run)(&IoPayload::Binary(composed_carrier(&parent, Vec::new())))), format!("{parent:?}|content/child-1"));
-        assert_eq!(text((entry.run)(&IoPayload::Binary(store::ArtifactPack::encode_pack(&parent)))), format!("{parent:?}|"));
-        assert!((entry.run)(&IoPayload::Binary(composed_carrier(&parent, vec![1]))).is_err(), "a carrier with parent history is not a head carrier");
-        assert!((entry.run)(&IoPayload::Binary(vec![store::channel::DOCUMENT_ARCHIVE_VERSION, 0xff])).is_err(), "a malformed carrier is refused");
+        assert_eq!(text(with_control(|control|(entry.run)(&IoPayload::Binary(composed_carrier(&parent, Vec::new())),control))), format!("{parent:?}|content/child-1"));
+        assert_eq!(text(with_control(|control|(entry.run)(&IoPayload::Binary(store::ArtifactPack::encode_pack(&parent)),control))), format!("{parent:?}|"));
+        assert!(with_control(|control|(entry.run)(&IoPayload::Binary(composed_carrier(&parent, vec![1])),control)).is_err(), "a carrier with parent history is not a head carrier");
+        assert!(with_control(|control|(entry.run)(&IoPayload::Binary(vec![store::channel::DOCUMENT_ARCHIVE_VERSION, 0xff]),control)).is_err(), "a malformed carrier is refused");
     }
 
     /// 🧲️ LAW: the constructors declare the native side — a serializer entry exports out of its own dialect, a deserializer entry
@@ -209,10 +219,10 @@ mod laws {
     async fn conformance_runs_after_deserialize() {
         let entry = deserializer_entry::<semio_framework_value::DslValue, JsonDeserializer>(A);
 
-        let conforming = (entry.run)(&IoPayload::Text("{}".to_string())).expect("an empty object deserializes cleanly");
+        let conforming = with_control(|control|(entry.run)(&IoPayload::Text("{}".to_string()),control)).expect("an empty object deserializes cleanly");
         assert!(conforming.diagnostics.is_empty(), "an object payload has no conformance diagnostics");
 
-        let non_conforming = (entry.run)(&IoPayload::Text("42".to_string())).expect("deserialize still succeeds when conformance is unhappy");
+        let non_conforming = with_control(|control|(entry.run)(&IoPayload::Text("42".to_string()),control)).expect("deserialize still succeeds when conformance is unhappy");
         assert_eq!(non_conforming.diagnostics.len(), 1, "CONFORMANCE's diagnostics must reach the caller after a successful deserialize");
     }
 }

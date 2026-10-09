@@ -1,0 +1,1368 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "positions",
+    "faces",
+    "copyGrants",
+    "maximumItems",
+    "cancellationCapacityBytes",
+    "cancellationReleaseBytes",
+    "sameOutputBuffer",
+    "sameSourceBuffer",
+    "terminalDropBytes",
+    "physical",
+    "normalReservation",
+    "metadataCapture",
+    "cornerEmission",
+    "edgeEmission",
+    "triangleEmission",
+    "attributeProjection",
+    "facePreparation",
+    "normalTessellation",
+    "polygons",
+    "surfaceAssetCustody",
+    "indexedChannels",
+    "modelingTessellation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "positions": {
+      "const": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ]
+    },
+    "faces": {
+      "const": [
+        [
+          0,
+          1,
+          2
+        ]
+      ]
+    },
+    "copyGrants": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "cancellationCapacityBytes": {
+      "const": 0
+    },
+    "cancellationReleaseBytes": {
+      "const": 0
+    },
+    "sameOutputBuffer": {
+      "const": true
+    },
+    "sameSourceBuffer": {
+      "const": true
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "physical": {
+      "const": "sourcePlusAdmittedFrames"
+    },
+    "cornerEmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "maximumItems",
+        "maximumCorners",
+        "sameSourceAfterDenial",
+        "position",
+        "normal",
+        "uv",
+        "color"
+      ],
+      "properties": {
+        "copyBytes": {
+          "const": 56
+        },
+        "capacityBytes": {
+          "const": 0
+        },
+        "releaseBytes": {
+          "const": 0
+        },
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumCorners": {
+          "const": 1
+        },
+        "sameSourceAfterDenial": {
+          "const": true
+        },
+        "position": {
+          "const": [
+            0,
+            0,
+            0
+          ]
+        },
+        "normal": {
+          "const": [
+            0,
+            0,
+            1
+          ]
+        },
+        "uv": {
+          "const": [
+            0,
+            0
+          ]
+        },
+        "color": {
+          "const": [
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    },
+    "metadataCapture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "sameKeys",
+        "sameSamples",
+        "attributes"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "copyBytes": {
+          "const": 0
+        },
+        "capacityBytes": {
+          "const": 0
+        },
+        "releaseBytes": {
+          "const": 0
+        },
+        "sameKeys": {
+          "const": true
+        },
+        "sameSamples": {
+          "const": true
+        },
+        "attributes": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "semantic",
+              "values"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "normal",
+                  "uv",
+                  "color"
+                ]
+              },
+              "semantic": {
+                "enum": [
+                  "normal",
+                  "uv",
+                  "color"
+                ]
+              },
+              "values": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 4,
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "normalReservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "copyBytes",
+        "releaseBytes",
+        "depth",
+        "sameSourceBuffer",
+        "buffers"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "copyBytes": {
+          "const": 0
+        },
+        "releaseBytes": {
+          "const": 0
+        },
+        "depth": {
+          "const": 1
+        },
+        "sameSourceBuffer": {
+          "const": true
+        },
+        "buffers": {
+          "type": "array",
+          "minItems": 16,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "elementsPerHalfedge"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "boundary",
+                  "points",
+                  "projected",
+                  "links",
+                  "positions",
+                  "normals",
+                  "colors",
+                  "indices",
+                  "uvs",
+                  "faceIds",
+                  "vertexIds",
+                  "edgePositions",
+                  "edgeIds",
+                  "edgeUvs",
+                  "edgeIsSeam",
+                  "cornerIds"
+                ]
+              },
+              "elementsPerHalfedge": {
+                "enum": [
+                  1,
+                  3,
+                  4,
+                  6,
+                  9,
+                  12
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "edgeEmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytes",
+        "releaseBytes",
+        "maximumItems",
+        "maximumEdges",
+        "sameSourceAfterDenial",
+        "positions",
+        "uvs",
+        "edgeId",
+        "isSeam"
+      ],
+      "properties": {
+        "copyBytes": {
+          "const": 45
+        },
+        "releaseBytes": {
+          "const": 0
+        },
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumEdges": {
+          "const": 1
+        },
+        "sameSourceAfterDenial": {
+          "const": true
+        },
+        "positions": {
+          "const": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        "uvs": {
+          "const": [
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        "edgeId": {
+          "const": 0
+        },
+        "isSeam": {
+          "const": 0
+        }
+      }
+    },
+    "triangleEmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "maximumItems",
+        "maximumTriangles",
+        "sameSourceAfterDenial",
+        "indices",
+        "faceId"
+      ],
+      "properties": {
+        "copyBytes": {
+          "const": 16
+        },
+        "capacityBytes": {
+          "const": 0
+        },
+        "releaseBytes": {
+          "const": 0
+        },
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumTriangles": {
+          "const": 1
+        },
+        "sameSourceAfterDenial": {
+          "const": true
+        },
+        "indices": {
+          "const": [
+            0,
+            1,
+            2
+          ]
+        },
+        "faceId": {
+          "const": 0
+        }
+      }
+    },
+    "attributeProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "atomicIndexBytes",
+        "copyGrants",
+        "sourceIndices",
+        "outputIndices",
+        "sameKey",
+        "sameValues",
+        "oldIndicesRequireTypedClosure"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "atomicIndexBytes": {
+          "const": 4
+        },
+        "copyGrants": {
+          "const": [
+            4,
+            8,
+            64
+          ]
+        },
+        "sourceIndices": {
+          "const": [
+            0,
+            1,
+            2
+          ]
+        },
+        "outputIndices": {
+          "const": [
+            0,
+            1,
+            2
+          ]
+        },
+        "sameKey": {
+          "const": true
+        },
+        "sameValues": {
+          "const": true
+        },
+        "oldIndicesRequireTypedClosure": {
+          "const": true
+        }
+      }
+    },
+    "facePreparation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "normal",
+        "sourcePositions",
+        "boundaryCopyBytes",
+        "pointCopyBytes",
+        "normalSumCopyBytes",
+        "normalCompletionCopyBytes",
+        "projectedF64Scalars",
+        "projectedNativeWords",
+        "normalizedCopyBytes",
+        "areaCopyBytes",
+        "sameSource",
+        "sameBacking",
+        "areaCompletionCopyBytes"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumCopyBytes": {
+          "const": 128
+        },
+        "capacityBytes": {
+          "const": 0
+        },
+        "releaseBytes": {
+          "const": 0
+        },
+        "normal": {
+          "const": [
+            0,
+            0,
+            1
+          ]
+        },
+        "sourcePositions": {
+          "const": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ]
+        },
+        "boundaryCopyBytes": {
+          "const": 4
+        },
+        "pointCopyBytes": {
+          "const": 12
+        },
+        "normalSumCopyBytes": {
+          "const": 24
+        },
+        "normalCompletionCopyBytes": {
+          "const": 84
+        },
+        "projectedF64Scalars": {
+          "const": 3
+        },
+        "projectedNativeWords": {
+          "const": 2
+        },
+        "normalizedCopyBytes": {
+          "const": 16
+        },
+        "areaCopyBytes": {
+          "const": 8
+        },
+        "sameSource": {
+          "const": true
+        },
+        "sameBacking": {
+          "const": true
+        },
+        "areaCompletionCopyBytes": {
+          "const": 12
+        }
+      }
+    },
+    "normalTessellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "cancellationTurns",
+        "positions",
+        "normals",
+        "colors",
+        "uvs",
+        "indices",
+        "vertexIds",
+        "faceIds",
+        "edgePositions",
+        "edgeUvs",
+        "edgeIds",
+        "edgeIsSeam",
+        "publishedBufferBytes",
+        "sameSource",
+        "sameOutputBuffers",
+        "sameAttributeKeys",
+        "sameAttributeValues"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumCopyBytes": {
+          "const": 128
+        },
+        "cancellationTurns": {
+          "const": [
+            0,
+            9,
+            20,
+            37,
+            64,
+            91
+          ]
+        },
+        "positions": {
+          "const": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        "normals": {
+          "const": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "colors": {
+          "const": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        "uvs": {
+          "const": [
+            0,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "indices": {
+          "const": [
+            0,
+            1,
+            2
+          ]
+        },
+        "vertexIds": {
+          "const": [
+            0,
+            1,
+            2
+          ]
+        },
+        "faceIds": {
+          "const": [
+            0
+          ]
+        },
+        "edgePositions": {
+          "const": [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "edgeUvs": {
+          "const": [
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        "edgeIds": {
+          "const": [
+            0,
+            1,
+            2
+          ]
+        },
+        "edgeIsSeam": {
+          "const": [
+            0,
+            0,
+            0
+          ]
+        },
+        "publishedBufferBytes": {
+          "const": 343
+        },
+        "sameSource": {
+          "const": true
+        },
+        "sameOutputBuffers": {
+          "const": true
+        },
+        "sameAttributeKeys": {
+          "const": true
+        },
+        "sameAttributeValues": {
+          "const": true
+        }
+      }
+    },
+    "polygons": {
+      "const": [
+        {
+          "id": "concave-flat",
+          "positions": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ],
+            [
+              2,
+              1,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              1,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ],
+          "smooth": false,
+          "flipped": false,
+          "triangles": 4,
+          "area": 3,
+          "normalZ": 1
+        },
+        {
+          "id": "concave-smooth",
+          "positions": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ],
+            [
+              2,
+              1,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              1,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ],
+          "smooth": true,
+          "flipped": false,
+          "triangles": 4,
+          "area": 3,
+          "normalZ": 1
+        },
+        {
+          "id": "triangle-flipped",
+          "positions": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "smooth": false,
+          "flipped": true,
+          "triangles": 1,
+          "area": 0.5,
+          "normalZ": -1
+        },
+        {
+          "id": "quad-flat",
+          "positions": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "smooth": false,
+          "flipped": false,
+          "triangles": 2,
+          "area": 1,
+          "normalZ": 1
+        },
+        {
+          "id": "shared-edge",
+          "positions": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              1,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ]
+          ],
+          "smooth": false,
+          "flipped": false,
+          "triangles": 2,
+          "area": 1,
+          "normalZ": 1
+        }
+      ]
+    },
+    "surfaceAssetCustody": {
+      "const": {
+        "materialKey": "coat",
+        "material": {
+          "baseColorTexture": "tiny",
+          "label": "original-coat"
+        },
+        "textureKey": "tiny",
+        "texture": {
+          "mime": "image/png",
+          "bytes": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        "sameKeys": true,
+        "sameMaterialPayload": true,
+        "sameTextureBytes": true
+      }
+    },
+    "indexedChannels": {
+      "const": {
+        "positions": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2
+          ],
+          [
+            0,
+            2,
+            3
+          ]
+        ],
+        "vertexIds": [
+          0,
+          1,
+          2,
+          0,
+          2,
+          3
+        ],
+        "cornerIds": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "edgeIds": [
+          0,
+          1,
+          2,
+          4,
+          5
+        ],
+        "faceIds": [
+          0,
+          1
+        ],
+        "attributes": [
+          {
+            "name": "normal",
+            "domain": "corner",
+            "semantic": "normal",
+            "interpolation": "linear",
+            "values": [
+              [
+                1,
+                0,
+                0
+              ]
+            ],
+            "indices": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "outputIndices": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "name": "uv",
+            "domain": "corner",
+            "semantic": "uv",
+            "interpolation": "linear",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0.25,
+                0
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "indices": [
+              0,
+              1,
+              2,
+              3,
+              2,
+              4
+            ],
+            "outputIndices": [
+              0,
+              1,
+              2,
+              3,
+              2,
+              4
+            ]
+          },
+          {
+            "name": "color",
+            "domain": "face",
+            "semantic": "color",
+            "interpolation": "constant",
+            "values": [
+              [
+                1,
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                1,
+                0,
+                1
+              ]
+            ],
+            "indices": null,
+            "outputIndices": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "label",
+            "domain": "face",
+            "semantic": "custom",
+            "interpolation": "constant",
+            "values": [
+              "original-red",
+              "original-green"
+            ],
+            "indices": null,
+            "outputIndices": [
+              0,
+              1
+            ]
+          },
+          {
+            "name": "edge-tag",
+            "domain": "edge",
+            "semantic": "custom",
+            "interpolation": "nearest",
+            "values": [
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "indices": null,
+            "outputIndices": [
+              0,
+              1,
+              2,
+              4,
+              5
+            ]
+          },
+          {
+            "name": "weight",
+            "domain": "vertex",
+            "semantic": "custom",
+            "interpolation": "linear",
+            "values": [
+              2,
+              4,
+              6,
+              8
+            ],
+            "indices": null,
+            "outputIndices": [
+              0,
+              1,
+              2,
+              0,
+              2,
+              3
+            ]
+          }
+        ],
+        "uvs": [
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0.25,
+          0,
+          1,
+          1,
+          0,
+          1
+        ],
+        "colors": [
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "normals": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "edgeUvs": [
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0.25,
+          0
+        ],
+        "edgeIsSeam": [
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "faceUv": {
+          "values": [
+            [
+              0.25,
+              0.5
+            ],
+            [
+              0.75,
+              1
+            ]
+          ],
+          "uvs": [
+            0.25,
+            0.5,
+            0.25,
+            0.5,
+            0.25,
+            0.5,
+            0.75,
+            1,
+            0.75,
+            1,
+            0.75,
+            1
+          ],
+          "edgeUvs": [
+            0.25,
+            0.5,
+            0.25,
+            0.5,
+            0.25,
+            0.5,
+            0.25,
+            0.5,
+            0.25,
+            0.5,
+            0.25,
+            0.5,
+            0.75,
+            1,
+            0.75,
+            1,
+            0.75,
+            1,
+            0.75,
+            1
+          ],
+          "outputIndices": [
+            0,
+            1
+          ]
+        },
+        "sameKeys": true,
+        "sameValues": true,
+        "terminalDropBytes": 0
+      }
+    },
+    "modelingTessellation": {
+      "const": {
+        "kinds": [
+          "knife",
+          "triangulate"
+        ],
+        "polygon": "concave-flat",
+        "maximumCopyBytes": 128,
+        "knifeA": [
+          0.5,
+          -1,
+          0
+        ],
+        "knifeB": [
+          0.5,
+          3,
+          0
+        ],
+        "sameSourceOnHandback": true,
+        "successfulHandbackReleaseBytes": 0,
+        "terminalDropBytes": 0,
+        "handoffCuts": [
+          null,
+          0,
+          3,
+          17
+        ]
+      }
+    }
+  }
+}

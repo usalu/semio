@@ -1,13 +1,19 @@
 
 use super::*;
 
+fn fixture_read_policy(fixture:&serde_json::Value)->JsonReadLimits{
+    let limits=&fixture["readLimits"];JsonReadLimits{maximum_bytes:limits["maximumBytes"].as_u64().unwrap(),maximum_allocation_bytes:limits["maximumAllocationBytes"].as_u64().unwrap()as usize,maximum_depth:limits["maximumDepth"].as_u64().unwrap()as usize,maximum_items:limits["maximumItems"].as_u64().unwrap()}
+}
+
+const JSON_NORMAL_TEST_POLICY:RetainedCloneGrant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096};
+
 #[test]
 fn completed_json_projection_frame_reuses_inline_authority_without_transient_admission(){
     let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📦️completed-frame/🔣️.json")).unwrap();let source=law["source"].as_str().unwrap();let expected:serde_json::Value=serde_json::from_str(source).unwrap();let mut projection=JsonValueProjection::new(parse(source,JsonMemberPolicy::Reject).unwrap());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);
-    for _ in 0..law["maximumTurns"].as_u64().unwrap(){if projection.retirement.is_some(){break;}assert!(projection.step(1,3,&mut control).unwrap().is_none());}assert!(projection.retirement.is_some());let admitted=control.owned_bytes();let mut released=0;
+    for _ in 0..law["maximumTurns"].as_u64().unwrap(){if projection.retirement.is_some(){break;}assert!(projection.step(1,3,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}assert!(projection.retirement.is_some());let admitted=control.owned_bytes();let mut released=0;
     let original={let owner=projection.retirement.as_mut().unwrap();use semio_framework_value::{retirement::{RetirementCursor,RetirementStep},retained_clone::RetainedCloneGrant};let phase=owner.phase;let demand=owner.release_demand();assert!(demand>3);for grant in[RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:3,maximum_capacity_bytes:0,maximum_release_bytes:demand,maximum_depth:1},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:0,maximum_release_bytes:demand-1,maximum_depth:1}]{let(step,born,physical)=test_allocation::observe_backing(||owner.close_step(grant));assert!(matches!(step,RetirementStep::BudgetExhausted));assert_eq!((born,physical),(0,0));assert_eq!(owner.phase,phase);assert_eq!(owner.release_demand(),demand);}owner.frame.values.allocation+owner.frame.entries.allocation+owner.frame.array.capacity()*std::mem::size_of::<DslValue>()+owner.frame.object.capacity()*std::mem::size_of::<(String,DslValue)>()};
-    for _ in 0..law["maximumTurns"].as_u64().unwrap(){if projection.retirement.is_none(){break;}let(result,born,physical)=test_allocation::observe_backing(||projection.step(1,3,&mut control));assert!(result.unwrap().is_none());assert_eq!(born,0,"completed input backing needs no fresh retirement scaffold");assert_eq!(control.owned_bytes(),admitted,"original source admission is conserved through physical input release");released+=physical;}
-    assert!(projection.retirement.is_none());assert_eq!(released,original);let value=projection.step(1,3,&mut control).unwrap().expect("original output survives physical source close");assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&value)).unwrap(),expected);retire_original_json(projection,3,65536);retire_original_json(value,3,65536);
+    for _ in 0..law["maximumTurns"].as_u64().unwrap(){if projection.retirement.is_none(){break;}let(result,born,physical)=test_allocation::observe_backing(||projection.step(1,3,&mut control,JSON_NORMAL_TEST_POLICY));assert!(result.unwrap().is_none());assert_eq!(born,0,"completed input backing needs no fresh retirement scaffold");assert_eq!(control.owned_bytes(),admitted,"original source admission is conserved through physical input release");released+=physical;}
+    assert!(projection.retirement.is_none());assert_eq!(released,original);let value=projection.step(1,3,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().expect("original output survives physical source close");assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&value)).unwrap(),expected);retire_original_json(projection,3,65536);retire_original_json(value,3,65536);
     eprintln!("[DEBUG] completed JSON frame owns original backing, born=0 physical={released} original-admission={admitted}; Serde output remains exact after reusable inline close");
 }
 
@@ -29,7 +35,7 @@ fn retire_json_with_independent_grants<T: semio_framework_value::retirement::Ret
         }
         if owner.terminal_is_empty() { eprintln!("[DEBUG] JSON controlled original owner closed turns={}", turn + 1); return; }
     }
-    panic!("original JSON controlled retirement did not terminate");
+    panic!("original JSON controlled retirement did not terminate: owner={} copyDemand={} grantedCopy={} capacityDemand={} releaseDemand={} depthDemand={}",std::any::type_name::<T>(),owner.next_copy_byte_demand().unwrap(),law["maximumCopyBytes"],owner.next_capacity_byte_demand(3).unwrap(),owner.next_release_byte_demand().unwrap(),owner.next_depth_demand().unwrap());
 }
 
 #[test]
@@ -44,17 +50,17 @@ fn original_json_parser_writer_and_value_retire_with_independent_physical_grants
         let mut parser = JsonParseCursor::new(JsonMemberPolicy::Reject);
         let mut accepted = |_| true;
         let mut control = semio_framework_value::NativeDecodeControl::new(1_000_000, &mut accepted);
-        for _ in 0..stop.as_u64().unwrap() { if let Some(value) = parser.step(source, 1, &mut control).unwrap() { retire_json_with_independent_grants(value, &law); break; } }
+        for _ in 0..stop.as_u64().unwrap() { if let Some(value) = parser.step(source, 1, &mut control,JSON_NORMAL_TEST_POLICY).unwrap() { retire_json_with_independent_grants(value, &law); break; } }
         retire_json_with_independent_grants(parser, &law);
         let mut writer = JsonWriteCursor::new(from_json_str::<semio_framework_value::DslValue>(source, JsonMemberPolicy::Reject).unwrap());
         let mut accepted = |_| true;
         let mut control = semio_framework_value::NativeEncodeControl::new(1_000_000, &mut accepted);
-        for _ in 0..stop.as_u64().unwrap() { if writer.step(1, &mut control).unwrap().is_some() { break; } }
+        for _ in 0..stop.as_u64().unwrap() { if writer.step(1, &mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_some() { break; } }
         retire_json_with_independent_grants(writer, &law);
         let mut projection = JsonValueProjection::new(parse(source, JsonMemberPolicy::Reject).unwrap());
         let mut accepted = |_| true;
         let mut control = semio_framework_value::NativeDecodeControl::new(1_000_000, &mut accepted);
-        for _ in 0..stop.as_u64().unwrap() { if let Some(value) = projection.step(1, 3, &mut control).unwrap() { retire_json_with_independent_grants(value, &law); break; } }
+        for _ in 0..stop.as_u64().unwrap() { if let Some(value) = projection.step(1, 3, &mut control,JSON_NORMAL_TEST_POLICY).unwrap() { retire_json_with_independent_grants(value, &law); break; } }
         retire_json_with_independent_grants(projection, &law);
     }
 }
@@ -77,8 +83,8 @@ impl semio_framework_value::retirement::RetireOwned for DirectJsonSource{
 fn retained_json_writer_reads_original_owned_source_without_projected_copy(){
     let fixture=owned_json_fixture();let law=&fixture["retainedWriting"];let source=||DirectJsonSource{member:law["directSourceMember"].as_str().unwrap().into(),text:owned_json_text(law)};let expected=serde_json::json!({law["directSourceMember"].as_str().unwrap():owned_json_text(law)}).to_string();
     let retire=|writer:JsonWriteCursor<DirectJsonSource>|retire_original_json(writer,3,100000);
-    for budget in law["budgets"].as_array().unwrap(){let original=source();let pointer=original.text.as_ptr();let mut writer=JsonWriteCursor::new(original);assert!(writer.take_source().is_none());let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);let mut turns=0;let output=loop{let before=writer.progress();assert!(writer.step(0,&mut control).unwrap().is_none());assert_eq!(writer.progress(),before);turns+=1;assert!(turns<100000);if let Some(output)=writer.step(budget.as_u64().unwrap()as usize,&mut control).unwrap(){break output}assert!(writer.take_source().is_none());};assert!(turns>1);assert_eq!(output,expected);let original=writer.take_source().unwrap();assert!(writer.take_source().is_none());assert_eq!(original.text.as_ptr(),pointer);retire(writer);retire_original_json(original,3,100000);}
-    for stop in [0,1,32,512,4096]{let mut writer=JsonWriteCursor::new(source());let live=std::cell::Cell::new(true);let mut callback=|_|live.get();let mut control=semio_framework_value::NativeEncodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut callback);for _ in 0..stop{assert!(writer.step(1,&mut control).unwrap().is_none())}let before=writer.progress();live.set(false);assert_eq!(writer.step(1,&mut control).unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(writer.progress(),before);retire(writer);}
+    for budget in law["budgets"].as_array().unwrap(){let original=source();let pointer=original.text.as_ptr();let mut writer=JsonWriteCursor::new(original);assert!(writer.take_source().is_none());let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);let mut turns=0;let output=loop{let before=writer.progress();assert!(writer.step(0,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());assert_eq!(writer.progress(),before);turns+=1;assert!(turns<100000);if let Some(output)=writer.step(budget.as_u64().unwrap()as usize,&mut control,JSON_NORMAL_TEST_POLICY).unwrap(){break output}assert!(writer.take_source().is_none());};assert!(turns>1);assert_eq!(output,expected);let original=writer.take_source().unwrap();assert!(writer.take_source().is_none());assert_eq!(original.text.as_ptr(),pointer);retire(writer);retire_original_json(original,3,100000);}
+    for stop in [0,1,32,512,4096]{let mut writer=JsonWriteCursor::new(source());let live=std::cell::Cell::new(true);let mut callback=|_|live.get();let mut control=semio_framework_value::NativeEncodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut callback);for _ in 0..stop{assert!(writer.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none())}let before=writer.progress();live.set(false);assert_eq!(writer.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(writer.progress(),before);retire(writer);}
     eprintln!("[DEBUG] Original owned JSON source pointer retained without projection; budgets1/8/256 exactSerde bytes zero/cancel3byte retirement passed");
 }
 
@@ -86,11 +92,11 @@ fn retained_json_writer_reads_original_owned_source_without_projected_copy(){
 fn retained_json_projection_admits_exact_vectors_and_drains_consumed_input() {
     let fixture=owned_json_fixture();let law=&fixture["retainedProjectionAdmission"];let source=serde_json::json!({"values":(0..law["collectionItems"].as_u64().unwrap()).map(|index|serde_json::json!({"index":index,"label":format!("Label 😀 {index}")})).collect::<Vec<_>>()}).to_string();let oracle:serde_json::Value=serde_json::from_str(&source).unwrap();
     let input=||parse(&source,JsonMemberPolicy::Reject).unwrap();let mut projection=JsonValueProjection::new_ordered(input());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);let mut phases=std::collections::BTreeSet::new();let mut turns=0;
-    let value=loop{assert!(projection.step(0,0,&mut control).unwrap().is_none());phases.insert(projection.phase());turns+=1;assert!(turns<2000000);if let Some(value)=projection.step(law["maximumUnits"].as_u64().unwrap()as usize,law["retirementBytes"].as_u64().unwrap()as usize,&mut control).unwrap(){break value;}};assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&value)).unwrap(),oracle);assert!(projection.retirement.is_none());
+    let value=loop{assert!(projection.step(0,0,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());phases.insert(projection.phase());turns+=1;assert!(turns<2000000);if let Some(value)=projection.step(law["maximumUnits"].as_u64().unwrap()as usize,law["retirementBytes"].as_u64().unwrap()as usize,&mut control,JSON_NORMAL_TEST_POLICY).unwrap(){break value;}};assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&value)).unwrap(),oracle);assert!(projection.retirement.is_none());
     for phase in law["phases"].as_array().unwrap(){assert!(phases.contains(phase.as_str().unwrap()),"{phase}");}
     let retire=|projection:JsonValueProjection|retire_original_json(projection,3,4000000);retire(projection);retire_original_json(value,3,4000000);
-    let mut projection=JsonValueProjection::new(input());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(1,&mut accepted);assert_eq!(projection.step(1,3,&mut control).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);retire(projection);
-    for stop in law["cancelUnits"].as_array().unwrap(){let mut projection=JsonValueProjection::new(input());let canceled=std::cell::Cell::new(false);let mut accepted=|_|!canceled.get();let mut control=semio_framework_value::NativeDecodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);for _ in 0..stop.as_u64().unwrap(){assert!(projection.step(1,3,&mut control).unwrap().is_none());}canceled.set(true);assert_eq!(projection.step(1,3,&mut control).unwrap_err().kind,ValueRefusalKind::Canceled);retire(projection);}
+    let mut projection=JsonValueProjection::new(input());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(1,&mut accepted);assert_eq!(projection.step(1,3,&mut control,JSON_NORMAL_TEST_POLICY).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);retire(projection);
+    for stop in law["cancelUnits"].as_array().unwrap(){let mut projection=JsonValueProjection::new(input());let canceled=std::cell::Cell::new(false);let mut accepted=|_|!canceled.get();let mut control=semio_framework_value::NativeDecodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);for _ in 0..stop.as_u64().unwrap(){assert!(projection.step(1,3,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}canceled.set(true);assert_eq!(projection.step(1,3,&mut control,JSON_NORMAL_TEST_POLICY).unwrap_err().kind,ValueRefusalKind::Canceled);retire(projection);}
     eprintln!("[DEBUG] Same JSON typed projection admitted exact vectors, retained consumed input scaffold, oneunit/3byte frontier and independentSerde parity");
 }
 
@@ -101,22 +107,22 @@ fn retained_json_parser_admits_storage_before_copying_and_resumes_one_owner() {
     let mut phases=std::collections::BTreeSet::new();
     for (source,maximum) in [(text.clone(),length),(serde_json::to_string(&vec![label.clone();law["collectionItems"].as_u64().unwrap()as usize/128]).unwrap(),law["maximumBytes"].as_u64().unwrap()as usize),(serde_json::json!({"labels":(0..law["collectionItems"].as_u64().unwrap()).collect::<Vec<_>>(),"object":(0..128).map(|index|(format!("key{index}"),serde_json::Value::from(index))).collect::<serde_json::Map<_,_>>(),"label":label}).to_string(),law["maximumBytes"].as_u64().unwrap()as usize)] {
         let oracle:serde_json::Value=serde_json::from_str(&source).unwrap();let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(maximum,&mut accepted);let mut turns=0;
-        let value=loop{let before=(parser.position(),control.owned_bytes());assert!(parser.step(&source,0,&mut control).unwrap().is_none());assert_eq!((parser.position(),control.owned_bytes()),before);phases.insert(parser.phase());turns+=1;assert!(turns<4000000);if let Some(value)=parser.step(&source,law["maximumUnits"].as_u64().unwrap()as usize,&mut control).unwrap(){break value;}};
+        let value=loop{let before=(parser.position(),control.owned_bytes());assert!(parser.step(&source,0,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());assert_eq!((parser.position(),control.owned_bytes()),before);phases.insert(parser.phase());turns+=1;assert!(turns<4000000);if let Some(value)=parser.step(&source,law["maximumUnits"].as_u64().unwrap()as usize,&mut control,JSON_NORMAL_TEST_POLICY).unwrap(){break value;}};
         assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&value)).unwrap(),oracle);assert!(control.owned_bytes()<=maximum);if source==text {assert_eq!(control.owned_bytes(),length);}retire(parser);retire_original_json(value,3,4000000);
     }
     for phase in law["phases"].as_array().unwrap(){assert!(phases.contains(phase.as_str().unwrap()),"{phase}");}
-    let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(length-1,&mut accepted);let error=loop{match parser.step(&text,1,&mut control){Ok(None)=>{},Ok(Some(_))=>panic!("ownership limit admitted a string"),Err(error)=>break error}};assert_eq!(error.kind(),ValueRefusalKind::OwnershipLimit);assert_eq!(control.owned_bytes(),0);retire(parser);
-    for stop in law["cancelUnits"].as_array().unwrap(){let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let canceled=std::cell::Cell::new(false);let mut accepted=|_|!canceled.get();let mut control=semio_framework_value::NativeDecodeControl::new(length,&mut accepted);for _ in 0..stop.as_u64().unwrap(){assert!(parser.step(&text,1,&mut control).unwrap().is_none());}canceled.set(true);let before=(parser.position(),control.owned_bytes());assert_eq!(parser.step(&text,1,&mut control).unwrap_err().kind(),ValueRefusalKind::Canceled);assert_eq!((parser.position(),control.owned_bytes()),before);retire(parser);}
+    let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(length-1,&mut accepted);let error=loop{match parser.step(&text,1,&mut control,JSON_NORMAL_TEST_POLICY){Ok(None)=>{},Ok(Some(_))=>panic!("ownership limit admitted a string"),Err(error)=>break error}};assert_eq!(error.kind(),ValueRefusalKind::OwnershipLimit);assert_eq!(control.owned_bytes(),0);retire(parser);
+    for stop in law["cancelUnits"].as_array().unwrap(){let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let canceled=std::cell::Cell::new(false);let mut accepted=|_|!canceled.get();let mut control=semio_framework_value::NativeDecodeControl::new(length,&mut accepted);for _ in 0..stop.as_u64().unwrap(){assert!(parser.step(&text,1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}canceled.set(true);let before=(parser.position(),control.owned_bytes());assert_eq!(parser.step(&text,1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap_err().kind(),ValueRefusalKind::Canceled);assert_eq!((parser.position(),control.owned_bytes()),before);retire(parser);}
     let source=serde_json::json!({"label":law["textUnit"].as_str().unwrap().repeat(4),"array":[null,true,0],"object":{"z":true,"a":"日本"}}).to_string();
-    for phase in law["phases"].as_array().unwrap(){let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let canceled=std::cell::Cell::new(false);let mut accepted=|_|!canceled.get();let mut control=semio_framework_value::NativeDecodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);let mut turns=0;while parser.phase()!=phase.as_str().unwrap(){turns+=1;assert!(turns<100000);assert!(parser.step(&source,1,&mut control).unwrap().is_none());}canceled.set(true);let before=(parser.position(),control.owned_bytes());assert_eq!(parser.step(&source,1,&mut control).unwrap_err().kind(),ValueRefusalKind::Canceled);assert_eq!((parser.position(),control.owned_bytes()),before);retire(parser);}
+    for phase in law["phases"].as_array().unwrap(){let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let canceled=std::cell::Cell::new(false);let mut accepted=|_|!canceled.get();let mut control=semio_framework_value::NativeDecodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);let mut turns=0;while parser.phase()!=phase.as_str().unwrap(){turns+=1;assert!(turns<100000);assert!(parser.step(&source,1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}canceled.set(true);let before=(parser.position(),control.owned_bytes());assert_eq!(parser.step(&source,1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap_err().kind(),ValueRefusalKind::Canceled);assert_eq!((parser.position(),control.owned_bytes()),before);retire(parser);}
     eprintln!("[DEBUG] Same JSON parser measured/admitted strings, paged collection candidates, exact final storage, all6phases and3byte retirement");
 }
 
 #[test]
 fn retained_json_projection_canonicalizes_nested_member_order_under_work_grants() {
     let fixture=owned_json_fixture();let law=&fixture["retainedCanonical"];let key=law["keyUnit"].as_str().unwrap().repeat(law["keyRepeats"].as_u64().unwrap()as usize);let label=owned_json_text(law);let text=to_string(&object([(format!("{key}z"),Value::String(label.clone())),("z".into(),parse("{\"z\":3,\"a\":1}",JsonMemberPolicy::Reject).unwrap()),(format!("{key}a"),Value::String(label)),("a".into(),parse("[{\"z\":false,\"a\":true}]",JsonMemberPolicy::Reject).unwrap())]));let oracle:serde_json::Value=serde_json::from_str(&text).unwrap();let canonical=serde_json::to_string(&oracle).unwrap();let input=||parse(&text,JsonMemberPolicy::Reject).unwrap();let mut projection=JsonValueProjection::new_ordered(input());let mut turns=0;let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);
-    let actual=loop {assert!(projection.step(0,3,&mut control).unwrap().is_none());turns+=1;assert!(turns<100000);if let Some(value)=projection.step(law["maximumUnits"].as_u64().unwrap()as usize,3,&mut control).unwrap() {break value;}};assert_eq!(to_json_string(&actual),canonical);
-    for cutoff in law["cancelUnits"].as_array().unwrap() {let mut projection=JsonValueProjection::new_ordered(input());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);for _ in 0..cutoff.as_u64().unwrap() {assert!(projection.step(1,3,&mut control).unwrap().is_none());}retire_original_json(projection,law["retirementBytes"].as_u64().unwrap()as usize,100000);}
+    let actual=loop {assert!(projection.step(0,3,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());turns+=1;assert!(turns<100000);if let Some(value)=projection.step(law["maximumUnits"].as_u64().unwrap()as usize,3,&mut control,JSON_NORMAL_TEST_POLICY).unwrap() {break value;}};assert_eq!(to_json_string(&actual),canonical);
+    for cutoff in law["cancelUnits"].as_array().unwrap() {let mut projection=JsonValueProjection::new_ordered(input());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);for _ in 0..cutoff.as_u64().unwrap() {assert!(projection.step(1,3,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}retire_original_json(projection,law["retirementBytes"].as_u64().unwrap()as usize,100000);}
     eprintln!("[DEBUG] Same JSON projection retained canonical nested key order, transitions={turns}");
 }
 
@@ -129,25 +135,25 @@ fn retained_json_writer_resumes_canonical_physical_bytes_and_retires_owned_sourc
     let mut final_turns=0;
     for budget in law["budgets"].as_array().unwrap() {
         let value=to_dsl_value(&parse(&source,JsonMemberPolicy::Reject).unwrap()); let mut writer=JsonWriteCursor::new(value); let mut callback=|_|true; let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut callback); control.begin_stage(0).unwrap();
-        let mut turns=0; let output=loop { let before=(writer.progress(),control.owned_bytes()); assert!(writer.step(0,&mut control).unwrap().is_none()); assert_eq!((writer.progress(),control.owned_bytes()),before); turns+=1; assert!(turns<100000); if let Some(output)=writer.step(budget.as_u64().unwrap() as usize,&mut control).unwrap() {break output;} };
+        let mut turns=0; let output=loop { let before=(writer.progress(),control.owned_bytes()); assert!(writer.step(0,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none()); assert_eq!((writer.progress(),control.owned_bytes()),before); turns+=1; assert!(turns<100000); if let Some(output)=writer.step(budget.as_u64().unwrap() as usize,&mut control,JSON_NORMAL_TEST_POLICY).unwrap() {break output;} };
         assert_eq!(serde_json::from_str::<serde_json::Value>(&output).unwrap(),expected); assert_eq!(output,source); final_turns=turns; retire(writer);
     }
     for stop in [0,1,32,final_turns*128] {
         let value=to_dsl_value(&parse(&source,JsonMemberPolicy::Reject).unwrap()); let mut writer=JsonWriteCursor::new(value); let canceled=std::cell::Cell::new(false); let mut callback=|_|!canceled.get(); let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut callback); control.begin_stage(0).unwrap();
-        for _ in 0..stop {assert!(writer.step(1,&mut control).unwrap().is_none());}
-        canceled.set(true); let before=writer.progress(); let error=writer.step(1,&mut control).unwrap_err(); assert_eq!(error.kind,ValueRefusalKind::Canceled); assert_eq!(writer.progress(),before); retire(writer);
+        for _ in 0..stop {assert!(writer.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}
+        canceled.set(true); let before=writer.progress(); let error=writer.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap_err(); assert_eq!(error.kind,ValueRefusalKind::Canceled); assert_eq!(writer.progress(),before); retire(writer);
     }
-    let value=to_dsl_value(&parse(&source,JsonMemberPolicy::Reject).unwrap()); let mut writer=JsonWriteCursor::new(value); let mut callback=|_|true; let mut control=semio_framework_value::NativeEncodeControl::new(1,&mut callback); assert_eq!(writer.step(1,&mut control).unwrap_err().kind,ValueRefusalKind::OwnershipLimit); retire(writer);
-    let owned=DslValue::String(owned_json_text(law));let pointer=match &owned {DslValue::String(text)=>text.as_ptr(),_=>unreachable!()};let mut writer=JsonWriteCursor::new(owned);assert!(writer.take_source().is_none());let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut accepted);let mut turns=0;while writer.step(8,&mut control).unwrap().is_none() {turns+=1;assert!(turns<100000);assert!(writer.take_source().is_none());}let owned=writer.take_source().unwrap();assert!(writer.take_source().is_none());match &owned {DslValue::String(text)=>assert_eq!(text.as_ptr(),pointer),_=>unreachable!()};retire(writer);retire_original_json(owned,3,100000);
+    let value=to_dsl_value(&parse(&source,JsonMemberPolicy::Reject).unwrap()); let mut writer=JsonWriteCursor::new(value); let mut callback=|_|true; let mut control=semio_framework_value::NativeEncodeControl::new(1,&mut callback); assert_eq!(writer.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap_err().kind,ValueRefusalKind::OwnershipLimit); retire(writer);
+    let owned=DslValue::String(owned_json_text(law));let pointer=match &owned {DslValue::String(text)=>text.as_ptr(),_=>unreachable!()};let mut writer=JsonWriteCursor::new(owned);assert!(writer.take_source().is_none());let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut accepted);let mut turns=0;while writer.step(8,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none() {turns+=1;assert!(turns<100000);assert!(writer.take_source().is_none());}let owned=writer.take_source().unwrap();assert!(writer.take_source().is_none());match &owned {DslValue::String(text)=>assert_eq!(text.as_ptr(),pointer),_=>unreachable!()};retire(writer);retire_original_json(owned,3,100000);
     eprintln!("[DEBUG] retained JSON physical writer budgets=1/8/256 independentSerde=true cancellation=true boundedSourceRetirement=true");
 }
 
 #[test]
 fn retained_json_parser_and_projection_resume_and_retire_bounded_candidates() {
     let fixture=owned_json_fixture();let law=&fixture["retainedParsing"];let expected=serde_json::json!({"label":owned_json_text(law),"nested":[null,true,{"values":[1,2.5,-3]}]});let text=expected.to_string();let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut turns=0;let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);
-    let value=loop {let position=parser.position();assert!(parser.step(&text,0,&mut control).unwrap().is_none());assert_eq!(parser.position(),position);turns+=1;assert!(turns<100000);if let Some(value)=parser.step(&text,law["maximumUnits"].as_u64().unwrap()as usize,&mut control).unwrap() {break value;}};
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&value)).unwrap(),expected);let mut projection=JsonValueProjection::new(value);let projected=loop {assert!(projection.step(0,3,&mut control).unwrap().is_none());if let Some(value)=projection.step(1,3,&mut control).unwrap() {break value;}};assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&projected)).unwrap(),expected);
-    for stop in [0,1,text.len()/2,text.len()-1] {let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);while parser.position()<stop {assert!(parser.step(&text,1,&mut control).unwrap().is_none());}retire_original_json(parser,law["retirementBytes"].as_u64().unwrap()as usize,100000);}
+    let value=loop {let position=parser.position();assert!(parser.step(&text,0,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());assert_eq!(parser.position(),position);turns+=1;assert!(turns<100000);if let Some(value)=parser.step(&text,law["maximumUnits"].as_u64().unwrap()as usize,&mut control,JSON_NORMAL_TEST_POLICY).unwrap() {break value;}};
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&value)).unwrap(),expected);let mut projection=JsonValueProjection::new(value);let projected=loop {assert!(projection.step(0,3,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());if let Some(value)=projection.step(1,3,&mut control,JSON_NORMAL_TEST_POLICY).unwrap() {break value;}};assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&projected)).unwrap(),expected);
+    for stop in [0,1,text.len()/2,text.len()-1] {let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);while parser.position()<stop {assert!(parser.step(&text,1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}retire_original_json(parser,law["retirementBytes"].as_u64().unwrap()as usize,100000);}
     eprintln!("[DEBUG] Existing JSON grammar retained borrowed source and moved typed projection, transitions={turns}");
 }
 
@@ -854,8 +860,8 @@ fn retained_json_borrowed_source_uses_original_pages_utf8_and_refusal_owner(){
     let source=PagedList::<u8,16384>::try_from_iter(text.bytes()).unwrap();
     let pointer=source.get(0).unwrap()as *const u8;
     let mut accepted=|_|true;let mut control=NativeDecodeControl::new(fixture["decodeAllocationBytes"].as_u64().unwrap()as usize,&mut accepted);
-    let mut cursor=JsonBorrowedParseCursor::new(&source,JsonMemberPolicy::Reject);
-    let parsed=loop{if let Some(value)=cursor.step(fixture["stepUnits"].as_u64().unwrap()as usize,&mut control).unwrap(){break value;}};
+    let mut cursor=JsonBorrowedParseCursor::new(&source,JsonMemberPolicy::Reject,fixture_read_policy(&fixture)).unwrap();
+    let parsed=loop{if let Some(value)=cursor.step(fixture["stepUnits"].as_u64().unwrap()as usize,&mut control,JSON_NORMAL_TEST_POLICY).unwrap(){break value;}};
     assert_eq!(cursor.source().get(0).unwrap()as *const u8,pointer);
     assert_eq!(cursor.position(),source.len());
     let oracle:serde_json::Value=serde_json::from_str(text).unwrap();
@@ -864,20 +870,20 @@ fn retained_json_borrowed_source_uses_original_pages_utf8_and_refusal_owner(){
     close_borrowed_json(cursor,131072);
     let large=format!("\"{}\"", "x".repeat(fixture["largeStringBytes"].as_u64().unwrap()as usize));
     let source=PagedList::<u8,16384>::try_from_iter(large.bytes()).unwrap();
-    let mut cursor=JsonBorrowedParseCursor::new(&source,JsonMemberPolicy::Reject);
+    let mut cursor=JsonBorrowedParseCursor::new(&source,JsonMemberPolicy::Reject,fixture_read_policy(&fixture)).unwrap();
     let live=std::cell::Cell::new(true);let mut accepted=|_|live.get();let mut control=NativeDecodeControl::new(131072,&mut accepted);
-    while cursor.phase()!="materialize-string"{assert!(cursor.step(1,&mut control).unwrap().is_none());}
-    for _ in 0..64{assert!(cursor.step(1,&mut control).unwrap().is_none());}
+    while cursor.phase()!="materialize-string"{assert!(cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}
+    for _ in 0..64{assert!(cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}
     let bytes=control.owned_bytes();assert!(bytes>=fixture["largeStringBytes"].as_u64().unwrap()as usize);
     let position=cursor.position();let pointer=cursor.source().get(0).unwrap()as *const u8;
-    live.set(false);assert_eq!(cursor.step(1,&mut control).unwrap_err().into_value_error().kind,ValueRefusalKind::Canceled);
+    live.set(false);assert_eq!(cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap_err().into_value_error().kind,ValueRefusalKind::Canceled);
     assert_eq!(cursor.position(),position);assert_eq!(control.owned_bytes(),bytes);assert_eq!(cursor.source().get(0).unwrap()as *const u8,pointer);
     live.set(true);
-    let actual=loop{if let Some(value)=cursor.step(1,&mut control).unwrap(){break value;}};
+    let actual=loop{if let Some(value)=cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap(){break value;}};
     assert_eq!(actual,parse(&large,JsonMemberPolicy::Reject).unwrap());close_borrowed_json(cursor,131072);
     for bytes in[fixture["invalidUtf8"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>(),fixture["duplicate"].as_str().unwrap().as_bytes().to_vec()]{
-        let source=PagedList::<u8,16384>::try_from_iter(bytes.iter().copied()).unwrap();let mut cursor=JsonBorrowedParseCursor::new(&source,JsonMemberPolicy::Reject);
-        let error=loop{match cursor.step(1,&mut control){Err(error)=>break error,Ok(None)=>{},Ok(Some(_))=>panic!("invalid literal source accepted")}};
+        let source=PagedList::<u8,16384>::try_from_iter(bytes.iter().copied()).unwrap();let mut cursor=JsonBorrowedParseCursor::new(&source,JsonMemberPolicy::Reject,fixture_read_policy(&fixture)).unwrap();
+        let error=loop{match cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY){Err(error)=>break error,Ok(None)=>{},Ok(Some(_))=>panic!("invalid literal source accepted")}};
         if bytes[1]==237{assert!(matches!(error,JsonError::InvalidUtf8));}else{assert!(matches!(error,JsonError::DuplicateMember{..}));}
         close_borrowed_json(cursor,131072);
     }
@@ -891,8 +897,8 @@ fn retained_json_direct_semantic_source_moves_admitted_original_cells_without_tr
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫳️read-source.json")).unwrap();
     let text=fixture["source"].as_str().unwrap();let source=PagedList::<u8,16384>::try_from_iter(text.bytes()).unwrap();
     let mut accepted=|_|true;let mut control=NativeDecodeControl::new(131072,&mut accepted);
-    let mut cursor=JsonBorrowedDslCursor::new(&source,JsonMemberPolicy::Reject);
-    let value=loop{if let Some(value)=cursor.step(1,&mut control).unwrap(){break value;}};
+    let mut cursor=JsonBorrowedDslCursor::new(&source,JsonMemberPolicy::Reject,fixture_read_policy(&fixture)).unwrap();
+    let value=loop{if let Some(value)=cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap(){break value;}};
     assert_eq!(cursor.source().get(0).unwrap()as *const u8,source.get(0).unwrap()as *const u8);
     assert_eq!(serde_json::Value::from(&value),serde_json::from_str::<serde_json::Value>(text).unwrap());
     let DslValue::Object(fields)=&value else{panic!("original object")};
@@ -903,8 +909,8 @@ fn retained_json_direct_semantic_source_moves_admitted_original_cells_without_tr
     assert!(matches!(numbers[3],DslValue::Number(Number::Float(value))if value.to_bits()==1));
     close_borrowed_json(cursor,131072);
     let source=PagedList::<u8,16384>::try_from_iter(std::iter::once(b'"').chain(std::iter::repeat_n(b'x',fixture["largeStringBytes"].as_u64().unwrap()as usize)).chain(std::iter::once(b'"'))).unwrap();
-    let mut cursor=JsonBorrowedDslCursor::new(&source,JsonMemberPolicy::Reject);let mut control=NativeDecodeControl::new(131072,&mut accepted);
-    let value=loop{if let Some(value)=cursor.step(1,&mut control).unwrap(){break value;}};
+    let mut cursor=JsonBorrowedDslCursor::new(&source,JsonMemberPolicy::Reject,fixture_read_policy(&fixture)).unwrap();let mut control=NativeDecodeControl::new(131072,&mut accepted);
+    let value=loop{if let Some(value)=cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap(){break value;}};
     assert_eq!(control.owned_bytes(),fixture["largeStringBytes"].as_u64().unwrap()as usize);
     let DslValue::String(value)=value else{panic!("direct owned semantic string")};assert_eq!(value.len(),fixture["largeStringBytes"].as_u64().unwrap()as usize);assert!(value.bytes().all(|byte|byte==b'x'));
     close_borrowed_json(cursor,131072);
@@ -919,19 +925,19 @@ fn retained_json_borrowed_source_honors_complete_caller_extent_depth_and_paid_al
     for row in fixture["cases"].as_array().unwrap(){
         let text=row["source"].as_str().unwrap();let source=PagedList::<u8,16384>::try_from_iter(text.bytes()).unwrap();
         let limits=JsonReadLimits{maximum_bytes:text.len()as u64,maximum_allocation_bytes:fixture["decodeAllocationBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize,maximum_items:row["maximumItems"].as_u64().unwrap()};
-        let mut cursor=JsonBorrowedDslCursor::new_with_limits(&source,JsonMemberPolicy::Reject,limits).unwrap();let mut accepted=|_|true;let mut control=NativeDecodeControl::new(262144,&mut accepted);
-        let result=loop{match cursor.step(1,&mut control){Ok(Some(value))=>break Ok(value),Err(error)=>break Err(error),Ok(None)=>{}}};
+        let mut cursor=JsonBorrowedDslCursor::new(&source,JsonMemberPolicy::Reject,limits).unwrap();let mut accepted=|_|true;let mut control=NativeDecodeControl::new(262144,&mut accepted);
+        let result=loop{match cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY){Ok(Some(value))=>break Ok(value),Err(error)=>break Err(error),Ok(None)=>{}}};
         assert_eq!(control.maximum_bytes(),262144);
         if row["accept"].as_bool().unwrap(){assert_eq!(serde_json::Value::from(&result.unwrap()),serde_json::from_str::<serde_json::Value>(text).unwrap());}
         else{assert_eq!(result.unwrap_err().into_value_error().kind,match row["kind"].as_str().unwrap(){"WorkLimit"=>ValueRefusalKind::WorkLimit,"DepthLimit"=>ValueRefusalKind::DepthLimit,_=>panic!("closed literal refusal")});}
         close_borrowed_json(cursor,131072);
-        let short=JsonReadLimits{maximum_bytes:text.len()as u64-1,..limits};assert_eq!(JsonBorrowedDslCursor::new_with_limits(&source,JsonMemberPolicy::Reject,short).err().unwrap().kind,ValueRefusalKind::WorkLimit);
+        let short=JsonReadLimits{maximum_bytes:text.len()as u64-1,..limits};assert_eq!(JsonBorrowedDslCursor::new(&source,JsonMemberPolicy::Reject,short).err().unwrap().kind,ValueRefusalKind::WorkLimit);
     }
     let source=PagedList::<u8,16384>::try_from_iter(std::iter::once(b'"').chain(std::iter::repeat_n(b'x',fixture["largeStringBytes"].as_u64().unwrap()as usize)).chain(std::iter::once(b'"'))).unwrap();
     let mut accepted=|_|true;let mut control=NativeDecodeControl::new(262144,&mut accepted);
     let limits=JsonReadLimits{maximum_bytes:source.len()as u64,maximum_allocation_bytes:fixture["refusedAllocationBytes"].as_u64().unwrap()as usize,maximum_depth:8,maximum_items:8};
-    let mut cursor=JsonBorrowedDslCursor::new_with_limits(&source,JsonMemberPolicy::Reject,limits).unwrap();
-    let error=loop{match cursor.step(1,&mut control){Err(error)=>break error,Ok(Some(_))=>panic!("original paid string must refuse"),Ok(None)=>{}}};
+    let mut cursor=JsonBorrowedDslCursor::new(&source,JsonMemberPolicy::Reject,limits).unwrap();
+    let error=loop{match cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY){Err(error)=>break error,Ok(Some(_))=>panic!("original paid string must refuse"),Ok(None)=>{}}};
     assert_eq!(error.into_value_error().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(control.owned_bytes(),0);assert_eq!(control.maximum_bytes(),262144);
     assert_eq!(cursor.source().len(),source.len());close_borrowed_json(cursor,131072);
     let _=std::mem::size_of::<DslValue>();
@@ -949,11 +955,11 @@ fn retained_json_cursor_owns_exact_borrowed_source_view(){
     let pointer=source.get(1).unwrap()as *const u8;
     let view=OriginalView{owner:&source,start:1,length:text.len()};
     let limits=JsonReadLimits{maximum_bytes:text.len()as u64,maximum_allocation_bytes:131072,maximum_depth:8,maximum_items:4};
-    let mut cursor=JsonSourceCursor::<_,DslValue>::new_with_limits(view,JsonMemberPolicy::Reject,limits).unwrap();
+    let mut cursor=JsonSourceCursor::<_,DslValue>::new(view,JsonMemberPolicy::Reject,limits).unwrap();
     let live=std::cell::Cell::new(true);let mut accepted=|_|live.get();let mut control=NativeDecodeControl::new(262144,&mut accepted);
-    for _ in 0..4{assert!(cursor.step(1,&mut control).unwrap().is_none());}
-    let position=cursor.position();let owned=control.owned_bytes();live.set(false);assert_eq!(cursor.step(1,&mut control).unwrap_err().kind(),ValueRefusalKind::Canceled);assert_eq!(cursor.position(),position);assert_eq!(control.owned_bytes(),owned);live.set(true);
-    let value=loop{if let Some(value)=cursor.step(1,&mut control).unwrap(){break value}};
+    for _ in 0..4{assert!(cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}
+    let position=cursor.position();let owned=control.owned_bytes();live.set(false);assert_eq!(cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap_err().kind(),ValueRefusalKind::Canceled);assert_eq!(cursor.position(),position);assert_eq!(control.owned_bytes(),owned);live.set(true);
+    let value=loop{if let Some(value)=cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap(){break value}};
     assert_eq!(serde_json::Value::from(&value),serde_json::from_str::<serde_json::Value>(text).unwrap());
     assert_eq!(cursor.source_ref().owner.get(cursor.source_ref().start).unwrap()as *const u8,pointer);assert_eq!(cursor.source_ref().length,text.len());assert_eq!(control.maximum_bytes(),262144);
     close_borrowed_json(cursor,131072);
@@ -981,9 +987,9 @@ fn borrowed_json_retirement_admission_preserves_original_source_on_refusal(){
     let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️borrowed-retirement/🔣️.json")).unwrap();
     let source=law["source"].as_str().unwrap();
     for row in law["cases"].as_array().unwrap(){
-        let mut cursor=JsonBorrowedParseCursor::new(source,JsonMemberPolicy::Reject);
+        let mut cursor=JsonBorrowedParseCursor::new(source,JsonMemberPolicy::Reject,fixture_read_policy(&law)).unwrap();
         let mut accept=|_|true;let mut control=NativeDecodeControl::new(131072,&mut accept);
-        for _ in 0..4{assert!(cursor.step(1,&mut control).unwrap().is_none());}
+        for _ in 0..4{assert!(cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());}
         let position=cursor.position();let pointer=cursor.source().as_ptr();
         let birth=cursor.retirement_birth_bytes();
         let grant=RetainedCloneGrant{maximum_items:row["items"].as_u64().unwrap()as usize,maximum_copy_bytes:0,maximum_capacity_bytes:if row["capacity"].as_str().unwrap()=="exact"{birth}else{birth-1},maximum_release_bytes:0,maximum_depth:row["depth"].as_u64().unwrap()as usize};
@@ -994,10 +1000,80 @@ fn borrowed_json_retirement_admission_preserves_original_source_on_refusal(){
         }else{
             let(error,restored)=cursor.into_retirement(grant).err().expect("original handoff must refuse");cursor=restored;
             assert_eq!(error.kind.as_str(),row["kind"].as_str().unwrap());assert_eq!(cursor.position(),position);assert_eq!(cursor.source().as_ptr(),pointer);
-            let parsed=loop{if let Some(value)=cursor.step(1,&mut control).unwrap(){break value;}};
+            let parsed=loop{if let Some(value)=cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap(){break value;}};
             assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&parsed)).unwrap(),serde_json::from_str::<serde_json::Value>(source).unwrap());
             close_borrowed_json(cursor,65536);
         }
     }
     eprintln!("[DEBUG] borrowed JSON retirement preserves original source and candidate on three independent admission refusals; Serde confirms resumed values");
+}
+
+#[test]
+fn borrowed_json_writer_retains_cumulative_admission_across_real_observer_grants(){
+    let fixture=owned_json_fixture();let law=&fixture["retainedWriting"];
+    let source=DirectJsonSource{member:law["directSourceMember"].as_str().unwrap().into(),text:owned_json_text(law)};
+    let pointer=source.text.as_ptr();let expected=serde_json::json!({source.member.clone():source.text.clone()}).to_string();
+    let live=std::cell::Cell::new(true);let mut writer=JsonBorrowedWriteCursor::new();let mut receipt=None;let mut previous_owned=0;let mut turns=0;
+    let output=loop{
+        let mut observe=|_|live.get();let mut control=match receipt.take(){Some(receipt)=>semio_framework_value::NativeEncodeControl::resume(receipt,&mut observe).unwrap(),None=>semio_framework_value::NativeEncodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut observe)};
+        let before=(writer.progress(),control.owned_bytes());assert!(writer.step(&source,0,&mut control,JSON_NORMAL_TEST_POLICY).unwrap().is_none());assert_eq!((writer.progress(),control.owned_bytes()),before);
+        let value=writer.step(&source,1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap();assert!(control.owned_bytes()>=previous_owned);previous_owned=control.owned_bytes();receipt=Some(control.pause().unwrap());turns+=1;assert!(turns<100000);if let Some(value)=value{break value}
+    };
+    assert_eq!(output,expected);assert_eq!(source.text.as_ptr(),pointer);assert!(turns>1);
+    retire_original_json(writer,3,100000);
+    let mut writer=JsonBorrowedWriteCursor::new();let mut observe=|_|live.get();let mut control=semio_framework_value::NativeEncodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut observe);writer.step(&source,1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap();let before=writer.progress();let receipt=control.pause().unwrap();live.set(false);let mut control=semio_framework_value::NativeEncodeControl::resume(receipt,&mut observe).unwrap();assert_eq!(writer.step(&source,1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(writer.progress(),before);retire_original_json(writer,3,100000);retire_original_json(source,3,100000);
+    eprintln!("[DEBUG] borrowed canonical writer actual1unit grants={turns}; cumulativeowned={previous_owned}; originalpointer=true; independentSerde=true; cancelpreserves=true");
+}
+
+#[test]
+fn original_json_normal_frontiers_preserve_actual_independent_receipts(){
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️normal/🔣️.json")).unwrap();
+    let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();
+    let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};
+    for text in law["sources"].as_array().unwrap(){
+        let text=text.as_str().unwrap();let pointer=text.as_ptr();let expected:serde_json::Value=serde_json::from_str(text).unwrap();
+        let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);let mut total=RetainedCloneProgress::default();let mut turns=0;
+        let parsed=loop{
+            turns+=1;assert!(turns<100000);let before=(parser.position(),parser.phase(),control.owned_bytes());
+            let(result,born,released)=test_allocation::observe_backing(||parser.step(text,1,&mut control,zero));assert!(result.unwrap().is_none());assert_eq!((born,released),(0,0));assert_eq!((parser.position(),parser.phase(),control.owned_bytes()),before);assert_eq!(parser.normal_step_progress(),Default::default());
+            let demand=parser.normal_step_demands(text).unwrap();
+            for short in [if demand.capacity_bytes>0{Some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant})}else{None},if demand.copy_bytes>0{Some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant})}else{None},if demand.release_bytes>0{Some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant})}else{None}].into_iter().flatten(){
+                let(result,born,released)=test_allocation::observe_backing(||parser.step(text,1,&mut control,short));assert!(result.unwrap().is_none());assert_eq!((born,released),(0,0));assert_eq!((parser.position(),parser.phase(),control.owned_bytes()),before);
+            }
+            let(result,born,released)=test_allocation::observe_backing(||parser.step(text,1,&mut control,grant));let progress=parser.normal_step_progress();assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(born,released));total=total.checked_add(progress).unwrap();assert_eq!(text.as_ptr(),pointer);
+            if let Some(value)=result.unwrap(){break value;}
+        };
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&parsed)).unwrap(),expected);assert!(total.retained_capacity_bytes>0);retire_original_json(parser,3,100000);
+        let mut projection=JsonValueProjection::new(parsed);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);let mut turns=0;
+        let projected=loop{
+            turns+=1;assert!(turns<100000);let before=(projection.phase(),control.owned_bytes());let(result,born,released)=test_allocation::observe_backing(||projection.step(1,32,&mut control,zero));assert!(result.unwrap().is_none());assert_eq!((born,released),(0,0));assert_eq!((projection.phase(),control.owned_bytes()),before);
+            let demand=projection.normal_step_demands().unwrap();for short in [if demand.capacity_bytes>0{Some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant})}else{None},if demand.release_bytes>0{Some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant})}else{None},if demand.copy_bytes>0{Some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant})}else{None}].into_iter().flatten(){let(result,born,released)=test_allocation::observe_backing(||projection.step(1,32,&mut control,short));assert!(result.unwrap().is_none());assert_eq!((born,released),(0,0));assert_eq!((projection.phase(),control.owned_bytes()),before);}
+            let(result,born,released)=test_allocation::observe_backing(||projection.step(1,32,&mut control,grant));let progress=projection.normal_step_progress();assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(born,released));if let Some(value)=result.unwrap(){break value;}
+        };
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&projected)).unwrap(),expected);retire_original_json(projection,3,100000);
+        let mut writer=JsonWriteCursor::new(projected);let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new_retained(&mut accepted);let mut turns=0;
+        let output=loop{
+            turns+=1;assert!(turns<100000);let before=(writer.progress(),control.owned_bytes());let(result,born,released)=test_allocation::observe_backing(||writer.step(1,&mut control,zero));assert!(result.unwrap().is_none());assert_eq!((born,released),(0,0));assert_eq!((writer.progress(),control.owned_bytes()),before);
+            let demand=writer.normal_step_demands().unwrap();for short in [if demand.capacity_bytes>0{Some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant})}else{None},if demand.copy_bytes>0{Some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant})}else{None}].into_iter().flatten(){let(result,born,released)=test_allocation::observe_backing(||writer.step(1,&mut control,short));assert!(result.unwrap().is_none());assert_eq!((born,released),(0,0));assert_eq!((writer.progress(),control.owned_bytes()),before);}
+            let(result,born,released)=test_allocation::observe_backing(||writer.step(1,&mut control,grant));let progress=writer.normal_step_progress();assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(born,released));if let Some(value)=result.unwrap(){break value;}
+        };
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&output).unwrap(),expected);let original=writer.take_source().unwrap();retire_original_json(original,3,100000);retire_original_json(writer,3,100000);
+        eprintln!("[DEBUG] original JSON normal parser/projection/writer same source, zero/short grant born=0 free=0, exact actual physical receipts; Serde output exact, parser-turns={turns}");
+    }
+}
+
+#[test]
+fn borrowed_json_writer_preserves_actual_post_birth_cancellation_receipt(){
+ let source=DslValue::String("雪".repeat(16));let expected=serde_json::to_string(&"雪".repeat(16)).unwrap();
+ let live=std::cell::Cell::new(true);let cancel_at_turn=std::cell::Cell::new(true);
+ let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|live.get()&&!(cancel_at_turn.get()&&event.completed==1);
+ let mut control=semio_framework_value::NativeEncodeControl::new(1<<20,&mut callback);control.begin_stage(1).unwrap();let mut writer=JsonBorrowedWriteCursor::new();
+ let (result,born,released)=test_allocation::observe_backing(||writer.step(&source,1,&mut control,JSON_NORMAL_TEST_POLICY));
+ let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);let progress=writer.normal_step_progress();assert_eq!(error.retained_progress(),progress);assert_eq!(progress.copied_items,1);assert_eq!(progress.copied_bytes,0);assert_eq!(progress.retained_capacity_bytes,born);assert_eq!(released,0);assert_eq!(progress.released_bytes,0);assert_eq!(writer.retained_capacity_bytes().unwrap(),born);
+ let pointers=(writer.frames.as_ptr(),writer.path.as_ptr());let frontier=writer.progress();let mut denied=JSON_NORMAL_TEST_POLICY;denied.maximum_items=0;
+ let (empty,born,released)=test_allocation::observe_backing(||writer.step(&source,1,&mut control,denied));assert!(empty.unwrap().is_none());assert_eq!((born,released),(0,0));assert_eq!(writer.progress(),frontier);assert_eq!((writer.frames.as_ptr(),writer.path.as_ptr()),pointers);
+ cancel_at_turn.set(false);control.begin_stage(0).unwrap();let actual=loop{if let Some(output)=writer.step(&source,4,&mut control,JSON_NORMAL_TEST_POLICY).unwrap(){break output}};
+ assert_eq!(actual,expected);assert_eq!(serde_json::from_str::<serde_json::Value>(&actual).unwrap(),serde_json::Value::String("雪".repeat(16)));
+ retire_original_json(writer,3,100000);retire_original_json(source,3,100000);retire_original_json(actual,3,100000);
+ println!("[DEBUG] Borrowed JSON post-birth cancellation SystemAllocationEqualsReceipt=true originalFramePointers=true zeroItemNoChange=true independentSerdeOutput=true");
 }

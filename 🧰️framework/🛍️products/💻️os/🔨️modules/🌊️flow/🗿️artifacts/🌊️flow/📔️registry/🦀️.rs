@@ -8,6 +8,7 @@ use std::sync::{LazyLock, Mutex, OnceLock, TryLockError};
 use crate::extensions::FlowExtensionManifest;
 use neural::{ColdRetire, Dictionary, EvalError, OperatorImpl};
 use serde::{Deserialize, Serialize};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
 
 
 
@@ -85,15 +86,9 @@ pub fn lock_flow_extension_registry_for_test() -> std::sync::MutexGuard<'static,
 /// moment the queue is empty or a faulted worker owns the cursor — neither is this helper's business
 /// to report.
 #[cfg(any(test, feature = "protocol-laws"))]
-pub fn drain_flow_extension_registry_retirements() -> usize {
-    for _ in 0..1_000_000 {
-        match retire_flow_extension_registries_step(1, 4096) {
-            Ok(neural::ValueRetirementStep::Pending { .. }) => {}
-            _ => break,
-        }
-    }
-    FLOW_EXTENSION_STATE.get().map_or(0, |state| state.lock().map_or(0, |state| state.retired.len()))
-}
+pub fn test_flow_registry_retirement_step(items:usize,copy:usize)->Result<RetainedCloneStep,ValueError>{let demand=next_flow_extension_registry_retirement_demands(copy)?;retire_flow_extension_registries_step(RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})}
+#[cfg(any(test, feature = "protocol-laws"))]
+pub fn drain_flow_extension_registry_retirements()->usize{for _ in 0..1_000_000{match test_flow_registry_retirement_step(1,4096){Ok(RetainedCloneStep::Complete(_))=>break,Ok(step)if step.progress()==Default::default()=>break,Err(_)=>break,_=>{}}}FLOW_EXTENSION_STATE.get().map_or(0,|state|state.lock().map_or(0,|state|state.retired.len()))}
 
 pub(crate) fn flow_extension_state() -> &'static Mutex<FlowExtensionRegistryState> {
     FLOW_EXTENSION_STATE.get_or_init(|| {
@@ -141,7 +136,10 @@ pub fn install_builtin_flow_extensions(_registry: &mut neural::Registry) {
 struct ContributedExtensionStub {
     invocation_address: String,
     operator_id: String,
+    retirement:semio_framework_value::retirement::controlled::RetainedOwnerGate<Option<ControlledRetirement<ContributedStubSource>>>,
 }
+#[derive(semio_framework_value::RetireOwned)]
+struct ContributedStubSource{invocation_address:String,operator_id:String}
 
 impl neural::Operator for ContributedExtensionStub {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -149,14 +147,22 @@ impl neural::Operator for ContributedExtensionStub {
         Err(EvalError::PendingExtension { extension_id: self.invocation_address.clone(), operator_id: self.operator_id.clone(), node_hash })
     }
 
-    fn retirement_is_empty(&self) -> bool { self.invocation_address.is_empty() && self.operator_id.is_empty() }
-
-    fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize, values: &mut neural::ValueRetirement) -> Result<neural::ValueRetirementStep, &'static str> {
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(neural::ValueRetirementStep::Blocked); }
-        if self.retirement_is_empty() { return Ok(neural::ValueRetirementStep::Complete); }
-        values.text(std::mem::take(&mut self.invocation_address));
-        values.text(std::mem::take(&mut self.operator_id));
-        Ok(neural::ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(neural::OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{neural::OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_copy:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(1)}
+    fn retirement_is_empty(&self)->bool{self.invocation_address.capacity()==0&&self.operator_id.capacity()==0&&self.retirement.try_lock().is_ok_and(|owner|owner.is_none())}
+    fn next_retire_copy_byte_demand(&self)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand)}
+    fn next_retire_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(copy))}
+    fn next_retire_release_byte_demand(&self)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand)}
+    fn next_retire_depth_demand(&self)->Result<usize,ValueError>{let owner=self.retirement.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original contributed retirement gate is occupied"))?;owner.as_ref().map_or(Ok(usize::from(self.invocation_address.capacity()!=0||self.operator_id.capacity()!=0)),ControlledRetirement::next_depth_demand)}
+    fn retire_step(&mut self,grant:RetainedCloneGrant,_values:&mut neural::ValueRetirement)->Result<RetainedCloneStep,ValueError>{
+        if self.retirement_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        let retirement=self.retirement.get_mut();
+        if let Some(owner)=retirement.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){*retirement=None}return Ok(if self.invocation_address.capacity()==0&&self.operator_id.capacity()==0&&retirement.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original contributed stub handoff requires depth"))}
+        *retirement=Some(ControlledRetirement::new(ContributedStubSource{invocation_address:std::mem::take(&mut self.invocation_address),operator_id:std::mem::take(&mut self.operator_id)}).unwrap_or_else(|_|unreachable!("original contributed stub source is typed")));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
 }
 
@@ -205,7 +211,7 @@ fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &st
         }
         let invocation_address = plugin_id.to_string();
         let operator_id = info.id.clone();
-        registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { invocation_address, operator_id }) }], &[]);
+        registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { invocation_address, operator_id,retirement:semio_framework_value::retirement::controlled::RetainedOwnerGate::new(None) }) }], &[]);
     }
     registry.finalize();
     Ok(())
@@ -232,51 +238,9 @@ fn build_flow_extension_registry(contributed: &BTreeMap<String, ContributedFlowE
 
 pub(crate) struct FlowRegistryReplacement<'a> { state: &'a mut FlowExtensionRegistryState, generation: u64 }
 
-/// 🧹️ How many `close_step`s ONE admission pays to make room in a full retirement queue. A registry
-/// version is a few hundred operators plus their schemas and defaults, so a free version retires in
-/// far fewer than this; the ceiling exists so a faulted cursor can never turn an admission into a
-/// spin.
-const RETIREMENT_RECLAIM_STEPS: usize = 65_536;
-
-/// 🧹️ Retires the retired versions at the FRONT of the queue that nobody reads any more, and stops
-/// at the first one that is still read.
-///
-/// 🐛️ [`retire_flow_extension_registries_step`] — the pump that gives these slots back — has no
-/// caller outside test code anywhere in this repository, so nothing in a served process drains this
-/// queue: the 17th replacement of a process's life is refused with `flow.registry-retirement-full`
-/// and every later `setContributions`, extension install and uninstall fails with it, forever. In
-/// the generation3d `--lib` binary that is
-/// `a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_registry_faulted` failing
-/// at law 398 of 449 on sixteen earlier laws' debt while passing alone
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-///
-/// 🔒️ It is deliberately FRONT-ONLY and never rotates: a blocked front means a live reader still
-/// holds that version, and the promise
-/// `registry_replacement_admission_preserves_roots_on_capacity_and_generation_exhaustion` states —
-/// a caller that pins a version and then fills the queue is still refused, with every root intact —
-/// is exactly the promise rotating past it would break. Pumping is therefore back-pressure paid at
-/// the door, never a force-close.
-fn reclaim_free_retired_registries(state: &mut FlowExtensionRegistryState) {
-    for _ in 0..RETIREMENT_RECLAIM_STEPS {
-        let Some(retirement) = state.retired.front_mut() else { return };
-        let Ok(Ok(step)) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| retirement.close_step(1, RETIREMENT_RECLAIM_PAGE_BYTES))) else { return };
-        match step {
-            neural::ValueRetirementStep::Complete if retirement.terminal_is_empty() => drop(state.retired.pop_front()),
-            neural::ValueRetirementStep::Pending { .. } => {}
-            _ => return,
-        }
-    }
-}
-
-/// 🎟️ The byte grant one reclaim step pays, matching the pump's own fixture grant.
-const RETIREMENT_RECLAIM_PAGE_BYTES: usize = 4_096;
-
 /// 🎟️ Admits a replacement before constructing any new registry or changing contribution metadata.
 pub(crate) fn begin_flow_registry_replacement(state: &mut FlowExtensionRegistryState) -> Result<FlowRegistryReplacement<'_>, &'static str> {
     let generation = state.generation.checked_add(1).ok_or("flow.registry-generation-exhausted")?;
-    if state.retired.len() >= RETIRED_REGISTRY_CAPACITY {
-        reclaim_free_retired_registries(state);
-    }
     if state.retired.len() >= RETIRED_REGISTRY_CAPACITY { return Err("flow.registry-retirement-full"); }
     Ok(FlowRegistryReplacement { state, generation })
 }
@@ -291,31 +255,13 @@ impl FlowRegistryReplacement<'_> {
     }
 }
 
-/// 🧹️ Advances one retired version without waiting on registry readers or a busy registry lock.
-pub fn retire_flow_extension_registries_step(maximum_items: usize, maximum_bytes: usize) -> Result<neural::ValueRetirementStep, &'static str> {
-    if maximum_items == 0 || maximum_bytes == 0 { return Ok(neural::ValueRetirementStep::Blocked); }
-    let Some(state) = FLOW_EXTENSION_STATE.get() else { return Ok(neural::ValueRetirementStep::Complete); };
-    let mut state = match state.try_lock() {
-        Ok(state) => state,
-        Err(TryLockError::WouldBlock) => return Ok(neural::ValueRetirementStep::Blocked),
-        Err(TryLockError::Poisoned(_)) => return Err("flow.registry-retirement-poisoned"),
-    };
-    let Some(retirement) = state.retired.front_mut() else { return Ok(neural::ValueRetirementStep::Complete); };
-    let step = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| retirement.close_step(1, maximum_bytes)))
-        .map_err(|_| "flow.registry-retirement-panicked")??;
-    match step {
-        neural::ValueRetirementStep::Complete => {
-            if !retirement.terminal_is_empty() { return Err("flow.registry-retirement-not-empty"); }
-            drop(state.retired.pop_front());
-            Ok(if state.retired.is_empty() { neural::ValueRetirementStep::Complete } else { neural::ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 } })
-        }
-        neural::ValueRetirementStep::Blocked if state.retired.len() > 1 => {
-            let waiting = state.retired.pop_front().unwrap();
-            state.retired.push_back(waiting);
-            Ok(neural::ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-        }
-        _ => Ok(step),
-    }
+/// 🪙️ Quotes the same original front registry owner without granting authority.
+pub fn next_flow_extension_registry_retirement_demands(copy:usize)->Result<RetirementDemand,ValueError>{
+ let Some(state)=FLOW_EXTENSION_STATE.get()else{return Ok(Default::default())};let state=state.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original registry retirement owner is busy"))?;let Some(owner)=state.retired.front()else{return Ok(Default::default())};if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})
+}
+/// 🧹️ Advances one actual front owner or transfers one empty slot under the incoming full wallet.
+pub fn retire_flow_extension_registries_step(grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ let empty=RetainedCloneProgress::default();if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let Some(state)=FLOW_EXTENSION_STATE.get()else{return Ok(RetainedCloneStep::Complete(empty))};let mut state=match state.try_lock(){Ok(state)=>state,Err(TryLockError::WouldBlock)=>return Ok(RetainedCloneStep::Progress(empty)),Err(TryLockError::Poisoned(_))=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original registry retirement is poisoned"))};let Some(owner)=state.retired.front_mut()else{return Ok(RetainedCloneStep::Complete(empty))};if owner.terminal_is_empty(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original registry empty slot requires depth"))}drop(state.retired.pop_front());let progress=RetainedCloneProgress{copied_items:1,..empty};return Ok(if state.retired.is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})}let step=owner.close_step(grant)?;Ok(RetainedCloneStep::Progress(step.progress()))
 }
 
 /// 🔌️ Installs a built-in extension spec (idempotent on `id`).

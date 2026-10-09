@@ -108,13 +108,13 @@ fn reconstruct(frame:Frame,control:&mut NativeDecodeControl<'_>)->Result<Ifc2x3S
     if let Some(value)=native.edm.take(){out.edm_preamble=Some(Ifc2x3EdmPreamble{producer:value.producer,module:value.module,creation_date:value.creation_date,host:value.host,database:value.database,database_version:value.database_version,database_creation_date:value.database_creation_date,schema:value.schema,model:value.model,model_creation_date:value.model_creation_date,header_model:value.header_model,header_model_creation_date:value.header_model_creation_date,user:value.user,group:value.group,license:value.license,options:value.options});}
     out.schema=std::mem::take(&mut native.schema);Ok(result.take())
 }
-pub(crate) fn encode(value:&Ifc2x3Snapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<IoPayload,ValueError>{
+pub(crate) fn encode(value:&Ifc2x3Snapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{
     value.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative)?;let maximum=control.limits().max_rows;
-    store::encode_sqlite_snapshot_record_native(encoding,STDIO_IFC2X3_DOCUMENT_SCHEMA,Frame::__dsl_spec_producer(),|native|{let mut frame=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(project(value,native,maximum)?,close::<Frame>);frame.as_mut().__dsl_to_record_controlled(native)},control)
+    store::encode_sqlite_snapshot_record_native(encoding,STDIO_IFC2X3_DOCUMENT_SCHEMA,Frame::__dsl_spec_producer(),|native|{let mut frame=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(project(value,native,maximum)?,close::<Frame>);frame.as_mut().__dsl_to_record_controlled(native)},control,native_owner)
 }
-pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Ifc2x3Snapshot,ValueError>{
+pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Ifc2x3Snapshot,ValueError>{
     let limits=control.limits();let maximum=limits.max_rows;
-    store::decode_sqlite_snapshot_record_native(payload,STDIO_IFC2X3_DOCUMENT_SCHEMA,Frame::__dsl_spec_producer(),|record,native|{Ifc2x3Snapshot::admit_sqlite_record(record,limits,native)?;let mut frame=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(binding::frame(record,native,maximum)?,close::<Frame>);reconstruct(frame.take(),native)},control)
+    store::decode_sqlite_snapshot_record_native(payload,STDIO_IFC2X3_DOCUMENT_SCHEMA,Frame::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {Ifc2x3Snapshot::admit_sqlite_record(record,limits,native)?;let mut frame=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(binding::frame(record,native,maximum)?,close::<Frame>);reconstruct(frame.take(),native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
 }
 
 pub(crate) fn encode_pack(value:&Ifc2x3Snapshot,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{

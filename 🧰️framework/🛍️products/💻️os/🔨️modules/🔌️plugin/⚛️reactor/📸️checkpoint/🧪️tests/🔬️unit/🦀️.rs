@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn checkpoint_of_no_instances_round_trips_through_json() {
-    let runtime = plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new();
+    let runtime = plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let bytes = checkpoint(&runtime, &[], vec![1, 2], vec![7], Vec::new()).await.expect("an empty instance list must still encode");
     let pack: CheckpointPack = serde_json::from_slice(&bytes).expect("checkpoint bytes must be valid CheckpointPack json");
     assert!(pack.instances.is_empty());
@@ -13,7 +13,7 @@ async fn checkpoint_of_no_instances_round_trips_through_json() {
 
 #[semio_framework_async_macros::async_test]
 async fn task_restarts_round_trip_through_json_and_are_exposed_by_the_accessor() {
-    let runtime = plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new();
+    let runtime = plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let restarts = vec![TaskRestart { instance: 5, command: vec![1, 2, 3] }, TaskRestart { instance: 6, command: vec![4] }];
     let bytes = checkpoint(&runtime, &[], Vec::new(), Vec::new(), restarts.clone()).await.expect("must encode");
     let pack = restore(&runtime, &bytes).await.expect("must decode back").pack;

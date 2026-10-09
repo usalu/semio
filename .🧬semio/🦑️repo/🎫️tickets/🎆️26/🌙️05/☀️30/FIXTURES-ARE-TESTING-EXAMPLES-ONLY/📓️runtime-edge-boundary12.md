@@ -1,0 +1,5 @@
+# Boundary12 Runtime Edge Cut
+
+Bounded fresh original Source search covered canonical production registry loader/binary/facade, Dev activation/distribution/local-hub, registry guest rebuild, browser materialization/action handoff and WGPU server owners. No concrete direct fixture import/include/read established in those inspected production sources. Fixture matches were documentation/reference-policy commentary in browser bundle and local-hub, not an actual read binding. Tests and fixture directories were excluded from this runtime cut; their reads remain test-role observations.
+
+Distribution sourceCoordinate12–14 rejects normalized fixture collections explicitly; actual source coordinates still require physical-owner and generated-response proof. Registry production uses genuine fresh producer route. Dynamic configured mounts/imports and full guest/browser dependencies require actual acquisition; static direct-negative cut is not transitive absence, runtime purity or mounted completion. No historical compiler output or neutral witness substituted. Current hashes are observations, not source authorship.

@@ -217,5 +217,35 @@
       "quotedBytes": 192,
       "quotedDepth": 3
     }
-  ]
+  ],
+  "physicalCloseGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 64
+  },
+  "physicalWallet": {
+    "grant": {
+      "maximumItems": 2,
+      "maximumCopyBytes": 8,
+      "maximumCapacityBytes": 64,
+      "maximumReleaseBytes": 64,
+      "maximumDepth": 4
+    },
+    "receipts": [
+      {
+        "copiedItems": 1,
+        "copiedBytes": 8,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 0
+      },
+      {
+        "copiedItems": 1,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 64
+      }
+    ]
+  }
 }

@@ -1,4 +1,4 @@
-macro_rules! physical_layout {($entry:ident,$source:expr $(,$options:expr)?)=>{{let mut decoding=|_|true;let mut encoding=|_|true;let mut progress=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut decoding);let mut encode=semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut encoding);let mut work=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(500_000_000,&mut progress);semio_framework_os_infinite::board::io::text::layout::$entry($source $(,$options)?,&mut decode,&mut work,&mut encode).map_err(|e|e.to_string())}};}
+macro_rules! physical_layout {($entry:ident,$source:expr $(,$options:expr)?)=>{{let mut decoding=|_|true;let mut encoding=|_|true;let mut progress=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut decoding);let mut encode=semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut encoding);let mut work=crate::board::schema::layout::LayoutControl::new(500_000_000,&mut progress);crate::board::io::text::layout::$entry($source $(,$options)?,&mut decode,&mut work,&mut encode).map_err(|e|e.to_string())}};}
 
 use super::*;
 

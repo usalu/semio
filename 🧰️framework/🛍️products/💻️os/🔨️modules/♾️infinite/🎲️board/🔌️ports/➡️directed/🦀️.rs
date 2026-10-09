@@ -527,6 +527,7 @@ pub mod types {
         retirement_credited_bytes: Cell<usize>,
         retirement_scene: Cell<Option<semio_framework_canvas::OpaqueSceneRetirementToken>>,
         closing: Cell<bool>,
+        registry_released:Cell<bool>,
         pub themed_icon_lookup: semio_framework_canvas::icon_codec::ThemedSvgLookup,
     }
 
@@ -562,6 +563,7 @@ pub mod types {
                 retirement_credited_bytes: Cell::new(0),
                 retirement_scene: Cell::new(None),
                 closing: Cell::new(false),
+                registry_released:Cell::new(false),
                 themed_icon_lookup: |_| None,
             }
         }
@@ -575,6 +577,7 @@ pub mod types {
                 retirement_credited_bytes: Cell::new(0),
                 retirement_scene: Cell::new(None),
                 closing: Cell::new(false),
+                registry_released:Cell::new(false),
                 themed_icon_lookup: self.themed_icon_lookup,
             }
         }
@@ -582,6 +585,7 @@ pub mod types {
 
     impl Drop for IconPaintCache {
         fn drop(&mut self) {
+            if self.registry_released.get(){return}
             let terminal = self.terminal_is_empty();
             let never_admitted = self.retirement_scene.get().is_none() && self.cache.get_mut().slots.iter().all(|slot| slot.key.is_none() && slot.value.is_none());
             debug_assert!(terminal || never_admitted || std::thread::panicking(), "IconPaintCache with admitted resources must reach terminal-empty through close_step before release");
@@ -589,6 +593,57 @@ pub mod types {
                 unsafe { ManuallyDrop::drop(self.cache.get_mut()) };
             }
         }
+    }
+
+    struct IconOwnedRetirement {
+        source:ManuallyDrop<Option<IconPaintCache>>,
+        key:Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>,
+        image:Option<semio_framework_value::retirement::shared::SharedControlledRetirement<RasterImage>>,
+        metadata:Option<semio_framework_value::retirement::controlled::ControlledRetirement<(f64,f64,f64,f64)>>,
+        cursor:usize,
+    }
+    impl IconOwnedRetirement {
+        fn terminal(&self)->bool{self.source.is_none()&&self.key.is_none()&&self.image.is_none()&&self.metadata.is_none()}
+        fn demand(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+            use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
+            let deeper=|depth:usize|depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original icon owner depth overflow"));
+            if let Some(owner)=self.key.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:deeper(owner.next_depth_demand()?)?})}
+            if let Some(owner)=self.metadata.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:deeper(owner.next_depth_demand()?)?})}
+            if let Some(owner)=self.image.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:deeper(owner.next_depth_demand()?)?})}
+            let Some(source)=self.source.as_ref() else{return Ok(RetirementDemand::default())};
+            if source.retirement_scene.get().is_some()||source.retirement_credited_bytes.get()!=0{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"existing icon scene authority requires its original full receipt"))}
+            if self.cursor==ICON_PAINT_CACHE_CAPACITY{return Ok(RetirementDemand{release_bytes:std::mem::size_of::<[IconPaintSlot;ICON_PAINT_CACHE_CAPACITY]>(),depth:1,..Default::default()})}
+            if matches!(source.cache.borrow().slots[self.cursor].value.as_ref().map(|value|&value.body),Some(CachedIconBody::Vector(_))){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original vector icon producer has not declared full scene retirement authority"))}
+            Ok(RetirementDemand{depth:1,..Default::default()})
+        }
+        fn step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
+            use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{controlled::ControlledRetirement,shared::SharedControlledRetirement}};
+            let empty=RetainedCloneProgress::default();if self.terminal(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
+            let demand=self.demand(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original icon retirement exceeds admitted depth"))}if grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
+            macro_rules! child{($field:ident,$method:ident)=>{if let Some(owner)=self.$field.as_mut(){if owner.terminal_is_empty(){self.$field=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.$method(child)?;return Ok(RetainedCloneStep::Progress(semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original icon child")?.progress()))}}}
+            child!(key,step);child!(metadata,step);child!(image,step);
+            let source=self.source.as_mut().unwrap();
+            if self.cursor==ICON_PAINT_CACHE_CAPACITY{unsafe{ManuallyDrop::drop(source.cache.get_mut())}source.registry_released.set(true);drop(self.source.take());return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..empty}))}
+            let slot=&mut source.cache.get_mut().slots[self.cursor];
+            if let Some(key)=slot.key.take(){self.key=Some(ControlledRetirement::new(key).unwrap_or_else(|_|unreachable!("original icon key is supported")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+            if let Some(value)=slot.value.take(){let CachedIconPaint{bx,by,bw,bh,body}=value;let CachedIconBody::Raster(image)=body else{unreachable!("original vector scene authority is checked before source transfer")};self.metadata=Some(ControlledRetirement::new((bx,by,bw,bh)).unwrap_or_else(|_|unreachable!("icon numeric metadata is supported")));self.image=Some(SharedControlledRetirement::lease(image));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+            self.cursor+=1;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
+        }
+    }
+    impl semio_framework_value::retirement::RetirementCursor for IconOwnedRetirement {
+        fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::{retirement::RetirementStep,retained_clone::{RetainedCloneProgress,RetainedCloneStep}};match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
+        fn terminal_is_empty(&self)->bool{self.terminal()}
+        fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.demand(0)?.copy_bytes)}
+        fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.demand(copy).ok().map(|demand|demand.capacity_bytes)}
+        fn next_close_byte_demand(&self)->Option<usize>{self.demand(0).ok().map(|demand|demand.release_bytes)}
+        fn next_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.demand(0)?.depth)}
+        fn terminal_release_bytes(&self)->Option<usize>{self.terminal().then_some(std::mem::size_of::<Self>())}
+    }
+    impl Drop for IconOwnedRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal(),"original icon cache abandoned before physical retirement");if self.terminal(){unsafe{ManuallyDrop::drop(&mut self.source)}}}}
+    impl semio_framework_value::retirement::RetireOwned for IconPaintCache {
+        fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(IconOwnedRetirement{source:ManuallyDrop::new(Some(self)),key:None,image:None,metadata:None,cursor:0})}
+        fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<IconOwnedRetirement>())}
+        fn controlled_retirement_supported()->bool{true}
     }
 
     impl IconPaintCache {
@@ -665,7 +720,7 @@ pub mod types {
         }
 
         pub fn terminal_is_empty(&self) -> bool {
-            self.closing.get()
+            self.registry_released.get() || self.closing.get()
                 && usize::from(self.retirement_cursor.get()) == ICON_PAINT_CACHE_CAPACITY
                 && self.retirement_credited_bytes.get() == 0
                 && self.retirement_scene.get().is_none()

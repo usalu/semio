@@ -7,8 +7,8 @@ use super::{
 use std::{mem::ManuallyDrop, sync::Arc};
 
 pub enum ArtifactEphemeralPreparationTaskStep<P> {
-    Progress(ArtifactStoreOneItemCheckpoint),
-    Prepared { root: P, checkpoint: ArtifactStoreOneItemCheckpoint },
+    Progress(ArtifactStoreOneItemCheckpoint, semio_framework_value::RetainedCloneProgress),
+    Prepared { root: Arc<P>, checkpoint: ArtifactStoreOneItemCheckpoint, ownership: semio_framework_value::RetainedCloneProgress },
     Blocked,
 }
 
@@ -19,14 +19,17 @@ pub trait ArtifactEphemeralPreparationTask<P, M>: ErasedSnapshotRetirement {
 }
 
 /// 🏗️ Domain construction supplies its task; Store retains base, mutation and result ownership.
-pub struct ArtifactEphemeralTaskPreparationFactory<P, M> {
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+pub struct ArtifactEphemeralTaskPreparationFactory<P: Send + Sync + 'static, M: Send + 'static> {
     preflight: fn(&M) -> Result<ArtifactStoreOneItemFootprint, String>,
     create_task: fn(&P, &M) -> Result<Box<dyn ArtifactEphemeralPreparationTask<P, M>>, String>,
+    #[factory_child]
     state_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
+    #[factory_child]
     mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,
 }
 
-impl<P, M> ArtifactEphemeralTaskPreparationFactory<P, M> {
+impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralTaskPreparationFactory<P, M> {
     pub fn new(
         preflight: fn(&M) -> Result<ArtifactStoreOneItemFootprint, String>,
         create_task: fn(&P, &M) -> Result<Box<dyn ArtifactEphemeralPreparationTask<P, M>>, String>,
@@ -113,38 +116,41 @@ impl<P, M> ArtifactEphemeralTaskPreparation<P, M> {
 
 impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPreparation<P, M> for ArtifactEphemeralTaskPreparation<P, M> {
     fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
-        if self.cancelled || self.closing || grant.maximum_items == 0 {
+        if self.cancelled || self.closing || !grant.permits_one() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.prepared.is_some() {
-            return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+            return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint,Default::default()));
         }
         if self.constructed {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }
+        if grant.maximum_depth < 2 { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
         let task = self.task.as_mut().ok_or_else(|| "ephemeral preparation lost its construction task".to_string())?;
         let base = self.base.as_ref().ok_or_else(|| "ephemeral preparation lost its base read".to_string())?;
-        let step = task.advance(base.as_ref(), &mut self.mutation, ArtifactStoreOneItemGrant { maximum_items: 1, ..grant })?;
+        let child=ArtifactStoreOneItemGrant { maximum_items: 1, maximum_depth:grant.maximum_depth-1, ..grant };
+        let step = task.advance(base.as_ref(), &mut self.mutation, child)?;
+        let ownership=match &step {ArtifactEphemeralPreparationTaskStep::Progress(_,ownership)|ArtifactEphemeralPreparationTaskStep::Prepared{ownership,..}=>*ownership,ArtifactEphemeralPreparationTaskStep::Blocked=>Default::default()};
         let checkpoint = match &step {
-            ArtifactEphemeralPreparationTaskStep::Progress(checkpoint) | ArtifactEphemeralPreparationTaskStep::Prepared { checkpoint, .. } => Some(*checkpoint),
+            ArtifactEphemeralPreparationTaskStep::Progress(checkpoint, _) | ArtifactEphemeralPreparationTaskStep::Prepared { checkpoint, .. } => Some(*checkpoint),
             ArtifactEphemeralPreparationTaskStep::Blocked => None,
         };
-        let invalid = checkpoint.is_some_and(|next| {
+        let invalid = !ownership.fits(child.retained_grant()) || checkpoint.is_some_and(|next| {
             next.completed_items < self.checkpoint.completed_items
                 || next.completed_items - self.checkpoint.completed_items > 1
                 || next.completed_bytes < self.checkpoint.completed_bytes
                 || next.completed_bytes - self.checkpoint.completed_bytes > grant.maximum_copy_bytes as u64
         });
         let result = match step {
-            ArtifactEphemeralPreparationTaskStep::Progress(checkpoint) => {
+            ArtifactEphemeralPreparationTaskStep::Progress(checkpoint,ownership) => {
                 self.checkpoint = checkpoint;
-                ArtifactStoreOneItemPreparationStep::Progress(checkpoint)
+                ArtifactStoreOneItemPreparationStep::Progress(checkpoint,ownership)
             }
-            ArtifactEphemeralPreparationTaskStep::Prepared { root, checkpoint } => {
-                *self.prepared = Some(ArtifactEphemeralOneItemPrepared { next_root: Arc::new(root) });
+            ArtifactEphemeralPreparationTaskStep::Prepared { root, checkpoint,ownership } => {
+                *self.prepared = Some(ArtifactEphemeralOneItemPrepared { next_root: root });
                 self.constructed = true;
                 self.checkpoint = checkpoint;
-                ArtifactStoreOneItemPreparationStep::Prepared(checkpoint)
+                ArtifactStoreOneItemPreparationStep::Prepared(checkpoint,ownership)
             }
             ArtifactEphemeralPreparationTaskStep::Blocked => ArtifactStoreOneItemPreparationStep::Blocked,
         };

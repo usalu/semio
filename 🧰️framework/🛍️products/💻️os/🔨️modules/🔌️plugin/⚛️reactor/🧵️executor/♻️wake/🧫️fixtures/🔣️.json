@@ -1,0 +1,33 @@
+{
+  "schema": "original-executor-worker-wake.v1",
+  "policy": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 65536,
+    "release": 262144,
+    "depth": 64
+  },
+  "tasks": [
+    7,
+    9,
+    21
+  ],
+  "epochs": [
+    1,
+    2
+  ],
+  "signals": [
+    "caller",
+    "worker"
+  ],
+  "steps": [
+    "slot-custody",
+    "original-std-wake",
+    "issued-typed-wake",
+    "ready-slot",
+    "original-typed-retirement"
+  ],
+  "foreignWaker": "unsupported",
+  "staleGeneration": "ignored",
+  "terminalDropBytes": 0
+}

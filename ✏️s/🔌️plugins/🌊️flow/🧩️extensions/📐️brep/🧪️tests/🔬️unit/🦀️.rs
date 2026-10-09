@@ -414,7 +414,7 @@ async fn extension_bundle_extends_flow_and_evaluates_box() {
     let json_number = |value: f64| semio_framework_pack_json::object([("$schema".to_string(), semio_framework_pack_json::Value::from("number")), ("value".to_string(), semio_framework_pack_json::Value::from(value))]);
     let input_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("width".to_string(), json_number(1.0)), ("depth".to_string(), json_number(1.0)), ("height".to_string(), json_number(1.0))]));
     let req =
-        semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("operatorId".to_string(), semio_framework_pack_json::Value::from("brep.prim3d.box")), ("inputJson".to_string(), semio_framework_pack_json::Value::from(input_json)), ("nodeHash".to_string(), semio_framework_pack_json::Value::from(1_i64))]));
+        semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("operatorId".to_string(), semio_framework_pack_json::Value::from("brep.prim3d.box")),("retained".into(),geometry_test_retained()), ("inputJson".to_string(), semio_framework_pack_json::Value::from(input_json)), ("nodeHash".to_string(), semio_framework_pack_json::Value::from(1_i64))]));
     // ⏱️ `evaluate` answers the BUDGET envelope, not a bare out dictionary — a primitive finishes
     // inside its first round trip, so this one is `done` with its output inside
     // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`).
@@ -725,6 +725,11 @@ async fn brep_deconstruct_resolves_selected_labels_without_ordinal_identity() {
         assert!(registry.dispatch_cold("brep.brep",(*input).clone().insert("edgeLabels",Value::Dictionary(text_dictionary(text))).insert("faceLabels",Value::Dictionary(text_dictionary("[]"))).insert("sourceHandle",Value::Dictionary(text_dictionary("")))).is_err());
     }
     println!("[DEBUG] BRep scoped exact-label selection edgeLength={edge_length} faceArea={face_area} independentParry=true");
+}
+
+pub(crate) fn geometry_test_retained()->semio_framework_pack_json::Value {
+    let fixture=semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🚪️retirement/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    fixture.get("evaluate").unwrap().get("retained").unwrap().clone()
 }
 
 pub(crate) fn compact_evaluation_request(request:&str)->String {

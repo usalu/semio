@@ -1,0 +1,13 @@
+# Current Seed and Original Schema Boundary
+
+Observed-only ownership=false; current hashes and exact three requested path existence are in `📥️seed.json`. All three original separate fixture schemas remain absent. This is physical/source observation, not a fresh catalog or production pass.
+
+The Store runtime-seed plain JSON is testing-only in the bounded exact reader census. Its one literal reader is Store unit Rust5648, in canonical_runtime_seed_retains_duplicate_owners_and_preflights_before_building: expected applied/duplicate identity arrays, bounded retirement and oversize/capacity refusal. No live/seed launch reference to runtime-seed was found. Launch seed filename membership alone does not consume the example.
+
+Production Store seed_runtime_state at19460 derives identities and clock from the supplied ArtifactEnvelope's actual edits, mutation metadata and transitions; it calls preflight_runtime_seed19476 and adopt_runtime_seed19477. The shared function names refer to real domain initialization, but no fixture path/content is read by those production functions. Keep the plain example and these behavioral laws. Exact path/label census cannot prove absence of a computed read elsewhere.
+
+Hub shipped-fleet plain owners/dependencies examples are read by shipped-fleet test TS5/79/94 and Rust350/398/553+; package script1318/1323 dispatches that original test. Their current canonical owners are actual Binary/TXT/JSON SQLite projection implementations imported by test6–9 and independent real dependent schema contracts77–98. These are domain admission/structural declarations, not a replacement fleet corpus schema.
+
+Procedural generation2d canonical snapshot JSON exists outside examples. Its SQLite snapshot TypeScript imports the genuine procedural core generation snapshot type through a filesystem-resolved original relative edge (observer input records that actual owner), rather than the retired public fixture schema. MP4 SQLite snapshot TypeScript imports genuine sibling snapshot types at3 and first-party SQLite artifact/value interfaces4–5. Both production SQLite projection TypeScript sources have no fixture import matches in this focused read. Their Rust implementations also exist; this observation does not establish their full transitive runtime closure or execute either implementation.
+
+The first broad file listing was truncated and supplies no negative census credit. Conclusions above use exact literal references and focused original defining sources. No Source copies/edits, builds, tests, producer dispatch or catalog regeneration occurred. New report/input paths are below256 characters.

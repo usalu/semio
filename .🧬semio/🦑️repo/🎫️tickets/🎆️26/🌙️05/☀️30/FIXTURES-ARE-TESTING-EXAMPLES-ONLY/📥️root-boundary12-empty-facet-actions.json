@@ -1,0 +1,25 @@
+{
+  "sourceActions": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema",
+      "action": "remove-empty-directory",
+      "qualification": "Exact retired corpus authority facet, empty checked immediately before rmdir"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt",
+      "action": "remove-empty-directory",
+      "qualification": "Exact retired corpus authority facet, empty checked immediately before rmdir"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source",
+      "action": "remove-empty-directory",
+      "qualification": "Exact retired corpus authority facet, empty checked immediately before rmdir"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema",
+      "action": "remove-empty-directory",
+      "qualification": "Exact retired corpus authority facet, empty checked immediately before rmdir"
+    }
+  ],
+  "observations": []
+}

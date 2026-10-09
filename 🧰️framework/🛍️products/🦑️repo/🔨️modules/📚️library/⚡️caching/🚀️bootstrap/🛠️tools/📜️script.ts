@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, isAbsolute, join, relative } from "node:path";
-import { runTool } from "../📦️dependencies/📜️script.ts";
+import {repositoryCargoPreparationStorageV1, runTool } from "../📦️dependencies/📜️script.ts";
 import { prepareBun } from "./🟦️bun/📜️script.ts";
 import { withResourceLeases } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 
@@ -94,7 +94,7 @@ export async function provisionNxTools(workspace: string, signal: AbortSignal): 
   try {
     for (const [name, bytes] of files) { mkdirSync(dirname(join(staging, name)), { recursive: true }); writeFileSync(join(staging, name), bytes); }
     console.log(`Acquiring pinned Nx ${manifest.dependencies.nx} tooling…`);
-    await runTool(bun, ["install", "--frozen-lockfile", "--ignore-scripts", "--cache-dir", join(staging, ".bun-cache"), "--backend", "copyfile"], staging, signal);
+    await runTool(bun,["install", "--frozen-lockfile", "--ignore-scripts", "--cache-dir", join(staging, ".bun-cache"), "--backend", "copyfile"],staging,signal,false,process.env,repositoryCargoPreparationStorageV1(process.cwd()));
     signal.throwIfAborted();
     writeFileSync(join(staging, ".semio-nx-tooling.json"), JSON.stringify({ version: 1, digest }));
     installed(staging);

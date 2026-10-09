@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:store:decode-release-step-wallet:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "nativeLaw",
+    "grant",
+    "source",
+    "beforeBytes",
+    "birthBytes",
+    "receipt",
+    "deniedAxes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "nativeLaw": {
+      "const": "normal_decode_release_records_original_wallet_even_after_child_fault"
+    },
+    "source": {
+      "const": "original field payload!"
+    },
+    "beforeBytes": {
+      "const": 32
+    },
+    "birthBytes": {
+      "const": 64
+    },
+    "deniedAxes": {
+      "const": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ]
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "const": 65536
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "const": 65536
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "const": 65536
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "const": 65536
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "const": 64
+        }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "const": 1
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "const": 23
+        },
+        "retainedCapacityBytes": {
+          "type": "integer",
+          "const": 64
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "const": 32
+        }
+      }
+    }
+  }
+}

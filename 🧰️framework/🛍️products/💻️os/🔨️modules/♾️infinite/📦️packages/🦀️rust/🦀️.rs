@@ -72,7 +72,6 @@ pub mod board {
 }
 
 //#region 🔖️DirectedNormalSurface
-pub use board::ports::directed::force_graph;
 /// ♾️ Crate-root surface for plugins that `extern crate infinite_canvas as infinite_board_port_directed(_normal)`.
 /// `directed_normal` already re-exports `ports::directed::*` (layouts, `GraphExtension`, `BoardEngine`, …).
 pub use board::ports::directed_normal::*;

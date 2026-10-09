@@ -1,0 +1,47 @@
+{
+  "sources": [
+    {
+      "text": "original 文🌠\u0000",
+      "capacity": 4096
+    },
+    {
+      "text": "",
+      "capacity": 8192
+    }
+  ],
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 8
+  },
+  "expectedDropReleaseBytes": 0,
+  "wrapper": {
+    "separateTerminalFrame": true,
+    "normalFactoryBirthQualified": false,
+    "maximumTurns": 16
+  },
+  "recordingLeases": [
+    "unique",
+    "alias",
+    "weak"
+  ],
+  "driveGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  },
+  "identityPolicy": {
+    "maximumBytes": 33554432,
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 65536,
+      "maximumCapacityBytes": 2097152,
+      "maximumReleaseBytes": 2097152,
+      "maximumDepth": 64
+    }
+  }
+}

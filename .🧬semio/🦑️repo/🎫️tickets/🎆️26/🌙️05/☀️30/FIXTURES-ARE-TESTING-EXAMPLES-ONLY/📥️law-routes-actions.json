@@ -1,0 +1,34 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSha256": "3f5308f662af82bab56c4869fb06e4d3bf9ecd83b5a2852b3d7ed67b56baca33",
+      "afterSha256": "2f7133f23b91ed4db8b412ef0849e6fe3e2131f48ea3c80550116b663014ba5f",
+      "action": "Original session-source Nx/script/live and seed launch route; Terrain existing script path respects owner cwd."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+      "beforeSha256": "a41c75dfc497e2af19062fb10b162981046424f353632ad863ea467584077202",
+      "afterSha256": "4887208362913560393a1074a46f2093df8ca02fa2a095a5b19143086cc30dec",
+      "action": "Original session-source Nx/script/live and seed launch route; Terrain existing script path respects owner cwd."
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "897607feebd632477d5ef258e04a0d3ae10346b02adb66ef4af2a4f5f4ce8d0f",
+      "afterSha256": "084bb2424e3d83da380a898a773f0058c6206bf20dc983fce588368a8eb820ee",
+      "action": "Original session-source Nx/script/live and seed launch route; Terrain existing script path respects owner cwd."
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSha256": "1caa0011353ddc7e79fbaa38864e74fd8269fee41c44e872c18aa94ab1326581",
+      "afterSha256": "b1ff7e484e37c1d38395c280a0d553d3f8aebcb827f31fe32f695bc75b42e7ec",
+      "action": "Original session-source Nx/script/live and seed launch route; Terrain existing script path respects owner cwd."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📋️project.json",
+      "beforeSha256": "dceba8d14ceef22b5b905680c4112d2e08646f5be9ad2830a2ef6b12dbc50882",
+      "afterSha256": "7170406bc0cd01f93be87b3b58be6b36d40459091cf1f4da4ab4ce1c2fe7d572",
+      "action": "Original session-source Nx/script/live and seed launch route; Terrain existing script path respects owner cwd."
+    }
+  ]
+}

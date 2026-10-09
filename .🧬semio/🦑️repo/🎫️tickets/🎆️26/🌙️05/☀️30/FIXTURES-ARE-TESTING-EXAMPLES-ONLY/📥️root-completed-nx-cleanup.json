@@ -1,0 +1,19 @@
+{
+  "completedOwnSessions": [
+    74307,
+    29013,
+    13491,
+    38930,
+    47438,
+    80136,
+    56277,
+    8203,
+    74916
+  ],
+  "removedGeneratedMetadataOnly": [
+    "oct9-root-epoch-cache",
+    "oct9-root-epoch"
+  ],
+  "nativeCachesRemoved": false,
+  "foreignFilesRemoved": false
+}

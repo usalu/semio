@@ -1,0 +1,31 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+  "observedSHA": "8b9b9018d39db3edb49ba811bf29ba7bef49d02cc1ef7bc85bd38b9a541a82d7",
+  "observedPublisherBlockSHA": "efc28966c6e45a53e580cdcc7de1fc84f2ab344c8cf84f8d8336afc583d48048",
+  "authored": false,
+  "batchLanes": {
+    "artifact_mutations": {
+      "originalMove": true,
+      "restoreOnRefusal": true
+    },
+    "config_mutations": {
+      "originalMove": true,
+      "restoreOnRefusal": true
+    },
+    "draft_mutations": {
+      "originalMove": true,
+      "restoreOnRefusal": true
+    }
+  },
+  "ephemeralLanes": {
+    "presence": {
+      "move": true,
+      "restoreOnRefusal": true
+    },
+    "transient": {
+      "move": true,
+      "restoreOnRefusal": true
+    }
+  },
+  "remainingPhysicalDebt": "Private child frame caller constructs grant from quoted frame bytes; foreign-step path cold diff/encode allocations remain production debt; observation does not grant authority."
+}

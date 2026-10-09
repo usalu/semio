@@ -82,7 +82,7 @@ impl Machine for ToBrep {
             };
         }
         let Some(cursor) = self.cursor.as_mut() else { return Err(cancelled_fault()) };
-        match self.session.brep().close_mesh_import_sync(cursor, fuel.saturating_mul(BATCH), 65_536).map_err(|error| kernel_fault(&error))? {
+        match self.session.brep().step_mesh_import_sync(cursor, fuel.saturating_mul(BATCH)).map_err(|error| kernel_fault(&error))? {
             Some(handle) => Ok(Flow::Done(outputs([("shape", GeometryValue::shape(self.session.export(&handle)?))]))),
             None => {
                 let (done, total, _) = cursor.progress();

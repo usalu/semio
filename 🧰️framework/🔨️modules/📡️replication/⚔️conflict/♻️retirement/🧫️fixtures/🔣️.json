@@ -1,13 +1,140 @@
 {
-  "copyGrants": [0, 1, 24, 4096],
-  "releaseGrants": [0, 1, 7, 4096],
+  "copyGrants": [
+    0,
+    1,
+    24,
+    4096
+  ],
+  "releaseGrants": [
+    0,
+    1,
+    7,
+    4096
+  ],
   "envelopes": [
-    { "name": "all-optional-owners", "text": "ä🐚\u0000", "repeat": 10000, "stringCapacity": 19, "optional": true, "dependencies": ["", "parent:🐚"], "dependencyCapacity": 13, "targets": ["", "field:ä"], "targetCapacity": 17, "forward": [0, 255, 7], "forwardCapacity": 257, "inverse": [], "inverseCapacity": 337 },
-    { "name": "empty-retained-scaffolds", "text": "", "repeat": 1, "stringCapacity": 31, "optional": false, "dependencies": [], "dependencyCapacity": 7, "targets": [""], "targetCapacity": 5, "forward": [], "forwardCapacity": 19, "inverse": [255], "inverseCapacity": 29 }
+    {
+      "name": "all-optional-owners",
+      "text": "ä🐚\u0000",
+      "repeat": 10000,
+      "stringCapacity": 19,
+      "optional": true,
+      "dependencies": [
+        "",
+        "parent:🐚"
+      ],
+      "dependencyCapacity": 13,
+      "targets": [
+        "",
+        "field:ä"
+      ],
+      "targetCapacity": 17,
+      "forward": [
+        0,
+        255,
+        7
+      ],
+      "forwardCapacity": 257,
+      "inverse": [],
+      "inverseCapacity": 337
+    },
+    {
+      "name": "empty-retained-scaffolds",
+      "text": "",
+      "repeat": 1,
+      "stringCapacity": 31,
+      "optional": false,
+      "dependencies": [],
+      "dependencyCapacity": 7,
+      "targets": [
+        ""
+      ],
+      "targetCapacity": 5,
+      "forward": [],
+      "forwardCapacity": 19,
+      "inverse": [
+        255
+      ],
+      "inverseCapacity": 29
+    }
   ],
   "conflicts": [
-    { "name": "quarantined-originals", "kind": "quarantined", "rows": [0, 1], "rowCapacity": 13, "identities": [], "identityCapacity": 0, "id": "", "idCapacity": 73, "actors": ["", "actor:🐚"], "actorCapacity": 11, "messages": ["", "fatal:ä🐚\u0000"], "messageCapacity": 7 },
-    { "name": "degraded-originals", "kind": "degraded", "rows": [], "rowCapacity": 0, "identities": ["", "edit:🐚"], "identityCapacity": 17, "id": "conflict:ä", "idCapacity": 128, "actors": [], "actorCapacity": 5, "messages": ["warning:🐚"], "messageCapacity": 13 },
-    { "name": "empty-quarantined-capacities", "kind": "quarantined", "rows": [], "rowCapacity": 19, "identities": [], "identityCapacity": 0, "id": "", "idCapacity": 31, "actors": [], "actorCapacity": 7, "messages": [], "messageCapacity": 23 }
-  ]
+    {
+      "name": "quarantined-originals",
+      "kind": "quarantined",
+      "rows": [
+        0,
+        1
+      ],
+      "rowCapacity": 13,
+      "identities": [],
+      "identityCapacity": 0,
+      "id": "",
+      "idCapacity": 73,
+      "actors": [
+        "",
+        "actor:🐚"
+      ],
+      "actorCapacity": 11,
+      "messages": [
+        "",
+        "fatal:ä🐚\u0000"
+      ],
+      "messageCapacity": 7
+    },
+    {
+      "name": "degraded-originals",
+      "kind": "degraded",
+      "rows": [],
+      "rowCapacity": 0,
+      "identities": [
+        "",
+        "edit:🐚"
+      ],
+      "identityCapacity": 17,
+      "id": "conflict:ä",
+      "idCapacity": 128,
+      "actors": [],
+      "actorCapacity": 5,
+      "messages": [
+        "warning:🐚"
+      ],
+      "messageCapacity": 13
+    },
+    {
+      "name": "empty-quarantined-capacities",
+      "kind": "quarantined",
+      "rows": [],
+      "rowCapacity": 19,
+      "identities": [],
+      "identityCapacity": 0,
+      "id": "",
+      "idCapacity": 31,
+      "actors": [],
+      "actorCapacity": 7,
+      "messages": [],
+      "messageCapacity": 23
+    }
+  ],
+  "expected": {
+    "handoffBirthBytes": 0,
+    "handoffReleaseBytes": 0,
+    "refusalBirthBytes": 0,
+    "refusalReleaseBytes": 0,
+    "sameOriginalSource": true,
+    "terminalDropBytes": 0
+  },
+  "sharedActor": {
+    "aliases": [
+      false,
+      true
+    ],
+    "maximumTurns": 262144,
+    "copy": 4096,
+    "wholeOriginalExtentRequired": true,
+    "terminalDropBytes": 0,
+    "copyDenial": "zeroWhenPayloadWorkQuoted"
+  },
+  "maximumTurnFactor": 16,
+  "maximumFixedTurns": 65536,
+  "maximumTurns": 1048576
 }

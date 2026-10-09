@@ -442,6 +442,7 @@ fn flow_hostile_actual_state(session: &FlowRetainedVcs) -> FlowHostileState {
 
 fn flow_hostile_grant(value: &semio_framework_pack_json::Value) -> FlowVcsGrant {
     FlowVcsGrant {
+        retained: RetainedCloneGrant {maximum_items:flow_oracle_usize(value.get("retained").unwrap(),"maximumItems"),maximum_copy_bytes:flow_oracle_usize(value.get("retained").unwrap(),"maximumCopyBytes"),maximum_capacity_bytes:flow_oracle_usize(value.get("retained").unwrap(),"maximumCapacityBytes"),maximum_release_bytes:flow_oracle_usize(value.get("retained").unwrap(),"maximumReleaseBytes"),maximum_depth:flow_oracle_usize(value.get("retained").unwrap(),"maximumDepth")},
         items: flow_oracle_usize(value, "items"),
         bytes: flow_oracle_usize(value, "bytes"),
         outputs: flow_oracle_usize(value, "outputs"),
@@ -780,9 +781,9 @@ fn flow_hostile_cursor_matches(session: &FlowRetainedVcs, handle: FlowVcsHandle,
 }
 
 fn flow_hostile_close_and_drain(session: &mut FlowRetainedVcs, handle: FlowVcsHandle, grant: FlowVcsGrant) {
-    while !session.close_operation_step(handle, grant).expect("hostile operation close") {}
+    while !matches!(session.close_operation_step(handle, grant).expect("hostile operation close"),RetainedCloneStep::Complete(_)) {}
     while session.resource_fingerprint().retired_action_owners > 0 || session.resource_fingerprint().retired_surface_owners > 0 {
-        session.close_retired_step(grant).expect("hostile retirement close");
+        matches!(session.close_retired_step(grant).expect("hostile retirement close"),RetainedCloneStep::Complete(_));
     }
 }
 
@@ -840,7 +841,7 @@ fn flow_hostile_assert_rollback_boundary(session: &FlowRetainedVcs, handle: Flow
 }
 
 fn retained_grant() -> FlowVcsGrant {
-    FlowVcsGrant { items: 1, bytes: 256, outputs: 1, events: 1, controls: 1, fuel: 1, now_milliseconds: 1, deadline_milliseconds: 8, interrupted: false }
+    FlowVcsGrant { retained:semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:u32::MAX as usize,maximum_release_bytes:u32::MAX as usize,maximum_depth:4096}, items: 1, bytes: 256, outputs: 1, events: 1, controls: 1, fuel: 1, now_milliseconds: 1, deadline_milliseconds: 8, interrupted: false }
 }
 
 fn rejected_control_grants() -> [FlowVcsGrant; 4] {
@@ -879,7 +880,7 @@ fn publish_and_close(session: &mut FlowRetainedVcs, handle: FlowVcsHandle) -> Fl
     drive_to_preview(session, handle);
     let page = session.take_page(handle).expect("published page");
     session.acknowledge_page(handle, page.sequence).expect("page acknowledgement");
-    while !session.close_operation_step(handle, retained_grant()).expect("published operation close") {}
+    while !matches!(session.close_operation_step(handle, retained_grant()).expect("published operation close"),RetainedCloneStep::Complete(_)) {}
     page
 }
 
@@ -897,10 +898,10 @@ fn close_to_terminal(session: &mut FlowRetainedVcs) {
             }
             FlowVcsStage::Complete | FlowVcsStage::Cancelled | FlowVcsStage::Faulted | FlowVcsStage::Closing => {}
         }
-        while !session.close_operation_step(handle, grant).expect("operation close") {}
+        while !matches!(session.close_operation_step(handle, grant).expect("operation close"),RetainedCloneStep::Complete(_)) {}
     }
     session.begin_close();
-    while !session.close_retired_step(grant).expect("session close") {}
+    while !matches!(session.close_retired_step(grant).expect("session close"),RetainedCloneStep::Complete(_)) {}
     assert!(session.terminal_is_empty());
 }
 
@@ -951,7 +952,7 @@ fn retained_vcs_shared_snapshot_readers_retire_without_waiting_on_each_other() {
 fn close_layout_session(session: &mut FlowRetainedVcs) {
     session.begin_close();
     for _ in 0..4096 {
-        if session.close_retired_step(retained_grant()).expect("layout session retirement") {
+        if matches!(session.close_retired_step(retained_grant()).expect("layout session retirement"),RetainedCloneStep::Complete(_)) {
             assert!(session.terminal_is_empty());
             return;
         }
@@ -982,7 +983,7 @@ fn retained_vcs_ordered_layout_edits_undo_redo_match_json_oracle() {
         let redo = session.begin_redo(session.authority()).unwrap();
         publish_and_close(&mut session, redo);
         assert_eq!(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&session.document.as_ref().unwrap().host_snapshot().layout)), expected);
-        while !session.close_retired_step(retained_grant()).unwrap() {}
+        while !matches!(session.close_retired_step(retained_grant()).unwrap(),RetainedCloneStep::Complete(_)) {}
     }
     close_layout_session(&mut session);
 }
@@ -1008,7 +1009,7 @@ fn retained_vcs_ordered_layout_cancel_at_each_unpublished_boundary_retires_exact
             } else {
                 session.cancel(handle, retained_grant()).unwrap();
             }
-            while !session.close_operation_step(handle, retained_grant()).unwrap() {}
+            while !matches!(session.close_operation_step(handle, retained_grant()).unwrap(),RetainedCloneStep::Complete(_)) {}
             if !published {
                 assert_eq!(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&session.document.as_ref().unwrap().host_snapshot().layout)), fixture["initial"]["layout"], "cancel boundary {boundary}");
                 assert_eq!(session.credits(), FlowVcsCredits::default());
@@ -1056,8 +1057,8 @@ fn retained_vcs_stale_aba_cancel_ack_and_incremental_close_are_fail_closed() {
     assert_eq!(flow_vcs_host_snapshot_scalar_digest(session.document.as_ref().expect("document").host_snapshot()), before_digest);
     session.cancel(handle, retained_grant()).expect("valid cancel follows rejection");
     assert_eq!(session.cancel(handle, retained_grant()), Err(FlowVcsFault::DuplicateControl));
-    while !session.close_operation_step(handle, retained_grant()).expect("incremental close") {}
-    while !session.close_retired_step(retained_grant()).expect("retired source close") {}
+    while !matches!(session.close_operation_step(handle, retained_grant()).expect("incremental close"),RetainedCloneStep::Complete(_)) {}
+    while !matches!(session.close_retired_step(retained_grant()).expect("retired source close"),RetainedCloneStep::Complete(_)) {}
     assert_eq!(session.credits(), FlowVcsCredits::default());
     assert_eq!(session.rediscover(handle.operation, handle.generation), Err(FlowVcsFault::StaleHandle));
     close_to_terminal(&mut session);
@@ -1352,7 +1353,7 @@ fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_
             assert_eq!(result.map(|_| "ok").unwrap_or_else(flow_hostile_fault_name), expected.get("result").and_then(semio_framework_pack_json::Value::as_str).expect("transfer control result"));
             if let Some(steps) = rollback_steps {
                 for _ in 0..steps {
-                    assert!(!session.close_operation_step(handle, grant).expect("rollback boundary step"));
+                    assert!(!matches!(session.close_operation_step(handle, grant).expect("rollback boundary step"),RetainedCloneStep::Complete(_)));
                 }
                 assert!(
                     flow_hostile_cursor_matches(&session, handle, target),
@@ -1411,7 +1412,7 @@ fn retained_vcs_zero_fuel_deadline_and_interrupted_close_preserve_every_credit()
     session.cancel(handle, retained_grant()).expect("cancel checkpoint");
     rejected = retained_grant();
     rejected.items = 0;
-    assert_eq!(session.close_operation_step(handle, rejected), Err(FlowVcsFault::InsufficientGrant));
+    assert_eq!(session.close_operation_step(handle, rejected).map_err(|failure|failure.fault), Err(FlowVcsFault::InsufficientGrant));
     assert_eq!(session.credits(), before);
     close_to_terminal(&mut session);
 }
@@ -1430,13 +1431,13 @@ fn retained_vcs_every_mutating_control_rejects_partial_grants_without_state_chan
     session.cancel(handle, retained_grant()).expect("valid cancel");
     for grant in rejected_control_grants() {
         let before = session.resource_fingerprint();
-        assert_eq!(session.close_operation_step(handle, grant), Err(FlowVcsFault::InsufficientGrant));
+        assert_eq!(session.close_operation_step(handle, grant).map_err(|failure|failure.fault), Err(FlowVcsFault::InsufficientGrant));
         assert_eq!(session.resource_fingerprint(), before);
     }
-    while !session.close_operation_step(handle, retained_grant()).expect("valid operation close") {}
+    while !matches!(session.close_operation_step(handle, retained_grant()).expect("valid operation close"),RetainedCloneStep::Complete(_)) {}
     for grant in rejected_control_grants() {
         let before = session.resource_fingerprint();
-        assert_eq!(session.close_retired_step(grant), Err(FlowVcsFault::InsufficientGrant));
+        assert_eq!(session.close_retired_step(grant).map_err(|failure|failure.fault), Err(FlowVcsFault::InsufficientGrant));
         assert_eq!(session.resource_fingerprint(), before);
     }
     close_to_terminal(&mut session);
@@ -1466,13 +1467,13 @@ fn retained_vcs_256_plus_one_and_terminal_empty_laws_hold() {
     drive_to_preview(&mut session, rediscovered);
     let page = session.take_page(rediscovered).expect("page");
     session.acknowledge_page(rediscovered, page.sequence).expect("ACK");
-    while !session.close_operation_step(rediscovered, retained_grant()).expect("operation close") {}
+    while !matches!(session.close_operation_step(rediscovered, retained_grant()).expect("operation close"),RetainedCloneStep::Complete(_)) {}
     session.begin_close();
-    while !session.close_retired_step(retained_grant()).expect("session close") {}
+    while !matches!(session.close_retired_step(retained_grant()).expect("session close"),RetainedCloneStep::Complete(_)) {}
     assert!(session.terminal_is_empty());
     let terminal = session.resource_fingerprint();
-    assert!(session.close_retired_step(retained_grant()).expect("idempotent close"));
-    assert!(session.close_retired_step(retained_grant()).expect("repeated idempotent close"));
+    assert!(matches!(session.close_retired_step(retained_grant()).expect("idempotent close"),RetainedCloneStep::Complete(_)));
+    assert!(matches!(session.close_retired_step(retained_grant()).expect("repeated idempotent close"),RetainedCloneStep::Complete(_)));
     assert_eq!(session.resource_fingerprint(), terminal);
 }
 
@@ -1504,7 +1505,7 @@ fn retained_vcs_panic_fault_preserves_exact_resources_and_next_close_progresses(
     assert_eq!(session.resource_fingerprint(), before);
     assert_eq!(session.panic_fault(handle, retained_grant()), Err(FlowVcsFault::DuplicateControl));
     assert_eq!(session.resource_fingerprint(), before);
-    while !session.close_operation_step(handle, retained_grant()).expect("close after panic") {}
+    while !matches!(session.close_operation_step(handle, retained_grant()).expect("close after panic"),RetainedCloneStep::Complete(_)) {}
     close_to_terminal(&mut session);
 }
 
@@ -1519,7 +1520,7 @@ fn retained_vcs_cancel_around_every_transfer_has_exact_resource_fingerprints() {
         let before = session.resource_fingerprint();
         session.cancel(handle, retained_grant()).expect("cancel before publication");
         assert_eq!(session.resource_fingerprint(), before);
-        while !session.close_operation_step(handle, retained_grant()).expect("cancel close") {}
+        while !matches!(session.close_operation_step(handle, retained_grant()).expect("cancel close"),RetainedCloneStep::Complete(_)) {}
         close_to_terminal(&mut session);
     }
 
@@ -1582,8 +1583,8 @@ fn retained_vcs_cancel_during_adjacent_transfer_rolls_back_exact_document() {
     }
     session.poll(handle, retained_grant()).expect("one adjacent swap");
     session.cancel(handle, retained_grant()).expect("cancel between transfers");
-    while !session.close_operation_step(handle, retained_grant()).expect("incremental rollback close") {}
-    while !session.close_retired_step(retained_grant()).expect("retire cancelled source") {}
+    while !matches!(session.close_operation_step(handle, retained_grant()).expect("incremental rollback close"),RetainedCloneStep::Complete(_)) {}
+    while !matches!(session.close_retired_step(retained_grant()).expect("retire cancelled source"),RetainedCloneStep::Complete(_)) {}
     assert_eq!(flow_vcs_host_snapshot_scalar_digest(session.document.as_ref().expect("document").host_snapshot()), before_digest);
     let after_ids: Vec<String> = session.document.as_ref().expect("document").host_snapshot().widgets.iter().map(|widget| widget_id_for(widget).to_owned()).collect();
     assert_eq!(after_ids, before_ids);
@@ -1655,8 +1656,8 @@ fn retained_vcs_cancel_restores_every_partially_retired_redo_owner() {
         assert_eq!(session.operations[slot].as_ref().expect("operation").cursor.redo_retired, expected);
     }
     session.cancel(handle, retained_grant()).expect("cancel after redo transfer");
-    while !session.close_operation_step(handle, retained_grant()).expect("restore redo and semantic owner") {}
-    while !session.close_retired_step(retained_grant()).expect("retire cancelled request") {}
+    while !matches!(session.close_operation_step(handle, retained_grant()).expect("restore redo and semantic owner"),RetainedCloneStep::Complete(_)) {}
+    while !matches!(session.close_retired_step(retained_grant()).expect("retire cancelled request"),RetainedCloneStep::Complete(_)) {}
     assert_eq!(session.resource_fingerprint(), before);
     assert_eq!(session.document.as_ref().expect("document").host_snapshot().layout.get("source"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
     close_to_terminal(&mut session);
@@ -1683,11 +1684,11 @@ fn retained_vcs_cancel_restores_each_split_publication_boundary() {
             let rejected = session.resource_fingerprint();
             assert_eq!(session.cancel(handle, retained_grant()), Err(FlowVcsFault::DuplicateControl));
             assert_eq!(session.resource_fingerprint(), rejected);
-            if session.close_operation_step(handle, retained_grant()).expect("publication rollback") {
+            if matches!(session.close_operation_step(handle, retained_grant()).expect("publication rollback"),RetainedCloneStep::Complete(_)) {
                 break;
             }
         }
-        while !session.close_retired_step(retained_grant()).expect("retire cancelled request") {}
+        while !matches!(session.close_retired_step(retained_grant()).expect("retire cancelled request"),RetainedCloneStep::Complete(_)) {}
         assert_eq!(session.resource_fingerprint(), before);
         assert_eq!(session.document.as_ref().expect("document").host_snapshot().layout.get("source"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
         close_to_terminal(&mut session);
@@ -1725,11 +1726,11 @@ fn retained_vcs_cancel_restores_each_document_replacement_boundary() {
             let rejected = session.resource_fingerprint();
             assert_eq!(session.fault(handle, retained_grant()), Err(FlowVcsFault::DuplicateControl));
             assert_eq!(session.resource_fingerprint(), rejected);
-            if session.close_operation_step(handle, retained_grant()).expect("replacement rollback") {
+            if matches!(session.close_operation_step(handle, retained_grant()).expect("replacement rollback"),RetainedCloneStep::Complete(_)) {
                 break;
             }
         }
-        while !session.close_retired_step(retained_grant()).expect("replacement retirement") {}
+        while !matches!(session.close_retired_step(retained_grant()).expect("replacement retirement"),RetainedCloneStep::Complete(_)) {}
         assert_eq!(session.resource_fingerprint(), before);
         close_to_terminal(&mut session);
         retire_snapshot_source(&mut source);
@@ -1954,4 +1955,51 @@ fn default_flow_example_dsl_round_trips() {
     crate::os_store::test_support::assert_dsl_round_trip(&host_snapshot);
     crate::os_store::test_support::assert_dsl_pack_equivalence(&host_snapshot);
     host_snapshot.retire_cold();
+}
+
+/// 🌿️ Original VCS closes the exact document, action and layout owners under one unchanged full wallet.
+#[test]
+fn original_vcs_close_preserves_source_and_full_physical_receipt(){
+ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+ for copy in law["copyGrants"].as_array().unwrap(){
+  let (mut vcs,source)=observe(||{
+   let mut snapshot=retained_fixture();snapshot.schema=law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap()as usize);
+   let mut vcs=FlowRetainedVcs::new(snapshot,13,1,0);
+   vcs.retired_actions.push(FlowVcsAction::PatchWidget{id:"original-id".into(),item:Widget::InputNote{id:"original-note".into(),text:"original-action".repeat(37)}}).unwrap();
+   vcs.retired_actions.push(FlowVcsAction::InsertSynapse{index:0,item:SynapseSpec{id:"original-link".into(),from:"original-note".into(),to:"preview".into(),from_port:"text".into(),to_port:"text".into()}}).unwrap();vcs
+  });
+  let source_bytes=source.requested_bytes-source.released_bytes;let original=vcs.document.as_ref().unwrap().host_snapshot().schema.as_ptr();
+  let(_,signal)=observe(||vcs.begin_close());assert_eq!((signal.requested_bytes,signal.released_bytes),(0,0));assert_eq!(vcs.document.as_ref().unwrap().host_snapshot().schema.as_ptr(),original);
+  let(mut born,mut released,mut turns,mut stalled)=(0,0,0,0);
+  while !vcs.terminal_is_empty(){
+   turns+=1;assert!(turns<law["maximumTurns"].as_u64().unwrap());let copy=copy.as_u64().unwrap()as usize;
+   let (demands,heap)=observe(||vcs.next_close_retired_demands(copy).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+   let grant=FlowVcsGrant{retained:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demands.capacity_bytes,maximum_release_bytes:demands.release_bytes,maximum_depth:demands.depth},..retained_grant()};
+   let(step,heap)=observe(||vcs.close_retired_step(FlowVcsGrant{retained:RetainedCloneGrant{maximum_items:0,..grant.retained},..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+   if demands.capacity_bytes>0{let(step,heap)=observe(||vcs.close_retired_step(FlowVcsGrant{retained:RetainedCloneGrant{maximum_capacity_bytes:demands.capacity_bytes-1,..grant.retained},..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+   if demands.release_bytes>0{let(step,heap)=observe(||vcs.close_retired_step(FlowVcsGrant{retained:RetainedCloneGrant{maximum_release_bytes:demands.release_bytes-1,..grant.retained},..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+   let(step,heap)=observe(||vcs.close_retired_step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant.retained));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;
+   stalled=if progress==RetainedCloneProgress::default(){stalled+1}else{0};assert!(stalled<64,"original VCS fixed positive copy stalled");
+  }
+  assert_eq!(released,source_bytes+born);let(_,heap)=observe(||drop(vcs));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original VCS copy={copy} original={source_bytes} born={born} released={released} turns={turns} terminalDrop0");
+ }
+}
+
+/// 🎟️ Original VCS admission and the canonical receipt boundary match the closed neutral corpus.
+#[test]
+fn original_vcs_close_admission_and_receipts_match_neutral_wallet(){
+ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../♻️retirement/🧫️fixtures/🔣️.json")).unwrap();
+ let grant=|row:&serde_json::Value|RetainedCloneGrant{maximum_items:row["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:row["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:row["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:row["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};
+ for row in law["closeAdmissionCases"].as_array().unwrap(){
+  let d=&row["demands"];let demands=FlowVcsCloseDemands{copy_bytes:d["copyBytes"].as_u64().unwrap()as usize,capacity_bytes:d["capacityBytes"].as_u64().unwrap()as usize,release_bytes:d["releaseBytes"].as_u64().unwrap()as usize,depth:d["depth"].as_u64().unwrap()as usize};
+  let(result,heap)=observe(||retirement::admit_turn(grant(&row["grant"]),demands));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+  let actual=match result{Ok(true)=>"accepted",Ok(false)=>"deferred",Err(failure)=>{assert_eq!(failure.fault,FlowVcsFault::Depth);assert_eq!(failure.retained_progress,Default::default());"refused_depth"}};assert_eq!(actual,row["expected"].as_str().unwrap());
+ }
+ for row in law["closeReceiptCases"].as_array().unwrap(){
+  let p=&row["progress"];let progress=RetainedCloneProgress{copied_items:p["copiedItems"].as_u64().unwrap()as usize,copied_bytes:p["copiedBytes"].as_u64().unwrap()as usize,retained_capacity_bytes:p["retainedCapacityBytes"].as_u64().unwrap()as usize,released_bytes:p["releasedBytes"].as_u64().unwrap()as usize};let step=if row["complete"].as_bool().unwrap(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)};
+  let(result,heap)=observe(||semio_framework_value::retained_clone::admit_retained_clone_close(grant(&row["grant"]),step,row["terminal"].as_bool().unwrap(),"original VCS neutral receipt"));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(result.is_err(),row["refused"].as_bool().unwrap());match result{Ok(actual)=>assert_eq!(actual,step),Err(error)=>{assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::InvariantViolated);assert_eq!(error.retained_progress(),progress);}}
+ }
+ eprintln!("[DEBUG] original VCS native admissionCases=8 receiptCases=8 pureBoundary=true exactReceipts=true");
 }

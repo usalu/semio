@@ -80,7 +80,7 @@ pub fn evaluate(
         patched = Some(crate::standards::v1::subsets::any::schema::generation_host_snapshot_for(&doc.snapshot.host_snapshot, &state, state.selected_generation_id.as_deref()));
     }
     let host_snapshot = patched.as_ref().unwrap_or(&doc.snapshot.host_snapshot);
-    let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, turn_started_us);
+    let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, turn_started_us, doc.retained_grant()?);
     let publication = preview_eval::preview_eval_publication_for(session, host_snapshot, retained_eval);
     if let Some(displaced) = patched {
         displaced.retire_cold();

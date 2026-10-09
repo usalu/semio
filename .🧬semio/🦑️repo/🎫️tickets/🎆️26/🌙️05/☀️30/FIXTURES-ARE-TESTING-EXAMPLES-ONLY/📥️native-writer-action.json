@@ -1,0 +1,7 @@
+{
+  "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+  "before": "5f2e621b6427d9b05001aafce040ea8709410695ab829e875b6d3f44647fb572",
+  "after": "e4d4a9eba69ac564d8e90a0825f07b11ccf59c24187c9af41d8d5d1b609571ed",
+  "logicalBlock": "JsonBorrowedWriteCursor actual physical backing/copy receipt before cancellation",
+  "sourceCopies": false
+}

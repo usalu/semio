@@ -1,0 +1,26 @@
+{
+  "owned": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "de5103407a7c451307e5b958b990b742fcd3619803e765caf0ef8e68fd58f2c7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+      "sha256": "81d9edfdc70f071e6215b922b652e75286616ac5f8b429bb7f8fae6d629ee360"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "sha256": "d64c6ec73a121486af383a9834166854f5f2cda57a9b7a10c9c64f1b0a76d5a8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "2d6d406e74a78f91948dd264323c8099b7b3c53a46ab5ddf76494da5dbc9ca78"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+      "sha256": "fca92734b6f53cff2379fb0bac6e45129019317e16fd108d2a4baebb04ba78fc"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+    "action": "update",
+    "beforeSha256": "550a1700541b8826faa5be09b43dc68f331191878fee72c8954b3f82a3177e97",
+    "afterSha256": "8e674cdd88836e85d32aff3ca7a52fb7534db49ccba866891331d7d40d0a6467",
+    "qualification": "Independent plain caller authority; quotes remain only refusal/receipt observations"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧫️fixtures/🔣️.json",
+    "action": "update",
+    "beforeSha256": "8dd157d9d5c63240e7df9b2bdeb59694f5e3e4358c8c4bd36d06bd546ffee67e",
+    "afterSha256": "6998e22584c6bcb7bcb6d7bf63f1cffb59b3818167b72b4518c0d0742516bdfe",
+    "qualification": "Independent plain caller authority; quotes remain only refusal/receipt observations"
+  }
+]

@@ -17,6 +17,12 @@ class TestScript extends BundleScript {
       await new ScriptRouter(this.root, this.repoRoot).register("wgpu-engine", TestWgpuEngineScript).run(segments);
       return;
     }
+    if (segments[0] === "worker-retirement") {
+      if (segments.length !== 1) throw Error("Expected test worker-retirement");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+      await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🧬️contract/♻️retirement/👷️worker/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
+      return;
+    }
     if (segments[0] === "control-commit") {
       if (segments.length !== 1) throw Error("Expected test control-commit");
       if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");

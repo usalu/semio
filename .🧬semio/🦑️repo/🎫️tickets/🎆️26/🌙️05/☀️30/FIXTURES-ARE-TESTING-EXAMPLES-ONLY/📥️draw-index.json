@@ -1,0 +1,40 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "b7e885d36a9c0da6c2816d7602ccded7191281a01320d046334811ba7d56a52e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧬️schema/🔣️.json",
+      "sha256": "6fc424c4d55a558853aff8de650314d0bc6d2c897060ba04463313c5cb19ca02"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🦠️mutation/🟦️.ts",
+      "sha256": "3df845b8f31cd55eecc6ebed49d487aa051f06511a590f1d4c64528c7afc09d9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🔺️diff/🟦️.ts",
+      "sha256": "cddaf52d7018c5df949acba7ca64ae3a64c1393809ea221b40a120c8a2bbc0ed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️duplicate-layer/🦀️.rs",
+      "sha256": "a0fa5017553790f6ed40f461fcdad87b440bb5ea9a9add930436b02e560d3352"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "fcb58e212315c9f23a59a381d4bc021de578ff07dcb5f582171fc5fffa7f4033"
+    },
+    {
+      "path": "📜️script.ts",
+      "sha256": "ac6eb7e30b6d174d3117ab74c79ee847665893293bbfadfb951fadcad6c02a39"
+    }
+  ],
+  "currentExampleRequiredFields": [
+    "mutation",
+    "layerId",
+    "identities"
+  ],
+  "currentExampleAlreadyHasIdentityPair": true
+}

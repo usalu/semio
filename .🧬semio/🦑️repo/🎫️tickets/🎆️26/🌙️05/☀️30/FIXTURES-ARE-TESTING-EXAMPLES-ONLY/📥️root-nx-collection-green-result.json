@@ -1,0 +1,9 @@
+{
+  "exitCode": 0,
+  "tests": 3,
+  "assertions": 84,
+  "durationMs": 277,
+  "nativeAssertions": 0,
+  "qualification": "Actual original Source laws with neutral portable examples/Nx/minimatch and real physical inference; core gitignore gate remains separate",
+  "logSha256": "055b691f75ba0e04318f961c2302383d4b3714ca156937644d4a5ef1dc280167"
+}

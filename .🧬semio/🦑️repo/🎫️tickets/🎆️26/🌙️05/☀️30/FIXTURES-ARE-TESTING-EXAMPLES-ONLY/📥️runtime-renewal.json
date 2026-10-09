@@ -1,0 +1,75 @@
+{
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+      "sha256": "456b22d1b54d756d3c3947c1119a9eef9426df010966dc4f8bc4642042c0b8fd",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔣️.json",
+      "sha256": "a5fa2fd2e181ef6ffa2f778381abdb51ffea4b1ad97c8c25bee47321aea41703",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🔣️.json",
+      "sha256": "64ac2a9ed81204d3438fb4af86aa1c2f23fd0b5d8e5840762c2277a1f2083176",
+      "authored": false
+    }
+  ],
+  "guestChecks": [
+    {
+      "target": "wasm32-wasip2",
+      "workspace": "Cargo.toml",
+      "packages": [
+        "semio-framework",
+        "semio-framework-replication",
+        "semio-framework-os-kernel",
+        "semio-framework-os",
+        "semio-framework-plugin"
+      ],
+      "features": [
+        "semio-framework-plugin/component-guest",
+        "semio-framework-os-kernel/deflate",
+        "semio-framework-replication/deflate"
+      ]
+    },
+    {
+      "target": "wasm32-unknown-unknown",
+      "workspace": "Cargo.toml",
+      "packages": [
+        "semio-framework-os-kernel"
+      ],
+      "features": [
+        "semio-framework-os-kernel/sync"
+      ]
+    },
+    {
+      "target": "wasm32-unknown-unknown",
+      "workspace": "Cargo.toml",
+      "packages": [
+        "semio-framework-os-renderer-wgpu"
+      ],
+      "features": []
+    },
+    {
+      "target": "wasm32-wasip2",
+      "workspace": "✏️s/Cargo.toml",
+      "packages": [
+        "semio-s-plugin-stdio"
+      ],
+      "features": []
+    }
+  ],
+  "priorRefusal": {
+    "session": 64107,
+    "nxExit": 1,
+    "duration": "1m8s",
+    "actualGate": "workspace:runtime-fixture-graph",
+    "failure": "Prepared manifest changed: original UI Rust Cargo.toml",
+    "compilerArtifacts": null,
+    "graphs": [],
+    "runtimePurity": false,
+    "nativeAssertionsCredit": 0
+  }
+}

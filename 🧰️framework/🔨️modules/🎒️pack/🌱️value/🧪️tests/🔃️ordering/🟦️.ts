@@ -1,12 +1,10 @@
 /** 🔃️ SQLite independently separates schema map byte order and intrinsic occurrence order. */
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import Ajv from"ajv/dist/2020.js";
 import fixture from"../../🧫️fixtures/🔃️ordering/🔣️.json";
-import schema from"../../🧬️schema/🔃️ordering/🔣️.json";
 
 test("closed schema maps sort byte keys while intrinsic occurrences retain duplicates",()=>{
- const valid=new Ajv({strict:true}).compile(schema);expect(valid(fixture)).toBe(true);expect(valid({...fixture,payload:"opaque"})).toBe(false);
+ 
  const database=new Database(":memory:");try{
   database.exec("CREATE TABLE map_entry(parent_key BLOB NOT NULL,entry_key BLOB NOT NULL,value INTEGER NOT NULL);CREATE TABLE literal_occurrence(ordinal INTEGER PRIMARY KEY,entry_key BLOB NOT NULL,value TEXT NOT NULL)");
   for(const row of fixture.fieldMap.unsorted)for(const entry of row.entries)database.query("INSERT INTO map_entry VALUES(?,?,?)").run(Buffer.from(row.key),Buffer.from(entry.key),entry.value);

@@ -30,15 +30,15 @@ impl NativeKernelRuntime {
     /// `shard_count.max(1)` real [`ShardExecutor`]s sharing it, and one [`Kernel`]. No threads are
     /// spawned by this constructor — every [`ShardExecutor`] is pool-scheduled, only actually running
     /// a job once its first `ShardFrame` arrives via [`Self::activate`]/[`Self::tick_and_dispatch`].
-    pub async fn new(guest_runtime: Arc<GuestRuntimes>, shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32) -> Self {
+    pub async fn new(guest_runtime: Arc<GuestRuntimes>, shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32, mut identity_issuers:impl FnMut(u16)->semio_framework_plugin_host::shard::OriginalShardIdentityIssuer) -> Self {
         let shard_count = shard_count.max(1);
         let kernel = Kernel::new(ShardKind::Native, shard_count, exclusive_reserve, grants_per_tick).await;
         let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
         let pool = Arc::new(semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores)));
         let outcomes = OutcomeSink::new();
         let mut shards = Vec::with_capacity(shard_count as usize);
-        for _ in 0..shard_count {
-            shards.push(ShardExecutor::new(pool.clone(), guest_runtime.clone(), Vec::new(), outcomes.clone()).await);
+        for shard in 0..shard_count {
+            shards.push(ShardExecutor::new(pool.clone(), guest_runtime.clone(), Vec::new(), outcomes.clone(),identity_issuers(shard)).await);
         }
         Self { kernel, guest_runtime, shards, outcomes }
     }

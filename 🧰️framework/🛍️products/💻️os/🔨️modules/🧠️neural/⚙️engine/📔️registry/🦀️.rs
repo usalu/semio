@@ -31,8 +31,9 @@ unsafe impl Allocator for RegistryAllocator {
 }
 
 /// 🪪️ Identifies one original registry root while its exact source readers remain alive.
-#[derive(Clone,Copy,Debug,Eq,PartialEq,Hash)]
+#[derive(Clone,Copy,Debug,Eq,PartialEq,Ord,PartialOrd,Hash)]
 pub struct RegistryIdentity(usize);
+semio_framework_value::artifact_retire_leaf!(RegistryIdentity);
 
 /// 🔗️ Every registry reader participates in the exact last-reader handoff; raw Arc roots never escape.
 #[derive(Clone)]

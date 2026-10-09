@@ -1,0 +1,15 @@
+{
+  "session": 8983,
+  "exitCode": 1,
+  "nxDurationMs": 265000,
+  "actualCompilerErrors": 0,
+  "nativeAssertions": 0,
+  "selectedNames": 29,
+  "sourceDrifts": 86,
+  "warnings": 2187,
+  "compilationFinished": true,
+  "selectionRejected": true,
+  "cause": "Root extra separator after long forwarded -E/reporters to libtest; no source parser change required",
+  "resourceWarning": "rust-objcopy debug stripping reported ENOSPC; build finished",
+  "nativeRuntimeCredit": false
+}

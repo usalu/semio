@@ -1,0 +1,25 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "present": true,
+      "sha256": "f6d7ebe6547f00c25af4d698392ce9ea2a9bdc7a0d25dd39ab1e2858df0f6c2f",
+      "mtimeNs": 1791523628130520585
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "present": true,
+      "sha256": "63ae4f3433874d5f51ed31f62c7b8f2780a5ce574b6bab4311bcc33ba1e30369",
+      "mtimeNs": 1791523628131172835
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+      "present": true,
+      "sha256": "df7fa3e6c9d01270f25212b75ab601795a53613c93d48bed9d2d7fb6645ad277",
+      "mtimeNs": 1791523628127775504
+    }
+  ],
+  "searchScope": "original Flow TS/Rust/JSON/MJS only; exact schema path plus direct schema write/copy expressions"
+}

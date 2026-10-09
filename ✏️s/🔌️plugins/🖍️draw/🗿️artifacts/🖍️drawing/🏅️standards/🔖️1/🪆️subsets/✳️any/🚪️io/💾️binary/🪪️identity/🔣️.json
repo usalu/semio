@@ -1,0 +1,12 @@
+{
+  "title": "DrawingIdentityPreimageV1",
+  "description": "DRAWID01, kind u8, part count u32LE, each length u64LE followed by octets. Max 64 parts and 65536 total bytes.",
+  "type": "array",
+  "items": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 255
+  },
+  "minItems": 13,
+  "maxItems": 65536
+}

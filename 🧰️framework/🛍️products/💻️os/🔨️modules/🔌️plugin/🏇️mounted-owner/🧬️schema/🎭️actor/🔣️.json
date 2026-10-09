@@ -1,0 +1,65 @@
+{
+  "type": "object",
+  "required": [
+    "contract",
+    "maximumTextBytes",
+    "phases",
+    "currencies",
+    "grantSource",
+    "constructorMustYieldReceipt",
+    "undergrantHeapBytes",
+    "cases",
+    "nativeGrant",
+    "sqlVector"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "framework.plugin.mounted-actor-capture"
+    },
+    "maximumTextBytes": {
+      "const": 256
+    },
+    "phases": {
+      "const": [
+        "borrowed-original",
+        "paid-capture",
+        "publication-transfer",
+        "original-cancellation"
+      ]
+    },
+    "currencies": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "grantSource": {
+      "const": "mounted-owner-preparation-policy"
+    },
+    "constructorMustYieldReceipt": {
+      "const": true
+    },
+    "undergrantHeapBytes": {
+      "const": 0
+    },
+    "cases": {
+      "type": "array"
+    },
+    "nativeGrant": {
+      "const": [
+        1,
+        4096,
+        65536,
+        262144,
+        64
+      ]
+    },
+    "sqlVector": {
+      "type": "object"
+    }
+  }
+}

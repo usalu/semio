@@ -1,0 +1,12 @@
+{
+  "canonicalSourceSessionId": 10310,
+  "canonicalSourceNxExitCode": 0,
+  "alternateSourceNxExitCode": 0,
+  "alternateDuration": "232ms",
+  "bunTests": 3,
+  "assertions": 16,
+  "bunDurationMs": 144,
+  "actualDebug": "fresh routing / original canonical Schema / independent JSON + Ajv examples=4",
+  "nativeProducerPending": true,
+  "mockedCompilerCredit": false
+}

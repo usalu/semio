@@ -1,0 +1,49 @@
+{
+  "observers": [
+    {
+      "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddfe\ufe0fdocument/\ud83d\udcdc\ufe0fhistory/\ud83d\udca7\ufe0fhydration/\ud83e\udd80\ufe0f.rs",
+      "sha256": "accdba602d2d130eefa2f0030c6207b2bf8da17338e015cf07bcef76ff9993a0",
+      "characters": 112
+    },
+    {
+      "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83c\udf9a\ufe0fconfig/\ud83d\udce5\ufe0fretained/\ud83e\udd80\ufe0f.rs",
+      "sha256": "9b0b40c09428fcf3686c1d801f048a9f862da1d6f2dce49ee5881f747597b73a",
+      "characters": 99
+    },
+    {
+      "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\udde9\ufe0fcomposition/\ud83d\udeaa\ufe0fopen/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83d\udccf\ufe0fretirement/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "b8f0cf62d82c94ce7be650c4a94f204e3d7f90fe2f7c03dc723a732d5f3b4787",
+      "characters": 128
+    },
+    {
+      "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddfe\ufe0fdocument/\ud83d\udcdc\ufe0fhistory/\ud83d\udca7\ufe0fhydration/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+      "sha256": "a488be2b122b2655d08d1c4d735c1af468dc6f6a3261755f7de0bf274d4a0e71",
+      "characters": 127
+    },
+    {
+      "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddfe\ufe0fdocument/\ud83d\udcdc\ufe0fhistory/\ud83d\udca7\ufe0fhydration/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udccf\ufe0fphysical-demand/\ud83d\udd23\ufe0f.json",
+      "sha256": "93c15ef91a3b02136e4021bdd41d11376acea5a92045d43d6df0225c41f09c05",
+      "characters": 151
+    }
+  ],
+  "actions": [
+    "\ud83d\udce5\ufe0fh-ready-law.json",
+    "\ud83d\udce5\ufe0fh-pack-law.json",
+    "\ud83d\udce5\ufe0fh-pack-action.json",
+    "\ud83d\udce5\ufe0fh-fold-law.json",
+    "\ud83d\udce5\ufe0fh-fold-oracle.json",
+    "\ud83d\udce5\ufe0fh-fold-action.json",
+    "\ud83d\udce5\ufe0fc-ready-law.json",
+    "\ud83d\udce5\ufe0fc-ready-action.json",
+    "\ud83d\udce5\ufe0fh-native-policy.json",
+    "\ud83d\udce5\ufe0fh-native-law.json",
+    "\ud83d\udce5\ufe0fh-syntax-law.json",
+    "\ud83d\udce5\ufe0fh-target-law.json",
+    "\ud83d\udce5\ufe0fh-target-action.json",
+    "\ud83d\udce5\ufe0fh-child-law.json"
+  ],
+  "authorship": "only exact action blocks; current full-file hashes are observers",
+  "sourceCopies": false,
+  "processes": "all own neutral terminals; no owned native producer",
+  "qualification": "source/neutral/grammar receipts only; no native runtime pass; unchanged owned original full compiler route not dispatched"
+}

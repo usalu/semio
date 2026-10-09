@@ -92,7 +92,7 @@ fn read(reader: &mut OpcNativeReader<'_, '_, '_>) -> Result<XlsxSnapshot, ValueE
     Ok(XlsxSnapshot { schema, opc, xml_parts: std::mem::take(&mut parts.0) })
 }
 
-pub(in crate::standards::v_ecma_376::subsets::base::io) fn decode(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<XlsxSnapshot, ValueError> {
+pub(in crate::standards::v_ecma_376::subsets::base::io) fn decode(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<XlsxSnapshot, ValueError> {
     match payload {
         IoPayload::Binary(bytes) => backing::input(bytes, true, control),
         IoPayload::Text(text) => backing::input(text.as_bytes(), false, control),
@@ -102,15 +102,15 @@ pub(in crate::standards::v_ecma_376::subsets::base::io) fn decode(payload: &IoPa
 
 
 
-pub(in crate::standards::v_ecma_376::subsets::base::io) fn encode(snapshot: &XlsxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<IoPayload, ValueError> {
+pub(in crate::standards::v_ecma_376::subsets::base::io) fn encode(snapshot: &XlsxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<IoPayload, ValueError> {
     backing::encode(snapshot, encoding, control)
 }
 
-pub(in crate::standards::v_ecma_376::subsets::base::io) fn decode_text(text: &str, control: &mut SqliteSnapshotControl<'_>) -> Result<XlsxSnapshot, ValueError> {
+pub(in crate::standards::v_ecma_376::subsets::base::io) fn decode_text(text: &str, control: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<XlsxSnapshot, ValueError> {
     backing::input(text.as_bytes(), false, control)
 }
 
-pub(in crate::standards::v_ecma_376::subsets::base::io) fn decode_binary(bytes: &[u8], control: &mut SqliteSnapshotControl<'_>) -> Result<XlsxSnapshot, ValueError> {
+pub(in crate::standards::v_ecma_376::subsets::base::io) fn decode_binary(bytes: &[u8], control: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<XlsxSnapshot, ValueError> {
     backing::input(bytes, true, control)
 }
 

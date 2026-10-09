@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "maximumTurns": 100000,
+  "ownershipBytes": 16777216,
+  "nodes": [
+    "a",
+    "b"
+  ],
+  "ports": {
+    "inputs": [
+      "in",
+      "in"
+    ],
+    "outputs": [
+      "out"
+    ]
+  },
+  "selection": {
+    "nodes": [
+      "b",
+      "a",
+      "a",
+      "missing"
+    ],
+    "edges": [
+      "e1",
+      "missing"
+    ],
+    "handles": [
+      "b@in",
+      "missing@in"
+    ]
+  },
+  "channels": [
+    {
+      "widgetId": "b",
+      "port": "in",
+      "direction": "in"
+    },
+    {
+      "widgetId": "missing",
+      "port": "in",
+      "direction": "in"
+    }
+  ],
+  "progress": {
+    "active": "a",
+    "stale": [
+      "a",
+      "b",
+      "b",
+      "missing"
+    ]
+  },
+  "statuses": {
+    "a": {
+      "status": "queued"
+    },
+    "b": {
+      "status": "blocked",
+      "ports": [
+        "in",
+        "missing"
+      ]
+    },
+    "missing": {
+      "status": "computing"
+    }
+  },
+  "expected": {
+    "nodes": [
+      1,
+      2
+    ],
+    "edges": [
+      1
+    ],
+    "handles": [
+      13
+    ],
+    "channelHandles": [
+      13
+    ],
+    "active": 1,
+    "stale": [
+      2
+    ],
+    "queued": [
+      1
+    ],
+    "blocked": [
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        1
+      ]
+    ]
+  },
+  "retainedGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 8,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 2048
+  },
+  "closeReleaseBytes": 1
+}

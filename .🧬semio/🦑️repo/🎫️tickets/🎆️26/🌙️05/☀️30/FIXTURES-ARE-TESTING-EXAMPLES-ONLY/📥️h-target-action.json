@@ -1,0 +1,20 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddfe\ufe0fdocument/\ud83d\udcdc\ufe0fhistory/\ud83d\udca7\ufe0fhydration/\ud83e\udd80\ufe0f.rs",
+  "before": "ee66ba8113fdbecbb6830701b14f12347e440f4bd99a1c7f2b383282cab31ca2",
+  "after": "accdba602d2d130eefa2f0030c6207b2bf8da17338e015cf07bcef76ff9993a0",
+  "blocks": [
+    {
+      "before": "4b6c7f272cc2b34e78611a6d6e859a9d376dcfec16d93b6b32a3469d06bff376",
+      "after": "a095ed83a5110db1dfa3559b7efa4f91880f1f3e02cf4f65b75c9d02cf76edd0"
+    },
+    {
+      "before": "b75fbe6c03747c2346efe1a5c7ca16651c32bff8d97016a2fd21dfd6b1d1ae52",
+      "after": "2f8597fad69b562b8163359281a876b1d35262fd908d615fedc12b6c9c53a76d"
+    },
+    {
+      "before": "b3f0c277a2fc4b657e6b5e206761df14414420ccd8b258d5395b91cc23d24a3b",
+      "after": "fbf93597b7537c9cdad99380d40284e14cf3aaffffe48ff4d4387831fef34f9f"
+    }
+  ],
+  "change": "one shared current child authority projection for fold and target decoder; preserves physical axes and validates current pending receipts; producer terminal receipt gap remains"
+}

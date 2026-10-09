@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/flow/browser-types.json",
+  "title": "Flow Browser Types Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operationMethods",
+    "excluded",
+    "samples",
+    "result",
+    "canvasMethods",
+    "package",
+    "receiptFields"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operationMethods": {
+      "const": 106
+    },
+    "excluded": {
+      "const": [
+        "open",
+        "attachSurface",
+        "renderFrame"
+      ]
+    },
+    "samples": {
+      "const": [
+        {
+          "name": "setSliderValue",
+          "parameters": [
+            "widgetId: string",
+            "value: number"
+          ]
+        },
+        {
+          "name": "setHoverChannel",
+          "parameters": [
+            "widgetId?: string | null",
+            "port?: string | null"
+          ]
+        },
+        {
+          "name": "vcsCheckpoint",
+          "parameters": [
+            "sessionGeneration: number",
+            "baseRevision: number",
+            "parentRevision: number"
+          ]
+        },
+        {
+          "name": "snapshotJson",
+          "parameters": []
+        }
+      ]
+    },
+    "result": {
+      "const": "FlowTask<unknown>"
+    },
+    "canvasMethods": {
+      "const": [
+        "attachCanvas",
+        "renderCanvas"
+      ]
+    },
+    "package": {
+      "const": {
+        "name": "@semio-tech/flow-core",
+        "files": [
+          "flow_core_bg.wasm",
+          "flow_core.js",
+          "flow_core.d.ts",
+          "flow_core_bg.wasm.d.ts",
+          "🌐️browser/🟨️.js",
+          "🖥️host/🟨️.js",
+          "🌐️browser/🟦️.d.ts"
+        ],
+        "exports": {
+          ".": {
+            "types": "./flow_core.d.ts",
+            "import": "./flow_core.js"
+          },
+          "./🌐️flow-browser.js": {
+            "types": "./🌐️browser/🟦️.d.ts",
+            "import": "./🌐️browser/🟨️.js"
+          },
+          "./🖥️flow-host.js": "./🖥️host/🟨️.js"
+        }
+      }
+    },
+    "receiptFields": {
+      "const": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ]
+    }
+  }
+}

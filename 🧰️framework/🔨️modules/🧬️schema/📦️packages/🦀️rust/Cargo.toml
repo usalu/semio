@@ -16,6 +16,11 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[[bin]]
+name = "schema-export-entries"
+path = "../../📤️exports/🦀️.rs"
+test = false
+
 [[test]]
 name = "schema-export-entries"
 path = "../../🧪️tests/📤️schema-export-entries/🦀️.rs"

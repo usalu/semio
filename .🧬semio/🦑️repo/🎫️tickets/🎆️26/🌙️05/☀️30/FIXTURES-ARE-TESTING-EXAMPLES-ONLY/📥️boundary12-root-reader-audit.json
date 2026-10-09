@@ -1,0 +1,144 @@
+{
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema/🔣️.json",
+      "exists": true,
+      "authored": false,
+      "sha256": "184957a233304989d1fedde24e2aa74b4e0680fb0ce392a91b8c75b0053251e9",
+      "properties": [
+        "version",
+        "locales",
+        "cases",
+        "maximumErrorEm",
+        "originalHeap",
+        "retirement"
+      ],
+      "definitions": []
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧪️tests/🟦️.ts",
+      "sha256": "40ee694b1f0c35b2f186fd29581d338094ece80852aaa190eec4176de222a40e",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt/🔣️.json",
+      "exists": true,
+      "authored": false,
+      "sha256": "f481833ea4af382f37303b07ee9d0a4a469ce6632b94f7b000d8cfbe917df0a9",
+      "properties": [
+        "version",
+        "axes",
+        "cases"
+      ],
+      "definitions": [
+        "RetainedProgress"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🏷️browser-ownership/🟦️.ts",
+      "sha256": "2172a2c521005997018330cd0662972f75e61f8466f4365fec19ba45c71223c2",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts",
+      "sha256": "2531416fc59656b811d0d9af245501e1d283572304cdfd333c3f72c5ed7ae293",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts",
+      "sha256": "61371ff1f2f9f23e66444e3e0ec165c9be382e558c67907fe07c675bfd72f0fe",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-grant/🟦️.ts",
+      "sha256": "8ce1be9c9812b5d2fe2ebf32b90e2db8f17d1e207ab06554ecac30166b342e36",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔬️protocol-unit/🦀️.rs",
+      "sha256": "6f84e200b47fcaba73486cf0c0d175ce69089b7fb87c49364e1affe7bf0aaec2",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
+      "sha256": "66129fc632f4189df309f1dbcae3673035a0101ff7409a145814d8f67fcebf8b",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔬️component-domain-laws/🦀️.rs",
+      "sha256": "1bd19d9675222fc82cb4a2ad546a677a96b7ca82004350a40bc7808933b6f5a6",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎬️draw-list/🦀️.rs",
+      "sha256": "71327b0b9ace87e352c9e8e90903adb48a97872bb976ae206dcaa6e2e762d77f",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+      "exists": true,
+      "authored": false,
+      "sha256": "6e403a8b93cc6eec4327b7221e72d75c157cfeee8067c1f3d0abc3249602540d",
+      "properties": [
+        "version",
+        "text",
+        "repeat",
+        "capacityBytes",
+        "utf8Bytes",
+        "copyGrants",
+        "maximumTurns",
+        "sourceFields",
+        "expected"
+      ],
+      "definitions": []
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+      "sha256": "cbcb6f474aac7568d6bc7c397a74b24274cfa5b9361189699b1c87e5645e6239",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "sha256": "687338396a0117cb6bf6b8d88c579dcf5974e47b997cb970ee19e993d9ab674b",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts",
+      "sha256": "6ebda456dab0a38f305fa206382ff35440be593b35a8946c4d02a7c314a35372",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧹️retirement/🦀️.rs",
+      "sha256": "dcd926823a5a3710fcdaf46fc0561dbd164072a5fa7a8e161f746e2bac8dcbb3",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
+      "exists": true,
+      "authored": false,
+      "sha256": "c30c62bd0a34bd1173b941cfbf8d3f2fc7fa5b34a46d8a5db0a3e06df54c8fa9",
+      "properties": [
+        "schema",
+        "sourceFixture",
+        "allocationAdmission",
+        "grants",
+        "cases",
+        "cancelAfter",
+        "expected",
+        "factoryCustody"
+      ],
+      "definitions": []
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
+      "sha256": "49cb1a24836b5a31dcbe36a761320fd31d953f98a0f97ae3d13916586f3a6be1",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/📑️copy/🦀️.rs",
+      "sha256": "88f72eaee98a6d6d6eb1fe64f8d985a469bfecd28c0ea53e8076796e660715b6",
+      "authored": false
+    }
+  ]
+}

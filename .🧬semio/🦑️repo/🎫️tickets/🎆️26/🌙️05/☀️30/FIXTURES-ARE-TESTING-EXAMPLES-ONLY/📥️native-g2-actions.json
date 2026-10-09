@@ -1,0 +1,26 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts",
+    "action": "remove exact trial validator only",
+    "before": "54f6df5a096b8a3b50aa4d56938b4e7360b62a58b4b65082880c554e7a165361",
+    "after": "413ffadb9127a4cb8097ef0db625c85e78fd7c1155c64afec5d893ac09e9f09a"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🎟️insertion/🟦️.ts",
+    "action": "remove exact trial validator only",
+    "before": "ea58caf2b4c6c5381c90cf3702def109816985d1d854cbdd7730323b67ca8d78",
+    "after": "03e819cdf9c3739547e7821694c0aa3da586087dfb66176e54a5d18c73b47c8c"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧫️fixtures/🔭️observer/🧬️.json",
+    "action": "remove whole-trial authority",
+    "before": "d91279de5ec02e3ded4fe39ce63ec0747782c74f0bec2108c2c5e13c8d12f379",
+    "after": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🎟️insertion/🔣️.json",
+    "action": "remove whole-trial authority",
+    "before": "83ee893b699bc2fba89259e1bab3013d2520fe2a164f7c8bcc9d969c8549c202",
+    "after": null
+  }
+]

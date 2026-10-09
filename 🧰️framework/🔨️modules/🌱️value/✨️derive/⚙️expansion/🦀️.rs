@@ -2344,3 +2344,7 @@ fn controlled_to_body(input:&DeriveInput,container:&ContainerAttrs,c:&syn::Path)
   Data::Union(_)=>Err(syn::Error::new_spanned(input,"controlled output unions unsupported"))
  }
 }
+
+#[path="../🧵️canonical/🦀️.rs"]
+mod canonical_tree;
+pub fn expand_canonical_tree(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{canonical_tree::expand(input)}

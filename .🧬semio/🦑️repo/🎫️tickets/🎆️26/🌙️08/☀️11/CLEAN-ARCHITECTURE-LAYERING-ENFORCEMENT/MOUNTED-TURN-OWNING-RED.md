@@ -1,0 +1,15 @@
+# Mounted Owning Red
+
+Actual exact registered original owning invocation mg2 physically closed Nx/Bun1 and Cargo101. Compiler reached the current OS Kernel dependency and refused two `SpaceHistorySnapshot: ArtifactNativeSnapshot` bounds required by its SQLite capability. None of the eleven original receiving laws entered. This is compiler red and no native runtime acceptance. Full terminal and strict source closure are in `🗑️generated/mg2`; actual compiler artifacts remain in `🗑️generated/mg/a/exact-cargo-laws-xeW7Gq/00`.
+
+The fresh in-place capture had 5691 claims; 5666 remained exact and 25 current successor hashes are explicitly qualified. 0 interval removals are explicitly retained. Six predecessor removals were qualified before invocation, without source restoration. Catalogue fixture policy/identity transport and current peer publications remain current; this failed interval does not certify their runtime.
+
+## Actual Seventeen-Law mg4 Admission
+
+The exact GUI row admitted Cargo under the original 300000ms build budget after the explicit Repo storage port. `mg4` physically closed Nx/Bun1, Cargo101 before any seventeen mounted laws. Original Kernel compilation refused six genuine current-source receiving defects: invalid pub(super) token in prepared retirement initializer, Specific IO binding store import, and four missing canonical tree/digest imports in snapshot-clone. Original compiler stdout/stderr and build receipt are retained under generated/mg/a/exact-cargo-laws-arSH72/00. The full custody interval had6280 claims6247 exact33 qualified source advances and one explicit historical schema removal. Current peer publication subsequently corrected all six defects before any Catalogue edit; a stale assertion refused writing the obsolete initializer. No previous source was restored. Fresh `mg5` uses the same exact registered owning row, all17 required laws, unchanged budgets and current in-place source capture.
+
+## Full Mounted Successor mg6
+
+The exact original all-17 owning command physically closed unified84573 with outer Nx/Bun1 and child Cargo101 in build before any selected runtime law entered. Original budgets, offline build and law roster remain unchanged. Custody captured6,344claims:6,314exact and30qualifiedactualpeeradvances. Artifacts are generated/mg/a/exact-cargo-laws-uVlKlD/00; no source bodies were copied.
+
+Native compilation now reaches the current failed-close receipt publication: sixteen UI prepared/draw receiving constructors and eleven StoreRoot constructors still use the previous tuple Refused form; one then-loaded NativeSnapshotEncodeOwner checked_add Result join was already corrected by a peer after load. Root owns UI receiving. This lane owns StoreRoot receiving and identified the defining gap: OwnedSchemaDecodeDiagnostic lacks the actual failed-step receipt and lower owner close error mappings discard child progress. Fresh strict refusal schema/fixture and a SQLite/Ajv source law were authored before implementing the mandatory diagnostic receipt. Source successor hs4 is live as the defining red; no success claimed.

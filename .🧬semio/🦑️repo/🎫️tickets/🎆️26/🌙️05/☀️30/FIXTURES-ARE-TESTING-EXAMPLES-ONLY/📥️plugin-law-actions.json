@@ -1,0 +1,34 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "beforeSha256": "dfbaf5746492efc810f1eb11ab1168e2296112055bb95ddafb9cc5a99299b601",
+      "afterSha256": "cc4c15ef81cbc9d5039e408986fa8ca3fff49666ec0f3fd935f43bb993d79e85",
+      "action": "Remove only renewed fixture schema admission and register original TypeScript lifecycle laws in defining script/Nx/live+seed launch; shared native/example bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts",
+      "beforeSha256": "51a553a001c3c664c819c38a76be31fc5f13de5ad40fbd7c433a6db26c0b2821",
+      "afterSha256": "a489166e43f7b9bb683a89c990f1e449a444abe31fc248c5180ec67c04b467b2",
+      "action": "Remove only renewed fixture schema admission and register original TypeScript lifecycle laws in defining script/Nx/live+seed launch; shared native/example bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
+      "beforeSha256": "3ee20b0ce62f5c67cb509b5bd8e728309dca2bb5c6966bd3ea17ebe717e33ffe",
+      "afterSha256": "c06d32410b48893004bd23237d8b93eea125415b4ff8f57bbc130498a835f8b6",
+      "action": "Remove only renewed fixture schema admission and register original TypeScript lifecycle laws in defining script/Nx/live+seed launch; shared native/example bodies preserved."
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "67ca08100e02e90cb320c1a14c4f8e167efaa03bfe5ee72d95fedc4a20b8a025",
+      "afterSha256": "b83c920250abc8dc1af302c419c3e1123f6bbecf4e2cb9538e3e1076b083e05a",
+      "action": "Remove only renewed fixture schema admission and register original TypeScript lifecycle laws in defining script/Nx/live+seed launch; shared native/example bodies preserved."
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSha256": "b4e339d83030e175640e85ed05a6b168404eb59c75a43fe8c7e38c68d4e5a3ff",
+      "afterSha256": "428ac141c4dac3358bd2d9538172ff59d6b8874084d687dfce6620e3f6666af6",
+      "action": "Remove only renewed fixture schema admission and register original TypeScript lifecycle laws in defining script/Nx/live+seed launch; shared native/example bodies preserved."
+    }
+  ]
+}

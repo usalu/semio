@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:ui:worker-retirement-policy",
+  "title": "Worker Retirement Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximum_items",
+    "maximum_copy_bytes",
+    "maximum_capacity_bytes",
+    "maximum_release_bytes",
+    "maximum_depth"
+  ],
+  "properties": {
+    "maximum_items": {
+      "type": "integer",
+      "const": 1
+    },
+    "maximum_copy_bytes": {
+      "type": "integer",
+      "const": 4096
+    },
+    "maximum_capacity_bytes": {
+      "type": "integer",
+      "const": 65536
+    },
+    "maximum_release_bytes": {
+      "type": "integer",
+      "const": 262144
+    },
+    "maximum_depth": {
+      "type": "integer",
+      "const": 64
+    }
+  }
+}

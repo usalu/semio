@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "schema": "CREATE TABLE entry(id INTEGER PRIMARY KEY, value TEXT NOT NULL);",
+  "value": "snow雪",
+  "rowid": 7,
+  "maximumBytes": 1048576,
+  "expectedRows": [
+    [
+      7,
+      "snow雪"
+    ]
+  ]
+}

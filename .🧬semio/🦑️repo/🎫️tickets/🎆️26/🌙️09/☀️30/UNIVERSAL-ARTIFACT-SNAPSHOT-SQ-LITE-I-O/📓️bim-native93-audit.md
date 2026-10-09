@@ -1,0 +1,9 @@
+# Current Native BIM Draft Static Audit
+
+[Static census findings](📥️inputs/bim-native93-audit.json) bind current original provider/census digests. All93 authored WIDTHS exactly match independent SQLite table_info metadata, no missing table, maximum59 fits64 stack slots. Entity plan declaration counts match the defining Native struct roster in this scope. The root49-field census maps all47 collections at actual declaration IDs2..48.
+
+Dimension statements/block anchors are individually counted with rowid+active owner+ordinal base24; Leader enforces one record. PropertyDef default/allowed use the original intrinsic PropertyValue tagged-object shape; ClassificationSet consumes literal Map String-to-String. Empty holes/maps and Custom/Explicit/Lines/Polygon/Sweep parents are retained through their enclosing/owned rows. Shared variants count one active owner plus rowid base16 and named scalar bytes, with inactiveNULL cells costing zero. Optional scalar None costs zero semantic cells; finite f64 contributes REAL8+word8+class bytes, nonfinite NULL+word8+class bytes.
+
+Native compare_text now advances through bounded65536byte spans under scoped stage rather than an uncheckpointed whole-key prefix scan. Shape/variant plans are borrowed; the census precedes typed native reconstruction. No restored type birth or codec-produced expected data was used by this audit. The independently frozen witness row expectation remains3,972.
+
+Remaining proof is original Native compilation/execution, including3971refusal/3972admission, exactvaluebyte boundary, canonical47maps/93tables roundtrip, seven-anchor vector, defaults, signaling/fullNaN payload, ownership/unusedchildren and publicIO registry hooks. Static consistency does not establish any of those runtime laws. No newly proven draft defect found in the reviewed scope; no production edits.

@@ -1,0 +1,19 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+      "sha256": "d5b1c85a19cb1c57785fc8996c332b12c701d35af15402bcac3cdbf2a40d9602"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+      "sha256": "d98f99b7b94a73ec524f6543dcf3f8d61edf8a0e51428fc7cc7414dc08305c6f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts",
+      "sha256": "3dbd8ea82b0e9ac62a33a4419d592e960ac15cbb07e429566fc5b0e899300967"
+    }
+  ],
+  "acquisition": "failed-before-graphs",
+  "scope": "exact verifier and Registry defining TS fixture references"
+}

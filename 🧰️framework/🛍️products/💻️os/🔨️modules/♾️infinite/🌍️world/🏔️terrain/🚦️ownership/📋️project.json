@@ -5,7 +5,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📜️script.ts\" test"
+        "command": "bun ./📜️script.ts test"
       }
     }
   }

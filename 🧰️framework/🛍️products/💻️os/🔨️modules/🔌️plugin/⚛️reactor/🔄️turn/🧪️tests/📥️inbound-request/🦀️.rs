@@ -84,7 +84,7 @@ fn every_inbound_request_row_is_answered_on_the_turn_it_arrives() {
     assert_eq!(fixture.seam.origin_tag, "shell");
     assert_eq!(fixture.seam.answered_on_turn, 1);
     ::semio_framework_async::poll::resolve_ready(async {
-        let runtime = crate::plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new();
+        let runtime = crate::plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::extension_deactivate().await;
         let mut installed = false;
         for (index, row) in fixture.rows.iter().enumerate() {

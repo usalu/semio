@@ -1,0 +1,44 @@
+{
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4,
+    "maximumCapacityBytes": 64,
+    "maximumReleaseBytes": 64,
+    "maximumDepth": 2
+  },
+  "cases": [
+    {
+      "id": "unicode",
+      "target": {
+        "artifactId": "ä🌐",
+        "artifactKind": "note",
+        "dialect": "de"
+      },
+      "mutationId": "note.set",
+      "payload": [
+        0,
+        127,
+        128,
+        255
+      ],
+      "label": "Übergabe"
+    },
+    {
+      "id": "empty",
+      "target": {
+        "artifactId": "",
+        "artifactKind": ""
+      },
+      "mutationId": "",
+      "payload": [],
+      "label": ""
+    }
+  ],
+  "collectionGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 4096,
+    "maximumReleaseBytes": 4096,
+    "maximumDepth": 4
+  }
+}

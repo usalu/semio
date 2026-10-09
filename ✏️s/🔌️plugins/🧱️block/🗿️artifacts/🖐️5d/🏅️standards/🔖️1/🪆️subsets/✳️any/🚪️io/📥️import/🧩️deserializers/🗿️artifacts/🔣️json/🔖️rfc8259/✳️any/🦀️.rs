@@ -37,7 +37,7 @@ impl Deserializer<Block5dSnapshot> for JsonIntoBlock5d {
             _ => Confidence::None,
         }
     }
-    async fn deserialize(payload: &IoPayload) -> IoResult<Block5dSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<Block5dSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "json→block5d: expected a text json payload".to_string())));
         };

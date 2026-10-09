@@ -1,0 +1,55 @@
+{
+  "qualification": "Intermediate authored logical blocks only; original-source hashes are observers, not whole-file attribution/full member runtime proof",
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "17179fe54914fc7c2b00dd478fdffe59fc451c2101e9ab10e2b8b36635425299",
+      "pathCharacters": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧫️fixtures/🔣️.json",
+      "sha256": "f8bb5153e42324548d63b59d9fe81986981c77dbd4e54e3b8e6a2758d23d926b",
+      "pathCharacters": 133
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "fcf5e45a60dfff4ec156ea4c7db06b883c93985e0175844fdb0907e8fe68d2a4",
+      "pathCharacters": 115
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "8e6b0a4553b8e6d0e7745a10ad16c22c71e93d39c2de45d71d5f364206e2db9d",
+      "pathCharacters": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "d006aa711b6ee7a4ec5ea17901615cbccc653feb82dbbcc086bd145f89110e3a",
+      "pathCharacters": 112
+    }
+  ],
+  "actions": [
+    "📥️buffer-law.json",
+    "📥️buffer-oracle.json",
+    "📥️buffer-actions.json",
+    "📥️buffer-native.json",
+    "📥️buffer-plain.json",
+    "📥️buffer-grammar.json",
+    "📥️buffer-fuel.json",
+    "📥️target-backing-law.json",
+    "📥️target-backing-action.json"
+  ],
+  "finalFocusedSource": {
+    "session": 28010,
+    "Nx": 0,
+    "seconds": 1.8,
+    "laws": 3,
+    "additionalDepthAssertions": 612,
+    "originalRustGrammarPaths": 10
+  },
+  "priorCombinedSource": {
+    "session": 25945,
+    "Nx": 0,
+    "seconds": 2.2,
+    "selectedLaws": 10
+  }
+}

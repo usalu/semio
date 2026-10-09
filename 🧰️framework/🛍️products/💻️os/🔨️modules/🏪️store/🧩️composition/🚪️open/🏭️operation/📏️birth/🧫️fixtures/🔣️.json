@@ -33,5 +33,39 @@
       "maximumItems": 1,
       "belowBirth": true
     }
-  ]
+  ],
+  "inputBuffer": {
+    "capacityBytes": 37,
+    "policy": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 4096,
+      "maximumReleaseBytes": 65536,
+      "maximumDepth": 8
+    }
+  },
+  "snapshotInput": {
+    "payloadBytes": 96,
+    "chunkMaximumBytes": 4096,
+    "copyGrants": [
+      0,
+      1,
+      2,
+      3,
+      64
+    ],
+    "policy": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 65536,
+      "maximumDepth": 64
+    },
+    "expected": {
+      "copiesPerPayloadByte": 2,
+      "sameSourceOnDenial": true,
+      "reportedAllocationEqualsSystem": true,
+      "terminalDropBytes": 0
+    }
+  }
 }

@@ -1,13 +1,10 @@
-//! 🧬️ Drawing mutation — `DuplicateLayer`: copies an existing layer to a new, content-addressed id
-//! right after its source.
+//! 🧬️ Drawing mutation with explicit source-to-target subtree identity facts.
 use crate::diff::DrawingDiff;
 use crate::mutations::DrawingMutation;
 use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
-/// 🧬️ `duplicate-layer` payload — source address only; the duplicate's id is deterministic
-/// (content-addressed from the source, see `engine::clone_drawing_layer_node`), so `diff`/`inverse`
-/// recompute it from BASE rather than carrying it.
+/// 📋️ Copies a layer using the complete admitted identity assignment set.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -15,12 +12,13 @@ use crate::DrawingSnapshot;
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "duplicate-layer")]
 pub struct DuplicateLayer {
+    pub identities: semio_framework_value::list::PagedList<crate::schema::identity::DrawingIdentityAssignment,{usize::MAX}>,
     pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn duplicate_layer(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> DrawingMutation {
-    DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id })
+pub fn duplicate_layer(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, identities: semio_framework_value::list::PagedList<crate::schema::identity::DrawingIdentityAssignment,{usize::MAX}>) -> DrawingMutation {
+    DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id, identities })
 }
 
 impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DuplicateLayer {

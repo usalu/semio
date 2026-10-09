@@ -43,3 +43,26 @@ test("♻️ completed planning transfers result fields and retains original res
   const owner=readFileSync(new URL("../../../🦀️.rs",import.meta.url),"utf8");expect(owner.includes("fn retain_completed_plan(")).toBe(true);expect(owner.includes("fn planning_retirement_demands(")).toBe(true);expect(owner.includes("fn retire_completed_plan(")).toBe(true);
   console.log("[DEBUG] completed preview/replay result partition preserves original ordinal/count residue; direct controlled plan retention and grant-preserving close are mounted");
 });
+
+
+test("original history cleanup authority is independent of its retirement demand",()=>{
+ const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ expect(law.cleanup).toBeDefined();
+ const contract=JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json",import.meta.url),"utf8"));
+ const validate=new Ajv({strict:false}).compile({...contract,$ref:"#/$defs/Grant"});
+ expect(validate(law.cleanup)).toBe(true);
+ expect(law.bodyRefusalCapacityBytes).toBe(0);
+ for(const copy of law.copyGrants)expect(validate({...law.cleanup,maximumCopyBytes:copy,maximumCapacityBytes:law.bodyRefusalCapacityBytes})).toBe(true);
+ for(const field of contract.$defs.Grant.required){const omitted={...law.cleanup};delete omitted[field];expect(validate(omitted)).toBe(false);expect(validate({...law.cleanup,[field]:-1})).toBe(false);}
+ const db=new Database(":memory:");
+ try{
+  db.run("CREATE TABLE caller(items INTEGER,copy INTEGER,capacity INTEGER,released INTEGER,depth INTEGER)");
+  const p=law.cleanup;db.run("INSERT INTO caller VALUES(?,?,?,?,?)",[p.maximumItems,p.maximumCopyBytes,p.maximumCapacityBytes,p.maximumReleaseBytes,p.maximumDepth]);
+  expect(db.query("SELECT items,copy,capacity,released,depth FROM caller").get()).toEqual({items:p.maximumItems,copy:p.maximumCopyBytes,capacity:p.maximumCapacityBytes,released:p.maximumReleaseBytes,depth:p.maximumDepth});
+ }finally{db.close();}
+ const native=readFileSync(new URL("./🦀️.rs",import.meta.url),"utf8");
+ expect(native.includes("fn cleanup_grant(")).toBe(true);
+ expect(native.includes(".max(work)")).toBe(false);expect(native.includes(".max(demand.copy_bytes)")).toBe(false);
+ const grants=[...native.matchAll(/let grant=([^;]+);/g)].map(match=>match[1]);expect(grants).toHaveLength(6);for(const grant of grants)expect(grant).toBe("cleanup_grant(&law)");
+ console.log("[DEBUG] original history caller authority / genuine Grant Ajv omissions / independent SQLite all axes / actual native Source preserves supplied policy; under-copy refusal denies alternate child-shell birth");
+});

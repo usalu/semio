@@ -1,0 +1,26 @@
+{
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
+      "sha256": "48c3238a19f9e41affda41b7dcb44ae21d381d9eee40f36d06dbbffe1d1776a7",
+      "role": "read-only peer/current production observer; not authored endpoint"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+      "sha256": "34b902f29de2b59866f39f8f0020c5ef8be34ef275372c5ae3a8897429467993",
+      "role": "read-only peer/current production observer; not authored endpoint"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "sha256": "4b1ac04d089167a5636f2e3e4a98a096c84b2d223620ec41f8f19b60570ac7d1",
+      "role": "read-only peer/current production observer; not authored endpoint"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-frame-job-unit/🦀️.rs",
+      "sha256": "676d6525a5ac26e880d9fe5c7259ea841a1f76462ead723ea48bfe0f800810e7",
+      "role": "read-only peer/current production observer; not authored endpoint"
+    }
+  ],
+  "sourceRed": "pub-frame4.md/actual9300, preserved meaningful phase grant failure",
+  "cargo": "none; Root50708 owns serial production acquisition"
+}

@@ -93,8 +93,30 @@ class LintScript extends BundleScript {
   }
 }
 
+/** 🗂️ Produces original reader evidence with caller-owned reporting and interruptible discovery. */
+class SchemaReadInventoryScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length && (segments.length !== 2 || segments[0] !== "--report")) throw new Error("Expected schema-read-inventory [--report <path>]");
+    const { inventorySchemaValidationReads } = await import("../../🔍️discovery/🟦️.ts"), controller = new AbortController(), cancel = (): void => controller.abort(new Error("Schema reader inventory cancelled"));
+    process.once("SIGINT", cancel);
+    try {
+      const index = await inventorySchemaValidationReads(this.repoRoot, undefined, { checkCancellation: () => { if (controller.signal.aborted) throw controller.signal.reason; }, onProgress: row => { if (row.completed === 0 || row.completed % 1024 === 0 || row.phase === "inspect" && row.completed === row.total) console.log(`[schema-read-inventory] ${row.phase} completed=${row.completed} total=${row.total ?? "unknown"}`); } });
+      if (segments.length) {
+        const target = resolve(this.repoRoot, segments[1]!);
+        if (target.length > 256 || [...target].length > 256) throw new Error("Schema reader report path exceeds 256 characters");
+        mkdirSync(resolve(target, ".."), { recursive: true }); writeFileSync(target, JSON.stringify(index, null, 2) + "\n");
+      }
+      console.log(`[DEBUG] original schema reader inventory sources=${index.reports.length} whole=${index.reports.reduce((count, row) => count + row.reads.filter(read => read.resolution === "whole").length, 0)} projected=${index.reports.reduce((count, row) => count + row.reads.filter(read => read.resolution === "projected").length, 0)} unresolved=${index.reports.filter(row => !row.completeSyntax || row.unresolved.length).length} unavailable=${index.unavailablePaths.length}`);
+    } finally { process.removeListener("SIGINT", cancel); }
+  }
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "schema-reads") {
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "schema-reads"), budgetMs: TEST_LEVEL_BUDGET_MS.quick });
+      return;
+    }
     if(segments[0]==="nx-owner-arguments-probe"){console.log("[DEBUG] ownerArgumentReceipt="+JSON.stringify({arguments:segments.slice(1),carrierPresent:process.env.SEMIO_OWNER_ARGUMENTS!==undefined}));return;}
 
     if(segments.length===1&&segments[0]==="nx-owner-arguments"){const {level}=resolveTestLevel([],"quick");await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"nx-owner-arguments"),budgetMs:TEST_LEVEL_BUDGET_MS[level]});return;}
@@ -136,7 +158,8 @@ class TestScript extends BundleScript {
     if (segments[0] === "nx-project-inference") {
       const revision = segments.length === 2 && segments[1] === "revision";
       const imports = segments.length === 2 && segments[1] === "imports";
-      if (!revision && !imports && segments.length !== 1) throw Error("Expected test nx-project-inference [revision|imports]");
+      const facts = segments.length === 2 && segments[1] === "facts";
+      if (!revision && !imports && !facts && segments.length !== 1) throw Error("Expected test nx-project-inference [revision|imports|facts]");
       if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
       if (revision) {
         const output = repoTestArtifactEnvironment(this.repoRoot, "nx-project-inference-revision").SEMIO_TEST_ARTIFACT_DIR!;
@@ -145,8 +168,8 @@ class TestScript extends BundleScript {
         console.log("[nx-project-inference] original Node/Bun graph revision laws passed");
         return;
       }
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🧪️tests", imports ? "🔍️imports/🟦️.ts" : "🟦️.ts");
-      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "nx-project-inference"), budgetMs: imports ? 180_000 : 30_000 });
+      const sources = facts ? ["🔁️context/🟦️.ts","📁️paths/🟦️.ts"].map(path=>join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔗️import-edges",path)) : [join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🧪️tests", imports ? "🔍️imports/🟦️.ts" : "🟦️.ts")];
+      await runRepositoryTestCommand(process.execPath, ["test", ...sources], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "nx-project-inference"), budgetMs: imports || facts ? 180_000 : 30_000 });
       return;
     }
     if (segments[0] === "rust-family-ownership") {
@@ -940,6 +963,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("owner-command", OwnerCommandScript)
   .register("typecheck", TypecheckScript)
   .register("lint", LintScript)
+  .register("schema-read-inventory", SchemaReadInventoryScript)
   .register("test", TestScript)
   .register("go-test", GoTestScript)
   .register("workspaces", WorkspacePublicationScript)

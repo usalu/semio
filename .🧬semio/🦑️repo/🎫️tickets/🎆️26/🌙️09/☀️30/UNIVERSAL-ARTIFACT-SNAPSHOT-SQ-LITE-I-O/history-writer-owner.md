@@ -1,0 +1,9 @@
+# Original History JSON Writer
+
+The actual SpaceHistorySnapshot SQLite native Text path had an obsolete two-argument JSON writer call. A concurrent edit replaced that productive path with an unconditional UnsupportedOwner refusal. Root restored the real borrowed original JsonWriteCursor path and removed that temporary refusal.
+
+Each iteration quotes the current original normal_step_demands, invokes one normal turn with separate item, copy, capacity, release and depth currencies, and verifies the actual normal_step_progress against that grant. The original NativeEncodeControl is reborrowed inside scoped_maximum at its current ceiling each turn, preserving cumulative owned bytes and restoring the original ceiling after the JSON cursor narrows admission. The existing outer SQL allocation ceiling and original cancellation observer remain. Current allocation_stage_native is used because this producer already receives the caller's original native controller; no fresh widened or forwarded replacement is introduced.
+
+An original owning law is mounted in the existing SpaceHistory SQLite tests and uses the existing schema-first neutral owner fixture. It compares complete Text output against independent Serde reconstruction, checks measured native/SQL charges, restores the original ceiling, checks prefunded3 exact and positive one-short native limits, and refuses a repeated operation on the same exhausted original ledger. No native execution is claimed yet. The original package test-space-history-sqlite-native selector already includes this law.
+
+Read-only audit found no concrete accounting defect in the restored path. Writer partial-state ordinary Drop on cancellation and the existing scalar256 retire_projection loop remain separate physical retirement frontiers. This grant integration does not qualify their cleanup or whole-history public IO runtime.

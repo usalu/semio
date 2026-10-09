@@ -1,0 +1,9 @@
+{
+  "target": "@semio-tech/value-rs:test",
+  "selectedLaw": "native_decode_caller_buffer_retains_actual_partial_allocation_on_cancel",
+  "originalPolicy": true,
+  "budgetOverride": false,
+  "featuresOverride": false,
+  "executed": false,
+  "beforeObservers": 156
+}

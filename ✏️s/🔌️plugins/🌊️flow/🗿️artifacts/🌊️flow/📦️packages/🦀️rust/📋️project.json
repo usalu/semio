@@ -33,7 +33,6 @@
       }
     },
     "test": {
-
       "executor": "nx:run-commands",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
@@ -168,6 +167,40 @@
         "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
+      }
+    },
+    "test-contributions-receiver": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify contributions-receiver",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "contributions-receiver"
+          ]
+        }
+      }
+    },
+    "test-contributions-syntax": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify contributions-syntax",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "contributions-syntax"
+          ]
+        }
       }
     }
   }

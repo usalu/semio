@@ -22,6 +22,17 @@
         "forwardAllArgs": true
       }
     },
+    "test-index-set": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-index-set",
+        "forwardAllArgs": true
+      }
+    },
     "test-index-entry": {
       "executor": "nx:run-commands",
       "dependsOn": [],
@@ -30,6 +41,17 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-index-entry",
+        "forwardAllArgs": true
+      }
+    },
+    "test-index-insertion": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-index-insertion",
         "forwardAllArgs": true
       }
     }

@@ -1,0 +1,20 @@
+# Guest Port Loan Mounted Current
+
+Read-only 2026-10-09. Mounted `🧰️framework/🔨️modules/🌱️value/🫴️receiving/🦀️.rs` reviewed; no compilation or runtime.
+
+Allocator correctly excludes original non-Send callback and recipient. It validates relative owned/next against remaining ceiling, calls authentic original port with absolute owned/max, and updates actual owned plus Atomic only after port success. Mutex retains first error by move, with no clone, and restores that actual error after operation returns. Observer maps same-direction actual callback with absolute ownership. No fresh opposite control is visible in this macro.
+
+Concrete remaining concerns:
+
+1. `EntityIdentityAuthority` still uses native `Observer = dyn FnMut(...) + Send` at entity-identity control root lines4–6. Receiver supplies plain non-Send observer borrowing original non-Send callback. The Send allocator fix does not make this observer Send; direct `new_forwarded` remains incompatible. Separate synchronous borrowed authority from authority allowed to move across native futures; do not assert unsafe Send or require all original callbacks Send without the actual contract change.
+2. Receiving root declares test module `🧪️tests/🦀️.rs` at bottom, but file was absent during this read. If still absent, any Value test build fails before laws run. Parent may be authoring concurrently.
+3. StageScope is now RAII in encode root24–25 and decode root26–27, preserving cumulative owned on unwind. It restores parent work only if stage changed. Macro first observer always increments stage (work None), so callback panics after field mutation restore parent. Initial original checkpoint can mutate started before a stage change; this preserves current pre-existing scoped-stage semantics, but does not promise exact original started restoration in all refusal paths.
+4. Observer validates relative progress owned against Atomic and finite completed/total before mutation, then sets original work and calls callback. Same-total decreasing progress is treated as a new stage rather than refusal; this is valid only if actual guest protocol permits restarted stages. No final relative receipt check appears in macro; receiving helper/operation must enforce it (OriginalOperationReceiver does for its own flow).
+5. Allocator can be called directly without first facade progress/cancellation. It intentionally cannot call original callback. Therefore the API must require actual controlled facade charge/preflight, or tests must prove direct port requests cannot bypass cancellation. Original initial checkpoint covers entry only.
+6. If operation catches an allocator/observer refusal and continues, first refusal is retained but macro does not stop subsequent callbacks/allocations. Add sticky refusal gating if contract requires no additional admission after first refusal. Current counters still reflect every successfully admitted request; no rollback is present.
+
+Meaningful missing laws: original non-Send callback with genuine Send allocation port; prefunded absolute port receipt; original port refusal retaining original cause without clone and zero request delta; observer cancel before first allocation; caught refusal followed by attempted extra allocation; unwind after accepted charge restoring parent work and preserving owned; malformed progress/relative request; installed original retirement recipient unchanged.
+
+GUI config: `.vscode/launch.json:48299–48309` is `🌱️Value 🦀️native 🧪️test`, command `bun nx run @semio-tech/value-rs:test --skip-nx-cache`, group9_gates/order900.05746. This is actual existing full Value test configuration. Add a targeted original receiving choice beside this block using the existing Value script/Nx interface; no alternative script file.
+
+Socket native tests still use raw decoder at lines52,72,76,89 and provider export at101 of renderer `🪶️sqlite/🧪️tests/🦀️.rs`. Wrap actual same decoder in `NativeSnapshotDecodeOwner` with independently authored native_grant for new signature. Provider import101 also still passes raw encoder rather than snapshot encoder owner. These are current source incompatibilities, not test results.

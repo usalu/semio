@@ -12,9 +12,9 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 
 fn prepared_close_gate(grant: RetainedCloneGrant, terminal: bool, release: Result<usize, ValueError>) -> Option<CloseStep> {
     if terminal { return Some(CloseStep::Complete { progress: RetainedCloneProgress::default() }); }
-    let bytes = match release { Ok(bytes) => bytes, Err(error) => return Some(CloseStep::Refused(error.kind)) };
+    let bytes = match release { Ok(bytes) => bytes, Err(error) => return Some(CloseStep::Refused { kind: error.kind, progress: error.retained_progress() }) };
     if grant.maximum_items == 0 || bytes > grant.maximum_release_bytes { return Some(CloseStep::Pending { progress: RetainedCloneProgress::default() }); }
-    if grant.maximum_depth == 0 { return Some(CloseStep::Refused(ValueRefusalKind::DepthLimit)); }
+    if grant.maximum_depth == 0 { return Some(CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }); }
     None
 }
 
@@ -45,14 +45,14 @@ fn prepared_close_text(key: &mut String) -> usize {
 fn prepared_close_bytes(bytes: &mut Vec<u8>, grant: RetainedCloneGrant) -> CloseStep {
     if !bytes.is_empty() {
         if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 { return CloseStep::Pending { progress: RetainedCloneProgress::default() } }
-        if grant.maximum_depth == 0 { return CloseStep::Refused(ValueRefusalKind::DepthLimit) }
+        if grant.maximum_depth == 0 { return CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() } }
         let processed = bytes.len().min(grant.maximum_copy_bytes);
         bytes.truncate(bytes.len() - processed);
         return CloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: processed, ..Default::default() } }
     }
     let release = bytes.capacity();
     if grant.maximum_items == 0 || release > grant.maximum_release_bytes { return CloseStep::Pending { progress: RetainedCloneProgress::default() } }
-    if grant.maximum_depth == 0 { return CloseStep::Refused(ValueRefusalKind::DepthLimit) }
+    if grant.maximum_depth == 0 { return CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() } }
     drop(std::mem::take(bytes));
     prepared_close_progress(release)
 }
@@ -75,7 +75,7 @@ fn prepared_abandoned_close<'a, T: 'a>(mut slots: impl Iterator<Item = (&'a Atom
     let mut value = unsafe { Box::from_raw(pointer) };
     let step = if empty(&value) {
         if grant.maximum_items == 0 || grant.maximum_release_bytes < size_of::<T>() { CloseStep::Pending { progress: RetainedCloneProgress::default() } }
-        else if grant.maximum_depth == 0 { CloseStep::Refused(ValueRefusalKind::DepthLimit) }
+        else if grant.maximum_depth == 0 { CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() } }
         else { drop(value); state.store(0, Ordering::Release); return prepared_close_progress(size_of::<T>()) }
     } else { prepared_close_child(close(&mut value, grant)) };
     owner.store(Box::into_raw(value), Ordering::Release);
@@ -269,7 +269,7 @@ impl<T> PreparedFixedList<T> {
     fn close_backing_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
         let demand = self.next_close_release_byte_demand();
         if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty(), demand.clone()) { return step; }
-        if self.len != 0 { return CloseStep::Refused(ValueRefusalKind::InvariantViolated); }
+        if self.len != 0 { return CloseStep::Refused { kind: ValueRefusalKind::InvariantViolated, progress: RetainedCloneProgress::default() }; }
         self.release_backing_step();
         prepared_close_progress(demand.unwrap_or(0))
     }
@@ -744,7 +744,7 @@ impl PreparedAtlasAbandonment {
     }
 
     fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
-        let demand = match self.next_close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return CloseStep::Refused(error.kind) };
+        let demand = match self.next_close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return CloseStep::Refused { kind: error.kind, progress: error.retained_progress() } };
         if let Some(step) = prepared_close_gate(grant, self.terminal_is_empty(), Ok(demand.maximum_release_bytes)) { return step; }
         let before = (self.len, self.slots.is_some(), self.permit.as_ref().map(|permit| permit.release_phase));
         self.close_step();
@@ -1537,7 +1537,7 @@ impl PreparedRenderUpload {
             Self::RasterPages { key, pixels } => return pixels.close_with_key_granted(key, grant),
             Self::SceneRaster { key, lease } => {
                 if key.capacity() != 0 { prepared_close_text(key); }
-                else { return match lease.close_step(grant) { Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)) => CloseStep::Pending { progress }, Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => CloseStep::Complete { progress }, Err(error) => CloseStep::Refused(error.kind) }; }
+                else { return match lease.close_step(grant) { Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)) => CloseStep::Pending { progress }, Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => CloseStep::Complete { progress }, Err(error) => CloseStep::Refused { kind: error.kind, progress: error.retained_progress() } }; }
             }
             Self::Mesh { key, .. } => { prepared_close_text(key); }
         }
@@ -1875,7 +1875,7 @@ impl PreparedRenderPacket {
             4 => self.limits = PreparedRenderLimits::default(),
             5 => {
                 if self.abandonment_slot != u8::MAX {
-                    let Some(state) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return CloseStep::Refused(ValueRefusalKind::InvariantViolated); };
+                    let Some(state) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return CloseStep::Refused { kind: ValueRefusalKind::InvariantViolated, progress: RetainedCloneProgress::default() }; };
                     let current = state.load(Ordering::Acquire);
                     if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return CloseStep::Blocked; }
                     self.abandonment_slot = u8::MAX;
@@ -2172,7 +2172,7 @@ impl PreparedRenderInput {
             return prepared_close_progress(0);
         }
         if self.abandonment_slot != u8::MAX {
-            let Some(state) = PREPARED_RENDER_INPUT_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return CloseStep::Refused(ValueRefusalKind::InvariantViolated); };
+            let Some(state) = PREPARED_RENDER_INPUT_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return CloseStep::Refused { kind: ValueRefusalKind::InvariantViolated, progress: RetainedCloneProgress::default() }; };
             let current = state.load(Ordering::Acquire);
             if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return CloseStep::Blocked; }
             self.abandonment_slot = u8::MAX; return prepared_close_progress(0);
@@ -2425,7 +2425,7 @@ impl PreparedRenderReceiver {
     fn close_granted(&mut self, grant: RetainedCloneGrant) -> CloseStep {
         if !self.owned { return CloseStep::Complete { progress: RetainedCloneProgress::default() }; }
         if grant.maximum_items == 0 { return CloseStep::Pending { progress: RetainedCloneProgress::default() }; }
-        if grant.maximum_depth == 0 { return CloseStep::Refused(ValueRefusalKind::DepthLimit); }
+        if grant.maximum_depth == 0 { return CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }; }
         let Some(slot) = PREPARED_RENDER_MAILBOX.get(usize::from(self.slot)) else { self.owned = false; return prepared_close_progress(0); };
         if slot.generation.load(Ordering::Acquire) != self.generation { self.owned = false; return prepared_close_progress(0); }
         if slot.state.load(Ordering::Acquire) == 1 && slot.packet.load(Ordering::Acquire).is_null() {
@@ -2678,7 +2678,7 @@ impl PreparedRenderJob {
         if !self.closing { return CloseStep::Blocked }
         if self.terminal_is_empty() { return CloseStep::Complete { progress: RetainedCloneProgress::default() }; }
         if grant.maximum_items == 0 { return CloseStep::Pending { progress: RetainedCloneProgress::default() }; }
-        if grant.maximum_depth == 0 { return CloseStep::Refused(ValueRefusalKind::DepthLimit); }
+        if grant.maximum_depth == 0 { return CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }; }
         if let Some(upload) = self.rejected_upload.as_mut() {
             if !upload.terminal_is_empty() { return prepared_close_child(upload.close_granted(grant)) }
             self.rejected_upload = None; return prepared_close_progress(0)
@@ -2697,7 +2697,7 @@ impl PreparedRenderJob {
         }
         if !self.receiver.terminal_is_empty() { return prepared_close_child(self.receiver.close_granted(grant)) }
         if self.abandonment_slot != u8::MAX {
-            let Some(state) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return CloseStep::Refused(ValueRefusalKind::InvariantViolated) };
+            let Some(state) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return CloseStep::Refused { kind: ValueRefusalKind::InvariantViolated, progress: RetainedCloneProgress::default() } };
             let current = state.load(Ordering::Acquire);
             if !matches!(current, 1 | 3) || state.compare_exchange(current, if current == 3 { 3 } else { 0 }, Ordering::AcqRel, Ordering::Acquire).is_err() { return CloseStep::Blocked }
             self.abandonment_slot = u8::MAX; return prepared_close_progress(0)
@@ -2804,7 +2804,7 @@ impl PreparedRenderJob {
         let mut job = unsafe { Box::from_raw(pointer) };
         let step = if job.terminal_is_empty() {
             if grant.maximum_items == 0 || grant.maximum_release_bytes < size_of::<Self>() { CloseStep::Pending { progress: RetainedCloneProgress::default() } }
-            else if grant.maximum_depth == 0 { CloseStep::Refused(ValueRefusalKind::DepthLimit) }
+            else if grant.maximum_depth == 0 { CloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() } }
             else {
                 drop(job); PREPARED_RENDER_JOB_ABANDONMENT_STATE[slot].store(0, Ordering::Release);
                 return prepared_close_progress(size_of::<Self>())

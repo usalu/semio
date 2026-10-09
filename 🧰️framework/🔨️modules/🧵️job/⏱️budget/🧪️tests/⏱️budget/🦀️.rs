@@ -44,11 +44,11 @@ fn microsecond_zero_expired_or_empty_fuel_never_enters_job() {
     for (fuel, deadline) in [(1, 1_000), (1, 999), (0, 1_500)] {
         let mut probe = EntryProbe { entered: 0, closing: false };
         let mut sequence = 0;
-        let outcome = drive_step(&mut probe, "microsecond-entry", allocate_operation_id(), Generation(1), InteractiveStage::InteractiveStep, StepBudget::new(fuel, deadline), root_cancel_token(), now, &mut sequence, &mut None);
+        let outcome = drive_step(&mut probe, "microsecond-entry", allocate_operation_id(), Generation(1), InteractiveStage::InteractiveStep, StepBudget::new(fuel, deadline,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), now, &mut sequence, &mut None);
         probe.begin_close();
         assert_eq!(probe.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:4_096,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()});
         assert!(probe.terminal_is_empty());
-        assert!(matches!(outcome, StepOutcome::Yield));
+        assert!(matches!(outcome.0, StepOutcome::Yield));
         assert_eq!(probe.entered, 0, "expired or exhausted grant entered job: fuel={fuel}, deadline={deadline}");
     }
 }
@@ -60,14 +60,14 @@ fn microsecond_language_neutral_deadline_boundaries_and_overflow() {
         let start = law["start"].as_str().unwrap().parse::<u64>().unwrap();
         let fuel = law["fuel"].as_u64().unwrap();
         let grant = law["grant"].as_u64().unwrap();
-        let budget = StepBudget::from_duration(fuel, start, grant);
+        let budget = StepBudget::from_duration(fuel, start, grant,crate::component::TEST_RETAINED_POLICY);
         assert_eq!(budget.map(|value| value.deadline_us.to_string()), law["deadline"].as_str().map(str::to_owned), "{}", law["id"]);
         for (index, sample) in law["samples"].as_array().unwrap().iter().enumerate() {
             bind_clock(Some(sample.as_str().unwrap().parse().unwrap()));
             let mut sequence = 0;
             let (expired, yielded) = match budget {
                 Some(budget) => {
-                    let cx = StepContext::new(allocate_operation_id(), Generation(1), budget, root_cancel_token(), now, &mut sequence);
+                    let mut actual_retained_progress=RetainedCloneProgress::default();let cx = StepContext::new(allocate_operation_id(), Generation(1), budget, root_cancel_token(), now, &mut sequence,&mut actual_retained_progress);
                     (cx.deadline_exceeded(), cx.should_yield())
                 }
                 None => (true, true),
@@ -82,17 +82,14 @@ fn microsecond_language_neutral_deadline_boundaries_and_overflow() {
 
 //#region 🧵️RetainedWorker
 fn close_authority(mut authority: WorkerJobAuthorityOwner<EntryProbe>) -> usize {
-    let job = authority.job.as_mut().unwrap();
+    let job = authority.job.original_mut().unwrap();
     job.begin_close();
     assert_eq!(job.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:4_096,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()});
     assert!(job.terminal_is_empty());
     let entered = job.entered;
-    if let Some(outcome) = authority.outcome.as_mut() {
-        while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
-    }
-    if let Some(fault) = authority.preadmitted_fault.as_mut() {
-        while !fault.terminal_is_empty() { let _ = fault.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
-    }
+    while !authority.outcome.is_empty() { let _ = close_step_outcome_slot(&mut authority.outcome, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
+    while !authority.preadmitted_fault.is_empty() { let _ = authority.preadmitted_fault.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
+    authority.job.remove_terminal(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64}).unwrap();
     entered
 }
 
@@ -100,10 +97,10 @@ fn close_authority(mut authority: WorkerJobAuthorityOwner<EntryProbe>) -> usize 
 fn microsecond_retained_worker_admits_half_ms_and_rejects_missing_or_overflow_clock() {
     for (clock, grant, fuel, expected_entries, faulted) in [(Some(1_000), 500, 1, 1, false), (Some(1_000), 0, 1, 0, false), (Some(1_000), 500, 0, 0, false), (None, 500, 1, 0, true), (Some(u64::MAX - 100), 500, 1, 0, true)] {
         bind_clock(clock);
-        let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { site: "microsecond-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: fuel, step_budget_us: grant }, now_us: now };
+        let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "microsecond-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: fuel, step_budget_us: grant }, now_us: now };
         let mut authority = WorkerJobAuthorityOwner::try_new(EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
         let terminal = drive_worker_job_authority(&mut authority);
-        let actual_fault = matches!(authority.outcome, Some(StepOutcome::Fault(_)));
+        let actual_fault = matches!(authority.outcome.original(), Some(StepOutcome::Fault(_)));
         let entered = close_authority(authority);
         assert_eq!(terminal, faulted);
         assert_eq!(actual_fault, faulted);
@@ -130,7 +127,7 @@ fn microsecond_platform_clock_and_real_half_ms_worker_progress() {
     assert!(submillisecond_sample, "platform clock lost microsecond precision");
     let entered = (0..REAL_CLOCK_ATTEMPTS)
         .map(|_| {
-            let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { site: "microsecond-real-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: default_now_us };
+            let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "microsecond-real-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: default_now_us };
             let mut authority = WorkerJobAuthorityOwner::try_new(EntryProbe { entered: 0, closing: false }, params).unwrap_or_else(|_| panic!("fixture payload admission"));
             assert!(!drive_worker_job_authority(&mut authority), "a spent real grant yields, it never terminates");
             close_authority(authority)
@@ -164,8 +161,8 @@ fn microsecond_exact_callback_quarantine_retains_original_output_and_session_ide
     let generation = Generation(71);
     for law in fixture["verdicts"].as_array().unwrap().iter().filter(|law| !law["start"].is_null()) {
         bind_clock(law["start"].as_u64());
-        let params = BatchJobParams { operation, generation, cancel: root_cancel_token(), config: BatchDriveConfig { site: "microsecond-exact-quarantine", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: now };
-        let session = WorkerJobSession::try_new(CompletionProbe { end: law["end"].as_u64(), closing: false }, params).unwrap_or_else(|_| panic!("exact worker admission"));
+        let params = BatchJobParams { operation, generation, cancel: root_cancel_token(), config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "microsecond-exact-quarantine", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: now };
+        let mut session = WorkerJobSession::try_new(CompletionProbe { end: law["end"].as_u64(), closing: false }, params).unwrap_or_else(|_| panic!("exact worker admission"));
         assert!(matches!(session.try_step_on_caller(), Ok((_, WorkerJobPoll::Terminal))));
         let owner = session.take_terminal().unwrap_or_else(|_| panic!("exact terminal owner"));
         let verdict = owner.callback_verdict().expect("callback verdict is retained by the exact session");
@@ -177,23 +174,24 @@ fn microsecond_exact_callback_quarantine_retains_original_output_and_session_ide
         assert!(!quarantined || faulted, "a quarantine implies a breached sample");
         if quarantined {
             assert!(matches!(owner.outcome(), StepOutcome::Fault(_)));
-            let Some(StepOutcome::Complete(candidate)) = owner.authority.as_ref().unwrap().quarantined_outcome.as_ref() else { panic!("quarantined original candidate must remain owned") };
+            let Some(StepOutcome::Complete(candidate)) = owner.authority.as_ref().unwrap().quarantined_outcome.original() else { panic!("quarantined original candidate must remain owned") };
             assert_eq!(candidate.output.single_page(), Some(b"kept".as_slice()));
         } else {
             assert!(matches!(owner.outcome(), StepOutcome::Complete(_)));
-            assert!(owner.authority.as_ref().unwrap().quarantined_outcome.is_none());
+            assert!(owner.authority.as_ref().unwrap().quarantined_outcome.is_empty());
         }
-        let ledger = Arc::clone(&owner.authority.as_ref().unwrap().payload_ledger);
+        let ledger = Arc::clone(owner.authority.as_ref().unwrap().payload_ledger.as_ref().expect("original admitted worker ledger"));
         owner.begin_close();
         let owned_bytes = ledger.bytes.load(Ordering::Acquire);
         let _ = session.close_step(RetainedCloneGrant{maximum_items:0,maximum_release_bytes:0,maximum_depth:64,..RetainedCloneGrant::default()});
         assert_eq!(ledger.bytes.load(Ordering::Acquire), owned_bytes);
         let mut released_bytes = 0;
         for _ in 0..64 {
-            match session.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64,..RetainedCloneGrant::default()}) {
-                WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:released_items,released_bytes:bytes,..}} => { assert!(released_items <= 1 && bytes <= JOB_PAYLOAD_PAGE_BYTES); released_bytes += bytes; }
+            let phase=session.close_phase();let caller=super::retained_ownership_tests::caller_worker_close_policy(phase);
+            match session.close_step(caller) {
+                WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:released_items,released_bytes:bytes,..}} => { assert!(released_items <= 1 && bytes <= caller.maximum_release_bytes); if matches!(phase,WorkerJobClosePhase::QuarantinedOutcome|WorkerJobClosePhase::Outcome|WorkerJobClosePhase::PreadmittedFault){assert!(bytes<=JOB_PAYLOAD_PAGE_BYTES);released_bytes += bytes;} }
                 WorkerJobCloseStep::Blocked => std::thread::yield_now(),
-            WorkerJobCloseStep::Refused(kind)=>panic!("original close grant refused: {kind:?}"),
+            WorkerJobCloseStep::Refused{kind,..}=>panic!("original close grant refused: {kind:?}"),
                 WorkerJobCloseStep::Complete {progress} => break,
             }
         }
@@ -236,19 +234,14 @@ impl InteractiveJob for SlowProbe {
 }
 
 fn close_slow_authority(mut authority: WorkerJobAuthorityOwner<SlowProbe>) -> usize {
-    let job = authority.job.as_mut().unwrap();
+    let job = authority.job.original_mut().unwrap();
     job.begin_close();
     assert_eq!(job.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:4_096,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()});
     let steps = job.steps;
-    if let Some(outcome) = authority.outcome.as_mut() {
-        while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
-    }
-    if let Some(outcome) = authority.quarantined_outcome.as_mut() {
-        while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
-    }
-    if let Some(fault) = authority.preadmitted_fault.as_mut() {
-        while !fault.terminal_is_empty() { let _ = fault.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
-    }
+    while !authority.outcome.is_empty() { let _ = close_step_outcome_slot(&mut authority.outcome, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
+    while !authority.quarantined_outcome.is_empty() { let _ = close_step_outcome_slot(&mut authority.quarantined_outcome, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
+    while !authority.preadmitted_fault.is_empty() { let _ = authority.preadmitted_fault.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
+    authority.job.remove_terminal(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64}).unwrap();
     steps
 }
 
@@ -259,7 +252,7 @@ fn drive_slow_probe(slow_steps: usize, attempts: usize) -> (usize, Option<usize>
         operation: allocate_operation_id(),
         generation: Generation(1),
         cancel: root_cancel_token(),
-        config: BatchDriveConfig { site: "sustained-overrun-probe", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: INTERACTIVE_LANE_WALL_US },
+        config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "sustained-overrun-probe", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: INTERACTIVE_LANE_WALL_US },
         now_us: now,
     };
     let mut authority = WorkerJobAuthorityOwner::try_new(SlowProbe { remaining_slow_steps: slow_steps, steps: 0, closing: false }, params).unwrap_or_else(|_| panic!("exact worker admission"));
@@ -269,8 +262,9 @@ fn drive_slow_probe(slow_steps: usize, attempts: usize) -> (usize, Option<usize>
             quarantined_at = Some(attempt);
             break;
         }
+        while !authority.outcome.is_empty() { close_step_outcome_slot(&mut authority.outcome, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap(); }
     }
-    assert_eq!(matches!(authority.outcome, Some(StepOutcome::Fault(_))), quarantined_at.is_some());
+    assert_eq!(matches!(authority.outcome.original(), Some(StepOutcome::Fault(_))), quarantined_at.is_some());
     let ledger = authority.overruns;
     let steps = close_slow_authority(authority);
     (steps, quarantined_at, ledger.consecutive_overruns(), ledger.total_overruns(), ledger.worst_elapsed_us())
@@ -316,3 +310,48 @@ fn microsecond_browser_clock_fraction_and_invalid_source_vectors() {
     assert!(before <= trace_sample && trace_sample <= after, "job and watchdog must share one monotonic epoch");
 }
 //#endregion 🌐️PlatformClock
+
+
+struct RetainedReceiptProbe{output:Vec<u8>,phase:u8,panic_after_birth:bool,closing:bool}
+impl RetainedReceiptProbe{
+ fn demand(&self)->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:usize::from(self.phase==1)*23,capacity_bytes:usize::from(self.phase==0)*64,release_bytes:usize::from(self.phase==2)*self.output.capacity(),depth:3}}
+}
+impl InteractiveJob for RetainedReceiptProbe{
+ fn step(&mut self,cx:&mut StepContext<'_>)->StepOutcome{
+  let grant=cx.retained_grant();let demand=self.demand();if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return StepOutcome::Yield;}
+  let progress=match self.phase{0=>{self.output.try_reserve_exact(64).unwrap();RetainedCloneProgress{copied_items:1,retained_capacity_bytes:self.output.capacity(),..Default::default()}},1=>{self.output.extend_from_slice(b"original source payload");cx.consume_fuel(2);RetainedCloneProgress{copied_items:1,copied_bytes:23,..Default::default()}},2=>{let bytes=self.output.capacity();drop(std::mem::take(&mut self.output));RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}},_=>return StepOutcome::Yield};
+  cx.consume_retained(progress).unwrap();self.phase+=1;if self.panic_after_birth{panic!("actual receipt survives producer panic");}StepOutcome::Yield
+ }
+ fn begin_close(&mut self){self.closing=true;}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep{if self.output.capacity()==0{return InteractiveJobCloseStep::Complete{progress:Default::default()};}if grant.maximum_items==0||grant.maximum_release_bytes<self.output.capacity()||grant.maximum_depth==0{return InteractiveJobCloseStep::Pending{progress:Default::default()};}let bytes=self.output.capacity();drop(std::mem::take(&mut self.output));InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}}}
+ fn terminal_is_empty(&self)->bool{self.closing&&self.output.capacity()==0}
+}
+
+#[test]
+fn original_job_step_context_conserves_actual_independent_retained_wallet(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["retained"];let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();let mut owner=StepContextOwner::new(OperationId(98143),Generation(17),RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:StepContextOwner::birth_bytes(),maximum_depth:1,..Default::default()}).unwrap().0;let cancel=root_cancel_token();let mut probe=RetainedReceiptProbe{output:Vec::new(),phase:0,panic_after_birth:false,closing:false};let mut progress=RetainedCloneProgress::default();let mut sequence=0;
+ for expected in law["receipts"].as_array().unwrap(){
+  let demand=probe.demand();let original=(probe.phase,probe.output.as_ptr(),probe.output.len(),probe.output.capacity());
+  for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),Some(RetainedCloneGrant{maximum_depth:2,..grant}),if demand.copy_bytes>0{Some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant})}else{None},if demand.capacity_bytes>0{Some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant})}else{None},if demand.release_bytes>0{Some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant})}else{None}].into_iter().flatten(){let mut refused=RetainedCloneProgress::default();let mut refused_sequence=0;let mut cx=owner.context(StepBudget::new(7,1500,denied),cancel.clone(),now,&mut refused_sequence,&mut refused).unwrap();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||probe.step(&mut cx));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),Default::default());assert_eq!((probe.phase,probe.output.as_ptr(),probe.output.len(),probe.output.capacity()),original);}
+  let before=progress;let mut cx=owner.context(StepBudget::new(7,1500,grant),cancel.clone(),now,&mut sequence,&mut progress).unwrap();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||probe.step(&mut cx));let actual=cx.retained_progress();let receipt=RetainedCloneProgress{copied_items:actual.copied_items-before.copied_items,copied_bytes:actual.copied_bytes-before.copied_bytes,retained_capacity_bytes:actual.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:actual.released_bytes-before.released_bytes};assert_eq!(receipt,serde_json::from_value(expected.clone()).unwrap());assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(heap.requested_bytes,heap.released_bytes));assert_eq!(cx.operation(),OperationId(98143));assert_eq!(cx.generation(),Generation(17));assert_eq!(cx.deadline_us(),1500);assert_eq!(cx.fuel_remaining(),if probe.phase==2{5}else{7});if probe.phase==2{assert_eq!(std::str::from_utf8(&probe.output).unwrap(),law["source"].as_str().unwrap());}
+ }
+ let mut cx=owner.context(StepBudget::new(7,1500,grant),cancel.clone(),now,&mut sequence,&mut progress).unwrap();assert_eq!(cx.retained_grant(),serde_json::from_value(law["remaining"].clone()).unwrap());drop(cx);probe.begin_close();assert!(probe.terminal_is_empty());while !owner.terminal_is_empty(){owner.close_step(crate::component::TEST_RETAINED_POLICY);}eprintln!("[DEBUG] actual original StepContext same operation/source, separate born64/copy23/free64, zero/short allocator0, actual valid child receipts remain in original recipient, fuel7/deadline1500 independent");
+}
+
+#[test]
+fn original_worker_job_retains_actual_step_receipt_across_producer_panic(){
+ bind_clock(Some(1000));let grant=RetainedCloneGrant{maximum_items:3,maximum_copy_bytes:23,maximum_capacity_bytes:64,maximum_release_bytes:65536,maximum_depth:3};let params=BatchJobParams{operation:OperationId(98144),generation:Generation(17),cancel:root_cancel_token(),config:BatchDriveConfig{retained:grant,site:"actual-retained-receipt-panic",stage:InteractiveStage::InteractiveStep,fuel_per_step:7,step_budget_us:500},now_us:now};let mut authority=WorkerJobAuthorityOwner::try_new(RetainedReceiptProbe{output:Vec::new(),phase:0,panic_after_birth:true,closing:false},params).unwrap_or_else(|_|panic!("original worker owner admission"));assert!(drive_worker_job_authority(&mut authority));assert_eq!(authority.retained_step_progress,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:64,..Default::default()});assert_eq!(authority.retained_progress,authority.retained_step_progress);let pointer=authority.job.original().unwrap().output.as_ptr();assert_eq!(authority.job.original().unwrap().output.capacity(),64);authority.job.original_mut().unwrap().begin_close();assert_eq!(authority.job.original().unwrap().output.as_ptr(),pointer);authority.job.original_mut().unwrap().close_step(crate::component::TEST_RETAINED_POLICY);authority.job.remove_terminal(crate::component::TEST_RETAINED_POLICY).unwrap();while !authority.outcome.is_empty(){close_step_outcome_slot(&mut authority.outcome,crate::component::TEST_RETAINED_POLICY).unwrap();}while !authority.preadmitted_fault.is_empty(){authority.preadmitted_fault.close_step(crate::component::TEST_RETAINED_POLICY).unwrap();}authority.params=None;while !authority.0.is_empty(){authority.close_terminal_worker_authority(crate::component::TEST_RETAINED_POLICY);}eprintln!("[DEBUG] actual original worker panic retains born64 receipt and same original deep allocation until funded close");
+}
+
+#[test]
+fn original_job_failed_receipt_ingress_keeps_actual_external_recipient(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../⏱️context/📦️owner/⚠️failure/🧫️fixtures/🔣️.json")).unwrap();
+ let mut owner=StepContextOwner::new(OperationId(98145),Generation(17),RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:StepContextOwner::birth_bytes(),maximum_depth:1,..Default::default()}).unwrap().0;
+ let mut sequence=0;let mut recipient=RetainedCloneProgress::default();let mut probe=RetainedReceiptProbe{output:Vec::new(),phase:0,panic_after_birth:false,closing:false};
+ let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:64,maximum_depth:3};let mut cx=owner.context(StepBudget::new(7,1500,grant),root_cancel_token(),now,&mut sequence,&mut recipient).unwrap();
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{probe.output.try_reserve_exact(law["producerBytes"].as_u64().unwrap()as usize).unwrap();let progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:probe.output.capacity(),..Default::default()};cx.consume_retained(progress)});
+ let error=result.unwrap_err();let actual=cx.retained_progress();assert_eq!(actual.retained_capacity_bytes,heap.requested_bytes);assert_eq!(heap.released_bytes,0);assert_eq!(error.retained_progress(),actual);assert_eq!(error.kind,ValueRefusalKind::InvariantViolated);assert_eq!(cx.retained_grant().maximum_capacity_bytes,0);assert_eq!(cx.retained_grant().maximum_items,0);assert_eq!(cx.fuel_remaining(),7);assert_eq!(cx.deadline_us(),1500);assert_eq!(cx.operation(),OperationId(98145));let pointer=probe.output.as_ptr();
+ let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.retained_grant());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));drop(cx);assert_eq!(recipient,actual);assert_eq!(probe.output.as_ptr(),pointer);probe.begin_close();
+ let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||probe.close_step(grant));assert_eq!(step.progress().released_bytes,actual.retained_capacity_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,actual.retained_capacity_bytes));assert!(probe.terminal_is_empty());while !owner.terminal_is_empty(){owner.close_step(crate::component::TEST_RETAINED_POLICY);}
+ eprintln!("[DEBUG] actual failed Job child born64 survives denied incoming capacity0 in same external recipient and error; remaining0/fuel7/deadline1500, original pointer until granted free64");
+}

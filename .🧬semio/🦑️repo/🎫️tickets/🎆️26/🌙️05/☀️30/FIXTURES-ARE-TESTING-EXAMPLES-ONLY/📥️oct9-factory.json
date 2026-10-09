@@ -1,0 +1,18 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+  "beforeSHA": "132276735c42964b57384360b221bc1a5052e85d98633a7a401d8929949b2b19",
+  "afterSHA": "d4bb12dd49671430a670c66218d7067ec6298cd1dee3390af162ced08fb72345",
+  "actions": [
+    {
+      "scope": "impl semio_framework_value::FactoryPayloadRetirement for DemoPublishedRootWitness",
+      "beforeBlockSHA": "bca22262c35410e62f7b57639836ba38017231bf4d6f93342e02b0b6d0858ce8",
+      "afterBlockSHA": "5fe33b86aedc84b9799ddf0a93eccd6ed4f921787db19e0d6f78aaafea50ed9c"
+    },
+    {
+      "scope": "impl semio_framework_value::FactoryPayloadRetirement for DemoOneItemPreparationFactory",
+      "beforeBlockSHA": "b0f435771f1a394c49a2fd1f8a5b7cd4cc7767be38504c21dcd7252633d87a07",
+      "afterBlockSHA": "50ed4884e95ac86534acea44e497f7ed0eb8124cda0d90bf510163cde7f70b84"
+    }
+  ],
+  "nativeExecuted": false
+}

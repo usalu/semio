@@ -1,0 +1,17 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"semio.pack.json.normal-refusal-receipt.v1",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["version","source","limits","preparationGrant","closeGrant","maximumTurns","cases"],
+  "properties":{
+    "version":{"const":1},
+    "source":{"type":"string"},
+    "limits":{"type":"object","additionalProperties":false,"required":["maximumBytes","maximumAllocationBytes","maximumDepth","maximumItems"],"properties":{"maximumBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"maximumAllocationBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"maximumDepth":{"type":"integer","minimum":1,"maximum":128},"maximumItems":{"type":"integer","minimum":0,"maximum":9007199254740991}}},
+    "preparationGrant":{"$ref":"#/$defs/grant"},
+    "closeGrant":{"$ref":"#/$defs/grant"},
+    "maximumTurns":{"type":"integer","minimum":1,"maximum":9007199254740991},
+    "cases":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"object","additionalProperties":false,"required":["frontier","grant","receipt"],"properties":{"frontier":{"enum":["utf8Scan","stringCapacity","stringCopy"]},"grant":{"$ref":"#/$defs/grant"},"receipt":{"type":"object","additionalProperties":false,"required":["copiedItems","copiedBytes","retainedCapacityBytes","releasedBytes"],"properties":{"copiedItems":{"const":1},"copiedBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"retainedCapacityBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"releasedBytes":{"const":0}}}}}}
+  },
+  "$defs":{"grant":{"type":"object","additionalProperties":false,"required":["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"],"properties":{"maximumItems":{"type":"integer","minimum":0,"maximum":9007199254740991},"maximumCopyBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"maximumCapacityBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"maximumReleaseBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"maximumDepth":{"type":"integer","minimum":0,"maximum":9007199254740991}}}}
+}

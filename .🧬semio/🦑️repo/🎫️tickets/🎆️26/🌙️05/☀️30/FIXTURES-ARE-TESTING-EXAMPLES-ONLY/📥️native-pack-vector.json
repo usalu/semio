@@ -1,0 +1,41 @@
+{
+  "command": [
+    "bun",
+    "nx",
+    "run",
+    "@semio-tech/framework-pack-json-rs:test-native",
+    "--skip-nx-cache",
+    "--outputStyle=static",
+    "--",
+    "long",
+    "--lib",
+    "borrowed_json_writer_preserves_actual_post_birth_cancellation_receipt",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "state": "PLANNED ONLY; no process",
+  "projectPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json",
+  "scriptPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+  "originalPackage": "semio-framework-pack-json",
+  "level": "long",
+  "policy": "original inferred SEMIO_CARGO_TEST_POLICY, no override",
+  "storage": {
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build",
+    "SEMIO_COMPILER_RESOURCE_ROOT": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/semio-compiler-resources"
+  },
+  "noChanges": [
+    "features",
+    "compiler profile",
+    "native budgets",
+    "package roster",
+    "source copying",
+    "global setup",
+    "dependency skip"
+  ],
+  "constraint": "Root Kernel48189 must be terminal with serial Cargo slot released before execution"
+}

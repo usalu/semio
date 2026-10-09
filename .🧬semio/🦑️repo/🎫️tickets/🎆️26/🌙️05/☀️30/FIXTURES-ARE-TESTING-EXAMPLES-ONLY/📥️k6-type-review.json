@@ -1,0 +1,50 @@
+{
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+      "sha256": "2b404bd7d03907af1fcec7e5348ba9c67bd2d9fb02dd67eb8f7d2960cb6a195b",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️assign-n/🦀️.rs",
+      "sha256": "34f596432caf8bb961145d2ecdd049b8751d017d000de39dedd0be8f3cb1bf53",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/➕️add-n/🦀️.rs",
+      "sha256": "67bc03c875c783e31603d9633d1aa101887ab65abf726bc8666f4e93c99f7147",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔢️set-n/🦀️.rs",
+      "sha256": "9a2f6f32a14efece6b4c61b7c069752cdf6dccf4e911b1afc5e5d9ea3f1868f3",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🗑️delete-n/🦀️.rs",
+      "sha256": "b0d23ce698ba0e81139c3c882ef0fb72ce273a2a4e050e024610b4150c5906a2",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs",
+      "sha256": "46f1999b8f843ca5cf82f6ac74706e17d26c17f64dc2a78434478189d0aef917",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "500d2210ed1d07c7ef68342027d5f312be034bec962906943cd910a31a58eafb",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "6a24d5f28c116bd8702c28673ec039d853e3973b4c9d0e28b820094c1a310f7b",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+      "sha256": "0ae4e27cde1bb26956d4fc5e7fa3aba6265f2ef87bf6b2d8835b569390cb0353",
+      "authored": false
+    }
+  ]
+}

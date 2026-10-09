@@ -1,0 +1,35 @@
+{
+  "qualification": "Six whole-file current observers; exact authored blocks limited to action ledgers; source/grammar green, new catalog native law unrun",
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🦀️.rs",
+      "observedSha256": "34de4f1a74552a51f94ccf751912c609fe8b6515a7d8ab44d42ce7533a63566f",
+      "pathCharacters": 106
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧪️tests/🔬️unit/🦀️.rs",
+      "observedSha256": "42c8c08914e0cb02f00022ad49506589526b30672ad50406a5492c1205e631da",
+      "pathCharacters": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧫️fixtures/🔣️.json",
+      "observedSha256": "e71b0ed491e9b1fb9fdb7685dbf9abb0d3beeb0f393617692326e7d65681f7df",
+      "pathCharacters": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "observedSha256": "72e056ebe0214bed64888ed9abcabbf57a68a14113acaeb54052f1fb6a219116",
+      "pathCharacters": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "observedSha256": "8d5b0324c365302f4d2cf9621be826e0c01c031c0b922b526647d36f4689a280",
+      "pathCharacters": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+      "observedSha256": "9baddd88e5f12d7e14889223ad7af52dc5e743b6d8c94362c60b661f7ae1cea7",
+      "pathCharacters": 127
+    }
+  ]
+}

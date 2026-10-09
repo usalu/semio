@@ -1,0 +1,7 @@
+# Original Runtime Graph Acquisition Checkpoint
+
+Original normal workspace:runtime-fixture-graph session 64107 terminated naturally Nx exit 1 after 1m8s. Original project metadata declares the durable fixture-boundary-production Cargo target/build roots; no profile, flags, stack, operation budget, policy or proof waiver was supplied. Inherited Cargo/profile overrides were empty in the retained original input.
+
+The actual first guest-framework-check selected wasm32-wasip2 and the declared Framework/Replication/OS Kernel/OS/Plugin packages. Acquisition failed in the original selected Cargo preparation because the actual UI Rust Cargo.toml changed during preparation. That rejection was preserved. No cached or neutral witness was substituted. The original report has compilerArtifacts null, compilerProvenance empty, graphs empty, sourceIdentities empty and one runtime-unresolved-edge. This does not establish runtime purity, successful native compilation or any mounted publication.
+
+The owned Root session is terminal and the serial Cargo slot was released to Publication for the next justified actual native checkpoint. Foreign Kernel/UI compiler jobs were observed and preserved. The current source epoch may change under the required concurrent workflow; no global Source freeze or whole-observer authorship is claimed. Fresh acquisition is required after the current preparation/receiver cohort is coherent. Narrow inputs and result are retained in `📥️runtime-graph-current-input.json` and `📥️runtime-graph-current-result.json`.

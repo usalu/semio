@@ -1,0 +1,21 @@
+[
+  {
+    "name": "🧰️Framework 🛍️OS 🔎️Projection 🦀️Whole Original Kernel Test",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/framework-os-kernel:test --skip-nx-cache --skip-remote-cache --excludeTaskDependencies -- long --lib --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_BUILD_MODE": "ship",
+      "NX_TUI": "false",
+      "NX_DAEMON": "false",
+      "NX_SKIP_NX_CACHE": "true",
+      "NX_SKIP_REMOTE_CACHE": "true",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/hk/a"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 11.48
+    }
+  }
+]

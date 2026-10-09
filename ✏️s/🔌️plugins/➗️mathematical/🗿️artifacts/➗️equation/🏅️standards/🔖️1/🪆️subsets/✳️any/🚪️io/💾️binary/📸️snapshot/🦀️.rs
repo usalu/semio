@@ -37,8 +37,8 @@ impl EquationPackRecord{
 #[path="🛬️decode/🦀️.rs"]
 mod controlled;
 #[path="🛫️encode/🦀️.rs"]mod controlled_output;
-pub(crate) fn decode_sqlite_native(payload:&store::io::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<EquationSnapshot,ValueError>{let maximum_rows=control.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,"mathematical.equation",EquationPackRecord::__dsl_spec_producer(),|record,native|controlled::reconstruct(record,native,maximum_rows),control)}
-pub(crate) fn encode_sqlite_native(snapshot:&EquationSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<store::io::IoPayload,ValueError>{let maximum_rows=control.limits().max_rows;store::encode_sqlite_snapshot_record_native(encoding,"mathematical.equation",EquationPackRecord::__dsl_spec_producer(),|native|controlled_output::project(snapshot,maximum_rows,native),control)}
+pub(crate) fn decode_sqlite_native(payload:&store::io::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<EquationSnapshot,ValueError>{let maximum_rows=control.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,"mathematical.equation",EquationPackRecord::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {controlled::reconstruct(record,native,maximum_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+pub(crate) fn encode_sqlite_native(snapshot:&EquationSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{let maximum_rows=control.limits().max_rows;store::encode_sqlite_snapshot_record_native(encoding,"mathematical.equation",EquationPackRecord::__dsl_spec_producer(),|native|controlled_output::project(snapshot,maximum_rows,native),control,native_owner)}
 /// 🛬️ Bind the explicit owned fields and admit reverse construction before every allocation.
 pub(crate) fn reconstruct_pack_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>,maximum_rows:usize)->Result<EquationSnapshot,ValueError>{controlled::reconstruct(record,control,maximum_rows)}
 /// 🖨️ Print the literal owned equation records without recursively lowering the expression.
@@ -78,3 +78,9 @@ pub fn decode(bytes:&[u8])->Result<EquationSnapshot,PackError>{<EquationSnapshot
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+/// 🫴️ Declares this owner’s actual controlled native record factories.
+impl store::ArtifactNativeSnapshot for crate::EquationSnapshot {
+ fn decode_native_snapshot(payload:store::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as store::ArtifactDsl>::envelope_id(),pack::record_spec_producer(),|record,native|{let maximum=native.maximum_bytes();pack::reconstruct_record_controlled(record,native,maximum,maximum)},control)}
+ fn encode_native_snapshot(&self,encoding:store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as store::ArtifactDsl>::envelope_id(),pack::record_spec_producer(),|native|{let maximum=native.maximum_bytes();pack::record_controlled_semantic(self,native,maximum,maximum)},control)}
+}

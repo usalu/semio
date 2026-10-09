@@ -1,3 +1,4 @@
+import "../../🔍️discovery/📤️schema-registry/🧪️tests/🟦️.ts";
 import { requireRecord } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import "../🧬️mutation-authority/🟦️.ts";
 import "../🧾️canonical-json/🟦️.ts";

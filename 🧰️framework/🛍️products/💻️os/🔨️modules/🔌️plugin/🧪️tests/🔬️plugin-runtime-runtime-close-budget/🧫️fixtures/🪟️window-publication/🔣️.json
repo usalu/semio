@@ -1,0 +1,12 @@
+{
+  "schema": "framework.window-config.original-publication-admission",
+  "grantCurrencies": ["items", "copy", "capacity", "release", "depth"],
+  "receiptCurrencies": ["items", "copy", "capacity", "release"],
+  "phases": ["original-borrow", "paid-typed-frame", "paid-store-frame", "original-semantic-preparation", "original-close"],
+  "factorySource": "installed-original-store-preparation-factory",
+  "denialRetains": ["actor", "mutation-carrier", "mutation-vector", "authority"],
+  "newReceiptStopsCallback": true,
+  "nativeGrant": [1, 4096, 65536, 262144, 64],
+  "receiptExampleTurns": [[1, 512, 2048, 0], [1, 640, 1024, 0]],
+  "exampleTotals": [2, 1152, 3072, 0]
+}

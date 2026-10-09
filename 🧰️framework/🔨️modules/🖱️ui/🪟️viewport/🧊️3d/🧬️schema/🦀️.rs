@@ -573,6 +573,8 @@ pub struct Viewport3dProjectionSpec {
     pub orientation: Viewport3dProjectionOrientation,
 }
 
+semio_framework_value::artifact_retire_leaf!(Viewport3dProjectionSpec,Viewport3dProjectionFramePolicy);
+
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Viewport3dProjectionSpecSerde {

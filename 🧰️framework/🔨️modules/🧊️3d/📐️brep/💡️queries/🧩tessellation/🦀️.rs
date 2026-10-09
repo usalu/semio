@@ -211,24 +211,10 @@ pub struct TessellationJob {
 semio_framework_value::artifact_retire_leaf!(TopologyCursor, TessellationReport, TessellationPhase);
 semio_framework_value::artifact_retire_struct!(TessellationJob { topology, deflection, edge_order, edge_cache, vertices, standalone_vertex, vertex_units_done, faces, edge_cursor, face_cursor, pack_cursor, transfer, report, phase });
 
-struct RetiredEdgeSamples(EdgeSampleCache);
-impl crate::brep::engine::retirement::RetirementFrontier for RetiredEdgeSamples {
-    fn advance(&mut self, payloads: &mut crate::brep::engine::retirement::PayloadRetirement,_grant:semio_framework_value::retained_clone::RetainedCloneGrant) -> bool {
-        if let Some((_, samples)) = self.0.pop_first() { payloads.pod(samples); }
-        self.0.is_empty()
-    }
-}
-struct RetiredVertexIds(HistoryFoldIndex<VertexId, ()>);
-impl crate::brep::engine::retirement::RetirementFrontier for RetiredVertexIds {
-    fn advance(&mut self, _: &mut crate::brep::engine::retirement::PayloadRetirement,_grant:semio_framework_value::retained_clone::RetainedCloneGrant) -> bool {
-        self.0.pop_first(); self.0.is_empty()
-    }
-}
 impl TessellationJob {
-    /// 🧹️ Transfers all retained tessellation payloads without cancelling or clearing them.
-    pub fn detach_retirement(self, payloads: &mut crate::brep::engine::retirement::PayloadRetirement) {
-        payloads.pod(self.edge_order); payloads.pod(self.faces);
-        payloads.frontier(RetiredEdgeSamples(self.edge_cache)); payloads.frontier(RetiredVertexIds(self.vertices)); payloads.mesh_transfer(self.transfer);
+    /// 🧹️ Moves the whole original job inline without allocation or payload extraction.
+    pub fn detach_retirement(self)->semio_framework_value::retirement::controlled::ControlledRetirement<Self> {
+        semio_framework_value::retirement::controlled::ControlledRetirement::new(self).unwrap_or_else(|_|panic!("original tessellation owner requires typed retirement"))
     }
     /// 📍️ A resumable preview of one original topology vertex without sampled edges or faces.
     pub fn for_vertex(body: &Body, vertex: VertexId, deflection: f64) -> Result<Self, KernelError> {
@@ -418,8 +404,12 @@ impl TessellationJob {
     /// 📤 Takes the finished mesh — `None` unless the job reached `Complete`.
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn into_mesh(mut self)->Option<(MeshTransfer,TessellationReport)> {
-        let output=self.take_mesh();let mut payloads=crate::brep::engine::retirement::PayloadRetirement::default();self.detach_retirement(&mut payloads);
-        while !payloads.terminal_is_empty() {let demand=payloads.next_close_byte_demand().max(1);payloads.close_step(1,demand);}
+        let output=self.take_mesh();let mut owner=self.detach_retirement();
+        while !owner.terminal_is_empty() {
+            let copy=owner.next_copy_byte_demand().expect("original tessellation copy demand");
+            let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).expect("original tessellation capacity demand"),maximum_release_bytes:owner.next_release_byte_demand().expect("original tessellation release demand"),maximum_depth:owner.next_depth_demand().expect("original tessellation depth demand")};
+            owner.step(grant).expect("original cold tessellation retirement");
+        }
         output
     }
     /// 📤 Moves completed output while retaining the original job's retirement payloads.
@@ -1346,6 +1336,6 @@ fn triangle_needs_refine(surface: &Surface, positions: &[Pnt3], uvs: &[(f64, f64
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;
 
 // #endregion 🔖️Tests

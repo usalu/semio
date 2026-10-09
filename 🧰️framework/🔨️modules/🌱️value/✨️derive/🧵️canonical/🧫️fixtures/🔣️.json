@@ -1,0 +1,12 @@
+{
+  "tag": "mutation",
+  "variant": "moveNode",
+  "values": {
+    "id": "Ä\u0000🧩",
+    "newX": 1.5,
+    "newY": -2.25
+  },
+  "expected": "{\"mutation\":\"moveNode\",\"id\":\"Ä\\u0000🧩\",\"newX\":1.5,\"newY\":-2.25}",
+  "maximumBodyBytes": 4096,
+  "maximumTurns": 100000
+}

@@ -1,0 +1,52 @@
+{
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧬️schema/🔣️.json",
+      "sha256": "0ba717c1234feafc62d33c7bdc19f1857d0733263ca86dc48dd2d462f66259e4",
+      "required": [
+        "version",
+        "constructor",
+        "cases"
+      ],
+      "properties": [
+        "version",
+        "constructor",
+        "cases"
+      ],
+      "defs": [
+        "limits",
+        "case"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧪️tests/🟦️.ts",
+      "sha256": "26ae485814f921ab2bed13e4bd53810c24d53bd1134e0010ca68176b2e664ae6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧫️fixtures/🔣️.json",
+      "sha256": "3f5d092d44d4b07525391b54f361a0619b91756b7a6aec1a3b440349b17fceb1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/✅️output/🧬️schema/🔣️.json",
+      "sha256": "84e94b1bbba81048a367c88424eb981a97658db37fee09e52b6dab2214bca4af",
+      "required": [
+        "copyBytes",
+        "cases"
+      ],
+      "properties": [
+        "copyBytes",
+        "cases"
+      ],
+      "defs": []
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/✅️output/🧪️tests/🟦️.ts",
+      "sha256": "871fcba93c3b3564c4a3094efb1a7babaeb4dd7520361c1ff4b4921d03135c1d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/✅️output/🧫️fixtures/🔣️.json",
+      "sha256": "08e716e89ea4941c2a2a2b052ae067ae2a00eea33cc82bc16a0a9ddf1123e105"
+    }
+  ],
+  "classification": "Both root cases documents govern testing authority; Pack limits is the real Rust JsonReadLimits type, preserved original runtime constructor/native laws, no production JSON schema consumer found. Neural per-output Ajv cardinality rules preserved."
+}

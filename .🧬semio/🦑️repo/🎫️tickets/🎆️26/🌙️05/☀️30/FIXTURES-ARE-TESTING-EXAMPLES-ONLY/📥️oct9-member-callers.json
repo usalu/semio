@@ -1,0 +1,33 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "beforeSha256": "98b220c52ede8cd5876b6272a51c4423c737890561e22309ed04da363f265b52",
+  "afterSha256": "40adad19e52de995fad5775e94ec707d422e09fcb9effe2ab02429e4480f138b",
+  "actions": [
+    {
+      "logicalScope": "Counting granted begin receipt and original pointer allocator assertions",
+      "occurrences": 1,
+      "beforeBlockSha256": "8096d4fa33781de90dc547e8120a751cd7537f5f8b03e69e5b5110d233fbd59c",
+      "afterBlockSha256": "8b2e3dbbc56de5a5b54408d0ff298a5994a5262d063a2d0a887e722f89b3feb3"
+    },
+    {
+      "logicalScope": "owned batch census immutable fixed release policy actual receipts",
+      "occurrences": 1,
+      "beforeBlockSha256": "7615deb804afd545f9b37f372065454d22111db68fad48e308271b71c6d9d44f",
+      "afterBlockSha256": "d8ae3bf15d007170c6253b6b053521bc95193fa113e9ec9a1b563931e44d7f2f"
+    },
+    {
+      "logicalScope": "member partial retention fixed original admission grant",
+      "occurrences": 1,
+      "beforeBlockSha256": "852a8f19916354c66337bdb0b1e237bca2343fd973475a33d5f3ddd72a803cac",
+      "afterBlockSha256": "e3f1ff1f66821eaecbf68882f96388b51dca3165f710150ed5cbca4545cba050"
+    },
+    {
+      "logicalScope": "three exact member cold close full independent grant",
+      "occurrences": 3,
+      "beforeBlockSha256": "bbb39a56a870bc41dc4b62b5fa7512acc4f59e4b8449b4ced63d8e3799ca5ce5",
+      "afterBlockSha256": "e65c289b0cb0607b1d86a17f1ad518ddfab18ee040af8f9dc7ee0a2b5d4ee414"
+    }
+  ],
+  "copiedSource": false,
+  "nativeAssertions": "UNRUN"
+}

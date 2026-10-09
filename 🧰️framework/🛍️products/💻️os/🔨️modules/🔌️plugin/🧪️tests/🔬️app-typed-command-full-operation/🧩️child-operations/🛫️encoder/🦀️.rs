@@ -1,6 +1,6 @@
 // 🧵️ Child framing borrows original paged semantic text and retains its symbol frontier explicitly.
 use semio_framework_os_kernel::{os_pack::codec::PackEncodeOptions,os_pack::PackRefusal,os_spr::operation_bytes::{OperationByteOutput,OperationByteLimitedOutput,OperationSourceCollection,with_operation_encode_policy}};
-use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind,list::PagedList,paged_text::PagedText,ErasedSnapshotRetirement,SnapshotRetirementStep};
+use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind,list::PagedList,paged_text::PagedText,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
 use semio_framework_ui_locale::{Terminology,Locale};
 use std::cmp::Ordering;
 const CAPACITY:usize=isize::MAX as usize;
@@ -49,10 +49,17 @@ impl ChildSymbolOwner{
     fn index(&self,groups:&dyn PagedChildGroups,text:ChildTextView<'_>,control:&mut NativeEncodeControl<'_>)->Result<Option<usize>,ValueError>{let(mut low,mut high)=(0,self.entries.len());while low<high{let middle=low+(high-low)/2;match compare(view(groups,self.entries[middle])?,text,control)?{Ordering::Less=>low=middle+1,Ordering::Greater=>high=middle,Ordering::Equal=>return Ok(Some(middle))}}Ok(None)}
     pub fn allocated_bytes(&self)->usize{self.entries.allocated_bytes()}
 }
+impl ChildSymbolOwner{
+ fn demands(&self,_:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if !self.entries.is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<TextOrdinal>(),depth:1,..Default::default()})}Ok(RetirementDemand{release_bytes:self.entries.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}
+}
 impl ErasedSnapshotRetirement for ChildSymbolOwner{
-    fn close_step(&mut self,items:usize,bytes:usize)->Result<SnapshotRetirementStep,ValueError>{if items==0||bytes==0{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0})}if self.entries.pop().is_some(){return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:0})}if self.entries.terminal_is_empty(){return Ok(SnapshotRetirementStep::Complete)}let step=self.entries.release_empty_page(bytes).map_err(ValueError::from)?;Ok(SnapshotRetirementStep::Pending{released_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes})}
-    fn terminal_is_empty(&self)->bool{self.entries.terminal_is_empty()}
-    fn next_close_byte_demand(&self)->usize{if !self.entries.is_empty(){1}else{self.entries.next_release_allocation_bytes().unwrap_or(0)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if self.entries.pop().is_some(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let step=self.entries.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
+ fn terminal_is_empty(&self)->bool{self.entries.terminal_is_empty()}
+
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
+ fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.demands(copy)?.capacity_bytes)}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
 }
 impl Drop for ChildSymbolOwner{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"child symbol owner retains actual backing pages");}}
 struct Writer<'a>{output:&'a mut dyn OperationByteOutput,completed:usize,options:&'a PackEncodeOptions}

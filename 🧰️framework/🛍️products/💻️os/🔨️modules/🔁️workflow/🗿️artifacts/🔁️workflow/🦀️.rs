@@ -32,7 +32,7 @@ pub const S_WORKFLOW_SCHEMA: &str = "os.workflow";
 /// `framework/product/os/core`'s `workflow` module (`MediaContract`) so the persisted graph carries
 /// its own edge contracts; the negotiation logic itself (`negotiate_media_contract`) stays in
 /// os-core for now since it needs the artifact-kind registry, which doesn't exist at this layer yet.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct MediaContract {
     pub kind_id: String,
     pub media_type: MediaType,
@@ -429,7 +429,7 @@ impl semio_framework_value::FromValue for MediaContract {
 /// 🔌️ One instance-scoped wire endpoint on a `WorkflowNode` — `id` is unique within the graph
 /// (`"{node_id}:{spec.id}:{in|out}"`, see `workflow_media_port`), `spec` is the app-level port
 /// declaration it was instantiated from (`semio_framework::MediaPortSpec`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowMediaPort {
     pub id: String,
@@ -597,7 +597,7 @@ impl semio_framework_dsl_record::DslField for WorkflowMediaPort {
 }
 //#endregion 🔖️WorkflowMediaPort
 
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowPosition {
     pub x: f64,
@@ -607,7 +607,7 @@ pub struct WorkflowPosition {
 }
 
 /// 🧷️ A node IS the app-instance now — see the `🔖️InstanceIdentity` region at the top of this file.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowNode {
     pub id: String,
@@ -625,7 +625,7 @@ pub struct WorkflowNode {
     pub outputs: Vec<WorkflowMediaPort>,
 }
 
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowEdge {
     pub id: String,
@@ -637,7 +637,7 @@ pub struct WorkflowEdge {
     pub contract: MediaContract,
 }
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(extension = "workflow")]
@@ -843,7 +843,7 @@ pub enum WorkflowParameterType {
 
 /// 🎯️ `field_path` names a field `id` in the target node's app's declared `ConfigSpec` —
 /// see `validate_workflow_parameter_config_binding` (type-checks against the field's `ArgSchema`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowParameterBinding {
     pub parameter_id: String,
@@ -851,7 +851,7 @@ pub struct WorkflowParameterBinding {
     pub field_path: String,
 }
 
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 #[value(tag = "type", rename_all = "lowercase")]
 pub enum WorkflowParameter {
     Numeric { id: String, name: String, value: f64, min: Option<f64>, max: Option<f64>, step: Option<f64> },
@@ -1099,7 +1099,7 @@ pub fn sync_workflow_parameter_ports(graph: &Workflow, bindings: &[WorkflowParam
 /// 🔌️ One declared collection-level input slot a workflow's nodes can bind an in-port to — `selector`
 /// is a glob matched against collection entry paths at run time (W5's `SpaceRunner` job); this crate
 /// only carries the declaration + validates bindings resolve (`validate_workflow_snapshot`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowInput {
     pub id: String,
@@ -1186,7 +1186,7 @@ impl semio_framework_dsl_record::DslField for WorkflowInput {
 }
 
 /// 🔗️ Binds a declared [`WorkflowInput`] slot onto one node's in-port.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowInputBinding {
     pub input_id: String,
@@ -1196,7 +1196,7 @@ pub struct WorkflowInputBinding {
 
 /// 📤️ Names where a node's out-port materializes in the output collection — `path_template` like
 /// `"renders/{node}/{input.stem}.{ext}"` (resolved at run time by W5's `SpaceRunner`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct WorkflowOutputBinding {
     pub node_id: String,
@@ -1208,7 +1208,7 @@ pub struct WorkflowOutputBinding {
 /// its parameters/bindings, and its declared collection-level inputs/outputs. Absorbs os-core's
 /// dissolved `OsSnapshot` (`programs` moved to `space::SpaceSnapshot`, `active_plugin_id`/
 /// `active_alternative_id` become space-app session state — see `## The inversion` in the plan).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[artifact(id = "os.workflow")]
 pub struct WorkflowSnapshot {
     pub schema: String,

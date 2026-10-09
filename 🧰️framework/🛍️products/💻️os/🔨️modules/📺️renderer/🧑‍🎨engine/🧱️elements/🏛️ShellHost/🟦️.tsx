@@ -1,5 +1,6 @@
 import { shouldStartIntroduction } from "../../../../../../../🔨️modules/🖱️ui/🎓️introduction/🟦️.ts";
-import { DOCUMENT_SERVICE_TOPIC_V1, parseDocumentServiceDeclarationV1 } from "../../../../💡️inference/🔌️service/🟦️.ts";
+import { DOCUMENT_SERVICE_TOPIC_V1 } from "../../../../💡️inference/🔌️service/🟦️.ts";
+import {admitDocumentServiceWireDeclarationV1} from "../../../../💡️inference/🔌️service/🚪️io/🟦️.ts";
 import { shellFooterNavbarItem } from "../🏛️ShellFooter/🟦️.tsx";
 import { prepareDocumentSurfaceV1 } from "./🔀️surface-switch/📄️document/🟦️.ts";
 import { useInitialExampleReadiness } from "../🐚️Shell/🎬️initial-example/🟦️.ts";
@@ -18,7 +19,7 @@ import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMo
 import { createArtifactCreationCatalogMountV1, runArtifactCreationReadyOpeningV1, type ArtifactCreationCatalogMountV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { isTerminalDocumentCheckInPhaseV1, type DocumentCheckInStatusV1 } from "../../../../📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
 import { directorySessionAuthorityIsCurrentV1, startDirectorySessionRefreshV1, type DirectorySessionRefreshV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
-import { directoryAdministrationCommandAllowedV1 } from "../../../../📇️directory/🧬️schema/🟦️.ts";
+import { directoryAdministrationCommandAllowedV1 } from "../../../../📇️directory/🚪️io/📝️text/🟦️.ts";
 import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AgentCredentialInstallUnavailableV1, parseAgentCredentialInstallReceiptV1 } from "../../../../📇️directory/🤖️delegations/🟦️.ts";
 import { HubSessionPortClientV1 } from "../../../../📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts";
 import { LOCAL_HUB_SESSION_ENDPOINT_V1, parseLocalHubSessionAnswerV1 } from "../../../../📇️directory/🎫️local-session/🟦️.ts";
@@ -4035,7 +4036,7 @@ function FrameworkOsShellInner({
     const worker = ensureBackboneWorker();
     const clientInstanceId = crypto.randomUUID();
     localCatalogClientInstanceIdRef.current = clientInstanceId;
-    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, ...localCatalogActorConfig(shellActorIdRef.current, localDataDir) }) });
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, ...localCatalogActorConfig(shellActorIdRef.current, {maximumItems:1024,maximumCopyBytes:65536,maximumCapacityBytes:65536,maximumReleaseBytes:65536,maximumDepth:64}, localDataDir) }) });
     return () => {
       if (localCatalogClientInstanceIdRef.current === clientInstanceId) localCatalogClientInstanceIdRef.current = null;
       worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: LOCAL_CATALOG_CONFIG_SCHEMA, clientInstanceId }) });
@@ -4066,7 +4067,7 @@ function FrameworkOsShellInner({
         },
       });
     });
-    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, documentId, schema, bindings: [admission.binding], actor: shellActorIdRef.current }) });
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", actorIdentityGrant: {maximumItems:1024,maximumCopyBytes:65536,maximumCapacityBytes:65536,maximumReleaseBytes:65536,maximumDepth:64}, clientInstanceId, documentId, schema, bindings: [admission.binding], actor: shellActorIdRef.current }) });
     worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId, clientInstanceId, message: { kind: "localDocumentArchive", archive: Array.from(admission.archive) } }) });
     const written = await verified;
     worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId, clientInstanceId }) });
@@ -4087,7 +4088,7 @@ function FrameworkOsShellInner({
       const deadline = setTimeout(() => settle(null), LOCAL_CATALOG_READ_DEADLINE_MS_V1);
       localDocumentOwnersRef.current.set(clientInstanceId, { archive: settle });
     });
-    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, documentId: document.documentId, schema: document.schema, bindings: [localCatalogBindingV1(document)], actor: shellActorIdRef.current }) });
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", actorIdentityGrant: {maximumItems:1024,maximumCopyBytes:65536,maximumCapacityBytes:65536,maximumReleaseBytes:65536,maximumDepth:64}, clientInstanceId, documentId: document.documentId, schema: document.schema, bindings: [localCatalogBindingV1(document)], actor: shellActorIdRef.current }) });
     const archive = await read;
     worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: document.documentId, clientInstanceId }) });
     return archive;
@@ -4253,7 +4254,7 @@ function FrameworkOsShellInner({
     identityBootstrapAbortRef.current = identityWaitAbort;
     (async () => {
       const worker = ensureBackboneWorker();
-      const identityConfig = identityActorConfig(shellActorIdRef.current, hubEnv.dataDir);
+      const identityConfig = identityActorConfig(shellActorIdRef.current, {maximumItems:1024,maximumCopyBytes:65536,maximumCapacityBytes:65536,maximumReleaseBytes:65536,maximumDepth:64}, hubEnv.dataDir);
       const identityAttempt = { clientInstanceId: crypto.randomUUID() };
       const { clientInstanceId } = identityAttempt;
       identityClientInstanceIdRef.current = clientInstanceId;
@@ -6766,7 +6767,7 @@ function FrameworkOsShellInner({
   useEffect(() => {
     const services = documentServices.filter((presentation) => loadedPlugins.some((entry) => entry.handle.pluginId === presentation.owner && (entry.manifest.topicContributions ?? []).some((topic) => {
       if (topic.topic !== DOCUMENT_SERVICE_TOPIC_V1) return false;
-      try { return parseDocumentServiceDeclarationV1(presentation.owner, topic.payload).serviceId === presentation.serviceId; } catch { return false; }
+      try { return admitDocumentServiceWireDeclarationV1(presentation.owner, topic.payload).serviceId === presentation.serviceId; } catch { return false; }
     }))).map(({owner, serviceId}) => ({owner, serviceId}));
     documentServiceInventoryRef.current=services;
     backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "service-contributions", services }) });
@@ -6778,7 +6779,7 @@ function FrameworkOsShellInner({
     const presentations = documentServices.filter((entry) => entry.owner === operation.owner && entry.serviceId === operation.serviceId);
     if (presentations.length !== 1) throw new Error("installed-service.unavailable");
     const program = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === baseSession.pluginId);
-    const declarations = (program?.manifest.topicContributions ?? []).filter((entry) => entry.topic === DOCUMENT_SERVICE_TOPIC_V1).map((entry) => parseDocumentServiceDeclarationV1(operation.owner, entry.payload));
+    const declarations = (program?.manifest.topicContributions ?? []).filter((entry) => entry.topic === DOCUMENT_SERVICE_TOPIC_V1).map((entry) => admitDocumentServiceWireDeclarationV1(operation.owner, entry.payload));
     if (declarations.filter((entry) => entry.serviceId === operation.serviceId).length !== 1) throw new Error("installed-service.unavailable");
     if (inferencePortOwnerRef.current !== null || inferencePortOpeningRef.current !== null) throw new Error("inference.capacity");
     const owners = [...openDocumentSessionsRef.current.entries()].filter(([, entry]) => entry.session.pluginId === baseSession.pluginId && entry.session.instanceId === baseSession.instanceId && entry.scope !== undefined);
@@ -7681,6 +7682,7 @@ function FrameworkOsShellInner({
       }
       const request: BackboneWorkerRequest = {
         kind: "open",
+        actorIdentityGrant: {maximumItems:1024,maximumCopyBytes:65536,maximumCapacityBytes:65536,maximumReleaseBytes:65536,maximumDepth:64},
         clientInstanceId,
         documentId: ref.documentId,
         schema: ref.schema,

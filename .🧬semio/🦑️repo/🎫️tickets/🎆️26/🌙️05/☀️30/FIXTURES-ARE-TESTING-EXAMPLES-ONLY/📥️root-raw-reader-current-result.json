@@ -1,0 +1,11 @@
+{
+  "terminal": true,
+  "nxExitCode": 1,
+  "duration": "33.1s",
+  "command": "workspace:verify-interactivity -- tool-jobs mounted-dispatch",
+  "rawCloseBufferCases": 3,
+  "debug": "Original raw close Buffer cases=3; independent backing/copy and native source refusal laws passed",
+  "failure": "retained ChildEmit close and rejected completion handback are incomplete",
+  "nativeExecuted": false,
+  "wholeHelperPassed": false
+}

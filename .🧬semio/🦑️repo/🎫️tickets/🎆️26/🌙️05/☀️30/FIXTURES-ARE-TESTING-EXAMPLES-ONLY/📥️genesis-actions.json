@@ -1,0 +1,20 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🌱️genesis/🦀️.rs",
+    "beforeSha256": "0dd4157688f461c7fd6c662913b902443f175002427adc294ac44a8f303426bb",
+    "afterSha256": "6130411e6132967084ee2d8b91ed9710b9c7e321501c4539f57c562715a1b162",
+    "qualification": "narrow defining Genesis grant/original metadata ingress; preserved all other live bodies"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "beforeSha256": "a62bf47fc475e61f8216fba591be6db4947e232183780d632c469db76f6b7914",
+    "afterSha256": "f945e28724dd5f927e1fa3b3bbd3947cfaa0d79ee6daa6904df681eb72063a26",
+    "qualification": "narrow defining Genesis grant/original metadata ingress; preserved all other live bodies"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+    "beforeSha256": "8d5b0324c365302f4d2cf9621be826e0c01c031c0b922b526647d36f4689a280",
+    "afterSha256": "e58accee968badeba95f587cd960288d6e766c183ad2a117137d94e3a7a96b9e",
+    "qualification": "narrow defining Genesis grant/original metadata ingress; preserved all other live bodies"
+  }
+]

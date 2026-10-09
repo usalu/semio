@@ -1,0 +1,42 @@
+{
+  "executed": false,
+  "b11Paths": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+      "exists": false,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🚫️refusal/🧬️schema/🔣️.json",
+      "exists": false,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧬️schema/🔣️.json",
+      "exists": false,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧬️schema/🔣️.json",
+      "exists": false,
+      "authored": false
+    }
+  ],
+  "observations": [
+    {
+      "path": "📋️project.json",
+      "sha256": "271ae09fb93bda20a14d1b9bcd6df2978ebd36bc1f64d2458ffb9c0345490a3a",
+      "authored": false
+    },
+    {
+      "path": "📜️script.ts",
+      "sha256": "7c237a1b859e2d2068aec728b8a9e9be0ff48080d093e4ab4385fcbe8d69127b",
+      "authored": false
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "sha256": "49db704d63c50f7d4c331ffd134ddaadabea388d6dabde0023f97989198f9621",
+      "authored": false
+    }
+  ]
+}

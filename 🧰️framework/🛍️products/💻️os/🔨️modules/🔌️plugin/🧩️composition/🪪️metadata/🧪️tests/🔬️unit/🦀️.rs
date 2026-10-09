@@ -225,3 +225,47 @@ fn private_publication_metadata_preserves_group_id_independently_of_transaction(
     }
     println!("[DEBUG] common parent/child group identities: nine optional transaction/group combinations; fields4/31 original; copy64; same-turn allocator birth parity; no synthesized transaction");
 }
+
+#[test]
+fn private_parent_metadata_carries_the_original_admitted_actor_lease_without_reconstruction() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let policy = &fixture["actorLease"]["originalGrant"];
+    let original_grant = RetainedCloneGrant { maximum_items: policy["items"].as_u64().unwrap() as usize, maximum_copy_bytes: policy["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: policy["capacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: policy["releaseBytes"].as_u64().unwrap() as usize, maximum_depth: policy["depth"].as_u64().unwrap() as usize };
+    let original_text = fixture["actor"].as_str().unwrap().to_owned();
+    let original_pointer = original_text.as_ptr();
+    let (original_actor, _) = semio_framework_value::SharedUtf8::admit(original_text, original_grant).map_err(|(error, _)| error).unwrap();
+    let source = PrivatePublicationMetadataSource { actor: &original_actor, transaction: None, group_id: None };
+    let mut issuer = PrivatePublicationMetadataIssuer::new();
+    for _ in 0..fixture["actorLease"]["maximumTurns"].as_u64().unwrap() {
+        if issuer.ready() { break; }
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| issuer.advance(source, RetainedCloneGrant { maximum_items: 0, ..original_grant }).unwrap());
+        assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| issuer.advance(source, original_grant).unwrap());
+        assert!(step.progress().fits(original_grant));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+    }
+    assert!(issuer.ready());
+    let (mut metadata, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| issuer.take_ready(original_grant).unwrap().unwrap());
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+    let (parts, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| metadata.take_ready(original_grant).unwrap().unwrap());
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+    let actual_actor: &semio_framework_value::SharedUtf8 = &parts.actor;
+    assert_eq!(actual_actor.as_ptr(), original_pointer);
+    assert_eq!(serde_json::to_value(actual_actor).unwrap(), fixture["actor"]);
+    let mut restored = PrivatePublicationMetadata::from_parts(parts);
+    for _ in 0..fixture["actorLease"]["maximumTurns"].as_u64().unwrap() {
+        if restored.terminal_is_empty() { break; }
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| restored.close_granted(RetainedCloneGrant { maximum_items: 0, ..original_grant }).unwrap());
+        assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert_eq!(original_actor.as_ptr(), original_pointer);
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| restored.close_granted(original_grant).unwrap());
+        assert!(step.progress().fits(original_grant));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+    }
+    assert!(restored.terminal_is_empty());
+    assert_eq!(original_actor.as_ptr(), original_pointer);
+    assert_eq!(original_actor.as_str(), fixture["actor"].as_str().unwrap());
+    eprintln!("[DEBUG] Original metadata actor lease retains original admitted UTF8 pointer; independent Serde agrees; every denied and accepted turn matches actual heap receipts");
+}

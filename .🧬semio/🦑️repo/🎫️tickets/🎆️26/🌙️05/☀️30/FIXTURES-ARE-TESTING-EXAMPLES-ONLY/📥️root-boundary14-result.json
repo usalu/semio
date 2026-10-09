@@ -1,0 +1,18 @@
+{
+  "target": "workspace:schema-check",
+  "args": [
+    "--fixture-boundary"
+  ],
+  "exitCode": 1,
+  "modules": 4750,
+  "scopes": 3756,
+  "findings": [
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json"
+    }
+  ],
+  "restoredSchemaHash": "100702043bed8e8a311417e9697db2e7bdfeffde1c62f47715f3471fe1bbef58",
+  "writer": "unknown",
+  "runtimeOrNativeCredit": false
+}

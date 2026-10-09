@@ -1,0 +1,42 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+    "sha256": "399d20dbce53eeed594049d2ce63de6a7e7f8b81e609248b3265350dcfaed0cb",
+    "bytes": 1865
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🟦️.ts",
+    "sha256": "17df205dc94bcb878f64c4c6cfb12f2359398bedf5bef08cd76eae7368cee660",
+    "bytes": 1364
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧫️fixtures/🔣️.json",
+    "sha256": "055e8640b8d08d5d082e9e009c706f3150a915e16fd0cba9f2fd91b149a1abef",
+    "bytes": 725
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🦀️.rs",
+    "sha256": "664a5d007790b967dc76eb8ed184453727fc6cbebc535a0aa260a26f0f9c6b16",
+    "bytes": 3239
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧬️schema/🔣️.json",
+    "sha256": "d2e4670925dba96b58dd5aab5bd1af12fc2bf6aefe8ccdbec778a2e19a888d8c",
+    "bytes": 437
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧪️tests/🟦️.ts",
+    "sha256": "b5ab35c78ea796b09d23f9aa550d63e0ac99518f63717e7fbc0ffbabe5c1984b",
+    "bytes": 954
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧫️fixtures/🔣️.json",
+    "sha256": "1182145ef90e71b726534c42a095e5568cfe7b08446b9266f6ec065b2d4c8dcc",
+    "bytes": 680
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🦀️.rs",
+    "sha256": "aeced8687a7ff8539bab7a64deac40cf37731b5e2770750307735ae28e10cc96",
+    "bytes": 8664
+  }
+]

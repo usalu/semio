@@ -1,0 +1,55 @@
+{
+  "records": [
+    {
+      "path": "🗑️generated/k4-data",
+      "bytes": 348082301,
+      "lsofExitCode": 1,
+      "openedFiles": false,
+      "ownedRootsAbsent": true,
+      "removeOnlyMetadata": true
+    },
+    {
+      "path": "🗑️generated/k4-cache",
+      "bytes": 2863518,
+      "lsofExitCode": 1,
+      "openedFiles": false,
+      "ownedRootsAbsent": true,
+      "removeOnlyMetadata": true
+    },
+    {
+      "path": "🗑️generated/k5-data",
+      "bytes": 349459797,
+      "lsofExitCode": 1,
+      "openedFiles": false,
+      "ownedRootsAbsent": true,
+      "removeOnlyMetadata": true
+    },
+    {
+      "path": "🗑️generated/k5-cache",
+      "bytes": 2193871,
+      "lsofExitCode": 1,
+      "openedFiles": false,
+      "ownedRootsAbsent": true,
+      "removeOnlyMetadata": true
+    },
+    {
+      "path": "🗑️generated/oct9-root-epoch",
+      "bytes": 350000352,
+      "lsofExitCode": 1,
+      "openedFiles": false,
+      "ownedRootsAbsent": true,
+      "removeOnlyMetadata": true
+    },
+    {
+      "path": "🗑️generated/oct9-root-epoch-cache",
+      "bytes": 454291,
+      "lsofExitCode": 1,
+      "openedFiles": false,
+      "ownedRootsAbsent": true,
+      "removeOnlyMetadata": true
+    }
+  ],
+  "foreignProcessesPreserved": true,
+  "nativeCachesPreserved": true,
+  "logsAndProofPreserved": true
+}

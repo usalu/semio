@@ -7,7 +7,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 /// Failed`, not a `Sealed` variant). Hand-crafted `dsl::DslField` (ordinal `Shape::Enum`), not
 /// `#[derive(dsl::DslEnum)]`: this is a plain field-less scalar, not a tagged-variant-with-data sum
 /// type (`DslEnum`/`DslVariants` target the latter — see `WorkflowParameter`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum RunStatus {
     Pending,
@@ -69,7 +69,7 @@ impl semio_framework_dsl_record::DslField for RunStatus {
 
 /// 🚦️ Per-node outcome of one run — `Computed` (ran fresh), `CacheHit` (memoized against the prior
 /// sealed run's `RunNodeRecord`), `Failed` (the node's `AppChannelHost` exchange errored).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum RunNodeStatus {
     Computed,
@@ -125,7 +125,7 @@ impl semio_framework_dsl_record::DslField for RunNodeStatus {
 /// compat only). Hand-crafted `dsl::DslField` (`Shape::Record`) mirroring `MediaContract`'s own
 /// tag-plus-optional-fields encoding above — a real Rust sum type stays the API surface; the wire
 /// encoding is just a `kind` discriminator text field plus each variant's own optional columns.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum RunTrigger {
     Manual { actor: String },
@@ -291,7 +291,7 @@ impl semio_framework_dsl_record::BorrowedDslField for RunTrigger {
 /// plain JSON text sidesteps that risk entirely while staying a lossless round trip. `run::SpaceRunner`
 /// parses it back to `serde_json::Value` when applying the overlay onto a node's config (see
 /// `WorkflowParameterBinding.field_path`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct RunParameterValue {
     pub parameter_id: String,
@@ -300,7 +300,7 @@ pub struct RunParameterValue {
 
 /// 🔑️ One port's fingerprint — reused for both a `RunNodeRecord`'s `input_fingerprints` and
 /// `output_fingerprints` (same shape, different table column on the owning row).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PortFingerprint {
     pub port_id: String,
@@ -309,7 +309,7 @@ pub struct PortFingerprint {
 
 /// 📤️ Where one node's out-port materialized in the run's own write-only output area — `path` is
 /// relative to the run's own sink (see `run::RunContext`'s doc), never a source-bundle path.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct RunOutputArtifact {
     pub port_id: String,
@@ -322,7 +322,7 @@ pub struct RunOutputArtifact {
 /// against the PRIOR sealed run's `node_records`, not a side-channel state file. `duration_ms` is
 /// `f64` (not `u64`): the `dsl` engine's scalar `DslField` impls cover `bool`/`f32`/`f64`/`String`
 /// only, no integer width — see `dsl/rs/lib.rs`'s `impl DslField for f64` and neighbors.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RunNodeRecord {
     pub node_id: String,
@@ -339,7 +339,7 @@ pub struct RunNodeRecord {
 }
 
 /// 📜️ One run-level or per-node log line — `node_id` empty for a run-level line (see `RunMutation::AppendRunLog`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RunLogLine {
     pub node_id: String,
@@ -355,7 +355,7 @@ pub struct RunLogLine {
 /// rejects every further operation, see `🔖️RunMutation` below). Sealing is meant to promote a run
 /// draft→asset later (`space::DraftCatalog`, W5 Lane B's territory) — this wave only carries the flag
 /// and the apply-rejection law, not the promotion wiring itself.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "os.run")]
 pub struct RunArtifact {

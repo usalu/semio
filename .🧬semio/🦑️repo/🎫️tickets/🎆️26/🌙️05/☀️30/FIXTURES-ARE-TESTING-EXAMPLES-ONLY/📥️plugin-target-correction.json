@@ -1,0 +1,11 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
+      "beforeSha256": "c06d32410b48893004bd23237d8b93eea125415b4ff8f57bbc130498a835f8b6",
+      "afterSha256": "981c60ab467d3ca270aa4b10925e13426211a7416795276000998c0bfb494d40",
+      "action": "Correct Root-authored lifecycle registration placement from namedInputs to targets, preserve all previous target and input values."
+    }
+  ],
+  "cause": "Root insertion selected last object rather than targets. Earlier target source-review was incomplete. No peer attribution, no native/test credit from failed graph runs."
+}

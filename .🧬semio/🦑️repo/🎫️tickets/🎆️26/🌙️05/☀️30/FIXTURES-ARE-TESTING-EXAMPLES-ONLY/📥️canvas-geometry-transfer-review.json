@@ -1,0 +1,39 @@
+{
+  "executed": false,
+  "authored": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+      "authored": false,
+      "sha256": "450f9308ef0629e2cb7b61bc0afadaf27b4a962e855c66c5ecd7de3b7e10879e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/🦀️.rs",
+      "authored": false,
+      "sha256": "1c74531f4bc91fc3a22ca808ecb1389498844a0c453544a7c2ae55e531ae40f6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/Cargo.toml",
+      "authored": false,
+      "sha256": "f3202f3b4fcf17df15200c701b2c79322495f92a933afbb915bf5a74d4862957"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs",
+      "authored": false,
+      "sha256": "cb2f4810e509c2579902f5b440d7082b3ff42fe2559759e00606c261b78c3be1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🦀️.rs",
+      "authored": false,
+      "sha256": "2d6789e0ec288b51f2ca4296a4bcaf368ec8d1d08a00579ffb3a96fa33debf34"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "authored": false,
+      "sha256": "b5e081fdcf0077058db4dbdac9580396df26b87a335b109d0aa45f9c7783d29a"
+    }
+  ],
+  "proposedGeometryPort": "BezPath::into_elements(self)->Vec<PathEl> moves original allocation",
+  "proposedCanvasOwner": "local PathElements(Vec<PathEl>) cursor prices exact original capacity; no orphan RetireOwned for external Geometry type",
+  "allocator": "test-only RequestedAllocator/observe_backing; not currently wired Canvas"
+}

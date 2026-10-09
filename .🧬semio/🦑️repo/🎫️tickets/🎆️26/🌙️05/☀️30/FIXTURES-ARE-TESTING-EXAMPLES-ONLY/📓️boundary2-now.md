@@ -1,0 +1,9 @@
+# Boundary two current authority review
+
+Read-only, no Source or Cargo actions. Original boundary7 reports two whole-trial documents. Frame-close root requires caller plus nine-or-more cases containing step/terminal/expected outcomes. Its nested grant/progress are variable domain-shaped fields, but bounded matching readers show no production schema projection; genuine defining Rust Value grant/progress contracts remain. Remove whole document and only TS first admission test (10–18), preserving SQLite receipt/terminal oracle and actual source authority/identity assertions. Native frame-job test370 consumes original plain trials independently.
+
+Raw-close root requires fixed corpus identity and cases of original capacity, initialized bytes and expected copy/release totals; Counter is primitive embedded grammar. Current raw-close TS has no schema admission: retain its Buffer original extent versus initialized subarray law. Native retained-command708 consumes original plain fixture and physical backing retirement law; preserve it unchanged. No production replacement of a corpus schema is indicated.
+
+Additional frame-close TS final test validates entire UI text-splice/draft-wire policy and deletes callerGrant fields to assert admission refusal. This is a separate live whole-value validation edge needing actual defining schema role review; whole validation alone does not establish a violation. Publication was alerted. Preserve draft writer supplied-grant/source receipt assertions independently.
+
+Bounded exact frame-close/raw-close references found consumers, not a write/copy generator relation. Broad first search output truncated and contributes no exhaustive coverage; narrowed literal search was complete for these two owners. No unknown writer attribution, global purity or test execution claim. Current four endpoint observations are in 📥️boundary2-now.json; concurrent executor changes may supersede hashes.

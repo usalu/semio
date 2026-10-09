@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:cargo-preparation-storage:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "directory"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 135,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    }
+  }
+}

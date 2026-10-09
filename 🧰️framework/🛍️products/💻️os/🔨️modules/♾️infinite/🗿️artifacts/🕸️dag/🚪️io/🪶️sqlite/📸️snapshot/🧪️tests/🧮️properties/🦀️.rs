@@ -3,12 +3,15 @@ use super::*;
 use std::alloc::{GlobalAlloc,Layout,System};
 std::thread_local!{static REQUEST_BYTES:std::cell::Cell<Option<usize>>=const{std::cell::Cell::new(None)};static SLOT_REQUESTS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};}
 fn record(size:usize,alignment:usize){REQUEST_BYTES.with(|value|{if let Some(bytes)=value.get(){value.set(Some(bytes.checked_add(size).expect("property request observation overflow")));if alignment==std::mem::align_of::<(String,graph::manifest::PropertyValue)>(){SLOT_REQUESTS.with(|count|count.set(count.get()+1));}}});}
+std::thread_local!{static HEAP:std::cell::Cell<Option<(usize,usize)>>=const{std::cell::Cell::new(None)};}
+fn heap_event(born:usize,released:usize){HEAP.with(|value|{if let Some((a,b))=value.get(){value.set(Some((a+born,b+released)));}});}
+pub(crate) fn heap<T>(operation:impl FnOnce()->T)->(T,usize,usize){let prior=HEAP.with(|value|value.replace(Some((0,0))));let result=operation();let(a,b)=HEAP.with(|value|value.replace(prior).unwrap());(result,a,b)}
 struct PropertyAllocator;
 unsafe impl GlobalAlloc for PropertyAllocator {
- unsafe fn alloc(&self,layout:Layout)->*mut u8{record(layout.size(),layout.align());unsafe{System.alloc(layout)}}
- unsafe fn alloc_zeroed(&self,layout:Layout)->*mut u8{record(layout.size(),layout.align());unsafe{System.alloc_zeroed(layout)}}
- unsafe fn realloc(&self,pointer:*mut u8,layout:Layout,size:usize)->*mut u8{record(size,layout.align());unsafe{System.realloc(pointer,layout,size)}}
- unsafe fn dealloc(&self,pointer:*mut u8,layout:Layout){unsafe{System.dealloc(pointer,layout)}}
+ unsafe fn alloc(&self,layout:Layout)->*mut u8{heap_event(layout.size(),0);record(layout.size(),layout.align());unsafe{System.alloc(layout)}}
+ unsafe fn alloc_zeroed(&self,layout:Layout)->*mut u8{heap_event(layout.size(),0);record(layout.size(),layout.align());unsafe{System.alloc_zeroed(layout)}}
+ unsafe fn realloc(&self,pointer:*mut u8,layout:Layout,size:usize)->*mut u8{heap_event(size,layout.size());record(size,layout.align());unsafe{System.realloc(pointer,layout,size)}}
+ unsafe fn dealloc(&self,pointer:*mut u8,layout:Layout){heap_event(0,layout.size());unsafe{System.dealloc(pointer,layout)}}
 }
 #[global_allocator]
 static PROPERTY_ALLOCATOR:PropertyAllocator=PropertyAllocator;

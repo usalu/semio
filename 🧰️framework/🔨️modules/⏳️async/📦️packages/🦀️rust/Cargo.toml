@@ -31,6 +31,7 @@ entrypoint = []
 
 [dependencies]
 semio-framework-trace = { workspace = true }
+semio-framework-value = { workspace = true }
 
 # 🌉️ Browser-only `pub mod browser` (JS `Promise`/`JsValue` bridge — `spawn_local`/
 # `future_to_promise`/`JsFuture`). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"`

@@ -1,0 +1,11 @@
+{
+  "contract": "framework.plugin.prepared-child-original-custody",
+  "originalGrant": [1,4096,65536,262144,64],
+  "metadataFields": 7,
+  "originalCapacities": [1,257,4096,65536],
+  "fieldReleaseIncludesHeader": true,
+  "metadataRemovalSeparate": true,
+  "visibilityRemovalSeparate": true,
+  "readReturnPreservesOriginalReceipt": true,
+  "childCompleteIsParentProgress": true
+}

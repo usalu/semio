@@ -1,0 +1,17 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "e9de34b64e6418ce2d1e11f0327fc090c08a63aa21b195d0d50c3efbb2a07581"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "sha256": "9d9addf2a96c139f7426a55b876d8767af0041e288531ceb5c62b3528cee07be"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "2f203eca54b61314bdbb576a575e33758299ede42c565eb7668b38c161bfa2da"
+    }
+  ]
+}

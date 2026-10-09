@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🚦️refusals/🟦️.ts",
+      "beforeSha256": "681aa810c4601d143f39817334c7fddf2ef691cb5d08e95ccde505dadd7923b5",
+      "afterSha256": "5e97dbee3ed9eb724e1a612f2a370a50178ace1464c117552dc41a1bb2358a36",
+      "action": "Update original plain reference-refusals reader to defining text artifact-reference binding owner; remove unused test Ajv allocation."
+    }
+  ]
+}

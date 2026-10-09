@@ -9,11 +9,11 @@ pub(crate) fn test_mounted_private_child_frame<A:ArtifactApp,M:SpaceMember+Membe
         if !row["admitted"].as_bool().unwrap(){assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));continue;}
         assert_eq!(heap.requested_bytes,frame);let original=app.private_child_groups.get(operation).unwrap().as_ref()as *const _;
         let context_extent=semio_framework_job::StepContextOwner::birth_bytes();
-        let(context,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::StepContextOwner::new(semio_framework_job::OperationId(operation),semio_framework_job::Generation(1),1,context_extent));
+        let(context,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::StepContextOwner::new(semio_framework_job::OperationId(operation),semio_framework_job::Generation(1),RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:context_extent,maximum_depth:1,..Default::default()}));
         assert_eq!((heap.requested_bytes,heap.released_bytes),(context_extent,0));
-        app.private_child_groups.get_mut(operation).unwrap().context=context;
+        let(context,progress)=context.unwrap();assert_eq!(progress.retained_capacity_bytes,context_extent);app.private_child_groups.get_mut(operation).unwrap().context=Some(context);
         let mut sequence=0;
-        let context=app.private_child_groups.get(operation).unwrap().context.as_ref().unwrap().context(semio_framework_job::StepBudget::new(1,semio_framework_job::default_now_us().unwrap().saturating_add(INTERACTIVE_TURN_WORKER_WALL_US)),semio_framework_job::root_cancel_token(),semio_framework_job::default_now_us,&mut sequence).unwrap();
+        let mut actual_retained_progress=Default::default();let context=app.private_child_groups.get(operation).unwrap().context.as_ref().unwrap().context(semio_framework_job::StepBudget::new(1,semio_framework_job::default_now_us().unwrap().saturating_add(INTERACTIVE_TURN_WORKER_WALL_US),app.mounted_policy.maintenance),semio_framework_job::root_cancel_token(),semio_framework_job::default_now_us,&mut sequence,&mut actual_retained_progress).unwrap();
         let demand=app.private_child_group_operation_close_demands(operation,64).unwrap();assert_eq!(demand.release_bytes,context_extent);
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_operation_step(operation,grant).unwrap());

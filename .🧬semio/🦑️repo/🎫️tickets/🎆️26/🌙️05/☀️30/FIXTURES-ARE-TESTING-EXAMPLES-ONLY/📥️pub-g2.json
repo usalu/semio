@@ -1,0 +1,61 @@
+{
+  "documentaryRecovery": {
+    "collision": "Native independently wrote generic g2-actions.json/g2-current.md without reading; original own before-hash ledger lost. Native moved its records to native-g2 names. No Source was restored or modified by recovery.",
+    "beforeHashesRecovered": false,
+    "noInventedHistoricalHashes": true,
+    "rawExecutedReceiptsRetained": [
+      "g2-red-actual.log",
+      "g2-green.log",
+      "g2-source.log",
+      "g2-helper.log"
+    ],
+    "originalCutPreservation": "Original in-memory equality assertions verified remaining production rule projection and exact plain examples at own cut; later Frame plain/test peer drift was separately observed. Missing exact historical hashes are not reconstructed as attestations."
+  },
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/♻️frame-close/📐️schema.json",
+      "logicalAction": "remove exclusive whole-frame-case schema",
+      "historicalBeforeSHA": null,
+      "currentObservedSHA": null,
+      "attribution": "Only own described logical cut; whole-file current observer not peer authorship/freeze."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "logicalAction": "remove only Ajv whole-wrapper import/admission/missing-caller refusals; preserve SQL and genuine Source laws",
+      "historicalBeforeSHA": null,
+      "currentObservedSHA": "553b5e4822f2c64e44fa95e6a2fb02cc745f26c267b6d5eaaf8aa2cd63e38791",
+      "attribution": "Only own described logical cut; whole-file current observer not peer authorship/freeze."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json",
+      "logicalAction": "remove only RawAllocationCloseFixtureV2 and exclusive RawAllocationCloseCaseV2 definitions, preserving all other exact production rule text",
+      "historicalBeforeSHA": null,
+      "currentObservedSHA": "47c2fa3361eb29aa60af00da0c360fea0210577f87e1b23fec8d3c75381e83f7",
+      "attribution": "Only own described logical cut; whole-file current observer not peer authorship/freeze."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+      "logicalAction": "remove only whole-raw-example admission/hostile-wrapper checks, preserve genuine domain Ajv/Buffer/custody controls",
+      "historicalBeforeSHA": null,
+      "currentObservedSHA": "68edeee6faa371d3f7b65164766525e826b6fc2e9d267bf4f6725df4bd499675",
+      "attribution": "Only own described logical cut; whole-file current observer not peer authorship/freeze."
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "logicalAction": "add own physical/definition absence checks and original Source law calls to existing registered current-corpus facet only",
+      "historicalBeforeSHA": null,
+      "currentObservedSHA": "a1791b77fdbf34afe5eb6cfab9b24704b2c5184b03e7e0466dbbd3b40d8ca19d",
+      "attribution": "Only own described logical cut; whole-file current observer not peer authorship/freeze."
+    }
+  ],
+  "actualEvidence": {
+    "boundaryRed": "Root17998 full actualfixture boundary",
+    "scopedRed": "g2-red-actual Nx1/77ms at newFrame authority",
+    "FrameSource": "g2-source Nx1/109ms2pass1fail28assertions: SQLite and scalarFrameBuildJob pass, actualphase/aggregate scalar gap remains",
+    "PluginHelper": "g2-helper Nx1/1.7s at existing ChildEmit scalar signature Source expectation; genuine domain Ajv/Buffer raw controls reached first",
+    "wholeFacetGreen": false
+  },
+  "sourceCopiesAdded": false,
+  "nativePositive": false,
+  "normalPublicationReleased": false
+}

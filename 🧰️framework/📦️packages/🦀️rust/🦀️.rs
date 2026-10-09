@@ -1,5 +1,8 @@
 //! 🥅️ Render-independent framework kernel: declarative {@link UiNode}, {@link Platform}, {@link ActionBus}.
 
+#[cfg(test)]
+#[global_allocator]
+static FRAMEWORK_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 pub use ui_wgpu::wgpu::IconName;
 use semio_framework_ui_locale::Locale;

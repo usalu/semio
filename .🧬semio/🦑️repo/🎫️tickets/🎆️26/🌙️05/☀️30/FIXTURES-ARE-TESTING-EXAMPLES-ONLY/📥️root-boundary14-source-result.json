@@ -1,0 +1,22 @@
+{
+  "target": "ticket-fixture-verification:tests",
+  "originalSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts",
+  "red": {
+    "exitCode": 1,
+    "laws": 1,
+    "assertions": 1,
+    "nxDurationMs": 369
+  },
+  "green": {
+    "exitCode": 0,
+    "laws": 1,
+    "assertions": 39,
+    "nxDurationMs": 188
+  },
+  "runtimeNativeCredit": false,
+  "oracles": [
+    "Ajv actual Widget and Synapse production schemas",
+    "Graphlib four original cycle/source cases",
+    "JSONPatch original nested source"
+  ]
+}

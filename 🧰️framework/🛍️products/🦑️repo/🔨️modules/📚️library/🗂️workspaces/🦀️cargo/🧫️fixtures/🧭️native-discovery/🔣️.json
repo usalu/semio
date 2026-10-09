@@ -5,6 +5,7 @@
     {"manifest":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/Cargo.toml","admitted":true},
     {"manifest":"🧰️framework/🔨️modules/🗣️dsl/🧬️schema/Cargo.toml","admitted":true},
     {"manifest":"ordinary/📦️packages/🦀️rust/Cargo.toml","admitted":true},
+    {"manifest":"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/Cargo.toml","admitted":true},
     {"manifest":".hidden/native/Cargo.toml","admitted":false},
     {"manifest":"target/native/Cargo.toml","admitted":false},
     {"manifest":"ordinary/🗑️generated/native/Cargo.toml","admitted":false}

@@ -13,7 +13,7 @@ async fn temp_path(name: &str) -> PathBuf {
 async fn sample_edit(id: &str, actor: Option<&str>) -> crate::os_spr::HistoryEdit {
     crate::os_spr::HistoryEdit { line: None,
         id: id.to_string(),
-        actor: actor.map(str::to_string),
+        actor: actor.map(Into::into),
         started_at: format!("2026-07-27T00:00:{id}Z", id = &id[id.len().saturating_sub(2)..]),
         finished_at: None, verb: None,
         ops: vec![crate::os_spr::OpPayload { text: Some(format!("set {id} = 1")), binary: None }],
@@ -51,7 +51,7 @@ async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_a
         });
         let branch = crate::os_spr::HistoryTransition::Branch { alternative_id: "alt-main".to_string(), name: "main".to_string(), checkpoint_id: "cp0".to_string() };
         for (logical, transition) in [commit, branch].iter().enumerate() {
-            let envelope = crate::os_spr::history_transition_envelope(transition, &crate::os_spr::ArtifactId("doc-1".to_string()), &crate::os_spr::ActorId("actor-a".to_string()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: logical as u64 });
+            let envelope = crate::os_spr::history_transition_envelope(transition, &crate::os_spr::ArtifactId("doc-1".to_string()), &crate::os_spr::ActorId("actor-a".into()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: logical as u64 });
             appender.append_transition(&crate::os_spr::HistoryTransitionRecord::from_envelope(&envelope)).await.unwrap();
         }
         appender.commit().await.unwrap();

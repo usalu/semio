@@ -102,8 +102,8 @@ fn graph_hex_float_body(hex:&str)->String{
 fn graph_hex_float_decode(body:&str,limits:SqliteDatabaseLimits)->Result<SemioGraphSnapshot,semio_framework_value::ValueError>{
  use semio_framework_value::native_decoding::{NativeDecodeControl,NativeDecodeProgress};
  let mut callback=|_|true;let mut outer=SqliteSnapshotControl::new(&mut callback,limits);
- outer.allocation_stage(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-  let mut callback=|event:NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native=NativeDecodeControl::new(remaining,&mut callback);
+ outer.allocation_stage(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint,allocation|{
+  let mut callback=|event:NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
   let result=crate::standards::v1::subsets::graph::io::sqlite::snapshot::native_decoding::document(body,&mut native,limits);(result,native.owned_bytes())
  }).unwrap()
 }

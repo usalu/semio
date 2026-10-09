@@ -15,6 +15,17 @@ use semio_framework_value::{ValueKind, ValueType};
 
 #[path = "🧵️retirement/🦀️.rs"]
 pub mod retirement;
+
+#[path = "🧭️topology/🦀️.rs"]
+pub mod topology;
+#[path = "📥️input/🦀️.rs"]
+pub mod input;
+#[path = "⏱️evaluation/🦀️.rs"]
+pub mod evaluation;
+pub use evaluation::{BudgetedEvalState,BudgetedEvalStep};
+#[path="🌳️tree/📋️copy/🦀️.rs"]
+pub mod tree_copy;
+pub use tree_copy::BudgetedTreeCopy;
 pub use retirement::{ColdDictionaryBuilder,ColdValueOwner,ValueRetirement};
 pub use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 
@@ -25,6 +36,9 @@ pub use cold::{ColdOwner, ColdRetire};
 #[path = "📔️registry/🦀️.rs"]
 pub mod registry;
 pub use registry::{RegistryIdentity,RegistryRetirement,RegistryLeaseRetirement,SharedRegistry};
+#[path = "📔️registry/✅️output/🦀️.rs"]
+mod output;
+pub use output::OperatorFinishCursor;
 
 // #region 🔖️Dictionary
 /// 📚️ Immutable, unordered, collision-free key-value collection. `serde` is TEST-ONLY
@@ -864,6 +878,12 @@ impl SchemaComponent {
 }
 
 impl Operator for SchemaComponent {
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_copy:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(1)}
+
         fn retire_cold(self: Box<Self>) { self.schema.retire_cold(); }
 
     fn retirement_is_empty(&self) -> bool {
@@ -1068,8 +1088,9 @@ pub fn cluster_operator_info(id: &str, name: &str, tree: &Tree) -> OperatorInfo 
 
 // #region 🔖️OperatorRecord
 /// ⚙️ Eval error from an operator.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned)]
 pub enum EvalError {
+    Retained(ValueError),
     UnknownKind(String),
     MissingInput(String),
     InvalidInput(String),
@@ -1082,6 +1103,7 @@ pub enum EvalError {
 impl std::fmt::Display for EvalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            EvalError::Retained(error)=>std::fmt::Display::fmt(error,f),
             EvalError::UnknownKind(k) => write!(f, "unknown kind: {k}"),
             EvalError::MissingInput(k) => write!(f, "missing input: {k}"),
             EvalError::InvalidInput(m) => write!(f, "invalid input: {m}"),
@@ -1094,6 +1116,14 @@ impl std::fmt::Display for EvalError {
 }
 
 impl std::error::Error for EvalError {}
+impl From<ValueError> for EvalError{fn from(error:ValueError)->Self{Self::Retained(error)}}
+
+/// 📥️ Returns the same original input when an implementation declares no resumable plan.
+pub enum OperatorPlanAdmission {Job(Box<dyn OperatorJob>),Immediate(Dictionary)}
+impl OperatorPlanAdmission {
+    /// 📤️ Hands back the exact original no-plan input with one admitted ownership event and no physical effects.
+    pub fn immediate(input:Dictionary,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(EvalError,Dictionary)>{if grant.maximum_items==0{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original immediate plan requires one item").into(),input))}if grant.maximum_depth==0{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original immediate plan requires admitted depth").into(),input))}Ok((Self::Immediate(input),RetainedCloneProgress{copied_items:1,..Default::default()}))}
+}
 
 /// 📈️ Monotone progress of one [`OperatorJob`]. `units_done` never decreases; `units_total` is the
 /// plan known so far and may be revised upward by a job whose later stages are only plannable once
@@ -1128,8 +1158,14 @@ pub enum OperatorJobStep {
 /// not offer a job (see [`Operator::step_plan`]'s default) and is evaluated in one call as before
 /// (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
 pub trait OperatorJob: Send {
-    /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe.
-    fn step(&mut self, budget: usize) -> Result<OperatorJobStep, EvalError>;
+    /// ⏱️ Advances by at most `budget` units under independently supplied physical credits, preserving the actual receipt through terminal output.
+    fn step(&mut self, budget: usize, grant: RetainedCloneGrant) -> Result<(OperatorJobStep, RetainedCloneProgress), EvalError>;
+    /// 🧾️ Preserves the actual last normal receipt through successful and failed child turns.
+    fn normal_step_progress(&self)->RetainedCloneProgress;
+    fn next_step_copy_byte_demand(&self) -> Result<usize, ValueError>;
+    fn next_step_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError>;
+    fn next_step_release_byte_demand(&self) -> Result<usize, ValueError>;
+    fn next_step_depth_demand(&self) -> Result<usize, ValueError>;
     /// 📈️ Progress right now — safe to read between steps and after termination.
     fn progress(&self) -> OperatorProgress;
     /// 🛑️ Retires the job at the next observable boundary. A job that already produced its output
@@ -1158,14 +1194,12 @@ pub trait Operator: Send + Sync {
         let input = ColdOwner::new(input);
         self.evaluate(&input).map(ColdOwner::new)
     }
-    /// ⏱️ The budgeted, resumable form of this operator's evaluation, when it has one. `None` (the
-    /// default, and the answer for every operator whose cost is microseconds) means "evaluate me in
-    /// one call". An operator that answers `Some` MUST produce, through its job, exactly what
-    /// [`Operator::evaluate`] would have produced for the same input — the stepped path IS the
-    /// algorithm, never a second implementation to drift from.
-    fn step_plan(&self, _input: &Dictionary) -> Result<Option<Box<dyn OperatorJob>>, EvalError> {
-        Ok(None)
-    }
+    /// ⏱️ Admits a concrete plan by moving the exact original input under the caller's independent physical currencies.
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>;
+    fn next_plan_copy_byte_demand(&self,input:&Dictionary)->Result<usize,ValueError>;
+    fn next_plan_capacity_byte_demand(&self,input:&Dictionary,maximum_copy_bytes:usize)->Result<usize,ValueError>;
+    fn next_plan_release_byte_demand(&self,input:&Dictionary)->Result<usize,ValueError>;
+    fn next_plan_depth_demand(&self,input:&Dictionary)->Result<usize,ValueError>;
     /// 🪶️ Only compiler-proven trivial operators are terminal without domain-specific field retirement.
     fn retirement_is_empty(&self) -> bool { !std::mem::needs_drop::<Self>() }
     fn next_retire_copy_byte_demand(&self)->Result<usize,ValueError> {if self.retirement_is_empty(){Ok(0)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"operator copy ownership is not declared"))}}
@@ -1575,6 +1609,19 @@ pub struct OperatorRecord {
     pub implementations: Vec<OperatorImpl>,
 }
 
+/// 🧭️ Retains only scalar positions into the original registry and input owners.
+#[derive(Clone,Copy,Default)]
+pub struct OperatorPlanCursor {slot:usize,record:Option<usize>,implementation:usize,fallback:Option<usize>,channel:usize,signature:usize,rank:usize,offset:usize,value_rank:Option<usize>,schema_rank:Option<usize>,use_default:bool,phase:u8,progress:RetainedCloneProgress}
+semio_framework_value::artifact_retire_leaf!(OperatorPlanCursor);
+pub enum OperatorPlanStep {Working,Admitted(OperatorPlanAdmission)}
+impl OperatorPlanCursor {
+    pub fn new()->Self{Self::default()}
+    pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
+    fn value<'a>(&self,record:&'a OperatorRecord,input:&'a Dictionary)->Option<&'a Value>{if self.use_default{record.info.inputs.get(self.channel)?.default.as_ref()}else{input.entry_at_rank(self.value_rank?).map(|(_,value)|value)}}
+    fn schema<'a>(&self,record:&'a OperatorRecord,input:&'a Dictionary)->&'a str{self.value(record,input).and_then(Value::as_dictionary).and_then(|dict|dict.entry_at_rank(self.schema_rank?)).and_then(|(_,value)|value.as_atom()).and_then(Atom::as_str).unwrap_or("")}
+    fn compare(&mut self,left:&str,right:&str,grant:RetainedCloneGrant)->Option<bool>{let length=left.len().min(right.len());let count=(length-self.offset).min(grant.maximum_copy_bytes);if count==0&&self.offset<length{return None}let same=left.as_bytes()[self.offset..self.offset+count]==right.as_bytes()[self.offset..self.offset+count];self.offset+=count;self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()};if !same{self.offset=0;Some(false)}else if self.offset==length{self.offset=0;Some(left.len()==right.len())}else{None}}
+}
+
 /// 📋️ Registry of schemas and operators by id.
 #[derive(Default)]
 pub struct Registry {
@@ -1766,35 +1813,35 @@ impl Registry {
         self.dispatch(operator_id, &input).map(ColdOwner::new)
     }
 
-    /// ⏱️ The budgeted form of [`Registry::dispatch`]: resolves the same operator and
-    /// implementation, validates the same inputs, and asks the implementation for a resumable job.
-    /// `Ok(None)` means this operator has no sub-structure and the caller should `dispatch` it in
-    /// one call. The job's `Done` dictionary still has to pass [`validate_operator_outputs`], which
-    /// is why [`Registry::finish_job`] — not the caller — closes it.
-    // 🚫️async: E1 pure registry lookup mirroring `dispatch` (no I/O) — see R9
-    pub fn dispatch_job(&self, operator_id: &str, input: &Dictionary) -> Result<Option<Box<dyn OperatorJob>>, EvalError> {
-        let operator = self.operator(operator_id).ok_or_else(|| EvalError::UnknownKind(operator_id.into()))?;
-        validate_neuron_inputs(input, Some(&operator.info))?;
-        let signature = operator_signature(&operator.info, input);
-        let implementation = operator
-            .implementations
-            .iter()
-            .find(|implementation| implementation.schemas == signature)
-            .or_else(|| operator.implementations.iter().find(|implementation| implementation.schemas.is_empty()))
-            .ok_or_else(|| EvalError::InvalidInput(format!("no implementation for {operator_id}({})", signature.join(", "))))?;
-        implementation.operator.step_plan(input)
+    /// 🪙️ Quotes the next scalar selection or actual concrete plan admission from the same owners.
+    pub fn next_dispatch_job_demands(&self,operator_id:&str,input:&Option<Dictionary>,cursor:&OperatorPlanCursor,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
+        let input=input.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original plan input is absent"))?;
+        if cursor.phase==6{let record=self.operators.slot_entry(cursor.record.unwrap()).unwrap().1;let operator=&record.implementations[cursor.implementation].operator;return Ok(semio_framework_value::RetirementDemand{copy_bytes:operator.next_plan_copy_byte_demand(input)?,capacity_bytes:operator.next_plan_capacity_byte_demand(input,copy)?,release_bytes:operator.next_plan_release_byte_demand(input)?,depth:operator.next_plan_depth_demand(input)?})}
+        let bytes=match cursor.phase{0=>self.operators.slot_entry(cursor.slot).map_or(0,|(key,_)|usize::from(cursor.offset<key.len().min(operator_id.len()))),2=>cursor.record.and_then(|slot|self.operators.slot_entry(slot)).and_then(|(_,record)|record.info.inputs.get(cursor.channel)).and_then(|channel|input.entry_at_rank(cursor.rank).map(|(key,_)|usize::from(cursor.offset<key.len().min(channel.name.len())))).unwrap_or(0),3=>cursor.record.and_then(|slot|self.operators.slot_entry(slot)).and_then(|(_,record)|cursor.value(record,input)).and_then(Value::as_dictionary).and_then(|dictionary|dictionary.entry_at_rank(cursor.rank)).map_or(0,|(key,_)|usize::from(cursor.offset<key.len().min(SCHEMA_KEY.len()))),4=>cursor.record.and_then(|slot|self.operators.slot_entry(slot)).map_or(0,|(_,record)|usize::from(cursor.offset<cursor.schema(record,input).len().min(record.implementations[cursor.implementation].schemas[cursor.signature].len()))),_=>0};
+        Ok(semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()})
+    }
+    /// ⏱️ Selects the original implementation without a cold lookup or allocated signature mirror.
+    pub fn dispatch_job(&self,operator_id:&str,input:&mut Option<Dictionary>,cursor:&mut OperatorPlanCursor,grant:RetainedCloneGrant)->Result<OperatorPlanStep,EvalError>{
+        cursor.progress=Default::default();let result=self.dispatch_job_source(operator_id,input,cursor,grant);result.map_err(|error|match error{EvalError::Retained(error)=>EvalError::Retained(error.with_retained_progress(cursor.progress)),other=>other})
+    }
+    fn dispatch_job_source(&self,operator_id:&str,input:&mut Option<Dictionary>,cursor:&mut OperatorPlanCursor,grant:RetainedCloneGrant)->Result<OperatorPlanStep,EvalError>{
+        use semio_framework_value::ValueRefusalKind;
+        if grant.maximum_items==0{return Ok(OperatorPlanStep::Working)}let demand=self.next_dispatch_job_demands(operator_id,input,cursor,grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original plan selection requires admitted depth").into())}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(OperatorPlanStep::Working)}
+        cursor.progress=RetainedCloneProgress{copied_items:1,..Default::default()};
+        if cursor.phase==0{if cursor.slot==self.operators.slot_count(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original operator kind is absent").into())}if let Some((key,_))=self.operators.slot_entry(cursor.slot){match cursor.compare(key,operator_id,grant){Some(true)=>{cursor.record=Some(cursor.slot);cursor.phase=1;},Some(false)=>cursor.slot+=1,None=>{}}}else{cursor.slot+=1}return Ok(OperatorPlanStep::Working)}
+        let record=self.operators.slot_entry(cursor.record.unwrap()).unwrap().1;let original=input.as_ref().unwrap();
+        match cursor.phase {
+            1=>{if cursor.implementation==record.implementations.len(){if let Some(index)=cursor.fallback{cursor.implementation=index;cursor.phase=6;}else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original operator implementation is absent").into())}}else if record.implementations[cursor.implementation].schemas.is_empty(){cursor.fallback.get_or_insert(cursor.implementation);cursor.implementation+=1;}else if record.info.variadic_input.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original variadic signature requires its retained contract cursor").into())}else{cursor.channel=0;cursor.signature=0;cursor.phase=5;}},
+            2=>{if let Some((key,_))=original.entry_at_rank(cursor.rank){match cursor.compare(key,&record.info.inputs[cursor.channel].name,grant){Some(true)=>{cursor.value_rank=Some(cursor.rank);cursor.use_default=false;cursor.rank=0;cursor.phase=3;},Some(false)=>cursor.rank+=1,None=>{}}}else{cursor.value_rank=None;cursor.use_default=true;cursor.rank=0;cursor.phase=3;}},
+            3=>{if let Some(dictionary)=cursor.value(record,original).and_then(Value::as_dictionary){if let Some((key,_))=dictionary.entry_at_rank(cursor.rank){match cursor.compare(key,SCHEMA_KEY,grant){Some(true)=>{cursor.schema_rank=Some(cursor.rank);cursor.phase=4;},Some(false)=>cursor.rank+=1,None=>{}}}else{cursor.schema_rank=None;cursor.phase=4;}}else{cursor.schema_rank=None;cursor.phase=4;}},
+            4=>{match cursor.compare(cursor.schema(record,original),&record.implementations[cursor.implementation].schemas[cursor.signature],grant){Some(true)=>{cursor.signature+=1;cursor.channel+=1;cursor.phase=5;},Some(false)=>{cursor.implementation+=1;cursor.phase=1;},None=>{}}},
+            5=>{if cursor.channel==record.info.inputs.len(){if cursor.signature==record.implementations[cursor.implementation].schemas.len(){cursor.phase=6;}else{cursor.implementation+=1;cursor.phase=1;}}else if record.info.inputs[cursor.channel].name.len()==1{if grant.maximum_copy_bytes==0{cursor.progress=Default::default();return Ok(OperatorPlanStep::Working)}cursor.progress.copied_bytes=1;if record.info.inputs[cursor.channel].name.as_bytes()[0]==b'*'{cursor.channel+=1;}else if cursor.signature==record.implementations[cursor.implementation].schemas.len(){cursor.implementation+=1;cursor.phase=1;}else{cursor.rank=0;cursor.phase=2;}}else if cursor.signature==record.implementations[cursor.implementation].schemas.len(){cursor.implementation+=1;cursor.phase=1;}else{cursor.rank=0;cursor.phase=2;}},
+            6=>{match record.implementations[cursor.implementation].operator.step_plan(input.take().unwrap(),grant){Ok((admission,progress))=>{cursor.progress=progress;cursor.phase=7;return Ok(OperatorPlanStep::Admitted(admission))},Err((error,original))=>{*input=Some(original);cursor.progress=match &error{EvalError::Retained(error)=>error.retained_progress(),_=>Default::default()};return Err(error)}}},
+            _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original plan was already admitted").into()),
+        }
+        Ok(OperatorPlanStep::Working)
     }
 
-    /// ✅️ Holds a finished job's output to the SAME output contract [`Registry::dispatch`] holds a
-    /// one-shot evaluation to, so a stepped answer and a one-shot answer are indistinguishable
-    /// downstream.
-    // 🚫️async: E1 pure registry lookup (no I/O) — see R9
-    pub fn finish_job(&self, operator_id: &str, output: Dictionary) -> Result<Dictionary, EvalError> {
-        let operator = self.operator(operator_id).ok_or_else(|| EvalError::UnknownKind(operator_id.into()))?;
-        let output = ColdOwner::new(output);
-        validate_operator_outputs(&operator.info, &output)?;
-        Ok(output.into_inner())
-    }
 }
 // #endregion 🔖️OperatorRecord
 
@@ -2209,7 +2256,7 @@ impl EvalStepBudget {
 ///
 /// 🪪️ `neuron_id` names the node the request BELONGS to, so a census can say which nodes of a wave
 /// are actually outstanding at their plugin instead of guessing from the head of a remaining list.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned)]
 pub struct PendingExtensionEval {
     pub neuron_id: String,
     pub extension_id: String,
@@ -2229,7 +2276,7 @@ impl<'a> Evaluator<'a> {
     }
 
     pub fn evaluate(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Result<HistoryFoldIndex<String, Dictionary>, EvalError> {
-        let EvalChannels { outputs, inputs } = self.evaluate_channels(tree, seeds, &HashMap::new())?;
+        let EvalChannels { outputs, inputs } = self.evaluate_channels(tree, seeds, &HistoryFoldIndex::new())?;
         inputs.retire_cold(); Ok(outputs)
     }
 
@@ -2237,14 +2284,14 @@ impl<'a> Evaluator<'a> {
         &self,
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
-        operator_infos: &HashMap<String, OperatorInfo>,
+        operator_infos: &HistoryFoldIndex<String, OperatorInfo>,
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
     ) -> Result<HistoryFoldIndex<String, Dictionary>, EvalError> {
         let EvalChannels { outputs, inputs } = self.evaluate_channels_with(tree, seeds, operator_infos, dispatch)?;
         inputs.retire_cold(); Ok(outputs)
     }
 
-    pub fn evaluate_channels(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>, operator_infos: &HashMap<String, OperatorInfo>) -> Result<EvalChannels, EvalError> {
+    pub fn evaluate_channels(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>, operator_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Result<EvalChannels, EvalError> {
         self.evaluate_channels_with(tree, seeds, operator_infos, &|kind, input| self.registry.dispatch(kind, input))
     }
 
@@ -2252,7 +2299,7 @@ impl<'a> Evaluator<'a> {
         &self,
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
-        operator_infos: &HashMap<String, OperatorInfo>,
+        operator_infos: &HistoryFoldIndex<String, OperatorInfo>,
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
     ) -> Result<EvalChannels, EvalError> {
         let cache = ColdOwner::new(NeuralCache::new());
@@ -2267,7 +2314,7 @@ impl<'a> Evaluator<'a> {
         &self,
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
-        operator_infos: &HashMap<String, OperatorInfo>,
+        operator_infos: &HistoryFoldIndex<String, OperatorInfo>,
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
         cache: &NeuralCache,
         dirty: &HashSet<String>,
@@ -2294,7 +2341,7 @@ impl<'a> Evaluator<'a> {
         &self,
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
-        operator_infos: &HashMap<String, OperatorInfo>,
+        operator_infos: &HistoryFoldIndex<String, OperatorInfo>,
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
         cache: &NeuralCache,
         dirty: &HashSet<String>,
@@ -2396,7 +2443,7 @@ impl<'a> Evaluator<'a> {
         &self,
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
-        operator_infos: &HashMap<String, OperatorInfo>,
+        operator_infos: &HistoryFoldIndex<String, OperatorInfo>,
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
     ) -> Result<EvalChannels, EvalError> {
         let cache = ColdOwner::new(NeuralCache::new());
@@ -2411,7 +2458,7 @@ impl<'a> Evaluator<'a> {
         &self,
         tree: &Tree,
         seeds: &HashMap<String, Dictionary>,
-        operator_infos: &HashMap<String, OperatorInfo>,
+        operator_infos: &HistoryFoldIndex<String, OperatorInfo>,
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
         cache: &NeuralCache,
         dirty: &HashSet<String>,
@@ -2476,11 +2523,11 @@ impl<'a> Evaluator<'a> {
 
     /// 🧮️ Evaluates a tree as a function: in dictionary to out dictionary via boundary neurons.
     pub fn evaluate_function(&self, tree: &Tree, in_dict: &Dictionary) -> Result<Dictionary, EvalError> {
-        self.evaluate_function_with(tree, in_dict, &HashMap::new(), &|kind, input| self.registry.dispatch(kind, input))
+        self.evaluate_function_with(tree, in_dict, &HistoryFoldIndex::new(), &|kind, input| self.registry.dispatch(kind, input))
     }
 
     /// 🧮️ Evaluates a tree as a function with custom dispatch and operator metadata.
-    pub fn evaluate_function_with(&self, tree: &Tree, in_dict: &Dictionary, operator_infos: &HashMap<String, OperatorInfo>, dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync)) -> Result<Dictionary, EvalError> {
+    pub fn evaluate_function_with(&self, tree: &Tree, in_dict: &Dictionary, operator_infos: &HistoryFoldIndex<String, OperatorInfo>, dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync)) -> Result<Dictionary, EvalError> {
         let seeds = ColdOwner::new(seed_input_boundaries(tree, in_dict));
         let channels = ColdOwner::new(self.evaluate_channels_with(tree, &seeds, operator_infos, dispatch)?);
         collect_output_boundaries(tree, &channels)
@@ -2491,7 +2538,7 @@ impl<'a> Evaluator<'a> {
         &self,
         tree: &Tree,
         in_dict: &Dictionary,
-        operator_infos: &HashMap<String, OperatorInfo>,
+        operator_infos: &HistoryFoldIndex<String, OperatorInfo>,
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
@@ -2504,7 +2551,7 @@ impl<'a> Evaluator<'a> {
         &self,
         sub_tree: &Tree,
         parent_input: &Dictionary,
-        operator_infos: &HashMap<String, OperatorInfo>,
+        operator_infos: &HistoryFoldIndex<String, OperatorInfo>,
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
@@ -2517,7 +2564,7 @@ impl<'a> Evaluator<'a> {
         &self,
         sub_tree: &Tree,
         parent_input: &Dictionary,
-        operator_infos: &HashMap<String, OperatorInfo>,
+        operator_infos: &HistoryFoldIndex<String, OperatorInfo>,
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
@@ -2530,7 +2577,7 @@ impl<'a> Evaluator<'a> {
     }
 }
 
-fn operator_info_for_neuron<'a>(neuron: &Neuron, operator_infos: &'a HashMap<String, OperatorInfo>, registry_info: Option<&'a OperatorInfo>) -> Option<&'a OperatorInfo> {
+fn operator_info_for_neuron<'a>(neuron: &Neuron, operator_infos: &'a HistoryFoldIndex<String, OperatorInfo>, registry_info: Option<&'a OperatorInfo>) -> Option<&'a OperatorInfo> {
     if neuron.tree.is_some() {
         return None;
     }

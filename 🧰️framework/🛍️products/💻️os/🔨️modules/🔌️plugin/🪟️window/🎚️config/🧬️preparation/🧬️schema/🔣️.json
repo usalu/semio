@@ -1,0 +1,138 @@
+{
+  "type": "object",
+  "required": [
+    "grant",
+    "maximumTurns",
+    "cancelAt",
+    "terminalDropBytes",
+    "selection",
+    "camera",
+    "selectionBounds"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "grant": {
+      "type": "object",
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "const": 1
+        },
+        "copy": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "release": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelAt": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "selection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "base",
+          "next"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "next": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    },
+    "camera": {
+      "type": "object",
+      "required": [
+        "base",
+        "next"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "type": "object"
+        },
+        "next": {
+          "type": "object"
+        }
+      }
+    },
+    "selectionBounds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "base",
+          "next",
+          "repeat",
+          "bytes",
+          "admissible"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "next": {
+            "type": "string"
+          },
+          "repeat": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "admissible": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

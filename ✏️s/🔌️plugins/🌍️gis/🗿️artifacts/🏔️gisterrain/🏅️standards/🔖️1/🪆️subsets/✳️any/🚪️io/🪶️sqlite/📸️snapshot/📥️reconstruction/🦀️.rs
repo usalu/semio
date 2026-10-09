@@ -115,9 +115,9 @@ pub(super) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapsho
  store::sqlite_snapshot::validate_sqlite_database_schema_controlled(database, <GisTerrainSnapshot as store::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, SqliteSnapshotPhase::ReconstructSnapshot, control)?;
  control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
  let maximum = control.reconstruction_remaining_bytes()?; let mut semantic = 0usize;
- let result = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, progress| {
+ let result = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, progress,allocation|{
   let mut callback = |event: semio_framework_value::native_decoding::NativeDecodeProgress| progress(event.completed, event.total);
-  let mut native = NativeDecodeControl::new(remaining, &mut callback);
+  let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
   let result = native.begin_stage(0).and_then(|()| { let mut owner = Owner { native: &mut native, bytes: 0, maximum }; let result = snapshot(database, &mut owner); semantic = owner.bytes; result });
   (result, native.owned_bytes())
  });

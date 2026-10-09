@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Job Step Budget",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fuel",
+    "deadlineUs",
+    "retained"
+  ],
+  "properties": {
+    "fuel": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "deadlineUs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "retained": {
+      "$ref": "../../../🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json"
+    }
+  }
+}

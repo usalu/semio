@@ -1,15 +1,450 @@
 {
-  "owners": ["discardedMutation", "snapshotFrame", "emptyOriginalVector", "issuer"],
+  "actorHeaderCustody": [
+    {
+      "phase": "sessionTransfer",
+      "headers": [
+        "session",
+        "sessionCursor"
+      ]
+    },
+    {
+      "phase": "sessionRemoval",
+      "headers": [
+        "sessionCursor",
+        "retiredFlag"
+      ]
+    },
+    {
+      "phase": "commandAdmission",
+      "headers": [
+        "event",
+        "commandSlot"
+      ]
+    },
+    {
+      "phase": "commandRemoval",
+      "headers": [
+        "commandSlot"
+      ]
+    }
+  ],
+  "snapshotReturnGrant": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 65536,
+    "release": 65536,
+    "depth": 128
+  },
+  "snapshotReturnCustody": [
+    {
+      "phase": "returned",
+      "original": "store",
+      "terminal": false
+    },
+    {
+      "phase": "cursorPaid",
+      "original": "pump",
+      "terminal": false
+    },
+    {
+      "phase": "payloadPaid",
+      "original": "shell",
+      "terminal": false
+    },
+    {
+      "phase": "shellPaid",
+      "original": "none",
+      "terminal": true
+    }
+  ],
+  "childMemberCustody": [
+    {
+      "phase": "member",
+      "entry": "member",
+      "metadata": "entry",
+      "terminal": false
+    },
+    {
+      "phase": "fieldsPaid",
+      "entry": "none",
+      "metadata": "cursor",
+      "terminal": false
+    },
+    {
+      "phase": "metadataPaid",
+      "entry": "none",
+      "metadata": "emptyCursor",
+      "terminal": false
+    },
+    {
+      "phase": "terminal",
+      "entry": "none",
+      "metadata": "none",
+      "terminal": true
+    }
+  ],
+  "childSnapshotCustody": [
+    {
+      "phase": "pending",
+      "snapshot": "entry",
+      "metadata": "entry",
+      "terminal": false
+    },
+    {
+      "phase": "snapshotPaid",
+      "snapshot": "cursor",
+      "metadata": "member",
+      "terminal": false
+    },
+    {
+      "phase": "leasePaid",
+      "snapshot": "none",
+      "metadata": "member",
+      "terminal": false
+    },
+    {
+      "phase": "metadataPaid",
+      "snapshot": "none",
+      "metadata": "cursor",
+      "terminal": false
+    },
+    {
+      "phase": "terminal",
+      "snapshot": "none",
+      "metadata": "none",
+      "terminal": true
+    }
+  ],
+  "childHeaderCustody": [
+    {
+      "phase": "rootAlias",
+      "headers": [
+        "rootArc"
+      ]
+    },
+    {
+      "phase": "emptyRoot",
+      "headers": [
+        "rootArc"
+      ]
+    },
+    {
+      "phase": "sharedPage",
+      "headers": [
+        "pageArc",
+        "rootCount"
+      ]
+    },
+    {
+      "phase": "emptyPage",
+      "headers": [
+        "pageArc"
+      ]
+    },
+    {
+      "phase": "entry",
+      "headers": [
+        "entryArc",
+        "entryBody",
+        "rootCount",
+        "pendingEntry"
+      ]
+    }
+  ],
+  "memberCloseGrant": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 65536,
+    "release": 65536,
+    "depth": 128
+  },
+  "memberCloseCustody": [
+    {
+      "phase": "live",
+      "view": "member",
+      "typed": "member",
+      "metadata": "member",
+      "terminal": false
+    },
+    {
+      "phase": "viewPaid",
+      "view": "registry",
+      "typed": "member",
+      "metadata": "member",
+      "terminal": false
+    },
+    {
+      "phase": "typedPaid",
+      "view": "registry",
+      "typed": "none",
+      "metadata": "member",
+      "terminal": false
+    },
+    {
+      "phase": "metadataPaid",
+      "view": "registry",
+      "typed": "none",
+      "metadata": "cursor",
+      "terminal": false
+    },
+    {
+      "phase": "terminal",
+      "view": "registry",
+      "typed": "none",
+      "metadata": "none",
+      "terminal": true
+    }
+  ],
+  "reviewViewGrant": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 4096,
+    "release": 4096,
+    "depth": 128
+  },
+  "reviewViewCustody": [
+    {
+      "phase": "reviewed",
+      "visible": "review",
+      "retained": null,
+      "displaced": null,
+      "base": 7
+    },
+    {
+      "phase": "captured",
+      "visible": "review",
+      "retained": "review",
+      "displaced": null,
+      "base": 7
+    },
+    {
+      "phase": "editing",
+      "visible": "draft",
+      "retained": "review",
+      "displaced": null,
+      "base": 7
+    },
+    {
+      "phase": "discarded",
+      "visible": "review",
+      "retained": null,
+      "displaced": "draft",
+      "base": 7
+    }
+  ],
+  "receiptCustody": [
+    {
+      "phase": "emitted",
+      "receipt": true,
+      "work": true,
+      "terminal": false
+    },
+    {
+      "phase": "physicalEmpty",
+      "receipt": true,
+      "work": true,
+      "terminal": false
+    },
+    {
+      "phase": "recipientPaid",
+      "receipt": false,
+      "work": false,
+      "terminal": true
+    }
+  ],
+  "discardPublicationGrant": {
+    "items": 1,
+    "copy": 131072,
+    "capacity": 262144,
+    "release": 262144,
+    "depth": 256
+  },
+  "discardPublicationCustody": [
+    {
+      "phase": "received",
+      "session": "live",
+      "editor": "live",
+      "store": "live",
+      "frames": 0
+    },
+    {
+      "phase": "effectsPreparing",
+      "session": "live",
+      "editor": "live",
+      "store": "live",
+      "frames": 5
+    },
+    {
+      "phase": "published",
+      "session": "retained",
+      "editor": "retained",
+      "store": "retained",
+      "frames": 5
+    }
+  ],
+  "owners": [
+    "discardedMutation",
+    "snapshotFrame",
+    "emptyOriginalVector",
+    "issuer"
+  ],
+  "pendingCommandCustody": [
+    {
+      "phase": "received",
+      "original": "event",
+      "applied": false,
+      "mayReduce": false
+    },
+    {
+      "phase": "slotPaid",
+      "original": "event",
+      "applied": false,
+      "mayReduce": false
+    },
+    {
+      "phase": "semanticFramePaid",
+      "original": "nativeCursor",
+      "applied": false,
+      "mayReduce": false
+    },
+    {
+      "phase": "storeEffectsAdmitted",
+      "original": "nativeCursor",
+      "applied": false,
+      "mayReduce": true
+    },
+    {
+      "phase": "committed",
+      "original": "residual",
+      "applied": false,
+      "mayReduce": false
+    },
+    {
+      "phase": "originalsTerminal",
+      "original": "none",
+      "applied": true,
+      "mayReduce": false
+    }
+  ],
+  "sessionCustody": [
+    {
+      "items": 0,
+      "depth": 1,
+      "accepted": false
+    },
+    {
+      "items": 1,
+      "depth": 0,
+      "accepted": false
+    },
+    {
+      "items": 1,
+      "depth": 1,
+      "accepted": true
+    }
+  ],
+  "configSelections": [
+    null,
+    "",
+    "α\u0000😀"
+  ],
   "copyBytes": 24,
   "capacityBytes": 528,
   "releaseBytes": 65536,
   "depth": 3,
   "grants": [
-    {"items": 0, "copy": 24, "capacity": 528, "release": 65536, "depth": 3, "accepted": false},
-    {"items": 1, "copy": 23, "capacity": 528, "release": 65536, "depth": 3, "accepted": false},
-    {"items": 1, "copy": 24, "capacity": 527, "release": 65536, "depth": 3, "accepted": false},
-    {"items": 1, "copy": 24, "capacity": 528, "release": 65535, "depth": 3, "accepted": false},
-    {"items": 1, "copy": 24, "capacity": 528, "release": 65536, "depth": 2, "accepted": false},
-    {"items": 1, "copy": 24, "capacity": 528, "release": 65536, "depth": 3, "accepted": true}
+    {
+      "items": 0,
+      "copy": 24,
+      "capacity": 528,
+      "release": 65536,
+      "depth": 3,
+      "accepted": false
+    },
+    {
+      "items": 1,
+      "copy": 23,
+      "capacity": 528,
+      "release": 65536,
+      "depth": 3,
+      "accepted": false
+    },
+    {
+      "items": 1,
+      "copy": 24,
+      "capacity": 527,
+      "release": 65536,
+      "depth": 3,
+      "accepted": false
+    },
+    {
+      "items": 1,
+      "copy": 24,
+      "capacity": 528,
+      "release": 65535,
+      "depth": 3,
+      "accepted": false
+    },
+    {
+      "items": 1,
+      "copy": 24,
+      "capacity": 528,
+      "release": 65536,
+      "depth": 2,
+      "accepted": false
+    },
+    {
+      "items": 1,
+      "copy": 24,
+      "capacity": 528,
+      "release": 65536,
+      "depth": 3,
+      "accepted": true
+    }
+  ],
+  "constructorGrant": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 65536,
+    "release": 262144,
+    "depth": 64
+  },
+  "constructorCustody": [
+    {
+      "phase": "sourceDenied",
+      "original": "factory",
+      "receipt": false,
+      "installed": false
+    },
+    {
+      "phase": "sourceAdmitted",
+      "original": "catalog",
+      "receipt": true,
+      "installed": false
+    },
+    {
+      "phase": "ticketsDenied",
+      "original": "catalog",
+      "receipt": false,
+      "installed": false
+    },
+    {
+      "phase": "ticketsAdmitted",
+      "original": "catalog",
+      "receipt": true,
+      "installed": false
+    },
+    {
+      "phase": "installed",
+      "original": "store",
+      "receipt": true,
+      "installed": true
+    },
+    {
+      "phase": "recipientPaid",
+      "original": "store",
+      "receipt": false,
+      "installed": true
+    }
   ]
 }

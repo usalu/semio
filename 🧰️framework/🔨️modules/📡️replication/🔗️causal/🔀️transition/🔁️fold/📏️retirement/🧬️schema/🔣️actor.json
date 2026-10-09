@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "original",
+    "deniedAxes",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.history.fold-shared-actor-admission/v1"
+    },
+    "original": {
+      "type": "string",
+      "minLength": 1
+    },
+    "deniedAxes": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "capacity",
+          "depth"
+        ]
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sameOriginal",
+        "deniedHeap",
+        "birth",
+        "copy",
+        "prebornFrame",
+        "terminalHeap"
+      ],
+      "properties": {
+        "sameOriginal": {
+          "const": true
+        },
+        "deniedHeap": {
+          "const": [
+            0,
+            0
+          ]
+        },
+        "birth": {
+          "const": "actual-shared-arc-frame"
+        },
+        "copy": {
+          "const": "native-owner-word-layout"
+        },
+        "prebornFrame": {
+          "const": "same-queued-shell"
+        },
+        "terminalHeap": {
+          "const": [
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}

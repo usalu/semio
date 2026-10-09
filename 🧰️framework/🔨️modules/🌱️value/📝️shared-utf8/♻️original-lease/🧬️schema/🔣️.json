@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/value/shared-utf8-original-lease/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "values",
+    "capacities",
+    "aliases",
+    "grant",
+    "arcWords",
+    "stringWords",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.value.shared-utf8-original-lease.v1"
+    },
+    "values": {
+      "const": [
+        "",
+        "🐚é",
+        "z\u0000雪"
+      ]
+    },
+    "capacities": {
+      "const": [
+        32,
+        128,
+        512
+      ]
+    },
+    "aliases": {
+      "const": [
+        0,
+        1,
+        2
+      ]
+    },
+    "grant": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 4096,
+        "maximumDepth": 1
+      }
+    },
+    "arcWords": {
+      "const": 2
+    },
+    "stringWords": {
+      "const": 3
+    },
+    "expected": {
+      "const": {
+        "captureHeapBytes": 0,
+        "closeHeapBytes": 0,
+        "lastOriginalPointerPreserved": true,
+        "ungrantedHeapBytes": 0
+      }
+    }
+  }
+}

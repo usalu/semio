@@ -1,0 +1,74 @@
+{
+  "accepted": [
+    {
+      "pointer": 1,
+      "length": 4294967295,
+      "word": "18446744069414584321",
+      "refusal": 1
+    },
+    {
+      "pointer": 2,
+      "length": 4294967295,
+      "word": "18446744069414584322",
+      "refusal": 2
+    },
+    {
+      "pointer": 3,
+      "length": 4294967295,
+      "word": "18446744069414584323",
+      "refusal": 3
+    },
+    {
+      "pointer": 4,
+      "length": 4294967295,
+      "word": "18446744069414584324",
+      "refusal": 4
+    },
+    {
+      "pointer": 5,
+      "length": 4294967295,
+      "word": "18446744069414584325",
+      "refusal": 5
+    },
+    {
+      "pointer": 6,
+      "length": 4294967295,
+      "word": "18446744069414584326",
+      "refusal": 6
+    },
+    {
+      "pointer": 7,
+      "length": 4294967295,
+      "word": "18446744069414584327",
+      "refusal": 7
+    },
+    {
+      "pointer": 8,
+      "length": 4294967295,
+      "word": "18446744069414584328",
+      "refusal": 8
+    },
+    {
+      "pointer": 123,
+      "length": 17,
+      "word": "73014444155",
+      "refusal": null
+    },
+    {
+      "pointer": 0,
+      "length": 0,
+      "word": "0",
+      "refusal": null
+    }
+  ],
+  "refused": [
+    {
+      "pointer": 0,
+      "length": 4294967295
+    },
+    {
+      "pointer": 9,
+      "length": 4294967295
+    }
+  ]
+}

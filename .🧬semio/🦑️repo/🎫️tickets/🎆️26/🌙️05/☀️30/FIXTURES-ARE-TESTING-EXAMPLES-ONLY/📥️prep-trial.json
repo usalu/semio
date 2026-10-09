@@ -1,0 +1,34 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🎟️preparation/🧬️schema/🔣️.json",
+      "beforeSHA": "04aecfd8741360901634af037ada3b9cd9bfd5cb45c9b19e5c9d670b3ce6c545",
+      "action": "remove exclusive whole-trial schema",
+      "priorCapturedSHA": "8e012774b76fa845077b31f7558dd59fc92bb087dc1d5d2e72d23a7d2e328bbd",
+      "recordedAfterSHA": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🎟️preparation/🧪️tests/🟦️.ts",
+      "beforeSHA": "980111f973d350020e7439ded4659a298955bba6e6b036a402f6fa014ca82459",
+      "action": "remove only whole-fixture Ajv admission preserving actual SQL and Source laws",
+      "priorCapturedSHA": "21eb491fac29a17942957b7e57661bcbcb8ef19a1002604fa9e85efcafe51339",
+      "recordedAfterSHA": "0f60812634f4441217f35cb4917a552eaf758cedc31bca182931c35cbf62e5bd"
+    }
+  ],
+  "privateGuard": {
+    "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+    "beforeSHA": "e0aa91f29d144babbaf0da73fb0795c98e78f8e70c4f0bdb22b4fba74dd039d8",
+    "recordedAfterSHA": "1ff5fd821d120e08f8f26da388a11205e6f31cc399661732caf47a1f227c3368"
+  },
+  "plainFixture": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🎟️preparation/🧫️fixtures/🔣️.json",
+    "beforeSHA": "4d4f10dc945b0bcad49dbf762aa337620633619c797cacdefa8ce62a56068fb9",
+    "historicalBeforeSHA": "bd56df84beab5747c87178df5274138657fcbcd893fa2bda0b2a00ed6770d68e",
+    "afterSHA": "4d4f10dc945b0bcad49dbf762aa337620633619c797cacdefa8ce62a56068fb9"
+  },
+  "actualBoundaryRed": "Root fixture-boundary-current6 actualNx1 exclusive whole cases/receipt wrapper",
+  "sourceCopiesAdded": false,
+  "heldRustChanges": false,
+  "freshGuardQualification": "Earlier guard refused current Schema/TS peer transferCases additions; no mutation. Fresh current cut preserves all added laws/plain rows and removes only whole-wrapper Ajv.",
+  "scopedRed": "prep-red.log actualNx1 at Store whole-receipt authority guard"
+}

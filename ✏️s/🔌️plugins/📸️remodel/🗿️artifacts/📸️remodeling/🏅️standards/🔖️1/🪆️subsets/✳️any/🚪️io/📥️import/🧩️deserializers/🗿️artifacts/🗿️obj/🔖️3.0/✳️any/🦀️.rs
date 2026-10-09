@@ -25,7 +25,7 @@ impl Deserializer<RemodelingSnapshot> for ObjIntoRemodeling {
             _ => Confidence::None,
         }
     }
-    async fn deserialize(payload: &IoPayload) -> IoResult<RemodelingSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<RemodelingSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "obj→remodeling: expected a text obj payload".to_string())));
         };

@@ -16,7 +16,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::schema::snapshot::{Grid2dSnapshot, WfcAdjacencyRule2d, WfcCell2d, WfcDirection2d, WfcPinnedCell2d, WfcTile2d, WfcTileMedia2d, WFC_GRID2D_DOCUMENT_SCHEMA};
 #[path = "🛬️native/🦀️.rs"]
-mod controlled_native;
+pub(crate)mod controlled_native;
 pub(crate) use controlled_native::{decode_sqlite_snapshot_native,encode_sqlite_snapshot_native};
 
 //#region 🔖️Direction

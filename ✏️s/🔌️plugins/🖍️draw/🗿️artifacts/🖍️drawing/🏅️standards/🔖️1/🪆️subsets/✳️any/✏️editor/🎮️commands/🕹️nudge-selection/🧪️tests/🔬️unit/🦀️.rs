@@ -4,13 +4,13 @@ use super::*;
 /// ⌨️ The emission of one right-nudge verb of `session`'s selection by `delta`.
 fn plan(document:&DrawingSnapshot,session:&DrawingSession,delta:[f64;2])->Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {
     let history=semio_framework_plugin::HistoryView::empty();
-    nudge(&ArtifactView::new(document,&history),session,"nudgeSelectionRight",delta)
+    nudge(&ArtifactView::with_operation(document,&history,crate::editor::drawing::identity_test::operation()),session,"nudgeSelectionRight",delta)
 }
 
 fn document()->DrawingSnapshot {
-    let mut child=crate::schema::create_layer_by_kind("shape:rect");
+    let mut child=crate::schema::create_layer_by_kind(crate::schema::identity::DrawingIdentity::admit((("shape:rect")).to_string().into()).expect("nonempty authored identity"), "shape:rect");
     crate::schema::layer_base_mut(&mut child).id="child".into();
-    let mut group=crate::schema::create_layer_by_kind("group");
+    let mut group=crate::schema::create_layer_by_kind(crate::schema::identity::DrawingIdentity::admit((("group")).to_string().into()).expect("nonempty authored identity"), "group");
     if let DrawingLayerNode::Group(group)=&mut group {
         group.base.id="parent".into();group.base.transform.rotation=std::f64::consts::FRAC_PI_2;group.base.transform.scale_x=2.0;group.base.transform.scale_y=4.0;group.children=vec![child].into();
     }
@@ -56,9 +56,9 @@ fn other_utilities_and_empty_point_selection_do_not_move_layers() {
 fn stale_point_reference_rejects_the_entire_selection() {
     let segments=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]}];
     let mut paths=Vec::new();
-    for id in ["first","second"] {let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(id,segments.clone().into());crate::schema::layer_base_mut(&mut path).id=id.into();paths.push(path);}
+    for id in ["first","second"] {let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id,segments.clone().into());crate::schema::layer_base_mut(&mut path).id=id.into();paths.push(path);}
     let source=DrawingSnapshot {layers:paths.into(),..Default::default()};let saved=source.clone();
-    let mut session=DrawingSession::new("editNodes","");session.interaction.ids=vec!["first".into(),"second".into()];
+    let mut session=crate::editor::drawing::identity_test::session("editNodes","");session.interaction.ids=vec!["first".into(),"second".into()];
     let geometry=points::geometry_id(&segments).unwrap();
     session.interaction.points=vec![points::point_id("first",&geometry,1,crate::schema::geometry::editing::PathPoint::Anchor).unwrap(),points::point_id("second",&"0".repeat(64),1,crate::schema::geometry::editing::PathPoint::Anchor).unwrap()];
     assert!(plan(&source,&session,[1.0,0.0]).is_err());assert_eq!(source,saved);
@@ -67,7 +67,7 @@ fn stale_point_reference_rejects_the_entire_selection() {
 #[test]
 fn one_nudge_is_one_tool_transaction_of_one_relative_leaf() {
     let source=document();
-    let mut session=DrawingSession::new("selectDirect","nudge-seed");session.interaction.ids=vec!["parent".into(),"child".into()];
+    let mut session=crate::editor::drawing::identity_test::session("selectDirect","nudge-seed");session.interaction.ids=vec!["parent".into(),"child".into()];
     let first=plan(&source,&session,[10.0,-5.0]).unwrap();
     assert_eq!(first.artifact_mutations,vec![drag_layers(vec!["parent".into()].into(),10.0,-5.0)],"the ancestor owns its descendant's movement");
     let transaction=first.transaction.clone().expect("a nudge commits as one tool transaction");
@@ -84,10 +84,10 @@ fn one_nudge_is_one_tool_transaction_of_one_relative_leaf() {
 #[test]
 fn a_node_nudge_drags_the_selected_points_and_rebinds_them() {
     let segments=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]}];
-    let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Path",segments.clone().into());crate::schema::layer_base_mut(&mut path).id="path".into();
+    let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), "Path",segments.clone().into());crate::schema::layer_base_mut(&mut path).id="path".into();
     let source=DrawingSnapshot {layers:vec![path].into(),..Default::default()};
     let geometry=points::geometry_id(&segments).unwrap();
-    let mut session=DrawingSession::new("editNodes","");session.interaction.ids=vec!["path".into()];
+    let mut session=crate::editor::drawing::identity_test::session("editNodes","");session.interaction.ids=vec!["path".into()];
     session.interaction.points=vec![points::point_id("path",&geometry,1,crate::schema::geometry::editing::PathPoint::Anchor).unwrap()];
     let emit=plan(&source,&session,[1.0,0.0]).unwrap();
     assert_eq!(emit.artifact_mutations,vec![drag_path_points(vec![DrawingPathPointTarget {layer_id:"path".into(),index:1,point:crate::schema::geometry::editing::PathPoint::Anchor}].into(),1.0,0.0)]);

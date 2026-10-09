@@ -1,0 +1,406 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "receiptCustody",
+    "reviewViewCustody",
+    "memberCloseCustody",
+    "childHeaderCustody",
+    "childSnapshotCustody",
+    "childMemberCustody",
+    "snapshotReturnCustody",
+    "constructorGrant",
+    "constructorCustody"
+  ],
+  "properties": {
+    "actorHeaderCustody": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "headers"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "sessionTransfer",
+              "sessionRemoval",
+              "commandAdmission",
+              "commandRemoval"
+            ]
+          },
+          "headers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "session",
+                "sessionCursor",
+                "retiredFlag",
+                "event",
+                "commandSlot"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "snapshotReturnCustody": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "original",
+          "terminal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "returned",
+              "cursorPaid",
+              "payloadPaid",
+              "shellPaid"
+            ]
+          },
+          "original": {
+            "enum": [
+              "store",
+              "pump",
+              "shell",
+              "none"
+            ]
+          },
+          "terminal": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "childMemberCustody": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "entry",
+          "metadata",
+          "terminal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "member",
+              "fieldsPaid",
+              "metadataPaid",
+              "terminal"
+            ]
+          },
+          "entry": {
+            "enum": [
+              "member",
+              "none"
+            ]
+          },
+          "metadata": {
+            "enum": [
+              "entry",
+              "cursor",
+              "emptyCursor",
+              "none"
+            ]
+          },
+          "terminal": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "childSnapshotCustody": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "snapshot",
+          "metadata",
+          "terminal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "pending",
+              "snapshotPaid",
+              "leasePaid",
+              "metadataPaid",
+              "terminal"
+            ]
+          },
+          "snapshot": {
+            "enum": [
+              "entry",
+              "cursor",
+              "none"
+            ]
+          },
+          "metadata": {
+            "enum": [
+              "entry",
+              "member",
+              "cursor",
+              "none"
+            ]
+          },
+          "terminal": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "childHeaderCustody": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "headers"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "rootAlias",
+              "emptyRoot",
+              "sharedPage",
+              "emptyPage",
+              "entry"
+            ]
+          },
+          "headers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "rootArc",
+                "pageArc",
+                "rootCount",
+                "entryArc",
+                "entryBody",
+                "pendingEntry"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "memberCloseCustody": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "view",
+          "typed",
+          "metadata",
+          "terminal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "live",
+              "viewPaid",
+              "typedPaid",
+              "metadataPaid",
+              "terminal"
+            ]
+          },
+          "view": {
+            "enum": [
+              "member",
+              "registry"
+            ]
+          },
+          "typed": {
+            "enum": [
+              "member",
+              "none"
+            ]
+          },
+          "metadata": {
+            "enum": [
+              "member",
+              "cursor",
+              "none"
+            ]
+          },
+          "terminal": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "reviewViewCustody": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "visible",
+          "retained",
+          "displaced",
+          "base"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "reviewed",
+              "captured",
+              "editing",
+              "discarded"
+            ]
+          },
+          "visible": {
+            "enum": [
+              "review",
+              "draft"
+            ]
+          },
+          "retained": {
+            "enum": [
+              null,
+              "review"
+            ]
+          },
+          "displaced": {
+            "enum": [
+              null,
+              "draft"
+            ]
+          },
+          "base": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "receiptCustody": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "receipt",
+          "work",
+          "terminal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "emitted",
+              "physicalEmpty",
+              "recipientPaid"
+            ]
+          },
+          "receipt": {
+            "type": "boolean"
+          },
+          "work": {
+            "type": "boolean"
+          },
+          "terminal": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "constructorGrant": {
+      "type": "object",
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copy": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "release": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "constructorCustody": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase",
+          "original",
+          "receipt",
+          "installed"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "sourceDenied",
+              "sourceAdmitted",
+              "ticketsDenied",
+              "ticketsAdmitted",
+              "installed",
+              "recipientPaid"
+            ]
+          },
+          "original": {
+            "enum": [
+              "factory",
+              "catalog",
+              "store"
+            ]
+          },
+          "receipt": {
+            "type": "boolean"
+          },
+          "installed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

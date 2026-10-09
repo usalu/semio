@@ -14,7 +14,8 @@
     "generatedDirectories",
     "toolchains",
     "generatorInputs",
-    "storage"
+    "storage",
+    "exampleCollections"
   ],
   "properties": {
     "$schema": {
@@ -232,6 +233,39 @@
               "exclusiveMinimum": 0
             }
           }
+        }
+      }
+    },
+    "exampleCollections": {
+      "description": "Canonical testing collection ancestry and current Nx admission paths; domain module names remain production owners.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "names",
+        "moduleMember",
+        "manifestBasenames"
+      ],
+      "properties": {
+        "names": {
+          "const": [
+            "🧫️fixtures",
+            "🧫️examples",
+            "🧪️fixtures",
+            "🧪️examples"
+          ]
+        },
+        "moduleMember": {
+          "const": "🔨️modules"
+        },
+        "manifestBasenames": {
+          "const": [
+            "📋️project.json",
+            "project.json",
+            "package.json",
+            "Cargo.toml",
+            "bun.lock",
+            "*.patch"
+          ]
         }
       }
     }

@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "framework.plugin.original-metadata-actor-lease",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "originalGrant",
+    "maximumTurns",
+    "retainsOriginalTextPointer",
+    "takeReadyHeapBytes",
+    "deniedHeapBytes"
+  ],
+  "properties": {
+    "originalGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "retainsOriginalTextPointer": {
+      "const": true
+    },
+    "takeReadyHeapBytes": {
+      "const": 0
+    },
+    "deniedHeapBytes": {
+      "const": 0
+    }
+  }
+}

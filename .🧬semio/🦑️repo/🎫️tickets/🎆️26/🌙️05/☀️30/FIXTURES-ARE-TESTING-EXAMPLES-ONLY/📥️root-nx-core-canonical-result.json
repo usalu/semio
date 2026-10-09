@@ -1,0 +1,8 @@
+{
+  "exitCode": 0,
+  "durationMs": 5700,
+  "command": "bun run nx run repo:test-native-input-vocabulary --skip-nx-cache --outputStyle=static",
+  "nativeAssertions": 0,
+  "qualification": "Actual canonical bootstrap pre-spawn publisher/provisioning and current Nx core graph + registered original Source target; new race law not yet included",
+  "logSha256": "48bb562dde6201235615304997987faafc821def7a5fe611bad57e1ea6e75e5b"
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧮️expression/🔤️syntax/🧬️schema/🔣️.json",
+    "beforeSha256": "b6916cb95f28404c240565c7e95166b7f19053929b6bcf81a320b61736b4eeef",
+    "schemaId": "https://semio.tech/framework/expression/syntax.json",
+    "required": [
+      "cases",
+      "errors"
+    ],
+    "definitions": [
+      "Kind",
+      "Value",
+      "Failure",
+      "Tree"
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🎟️insertion/🔣️.json",
+    "beforeSha256": "83ee893b699bc2fba89259e1bab3013d2520fe2a164f7c8bcc9d969c8549c202",
+    "schemaId": null,
+    "required": [
+      "version",
+      "sourceCapacityBytes",
+      "sourceRows",
+      "insertions",
+      "expected",
+      "copyGrants",
+      "maximumTurns",
+      "reuse",
+      "setExpectedKeys"
+    ],
+    "definitions": [
+      "row"
+    ]
+  }
+]

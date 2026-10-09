@@ -212,6 +212,9 @@ fn draft_wire_borrows_original_changes_and_retains_refusal_prefixes() {
 
 #[test]
 fn draft_wire_incremental_cursor_keeps_original_source_and_cumulative_admission(){
+    let policy:Value=serde_json::from_str(include_str!("../../✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json")).unwrap();
+    let caller=&policy["callerGrant"];
+    let grant=protocol::value::RetainedCloneGrant{maximum_items:caller["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:caller["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:caller["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:caller["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:caller["maximumDepth"].as_u64().unwrap()as usize};
     use protocol::value::{NativeEncodeControl,ValueError,ValueRefusalKind};
     for row in fixture()["draftJson"].as_array().unwrap(){
         for units in [0,1,3,64]{
@@ -221,24 +224,24 @@ fn draft_wire_incremental_cursor_keeps_original_source_and_cumulative_admission(
             let mut callbacks=0;
             let mut observe=|_|{callbacks+=1;true};
             let mut control=NativeEncodeControl::new(32768,&mut observe);
-            assert!(cursor.step(0,&mut control).unwrap().is_none());
+            assert!(cursor.step(0,&mut control,grant).unwrap().is_none());
             let receipt=control.pause().unwrap();
             let mut cancel=|_|false;
             let mut refused=NativeEncodeControl::resume(receipt,&mut cancel).unwrap();
-            assert_eq!(cursor.step(1,&mut refused).unwrap_err().kind,ValueRefusalKind::Canceled);
+            assert_eq!(cursor.step(1,&mut refused,grant).unwrap_err().kind,ValueRefusalKind::Canceled);
             let receipt=refused.pause().unwrap();
             let mut checkpoints=0;
             let mut observe=|_|{checkpoints+=1;true};
             let mut control=NativeEncodeControl::resume(receipt,&mut observe).unwrap();
             let mut wire=None;
-            for _ in 0..5000 {if let Some(output)=cursor.step(units.max(1),&mut control).unwrap(){wire=Some(output);break;}}
+            for _ in 0..5000 {if let Some(output)=cursor.step(units.max(1),&mut control,grant).unwrap(){assert!(cursor.normal_step_progress().fits(grant));wire=Some(output);break;}assert!(cursor.normal_step_progress().fits(grant));}
             let wire=wire.expect("original finite draft wire completes");
             assert_eq!(wire,row["json"].as_str().unwrap());
             let changes=cursor.take_changes().expect("original ranges transfer");
             assert_eq!((changes.as_ptr(),changes.len(),changes.capacity()),original);
             assert_eq!(wire,serde_json::to_string(&changes).unwrap());
             assert!(control.owned_bytes()>=wire.capacity());
-            assert!(matches!(cursor.step(1,&mut control),Ok(None)));
+            assert!(matches!(cursor.step(1,&mut control,grant),Ok(None)));
             println!("[DEBUG] draft-wire cursor original={} units={} admitted={} exactPointer=true",row["id"],units,control.owned_bytes());
         }
     }

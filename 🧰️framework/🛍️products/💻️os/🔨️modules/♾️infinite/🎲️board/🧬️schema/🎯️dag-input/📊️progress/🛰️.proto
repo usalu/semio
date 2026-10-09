@@ -1,0 +1,3 @@
+syntax = "proto3";
+package semio.board.dag.progress;
+message DagComputingProgress { optional string active = 1; repeated string stale = 2; }

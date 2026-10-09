@@ -1,0 +1,7 @@
+# K7 Preflight Review
+
+Read-only source review. The current action matches afterSHA 3edfbd2b. One concrete compiler mismatch remains: both original collection and Space SQLite snapshot tests line105 pass `&mut original_io` as a ninth argument, while the defining preflight verify has eight parameters and ends at observe. These exact caller paths and hashes are retained in the companion JSON. No compiler was run here.
+
+The defining NativeSnapshotDecodeOwner::new takes the borrowed NativeDecodeControl and original full grant. NativeDecodeControl supports install_retirement_recipient, has_retirement_owner and close_retirement_recipient(grant); explicit owner/native drops release the mutable borrows before testing recipient emptiness. RetireOwned adds Send+'static, which fits the retained recipient’s erased ownership requirement. The returned typed specimen is installed into ControlledRetirement and driven with the fixed five-axis caller policy, rather than demands promoted into authority.
+
+Existing fixed encode grant remains 64 items/65536 copy/16777216 capacity and release/depth64. Borrowed scratch allocation, same-shape equality, cumulative refusal, cancellation and unchanged original owner assertions remain in verify. The new native decode/typed cleanup is outside the scratch observation. No schema or production fixture authority is introduced by this test-only caller change. Native lifetime/type correctness and runtime custody remain unverified until the original compile/tests execute.

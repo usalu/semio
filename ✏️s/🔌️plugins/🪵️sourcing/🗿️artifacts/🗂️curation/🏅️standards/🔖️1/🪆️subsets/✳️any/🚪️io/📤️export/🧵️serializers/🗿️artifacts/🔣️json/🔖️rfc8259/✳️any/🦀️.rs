@@ -26,7 +26,7 @@ pub struct CurationIntoJson;
 impl Serializer<CurationSnapshot> for CurationIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &CurationSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &CurationSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let bytes = serialize_bytes(from).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("CurationIntoJson: {error}"))))?;
         let text = String::from_utf8(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("CurationIntoJson: non-utf8 json output: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Text(text)))

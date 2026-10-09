@@ -1,0 +1,6 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\udde9\ufe0fcomposition/\ud83d\udeaa\ufe0fopen/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83d\udccf\ufe0fretirement/\ud83d\udfe6\ufe0f.ts",
+  "before": "39928fe050465e64dd463370bc22475a930f62365b674cae049f04c1adbd57ae",
+  "after": "2bcf7b40cd0b760c171e32addea9decb6d543da23233212d0e13579831689022",
+  "change": "preserve independent original policy during RFC6902 child projection; first RED2172 oracle fault qualified"
+}

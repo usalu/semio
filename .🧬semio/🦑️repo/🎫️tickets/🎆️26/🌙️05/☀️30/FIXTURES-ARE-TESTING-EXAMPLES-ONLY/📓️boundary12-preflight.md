@@ -1,0 +1,7 @@
+# Boundary12 Preflight
+
+Read-only current filesystem cut. All four actual boundary11 diagnostic paths are absent: Flow VCS retirement, Store IO refusal, Neural evaluation and Neural input schemas. Their original plain examples/behavioral routes must remain; absence here is not a completed full inventory. The private current-corpus branch initial15 reviewed whole-law paths are also absent. Its subsequent literal references include genuine retained-command domain schema used for domain assertions; a schema reference is not automatically a corpus violation. No blanket purity from this bounded listing.
+
+Original workspace:schema-fixture-boundary target is cachefalse and invokes permanent Root script schema check --fixture-boundary. schema-check forwards args and declares schemaSources; actual normal execution must retain complete original discovery rows/counters, current catalog/physical format joins and terminal result. Native owner transport may wrap task according to genuine inference; no bypass is proposed.
+
+Private root-resumed-corpus-tests --current-corpus-only checks finite original absence lists and invokes retained source behavior/grammar laws. It is complementary to the full original gate and cannot prove all current runtime closure or global schema absence. Original boundary11 terminal4 and prior corpus guard failure remain historical refusals; current absent paths are a later observation only. No tests, generation, Cargo or Source changes performed.

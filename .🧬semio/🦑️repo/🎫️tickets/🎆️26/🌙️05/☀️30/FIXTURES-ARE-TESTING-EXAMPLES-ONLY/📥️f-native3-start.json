@@ -1,0 +1,53 @@
+{
+  "session": 95477,
+  "utc": "2026-10-09T05:02:41.330980+00:00",
+  "argv": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build' SEMIO_COMPILER_RESOURCE_ROOT='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/semio-compiler-resources' NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/f-native3-cache' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/f-native3-data' bun nx run @semio-tech/framework-replication-rs:test --skip-nx-cache --outputStyle=static -- --lib -E 'test(history_fold_terminal_output_preserves_actual_cleanup_receipt) | test(protocol_borrowed_cause_closure_matches_original_owned_slot_without_hidden_release)' --status-level pass --final-status-level all --success-output immediate -- --nocapture > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/f-native3.log' 2>&1",
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs",
+      "sha256": "52a65c54fd2b39af1a68551ec5e43e1ea572528deac6a50a2e7b4542df03c48f",
+      "pathCharacters": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "addbe965d798a5319cb2c4c692995f901b2e0e3fae51b49faad2b092b940c344",
+      "pathCharacters": 106
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "257f966f77088ea6ec9c3fe297e356900fe8ba72432314dd8d2d8e36a0bb7a49",
+      "pathCharacters": 102
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "d006aa711b6ee7a4ec5ea17901615cbccc653feb82dbbcc086bd145f89110e3a",
+      "pathCharacters": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs",
+      "sha256": "058119424e0568e3f3cc4e6762b488016aa8759c2f7d2581abddb9231d3f9555",
+      "pathCharacters": 99
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "8e6b0a4553b8e6d0e7745a10ad16c22c71e93d39c2de45d71d5f364206e2db9d",
+      "pathCharacters": 128
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧾️wire/♻️retirement/🦀️.rs",
+      "sha256": "30865104d521f38b4267139075ea1024828d6a4db3117093c360c6568910dbf1",
+      "pathCharacters": 89
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs",
+      "sha256": "a7ee1d31d7c6f7f3b70ee1b22f7171dbb90ebf7a995de7e783285d81b67af4b8",
+      "pathCharacters": 76
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🧾️wire/♻️retirement/🧪️tests/🦀️.rs",
+      "sha256": "58241d4b9c3df5885cf0112e3f94c0c99a58d975a61eabfaef56108e18f0dbc7",
+      "pathCharacters": 97
+    }
+  ],
+  "qualification": "Same original normal route after Root corrected graph actual Plugin tests positive; source observers only; no source copies or foreign job adoption"
+}

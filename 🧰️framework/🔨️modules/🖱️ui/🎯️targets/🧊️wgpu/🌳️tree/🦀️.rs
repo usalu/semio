@@ -182,6 +182,22 @@ pub enum NodeKey {
     Positional(u32, u32),
 }
 
+/// 🔑️ Borrows the original explicit text or copies a positional identity without heap effects.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum NodeKeyRef<'a> {
+    Explicit(&'a str),
+    Positional(u32, u32),
+}
+
+impl NodeKey {
+    pub fn borrowed(&self) -> NodeKeyRef<'_> {
+        match self {
+            Self::Explicit(text) => NodeKeyRef::Explicit(text),
+            Self::Positional(variant, ordinal) => NodeKeyRef::Positional(*variant, *ordinal),
+        }
+    }
+}
+
 /// 🚩️ Per-node dirty/interaction bits. Hand-rolled over a `u16` (no `bitflags` dep) to keep the
 /// crate dependency-free for this ~10-flag set.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]

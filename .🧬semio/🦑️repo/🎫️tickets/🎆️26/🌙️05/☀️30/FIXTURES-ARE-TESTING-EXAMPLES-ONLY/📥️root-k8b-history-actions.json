@@ -1,0 +1,37 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "action": "update",
+    "beforeSha256": null,
+    "afterSha256": "28649679f2d4ab784521da3dad0ebdec8e3e665629400e2dff51c2b86b05db94",
+    "recoveredAfterPartialCommand": true,
+    "qualification": "Production finished replay transfers the actual output page and leaves an allocation-free empty residual instead of Default birth; prior partial edit completed before later TS guard failed; whole-file preimage was not persisted and exclusive whole-file authorship is not claimed",
+    "observedAtUtc": "2026-10-09T14:34:45.286420+00:00"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧫️fixtures/🔣️.json",
+    "action": "update",
+    "beforeSha256": null,
+    "afterSha256": "5ab8908edafee6c1198d49ae3da73bdaac91926febc16fd5991093f03133b279",
+    "recoveredAfterPartialCommand": true,
+    "qualification": "Plain testing example denies alternate child-shell birth in under-copy refusal probes; prior partial edit completed before later TS guard failed; whole-file preimage was not persisted and exclusive whole-file authorship is not claimed",
+    "observedAtUtc": "2026-10-09T14:34:45.287332+00:00"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+    "action": "update",
+    "beforeSha256": null,
+    "afterSha256": "0dfc8684305c711194b963b97246e7d698253a4801b91e5cfd83351cff6a65ae",
+    "recoveredAfterPartialCommand": true,
+    "qualification": "Three actual native original-owner laws preserve fixed positive caller policy and all physical receipt assertions; prior partial edit completed before later TS guard failed; whole-file preimage was not persisted and exclusive whole-file authorship is not claimed",
+    "observedAtUtc": "2026-10-09T14:34:45.287733+00:00"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "deba2bb228e4b3ef018f2283d842966099103aa117f4793d0d33e79ccec110fd",
+    "afterSha256": "f08ed1a22c415594f778f1bd610cb4d145aa57804b764707371c6e4a98ead3b0",
+    "qualification": "Existing original neutral Grant Ajv/SQLite oracle additionally validates the zero-capacity under-copy refusal policy; six fixed positive grants remain unchanged",
+    "observedAtUtc": "2026-10-09T14:34:45.288221+00:00"
+  }
+]

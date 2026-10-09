@@ -1,0 +1,76 @@
+{
+  "sourceAuthorship": false,
+  "privateScript": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+  "sha256": "4751d6b8f5a5b8340ab3c9120e76af9176b96a92b133d74d7ee08a3a86a21151",
+  "copyLines": [
+    322,
+    422,
+    445
+  ],
+  "minimumCopiedOwnerDestinations": [
+    {
+      "owner": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin",
+      "minimumDestinationCharacters": 207,
+      "minimumDestinationUtf8Bytes": 274
+    },
+    {
+      "owner": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire",
+      "minimumDestinationCharacters": 203,
+      "minimumDestinationUtf8Bytes": 264
+    },
+    {
+      "owner": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation",
+      "minimumDestinationCharacters": 194,
+      "minimumDestinationUtf8Bytes": 254
+    },
+    {
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source",
+      "minimumDestinationCharacters": 261,
+      "minimumDestinationUtf8Bytes": 338
+    },
+    {
+      "owner": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/♻️source-currencies",
+      "minimumDestinationCharacters": 212,
+      "minimumDestinationUtf8Bytes": 278
+    },
+    {
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity",
+      "minimumDestinationCharacters": 212,
+      "minimumDestinationUtf8Bytes": 284
+    },
+    {
+      "owner": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔗️paged-source-custody",
+      "minimumDestinationCharacters": 215,
+      "minimumDestinationUtf8Bytes": 282
+    },
+    {
+      "owner": "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧹️metadata",
+      "minimumDestinationCharacters": 202,
+      "minimumDestinationUtf8Bytes": 264
+    },
+    {
+      "owner": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests",
+      "minimumDestinationCharacters": 200,
+      "minimumDestinationUtf8Bytes": 264
+    },
+    {
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests",
+      "minimumDestinationCharacters": 196,
+      "minimumDestinationUtf8Bytes": 263
+    },
+    {
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/♻️child-currencies",
+      "minimumDestinationCharacters": 256,
+      "minimumDestinationUtf8Bytes": 332
+    },
+    {
+      "owner": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🏭️factory",
+      "minimumDestinationCharacters": 198,
+      "minimumDestinationUtf8Bytes": 259
+    }
+  ],
+  "listedTicketFiles": 1502,
+  "ticketPathsAbove256Characters": 0,
+  "longestCharacters": 235,
+  "examples": []
+}

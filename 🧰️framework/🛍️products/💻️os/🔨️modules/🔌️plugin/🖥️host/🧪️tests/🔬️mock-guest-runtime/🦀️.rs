@@ -9,6 +9,10 @@ async fn hash(byte: u8) -> PackageHash {
 /// (not through the `GuestRuntimes` enum), same as it did through the deleted `poll_ready`.
 #[semio_framework_async_macros::async_test]
 async fn scripted_turn_is_returned_exactly_once_fifo() {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: hash(1).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(42);
@@ -21,45 +25,61 @@ async fn scripted_turn_is_returned_exactly_once_fifo() {
     runtime.script_turn(actor, first).await;
     runtime.script_turn(actor, second).await;
 
-    let got_first = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 })).expect("first scripted turn");
+    let got_first = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }, &mut identity)).expect("first scripted turn");
     assert_eq!(got_first.fuel_used, 7);
-    let got_second = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 })).expect("second scripted turn");
+    let got_second = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }, &mut identity)).expect("second scripted turn");
     assert_eq!(got_second.fuel_used, 9);
+    crate::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn exhausted_script_queue_is_a_loud_error_not_a_fabricated_idle_turn() {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("cad".to_string()), hash: hash(2).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(7);
     let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
-    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 })).expect_err("no script queued");
+    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }, &mut identity)).expect_err("no script queued");
     assert!(matches!(error, TurnFault::Exhausted));
+    crate::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn scripted_fault_surfaces_as_trapped() {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("block".to_string()), hash: hash(3).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(9);
     let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
     runtime.script_fault(actor, "epoch deadline exceeded").await;
-    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 })).expect_err("scripted fault");
+    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }, &mut identity)).expect_err("scripted fault");
     assert!(matches!(error, TurnFault::Trapped(message) if message == "epoch deadline exceeded"));
+    crate::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn checkpoint_then_restore_round_trips_through_a_fresh_instance() {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("puzzle".to_string()), hash: hash(4).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(11);
     let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
-    let snapshot = semio_framework_async::block_on(runtime.checkpoint(&mut inst)).expect("checkpoint");
+    let snapshot = semio_framework_async::block_on(runtime.checkpoint(&mut inst, &mut identity)).expect("checkpoint");
 
     let mut restored = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("re-instantiate");
-    semio_framework_async::block_on(runtime.restore(&mut restored, &snapshot)).expect("restore");
+    semio_framework_async::block_on(runtime.restore(&mut restored, &snapshot, &mut identity)).expect("restore");
     let GuestInstanceState::Mock(state) = &restored.state else { panic!("expected a Mock instance") };
     assert_eq!(state.checkpoint.as_deref(), Some(snapshot.as_slice()));
+    crate::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]

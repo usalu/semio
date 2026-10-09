@@ -220,7 +220,8 @@ fn drive(ui: &mut Ui, window_id: &str, body: Rect, atlas: &mut FontAtlas) {
     // `UiDocumentFramePhase::Layout` re-arms with `request_layout`.
     'settle: for _ in 0..64 {
         for _ in 0..16_384 {
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
+            let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview_sequence,&mut actual_retained_progress);
             if matches!(ui.step_layouts(&pool, atlas, &mut cx), UiLayoutStep::Idle) {
                 break;
             }

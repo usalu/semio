@@ -1,0 +1,35 @@
+{
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🚫️refusal/🧬️schema/🔣️.json",
+      "exists": false,
+      "sha256": null,
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🚫️refusal/🧫️fixtures/🔣️.json",
+      "exists": true,
+      "sha256": "402b6d6a4178b268aeb8e9dd6c349e975df63d62827666ab729c667c8b85e17f",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "exists": true,
+      "sha256": "51f20652322d414f58c38a7f0ab1ab7df9d5add065a070ed907ff634fcfdb709",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "exists": true,
+      "sha256": "49e0382959a41f57b7a3d9465c6b81585392ae96bcc3d3860310ece9b85fe996",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json",
+      "exists": true,
+      "sha256": "bfcaa71551e4293ed27cc884d05546ba19196b3ba2391ecfe0cab304e31713b5",
+      "authored": false
+    }
+  ]
+}

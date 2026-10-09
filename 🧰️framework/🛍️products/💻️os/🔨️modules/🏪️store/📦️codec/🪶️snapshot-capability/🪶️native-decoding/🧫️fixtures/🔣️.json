@@ -1,5 +1,9 @@
 {
   "schema": "semio.framework.sqlite-native-decoding-admission/v1",
+  "callerGrant": {"maximumItems":4096,"maximumCopyBytes":65536,"maximumCapacityBytes":1048576,"maximumReleaseBytes":1048576,"maximumDepth":64},
+  "constructorCustody": {"partial":"originalRecipient","register":"beforeFirstCopy","output":"moveOriginal","cancelAfterBuffers":1},
+  "nativeMaximumBytes":1048576,
+  "maximumCloseTurns":131072,
   "metadataAdmission": {"domainRows": 3, "fileRows": 4},
   "erasedDispatch": {"bufferBytes": 4096, "cancelAt": 256, "ordinaryCalls": 0, "controlledCalls": 1},
   "cases": [

@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-09",
+  "qualification": "Read-only Native defining source/census audit, no Native compiler or runtime targets",
+  "schema": {
+    "tables": 44,
+    "maximumColumns": 55,
+    "stackCells": 64,
+    "independentRichRows": 192
+  },
+  "costs": {
+    "entity": "24+mapkey UTF8+active scalar cells",
+    "parameter": "16+kind UTF8+active payload",
+    "orderedChild": "24+active scalar cells",
+    "holeParent": 24,
+    "propertyElement": "24+outerkey UTF8",
+    "propertySet": "24+setname UTF8",
+    "propertyValue": "24+propertyname UTF8+kind UTF8+active scalar",
+    "finiteF64": "16+class UTF8",
+    "nonfiniteF64": "8+class UTF8",
+    "absentOptional": 0
+  },
+  "property": "F::Value(DslValue::Object exactly one PascalCase tag -> Object(value exactly one scalar)), not DslEnum statements",
+  "staging": "decode_record_native -> cells.admit_record -> typed __dsl_from_record_controlled; encode admit borrowedRowWriter before record birth",
+  "finding": {
+    "id": "mapCheckFrontier",
+    "anchor": "cells map22",
+    "issue": "full windows(2).any UTF8sortedkey scan before perentry native.step",
+    "proposal": "check adjacent pair within stepped entry loop; checkpoint bounded long string comparator if needed"
+  },
+  "defaults": "Native parser produces F::Absent for missing native roles and current DslField map/list requires actual container; neutral optional JSON defaults must normalize into typed empty containers before native encoding. No inherited supported Native omitted-map behavior proven.",
+  "ieee": "typed append uses to_bits/read from_bits, exact class/query; NaN payload preservation code present, original runtime unqualified",
+  "remaining": "actual owning hook/caller compile/original publicIO/cumulative one-short controls"
+}

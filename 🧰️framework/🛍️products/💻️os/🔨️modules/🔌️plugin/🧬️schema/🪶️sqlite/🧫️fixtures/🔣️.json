@@ -13,5 +13,12 @@
     "max_tables": 64,
     "max_pages": 256,
     "max_allocation_bytes": 1048576
+  },
+  "native": {
+    "maximum_items": 64,
+    "maximum_copy_bytes": 8192,
+    "maximum_capacity_bytes": 1048576,
+    "maximum_release_bytes": 16384,
+    "maximum_depth": 32
   }
 }

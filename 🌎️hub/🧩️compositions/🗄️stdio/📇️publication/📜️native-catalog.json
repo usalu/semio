@@ -82,7 +82,7 @@
       "packSchemaHash": "bacf1eb3e87697fa0d2dd1659effaf97aaba8f9496877c9b072a0e96151c683c",
       "factoryId": "stdio.native.jpg.v1",
       "extension": "jpg",
-      "protocolSourceSha256": "0d32030c224fda4733dc23733130d50931413bba28c83168817f294c8d1943c8"
+      "protocolSourceSha256": "65fe81f12ad7c4f2d39e9d3f43cb69f147ef60960beb1e5976c065b587ed5c55"
     },
     {
       "artifactKind": "s.stdio.json",
@@ -114,7 +114,7 @@
       "packSchemaHash": "ae9079830ec7750ec2b14255aee530d3ff3b6529e9a07f96289c7118ccb297d0",
       "factoryId": "stdio.native.mp3.v1",
       "extension": "semio",
-      "protocolSourceSha256": "3e0e4f0f7a7a5f4c49e4e8fde430e147871218245700eaab0107b4958c24e9e0"
+      "protocolSourceSha256": "29b5d10c2e992ce46edd6e5b77df15a41a09ad79341541a12eba3c6beffed49c"
     },
     {
       "artifactKind": "s.stdio.mp4",
@@ -146,7 +146,7 @@
       "packSchemaHash": "a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e",
       "factoryId": "stdio.native.pdf17.v1",
       "extension": "pdf",
-      "protocolSourceSha256": "b92db22ccdb887e23b1e41c86071a9d236ed8415fede659200494c6b45472355"
+      "protocolSourceSha256": "9c3f260b792c2d71461d6f46b493c17da850403061808e00ab7eedabaef9e7b8"
     },
     {
       "artifactKind": "s.stdio.ply",

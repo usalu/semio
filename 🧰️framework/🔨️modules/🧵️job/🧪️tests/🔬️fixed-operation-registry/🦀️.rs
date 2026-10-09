@@ -22,7 +22,7 @@ impl Owner {
     fn close_all(&mut self) {
         self.begin_close();
         for _ in 0..16 {
-            let _ = self.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:1,maximum_depth:64,..RetainedCloneGrant::default()});
+            let _ = self.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64});
             if self.terminal_is_empty() {
                 return;
             }
@@ -45,18 +45,18 @@ impl FixedOperationOwner for Owner {
     }
 
     fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep {
-        let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
-        if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
-            return InteractiveJobCloseStep::Blocked;
-        }
-        if self.bytes.pop().is_some() {
-            return InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:1,..RetainedCloneProgress::default()}};
-        }
-        InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress::default()}
+        if !self.closing || grant.maximum_items==0 || grant.maximum_depth==0{return InteractiveJobCloseStep::Blocked;}
+        let final_turn=self.bytes.len()<=1;
+        if !self.bytes.is_empty() && grant.maximum_copy_bytes<1{return InteractiveJobCloseStep::Pending{progress:Default::default()};}
+        if final_turn && grant.maximum_release_bytes<self.bytes.capacity(){return InteractiveJobCloseStep::Pending{progress:Default::default()};}
+        let copied=usize::from(self.bytes.pop().is_some());
+        let released_bytes=if final_turn{let bytes=self.bytes.capacity();drop(std::mem::take(&mut self.bytes));bytes}else{0};
+        let progress=RetainedCloneProgress{copied_items:copied,copied_bytes:1*copied,released_bytes,..Default::default()};
+        if final_turn{InteractiveJobCloseStep::Complete{progress}}else{InteractiveJobCloseStep::Pending{progress}}
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.bytes.is_empty()
+        self.closing && self.bytes.is_empty() && self.bytes.capacity()==0
     }
 }
 
@@ -68,7 +68,7 @@ impl Drop for Owner {
 
 fn drain<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>) {
     for _ in 0..64 {
-        let _ = registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:1,maximum_depth:64,..RetainedCloneGrant::default()});
+        let _ = registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64});
         if registry.is_empty() {
             return;
         }
@@ -106,12 +106,12 @@ fn fixture_cancel_stale<const CAPACITY: usize>(registry: &mut FixedOperationRegi
     output.push(format!("stale:{}", registry.cancel_stale_step(operation, live_generation)));
 }
 
-fn fixture_close<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, maximum_items: usize, maximum_bytes: usize) {
-    let state = match registry.close_step(RetainedCloneGrant{maximum_items:maximum_items,maximum_release_bytes:maximum_bytes,maximum_depth:64,..RetainedCloneGrant::default()}) {
+fn fixture_close<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, grant:RetainedCloneGrant) {
+    let state = match registry.close_step(grant) {
         InteractiveJobCloseStep::Blocked => "blocked",
         InteractiveJobCloseStep::Pending { .. } => "pending",
         InteractiveJobCloseStep::Complete {progress} => "complete",
-        InteractiveJobCloseStep::Refused(kind)=>panic!("original fixed owner close refused: {kind:?}"),
+        InteractiveJobCloseStep::Refused{kind,..}=>panic!("original fixed owner close refused: {kind:?}"),
     };
     output.push(format!("close:{state}"));
 }
@@ -173,7 +173,7 @@ fn stale_generation_interrupted_close_and_aba_preserve_exact_authority() {
     for _ in 0..4 {
         let _ = registry.cancel_stale_step(OperationId(9), Generation(2));
     }
-    let _ = registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:1,maximum_depth:64,..RetainedCloneGrant::default()});
+    let _ = registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64});
     assert!(!registry.is_empty(), "interrupted close must retain the exact owner");
     drain(&mut registry);
     let fresh = FixedOperationKey::new(OperationId(9), Generation(2));
@@ -182,8 +182,8 @@ fn stale_generation_interrupted_close_and_aba_preserve_exact_authority() {
     let mut owner = registry.take(fresh).expect("exact accepted owner handback");
     assert_eq!(owner.identity, 22);
     owner.close_all();
-    assert!(matches!(registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:1,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {..}));
-    assert!(matches!(registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:1,maximum_depth:64,..RetainedCloneGrant::default()}), InteractiveJobCloseStep::Complete {..}));
+    assert!(matches!(registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64}), InteractiveJobCloseStep::Complete {..}));
+    assert!(matches!(registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64}), InteractiveJobCloseStep::Complete {..}));
 }
 
 #[test]

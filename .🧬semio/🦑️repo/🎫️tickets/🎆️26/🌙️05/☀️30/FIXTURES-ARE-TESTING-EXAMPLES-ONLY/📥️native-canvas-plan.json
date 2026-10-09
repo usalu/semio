@@ -1,0 +1,30 @@
+{
+  "executed": false,
+  "authoredProduction": false,
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "sha256": "b5e081fdcf0077058db4dbdac9580396df26b87a335b109d0aa45f9c7783d29a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+      "sha256": "450f9308ef0629e2cb7b61bc0afadaf27b4a962e855c66c5ecd7de3b7e10879e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "2d6789e0ec288b51f2ca4296a4bcaf368ec8d1d08a00579ffb3a96fa33debf34"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "063b7b543233cdaed7ebf0500e99730d347571c323173af0c78f051f76a30c65"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "da036872c4e7641dadfd4b75cbbdf4a8434271fe1f0725a5d16ec23b78aa10c1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs",
+      "sha256": "cb2f4810e509c2579902f5b440d7082b3ff42fe2559759e00606c261b78c3be1"
+    }
+  ]
+}

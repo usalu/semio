@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/reactor/task/admission.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "observations"],
+  "properties": {
+    "contract": { "const": "reactor-task-admission/v1" },
+    "observations": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["phase", "suspends", "invokesTaskFactory"],
+        "properties": {
+          "phase": { "enum": ["publication", "quota", "decomposition", "host", "registry", "admission", "execution"] },
+          "suspends": { "type": "boolean" },
+          "invokesTaskFactory": { "type": "boolean" }
+        },
+        "if": { "properties": { "phase": { "const": "execution" } } },
+        "then": { "properties": { "suspends": { "const": true }, "invokesTaskFactory": { "const": true } } },
+        "else": { "properties": { "suspends": { "const": false }, "invokesTaskFactory": { "const": false } } }
+      }
+    }
+  }
+}

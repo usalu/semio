@@ -1,6 +1,10 @@
 {
   "actor": "actor:private-child",
-  "groupIds": [null, "", "group:gemeinsam-δ"],
+  "groupIds": [
+    null,
+    "",
+    "group:gemeinsam-δ"
+  ],
   "transactions": [
     null,
     {
@@ -11,5 +15,18 @@
       "id": "txn:δ",
       "tool": "cad#verschieben-ä"
     }
-  ]
+  ],
+  "actorLease": {
+    "originalGrant": {
+      "items": 1,
+      "copyBytes": 64,
+      "capacityBytes": 8192,
+      "releaseBytes": 8192,
+      "depth": 8
+    },
+    "maximumTurns": 128,
+    "retainsOriginalTextPointer": true,
+    "takeReadyHeapBytes": 0,
+    "deniedHeapBytes": 0
+  }
 }

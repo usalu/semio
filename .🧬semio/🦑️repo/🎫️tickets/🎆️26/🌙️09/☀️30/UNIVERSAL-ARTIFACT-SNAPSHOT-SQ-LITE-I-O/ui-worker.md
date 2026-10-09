@@ -1,0 +1,19 @@
+# Current UI Worker Receipt Callers
+
+Original BIM before2/root92073 reached two UI library E0599 errors at engine1495/2174: WorkerJobCloseStep has no progress method. Actual canonical enum contains Pending/Complete carrying full RetainedCloneProgress, Blocked and Refused. Both actual LayoutSession close callers now destructure that exact enum and validate all carried currencies with progress.fits(original UI_WORKER_RETIREMENT_POLICY); Blocked/Refused retain the session and yield. The existing terminal-is-empty check still gates removal. No compatibility accessor, enlarged grant, invented receipt or production wrapper is added.
+
+This is a concrete caller correction against a genuine original compiler-before. Original BIM/public IO replay remains owned by root/high; no UI worker runtime qualification is claimed from compilation. File path 86 codepoints / 92 UTF16 units.
+
+## Structural Refusal
+
+Fresh read-only review found WorkerJobDemandError already distinguishes contention from original ValueError refusal. The previous two session callers folded both cases into false and automatically requeued ordinary layout; surface retirement likewise answered Pending forever. The original rejected-job callers had the same structural error loss.
+
+The shared neutral worker fixture now declares currency-specific refusal identity, retained owner and no automatic structural retry. New Source demand-before ui-before2.log genuinely ran one existing law successfully and failed the new original law because uiWorkerRetirementRefusal did not exist. The earlier ui-before.log matched an incorrect Nx project name and ran no owning test; its terminal zero earns no qualification.
+
+Actual fixed-policy admission now returns depthLimit, ownershipLimit or workLimit without enlarging any currency. Actual session/rejected-job turns retain the owner on contention or refusal, validate all receipt currencies and terminal truth, and publish the original provider refusal kind. Refusal is latched on the original UiWindow and available through layout_retirement_refusal; the layout queue stops admitting that window. UiLayoutStep and UiSurfaceCloseStep expose its exact stage/kind. Original Interpreter layout enters its existing document Fault phase. Surface close keeps the exact queued generation and engine owner, reports the refusal once through its existing document diagnostic, and stops further close mutation while the refusal remains latched.
+
+Original Source after65608 ui-after.log is terminal zero: 2/2 laws, 71 expectations, 84ms. The new independent Bun SQLite CASE oracle checks every existing policy frontier; RFC6902 retains the original semantic owner. This is runtime policy qualification, not a physical WorkerJobSession refusal or completed UI surface retirement claim. Original Native contract law is running under the current explicit Cargo policy (ui-native2.log); the first native invocation lacked that newly required policy and started no compiler/runtime. Engine/Interpreter native runtime remains pending the actual common prerequisite replay.
+
+Durable launch seed rows206.1933/1934 use existing native/contract scripts through Nx. Generation ui-launch.log remains pending at this report write. All authored/affected paths were checked against both256 codepoints and UTF16units. No Git, worktree, AGENTS, compatibility accessor or guessed grant modification was made.
+
+Original Native contract replay55534 is genuinely terminal zero under the current explicit Cargo policy: ui-native2.log executes the two original worker policy laws (fixed owner-axis refusal plus new structural identity), not merely compilation. This remains the shared policy/provider scope; no actual retained WorkerJobSession/UI surface physical release qualification is inferred. Launch generator44931 terminal130 reports the independently known publication digest mismatch /nativeCodecs/9/protocolSourceSha256; the authored portable seed commands remain intact.

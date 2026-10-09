@@ -13,6 +13,13 @@ fn hydration_fold_byte_grant(logical_bytes: usize, demand: usize) -> Option<usiz
     (grant <= crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES).then_some(grant)
 }
 
+/// 🎫️ Debits nested depth and clips logical work without enlarging physical authority.
+fn hydration_child_grant(grant: RetainedCloneGrant, fuel: u64) -> Result<RetainedCloneGrant, MemberOpenDiagnostic> {
+    let depth = grant.maximum_depth.checked_sub(1).ok_or(MemberOpenDiagnostic::Capacity)?;
+    let bytes = usize::try_from(fuel).map_err(|_| MemberOpenDiagnostic::Capacity)?.min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
+    Ok(RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), maximum_copy_bytes: grant.maximum_copy_bytes.min(bytes), maximum_depth: depth, ..grant })
+}
+
 /// 🧮️ Prices one granted turn as fuel from its copied items and bytes.
 fn progress_fuel(progress: RetainedCloneProgress) -> Result<u64, MemberOpenDiagnostic> {
     progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::try_from(fuel).ok()).ok_or(MemberOpenDiagnostic::Capacity)
@@ -30,8 +37,7 @@ fn drive_hydration_retirement(active: &mut Option<Box<dyn ErasedSnapshotRetireme
     let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
     let step = super::artifact_retirement_box_close_step(active, grant).map_err(|_| MemberOpenDiagnostic::Initialization)?;
     let progress = step.progress();
-    let fuel = progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::try_from(fuel).ok()).ok_or(MemberOpenDiagnostic::Capacity)?;
-    cx.consume_fuel(fuel);
+    crate::os_store::member_open::record_member_step(cx, progress)?;
     Ok(true)
 }
 
@@ -43,8 +49,7 @@ fn drive_hydration_runtime<P: Send + Sync + 'static>(runtime: &mut ArtifactStore
     let terminal = runtime.terminal_is_empty();
     semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, terminal, "hydration original initialization").map_err(|_| MemberOpenDiagnostic::Initialization)?;
     let progress = step.progress();
-    let fuel = progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::try_from(fuel).ok()).ok_or(MemberOpenDiagnostic::Capacity)?;
-    cx.consume_fuel(fuel);
+    crate::os_store::member_open::record_member_step(cx, progress)?;
     Ok(terminal)
 }
 
@@ -96,7 +101,9 @@ enum Phase {
     DecodePack,
     Begin,
     Fold,
+    AdmitInitializationCatalog,
     BindGenesis,
+    AdmitEnvelope,
     BuildAppliedCursor,
     BuildRedoCursor,
     BeginEdit,
@@ -158,7 +165,7 @@ where
     mutation_lookup: ManuallyDrop<Option<std::collections::BTreeMap<crate::os_spr::MutationId, (usize, usize)>>>,
     target_source: ManuallyDrop<Option<std::sync::Arc<Vec<crate::os_spr::MutationEnvelope>>>>,
     target_decoder: ManuallyDrop<Option<crate::os_spr::HistoryFoldJob<'static, crate::os_spr::HistoryTransition>>>,
-    pending_target: ManuallyDrop<Option<crate::os_spr::TransitionSupersede>>,
+    pending_target: ManuallyDrop<Option<crate::os_spr::HistoryTransition>>,
     target_address: ManuallyDrop<Option<Vec<String>>>,
     fold_completed: u64,
     progress_high_water: std::cell::Cell<u64>,
@@ -168,6 +175,7 @@ where
     schema: ManuallyDrop<Option<String>>,
     envelope: ManuallyDrop<Option<ArtifactEnvelope<P, M>>>,
     runtime: ManuallyDrop<Option<ArtifactStoreInitializationRuntime<P>>>,
+    initialization_catalog: ManuallyDrop<Option<crate::os_store::ArtifactStoreInitializationOwnerCatalog>>,
     replay: ManuallyDrop<Option<EditReplay<P, M>>>,
     owners: ManuallyDrop<Option<DocumentStoreOwners<P, M>>>,
     pending_edit: ManuallyDrop<Option<Edit<M>>>,
@@ -273,6 +281,7 @@ where
             schema: ManuallyDrop::new(Some(schema)),
             envelope: ManuallyDrop::new(None),
             runtime: ManuallyDrop::new(None),
+            initialization_catalog: ManuallyDrop::new(None),
             replay: ManuallyDrop::new(None),
             owners: ManuallyDrop::new(Some(owners)),
             pending_edit: ManuallyDrop::new(None),
@@ -339,19 +348,19 @@ where
         let (owner, progress) = semio_framework_value::retirement::admit_owned_retirement(value, child).map_err(|_| MemberOpenDiagnostic::Initialization)?;
         *self.active = Some(owner);
         semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "hydration owned retirement").map_err(|_| MemberOpenDiagnostic::Initialization)?;
-        cx.consume_fuel(progress_fuel(progress)?);
+        crate::os_store::member_open::record_member_step(cx, progress)?;
         Ok(())
     }
 
     fn admitted_step(&mut self, step: Result<RetainedCloneStep, ValueError>, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {
-        match step.map_err(|_| MemberOpenDiagnostic::Initialization).and_then(|step| progress_fuel(step.progress())) {
-            Ok(fuel) => { cx.consume_fuel(fuel); PersistedDocumentHydrationStep::Pending(self.progress()) }
+        match step.map_err(|_| MemberOpenDiagnostic::Initialization).and_then(|step| crate::os_store::member_open::record_member_step(cx, step.progress())) {
+            Ok(()) => PersistedDocumentHydrationStep::Pending(self.progress()),
             Err(diagnostic) => self.reject(diagnostic),
         }
     }
 
     fn loaded_replay_retirement(&self, owners: &DocumentStoreOwners<P, M>) -> super::ArtifactHistoryReadRetirement<P, M> {
-        super::ArtifactHistoryReadRetirement { preview: ManuallyDrop::new(None), replay: ManuallyDrop::new(None), loaded_replay: ManuallyDrop::new(None), finished: ManuallyDrop::new(None), active: ManuallyDrop::new(None), plan_retirement: ManuallyDrop::new(None), draft_retirement: ManuallyDrop::new(None), registry_retirement: ManuallyDrop::new(None), snapshots: ManuallyDrop::new(Some(owners.initial_snapshot_retirement.clone())), mutations: ManuallyDrop::new(Some(owners.mutation_retirement.clone())), factory_retirement:std::array::from_fn(|_|None) }
+        super::ArtifactHistoryReadRetirement {derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None), preview: ManuallyDrop::new(None), replay: ManuallyDrop::new(None), loaded_replay: ManuallyDrop::new(None), finished: ManuallyDrop::new(None), active: ManuallyDrop::new(None), plan_retirement: ManuallyDrop::new(None), draft_retirement: ManuallyDrop::new(None), registry_retirement: ManuallyDrop::new(None), snapshots: ManuallyDrop::new(Some(owners.initial_snapshot_retirement.clone())), mutations: ManuallyDrop::new(Some(owners.mutation_retirement.clone())), factory_retirement:std::array::from_fn(|_|None) }
     }
 
     /// 🏪️ Refuses a foreign immutable target before consuming any retained hydration input.
@@ -374,6 +383,7 @@ where
     }
 
     pub fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
+        let grant = crate::os_store::member_open::member_step_grant(cx, grant);
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         if let Some(diagnostic) = self.diagnostic {
@@ -442,56 +452,86 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::Fold => {
-                let logical_bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
+                let fold_grant = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
                 let job = self.fold_job.as_mut().expect("history fold job remains retained");
-                let Ok(fold_grant) = job.next_step_grant(1, logical_bytes) else { return self.reject(MemberOpenDiagnostic::Replay) };
-                if [fold_grant.maximum_copy_bytes, fold_grant.maximum_capacity_bytes, fold_grant.maximum_release_bytes].into_iter().any(|bytes| hydration_fold_byte_grant(bytes, 0).is_none()) { return self.reject(MemberOpenDiagnostic::Capacity); }
                 let result = job.step(fold_grant, &mut || cx.should_yield());
                 self.fold_completed = job.completed();
-                cx.consume_fuel(1);
                 match result {
-                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(fold_grant) => {}
-                    Ok(crate::os_spr::HistoryFoldJobStep::Ready((fold, transitions, replay_order, conflicts))) => {
-                        self.fold_job.take();
+                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(fold_grant) => {
+                        if let Err(diagnostic) = crate::os_store::member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                    }
+                    Ok(crate::os_spr::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), progress }) => {
                         *self.replay_ids = Some(replay_order);
                         *self.fold = Some(fold);
                         *self.normalized_transitions = Some(transitions);
                         *self.normalized_conflicts = Some(conflicts);
-                        self.phase = Phase::BindGenesis;
+                        if !progress.fits(fold_grant) || !self.fold_job.as_ref().is_some_and(ErasedSnapshotRetirement::terminal_is_empty) { return self.reject(MemberOpenDiagnostic::Replay); }
+                        if let Err(diagnostic) = crate::os_store::member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                        self.fold_job.take();
+                        *self.initialization_catalog = Some(crate::os_store::ArtifactStoreInitializationOwnerCatalog::empty());
+                        self.phase = Phase::AdmitInitializationCatalog;
                     }
                     _ => return self.reject(MemberOpenDiagnostic::Replay),
                 }
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
+            Phase::AdmitInitializationCatalog => {
+                let child = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
+                let catalog = self.initialization_catalog.as_mut().expect("initialization retains its original page catalog");
+                let progress = match catalog.admit_next(child) { Ok(progress) => progress, Err(_) => return self.reject(MemberOpenDiagnostic::Initialization) };
+                if !progress.fits(child) { return self.reject(MemberOpenDiagnostic::Initialization); }
+                let ready = catalog.admission_is_complete();
+                if let Err(diagnostic) = crate::os_store::member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                if ready { self.phase = Phase::BindGenesis; }
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
             Phase::BindGenesis => {
+                if !self.initialization_catalog.as_ref().is_some_and(crate::os_store::ArtifactStoreInitializationOwnerCatalog::admission_is_complete) { return self.reject(MemberOpenDiagnostic::Initialization); }
+                let child = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
+                let birth = match crate::os_vcs::io::binary::genesis::AdmittedArtifactGenesis::<P>::verified_pack_birth_demand() { Ok(birth) => birth, Err(_) => return self.reject(MemberOpenDiagnostic::Capacity) };
+                if birth.admit(child).is_err() { return PersistedDocumentHydrationStep::Pending(self.progress()); }
                 let history = std::sync::Arc::get_mut(self.history.as_mut().expect("decoded history remains retained")).expect("fold aliases close before genesis binding");
                 let fold = self.fold.as_mut().expect("derived history remains retained");
                 let initial = self.initial.take().expect("typed initial snapshot remains retained");
                 let initial_digest = self.pack_digest.unwrap_or_else(|| *self.pack_hasher.finalize().as_bytes());
                 let pack = self.pack.take().expect("stored genesis Pack remains retained");
-                let genesis = crate::os_vcs::io::binary::genesis::AdmittedArtifactGenesis::from_verified_pack(initial, pack, initial_digest);
+                let (genesis, progress) = match crate::os_vcs::io::binary::genesis::AdmittedArtifactGenesis::admit_verified_pack(initial, pack, initial_digest, child) {
+                    Ok(admitted) => admitted,
+                    Err((_, initial, pack)) => { *self.initial = Some(initial); *self.pack = Some(pack); return self.reject(MemberOpenDiagnostic::Initialization); }
+                };
                 let expected = self.expected.take().expect("document identity remains retained");
                 let schema = self.schema.take().expect("document schema remains retained");
-                let mut envelope = crate::os_store::create_document_envelope_from_genesis::<P, M>(&schema, &expected.artifact_id, genesis, None);
+                let mut envelope = crate::os_store::empty_document_envelope_from_genesis_owners::<P, M>(schema, expected.artifact_id, genesis, None);
                 envelope.dialect = Some(expected.dialect);
                 envelope.owner = self.owner.take();
                 envelope.active_alternative_id = fold.alternative.take();
                 envelope.viewer_checkpoint_id = history.viewer_checkpoint.take();
-                envelope.cursor = Some(crate::os_store::ArtifactCursor::new(Vec::new(), Vec::new(), fold.checkpoint.take()));
+                envelope.cursor.as_mut().expect("new document retains its original cursor pages").checkpoint_id = fold.checkpoint.take();
                 envelope.transitions = self.normalized_transitions.take().expect("normalized transition owners remain retained");
                 let supersessions = std::mem::take(&mut fold.supersessions);
                 envelope.conflicts = self.normalized_conflicts.take().expect("normalized conflict owners remain retained");
                 let current = envelope.vcs.genesis.facts().share_snapshot();
-                let mut runtime = ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, current, initial_digest, crate::os_spr::ActorId(std::mem::take(&mut self.actor.0)));
+                let mut runtime = ArtifactStoreInitializationRuntime::new_with_owner_catalog(&envelope.id, &envelope.schema, current, initial_digest, crate::os_spr::ActorId(std::mem::take(&mut self.actor.0)), self.initialization_catalog.take().expect("fully admitted initialization catalog remains original"));
                 let installed = runtime.set_supersessions(supersessions);
                 *self.runtime = Some(runtime);
                 *self.envelope = Some(envelope);
                 if installed.is_err() {
                     return self.reject(MemberOpenDiagnostic::Initialization);
                 }
-                self.phase = Phase::BuildAppliedCursor;
+                self.phase = Phase::AdmitEnvelope;
                 self.operation_index = 0;
-                cx.consume_fuel(1);
+                if !progress.fits(child) { return self.reject(MemberOpenDiagnostic::Initialization); }
+                if let Err(diagnostic) = crate::os_store::member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                PersistedDocumentHydrationStep::Pending(self.progress())
+            }
+            Phase::AdmitEnvelope => {
+                let child = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
+                let envelope = self.envelope.as_mut().expect("hydration retains its original partially admitted envelope");
+                let progress = match envelope.admit_document_next(child) { Ok(progress) => progress, Err(_) => return self.reject(MemberOpenDiagnostic::Initialization) };
+                if !progress.fits(child) { return self.reject(MemberOpenDiagnostic::Initialization); }
+                let ready = envelope.document_admission_is_complete();
+                if let Err(diagnostic) = crate::os_store::member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                if ready { self.phase = Phase::BuildAppliedCursor; }
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::BuildAppliedCursor | Phase::BuildRedoCursor => {
@@ -810,6 +850,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::BeginTargets => {
+                if self.target_address.is_some() {
+                    let step = super::artifact_retirement_admit_owned(&mut self.target_address, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant });
+                    return self.admitted_step(step, cx);
+                }
                 if self.target_source.is_none() {
                     *self.target_source = Some(std::sync::Arc::new(std::mem::take(&mut self.envelope.as_mut().expect("hydrated envelope remains retained").transitions)));
                     self.record_index = 0;
@@ -835,24 +879,27 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::DecodeTarget => {
-                let bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
+                let decode_grant = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
                 let job = self.target_decoder.as_mut().expect("transition target decoder remains retained");
-                let Ok(decode_grant) = job.next_step_grant(1, bytes) else { return self.reject(MemberOpenDiagnostic::Replay) };
                 match job.step(decode_grant, &mut || cx.should_yield()) {
-                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { .. }) => {},
-                    Ok(crate::os_spr::HistoryFoldJobStep::Ready(crate::os_spr::HistoryTransition::Supersede(target))) => {
-                        self.target_decoder.take();
+                    Ok(crate::os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(decode_grant) => {
+                        if let Err(diagnostic) = crate::os_store::member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                    }
+                    Ok(crate::os_spr::HistoryFoldJobStep::Ready { value: target, progress }) => {
                         *self.pending_target = Some(target);
+                        if !progress.fits(decode_grant) || !self.target_decoder.as_ref().is_some_and(ErasedSnapshotRetirement::terminal_is_empty) { return self.reject(MemberOpenDiagnostic::Replay); }
+                        if !matches!(self.pending_target.as_ref(), Some(crate::os_spr::HistoryTransition::Supersede(_))) { return self.reject(MemberOpenDiagnostic::Replay); }
+                        if let Err(diagnostic) = crate::os_store::member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                        self.target_decoder.take();
                         self.operation_index = 0;
                         self.phase = Phase::TargetInputs;
                     }
                     _ => return self.reject(MemberOpenDiagnostic::Replay),
                 }
-                cx.consume_fuel(1);
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::TargetInputs => {
-                let target = self.pending_target.as_ref().expect("decoded target inputs remain retained");
+                let Some(crate::os_spr::HistoryTransition::Supersede(target)) = self.pending_target.as_ref() else { return self.reject(MemberOpenDiagnostic::Replay); };
                 if let Some(input) = target.inputs.get(self.operation_index) {
                     let envelope = self.envelope.as_ref().expect("hydrated envelope remains retained");
                     let operation = self.mutation_lookup.as_ref().expect("hydrated mutation index remains retained").get(&input.target).and_then(|(edit, index)| envelope.vcs.edits.get(*edit).and_then(|edit| edit.forwards.get(*index)));
@@ -873,13 +920,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                     } else if let Err(diagnostic) = self.admit_active(retired_strings, cx, grant) { return self.reject(diagnostic); }
                     self.operation_index += 1;
                 } else {
-                    if !owned_frame_funded::<crate::os_spr::TransitionSupersede>(grant) { return PersistedDocumentHydrationStep::Pending(self.progress()); }
+                    let step = match super::artifact_retirement_admit_owned(&mut self.pending_target, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }) {
+                        Ok(step) => step,
+                        Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),
+                    };
+                    if self.pending_target.is_some() { return self.admitted_step(Ok(step), cx); }
                     let source = std::sync::Arc::get_mut(self.target_source.as_mut().expect("immutable transition source remains retained")).expect("decoder aliases close before target mutation");
-                    source[self.record_index].target = self.target_address.take().unwrap_or_default();
-                    let target = self.pending_target.take().expect("finished decoded target remains retained");
-                    if let Err(diagnostic) = self.admit_active(target, cx, grant) { return self.reject(diagnostic); }
+                    let original = std::mem::replace(&mut source[self.record_index].target, self.target_address.take().unwrap_or_default());
+                    if original.capacity() != 0 { *self.target_address = Some(original); }
                     self.record_index += 1;
                     self.phase = Phase::BeginTargets;
+                    return self.admitted_step(Ok(step), cx);
                 }
                 cx.consume_fuel(1);
                 PersistedDocumentHydrationStep::Pending(self.progress())
@@ -922,19 +973,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::RetirePack => {
-                if let Some(pack) = self.pack.as_mut() {
-                    if pack.is_empty() {
-                        self.pack.take();
-                        cx.consume_fuel(1);
-                        return PersistedDocumentHydrationStep::Pending(self.progress());
-                    }
-                    let released = pack.len().min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES).min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX));
-                    if released == 0 {
-                        return PersistedDocumentHydrationStep::Pending(self.progress());
-                    }
-                    pack.truncate(pack.len() - released);
-                    cx.consume_fuel(released as u64);
-                    return PersistedDocumentHydrationStep::Pending(self.progress());
+                if self.pack.is_some() {
+                    let step = super::artifact_retirement_admit_owned(&mut self.pack, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant });
+                    return self.admitted_step(step, cx);
                 }
                 self.phase = if self.target == PersistedDocumentHydrationTarget::Envelope { Phase::CloseEnvelopeRuntime } else { Phase::Finish };
                 cx.consume_fuel(1);
@@ -966,7 +1007,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                         self.terminal = true;
                         return PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Envelope(envelope));
                     }
-                    RetainedCloneStep::Progress(progress) => match progress_fuel(progress) { Ok(fuel) => cx.consume_fuel(fuel), Err(diagnostic) => return self.reject(diagnostic) },
+                    RetainedCloneStep::Progress(progress) => if let Err(diagnostic) = crate::os_store::member_open::record_member_step(cx, progress) { return self.reject(diagnostic); },
                 }
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
@@ -1016,6 +1057,7 @@ where
         original!(target_source);
         original!(replay_ids);
         original!(replay_order);
+        if let Some(catalog) = self.initialization_catalog.as_ref() { return nested(catalog.close_demands()?); }
         if let Some(runtime) = self.runtime.as_ref() { return nested(runtime.initialization_retirement_demands(body)?); }
         if self.pending_edit.is_some() { return Ok(frame(std::mem::size_of::<super::ArtifactStoreDecodedEditRetirement<M>>())); }
         if self.pending_messages.is_some() { return Ok(frame(std::mem::size_of::<super::ArtifactStoreMessageLedgerRetirement>())); }
@@ -1033,7 +1075,7 @@ where
         original!(pack);
         original!(expected);
         original!(owner);
-        if self.actor.0.capacity() != 0 { return Ok(frame(semio_framework_value::retirement::owned_retirement_birth_bytes::<String>())); }
+        if self.actor.0.has_owner() { return Ok(frame(semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_framework_value::SharedUtf8>())); }
         original!(schema);
         let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration retained owner catalog is missing"))?;
         nested(owners.uninstalled_owners_demands(body)?)
@@ -1073,6 +1115,12 @@ where
         original!(replay_ids);
         original!(replay_order);
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if let Some(catalog) = self.initialization_catalog.as_mut() {
+            let step = catalog.close_step(child)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, catalog.terminal_is_empty(), "hydration original initialization page catalog")?;
+            if catalog.terminal_is_empty() { self.initialization_catalog.take(); }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
         if let Some(runtime) = self.runtime.as_mut() {
             let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration runtime lost its original factory"))?;
             let step = runtime.close_step(&owners.initial_snapshot_retirement, child)?;
@@ -1131,7 +1179,7 @@ where
         original!(pack);
         original!(expected);
         original!(owner);
-        if self.actor.0.capacity() != 0 {
+        if self.actor.0.has_owner() {
             let original = std::mem::take(&mut self.actor.0);
             match semio_framework_value::retirement::admit_owned_retirement(original, child) {
                 Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "hydration original actor birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration actor birth differs from its original quote")); } return Ok(RetainedCloneStep::Progress(progress)); }
@@ -1166,7 +1214,7 @@ where
 {
     fn terminal_is_empty_unbounded(&self) -> bool {
         self.terminal
-            && self.actor.0.capacity() == 0
+            && !self.actor.0.has_owner()
             && self.pack.is_none()
             && self.initial.is_none()
             && self.replay.is_none()
@@ -1190,6 +1238,7 @@ where
             && self.schema.is_none()
             && self.envelope.is_none()
             && self.runtime.is_none()
+            && self.initialization_catalog.is_none()
             && self.owners.is_none()
             && self.pending_edit.is_none()
             && self.pending_messages.is_none()

@@ -65,8 +65,11 @@ impl TrustedArtifactCodec for PluginHostArtifactCodec {
 
     async fn apply_operation(&self, pair: ArtifactPair, operation: &AcceptedArtifactOperation, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         context.checkpoint()?;
-        let encoded = directory::os_spr::encode_ops_vec(std::slice::from_ref(&operation.encoded));
-        let (pack, spr, ops) = (self.codec.apply_ops_binary)(&pair.pack, &pair.spr, &encoded).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
+        let maximum=usize::try_from(context.limits().max_pair_bytes).ok().and_then(|bytes|bytes.checked_mul(16)).and_then(|bytes|bytes.checked_add(operation.encoded.len().checked_mul(16)?)).ok_or(AuthorityError::ResourceLimit("identity source capacity"))?;
+        let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|{context.report(super::AuthorityProgress{stage:super::AuthorityProgressStage::ApplyingOperations,completed_units:operation.sequence,total_units:context.limits().max_operations as u64}).is_ok()};
+        let mut identity=directory::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum,&mut observer).map_err(|error|AuthorityError::Codec{stage:ArtifactValidationStage::Input,message:bounded_message(error)})?;
+        let encoded=identity.encode(|control|directory::os_spr::io::binary::operation_sequence::encode(std::slice::from_ref(&operation.encoded),control)).map_err(|error|AuthorityError::Codec{stage:ArtifactValidationStage::Input,message:bounded_message(error)})?;
+        let (pack, spr, ops) = (self.codec.apply_ops_binary)(&pair.pack, &pair.spr, &encoded, &mut identity).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
         if ops.len() > AUTHORITY_MAX_CODEC_TEXT_BYTES {
             return Err(AuthorityError::ResourceLimit("codec text byte"));
         }

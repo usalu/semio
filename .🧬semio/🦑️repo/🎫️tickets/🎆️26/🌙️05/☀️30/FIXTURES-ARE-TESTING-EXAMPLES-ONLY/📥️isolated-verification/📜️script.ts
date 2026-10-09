@@ -239,17 +239,88 @@ if (command === "runtime-store-corpus-source") {
   process.exit(0);
 }
 if (command === "root-resumed-corpus-tests") {
+  if (rest[0] === "--boundary12-root-only" && rest.length === 1) {
+    const readers = [
+      ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts", "testFlowRetainedReceipt"],
+      ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts", "testHostSourceCustodyContract"],
+      ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts", "flowSelectedCopySelfTests"],
+    ];
+    const results = await Promise.allSettled(readers.map(async ([path, name]) => {
+      const owner = await import(join(root, path!));
+      const result = await owner[name!]();
+      console.log("[DEBUG] Original boundary12 reader passed " + name + " result=" + String(result));
+    }));
+    const failures = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+    if (failures.length) throw new AggregateError(failures.map(result => result.reason), "Original boundary12 readers failed");
+    const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+    await runBudgetedTestCommand(process.execPath, ["test", join(root, "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧪️tests/🟦️.ts")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    process.exit(0);
+  }
   if (rest[0] === "--runtime-schema-only" && rest.length === 1) {
     const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
     await runBudgetedTestCommand(process.execPath, ["test", join(root, library, "🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts"), "-t", "^canonical runtime domain schemas"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
     process.exit(0);
   }
   if (rest[0] === "--current-corpus-only" && rest.length === 1) {
+    const { default: nativeB12Assert } = await import("node:assert/strict");
+    const { existsSync: nativeB12Exists } = await import("node:fs");
+    nativeB12Assert.deepEqual(["🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/✅️output/🧬️schema/🔣️.json"].filter(path => nativeB12Exists(join(root,path))), [], "Native boundary12 reviewed testing authorities must be absent");
+    console.log("[DEBUG] Native boundary12 original testing authority absence:2/2");
+    {
+      const { inventorySchemaScopes: nativeB12Inventory } = await import(join(root,library,"🔍️discovery/🟦️.ts"));
+      const { readFileSync: nativeB12Read, writeFileSync: nativeB12Write } = await import("node:fs");
+      const selected = ["🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy", "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/✅️output"];
+      const inventory = nativeB12Inventory(root,JSON.parse(nativeB12Read(join(root,library,"🔣️taxonomy.json"),"utf8")));
+      const owns = (path:string) => selected.some(owner => path===owner || path.startsWith(owner+"/"));
+      const modules=inventory.modules.filter(row => owns(row.modulePath)),diagnostics=[...inventory.diagnostics,...inventory.placement].filter(row => owns(row.path));
+      nativeB12Write(join(import.meta.dir,"../🗑️generated/native-b12-placement.json"),JSON.stringify({owners:selected,modules,diagnostics},null,2)+"\n");
+      nativeB12Assert.deepEqual(modules,[]);nativeB12Assert.deepEqual(diagnostics,[]);
+      console.log("[DEBUG] Native boundary12 original repository placement owners2 authorities0 diagnostics0");
+    }
+    const nativeB11Trials = ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧬️schema/🔣️.json"];
+    const { existsSync: nativeB11Exists } = await import("node:fs");
+    const { default: nativeB11Assert } = await import("node:assert/strict");
+    nativeB11Assert.deepEqual(nativeB11Trials.filter(path => nativeB11Exists(join(root,path))), [], "Current VCS/input/evaluation examples cannot own whole-trial authority");
+    console.log("[DEBUG] Native boundary11 current original whole-trial authority absence:3/3");
+    const nativeB10Trials = ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧬️schema/🔣️.json"];
+    const { existsSync: nativeB10Exists } = await import("node:fs");
+    const { default: nativeB10Assert } = await import("node:assert/strict");
+    nativeB10Assert.deepEqual(nativeB10Trials.filter(path => nativeB10Exists(join(root,path))), [], "Current VCS and Neural input trials cannot own schemas");
+    console.log("[DEBUG] Native boundary10 two original whole-trial authorities absent");
+    const nativeBoundary8Trials = ["🧰️framework/🔨️modules/🌱️value/🛬️decode/🔭️observer/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/🔣️.json"];
+    const { existsSync: nativeB8Exists } = await import("node:fs");
+    const { default: nativeB8Assert } = await import("node:assert/strict");
+    nativeB8Assert.deepEqual(nativeBoundary8Trials.filter(path => nativeB8Exists(join(root,path))), [], "Native observer and snapshot trials cannot own schema authority");
+    console.log("[DEBUG] Native boundary8 trial authority absence:2/2");
+    const newDecodeAndInsertionTrials = ["🧰️framework/🔨️modules/🌱️value/🛬️decode/🧫️fixtures/🔭️observer/🧬️.json", "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🎟️insertion/🔣️.json"];
+    const { existsSync: trialExists } = await import("node:fs");
+    const { default: trialAssert } = await import("node:assert/strict");
+    trialAssert.deepEqual(newDecodeAndInsertionTrials.filter(path => trialExists(join(root, path))), [], "Borrowed-observer and insertion examples must retain behavior without whole-trial authority");
+    console.log("[DEBUG] Borrowed-observer/insertion trial authority absence:2/2");
     const { default: assert } = await import("node:assert/strict");
-    const { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = await import("node:fs");
+    const { existsSync, mkdirSync, readFileSync, writeFileSync } = await import("node:fs");
     const { inventorySchemaScopes } = await import(join(root, library, "🔍️discovery/🟦️.ts"));
     const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
     const owners = ["🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🌱️paged-origin", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire", "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/🌱️authored-paged-source", "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/♻️source-currencies", "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity", "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🔗️paged-source-custody", "🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🧹️metadata", "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/♻️child-currencies", "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🏭️factory"];
+    const currentWholeLawSchemas = ["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json", "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json", "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json", "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json", "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json", "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/📏️live-physical-demand/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🚦️ownership/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/🎟️work.json", "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧬️schema/🎟️owners.json"];
+    currentWholeLawSchemas.push(...["✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🔐️lifecycle/🔣️.json", "🧫️fixtures/🧫️diff-only-law-gate/🫧️lanes/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️schema/🧺️heap.json", "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/📦️full-receipt/🔣️.json", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧮️expression/📏️kinds/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧮️expression/🕸️parameters/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧮️expression/🧮️evaluation/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧵️job/🧬️schema/📇️fixed-operation/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧬️schema/♻️retirement/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-allocation-close/🔣️.json"]);
+    const publicationTrialSchemas = ["🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧬️schema/♻️retirement/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-allocation-close/🔣️.json"];
+    assert.deepEqual(publicationTrialSchemas.filter(path => existsSync(join(root, path))), [], "Selected Plugin/Shell/Playbook whole-trial authorities must retire while plain examples remain");
+    assert.equal(existsSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♻️frame-close/🔣️.json")), false, "Relocated Frame trials cannot define production authority");
+    assert.equal(existsSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/♻️frame-close/📐️schema.json")), false, "Frame close examples cannot define whole-trial schema authority");
+    assert.equal(existsSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🎟️preparation/🧬️schema/🔣️.json")), false, "Store preparation receipt examples cannot govern a whole test corpus");
+    const retainedCommandPolicy = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json"), "utf8"));
+    assert.deepEqual(["RawAllocationCloseFixtureV2", "RawAllocationCloseCaseV2"].filter(name => name in retainedCommandPolicy.$defs), [], "Raw allocation examples cannot define whole-trial authority inside the production policy");
+    await runBudgetedTestCommand(process.execPath, ["test", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🎟️preparation/🧪️tests/🟦️.ts")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    const { toolJobLatestWinsSelfTests } = await import(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts"));
+    console.log(`[DEBUG] original retained command domain/Buffer/Ajv laws=${toolJobLatestWinsSelfTests()}`);
+    await runBudgetedTestCommand(process.execPath, ["test", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+    const syntaxAndInsertionTrials = ["🧰️framework/🔨️modules/🧮️expression/🔤️syntax/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🎟️insertion/🔣️.json"];
+    assert.deepEqual(syntaxAndInsertionTrials.filter(path => existsSync(join(root, path))), [], "Expression syntax and index insertion trials cannot define schema authority");
+    const coreTenWholeLawSchemas = ["🧫️fixtures/🧫️diff-only-law-gate/🫧️lanes/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️schema/🧺️heap.json", "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/📦️full-receipt/🔣️.json", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧮️expression/📏️kinds/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧮️expression/🕸️parameters/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧮️expression/🧮️evaluation/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/🧵️job/🧬️schema/📇️fixed-operation/🔣️.json"];
+    assert.deepEqual(coreTenWholeLawSchemas.filter(path => existsSync(join(root, path))), [], "Core ten testing trials retain no schema authority");
+    console.log("[DEBUG] Core ten whole-trial authority absence:10/10 original Source paths absent");
+    assert.deepEqual(currentWholeLawSchemas.filter(path => existsSync(join(root, path))), [], "Reviewed whole examples cannot retain schema authority while domain validators and independent behavior remain");
     const retiredWholeLawSchemas = ["✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧬️schema/🧫️witness/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/♻️inline-source-ownership/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧬️schema/🎟️source-authority/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧬️schema/🎟️preparation-birth/🔣️.json", "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/📝️drafts/🧬️schema/🔣️.json"];
     retiredWholeLawSchemas.push(...["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🎟️admission/🧬️schema/🔣️.json", "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json"]);
     retiredWholeLawSchemas.push("🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/♻️retirement/🧬️schema/🔣️.json");
@@ -317,17 +388,13 @@ if (command === "root-resumed-corpus-tests") {
     const output = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;
     if (!output) throw Error("Explicit ticket output required for physical corpus inventory");
     mkdirSync(output, { recursive: true });
-    const scopeRoot = mkdtempSync(join(output, "current-corpus-"));
-    try {
-      for (const owner of owners) cpSync(join(root, owner), join(scopeRoot, owner), { recursive: true });
-      const inventory = inventorySchemaScopes(scopeRoot, JSON.parse(readFileSync(join(root, library, "🔣️taxonomy.json"), "utf8")));
-      const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + "/"));
-      const authorities = inventory.modules.filter(row => owned(row.modulePath));
-      const diagnostics = [...inventory.diagnostics, ...inventory.placement].filter(row => owned(row.path) && row.code === "schema-fixture-defines-schema");
-      writeFileSync(join(output, "current-corpus-placement.json"), JSON.stringify({ owners, authorities, diagnostics }, null, 2) + "\n");
-      assert.deepEqual(diagnostics, [], "Physical or adjacent test-corpus authority must retire independent of filename");
-      assert.deepEqual(authorities, []);
-    } finally { rmSync(scopeRoot, { recursive: true, force: true }); }
+    const inventory = inventorySchemaScopes(root, JSON.parse(readFileSync(join(root, library, "🔣️taxonomy.json"), "utf8")));
+    const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + "/"));
+    const authorities = inventory.modules.filter(row => owned(row.modulePath));
+    const diagnostics = [...inventory.diagnostics, ...inventory.placement].filter(row => owned(row.path) && row.code === "schema-fixture-defines-schema");
+    writeFileSync(join(output, "current-corpus-placement.json"), JSON.stringify({ owners, authorities, diagnostics }, null, 2) + "\n");
+    assert.deepEqual(diagnostics, [], "Physical or adjacent test-corpus authority must retire independent of filename");
+    assert.deepEqual(authorities, []);
     const value = JSON.parse(readFileSync(join(root, owners[0]!, "🔣️.json"), "utf8"));
     const plugin = JSON.parse(readFileSync(join(root, owners[3]!, "🔣️.json"), "utf8"));
     const payload = Buffer.alloc(value.textBytes, value.textByte);
@@ -410,46 +477,38 @@ if (command === "root-resumed-corpus-tests") {
   }
   if (rest[0] === "--post-session-corpus-only" && rest.length === 1) {
     const { default: assert } = await import("node:assert/strict");
-    const { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = await import("node:fs");
+    const { mkdirSync, readFileSync, writeFileSync } = await import("node:fs");
     const { inventorySchemaScopes } = await import(join(root, library, "🔍️discovery/🟦️.ts"));
     const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
     const owners = ["✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot", "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands"];
     const output = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;
     if (!output) throw Error("Explicit ticket output required for bounded physical collection inventory");
     mkdirSync(output, { recursive: true });
-    const scopeRoot = mkdtempSync(join(output, "post-session-corpus-"));
-    try {
-      for (const owner of owners) cpSync(join(root, owner), join(scopeRoot, owner), { recursive: true });
-      const inventory = inventorySchemaScopes(scopeRoot, JSON.parse(readFileSync(join(root, library, "🔣️taxonomy.json"), "utf8")));
-      const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + "/"));
-      const modules = inventory.modules.filter(row => owned(row.modulePath)), diagnostics = inventory.diagnostics.filter(row => owned(row.path));
-      writeFileSync(join(output, "post-session-corpus-placement.json"), JSON.stringify({ owners, modules, diagnostics, observedAncestorModules: inventory.modules.filter(row => !owned(row.modulePath)) }, null, 2) + "\n");
-      assert.deepEqual(diagnostics, [], "All selected collection authorities must retire independent of nested filename or folder");
-      assert.deepEqual(modules, []);
-    } finally { rmSync(scopeRoot, { recursive: true, force: true }); }
+    const inventory = inventorySchemaScopes(root, JSON.parse(readFileSync(join(root, library, "🔣️taxonomy.json"), "utf8")));
+    const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + "/"));
+    const modules = inventory.modules.filter(row => owned(row.modulePath)), diagnostics = inventory.diagnostics.filter(row => owned(row.path));
+    writeFileSync(join(output, "post-session-corpus-placement.json"), JSON.stringify({ owners, modules, diagnostics, observedAncestorModules: inventory.modules.filter(row => !owned(row.modulePath)) }, null, 2) + "\n");
+    assert.deepEqual(diagnostics, [], "All selected collection authorities must retire independent of nested filename or folder");
+    assert.deepEqual(modules, []);
     await runBudgetedTestCommand(process.execPath, ["test", join(root, "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧱️content/🟦️.ts"), ...["✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts"].map(path => join(root, path))], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
     console.log("[DEBUG] Four current corpus authorities retired; normal selected collection placement0; actual SQLite/domain Ajv/command owner laws; Cargo/native producers0");
     process.exit(0);
   }
   if (rest[0] === "--post-corpus-only" && rest.length === 1) {
     const { default: assert } = await import("node:assert/strict");
-    const { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } = await import("node:fs");
+    const { mkdirSync, readFileSync, writeFileSync } = await import("node:fs");
     const { inventorySchemaScopes } = await import(join(root, library, "🔍️discovery/🟦️.ts"));
     const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
     const owners = ["✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/🎮️prepare/📨️messages", "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation", "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/🧵️compose"];
     const output = repositoryEnv.SEMIO_TEST_ARTIFACT_DIR;
     if (!output) throw Error("Explicit ticket output required for bounded physical corpus inventory");
     mkdirSync(output, { recursive: true });
-    const scopeRoot = mkdtempSync(join(output, "post-corpus-"));
-    try {
-      for (const owner of owners) cpSync(join(root, owner), join(scopeRoot, owner), { recursive: true });
-      const inventory = inventorySchemaScopes(scopeRoot, JSON.parse(readFileSync(join(root, library, "🔣️taxonomy.json"), "utf8")));
-      const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + "/"));
-      const modules = inventory.modules.filter(row => owned(row.modulePath)), diagnostics = inventory.diagnostics.filter(row => owned(row.path));
-      writeFileSync(join(output, "post-corpus-placement.json"), JSON.stringify({ owners, modules, diagnostics, observedAncestorModules: inventory.modules.filter(row => !owned(row.modulePath)) }, null, 2) + "\n");
-      assert.deepEqual(diagnostics, [], "All selected physical collection authorities must retire independent of nested filename or folder");
-      assert.deepEqual(modules, []);
-    } finally { rmSync(scopeRoot, { recursive: true, force: true }); }
+    const inventory = inventorySchemaScopes(root, JSON.parse(readFileSync(join(root, library, "🔣️taxonomy.json"), "utf8")));
+    const owned = (path: string) => owners.some(owner => path === owner || path.startsWith(owner + "/"));
+    const modules = inventory.modules.filter(row => owned(row.modulePath)), diagnostics = inventory.diagnostics.filter(row => owned(row.path));
+    writeFileSync(join(output, "post-corpus-placement.json"), JSON.stringify({ owners, modules, diagnostics, observedAncestorModules: inventory.modules.filter(row => !owned(row.modulePath)) }, null, 2) + "\n");
+    assert.deepEqual(diagnostics, [], "All selected physical collection authorities must retire independent of nested filename or folder");
+    assert.deepEqual(modules, []);
     await runBudgetedTestCommand(process.execPath, ["test", join(root, owners[0]!, "🧪️tests/🟦️.ts"), join(root, owners[1]!, "🧪️tests/🔬️unit/🟦️.ts"), join(root, owners[2]!, "🧪️tests/🟦️.ts")], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
     console.log("[DEBUG] current selected three corpus owners: normal placement modules0 diagnostics0; actual SQLite/Three/JSON/UTF8/RFC6902 laws; Cargo/native producers0");
     process.exit(0);
@@ -627,6 +686,14 @@ if (command === "mounted-runtime-http") {
   }
   process.exit(0);
 }
+if (command === "publication-provenance-physical-source") {
+  if (!repositoryEnv.SEMIO_TEST_ARTIFACT_DIR) throw Error("Explicit physical provenance test output required");
+  const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
+  await runBudgetedTestCommand(process.execPath, ["test", join(root, library, "⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts"), "-t", "current Cargo relay physical authority"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+  await runBudgetedTestCommand(process.execPath, ["test", join(root, "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts"), "-t", "completed Cargo provenance requires|actual physical owner rechecks|compiler dep-info physical owner evidence|compiler resource tracked capture|in-place resource read authority"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });
+  process.exit(0);
+}
+
 if (command === "runtime-callsite-source") {
   const { runBudgetedTestCommand } = await import(join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts"));
   await runBudgetedTestCommand(process.execPath, ["test", join(root, library, "🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts"), "-t", "runtime graph (dynamic|rust-resource-read)|runtime resource-read owners|dynamic import owners|Bun import edges|production test exclusion"], { cwd: root, env: repositoryEnv, budgetMs: 120_000, throwOnFailure: true });

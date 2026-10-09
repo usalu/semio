@@ -17,7 +17,7 @@ pub struct NoteIntoDwg;
 impl Serializer<NoteSnapshot> for NoteIntoDwg {
     const INTO: Dialect = DWG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &NoteSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &NoteSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let (svg, _w, _h) = crate::standards::v1::subsets::any::io::note_document_to_svg(from).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("NoteIntoDwg: svg bridge: {error}"))))?;
         let raw = semio_framework_os::svg_to_polylines(&svg)
             .and_then(|paths| semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::polylines_to_dwg_bytes(paths.iter().map(|path| (path.layer.as_str(), path.vertices.as_slice(), path.closed))))

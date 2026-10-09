@@ -45,7 +45,7 @@ fn value_type_from_value(value: semio_framework_value::DslValue) -> Result<Value
 
 // #region 🔖️Property
 /// 📊️ Runtime property value for graph instances.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub enum PropertyValue {
     #[default]
     Null,

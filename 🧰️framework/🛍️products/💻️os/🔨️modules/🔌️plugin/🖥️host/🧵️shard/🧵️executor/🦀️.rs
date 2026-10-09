@@ -299,9 +299,9 @@ impl ShardExecutor {
     /// `RegisterRequest`/ack rendezvous, there is no interleaving to close here at all), and returns
     /// an `Arc` (needed so [`ShardExecutor::schedule`] can hand `WorkerPool::submit` a strong
     /// self-reference for its job closure).
-    pub async fn new(pool: Arc<WorkerPool>, runtime: Arc<GuestRuntimes>, initial: Vec<(ActorId, GuestInstance)>, outcomes: Arc<OutcomeSink>) -> Arc<ShardExecutor> {
+    pub async fn new(pool: Arc<WorkerPool>, runtime: Arc<GuestRuntimes>, initial: Vec<(ActorId, GuestInstance)>, outcomes: Arc<OutcomeSink>,identity:super::OriginalShardIdentityIssuer) -> Arc<ShardExecutor> {
         let (kernel_side, shard_side) = ThreadTransport::new_pair().await;
-        let mut shard = ShardLoop::new(runtime, ShardTransports::SharedThread(SharedThreadTransport(Arc::new(shard_side)))).await;
+        let mut shard = ShardLoop::new(runtime, ShardTransports::SharedThread(SharedThreadTransport(Arc::new(shard_side))),identity).await;
         for (actor, instance) in initial {
             if let Err(rejected) = shard.register(actor, instance) {
                 shard.runtime.drop_instance(rejected.instance).await;
@@ -341,7 +341,7 @@ impl ShardExecutor {
         let receive = {
             let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
             if self.closed.load(Ordering::Acquire) || self.ingress_state.load(Ordering::Acquire) != 0 || self.pool.is_shutdown() {
-                return RegistrationAdmission::Refused(super::ShardRegistrationRejected { actor, instance, reason: super::ShardRegistrationReason::Stopped });
+                return RegistrationAdmission::Refused(super::ShardRegistrationRejected { actor, instance, reason: super::ShardRegistrationReason::Stopped,identity_refusal:None });
             }
             if let Some(shard) = state.shard.as_mut() {
                 return match shard.register(actor, instance) {
@@ -567,7 +567,7 @@ impl ShardExecutor {
             let Some((_, (actor, instance, reply))) = owner else { break };
             let unclaimed = match reply {
                 Some(reply) => {
-                    let refusal = RegistrationAdmission::Refused(super::ShardRegistrationRejected { actor, instance, reason: super::ShardRegistrationReason::Stopped });
+                    let refusal = RegistrationAdmission::Refused(super::ShardRegistrationRejected { actor, instance, reason: super::ShardRegistrationReason::Stopped,identity_refusal:None });
                     match reply.send(refusal) {
                         Ok(()) => None,
                         Err(RegistrationAdmission::Refused(owner)) => Some(owner.instance),

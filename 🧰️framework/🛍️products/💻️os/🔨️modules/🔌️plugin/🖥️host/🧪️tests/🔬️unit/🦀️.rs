@@ -161,7 +161,7 @@ async fn plugin_instance_handle_drives_io_run_job_on_worker_through_a_running_st
     mock.script_job_step(actor, JobStep::Running { progress: None }).await;
     let io_payload = semio_framework::io_schema::IoPayload::Text("87a-bytes".to_string());
     mock.script_job_step(actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&io_payload).into_bytes() }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
+    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_wake_authority()).await;
 
     let payload_bytes = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Text("raw-bytes".to_string())).into_bytes();
     let result = handle.io_run("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", payload_bytes).await.expect("job-backed io_run must drive start-job + step-job to Done");
@@ -178,7 +178,7 @@ async fn plugin_instance_handle_io_sniff_decodes_the_confidence_byte() {
     let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([2u8; 32]) }, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
     mock.script_job_step(actor, JobStep::Done { output: vec![3u8] }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
+    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_wake_authority()).await;
 
     let payload_bytes = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Binary(vec![0xFF])).into_bytes();
     let rank = handle.io_sniff("s.stdio.binary@raw/*", "s.stdio.gif@87a/*", &payload_bytes).await.expect("job-backed io_sniff must decode a Done result");
@@ -196,7 +196,7 @@ async fn plugin_instance_handle_migrate_drives_the_semio_migrate_job_to_completi
     let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
     mock.script_job_step(actor, JobStep::Running { progress: None }).await;
     mock.script_job_step(actor, JobStep::Done { output: vec![1, 2, 3, 0xAB] }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
+    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_wake_authority()).await;
 
     let result = handle.migrate("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", vec![1, 2, 3]).await.expect("job-backed migrate must drive start-job + step-job to Done");
     assert_eq!(result, vec![1, 2, 3, 0xAB]);
@@ -211,7 +211,7 @@ async fn plugin_instance_handle_mutation_plan_passes_wire_bytes_through_to_done(
     let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([10u8; 32]) }, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
     mock.script_job_step(actor, JobStep::Done { output: b"planned".to_vec() }).await;
-    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
+    let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_wake_authority()).await;
 
     let result = handle.mutation_plan(b"request-wire-bytes").await.expect("job-backed mutation_plan must drive start-job + step-job to Done");
     assert_eq!(result, b"planned");
@@ -242,7 +242,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let stdio_instance = stdio_mock.instantiate(&stdio_compiled, stdio_actor, &[], &budget).await.expect("stdio mock instantiate");
     let midpoint = semio_framework::io_schema::IoPayload::Text("midpoint".to_string());
     stdio_mock.script_job_step(stdio_actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&midpoint).into_bytes() }).await;
-    let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, Arc::new(GuestRuntimes::Mock(stdio_mock)), stdio_instance).await);
+    let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, Arc::new(GuestRuntimes::Mock(stdio_mock)), stdio_instance,test_relay_wake_authority()).await);
 
     let gif_mock = Arc::new(MockGuestRuntime::new().await);
     let gif_actor = RuntimeActorId(201);
@@ -250,7 +250,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let gif_instance = gif_mock.instantiate(&gif_compiled, gif_actor, &[], &budget).await.expect("gif mock instantiate");
     let final_payload = semio_framework::io_schema::IoPayload::Text("final".to_string());
     gif_mock.script_job_step(gif_actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&final_payload).into_bytes() }).await;
-    let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, Arc::new(GuestRuntimes::Mock(gif_mock)), gif_instance).await);
+    let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, Arc::new(GuestRuntimes::Mock(gif_mock)), gif_instance,test_relay_wake_authority()).await);
 
     let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
     let gif_87a = io_dialect("s.stdio.gif", "87a", "*").await;
@@ -293,7 +293,7 @@ async fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_t
     let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
     mock.script_job_step(actor, JobStep::Running { progress: None }).await;
     mock.script_job_step(actor, JobStep::Done { output: b"composed".to_vec() }).await;
-    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance).await);
+    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance,test_relay_wake_authority()).await);
 
     let dialects = vec![(
         semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },
@@ -325,7 +325,7 @@ async fn io_router_compose_still_refuses_to_route_back_into_the_calling_plugin()
     let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
     let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([6u8; 32]) }, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
-    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance).await);
+    let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance,test_relay_wake_authority()).await);
 
     let dialects = vec![(
         semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() },

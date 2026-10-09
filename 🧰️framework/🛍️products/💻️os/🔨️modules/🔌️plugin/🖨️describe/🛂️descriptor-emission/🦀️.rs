@@ -55,6 +55,12 @@ impl wasmtime_wasi::WasiView for DescribeHostState {
 // See R9/R2 E1.
 #[cfg(test)]
 impl actor_bindings::semio::framework::pure::Host for DescribeHostState {
+    async fn operation_begin(_accessor:&wasmtime::component::Accessor<DescribeHostState,Self>)->Result<u64,u32>{Err(6)}
+    async fn operation_progress(_accessor:&wasmtime::component::Accessor<DescribeHostState,Self>,_completed:u64,_total:u64,_owned:u64)->u32{6}
+    async fn operation_allocation(_accessor:&wasmtime::component::Accessor<DescribeHostState,Self>,_bytes:u64,_owned:u64,_next:u64,_maximum:u64)->u32{6}
+    async fn operation_reserve_return(_accessor:&wasmtime::component::Accessor<DescribeHostState,Self>,_kind:actor_bindings::semio::framework::pure::OperationReturnAllocation,_count:u64)->u32{6}
+    async fn operation_finish(_accessor:&wasmtime::component::Accessor<DescribeHostState,Self>,_owned:u64)->u32{6}
+
     fn log(&mut self, level: String, message: String) {
         eprintln!("[describe:{level}] {message}");
     }

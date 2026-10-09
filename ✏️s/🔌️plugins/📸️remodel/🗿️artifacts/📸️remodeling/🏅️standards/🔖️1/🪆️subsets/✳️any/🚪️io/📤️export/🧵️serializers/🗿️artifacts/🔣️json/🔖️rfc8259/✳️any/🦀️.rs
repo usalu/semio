@@ -15,7 +15,7 @@ pub struct RemodelingIntoJson;
 impl Serializer<RemodelingSnapshot> for RemodelingIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &RemodelingSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &RemodelingSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let owned = crate::standards::v1::subsets::any::io::remodeling_json::convert(from.to_value(),false).map_err(|message|IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)))?;
         let value = semio_framework_pack_json::from_dsl_value(&owned);
         Ok(IoOutcome::clean(IoPayload::Text(write_json_pretty(&JsonSnapshot::from_value(value).value))))

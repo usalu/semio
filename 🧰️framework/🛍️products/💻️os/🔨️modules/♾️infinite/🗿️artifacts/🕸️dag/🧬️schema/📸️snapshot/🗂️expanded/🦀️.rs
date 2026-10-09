@@ -22,7 +22,7 @@ impl<const N:usize> From<[String;N]> for DagExpandedPaths{fn from(values:[String
 impl FromIterator<String> for DagExpandedPaths{fn from_iter<T:IntoIterator<Item=String>>(values:T)->Self{let mut result=Self::new();for value in values{result.insert(value);}result}}
 impl IntoIterator for DagExpandedPaths{type Item=String;type IntoIter=std::vec::IntoIter<String>;fn into_iter(self)->Self::IntoIter{self.values.into_iter()}}
 impl<'a> IntoIterator for &'a DagExpandedPaths{type Item=&'a String;type IntoIter=std::slice::Iter<'a,String>;fn into_iter(self)->Self::IntoIter{self.values.iter()}}
-impl semio_framework_value::retirement::RetireOwned for DagExpandedPaths{fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.values)}}
+semio_framework_value::artifact_retire_struct!(DagExpandedPaths {values});
 impl ToValue for DagExpandedPaths{
  fn to_value(&self)->DslValue{self.values.to_value()}
  fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{self.values.to_value_controlled(control)}

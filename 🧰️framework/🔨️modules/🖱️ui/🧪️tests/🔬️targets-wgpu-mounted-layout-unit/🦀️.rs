@@ -63,7 +63,8 @@ fn text_job(tree: &UiTree, root: NodeId) -> MountedLayoutJob {
 fn admit(job: &mut MountedLayoutJob, tree: &UiTree, cancel: &semio_framework_job::CancelToken) -> LayoutJobStep {
     let mut preview = 0;
     loop {
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(23), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), clock_zero, &mut preview);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(23), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), clock_zero, &mut preview,&mut actual_retained_progress);
         let step = job.admit_one(tree, &mut cx);
         if job.is_admitted() || matches!(step, LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled) {
             return step;
@@ -144,7 +145,8 @@ fn mounted_layout_multi_page_unicode_uses_one_glyph_or_atlas_boundary_per_turn()
     let mut preview_sequence = 0;
     while job.stage() == LayoutJobStage::ShapeText {
         let before = job.glyph_cursor;
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(27), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), clock_zero, &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(27), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), clock_zero, &mut preview_sequence,&mut actual_retained_progress);
         let _ = semio_framework_job::InteractiveJob::step(&mut job, &mut cx);
         assert!(job.glyph_cursor - before <= 1);
         turns += 1;
@@ -168,7 +170,7 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
         operation: semio_framework_job::OperationId(29),
         generation: semio_framework_job::Generation(11),
         cancel,
-        config: semio_framework_job::BatchDriveConfig { site: "ui.layout-text.worker.law", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+        config: semio_framework_job::BatchDriveConfig { retained:ui_contract::UI_WORKER_RETIREMENT_POLICY, site: "ui.layout-text.worker.law", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: clock_zero,
     };
     let mut session = semio_framework_job::MountedWorkerJobSession::try_new(job, params).unwrap_or_else(|_| panic!("mounted worker session credit"));
@@ -185,12 +187,27 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
     assert!(session.checked_out_job_mut().is_some_and(|owner| owner.worker_thread_observed()));
     session.begin_close();
     for _ in 0..LAYOUT_GLYPH_CREDITS + LAYOUT_NODE_CREDITS * 4 {
-        let _ = session.close_step(session.next_close_demands(0).expect("original layout worker close demands"));
+        let grant = ui_contract::UI_WORKER_RETIREMENT_POLICY;
+        let demand = session.retirement_demands(grant.maximum_copy_bytes).expect("original layout worker close demands");
+        if !ui_contract::ui_worker_retirement_permits(demand) {
+            eprintln!("[DEBUG] mounted layout retained original close phase={:?} demand={demand:?} fixedPolicy={grant:?}", session.close_phase());
+        }
+        assert!(ui_contract::ui_worker_retirement_permits(demand));
+        let phase=session.close_phase();
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||session.close_step(grant));
+        let progress=step.progress();
+        if (progress.retained_capacity_bytes,progress.released_bytes)!=(heap.requested_bytes,heap.released_bytes){eprintln!("[DEBUG] actual mounted worker physical receipt phase={phase:?} demand={demand:?} progress={progress:?} originalHeap={heap:?}");}
+        assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(heap.requested_bytes,heap.released_bytes));
+        assert!(progress.fits(grant));
+        assert!(!matches!(step, semio_framework_job::WorkerJobCloseStep::Refused { .. }));
         if session.terminal_is_empty() {
             break;
         }
     }
     assert!(session.terminal_is_empty());
+    let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(session));
+    eprintln!("[DEBUG] actual mounted worker terminal Drop physical={} birth={}",heap.released_bytes,heap.requested_bytes);
+    assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 
 #[test]
@@ -201,7 +218,8 @@ fn mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained(
     assert!(matches!(admit(&mut before, &tree, &cancel), LayoutJobStep::Yield { .. }));
     cancel.cancel_now();
     let mut preview = 0;
-    let mut before_cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(31), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, clock_zero, &mut preview);
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+    let mut before_cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(31), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, clock_zero, &mut preview,&mut actual_retained_progress);
     assert!(matches!(semio_framework_job::InteractiveJob::step(&mut before, &mut before_cx), semio_framework_job::StepOutcome::Cancelled));
     assert_eq!(before.glyph_cursor, 0);
 
@@ -210,7 +228,8 @@ fn mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained(
     assert!(matches!(admit(&mut after, &tree, &after_cancel), LayoutJobStep::Yield { .. }));
     after.cancel_after_shape(after_cancel.clone());
     let mut after_preview = 0;
-    let mut after_cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(37), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX), after_cancel, clock_zero, &mut after_preview);
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+    let mut after_cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(37), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), after_cancel, clock_zero, &mut after_preview,&mut actual_retained_progress);
     assert!(matches!(semio_framework_job::InteractiveJob::step(&mut after, &mut after_cx), semio_framework_job::StepOutcome::Cancelled));
     assert_eq!(after.glyph_cursor, 1);
     assert_eq!(after.latest_glyph_preview().map(|preview| preview.generation), Some(11));
@@ -226,7 +245,8 @@ fn mounted_layout_deadline_and_partial_close_each_advance_at_most_one_owner() {
     let mut job = text_job(&tree, root);
     assert!(matches!(admit(&mut job, &tree, &cancel), LayoutJobStep::Yield { .. }));
     let mut preview = 0;
-    let mut expired = semio_framework_job::StepContext::new(semio_framework_job::OperationId(41), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, 0), cancel, clock_zero, &mut preview);
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+    let mut expired = semio_framework_job::StepContext::new(semio_framework_job::OperationId(41), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, 0,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, clock_zero, &mut preview,&mut actual_retained_progress);
     assert!(matches!(semio_framework_job::InteractiveJob::step(&mut job, &mut expired), semio_framework_job::StepOutcome::Yield));
     assert_eq!(job.glyph_cursor, 0);
     let retained = job.glyphs.as_deref().expect("original layout owner").len() + job.nodes.as_deref().expect("original layout owner").len() + job.runs.as_deref().expect("original layout owner").len() + LAYOUT_ATLAS_PAGE_CREDITS;
@@ -246,7 +266,8 @@ fn mounted_layout_publication_rechecks_full_identity_and_repeat_ready_swaps_once
     assert!(matches!(admit(&mut job, &tree, &cancel), LayoutJobStep::Yield { .. }));
     let mut preview_sequence = 0;
     while job.stage() != LayoutJobStage::PublishResults {
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(43), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), clock_zero, &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(43), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), clock_zero, &mut preview_sequence,&mut actual_retained_progress);
         let _ = semio_framework_job::InteractiveJob::step(&mut job, &mut cx);
     }
     let stale = (UiSurfaceToken::new(3, 8), 11, 13, 17, 19, 640.0, 480.0);
@@ -440,11 +461,13 @@ fn composite_intrinsic_and_layout(tree: &mut UiTree, root: NodeId, width: f32) -
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview = 0;
     while !job.is_admitted() {
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(61), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), clock_zero, &mut preview);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(61), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), clock_zero, &mut preview,&mut actual_retained_progress);
         assert!(!matches!(job.admit_one(tree, &mut cx), LayoutJobStep::Fault(_) | LayoutJobStep::Cancelled));
     }
     while job.stage() != LayoutJobStage::PublishResults {
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(61), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), clock_zero, &mut preview);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(61), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), clock_zero, &mut preview,&mut actual_retained_progress);
         assert!(!matches!(semio_framework_job::InteractiveJob::step(&mut job, &mut cx), semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled));
     }
     let intrinsic = job.root_intrinsic_height().expect("root intrinsic height");

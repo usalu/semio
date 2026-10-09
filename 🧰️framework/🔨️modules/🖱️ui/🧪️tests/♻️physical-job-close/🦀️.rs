@@ -1,6 +1,6 @@
 use super::{ClipboardIoJob, ClipboardIoOperation};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep as Step, RetainedCloneGrant, RetainedCloneProgress};
-use std::alloc::{GlobalAlloc, Layout, System};
+use std::alloc::{GlobalAlloc, Layout};
 use std::cell::Cell;
 
 thread_local! {
@@ -11,7 +11,7 @@ struct PhysicalAllocator;
 
 unsafe impl GlobalAlloc for PhysicalAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let pointer = unsafe { System.alloc(layout) };
+        let pointer = unsafe { semio_framework_trace::HeapWitness.alloc(layout) };
         if !pointer.is_null() {
             let _ = OBSERVATION.try_with(|state| if let Some((births, frees)) = state.get() { state.set(Some((births + layout.size(), frees))) });
         }
@@ -19,7 +19,7 @@ unsafe impl GlobalAlloc for PhysicalAllocator {
     }
     unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) {
         let _ = OBSERVATION.try_with(|state| if let Some((births, frees)) = state.get() { state.set(Some((births, frees + layout.size()))) });
-        unsafe { System.dealloc(pointer, layout) }
+        unsafe { semio_framework_trace::HeapWitness.dealloc(pointer, layout) }
     }
 }
 

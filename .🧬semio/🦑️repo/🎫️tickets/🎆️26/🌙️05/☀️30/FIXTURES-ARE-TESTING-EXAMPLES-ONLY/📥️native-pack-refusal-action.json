@@ -1,0 +1,10 @@
+{
+  "time": "2026-10-09T12:59:28.232556+00:00",
+  "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs",
+  "beforeSha256": "139e211c0ef5431de2f6b6390eac88955cc700bd4df3d489f2eb853b9bb8bce6",
+  "oldLogicalBlock": "else{Err(ValueError::new(ValueRefusalKind::Canceled, \"native encoding canceled\"))}",
+  "newLogicalBlock": "else{Err(ValueError::literal(ValueRefusalKind::Canceled, \"native encoding canceled\"))}",
+  "actualRed": "native-pack-system.log; Nx1/9.6s; System4144 vs receipt4120",
+  "reason": "static cancellation prose must not allocate denied24byte owned String",
+  "afterSha256": "37caf305fae2d3f7760fff38360bcee56a2bfd99d331f8a39bfd56d930c0a91e"
+}

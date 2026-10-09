@@ -26,35 +26,30 @@ depends-on = ["stdio"]
 # 🧩️ Composition Playgrounds
 [[package.metadata.semio.playground]]
 variant = "stdio-binary"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.binary@raw/*#editor"
 aliases = ["stdio binary"]
 ports = { react = 6296, wgpu = 6396 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-deflate"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.deflate@rfc1950/*#editor"
 aliases = ["stdio deflate"]
 ports = { react = 6297, wgpu = 6397 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-zip"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.zip@2.0/*#editor"
 aliases = ["stdio zip"]
 ports = { react = 6298, wgpu = 6398 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-zip-iso21320"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.zip@2.0/iso21320#editor"
 aliases = ["stdio iso zip"]
 ports = { react = 6299, wgpu = 6399 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-epw"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.epw@energyplus/*#editor"
 aliases = ["stdio weather"]
 ports = { react = 6300, wgpu = 6400 }

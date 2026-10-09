@@ -1,0 +1,5 @@
+# Current Typed Foundation Boundary
+
+Actual source route86524 now reaches the preserved toolJobTypedPersistentFoundation refusal. Its Root script predicate still selects the removed scalar PluginApp maintenance signature and requires old PluginCloseStep/pump_one/maximum_bytes worker names. The current defining production API carries a full RetainedCloneGrant and PluginLifecycleStep; worker pump is pump_one_for_interactive_turn with real outcome-slot and session receipt custody. These genuine peer-owned changes are observations only.
+
+The current mounted retirement_step and retire_typed_operation_unit remain scalar and still leave unsupported publication/output/completion owners, so foundation integration is not complete. Updating the current observer must preserve actual grant/receipt/terminal and full owner scan laws; an alias or unsupported-domain bypass would be false proof. No Root script/production edits were made while the coordinated Rust cohort is held. Exact observations/hashes are in pub-foundation-observer.json.

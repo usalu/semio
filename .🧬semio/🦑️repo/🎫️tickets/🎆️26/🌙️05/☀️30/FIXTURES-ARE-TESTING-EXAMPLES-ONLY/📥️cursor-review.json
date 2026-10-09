@@ -1,0 +1,25 @@
+{
+  "executed": false,
+  "rows": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+      "sha256": "e4d4a9eba69ac564d8e90a0825f07b11ccf59c24187c9af41d8d5d1b609571ed",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+      "sha256": "9f39a68a155c9389fd3758cbde8d054c37eccc53ab2376ac8ada25ef8f5b687b",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+      "sha256": "74017abd2f687ab3c4ac2d010224e9fb5dea30cf2521aa6c2736a50958cac068",
+      "authored": false
+    },
+    {
+      "path": "📜️script.ts",
+      "sha256": "7c237a1b859e2d2068aec728b8a9e9be0ff48080d093e4ab4385fcbe8d69127b",
+      "authored": false
+    }
+  ]
+}

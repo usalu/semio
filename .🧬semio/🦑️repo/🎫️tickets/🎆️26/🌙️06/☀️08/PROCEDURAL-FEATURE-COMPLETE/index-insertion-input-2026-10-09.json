@@ -1,0 +1,199 @@
+{
+  "date": "2026-10-09",
+  "status": "schema and tests authored before arena/admission API mutation",
+  "originalIndexSha256": "87aa09111bcc0d4421cd53d0526ffb668c129ba11ce92dc8a6d9c213a38ba5cd",
+  "fixture": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🎟️insertion/🔣️.json",
+  "schema": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🎟️insertion/🔣️.json",
+  "portable": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🎟️insertion/🟦️.ts",
+  "native": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🦀️.rs",
+  "nativeBaseline": {
+    "handle": 42452,
+    "status": "terminal missing-API compiler PRE",
+    "assertions": 0,
+    "nxSeconds": 9.2,
+    "log": "🗑️generated/sol-2026-10-08/index-insertion-native-1.log"
+  },
+  "portableAttempt": {
+    "handle": 7737,
+    "status": "terminal file-path PRE",
+    "nxSeconds": 2.9,
+    "log": "🗑️generated/sol-2026-10-08/index-insertion-oracle-1.log"
+  },
+  "nativeInsertionReplay2": {
+    "sessionId": 18315,
+    "exitCode": 0,
+    "passed": 1,
+    "skipped": 319,
+    "seconds": 0.043,
+    "originalBytes": 29264,
+    "admittedBytes": 85720,
+    "physicalBytes": 114984,
+    "reserveTurns": 6,
+    "copyGrants": [
+      1,
+      3,
+      64
+    ],
+    "log": "🗑️generated/sol-2026-10-08/index-insertion-native-2.log"
+  },
+  "portableReplay2": {
+    "sessionId": 62494,
+    "exitCode": 1,
+    "assertionsReached": false,
+    "classification": "setup pre-assertion: missing json-stable-stringify; corrected to existing fast-json-stable-stringify test dependency",
+    "log": "🗑️generated/sol-2026-10-08/index-insertion-oracle-2.log"
+  },
+  "reuseBaselineSource": {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🦀️.rs",
+    "sha256": "0838630c9c684eb8bfe6114137905bc2fc236264131bc619c51f618ef7e17032",
+    "rounds": 36,
+    "modes": [
+      "remove-entry",
+      "pop-first",
+      "pop-last"
+    ],
+    "assertions": [
+      "same exact physical slot",
+      "same backing",
+      "same payload pointer",
+      "no heap birth/release",
+      "unchanged logical JSON",
+      "full physical retirement"
+    ]
+  },
+  "reuseBaseline24369": {
+    "sessionId": 24369,
+    "exitCode": 1,
+    "classification": "actual original System law RED: detached row appended a new slot",
+    "passed": 0,
+    "failed": 1,
+    "log": "🗑️generated/sol-2026-10-08/index-reuse-native-1.log"
+  },
+  "reuseAuthoredSourceSha256": "1a2d6f19dadef4ffe015897a0807fda38d16f73b0b93599e87f4832697e3198d",
+  "portableReplay3": {
+    "sessionId": 54159,
+    "exitCode": 0,
+    "classification": "strict Ajv, independent JSON Patch/Map/stable JSON actual GREEN",
+    "log": "🗑️generated/sol-2026-10-08/index-insertion-oracle-3.log"
+  },
+  "reuseInterrupted73349": {
+    "sessionId": 73349,
+    "handleMissingOnResume": true,
+    "assertionsReached": false,
+    "lastObservedState": "compiler lease waiting behind four owners",
+    "log": "🗑️generated/sol-2026-10-08/index-reuse-native-2.log"
+  },
+  "portableExtended47915": {
+    "sessionId": 47915,
+    "handleMissingOnResume": true,
+    "logConfirmsNxSuccess": true,
+    "strictAjvJSONPatchMapStableJson": true,
+    "log": "🗑️generated/sol-2026-10-08/index-insertion-oracle-4.log"
+  },
+  "reuseReplay3SourceSha256": "fa9b0446845e82d29b1cbd387eb76824812c627aa93b1c67ef39c1d491dbfe5d",
+  "reuseReplay97588": {
+    "sessionId": 97588,
+    "exitCode": 0,
+    "passed": 2,
+    "skipped": 320,
+    "seconds": 0.064,
+    "insertion": {
+      "original": 29264,
+      "admitted": 85792,
+      "physical": 115056,
+      "reservationTurns": 6
+    },
+    "reuse": {
+      "rounds": 36,
+      "original": 5496,
+      "admitted": 12064,
+      "physical": 17560,
+      "sameSlot": true,
+      "sameValue": true,
+      "sameBacking": true,
+      "lazyAndGetOrInsert": true
+    },
+    "copyGrants": [
+      1,
+      3,
+      64
+    ],
+    "terminalDropBytes": 0,
+    "log": "🗑️generated/sol-2026-10-08/index-reuse-native-3.log"
+  },
+  "wholeFamily92916": {
+    "sessionId": 92916,
+    "exitCode": 0,
+    "passed": 6,
+    "skipped": 317,
+    "seconds": 0.124,
+    "nxDuration": "9m17s",
+    "log": "🗑️generated/sol-2026-10-08/index-family-native-1.log"
+  },
+  "membershipAndExtractionSource": {
+    "testAuthoredBeforeProduction": true,
+    "independentJSSetExpectedKeys": 140,
+    "forwardedAxes": 5,
+    "preservedReceipts": 4
+  },
+  "portableChangedSource62114": {
+    "sessionId": 62114,
+    "exitCode": 0,
+    "schemaAbsent": true,
+    "strictAjvAndNegativeAssertionsRemoved": true,
+    "unattributedSourceSha256": "94b751a6135c38da4f76ed53e91241441aa1b083e5b03857e8264154c3e0801d",
+    "provesOnly": "JSONPatch, Map, JSSet, canonical JSON; does not prove strict contract validation",
+    "log": "🗑️generated/sol-2026-10-08/index-insertion-oracle-5.log"
+  },
+  "strictRestoration": {
+    "schemaSha256": "83ee893b699bc2fba89259e1bab3013d2520fe2a164f7c8bcc9d969c8549c202",
+    "testSha256": "ea58caf2b4c6c5381c90cf3702def109816985d1d854cbdd7730323b67ca8d78",
+    "negativeAuthorityCases": 8
+  },
+  "wholeFamily99478": {
+    "sessionId": 99478,
+    "exitCode": 0,
+    "passed": 7,
+    "skipped": 317,
+    "seconds": 0.132,
+    "nxSeconds": 13.5,
+    "copyGrants": [
+      1,
+      3,
+      64
+    ],
+    "membership": {
+      "originalBytes": 18328,
+      "admittedBytes": 72236,
+      "physicalBytes": 90564,
+      "turns": [
+        10003,
+        6909,
+        5643
+      ],
+      "placementBirthBytes": 0,
+      "placementReleasedBytes": 0,
+      "sameOriginalKeyPointers": true,
+      "refusalHandback": true,
+      "terminalDropBytes": 0
+    },
+    "sourceEpoch": "before subsequent conditional original PagedList retirement admission change",
+    "log": "🗑️generated/sol-2026-10-08/index-family-native-2.log"
+  },
+  "strictPortable66523": {
+    "sessionId": 66523,
+    "exitCode": 0,
+    "strictAjv": true,
+    "negativeAuthorityCases": 8,
+    "rows": 140,
+    "independent": [
+      "JSONPatch",
+      "Map",
+      "JSSet",
+      "fast-json-stable-stringify",
+      "UTF8"
+    ],
+    "nxSeconds": 1.7,
+    "log": "🗑️generated/sol-2026-10-08/index-insertion-oracle-6.log"
+  }
+}

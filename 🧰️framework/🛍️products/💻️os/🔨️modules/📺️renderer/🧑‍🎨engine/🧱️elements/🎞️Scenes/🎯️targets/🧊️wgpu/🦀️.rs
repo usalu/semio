@@ -1583,7 +1583,7 @@ thread_local! {
     static CANVAS_CATALOGUE_HOVER: RefCell<Option<CanvasCatalogueHover>> = const { RefCell::new(None) };
     static PENDING_RASTER_STATE: RefCell<AdmittedSurfaceMap<PendingRasterSurface>> = RefCell::new(AdmittedSurfaceMap::default());
     static PENDING_RASTER_CLOSE_OWNER: RefCell<Option<PendingRasterSurfaceRetirement>> = const { RefCell::new(None) };
-    static SCENE_CAMERA_DISPATCH_DEADLINES_MS: RefCell<HashMap<String, SceneCameraDeadline>> = RefCell::new(HashMap::new());
+    static SCENE_CAMERA_DISPATCH_DEADLINES_MS: RefCell<crate::camera_storage::DirectoryOwner<Option<SceneCameraOwnerMetadata>>> = RefCell::new(crate::camera_storage::DirectoryOwner::default());
     static SCENE_CAMERA_DISPATCH_FAULT: RefCell<Option<&'static str>> = RefCell::new(None);
 }
 
@@ -1600,7 +1600,7 @@ static PENDING_RASTER_STATE: WorkerCell<AdmittedSurfaceMap<PendingRasterSurface>
 #[cfg(not(target_arch = "wasm32"))]
 static PENDING_RASTER_CLOSE_OWNER: WorkerCell<Option<PendingRasterSurfaceRetirement>> = WorkerCell::new();
 #[cfg(not(target_arch = "wasm32"))]
-static SCENE_CAMERA_DISPATCH_DEADLINES_MS: WorkerCell<HashMap<String, SceneCameraDeadline>> = WorkerCell::new();
+static SCENE_CAMERA_DISPATCH_DEADLINES_MS: WorkerCell<crate::camera_storage::DirectoryOwner<Option<SceneCameraOwnerMetadata>>> = WorkerCell::new();
 #[cfg(not(target_arch = "wasm32"))]
 static SCENE_CAMERA_DISPATCH_FAULT: WorkerCell<Option<&'static str>> = WorkerCell::new();
 
@@ -1776,7 +1776,7 @@ pub(crate) fn mount_canvas_camera(scene: &UiComponentSceneNode, owner: crate::in
             state.canvas_click = None;
             state.drag = None;
             state.pointer_was_down = false;
-            SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|deadlines| deadlines.borrow_mut().remove(&scene.host_id));
+            remove_scene_camera_deadline(&scene.host_id);
         }
         true
     })
@@ -1838,12 +1838,9 @@ pub(crate) fn retire_scene_identity(owner: &crate::interpreter::ScenePointerTarg
             });
         });
     }
-    SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
-        let mut deadlines = cell.borrow_mut();
-        if deadlines.get(&owner.host_id).is_some_and(|deadline| deadline.owner.as_ref().is_some_and(|current| current.same_component_host(owner))) {
-            deadlines.remove(&owner.host_id);
-        }
-    });
+    let camera_matches = SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow().get(&owner.host_id).is_some_and(|record| camera_owner_matches(record, owner)));
+    if camera_matches { remove_scene_camera_deadline(&owner.host_id); }
+
     retained
 }
 
@@ -1864,119 +1861,189 @@ fn mutate_scene_state(surface_id: &str, f: impl FnOnce(&mut SceneSurfaceState)) 
 const SCENE_CAMERA_DISPATCH_CAPACITY: usize = 256;
 const SCENE_CAMERA_ID_BYTE_CAPACITY: usize = 256;
 
-struct SceneCameraDeadline {
-    at_ms: f64,
-    surface_id: String,
-    owner: Option<crate::interpreter::ScenePointerTarget>,
+#[derive(Clone, Copy, PartialEq)]
+struct SceneCameraOwnerMetadata {
+    document_id: ui_contract::UiNodeId,
+    window_generation: u64,
+    component_generation: u64,
+    kind: ui_wgpu::wgpu::SurfaceKind,
+    node: ui_wgpu::wgpu::NodeId,
+    positional_key: Option<(u32, u32)>,
 }
 
-impl SceneCameraDeadline {
-    fn owns_surface(&self, surface_id: &str) -> bool {
-        let matches = SCENE_STATE.with(|cell| {
-            let states = cell.borrow();
-            let current = states.get(surface_id).and_then(|state| state.canvas_camera_owner.as_ref());
-            match (current, self.owner.as_ref()) {
-                (Some(current), Some(owner)) => current.same_component_host(owner),
-                (None, None) => true,
-                _ => false,
-            }
-        });
-        matches && self.owner.as_ref().is_none_or(|owner| !crate::interpreter::ui_document_close_pending_for(&owner.window_id) && !scene_host_retiring(&owner.host_id) && crate::interpreter::component_scene_is_presented(owner))
+impl SceneCameraOwnerMetadata {
+    fn from_owner(owner: &crate::interpreter::ScenePointerTarget) -> Self {
+        Self { document_id: owner.document_id, window_generation: owner.window_generation, component_generation: owner.component_generation, kind: owner.kind, node: owner.node, positional_key: match &owner.key { ui_wgpu::wgpu::NodeKey::Explicit(_) => None, ui_wgpu::wgpu::NodeKey::Positional(a, b) => Some((*a, *b)) } }
     }
 }
 
-/// 🕒️ Settles each Canvas camera 120 ms after its latest wheel or pan mutation, matching Canvas2dHost.
-fn schedule_scene_camera_dispatch(host_id: &str, surface_id: &str) {
-    let owner = SCENE_STATE.with(|cell| cell.borrow().get(host_id).and_then(|state| state.canvas_camera_owner.clone()));
-    SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
-        let mut deadlines = cell.borrow_mut();
-        if host_id.len() > SCENE_CAMERA_ID_BYTE_CAPACITY || surface_id.len() > SCENE_CAMERA_ID_BYTE_CAPACITY || (!deadlines.contains_key(host_id) && deadlines.len() >= SCENE_CAMERA_DISPATCH_CAPACITY) {
-            SCENE_CAMERA_DISPATCH_FAULT.with(|fault| *fault.borrow_mut() = Some("scene camera deadline credits exceeded"));
-            return;
-        }
-        deadlines.insert(host_id.to_string(), SceneCameraDeadline { at_ms: crate::app_now_ms() + 120.0, surface_id: surface_id.to_owned(), owner });
-    });
+type SceneCameraRecord = crate::camera_storage::Record<Option<SceneCameraOwnerMetadata>>;
+
+fn camera_owner_matches(record: &SceneCameraRecord, owner: &crate::interpreter::ScenePointerTarget) -> bool {
+    let Some(metadata) = record.metadata else { return false };
+    metadata.document_id == owner.document_id && metadata.window_generation == owner.window_generation && metadata.component_generation == owner.component_generation && metadata.kind == owner.kind
+        && record.text(2) == owner.host_id && record.text(3) == owner.window_id && record.text(4) == owner.surface_id
+        && match &owner.key { ui_wgpu::wgpu::NodeKey::Explicit(key) => metadata.positional_key.is_none() && record.text(5) == key, ui_wgpu::wgpu::NodeKey::Positional(a, b) => metadata.positional_key == Some((*a, *b)) }
 }
 
-pub enum SceneCameraDispatchStep {
-    Pending,
-    Action(ActionDescriptor),
-    Complete,
-    Fault(&'static str),
+fn camera_owns_surface(record: &SceneCameraRecord) -> bool {
+    let current_matches = SCENE_STATE.with(|cell| {
+        let states = cell.borrow();
+        let current = states.get(record.text(0)).and_then(|state| state.canvas_camera_owner.as_ref());
+        match (current, record.metadata) {
+            (Some(current), Some(_)) => camera_owner_matches(record, current),
+            (None, None) => true,
+            _ => false,
+        }
+    });
+    if !current_matches { return false; }
+    let Some(metadata) = record.metadata else { return true };
+    if crate::interpreter::ui_document_close_pending_for(record.text(3)) || scene_host_retiring(record.text(2)) { return false; }
+    let witness = ui_wgpu::wgpu::reconcile::UiComponentSceneWitness {
+        document_id: metadata.document_id,
+        host_id: record.text(2),
+        window_id: record.text(3),
+        window_generation: metadata.window_generation,
+        component_generation: metadata.component_generation,
+        key: match metadata.positional_key { Some((variant, ordinal)) => ui_wgpu::wgpu::NodeKeyRef::Positional(variant, ordinal), None => ui_wgpu::wgpu::NodeKeyRef::Explicit(record.text(5)) },
+        kind: metadata.kind,
+        surface_id: record.text(4),
+    };
+    crate::interpreter::component_scene_is_presented(&witness)
 }
+
+fn remove_scene_camera_deadline(host: &str) {
+    let result = SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
+        let mut deadlines = cell.borrow_mut();
+        let grant = deadlines.received_grant()?;
+        deadlines.remove(host, grant)
+    });
+    if result.is_err() { SCENE_CAMERA_DISPATCH_FAULT.with(|fault| *fault.borrow_mut() = Some("scene camera removal credits exceeded")); }
+}
+
+/// 🪙️ Receives the exact host bootstrap grant before any camera storage operation.
+pub(crate) fn install_scene_camera_authority(grant: semio_framework_job::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+    SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().install(grant))
+}
+
+/// 🧹️ The original host closes global deadlines with the same incoming five-axis authority.
+pub(crate) fn close_scene_camera_storage(grant: semio_framework_job::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> {
+    SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().close_step(grant))
+}
+
+pub(crate) fn scene_camera_storage_is_empty() -> bool {
+    SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow().terminal_is_empty())
+}
+
+/// 🕒️ Settles the original Canvas identity 120 ms after its latest mutation.
+fn schedule_scene_camera_dispatch(host_id: &str, surface_id: &str) {
+    let result = SCENE_STATE.with(|states| {
+        let states = states.borrow();
+        let owner = states.get(host_id).and_then(|state| state.canvas_camera_owner.as_ref());
+        let (metadata, text) = match owner {
+            Some(owner) => (Some(SceneCameraOwnerMetadata::from_owner(owner)), [host_id, surface_id, owner.host_id.as_str(), owner.window_id.as_str(), owner.surface_id.as_str(), match &owner.key { ui_wgpu::wgpu::NodeKey::Explicit(key) => key.as_str(), ui_wgpu::wgpu::NodeKey::Positional(_, _) => "" }]),
+            None => (None, [host_id, surface_id, "", "", "", ""]),
+        };
+        SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
+            let mut deadlines = cell.borrow_mut();
+            let grant = deadlines.received_grant()?;
+            deadlines.schedule(text, metadata, crate::app_now_ms() + 120.0, grant)
+        })
+    });
+    if result.is_err() { SCENE_CAMERA_DISPATCH_FAULT.with(|fault| *fault.borrow_mut() = Some("scene camera deadline credits exceeded")); }
+}
+
+pub enum SceneCameraDispatchStep { Pending, Action(ActionDescriptor), Complete, Fault(&'static str) }
 
 pub struct SceneCameraDispatchCursor {
-    entries: std::collections::hash_map::IntoIter<String, SceneCameraDeadline>,
+    entries: crate::camera_storage::DirectoryCursor<Option<SceneCameraOwnerMetadata>>,
     now_ms: f64,
     fault: Option<&'static str>,
 }
 
 impl SceneCameraDispatchCursor {
-    pub fn begin(now_ms: f64) -> Self {
-        let entries = SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| std::mem::take(&mut *cell.borrow_mut()).into_iter());
+    pub fn begin(now_ms: f64, grant: semio_framework_job::RetainedCloneGrant) -> Result<(Self, semio_framework_job::RetainedCloneProgress), semio_framework_value::ValueError> {
+        let fault_copy = std::mem::size_of::<Option<&'static str>>();
+        if grant.maximum_copy_bytes < fault_copy { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "camera fault header exceeds original copy authority")); }
+        let (entries, mut progress) = SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().begin(semio_framework_job::RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - fault_copy, ..grant }))?;
+        progress.copied_bytes += fault_copy;
         let fault = SCENE_CAMERA_DISPATCH_FAULT.with(|cell| cell.borrow_mut().take());
-        Self { entries, now_ms, fault }
+        Ok((Self { entries, now_ms, fault }, progress))
     }
 
-    fn restore(surface_id: String, deadline: SceneCameraDeadline) {
-        if !deadline.owns_surface(&surface_id) {
-            return;
-        }
-        SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
-            let mut deadlines = cell.borrow_mut();
-            match deadlines.entry(surface_id) {
-                std::collections::hash_map::Entry::Vacant(entry) => {
-                    entry.insert(deadline);
-                }
-                std::collections::hash_map::Entry::Occupied(mut entry) => {
-                    if entry.get().owner == deadline.owner && entry.get().at_ms < deadline.at_ms {
-                        entry.insert(deadline);
-                    }
-                }
-            }
-        });
+    fn restore(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> Result<crate::camera_storage::RestoreStep, semio_framework_value::ValueError> {
+        SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().restore(&mut self.entries, grant))
     }
 
-    pub fn step(&mut self) -> SceneCameraDispatchStep {
-        if let Some(fault) = self.fault.take() {
-            return SceneCameraDispatchStep::Fault(fault);
+    pub fn step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> Result<(SceneCameraDispatchStep, semio_framework_job::RetainedCloneProgress), semio_framework_value::ValueError> {
+        use semio_framework_job::RetainedCloneProgress;
+        use semio_framework_value::RetainedCloneStep;
+        if self.fault.is_some() {
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < std::mem::size_of::<Option<&'static str>>() { return Ok((SceneCameraDispatchStep::Pending, RetainedCloneProgress::default())); }
+            let fault = self.fault.take().unwrap();
+            return Ok((SceneCameraDispatchStep::Fault(fault), RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<Option<&'static str>>(), ..Default::default() }));
         }
-        let Some((surface_id, deadline)) = self.entries.next() else { return SceneCameraDispatchStep::Complete };
-        if !deadline.owns_surface(&surface_id) || SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow().contains_key(&surface_id)) {
-            return SceneCameraDispatchStep::Pending;
+        if self.entries.has_retiring() {
+            let progress = self.entries.close_retiring(grant)?.progress();
+            return Ok((SceneCameraDispatchStep::Pending, progress));
         }
-        if deadline.at_ms > self.now_ms {
-            Self::restore(surface_id, deadline);
-            return SceneCameraDispatchStep::Pending;
-        }
-        let action = SCENE_STATE.with(|cell| -> Result<Option<ActionDescriptor>, &'static str> {
-            let states = cell.borrow();
-            let Some(state) = states.get(surface_id.as_str()) else { return Ok(None) };
-            let Some(controller_id) = state.camera_dispatch_controller_id.as_ref() else { return Ok(None) };
-            if controller_id.len() > SCENE_CAMERA_ID_BYTE_CAPACITY {
-                return Err("scene camera action identifier exceeded fixed credits");
-            }
-            Ok(Some(scene_camera_action(&deadline.surface_id, controller_id, state.viewport)))
-        });
-        match action {
-            Ok(Some(action)) => SceneCameraDispatchStep::Action(action),
-            Ok(None) => SceneCameraDispatchStep::Pending,
-            Err(fault) => SceneCameraDispatchStep::Fault(fault),
-        }
-    }
-
-    pub fn close_step(&mut self) -> bool {
-        let Some((surface_id, deadline)) = self.entries.next() else {
-            self.fault = None;
-            return true;
+        let Some((_, record)) = self.entries.peek() else {
+            let step = self.entries.close_backing(grant)?;
+            return Ok((if matches!(step, RetainedCloneStep::Complete(_)) { SceneCameraDispatchStep::Complete } else { SceneCameraDispatchStep::Pending }, step.progress()));
         };
-        Self::restore(surface_id, deadline);
-        false
+        if record.processed || record.terminal_is_empty() {
+            return Ok((SceneCameraDispatchStep::Pending, self.entries.close_current(grant)?.progress()));
+        }
+        let valid = camera_owns_surface(record) && SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow().get(record.text(0)).is_none());
+        if valid && record.at_ms > self.now_ms {
+            match self.restore(grant)? {
+                crate::camera_storage::RestoreStep::Returned { progress } => return Ok((SceneCameraDispatchStep::Pending, progress)),
+                crate::camera_storage::RestoreStep::Retained { progress } if progress.copied_items != 0 => return Ok((SceneCameraDispatchStep::Pending, progress)),
+                crate::camera_storage::RestoreStep::Retained { .. } => {}
+            }
+        } else if valid {
+            let progress = self.entries.mark_processed(grant)?;
+            let record = self.entries.peek().unwrap().1;
+            let action = SCENE_STATE.with(|cell| -> Result<Option<ActionDescriptor>, &'static str> {
+                let states = cell.borrow();
+                let Some(state) = states.get(record.text(0)) else { return Ok(None) };
+                let Some(controller_id) = state.camera_dispatch_controller_id.as_ref() else { return Ok(None) };
+                if controller_id.len() > SCENE_CAMERA_ID_BYTE_CAPACITY { return Err("scene camera action identifier exceeded fixed credits"); }
+                Ok(Some(scene_camera_action(record.text(1), controller_id, state.viewport)))
+            });
+            return Ok((match action { Ok(Some(action)) => SceneCameraDispatchStep::Action(action), Ok(None) => SceneCameraDispatchStep::Pending, Err(fault) => SceneCameraDispatchStep::Fault(fault) }, progress));
+        }
+        Ok((SceneCameraDispatchStep::Pending, self.entries.mark_processed(grant)?))
     }
 
-    pub fn terminal_is_empty(&self) -> bool {
-        self.entries.len() == 0 && self.fault.is_none()
+    pub fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneProgress};
+        use semio_framework_value::RetainedCloneStep;
+        if self.fault.is_some() {
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < std::mem::size_of::<Option<&'static str>>() { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
+            self.fault = None;
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<Option<&'static str>>(), ..Default::default() } };
+        }
+        let result = (|| {
+            if self.entries.has_retiring() { return self.entries.close_retiring(grant); }
+            let Some((_, record)) = self.entries.peek() else { return self.entries.close_backing(grant); };
+            if !record.processed && !record.terminal_is_empty() && camera_owns_surface(record) {
+                match self.restore(grant)? {
+                    crate::camera_storage::RestoreStep::Returned { progress } => return Ok(RetainedCloneStep::Progress(progress)),
+                    crate::camera_storage::RestoreStep::Retained { progress } if progress.copied_items != 0 => return Ok(RetainedCloneStep::Progress(progress)),
+                    crate::camera_storage::RestoreStep::Retained { .. } => {}
+                }
+            }
+            self.entries.close_current(grant)
+        })();
+        match result {
+            Ok(step) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress: step.progress() },
+            Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+            Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        }
     }
+
+    pub fn terminal_is_empty(&self) -> bool { self.entries.terminal_is_empty() && self.fault.is_none() }
 }
 
 /// 🕒️ A Canvas2d/Paint2d `setCamera` action from a bare surface id/controller id/viewport — same

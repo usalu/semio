@@ -1,0 +1,66 @@
+{
+  "actions": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧬️schema/🔣️.json",
+      "beforeSha256": "60e5354ccd06a33aa68943ffaf70373461f5de9dcdbcac6320eb47f26c366041",
+      "removedSelectors": [
+        "definitions/fixture",
+        "definitions/styleFixtures"
+      ],
+      "originalDomainPreserved": true,
+      "afterSha256": "53829d6325b21dd8d386aa083661db05a81df03e508de2492e53b354bad16278",
+      "action": "Retire only selected embedded trial definitions; exact remaining schema document semantics and genuine root/defs unchanged."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "beforeSha256": "2a38e3c7a2c682d60d1e289261ef38fd3d26e0026239009cc8a9d2ee819faaa6",
+      "removedSelectors": [
+        "definitions/fixtures"
+      ],
+      "originalDomainPreserved": true,
+      "afterSha256": "7fc9830533d6f190d8339df11d7bcab825ca7e908fd0d4e2dd4d5a29fef1bacb",
+      "action": "Retire only selected embedded trial definitions; exact remaining schema document semantics and genuine root/defs unchanged."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "beforeSha256": "e46f913cfe0c3690274a1456a039a47ba3991b43ce9a0a293f222546f6f9c14a",
+      "removedSelectors": [
+        "definitions/fixtures"
+      ],
+      "originalDomainPreserved": true,
+      "afterSha256": "0235f6841dd69de360fc81731f8ad5add60ca1f671db07e19015a920830f1078",
+      "action": "Retire only selected embedded trial definitions; exact remaining schema document semantics and genuine root/defs unchanged."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧬️schema/🔣️.json",
+      "beforeSha256": "bb65c0bef5cb0bae21abebfb4c4270cfeb4b47825c53b1a6c56f5313cb81fe57",
+      "removedSelectors": [
+        "definitions/ownedAdmissionFixtures"
+      ],
+      "originalDomainPreserved": true,
+      "afterSha256": "57db163476d755ebf7663b75cce53d05362f9c94ff0e1f5f88cbb7e4ce661ede",
+      "action": "Retire only selected embedded trial definitions; exact remaining schema document semantics and genuine root/defs unchanged."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧬️schema/🔣️.json",
+      "beforeSha256": "7b9bc5187ed5c45835b80cfc94ff44ca9f5c057cb250027132943566e252ac28",
+      "removedSelectors": [
+        "definitions/fixtures"
+      ],
+      "originalDomainPreserved": true,
+      "afterSha256": "ff5eb4b7fde1d5b045867b60bbb40d7c4717cda79d2d1dcf07fa1e519d33df35",
+      "action": "Retire only selected embedded trial definitions; exact remaining schema document semantics and genuine root/defs unchanged."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧬️schema/🔣️.json",
+      "beforeSha256": "b42016c41e6d3d65409d637687137b235a3bf534906a50c92b076e8ed7c826a5",
+      "removedSelectors": [
+        "definitions/admissionFixture"
+      ],
+      "originalDomainPreserved": true,
+      "afterSha256": "89fc0637c551aa17f494103bc8a1a1fc7d6169a2e1a21badecb0f6366e96c28f",
+      "action": "Retire only selected embedded trial definitions; exact remaining schema document semantics and genuine root/defs unchanged."
+    }
+  ],
+  "verification": "Original boundary4216 already RED; independent behavior/reader repairs pending. Remaining document semantics equal original minus selected trial definitions; no Source copies."
+}

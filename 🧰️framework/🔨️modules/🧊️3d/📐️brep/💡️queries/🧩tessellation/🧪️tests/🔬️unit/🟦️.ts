@@ -15,5 +15,8 @@ test("original tessellation grants and unit-box parity agree with Three", () => 
   const rows=new Map<string,Uint8Array>(fixture.liveRows.keys.map((key:string)=>[key,new Uint8Array(fixture.liveRows.payloadBytes)]));
   const original=new Map(rows);const removed=fixture.liveRows.removedKeys.map((key:string)=>{const value=rows.get(key)!;rows.delete(key);expect(value).toBe(original.get(key));return key;});
   expect(removed).toEqual(fixture.liveRows.removedKeys);expect(rows.size+removed.length).toBe(fixture.liveRows.keys.length);
+  const triangle=fixture.meshImport.positions;expect(new Triangle(...[0,3,6].map(offset=>new Vector3(...triangle.slice(offset,offset+3))) as [Vector3,Vector3,Vector3]).getArea()).toBe(fixture.meshImport.area);
+  const modeling=JSON.parse(readFileSync(new URL("../../../../../🥽️mesh/🧫️fixtures/🛠️modeling/🔣️.json",import.meta.url),"utf8"));
+expect(area).toBe(modeling.ownedCapture.area);expect(Math.abs(volume)).toBeCloseTo(modeling.ownedCapture.volume,12);
   console.log("[DEBUG] Original tessellation neutral ownership fixture: independent Three area=6 volume=1 triangles=12");
 });

@@ -41,7 +41,7 @@
     }
   ],
   "cargo": {
-    "name": "neutral-artifact-fixture",
+    "name": "nat-fixture",
     "stdout": "Neutral artifact ready\\n",
     "features": [
       "component-guest",
@@ -56,7 +56,7 @@
     "buildResource": "provenance.txt",
     "buildScript": "fn main(){println!(\"cargo:rustc-check-cfg=cfg(fixture_provenance)\");println!(\"cargo:rustc-cfg=fixture_provenance\");println!(\"cargo:rustc-env=SEMIO_CARGO_PROVENANCE=actual-owned-build-script\");let out=std::path::PathBuf::from(std::env::var_os(\"OUT_DIR\").unwrap());std::fs::write(out.join(\"provenance.txt\"),b\"actual-owned-build-script\").unwrap();}\n",
     "dependency": {
-      "name": "neutral-artifact-dependency",
+      "name": "nat-dependency",
       "source": "pub fn marker() -> &'static str { \"actual-dependency-owner\" }\n",
       "value": "actual-dependency-owner"
     },
@@ -146,5 +146,80 @@
       "tracked": false,
       "count": 0
     }
-  ]
+  ],
+  "resourceReads": [
+    {
+      "id": "empty",
+      "hex": "",
+      "currentHex": "",
+      "exact": true
+    },
+    {
+      "id": "binary",
+      "hex": "00ff0180",
+      "currentHex": "00ff0180",
+      "exact": true
+    },
+    {
+      "id": "changed-same-size",
+      "hex": "00ff0180",
+      "currentHex": "00fe0180",
+      "exact": false
+    },
+    {
+      "id": "changed-length",
+      "hex": "00ff0180",
+      "currentHex": "00ff",
+      "exact": false
+    }
+  ],
+  "provenancePhysicalRequiredFields": [
+    "control",
+    "read",
+    "digest",
+    "directoryEntries",
+    "checkpoint",
+    "recheck"
+  ],
+  "provenanceAbsentInput": {
+    "path": "late.toml",
+    "bytes": "new physical input"
+  },
+  "internalDepInfoOwnership": {
+    "artifact": "exact same compiler bytes",
+    "source": "actual current unit source",
+    "package": "unit",
+    "current": "current.rs",
+    "foreign": "historical.rs",
+    "units": [
+      "current",
+      "historical"
+    ]
+  },
+  "unitEvidence": {
+    "discovery": {
+      "version": 1,
+      "kind": "discovery",
+      "paths": [],
+      "producer": null
+    },
+    "received": {
+      "version": 1,
+      "kind": "received",
+      "paths": [
+        "/owner/unit.d"
+      ],
+      "producer": {
+        "path": "/owner/producer.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "unit": 0
+      }
+    },
+    "required": [
+      "version",
+      "kind",
+      "paths",
+      "producer"
+    ]
+  }
 }

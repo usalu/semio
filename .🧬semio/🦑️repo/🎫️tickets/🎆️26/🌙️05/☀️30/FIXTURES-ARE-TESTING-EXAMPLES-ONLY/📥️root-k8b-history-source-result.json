@@ -1,0 +1,15 @@
+{
+  "exitCode": 0,
+  "command": "original ticket-fixture-verification:tests --skip-nx-cache --outputStyle=static --args=Store History planning original TS test",
+  "nativeAssertions": 0,
+  "tests": 6,
+  "assertions": 90,
+  "runDurationMs": 187,
+  "thirdPartyOracles": [
+    "Ajv actual Grant schema",
+    "SQLite actual caller policy",
+    "RFC6902 original neutral outcomes"
+  ],
+  "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/root-k8b-history-source.log",
+  "logSha256": "dd1622a1eb5da2f5e2eaf555fd0328145bba061ec5fecd14773c65dc78c072c6"
+}

@@ -687,6 +687,7 @@ fn run_inference_sends_one_infer_command_and_returns_the_guest_result() {
         generation: 0,
         cancellation_id: "cancel-1".into(),
         work_units: 64,
+        retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 },
         canonical_payload: b"{\"seed\":7}".to_vec(),
         artifact_id: String::new(),
         artifact_document: None,

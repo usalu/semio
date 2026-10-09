@@ -1,0 +1,24 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "beforeSha256": "dfbaf5746492efc810f1eb11ab1168e2296112055bb95ddafb9cc5a99299b601"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts",
+      "beforeSha256": "51a553a001c3c664c819c38a76be31fc5f13de5ad40fbd7c433a6db26c0b2821"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
+      "beforeSha256": "3ee20b0ce62f5c67cb509b5bd8e728309dca2bb5c6966bd3ea17ebe717e33ffe"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "67ca08100e02e90cb320c1a14c4f8e167efaa03bfe5ee72d95fedc4a20b8a025"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSha256": "b4e339d83030e175640e85ed05a6b168404eb59c75a43fe8c7e38c68d4e5a3ff"
+    }
+  ]
+}

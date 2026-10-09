@@ -33,7 +33,7 @@ async fn note_plugin_manifest_loads_from_its_committed_descriptor() {
     plugin_paths.insert("note".to_string(), wasm_path);
     let mut descriptor_paths = HashMap::new();
     descriptor_paths.insert("note".to_string(), descriptor_path);
-    let mut host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::new(InMemoryBlobStore::default())).await;
+    let mut host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::new(InMemoryBlobStore::default()),original_test_shard_issuer()).await;
 
     host.hot_reload_plugin("note").await.expect("note must load natively from its committed descriptor, zero live describe() calls");
     let manifest = host.plugin_graph().manifest("note").await.expect("registered note manifest query").expect("loaded note manifest");
@@ -45,4 +45,9 @@ async fn note_plugin_manifest_loads_from_its_committed_descriptor() {
     assert_eq!(routed_plugins, 1, "note must be the one plugin registered with the io router after this load");
     assert!(host.plugin_graph().is_registered("note").await.unwrap_or(false), "note must be registered in the plugin graph");
     assert!(host.app_router().owned_surface_gaps().await.is_empty(), "note's own panels leave no viewer/editor surface gap");
+}
+
+fn original_test_shard_issuer()->semio_framework_plugin_host::shard::OriginalShardIdentityIssuer{
+ let policy=serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json")).expect("original independent fixture identity policy");
+ semio_framework_plugin_host::shard::native_identity_issuer(policy,|_|Box::new(|_|true))
 }

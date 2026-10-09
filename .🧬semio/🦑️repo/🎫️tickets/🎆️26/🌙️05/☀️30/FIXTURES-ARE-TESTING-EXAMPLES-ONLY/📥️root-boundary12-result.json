@@ -1,0 +1,52 @@
+{
+  "session": 4173,
+  "exitCode": 1,
+  "durationMs": 44200,
+  "modules": 4749,
+  "scopes": 3756,
+  "findings": [
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema/🔣️.json",
+      "detail": "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧬️schema/🔣️.json",
+      "detail": "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt/🔣️.json",
+      "detail": "The document defines a test corpus contract outside the admitted schema facets."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+      "detail": "The document defines a test corpus contract outside the admitted schema facets."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
+      "detail": "Original Flow Selected Copy defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/♻️retirement/🧬️schema/🔣️.json",
+      "detail": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/♻️retirement/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/✅️output/🧬️schema/🔣️.json",
+      "detail": "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+    }
+  ],
+  "nativeAssertions": 0,
+  "unknownWriter": true,
+  "corpus": {
+    "session": 72175,
+    "exitCode": 1,
+    "durationMs": 3300,
+    "qualification": "Current absence gates and early original domain laws passed; actual cold foreign publisher clears original mutation owner, same preserved mounted failure7801; full law branch did not complete"
+  }
+}

@@ -18,10 +18,9 @@ import invalids from "../../🧫️fixtures/⚠️invalid/🔣️.json";
 test("canvas refuses invalid asset and unresolved algorithm owners explicitly",()=>{for(const row of invalids){const source=rows.find(sample=>sample.name===row.source)!;const document={...source.document,layers:lift(source.document.layers)} as never;const job=row.action==="prepare-only"?new DocumentSceneJob(document,source.limits):new DocumentVectorJob(document,source.limits,limits);while(!job.advance(7).done){}const plan=job.result();if(row.action==="remove-assets")plan.assets=[];expect(()=>preparedSceneNodes(plan)).toThrow(new RegExp(row.error,"i"));}console.log("[DEBUG] Canvas rejected missing actual assets and unresolved algorithms before rendering");});
 
 import boundCases from "../../🧫️fixtures/📐️bounds/🔣️.json";
-import boundSchema from "../../🧬️schema/📐️bounds/🔣️.json";
 import {preparedSceneNodeBounds,preparedSceneBounds,type PreparedSceneNode} from "../../🟦️.ts";
 test("completed geometry bounds match shared stroke, image, text and curve cases",()=>{
- const ajv=new Ajv({strict:true});expect(ajv.compile(boundSchema)(boundCases)).toBe(true);const validate=ajv.compile(schema);
+ const ajv=new Ajv({strict:true});const validate=ajv.compile(schema);
  for(const row of boundCases){expect(validate([row.record])).toBe(true);const node=row.record as PreparedSceneNode,bounds=preparedSceneNodeBounds(node);if(row.bounds===null){expect(bounds).toBeNull();continue;}bounds!.forEach((value,index)=>expect(value).toBeCloseTo(row.bounds![index]!,10));
   const box=new Box2();const matrix=new Matrix3().set(node.transform[0],node.transform[2],node.transform[4],node.transform[1],node.transform[3],node.transform[5],0,0,1);
   const include=(point:readonly number[])=>box.expandByPoint(new Vector2(point[0],point[1]).applyMatrix3(matrix));

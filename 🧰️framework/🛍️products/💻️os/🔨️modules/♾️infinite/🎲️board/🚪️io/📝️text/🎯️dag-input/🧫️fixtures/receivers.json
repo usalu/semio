@@ -1,0 +1,111 @@
+{
+  "sources": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🔬️unit/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests/🔬️unit/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/📤️selection/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔬️component-domain-laws/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧪️tests/🔬️unit/🦀️.rs"
+  ],
+  "pure": [
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs",
+      "methods": [
+        "selection_domains",
+        "set_selection_domains",
+        "selected_channels",
+        "set_selected_channels",
+        "set_node_statuses",
+        "wire_type_refusal",
+        "hover_facts"
+      ],
+      "type": "DagHost",
+      "forbidden": [
+        "wire_type_refusal_json",
+        "hovered_channel_json"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+      "methods": [
+        "selection_domains",
+        "set_selection_domains",
+        "selected_channels",
+        "set_selected_channels",
+        "set_node_statuses",
+        "set_selection",
+        "selected_widget_ids",
+        "hover_facts"
+      ],
+      "type": "FlowHost",
+      "forbidden": [
+        "hovered_channel_json"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🦀️.rs",
+      "type": "GraphHost",
+      "methods": [
+        "selected_node_ids",
+        "hover_facts"
+      ],
+      "forbidden": [
+        "selected_node_ids_json",
+        "hovered_channel_json"
+      ]
+    }
+  ],
+  "old": [
+    "selection_domains_json",
+    "set_selection_domains_json",
+    "selected_channels_json",
+    "set_selected_channels_json",
+    "set_node_statuses_from_json",
+    "set_selection_json",
+    "selected_widget_ids_json"
+  ],
+  "semanticForbiddenTypes": [
+    "DagCursorGrant",
+    "DagCursorFault",
+    "DagCursorStep",
+    "DagSelectedNodesJsonCursor",
+    "DagSelectedNodesJsonPhase",
+    "DagSelectedJsonKind"
+  ],
+  "typedSources": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/📤️selection/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx"
+  ],
+  "typedRetired": [
+    "parseDagChannelRefJson",
+    "parseDagWireTypeRefusalJson"
+  ],
+  "typedRegions": [
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx",
+      "functions": [
+        "FlowGraphCanvasHost",
+        "syncFlowSessionStructureFromScene"
+      ],
+      "forbiddenCalls": [
+        "parseSelectionDomainsFromSession"
+      ],
+      "forbiddenSelectionArguments": [
+        "nodeIds",
+        "scene.selection"
+      ]
+    }
+  ]
+}

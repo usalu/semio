@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "sources": [
+    "\"😀\"",
+    "[\"😀\"]",
+    "{\"a\":\"😀\",\"a\":\"雪\"}",
+    "\"😀\" x"
+  ],
+  "refusals": [
+    {
+      "frontier": "stringCapacity",
+      "kind": "allocationPort",
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "frontier": "grammar",
+      "kind": "trailingSyntax",
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    }
+  ],
+  "copyPrefixBytes": 4,
+  "cumulativeCopiedItems": 10,
+  "physicalDepth": 3,
+  "maximumTurns": 100000
+}

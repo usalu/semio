@@ -1,0 +1,67 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/♻️retirement/🧬️schema/🔣️.json",
+      "action": "delete exclusive whole-child-trial authority; no replacement copy or alias",
+      "beforeSha256": "ae9ba499898dc1ce53dbd06a37d440cb9545027378d348948ab1413e78a60d34",
+      "after": "absent",
+      "current": "absent"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "action": "retire only whole-law admission and wrapper mutants; independently admit actual Grant/Progress payload projections with original SQLite law",
+      "beforeSha256": "40bd62fd936c6992f7619c50f9fac6d964b623258f7decf574b89131fdf002a0",
+      "beforeBlockSha256": "21cf7d17780c247354b85503db39fda7b421e4e71fb38d229a5db7e490e1f0f1",
+      "afterBlockSha256": "2284cd4896ca7607c8538045c69da0d54d5e6fcaebcece6c1f4d432a3689e1a8",
+      "afterSha256": "33b8c372f596c73bdc2c5289cf51799d44a708778b0788c12bd967ba3079da9a",
+      "repairActions": [
+        {
+          "beforeSha256": "ea0c9780ce9ca746d943e748d258c72d7a36b4304593cda06b0fcd0c4c37480f",
+          "beforeBlockSha256": "c1c916e643ac1e86472ada9aa2010308e24fdf356dfca4f5c3d46d615f50940b",
+          "afterBlockSha256": "c94a1e47bc600ec2ce52b2be9b98ccf100b207e2867d91fb1854779c1475fd70",
+          "action": "register actual canonical schema once; two genuine canonical payload refs"
+        }
+      ],
+      "currentObserverSha256": "33b8c372f596c73bdc2c5289cf51799d44a708778b0788c12bd967ba3079da9a"
+    }
+  ],
+  "unchangedObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧫️fixtures/♻️child-currencies/🔣️.json",
+      "beforeSha256": "de05cd07c47fa130adf93252ccf535ee703c3b91a29143e3f91efdfed843c9ca",
+      "afterSha256": "de05cd07c47fa130adf93252ccf535ee703c3b91a29143e3f91efdfed843c9ca",
+      "currentSha256": "de05cd07c47fa130adf93252ccf535ee703c3b91a29143e3f91efdfed843c9ca",
+      "currentMatchesPreimage": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
+      "beforeSha256": "8ee82d931430becb2b8a86eff10592709319a2474ce39a8ffcbf8657df7d64f2",
+      "afterSha256": "8ee82d931430becb2b8a86eff10592709319a2474ce39a8ffcbf8657df7d64f2",
+      "currentSha256": "8ee82d931430becb2b8a86eff10592709319a2474ce39a8ffcbf8657df7d64f2",
+      "currentMatchesPreimage": true
+    }
+  ],
+  "boundaryRed": "Root4173 original full boundary Nx1/44.2s root-boundary12.log",
+  "sourceCopies": false,
+  "qualifiedSourceRed": {
+    "session": 23357,
+    "exit": 1,
+    "durationSeconds": 6.7,
+    "passedLaws": 20,
+    "failedLaws": 1,
+    "assertions": 577,
+    "cause": "own oracle registered same genuine schema ID twice; use single canonical registration and refs",
+    "log": "🗑️generated/pub-boundary12-source.log"
+  },
+  "actualGreen": {
+    "session": 57514,
+    "exit": 0,
+    "nxSeconds": 8.3,
+    "bunSeconds": 2.54,
+    "laws": 21,
+    "assertions": 611,
+    "log": "🗑️generated/pub-boundary12-green.log",
+    "strictTypeScript": "passed under original30s wrapper",
+    "native": "no invocation or assertion credit"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "executed": false,
+  "authored": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs",
+      "authored": false,
+      "previousObservedSha256": "21fa9e12bbd467230491d88152f492a8bf657f92167d6c4fc373aa2f4c6240a7",
+      "currentSha256": "886deb4d98e1883424cf8e9a524fc3d723c431fb885bf6ccb0c1015c4d6da86a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+      "authored": false,
+      "previousObservedSha256": "128855e71c65778b85e563ab192ccc4eed625c63e90b900fac39143796bdfcb0",
+      "currentSha256": "128855e71c65778b85e563ab192ccc4eed625c63e90b900fac39143796bdfcb0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+      "authored": false,
+      "previousObservedSha256": "a52822446c959b124440d42b2f01d86309a7dd6521b53f5d6872a06c10806d82",
+      "currentSha256": "a52822446c959b124440d42b2f01d86309a7dd6521b53f5d6872a06c10806d82"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs",
+      "authored": false,
+      "previousObservedSha256": "8d1763f6e9001ec674f9a24a91a15f470bdd837791ec57a01a895578a022c068",
+      "currentSha256": "8d1763f6e9001ec674f9a24a91a15f470bdd837791ec57a01a895578a022c068"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "authored": false,
+      "previousObservedSha256": "65028d92b92354947d4961c67b1eba14a4f9c6417ad547d01f2b40e6798a1135",
+      "currentSha256": "65028d92b92354947d4961c67b1eba14a4f9c6417ad547d01f2b40e6798a1135"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "authored": false,
+      "previousObservedSha256": "7eb6447b2ab2ad3cda286821f4f5eb1179bf8df0afe90725a38b4b56f432c3ed",
+      "currentSha256": "7eb6447b2ab2ad3cda286821f4f5eb1179bf8df0afe90725a38b4b56f432c3ed"
+    }
+  ],
+  "priorArityFinding": "Superseded: current helper9 and callers9",
+  "wallet": "snapshot encode/decode reborrow IoRunControl.progress; Drop commits receipts; select does not reset"
+}

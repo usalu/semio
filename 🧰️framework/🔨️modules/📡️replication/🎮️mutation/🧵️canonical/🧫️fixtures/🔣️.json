@@ -1,0 +1,143 @@
+{
+  "cases": [
+    {
+      "edit": {
+        "id": "sparse",
+        "forwards": [
+          true
+        ],
+        "inverse": [],
+        "sequenceNumber": 9,
+        "startedAt": "now",
+        "line": null
+      },
+      "expected": "{\"id\":\"sparse\",\"forwards\":[true],\"inverse\":[],\"startedAt\":\"now\",\"line\":null}"
+    },
+    {
+      "edit": {
+        "id": "dense",
+        "actor": "actor",
+        "forwards": [
+          true,
+          false
+        ],
+        "inverse": [
+          false,
+          true
+        ],
+        "mutationMeta": [
+          {
+            "mutation_id": "muÄ",
+            "dependencies": [
+              "dep0",
+              "dep1"
+            ],
+            "base_version": 7,
+            "author_id": "actor",
+            "timestamp": {
+              "actor": 9,
+              "physical_ms": 17,
+              "logical": 3
+            },
+            "undo_policy": "ExactBaseOnly",
+            "payload_hash": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31
+            ],
+            "semantic_kind": "schema#Move",
+            "label": "Ä\u0000🧩",
+            "group_id": "group",
+            "origin": {
+              "kind": "contributed",
+              "pluginId": "plug",
+              "mutationId": "foreign",
+              "payloadHash": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31
+              ]
+            },
+            "transaction": {
+              "id": "txn",
+              "tool": "tool"
+            }
+          }
+        ],
+        "verb": "move",
+        "sequenceNumber": 5,
+        "startedAt": "2026-10-09",
+        "finishedAt": "done",
+        "line": "branch"
+      },
+      "expected": "{\"id\":\"dense\",\"actor\":\"actor\",\"forwards\":[true,false],\"inverse\":[false,true],\"mutationMeta\":[{\"mutation_id\":\"muÄ\",\"dependencies\":[\"dep0\",\"dep1\"],\"base_version\":7,\"author_id\":\"actor\",\"timestamp\":{\"actor\":9,\"physical_ms\":17,\"logical\":3},\"undo_policy\":\"ExactBaseOnly\",\"payload_hash\":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31],\"semantic_kind\":\"schema#Move\",\"label\":\"Ä\\u0000🧩\",\"group_id\":\"group\",\"origin\":{\"kind\":\"contributed\",\"pluginId\":\"plug\",\"mutationId\":\"foreign\",\"payloadHash\":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]},\"transaction\":{\"id\":\"txn\",\"tool\":\"tool\"}}],\"verb\":\"move\",\"startedAt\":\"2026-10-09\",\"finishedAt\":\"done\",\"line\":\"branch\"}"
+    }
+  ],
+  "pauses": [
+    0,
+    1,
+    3,
+    17,
+    129
+  ],
+  "maximumTurns": 100000,
+  "maximumBodyBytes": 4096
+}

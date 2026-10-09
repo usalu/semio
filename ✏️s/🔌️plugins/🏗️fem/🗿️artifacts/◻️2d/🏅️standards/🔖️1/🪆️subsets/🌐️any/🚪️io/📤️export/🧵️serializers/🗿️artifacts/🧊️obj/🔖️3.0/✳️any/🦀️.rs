@@ -35,7 +35,7 @@ pub struct Fem2dIntoObj;
 impl Serializer<Fem2dSnapshot> for Fem2dIntoObj {
     const INTO: Dialect = OBJ_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &Fem2dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &Fem2dSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(IoPayload::Text(obj_text(from)?)))
     }
 }

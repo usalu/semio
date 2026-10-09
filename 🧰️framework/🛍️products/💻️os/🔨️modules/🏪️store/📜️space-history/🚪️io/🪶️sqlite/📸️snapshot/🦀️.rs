@@ -94,13 +94,13 @@ fn semantic(value:&SpaceHistorySnapshot,phase:SqliteSnapshotPhase,control:&mut S
 impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
     fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,control)}
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<crate::io_schema::IoPayload, ValueError> {
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut crate::os_store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<crate::io_schema::IoPayload, ValueError> {
         semantic(self,SqliteSnapshotPhase::EncodeNative,control)?;
-        native::encode(self, encoding, control)
+        native::encode(self, encoding, control, native_owner)
     }
-    fn decode_sqlite_snapshot_native(payload: &crate::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &crate::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut crate::os_store::NativeSnapshotDecodeOwner<'_,'_>) -> Result<Self, ValueError> {
         schema(control)?;
-        native::decode(payload, control)
+        native::decode(payload, control, native_owner)
     }
     fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         let result = (|| -> Result<SqliteDatabase, ValueError> {

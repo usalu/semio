@@ -679,7 +679,7 @@ impl Drop for FixedResumeQueue {
 /// `instance` — `QuotaSchema.outstanding_requests`, defaulting to 16 when the instance never
 /// declared one (or hasn't opened yet, which should not happen in practice: `spawn_task` is only
 /// ever reachable from `dispatch_emit`, itself only reachable after `Event::InstanceOpen`).
-async fn instance_task_quota(instance: u32) -> u64 {
+fn instance_task_quota(instance: u32) -> u64 {
     INSTANCE_METADATA.with(|metadata| metadata.borrow().get(instance).and_then(|entry| entry.quota.outstanding_requests)).unwrap_or(16)
 }
 
@@ -688,11 +688,10 @@ async fn instance_task_quota(instance: u32) -> u64 {
 /// per-request instance tagging, so `Event::InstanceClose` can cancel exactly this instance's
 /// pending host round-trips and no other's) — see `host::Host::new`.
 ///
-/// 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready` (`for_instance` is a
-/// pure clone-and-scope, no real suspension); `Host::new` itself is awaited normally outside.
-pub async fn host_for_instance(instance: u32) -> crate::host::Host {
+/// 🌐️ Captures the actor's existing request registry without polling a future.
+pub fn host_for_instance(instance: u32) -> crate::host::Host {
     let registry = REGISTRY.with(|registry| registry.for_instance(instance));
-    crate::host::Host::new(registry).await
+    crate::host::Host::new(registry)
 }
 
 //#region 🔖️ExtensionContinuation
@@ -797,8 +796,8 @@ pub(crate) fn append_extension_response_page(req: semio_framework::kernel::Reque
 /// `RequestRegistry::for_instance`'s own doc names. `⚛️reactor/💼️jobs/🦀️.rs::spawn_job`
 /// calls this (as `crate::reactor::host()`, zero args): a job is actor-global, not tied to one open
 /// instance the way an `AsyncTask` is, so it has no `instance: u32` to scope by in the first place.
-pub async fn host() -> crate::host::Host {
-    REGISTRY.with(|registry| crate::host::Host::new(registry.clone())).await
+pub fn host() -> crate::host::Host {
+    REGISTRY.with(|registry| crate::host::Host::new(registry.clone()))
 }
 
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): spawns `task` onto this actor's
@@ -817,13 +816,13 @@ pub async fn host() -> crate::host::Host {
 /// 🔑️ Latest-wins dedupe: a task spawned with the same `(instance, key)` as one still live
 /// cancels the live one FIRST — its future (and anything it owns, including a parked
 /// `RequestFuture`) is dropped without ever completing, so no resume is ever queued for it.
-pub(crate) async fn spawn_task<M, C, D>(instance: u32, meta: &crate::app::ActionMeta, task: crate::app::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
+pub(crate) fn spawn_task<M, C, D>(instance: u32, meta: &crate::app::ActionMeta, task: crate::app::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
 where
     M: ::protocol::OpBinary + 'static,
     C: ::protocol::OpBinary + 'static,
     D: ::protocol::OpBinary + 'static,
 {
-    let quota = instance_task_quota(instance).await;
+    let quota = instance_task_quota(instance);
     let live = TASK_RECORDS.with(|records| records.borrow().count_instance(instance) as u64);
     if live >= quota {
         return Err(semio_framework::Fault::new(
@@ -833,7 +832,7 @@ where
         ));
     }
 
-    let (label, key, restart, run) = task.into_parts().await;
+    let (label, key, restart, run) = task.into_parts();
     if label.len() > REACTOR_TASK_LABEL_BYTES || restart.as_ref().is_some_and(|bytes| bytes.len() > REACTOR_TASK_RESTART_BYTES) {
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task-authority-too-large"), "task label or restart authority exceeds its fixed admitted byte bound"));
     }
@@ -860,11 +859,11 @@ where
     }
     TASK_RECORDS.with(|records| records.borrow_mut().insert_admitted(task_id, TaskRecord { instance, key, restart }));
 
-    let ctx = crate::app::TaskCtx { host: host_for_instance(instance).await, meta: meta.clone() };
-    let future = run(ctx);
+    let ctx = crate::app::TaskCtx { host: host_for_instance(instance), meta: meta.clone() };
     let resume_instance = instance;
     let resume_meta = meta.clone();
     reservation.install(Box::pin(async move {
+        let future = run(ctx);
         let outcome = match future.await {
             Ok(crate::app::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
             Ok(crate::app::TaskResolution::Emit(emit)) => {
@@ -1251,6 +1250,7 @@ mod wit_bridge {
         runtime: &crate::plugin_runtime::PluginRuntime<PA>,
         events: Vec<crate::component::wasip2::exports::semio::framework::reactor::Event>,
         budget: crate::component::wasip2::exports::semio::framework::reactor::Budget,
+        identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     ) -> Result<crate::component::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
         turn::note_turn_events(events.len(), wit_events_payload_bytes(&events));
         let mut kernel_events = Vec::with_capacity(events.len());
@@ -1259,7 +1259,7 @@ mod wit_bridge {
         }
         let kernel_budget = semio_framework::kernel::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let staged = STAGED_PAGES.with(|pages| pages.try_borrow_mut().map(|mut pages| std::mem::take(&mut *pages)).map_err(|_| staging_fault("turn page staging authority busy")))?;
-        turn::poll_kernel_output(runtime, kernel_events, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.map(|page| *page), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared).await
+        turn::poll_kernel_output(runtime, kernel_events, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.map(|page| *page), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity).await
     }
 
     /// 🩺️ Bulk bytes a turn's events carry across the component boundary — every `pack`/`list<u8>`

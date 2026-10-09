@@ -1,0 +1,332 @@
+{
+  "version": 1,
+  "text": "源🌊",
+  "repeat": 257,
+  "utf8Bytes": 1799,
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "maximumTurns": 1048576,
+  "actionVariants": [
+    "InsertWidget",
+    "RemoveWidget",
+    "RemoveWidgetAt",
+    "MoveWidget",
+    "PatchWidget",
+    "InsertSynapse",
+    "RemoveSynapse",
+    "RemoveSynapseAt",
+    "MoveSynapse",
+    "PatchSynapse",
+    "SetLayout",
+    "LayoutRoot",
+    "ReplaceDocument",
+    "Undo",
+    "Redo",
+    "Checkpoint"
+  ],
+  "expected": {
+    "sourceSignalBirthBytes": 0,
+    "sourceSignalReleaseBytes": 0,
+    "refusalBirthBytes": 0,
+    "refusalReleaseBytes": 0,
+    "sameOriginalSource": true,
+    "wholeOriginalExtentRequired": true,
+    "terminalDropBytes": 0,
+    "domainRungsPerTurn": 1
+  },
+  "closeAdmissionCases": [
+    {
+      "name": "funded",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "demands": {
+        "copyBytes": 0,
+        "capacityBytes": 24,
+        "releaseBytes": 16,
+        "depth": 4
+      },
+      "expected": "accepted"
+    },
+    {
+      "name": "narrow-one",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 1,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "demands": {
+        "copyBytes": 0,
+        "capacityBytes": 24,
+        "releaseBytes": 16,
+        "depth": 4
+      },
+      "expected": "accepted"
+    },
+    {
+      "name": "narrow-sixty-four",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 64,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "demands": {
+        "copyBytes": 0,
+        "capacityBytes": 24,
+        "releaseBytes": 16,
+        "depth": 4
+      },
+      "expected": "accepted"
+    },
+    {
+      "name": "no-items",
+      "grant": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "demands": {
+        "copyBytes": 0,
+        "capacityBytes": 24,
+        "releaseBytes": 16,
+        "depth": 4
+      },
+      "expected": "deferred"
+    },
+    {
+      "name": "no-capacity",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 23,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "demands": {
+        "copyBytes": 0,
+        "capacityBytes": 24,
+        "releaseBytes": 16,
+        "depth": 4
+      },
+      "expected": "deferred"
+    },
+    {
+      "name": "no-release",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 15,
+        "maximumDepth": 4
+      },
+      "demands": {
+        "copyBytes": 0,
+        "capacityBytes": 24,
+        "releaseBytes": 16,
+        "depth": 4
+      },
+      "expected": "deferred"
+    },
+    {
+      "name": "no-depth",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 3
+      },
+      "demands": {
+        "copyBytes": 0,
+        "capacityBytes": 24,
+        "releaseBytes": 16,
+        "depth": 4
+      },
+      "expected": "refused_depth"
+    },
+    {
+      "name": "atomic-copy",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "demands": {
+        "copyBytes": 4,
+        "capacityBytes": 24,
+        "releaseBytes": 16,
+        "depth": 4
+      },
+      "expected": "deferred"
+    }
+  ],
+  "closeReceiptCases": [
+    {
+      "name": "funded-progress",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 24,
+        "releasedBytes": 16
+      },
+      "complete": false,
+      "terminal": false,
+      "refused": false
+    },
+    {
+      "name": "funded-complete",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 24,
+        "releasedBytes": 16
+      },
+      "complete": true,
+      "terminal": true,
+      "refused": false
+    },
+    {
+      "name": "false-complete",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 24,
+        "releasedBytes": 16
+      },
+      "complete": true,
+      "terminal": false,
+      "refused": true
+    },
+    {
+      "name": "empty-progress",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "progress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "complete": false,
+      "terminal": false,
+      "refused": false
+    },
+    {
+      "name": "items-over",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "progress": {
+        "copiedItems": 2,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 24,
+        "releasedBytes": 16
+      },
+      "complete": false,
+      "terminal": false,
+      "refused": true
+    },
+    {
+      "name": "copy-over",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 4,
+        "retainedCapacityBytes": 24,
+        "releasedBytes": 16
+      },
+      "complete": false,
+      "terminal": false,
+      "refused": true
+    },
+    {
+      "name": "capacity-over",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 25,
+        "releasedBytes": 16
+      },
+      "complete": false,
+      "terminal": false,
+      "refused": true
+    },
+    {
+      "name": "release-over",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 3,
+        "maximumCapacityBytes": 24,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 4
+      },
+      "progress": {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 24,
+        "releasedBytes": 17
+      },
+      "complete": false,
+      "terminal": false,
+      "refused": true
+    }
+  ]
+}

@@ -1,24 +1,148 @@
 //! 📥️ Retained typed Pack and SPR loading for one exact window-config partition.
 
-use super::{PluginCloseStep, WindowConfigOwner, WindowConfigPack, WindowConfigPartition};
+use super::{ WindowConfigOwner, WindowConfigPack, WindowConfigPartition, WindowRegistry};
 use crate::{protocol, store};
 use std::any::Any;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::mem::ManuallyDrop;
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, retirement::{RetireOwned, RetirementCursor, controlled::ControlledRetirement}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use super::PluginLifecycleStep;
 
 type Mounted = store::mounted_pack_rt::RetainedValueToken;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct WindowConfigPackLoadGrant {
-    pub maximum_items: usize,
-    pub maximum_bytes: usize,
+#[cfg(test)]
+mod physical_ownership_tests {
+    use super::*;
+    use super::super::pack_identity_tests::IdentityWindowOwner;
+
+    #[test]
+    fn window_config_paged_registry_actual_authored_root_metadata_producer() {
+        use super::super::retained_pack_load_tests::RetainedLoadCameraConfig;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧫️fixtures/🔣️.json")).unwrap();
+        let law = &fixture["rootMetadata"];
+        let ((producer, absent), getter) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| (
+            <RetainedLoadCameraConfig as store::ArtifactPack>::record_spec_producer(),
+            <semio_framework_value::DslValue as store::ArtifactPack>::record_spec_producer(),
+        ));
+        assert_eq!(producer.is_some(), law["ownedProducer"].as_bool().unwrap());
+        assert_eq!(absent.is_some(), law["schemaLessProducer"].as_bool().unwrap());
+        assert_eq!((getter.requested_bytes, getter.released_bytes), (law["getterAllocationBytes"].as_u64().unwrap() as usize, law["getterReleaseBytes"].as_u64().unwrap() as usize));
+        assert_eq!(<RetainedLoadCameraConfig as store::ArtifactDsl>::envelope_id(), law["owner"].as_str().unwrap());
+        let mut accepted = |_| true;
+        let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);
+        native.admit_turn_capacity(law["maximumCapacityBytes"].as_u64().unwrap() as usize).unwrap();
+        let (spec, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| producer.unwrap().decode(&mut native).unwrap());
+        assert_eq!(birth.requested_bytes, native.owned_bytes());
+        assert_eq!(birth.released_bytes, 0);
+        assert_eq!(spec.fields.iter().map(|field| field.key.as_str()).collect::<Vec<_>>(), law["fields"].as_array().unwrap().iter().map(|field| field.as_str().unwrap()).collect::<Vec<_>>());
+        let mut owner = ControlledRetirement::new(spec).map_err(|(error, _)| error).unwrap();
+        let mut allocated = birth.requested_bytes;
+        let mut released = 0;
+        let body = fixture["maximumPageBytes"].as_u64().unwrap() as usize;
+        while !owner.terminal_is_empty() {
+            let demand = controlled_demands(&owner, body).unwrap();
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.step(grant));
+            let progress = result.unwrap().progress();
+            assert!(progress.fits(grant));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+            allocated += heap.requested_bytes;
+            released += heap.released_bytes;
+        }
+        assert_eq!(allocated, released);
+        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        eprintln!("[DEBUG] original Window authored root metadata nativeBirth={} controlledRelease={released} optionalGetter0 terminalDrop0", birth.requested_bytes);
+    }
+
+    #[test]
+    fn window_config_paged_registry_retained_source_reservation_uses_capacity_authority() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧫️fixtures/🔣️.json")).unwrap();
+        let body = fixture["maximumPageBytes"].as_u64().unwrap() as usize;
+        let mut decoder = RetainedWindowConfigStateDecode::<IdentityWindowOwner>::new();
+        decoder.phase = RetainedStatePhase::Ingress;
+        *decoder.source = Some(store::mounted_pack_rt::RetainedPackSourceCursor::try_new(1, 1, 65_536).unwrap());
+        let capacity = decoder.source.as_ref().unwrap().next_allocation_bytes().unwrap();
+        let refused_law = &fixture["sourceReservation"][0];
+        let admitted_law = &fixture["sourceReservation"][1];
+        let refused = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: refused_law["copyBytes"].as_u64().unwrap() as usize, maximum_depth: 64, ..Default::default() };
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| decoder.advance(&[7], refused));
+        assert_eq!(result.unwrap(), refused_law["reserved"].as_bool().unwrap());
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert!(!decoder.source.as_ref().unwrap().has_reserved_page());
+        let admitted = RetainedCloneGrant { maximum_copy_bytes: admitted_law["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: capacity, ..refused };
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| decoder.advance(&[7], admitted));
+        assert_eq!(result.unwrap(), admitted_law["reserved"].as_bool().unwrap());
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (capacity, 0));
+        assert_eq!(decoder.admitted, admitted_law["copiedBytes"].as_u64().unwrap() as usize);
+        let mut released = 0;
+        while !decoder.terminal_is_empty() {
+            let demand = decoder.retirement_demands(body).unwrap();
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| decoder.close_step(grant));
+            let progress = result.unwrap().progress();
+            assert!(progress.fits(grant));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+            released += heap.released_bytes;
+        }
+        assert_eq!(released, capacity);
+        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(decoder));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        eprintln!("[DEBUG] original retained window source capacity={capacity} release={released} copy0 reservation admitted terminalDrop0");
+    }
+
+    #[test]
+    fn window_config_paged_registry_actual_inline_parser_retains_original_backing() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧫️fixtures/🔣️.json")).unwrap();
+        let body = fixture["maximumPageBytes"].as_u64().unwrap() as usize;
+        let mut accepted = |_| true;
+        let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);
+        let (mut parser, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
+            let mut parser = RetainedWindowConfigTypedState::<IdentityWindowOwner>::new(&mut native).unwrap();
+            let original_fields = parser.spec.fields.as_ptr();
+            parser.begin_container(store::mounted_pack_rt::RetainedValueContainer::Record, 0).unwrap();
+            assert_eq!(parser.spec.fields.as_ptr(), original_fields);
+            assert!(matches!(parser.stack.last(), Some(ValueFrame::Record { root: true, spec: None, .. })));
+            parser
+        });
+        let mut allocated = birth.requested_bytes;
+        let mut released = birth.released_bytes;
+        let mut turns = 0;
+        while !parser.terminal_is_empty() {
+            let demand = parser.retirement_demands(body).unwrap();
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            let mut refused = vec![RetainedCloneGrant { maximum_items: 0, ..grant }];
+            if demand.copy_bytes > 0 { refused.push(RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..grant }); }
+            if demand.capacity_bytes > 0 { refused.push(RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant }); }
+            if demand.release_bytes > 0 { refused.push(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }); }
+            if demand.depth > 0 { refused.push(RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }); }
+            for refused in refused {
+                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| parser.close_step(refused));
+                assert_eq!(result.unwrap().progress(), RetainedCloneProgress::default());
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            }
+            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| parser.close_step(grant));
+            let progress = result.unwrap().progress();
+            assert!(progress.fits(grant));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+            allocated += heap.requested_bytes;
+            released += heap.released_bytes;
+            turns += 1;
+            assert!(turns < 65_536);
+        }
+        assert_eq!(allocated, released);
+        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(parser));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        eprintln!("[DEBUG] original inline window parser allocated={allocated} release={released} turns={turns} terminalDrop0");
+    }
 }
 
-impl WindowConfigPackLoadGrant {
-    /// 🎟️ One item under the decode page floor, widened to the exact allocation or release the next turn demands.
-    pub const fn for_demand(demand_bytes: usize) -> Self {
-        Self { maximum_items: 1, maximum_bytes: if demand_bytes > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES { demand_bytes } else { store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES } }
-    }
+fn controlled_demands<T: RetireOwned>(owner: &ControlledRetirement<T>, body: usize) -> Result<RetirementDemand, ValueError> {
+    Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? })
+}
+fn pack_close_receipt(step: store::mounted_pack_rt::RetainedPackCloseStep, demand: RetirementDemand) -> RetainedCloneStep {
+    let (items, bytes) = match step { store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items, released_bytes } => (released_items, released_bytes), store::mounted_pack_rt::RetainedPackCloseStep::Complete => (1, 0) };
+    RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: usize::from(items != 0 || bytes != 0), copied_bytes: if items == 0 { 0 } else { demand.copy_bytes }, released_bytes: bytes, ..Default::default() })
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -72,11 +196,11 @@ pub(super) trait ErasedWindowConfigPackLoad: Send {
     fn phase(&self) -> WindowConfigPackLoadPhase;
     fn progress(&self) -> WindowConfigPackLoadProgress;
     fn diagnostic(&self) -> Option<WindowConfigPackLoadDiagnostic>;
-    fn advance(&mut self, grant: WindowConfigPackLoadGrant) -> WindowConfigPackLoadStep;
+    fn advance(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep;
     fn request_cancel(&mut self);
     fn reject_stale(&mut self) -> WindowConfigPackLoadStep;
-    fn close_step(&mut self, grant: WindowConfigPackLoadGrant) -> Result<PluginCloseStep, String>;
-    fn demand_bytes(&mut self) -> usize;
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, String>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -107,10 +231,12 @@ impl WindowConfigPackLoad {
         self.inner.request_cancel();
     }
 
-    /// 🎟️ The grant the next advance or close turn needs: never below one decode page, never below its exact demand.
-    pub fn next_grant(&mut self) -> WindowConfigPackLoadGrant {
-        WindowConfigPackLoadGrant::for_demand(self.inner.demand_bytes())
+    /// 🎟️ Fixed caller policy; each currency retains its independent authority.
+    pub const fn next_grant(&self) -> RetainedCloneGrant {
+        RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 }
     }
+
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.inner.retirement_demands(body) }
 
     pub fn terminal_is_empty(&self) -> bool {
         self.inner.terminal_is_empty()
@@ -123,14 +249,14 @@ impl Drop for WindowConfigPackLoad {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 struct ExpectedValue {
-    shape: Option<semio_framework_dsl_record::Shape>,
+    shape: Option<semio_framework_dsl_record::BorrowedShape>,
     dsl: bool,
 }
 
 impl ExpectedValue {
-    fn field(shape: Option<semio_framework_dsl_record::Shape>) -> Self {
+    fn field(shape: Option<semio_framework_dsl_record::BorrowedShape>) -> Self {
         Self { shape, dsl: false }
     }
 
@@ -139,16 +265,17 @@ impl ExpectedValue {
     }
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 enum BuiltValue {
     Field(semio_framework_dsl_record::FieldValue),
     Dsl(semio_framework_value::DslValue),
 }
 
 enum ValueFrame {
-    Record { kind: store::mounted_pack_rt::RetainedValueContainer, spec: Option<semio_framework_dsl_record::RecordSpec>, fields: semio_framework_dsl_record::RecordFields, field: Option<u16> },
+    Record { kind: store::mounted_pack_rt::RetainedValueContainer, root: bool, spec: Option<semio_framework_dsl_record::BorrowedRecordSpec>, fields: semio_framework_dsl_record::RecordFields, field: Option<u16> },
     Sequence { kind: store::mounted_pack_rt::RetainedValueContainer, element: ExpectedValue, values: Vec<BuiltValue> },
     Map { dsl: bool, element: ExpectedValue, values: Vec<(String, BuiltValue)>, key: Option<String> },
-    Statements { variants: Vec<(String, semio_framework_dsl_record::RecordSpecProducer)>, values: Vec<(String, semio_framework_dsl_record::RecordValue)>, keyword: Option<String> },
+    Statements { variants: &'static [(&'static str, fn() -> semio_framework_dsl_record::BorrowedRecordSpec)], values: Vec<(String, semio_framework_dsl_record::RecordValue)>, keyword: Option<String> },
     Bytes { values: Vec<u8>, remaining: usize },
 }
 
@@ -158,12 +285,14 @@ enum ValueWrapper {
     Dynamic,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 enum StringTarget {
     Value(ExpectedValue),
     MapKey,
     StatementKeyword,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct RetainedString {
     target: StringTarget,
     value: String,
@@ -172,7 +301,7 @@ struct RetainedString {
 }
 
 struct RetainedWindowConfigTypedState<O: WindowConfigOwner> {
-    spec: semio_framework_dsl_record::RecordSpec,
+    spec: semio_framework_dsl_record::BorrowedRecordSpec,
     stack: Vec<ValueFrame>,
     wrappers: Vec<(ValueWrapper, usize)>,
     string: Option<RetainedString>,
@@ -180,16 +309,53 @@ struct RetainedWindowConfigTypedState<O: WindowConfigOwner> {
     root: Option<O::State>,
     complete: bool,
     handed_back: bool,
+    retirement_original: ManuallyDrop<Option<RetainedTypedOwners<O>>>,
+    retirement: Option<ControlledRetirement<RetainedTypedOwners<O>>>,
+}
+
+semio_framework_value::artifact_retire_struct!(ExpectedValue{shape,dsl});
+semio_framework_value::artifact_retire_leaf!(ValueWrapper);
+
+impl RetireOwned for ValueFrame {
+    fn retirement(self) -> Box<dyn RetirementCursor> {
+        match self {
+            Self::Record { spec, fields, .. } => semio_framework_value::artifact_retirement_sequence![spec, fields],
+            Self::Sequence { element, values, .. } => semio_framework_value::artifact_retirement_sequence![element, values],
+            Self::Map { element, values, key, .. } => semio_framework_value::artifact_retirement_sequence![element, values, key],
+            Self::Statements { values, keyword, .. } => semio_framework_value::artifact_retirement_sequence![values, keyword],
+            Self::Bytes { values, .. } => values.retirement(),
+        }
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        use semio_framework_value::retirement::{sequence_birth_bytes, deferred_birth_bytes_for};
+        match self {
+            Self::Record { spec, fields, .. } => sequence_birth_bytes(&[deferred_birth_bytes_for(spec), deferred_birth_bytes_for(fields)]),
+            Self::Sequence { element, values, .. } => sequence_birth_bytes(&[deferred_birth_bytes_for(element), deferred_birth_bytes_for(values)]),
+            Self::Map { element, values, key, .. } => sequence_birth_bytes(&[deferred_birth_bytes_for(element), deferred_birth_bytes_for(values), deferred_birth_bytes_for(key)]),
+            Self::Statements { values, keyword, .. } => sequence_birth_bytes(&[deferred_birth_bytes_for(values), deferred_birth_bytes_for(keyword)]),
+            Self::Bytes { values, .. } => values.retirement_birth_bytes(),
+        }
+    }
+    fn controlled_retirement_supported() -> bool { true }
+    fn retirement_element_copy_bytes() -> usize { std::mem::size_of::<Self>() }
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+struct RetainedTypedOwners<O: WindowConfigOwner> {
+    spec: semio_framework_dsl_record::BorrowedRecordSpec,
+    stack: Vec<ValueFrame>,
+    wrappers: Vec<(ValueWrapper, usize)>,
+    string: Option<RetainedString>,
+    root: Option<O::State>,
 }
 
 impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
-    fn new() -> Result<Self, WindowConfigPackLoadDiagnostic> {
-        let spec = <O::State as store::ArtifactPack>::record_spec().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
-        let mut stack = Vec::new();
-        let mut wrappers = Vec::new();
-        stack.try_reserve_exact(64).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
-        wrappers.try_reserve_exact(64).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
-        Ok(Self { spec, stack, wrappers, string: None, tag: None, root: None, complete: false, handed_back: false })
+    fn new(native: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, WindowConfigPackLoadDiagnostic> {
+        let producer = <O::State as store::ArtifactPack>::borrowed_record_spec_producer().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
+        let spec = producer.decode(native).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?;
+        let stack = Vec::new();
+        let wrappers = Vec::new();
+        Ok(Self { spec, stack, wrappers, string: None, tag: None, root: None, complete: false, handed_back: false, retirement_original: ManuallyDrop::new(None), retirement: None })
     }
 
     /// 🎁️ Wrappers pending at the current container depth, outermost first; deeper values never see them.
@@ -202,7 +368,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         self.pending_wrappers().iter().try_fold(self.parent_expected()?, |expected, (wrapper, _)| {
             Ok(match wrapper {
                 ValueWrapper::Block => match expected.shape {
-                    Some(semio_framework_dsl_record::Shape::Block(inner)) => ExpectedValue::field(Some(*inner)),
+                    Some(semio_framework_dsl_record::BorrowedShape::Block(inner)) => ExpectedValue::field(Some(inner())),
                     _ => ExpectedValue::field(None),
                 },
                 ValueWrapper::Dynamic => ExpectedValue::dsl(),
@@ -212,30 +378,18 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
 
     fn parent_expected(&self) -> Result<ExpectedValue, WindowConfigPackLoadDiagnostic> {
         match self.stack.last() {
-            None if self.root.is_none() => Ok(ExpectedValue::field(Some(semio_framework_dsl_record::Shape::Record(Self::root_spec_producer())))),
-            Some(ValueFrame::Record { spec, field: Some(field), .. }) => Ok(ExpectedValue::field(spec.as_ref().and_then(|spec| spec.fields.iter().find(|candidate| candidate.id == *field)).map(|field| field.shape.clone()))),
-            Some(ValueFrame::Sequence { element, .. }) => Ok(element.clone()),
-            Some(ValueFrame::Map { element, key: Some(_), .. }) => Ok(element.clone()),
-            Some(ValueFrame::Statements { variants, keyword: Some(keyword), .. }) => Ok(ExpectedValue::field(variants.iter().find(|(candidate, _)| candidate == keyword).map(|(_, spec)| semio_framework_dsl_record::Shape::Record(*spec)))),
+            None if self.root.is_none() => Ok(ExpectedValue::field(None)),
+            Some(ValueFrame::Record { root, spec, field: Some(field), .. }) => Ok(ExpectedValue::field((if *root { Some(&self.spec) } else { spec.as_ref() }).and_then(|spec| spec.fields.iter().find(|candidate| candidate.id == *field)).map(|field| field.shape))),
+            Some(ValueFrame::Sequence { element, .. }) => Ok(*element),
+            Some(ValueFrame::Map { element, key: Some(_), .. }) => Ok(*element),
+            Some(ValueFrame::Statements { variants, keyword: Some(keyword), .. }) => Ok(ExpectedValue::field(variants.iter().find(|(candidate, _)| *candidate == keyword).map(|(_, spec)| semio_framework_dsl_record::BorrowedShape::Record(*spec)))),
             _ => Err(WindowConfigPackLoadDiagnostic::TypedState),
         }
     }
 
-    fn root_spec() -> semio_framework_dsl_record::RecordSpec {
-        <O::State as store::ArtifactPack>::record_spec().expect("retained window config owner was preflighted with a record spec")
-    }
-
-    fn root_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
-        semio_framework_dsl_record::RecordSpecProducer {
-            ordinary: Self::root_spec,
-            decoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "window config owner has no controlled root metadata producer")),
-            encoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "window config owner has no controlled root metadata producer")),
-        }
-    }
-
-    fn child_record_spec(expected: &ExpectedValue) -> Option<semio_framework_dsl_record::RecordSpec> {
+    fn child_record_spec(expected: &ExpectedValue) -> Option<semio_framework_dsl_record::BorrowedRecordSpec> {
         match expected.shape.as_ref() {
-            Some(semio_framework_dsl_record::Shape::Record(spec)) | Some(semio_framework_dsl_record::Shape::Table(spec)) => Some((spec.ordinary)()),
+            Some(semio_framework_dsl_record::BorrowedShape::Record(spec)) | Some(semio_framework_dsl_record::BorrowedShape::Table(spec)) => Some(spec()),
             _ => None,
         }
     }
@@ -249,10 +403,10 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     /// `DslField::from_value` rejected it — `WindowConfigPackLoadDiagnostic::TypedState`, surfaced as
     /// `window-config.typed-state`. Every CAD world window config reload died on `CadCamera::position`
     /// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, cad-content).
-    fn shape_is_tuple_valued(shape: Option<&semio_framework_dsl_record::Shape>) -> bool {
+    fn shape_is_tuple_valued(shape: Option<&semio_framework_dsl_record::BorrowedShape>) -> bool {
         matches!(
             shape,
-            Some(semio_framework_dsl_record::Shape::Tuple(_, _)) | Some(semio_framework_dsl_record::Shape::Coord(_)) | Some(semio_framework_dsl_record::Shape::Dir) | Some(semio_framework_dsl_record::Shape::Dim(_)) | Some(semio_framework_dsl_record::Shape::Range)
+            Some(semio_framework_dsl_record::BorrowedShape::Tuple(_, _)) | Some(semio_framework_dsl_record::BorrowedShape::Coord(_)) | Some(semio_framework_dsl_record::BorrowedShape::Dir) | Some(semio_framework_dsl_record::BorrowedShape::Dim(_)) | Some(semio_framework_dsl_record::BorrowedShape::Range)
         )
     }
 
@@ -261,9 +415,9 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     /// component shapeless.
     fn child_element(expected: &ExpectedValue) -> ExpectedValue {
         let shape = match expected.shape.as_ref() {
-            Some(semio_framework_dsl_record::Shape::Tuple(inner, _)) | Some(semio_framework_dsl_record::Shape::List(inner)) | Some(semio_framework_dsl_record::Shape::Map(inner)) => Some(inner.as_ref().clone()),
-            Some(semio_framework_dsl_record::Shape::Table(spec)) => Some(semio_framework_dsl_record::Shape::Record(*spec)),
-            Some(semio_framework_dsl_record::Shape::Coord(_)) | Some(semio_framework_dsl_record::Shape::Dir) | Some(semio_framework_dsl_record::Shape::Dim(_)) | Some(semio_framework_dsl_record::Shape::Range) => Some(semio_framework_dsl_record::Shape::Float),
+            Some(semio_framework_dsl_record::BorrowedShape::Tuple(inner, _)) | Some(semio_framework_dsl_record::BorrowedShape::List(inner)) | Some(semio_framework_dsl_record::BorrowedShape::Map(inner)) => Some(inner()),
+            Some(semio_framework_dsl_record::BorrowedShape::Table(spec)) => Some(semio_framework_dsl_record::BorrowedShape::Record(*spec)),
+            Some(semio_framework_dsl_record::BorrowedShape::Coord(_)) | Some(semio_framework_dsl_record::BorrowedShape::Dir) | Some(semio_framework_dsl_record::BorrowedShape::Dim(_)) | Some(semio_framework_dsl_record::BorrowedShape::Range) => Some(semio_framework_dsl_record::BorrowedShape::Float),
             _ => None,
         };
         ExpectedValue { shape, dsl: expected.dsl }
@@ -388,11 +542,12 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         let count = usize::try_from(count).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
         match kind {
             store::mounted_pack_rt::RetainedValueContainer::Record => {
-                let spec = if self.stack.is_empty() && self.root.is_none() { Some(self.spec.clone()) } else { Self::child_record_spec(&expected) };
+                let root = self.stack.is_empty() && self.root.is_none();
+                let spec = if root { None } else { Self::child_record_spec(&expected) };
                 let mut entries = Vec::new();
-                entries.try_reserve_exact(count.max(spec.as_ref().map_or(0, |spec| spec.fields.len()))).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
+                entries.try_reserve_exact(count.max((if root { Some(&self.spec) } else { spec.as_ref() }).map_or(0, |spec| spec.fields.len()))).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
                 let fields = semio_framework_dsl_record::RecordFields::from_empty_slots(entries);
-                self.stack.push(ValueFrame::Record { kind, spec, fields, field: None });
+                self.stack.push(ValueFrame::Record { kind, root, spec, fields, field: None });
             }
             store::mounted_pack_rt::RetainedValueContainer::Tuple | store::mounted_pack_rt::RetainedValueContainer::List | store::mounted_pack_rt::RetainedValueContainer::PackedF64 | store::mounted_pack_rt::RetainedValueContainer::PackedVarint => {
                 let mut values = Vec::new();
@@ -406,8 +561,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             }
             store::mounted_pack_rt::RetainedValueContainer::Statements => {
                 let variants = match expected.shape {
-                    Some(semio_framework_dsl_record::Shape::Statements(variants)) => variants,
-                    _ => Vec::new(),
+                    Some(semio_framework_dsl_record::BorrowedShape::Statements(variants)) => variants,
+                    _ => &[],
                 };
                 let mut values = Vec::new();
                 values.try_reserve_exact(count).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
@@ -424,8 +579,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         }
         let frame = self.stack.pop().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
         let value = match frame {
-            ValueFrame::Record { kind: expected, spec, mut fields, field: None } if expected == kind => {
-                if let Some(spec) = spec {
+            ValueFrame::Record { kind: expected, root, spec, mut fields, field: None } if expected == kind => {
+                if let Some(spec) = if root { Some(&self.spec) } else { spec.as_ref() } {
                     for field in spec.fields {
                         if !fields.contains_key(&field.id) {
                             fields.insert(field.id, semio_framework_dsl_record::FieldValue::Absent);
@@ -455,9 +610,9 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         let expected = self.expected().ok();
         if expected.as_ref().is_some_and(|expected| expected.dsl) {
             BuiltValue::Dsl(semio_framework_value::DslValue::int(value))
-        } else if expected.as_ref().and_then(|expected| expected.shape.as_ref()).is_some_and(|shape| matches!(shape, semio_framework_dsl_record::Shape::UInt | semio_framework_dsl_record::Shape::Count)) && value >= 0 {
+        } else if expected.as_ref().and_then(|expected| expected.shape.as_ref()).is_some_and(|shape| matches!(shape, semio_framework_dsl_record::BorrowedShape::UInt | semio_framework_dsl_record::BorrowedShape::Count)) && value >= 0 {
             BuiltValue::Field(semio_framework_dsl_record::FieldValue::UInt(value as u64))
-        } else if let Some(semio_framework_dsl_record::Shape::Enum(_)) = expected.as_ref().and_then(|expected| expected.shape.as_ref()) {
+        } else if let Some(semio_framework_dsl_record::BorrowedShape::Enum(_)) = expected.as_ref().and_then(|expected| expected.shape.as_ref()) {
             BuiltValue::Field(semio_framework_dsl_record::FieldValue::Enum(value as u32))
         } else {
             BuiltValue::Field(semio_framework_dsl_record::FieldValue::Int(value))
@@ -544,7 +699,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
                 let expected = self.expected()?;
                 let built = if expected.dsl {
                     BuiltValue::Dsl(semio_framework_value::DslValue::uint(value))
-                } else if matches!(expected.shape, Some(semio_framework_dsl_record::Shape::Enum(_))) || self.tag == Some(0x0a) {
+                } else if matches!(expected.shape, Some(semio_framework_dsl_record::BorrowedShape::Enum(_))) || self.tag == Some(0x0a) {
                     BuiltValue::Field(semio_framework_dsl_record::FieldValue::Enum(u32::try_from(value).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?))
                 } else {
                     BuiltValue::Field(semio_framework_dsl_record::FieldValue::UInt(value))
@@ -585,18 +740,26 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         self.root.take()
     }
 
-    fn close_step(&mut self) -> bool {
-        self.string = None;
-        if self.stack.pop().is_some() || self.wrappers.pop().is_some() {
-            return false;
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        self.retirement.as_ref().map_or(Ok(RetirementDemand { copy_bytes: std::mem::size_of::<RetainedTypedOwners<O>>(), depth: 1, ..Default::default() }), |owner| Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }))
+    }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
+        if !super::registry::fits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if let Some(owner) = self.retirement.as_mut() { return owner.step(grant); }
+        let owners = self.retirement_original.take().unwrap_or_else(|| RetainedTypedOwners::<O> {
+            spec: std::mem::replace(&mut self.spec, semio_framework_dsl_record::BorrowedRecordSpec { keyword: None, layout: semio_framework_dsl_record::RecordLayout::Inline, fields: &[] }),
+            stack: std::mem::take(&mut self.stack), wrappers: std::mem::take(&mut self.wrappers), string: self.string.take(), root: self.root.take(),
+        });
+        match ControlledRetirement::new(owners) {
+            Ok(owner) => { self.retirement = Some(owner); self.handed_back = true; Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })) },
+            Err((error, owners)) => { *self.retirement_original = Some(owners); Err(error) },
         }
-        self.root = None;
-        self.handed_back = true;
-        true
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.handed_back && self.root.is_none() && self.stack.is_empty() && self.wrappers.is_empty() && self.string.is_none()
+        self.handed_back && self.root.is_none() && self.stack.capacity() == 0 && self.wrappers.capacity() == 0 && self.string.is_none() && self.retirement_original.is_none() && self.retirement.as_ref().is_some_and(ControlledRetirement::terminal_is_empty)
     }
 }
 
@@ -635,8 +798,10 @@ struct RetainedWindowConfigStateDecode<O: WindowConfigOwner> {
     value_sealed: bool,
     value_complete: bool,
     state: ManuallyDrop<Option<O::State>>,
+    state_retirement: Option<ControlledRetirement<O::State>>,
     digest: Option<[u8; 32]>,
     hasher: semio_framework_hash::Hasher,
+    native: Option<semio_framework_value::native_decoding::NativeDecodeContinuation>,
 }
 
 impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
@@ -660,16 +825,18 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
             value_sealed: false,
             value_complete: false,
             state: ManuallyDrop::new(None),
+            state_retirement: None,
             digest: None,
             hasher: semio_framework_hash::Hasher::new(),
+            native: None,
         }
     }
 
-    fn validate_envelope(&mut self, pack: &[u8], maximum_bytes: usize) -> Result<bool, WindowConfigPackLoadDiagnostic> {
+    fn validate_envelope(&mut self, pack: &[u8], grant: RetainedCloneGrant) -> Result<bool, WindowConfigPackLoadDiagnostic> {
         let envelope_id = <O::State as store::ArtifactDsl>::envelope_id();
         let expected_token_bytes = envelope_id.len().checked_add(".pack v1".len()).ok_or(WindowConfigPackLoadDiagnostic::EnvelopeIdentity)?;
         let header_bytes = 12usize.checked_add(expected_token_bytes).ok_or(WindowConfigPackLoadDiagnostic::EnvelopeIdentity)?;
-        if maximum_bytes < header_bytes {
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < header_bytes.saturating_add(std::mem::size_of::<RetainedWindowConfigTypedState<O>>()) {
             return Ok(false);
         }
         if pack.len() <= header_bytes || pack.get(..8) != Some(store::semio_format::BINARY_MAGIC.as_slice()) || pack.get(8..12).and_then(|bytes| <[u8; 4]>::try_from(bytes).ok()).map(u32::from_le_bytes) != Some(expected_token_bytes as u32) {
@@ -697,7 +864,15 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         *self.segment = Some(store::mounted_pack_rt::RetainedPackSegmentCursor::try_new(limits(), maximum_allocation).map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?);
         *self.catalog = Some(store::mounted_pack_rt::RetainedPackCatalogCursor::try_new(limits(), maximum_items, inner_len, inner_len, maximum_items, maximum_allocation).map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?);
         *self.value = Some(store::mounted_pack_rt::RetainedValueCursor::try_new(limits(), maximum_allocation).map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?);
-        *self.typed = Some(RetainedWindowConfigTypedState::<O>::new()?);
+        let mut accepted = |progress: semio_framework_value::native_decoding::NativeDecodeProgress| progress.completed <= grant.maximum_items;
+        let mut native = match self.native.take() {
+            Some(receipt) => semio_framework_value::NativeDecodeControl::resume(receipt, &mut accepted).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?,
+            None => semio_framework_value::NativeDecodeControl::new_retained(&mut accepted),
+        };
+        native.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
+        let typed = native.scoped_depth(grant.maximum_depth, |native| RetainedWindowConfigTypedState::<O>::new(native).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "Window config requires its actual authored metadata producer")));
+        self.native = Some(native.pause().map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?);
+        *self.typed = Some(typed.map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?);
         self.hasher.update(&pack[..header_bytes]);
         self.inner_start = header_bytes;
         self.phase = RetainedStatePhase::Ingress;
@@ -711,7 +886,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
             + self.value.as_ref().map_or(0, store::mounted_pack_rt::RetainedValueCursor::allocated_bytes)
     }
 
-    fn reserve_next(&mut self, maximum_bytes: usize) -> Result<bool, WindowConfigPackLoadDiagnostic> {
+    fn reserve_next(&mut self, maximum_capacity_bytes: usize) -> Result<bool, WindowConfigPackLoadDiagnostic> {
         let allocated = self.retained_allocated_bytes();
         let remaining = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES.saturating_sub(allocated);
         if self.phase == RetainedStatePhase::Ingress {
@@ -720,10 +895,10 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
                 return Ok(false);
             }
             let requested = source.next_allocation_bytes().map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?;
-            if requested > maximum_bytes || requested > remaining {
+            if requested > maximum_capacity_bytes || requested > remaining {
                 return Ok(false);
             }
-            let step = source.reserve_page(maximum_bytes.min(remaining)).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
+            let step = source.reserve_page(maximum_capacity_bytes.min(remaining)).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
             return Ok(step.progressed);
         }
         if self.phase != RetainedStatePhase::Replay {
@@ -731,29 +906,29 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         }
         let segment = self.segment.as_mut().ok_or(WindowConfigPackLoadDiagnostic::Pack)?;
         if let Some(requested) = segment.next_allocation_bytes() {
-            if requested > maximum_bytes || requested > remaining {
+            if requested > maximum_capacity_bytes || requested > remaining {
                 return Ok(false);
             }
-            return segment.reserve_allocation(maximum_bytes.min(remaining)).map(|step| step.progressed).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity);
+            return segment.reserve_allocation(maximum_capacity_bytes.min(remaining)).map(|step| step.progressed).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity);
         }
         let value = self.value.as_mut().ok_or(WindowConfigPackLoadDiagnostic::Pack)?;
         if let Some(requested) = value.next_allocation_bytes().map_err(|_| WindowConfigPackLoadDiagnostic::Pack)? {
-            if requested > maximum_bytes || requested > remaining {
+            if requested > maximum_capacity_bytes || requested > remaining {
                 return Ok(false);
             }
-            return value.reserve_allocation(maximum_bytes.min(remaining)).map(|step| step.progressed).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity);
+            return value.reserve_allocation(maximum_capacity_bytes.min(remaining)).map(|step| step.progressed).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity);
         }
         let catalog = self.catalog.as_mut().ok_or(WindowConfigPackLoadDiagnostic::Pack)?;
         if let Some(requested) = catalog.next_allocation_bytes().map_err(|_| WindowConfigPackLoadDiagnostic::Pack)? {
-            if requested > maximum_bytes || requested > remaining {
+            if requested > maximum_capacity_bytes || requested > remaining {
                 return Ok(false);
             }
-            return catalog.reserve_allocation(maximum_bytes.min(remaining)).map(|step| step.progressed).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity);
+            return catalog.reserve_allocation(maximum_capacity_bytes.min(remaining)).map(|step| step.progressed).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity);
         }
         Ok(false)
     }
 
-    fn ingress(&mut self, pack: &[u8], maximum_bytes: usize) -> Result<bool, WindowConfigPackLoadDiagnostic> {
+    fn ingress(&mut self, pack: &[u8], grant: RetainedCloneGrant) -> Result<bool, WindowConfigPackLoadDiagnostic> {
         let start = self.inner_start + self.admitted;
         let remaining = pack.len().saturating_sub(start);
         if remaining == 0 {
@@ -762,14 +937,14 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
             self.phase = RetainedStatePhase::Replay;
             return Ok(true);
         }
-        if self.reserve_next(maximum_bytes)? {
+        if self.reserve_next(grant.maximum_capacity_bytes)? {
             return Ok(true);
         }
         let source = self.source.as_mut().ok_or(WindowConfigPackLoadDiagnostic::Pack)?;
         if !source.has_reserved_page() {
             return Ok(false);
         }
-        let len = remaining.min(store::mounted_pack_rt::RETAINED_PACK_PAGE_BYTES).min(maximum_bytes);
+        let len = remaining.min(store::mounted_pack_rt::RETAINED_PACK_PAGE_BYTES).min(grant.maximum_copy_bytes);
         if len == 0 {
             return Ok(false);
         }
@@ -783,8 +958,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         Ok(true)
     }
 
-    fn replay(&mut self, maximum_bytes: usize) -> Result<bool, WindowConfigPackLoadDiagnostic> {
-        if self.reserve_next(maximum_bytes)? {
+    fn replay(&mut self, grant: RetainedCloneGrant) -> Result<bool, WindowConfigPackLoadDiagnostic> {
+        if self.reserve_next(grant.maximum_capacity_bytes)? {
             return Ok(true);
         }
         if self.typed.as_mut().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?.grant_symbol(self.catalog.as_ref().ok_or(WindowConfigPackLoadDiagnostic::Pack)?)? {
@@ -862,14 +1037,14 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         Ok(false)
     }
 
-    fn advance(&mut self, pack: &[u8], grant: WindowConfigPackLoadGrant) -> Result<bool, WindowConfigPackLoadDiagnostic> {
+    fn advance(&mut self, pack: &[u8], grant: RetainedCloneGrant) -> Result<bool, WindowConfigPackLoadDiagnostic> {
         if grant.maximum_items == 0 {
             return Ok(false);
         }
         match self.phase {
-            RetainedStatePhase::Envelope => self.validate_envelope(pack, grant.maximum_bytes),
-            RetainedStatePhase::Ingress => self.ingress(pack, grant.maximum_bytes),
-            RetainedStatePhase::Replay => self.replay(grant.maximum_bytes),
+            RetainedStatePhase::Envelope => self.validate_envelope(pack, grant),
+            RetainedStatePhase::Ingress => self.ingress(pack, grant),
+            RetainedStatePhase::Replay => self.replay(grant),
             RetainedStatePhase::Ready => Ok(true),
             RetainedStatePhase::Closing | RetainedStatePhase::Closed => Ok(false),
         }
@@ -889,99 +1064,70 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         self.phase = RetainedStatePhase::Closing;
     }
 
-    /// 🎟️ The exact single allocation or release the next decode or close turn needs; zero when it needs none.
-    fn demand_bytes(&mut self) -> usize {
-        let allocation = match self.phase {
-            RetainedStatePhase::Ingress => self.source.as_ref().filter(|source| !source.has_reserved_page()).and_then(|source| source.next_allocation_bytes().ok()),
-            RetainedStatePhase::Replay => self
-                .segment
-                .as_ref()
-                .and_then(store::mounted_pack_rt::RetainedPackSegmentCursor::next_allocation_bytes)
-                .or_else(|| self.value.as_mut().and_then(|value| value.next_allocation_bytes().ok().flatten()))
-                .or_else(|| self.catalog.as_mut().and_then(|catalog| catalog.next_allocation_bytes().ok().flatten())),
-            _ => None,
-        };
-        allocation.unwrap_or(0).max(self.next_release_allocation_bytes().unwrap_or(0))
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        let frame = |copy_bytes| Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
+        if self.terminal_is_empty() { return Ok(Default::default()); }
+        if self.document_byte.is_some() { return frame(std::mem::size_of::<(u64, u8)>()); }
+        if self.catalog_value.is_some() { return frame(std::mem::size_of::<store::mounted_pack_rt::RetainedPackCatalog>()); }
+        if self.state.is_some() { return frame(std::mem::size_of::<O::State>()); }
+        if let Some(owner) = self.state_retirement.as_ref() { return controlled_demands(owner, body); }
+        if let Some(typed) = self.typed.as_ref() { return if typed.terminal_is_empty() { frame(std::mem::size_of::<RetainedWindowConfigTypedState<O>>()) } else { typed.retirement_demands(body) }; }
+        if let Some(owner) = self.value.as_ref() { return if owner.terminal_is_empty() { frame(std::mem::size_of::<store::mounted_pack_rt::RetainedValueCursor>()) } else { Ok(owner.retirement_demands()) }; }
+        if let Some(owner) = self.catalog.as_ref() { return if owner.terminal_is_empty() { frame(std::mem::size_of::<store::mounted_pack_rt::RetainedPackCatalogCursor>()) } else { owner.retirement_demands() }; }
+        if let Some(owner) = self.segment.as_ref() { return if owner.terminal_is_empty() { frame(std::mem::size_of::<store::mounted_pack_rt::RetainedPackSegmentCursor>()) } else { Ok(owner.retirement_demands()) }; }
+        if self.anchor.is_some() { return frame(std::mem::size_of::<store::mounted_pack_rt::RetainedPackAnchorCursor>()); }
+        if let Some(owner) = self.source.as_ref() { return if owner.terminal_is_empty() { frame(std::mem::size_of::<store::mounted_pack_rt::RetainedPackSourceCursor>()) } else { owner.retirement_demands() }; }
+        frame(0)
     }
 
-    fn next_release_allocation_bytes(&self) -> Option<usize> {
-        if self.document_byte.is_some() || self.catalog_value.is_some() || self.typed.is_some() || self.state.is_some() {
-            return None;
-        }
-        if let Some(value) = self.value.as_ref() {
-            return value.next_release_allocation_bytes();
-        }
-        if let Some(catalog) = self.catalog.as_ref() {
-            return catalog.next_release_allocation_bytes().ok().flatten();
-        }
-        if let Some(segment) = self.segment.as_ref() {
-            return segment.next_release_allocation_bytes();
-        }
-        self.source.as_ref()?.next_release_allocation_bytes().ok()
-    }
-
-    fn close_step(&mut self, grant: WindowConfigPackLoadGrant) -> Result<PluginCloseStep, String> {
-        if grant.maximum_items == 0 {
-            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, String> {
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_message)?;
+        if !super::registry::fits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.request_cancel();
-        if self.document_byte.take().is_some() || self.catalog_value.take().is_some() || self.state.take().is_some() {
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        let moved = || RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() });
+        if self.document_byte.take().is_some() || self.catalog_value.take().is_some() { return Ok(moved()); }
+        if let Some(state) = self.state.take() {
+            return match ControlledRetirement::new(state) {
+                Ok(owner) => { self.state_retirement = Some(owner); Ok(moved()) },
+                Err((error, state)) => { *self.state = Some(state); Err(error.into_message()) },
+            };
+        }
+        if let Some(owner) = self.state_retirement.as_mut() {
+            let step = owner.step(grant).map_err(ValueError::into_message)?;
+            if owner.terminal_is_empty() { self.state_retirement = None; }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(typed) = self.typed.as_mut() {
-            if !typed.close_step() {
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            self.typed.take();
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            if typed.terminal_is_empty() { drop(self.typed.take()); return Ok(moved()); }
+            return typed.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(ValueError::into_message);
         }
         if let Some(value) = self.value.as_mut() {
-            return match value.close_step(1, grant.maximum_bytes).map_err(|error| error.to_string())? {
-                store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
-                store::mounted_pack_rt::RetainedPackCloseStep::Complete if value.terminal_is_empty() => {
-                    self.value.take();
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                store::mounted_pack_rt::RetainedPackCloseStep::Complete => Err("retained config value returned false terminal".into()),
-            };
+            if value.terminal_is_empty() { drop(self.value.take()); return Ok(moved()); }
+            let step = value.close_step(grant.maximum_items.min(1), grant.maximum_release_bytes).map_err(|error| error.to_string())?;
+            return Ok(pack_close_receipt(step, demand));
         }
         if let Some(catalog) = self.catalog.as_mut() {
-            return match catalog.close_step(1, grant.maximum_bytes).map_err(|error| error.reason.to_string())? {
-                store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
-                store::mounted_pack_rt::RetainedPackCloseStep::Complete if catalog.terminal_is_empty() => {
-                    self.catalog.take();
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                store::mounted_pack_rt::RetainedPackCloseStep::Complete => Err("retained config catalog returned false terminal".into()),
-            };
+            if catalog.terminal_is_empty() { drop(self.catalog.take()); return Ok(moved()); }
+            let step = catalog.close_step(grant.maximum_items.min(1), grant.maximum_release_bytes).map_err(|error| error.reason.to_string())?;
+            return Ok(pack_close_receipt(step, demand));
         }
         if let Some(segment) = self.segment.as_mut() {
-            return match segment.close_step(1, grant.maximum_bytes) {
-                store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
-                store::mounted_pack_rt::RetainedPackCloseStep::Complete if segment.terminal_is_empty() => {
-                    self.segment.take();
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                store::mounted_pack_rt::RetainedPackCloseStep::Complete => Err("retained config segment returned false terminal".into()),
-            };
+            if segment.terminal_is_empty() { drop(self.segment.take()); return Ok(moved()); }
+            return Ok(pack_close_receipt(segment.close_step(grant.maximum_items.min(1), grant.maximum_release_bytes), demand));
         }
         if let Some(anchor) = self.anchor.as_mut() {
             anchor.close_step();
-            self.anchor.take();
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            drop(self.anchor.take());
+            return Ok(moved());
         }
         if let Some(source) = self.source.as_mut() {
-            return match source.close_step(1, grant.maximum_bytes).map_err(|error| error.to_string())? {
-                store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
-                store::mounted_pack_rt::RetainedPackCloseStep::Complete if source.terminal_is_empty() => {
-                    self.source.take();
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                store::mounted_pack_rt::RetainedPackCloseStep::Complete => Err("retained config source returned false terminal".into()),
-            };
+            if source.terminal_is_empty() { drop(self.source.take()); return Ok(moved()); }
+            let step = source.close_step(grant.maximum_items.min(1), grant.maximum_release_bytes).map_err(|error| error.to_string())?;
+            return Ok(pack_close_receipt(step, demand));
         }
         self.phase = RetainedStatePhase::Closed;
-        Ok(PluginCloseStep::Complete)
+        Ok(RetainedCloneStep::Complete(Default::default()))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -995,6 +1141,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
             && self.typed.is_none()
             && self.catalog_value.is_none()
             && self.state.is_none()
+            && self.state_retirement.is_none()
     }
 }
 
@@ -1002,6 +1149,17 @@ impl<O: WindowConfigOwner> Drop for RetainedWindowConfigStateDecode<O> {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty(), "retained window config state decoder reached Drop before terminal-empty retirement");
     }
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+enum LoadOriginal<O: WindowConfigOwner> {
+    State(O::State),
+    History(store::HistoryLog),
+    HistoryAndAuxiliary((Option<store::HistoryLog>, Vec<String>, Vec<String>)),
+    Auxiliary((Vec<String>, Vec<String>)),
+    Files((Vec<u8>, Vec<u8>, String)),
+    Text(String),
+    SharedText(semio_framework_value::SharedUtf8),
 }
 
 struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
@@ -1022,7 +1180,8 @@ struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
     owners: ManuallyDrop<Option<store::DocumentStoreOwners<O::State, O::Mutation>>>,
     candidate: ManuallyDrop<Option<WindowConfigPartition<O>>>,
     displaced: ManuallyDrop<Option<WindowConfigPartition<O>>>,
-    active: ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    active: Option<ControlledRetirement<LoadOriginal<O>>>,
+    original: ManuallyDrop<Option<LoadOriginal<O>>>,
     registry_lifetime: u64,
     partition_generation: Option<u64>,
     phase: WindowConfigPackLoadPhase,
@@ -1039,6 +1198,10 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         let WindowConfigPack { window_id, window_kind_id, files } = pack;
         let total_bytes = files.pack.len().saturating_mul(3).saturating_add(files.spr.len()).saturating_add(files.ops.len()) as u64;
         let expected_id = format!("window-config:{}:{window_id}", O::WINDOW_KIND_ID);
+        let (owners, diagnostic) = match O::build_store_owners() {
+            Ok(owners) => (Some(owners), None),
+            Err(_) => (None, Some(WindowConfigPackLoadDiagnostic::Capacity)),
+        };
         Self {
             opened_actor: ManuallyDrop::new(Some(opened_actor)),
             window_id: ManuallyDrop::new(Some(window_id)),
@@ -1054,14 +1217,15 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             history_decode: ManuallyDrop::new(None),
             history: ManuallyDrop::new(None),
             hydration: ManuallyDrop::new(None),
-            owners: ManuallyDrop::new(Some(O::build_store_owners())),
+            owners: ManuallyDrop::new(owners),
             candidate: ManuallyDrop::new(None),
             displaced: ManuallyDrop::new(None),
-            active: ManuallyDrop::new(None),
+            active: None,
+            original: ManuallyDrop::new(None),
             registry_lifetime,
             partition_generation,
-            phase: WindowConfigPackLoadPhase::EnvelopeIdentity,
-            diagnostic: None,
+            phase: if diagnostic.is_some() { WindowConfigPackLoadPhase::RetiringRejectedCandidate } else { WindowConfigPackLoadPhase::EnvelopeIdentity },
+            diagnostic,
             completed_bytes: 0,
             total_bytes,
             decoded_states: 0,
@@ -1095,7 +1259,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         }
     }
 
-    fn advance_decode(&mut self, grant: WindowConfigPackLoadGrant) -> WindowConfigPackLoadStep {
+    fn advance_decode(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep {
         let pack = &self.files.as_ref().expect("retained window config input remains").pack;
         let decoder = self.state_decode.as_mut().expect("retained window config state decoder remains");
         let before = decoder.admitted;
@@ -1129,10 +1293,10 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         }
     }
 
-    fn advance_pack_retirement(&mut self, grant: WindowConfigPackLoadGrant) -> WindowConfigPackLoadStep {
+    fn advance_pack_retirement(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep {
         let decoder = self.state_decode.as_mut().expect("retained window config state decoder remains during close");
         match decoder.close_step(grant) {
-            Ok(PluginCloseStep::Complete) if decoder.terminal_is_empty() => {
+            Ok(RetainedCloneStep::Complete(_)) if decoder.terminal_is_empty() => {
                 self.state_decode.take();
                 if self.decoded_states < 3 {
                     *self.state_decode = Some(RetainedWindowConfigStateDecode::new());
@@ -1150,21 +1314,22 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
                     Err(_) => self.reject(WindowConfigPackLoadDiagnostic::History),
                 }
             }
-            Ok(PluginCloseStep::Complete) => self.reject(WindowConfigPackLoadDiagnostic::Retirement),
+            Ok(RetainedCloneStep::Complete(_)) => self.reject(WindowConfigPackLoadDiagnostic::Retirement),
             Ok(_) => self.pending(),
             Err(_) => self.reject(WindowConfigPackLoadDiagnostic::Retirement),
         }
     }
 
-    fn advance_history(&mut self, grant: WindowConfigPackLoadGrant) -> WindowConfigPackLoadStep {
+    fn advance_history(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep {
         let bytes = &self.files.as_ref().expect("retained window config SPR input remains").spr;
         let decoder = self.history_decode.as_mut().expect("retained window config history decoder remains");
-        match decoder.step(bytes, grant.maximum_bytes, grant.maximum_items.min(1)) {
+        match decoder.step(bytes, grant.maximum_copy_bytes, grant.maximum_items.min(1)) {
             Ok(store::RetainedHistoryDecodeStep::Pending { completed_bytes, .. }) => {
                 self.completed_bytes = (self.files.as_ref().expect("retained window config input remains").pack.len() as u64).saturating_add(completed_bytes);
                 self.pending()
             }
             Ok(store::RetainedHistoryDecodeStep::Ready) => {
+                if !super::registry::fits(grant, Self::original_demand()) { return self.pending(); }
                 let history = decoder.take_ready().expect("ready retained window config history remains");
                 let auxiliary = decoder.take_auxiliary_owners();
                 if !decoder.terminal_is_empty() {
@@ -1172,7 +1337,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
                 }
                 self.history_decode.take();
                 *self.history = Some(history);
-                *self.active = Some(semio_framework_value::retirement::owned_retirement(auxiliary));
+                if self.adopt_original(LoadOriginal::Auxiliary(auxiliary)).is_err() { return self.reject(WindowConfigPackLoadDiagnostic::Retirement); }
                 self.phase = WindowConfigPackLoadPhase::InputRetirement;
                 self.pending()
             }
@@ -1180,69 +1345,36 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         }
     }
 
-    fn drive_active(&mut self, grant: WindowConfigPackLoadGrant) -> Result<bool, WindowConfigPackLoadDiagnostic> {
-        let Some(active) = self.active.as_mut() else { return Ok(false) };
-        match active.close_step(grant.maximum_items.min(1), grant.maximum_bytes) {
-            Ok(store::SnapshotRetirementStep::Complete) if active.terminal_is_empty() => {
-                self.active.take();
-                Ok(true)
-            }
-            Ok(store::SnapshotRetirementStep::Complete) => Err(WindowConfigPackLoadDiagnostic::Retirement),
-            Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= grant.maximum_items.min(1) && released_bytes <= grant.maximum_bytes => Ok(true),
-            _ => Err(WindowConfigPackLoadDiagnostic::Retirement),
+    fn adopt_original(&mut self, original: LoadOriginal<O>) -> Result<(), ValueError> {
+        match ControlledRetirement::new(original) {
+            Ok(owner) => { self.active = Some(owner); Ok(()) }
+            Err((error, original)) => { *self.original = Some(original); Err(error) }
         }
     }
 
-    fn truncate_string(value: &mut String, maximum_bytes: usize) -> usize {
-        if maximum_bytes == 0 || value.is_empty() {
-            return 0;
-        }
-        let mut start = value.len().saturating_sub(maximum_bytes);
-        while !value.is_char_boundary(start) {
-            start += 1;
-        }
-        let released = value.len() - start;
-        value.truncate(start);
-        released
+    fn drive_active(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, ValueError> {
+        let Some(owner) = self.active.as_mut() else { return Ok(None) };
+        let step = owner.step(grant)?;
+        if owner.terminal_is_empty() { self.active = None; }
+        Ok(Some(RetainedCloneStep::Progress(step.progress())))
     }
 
-    fn retire_files(&mut self, grant: WindowConfigPackLoadGrant) -> Option<(usize, usize)> {
-        let Some(files) = self.files.as_mut() else { return None };
-        if !files.pack.is_empty() {
-            if grant.maximum_bytes == 0 {
-                return None;
-            }
-            let released = files.pack.len().min(grant.maximum_bytes);
-            files.pack.truncate(files.pack.len() - released);
-            return Some((0, released));
-        }
-        if !files.spr.is_empty() {
-            if grant.maximum_bytes == 0 {
-                return None;
-            }
-            let released = files.spr.len().min(grant.maximum_bytes);
-            files.spr.truncate(files.spr.len() - released);
-            return Some((0, released));
-        }
-        if !files.ops.is_empty() {
-            if grant.maximum_bytes == 0 {
-                return None;
-            }
-            let released = Self::truncate_string(&mut files.ops, grant.maximum_bytes);
-            return (released != 0).then_some((0, released));
-        }
-        if grant.maximum_items != 0 {
-            self.files.take();
-            return Some((1, 0));
-        }
-        None
+    fn original_demand() -> RetirementDemand { RetirementDemand { copy_bytes: std::mem::size_of::<LoadOriginal<O>>(), depth: 1, ..Default::default() } }
+
+    fn retire_files(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, ValueError> {
+        if self.files.is_none() { return Ok(None); }
+        let demand = Self::original_demand();
+        if !super::registry::fits(grant, demand) { return Ok(Some(RetainedCloneStep::Progress(Default::default()))); }
+        let files = self.files.take().expect("granted original files remain");
+        self.adopt_original(LoadOriginal::Files((files.pack, files.spr, files.ops)))?;
+        Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })))
     }
 
-    fn advance_input_retirement(&mut self, grant: WindowConfigPackLoadGrant) -> WindowConfigPackLoadStep {
+    fn advance_input_retirement(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep {
         match self.drive_active(grant) {
-            Ok(true) => return self.pending(),
-            Ok(false) => {}
-            Err(diagnostic) => return self.reject(diagnostic),
+            Ok(Some(_)) => return self.pending(),
+            Ok(None) => {}
+            Err(_) => return self.reject(WindowConfigPackLoadDiagnostic::Retirement),
         }
         if self.hydration.is_none() {
             if grant.maximum_items == 0 {
@@ -1271,16 +1403,14 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             ));
             return self.pending();
         }
-        if self.retire_files(grant).is_some() || self.files.is_some() {
-            return self.pending();
-        }
+        match self.retire_files(grant) { Ok(Some(_)) => return self.pending(), Ok(None) => {}, Err(_) => return self.reject(WindowConfigPackLoadDiagnostic::Retirement) }
         self.phase = WindowConfigPackLoadPhase::StoreHydration;
         self.pending()
     }
 
-    fn advance_hydration(&mut self, grant: WindowConfigPackLoadGrant) -> WindowConfigPackLoadStep {
+    fn advance_hydration(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep {
         let hydration = self.hydration.as_mut().expect("retained window config hydration remains");
-        match hydration.advance(grant.maximum_items.min(1), grant.maximum_bytes) {
+        match hydration.advance(grant) {
             store::ConfigStoreHydrationStep::Pending(_) => self.pending(),
             store::ConfigStoreHydrationStep::Rejected(diagnostic) => self.reject(Self::map_hydration_diagnostic(diagnostic)),
             store::ConfigStoreHydrationStep::Ready(store) => {
@@ -1292,7 +1422,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         }
     }
 
-    fn advance_inner(&mut self, grant: WindowConfigPackLoadGrant) -> WindowConfigPackLoadStep {
+    fn advance_inner(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep {
         if let Some(diagnostic) = self.diagnostic {
             return WindowConfigPackLoadStep::Rejected(diagnostic);
         }
@@ -1316,7 +1446,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         self.reject(WindowConfigPackLoadDiagnostic::Stale)
     }
 
-    fn install(&mut self, partitions: &mut BTreeMap<String, WindowConfigPartition<O>>, registry_lifetime: u64) -> WindowConfigPackLoadStep {
+    fn install(&mut self, partitions: &mut WindowRegistry<String, WindowConfigPartition<O>>, registry_lifetime: u64) -> WindowConfigPackLoadStep {
         if self.phase != WindowConfigPackLoadPhase::Ready || self.registry_lifetime != registry_lifetime {
             return self.reject_stale();
         }
@@ -1332,135 +1462,90 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         self.pending()
     }
 
-    fn close_partition(partition: &mut WindowConfigPartition<O>, grant: WindowConfigPackLoadGrant) -> Result<PluginCloseStep, String> {
-        let disposer = partition.disposer.as_mut().ok_or_else(|| "retained window config partition lost its disposer".to_string())?;
-        disposer.close_step(&mut partition.store, grant.maximum_items.min(1), grant.maximum_bytes).map_err(|fault| fault.message)
+    fn partition_demands(partition: &WindowConfigPartition<O>, body: usize) -> Result<RetirementDemand, ValueError> {
+        if partition.preview_retirement_pending() { return partition.preview_retirement_demand(); }
+        partition.disposer.as_ref().map_or(Ok(RetirementDemand { copy_bytes: std::mem::size_of::<WindowConfigPartition<O>>(), depth: 1, ..Default::default() }), |owner| {
+            if owner.terminal_is_empty(&partition.store) { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) }
+            else { owner.retirement_demands(&partition.store, body) }
+        })
     }
 
-    fn close_metadata(&mut self, grant: WindowConfigPackLoadGrant) -> Option<(usize, usize)> {
-        for value in [&mut *self.expected_id, &mut *self.window_kind_id, &mut *self.window_id] {
-            if value.as_ref().is_some_and(|text| !text.is_empty()) {
-                if grant.maximum_bytes == 0 {
-                    return None;
-                }
-                let released = Self::truncate_string(value.as_mut().expect("retained metadata remains"), grant.maximum_bytes);
-                return (released != 0).then_some((0, released));
-            }
-            if value.is_some() {
-                if grant.maximum_items != 0 {
-                    *value = None;
-                    return Some((1, 0));
-                }
-            }
+    fn close_partition(slot: &mut Option<WindowConfigPartition<O>>, grant: RetainedCloneGrant, demand: RetirementDemand) -> Result<PluginLifecycleStep, String> {
+        let partition = slot.as_mut().expect("granted original partition remains");
+        if partition.preview_retirement_pending() { return partition.preview_retirement_step(grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_message); }
+        if let Some(owner) = partition.disposer.as_mut() {
+            if !owner.terminal_is_empty(&partition.store) { return owner.close_step(&mut partition.store, grant).map(|step| match step { PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), other => other }).map_err(|fault| fault.message); }
+            drop(partition.disposer.take());
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
         }
-        None
+        drop(slot.take());
+        Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     }
 
-    fn close_inner(&mut self, grant: WindowConfigPackLoadGrant) -> Result<PluginCloseStep, String> {
-        if self.terminal {
-            return Ok(PluginCloseStep::Complete);
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        let frame = |copy_bytes| Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
+        if self.terminal { return Ok(Default::default()); }
+        if self.original.is_some() { return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "retained original window input has no controlled authority")); }
+        if let Some(owner) = self.active.as_ref() { return controlled_demands(owner, body); }
+        if let Some(owner) = self.state_decode.as_ref() { return if owner.terminal_is_empty() { frame(std::mem::size_of::<RetainedWindowConfigStateDecode<O>>()) } else { owner.retirement_demands(body) }; }
+        if self.history_decode.is_some() { return frame(std::mem::size_of::<store::RetainedHistoryDecode>().checked_add(Self::original_demand().copy_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "window history handoff size overflow"))?); }
+        if let Some(owner) = self.hydration.as_ref() {
+            return if store::ErasedSnapshotRetirement::terminal_is_empty(owner) { frame(std::mem::size_of::<store::RetainedConfigStoreHydration<O::State, O::Mutation>>()) }
+            else { Ok(RetirementDemand { copy_bytes: store::ErasedSnapshotRetirement::next_copy_byte_demand(owner)?, capacity_bytes: store::ErasedSnapshotRetirement::next_capacity_byte_demand(owner, body)?, release_bytes: store::ErasedSnapshotRetirement::next_release_byte_demand(owner)?, depth: store::ErasedSnapshotRetirement::next_depth_demand(owner)? }) };
         }
-        if grant.maximum_items == 0 {
-            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        }
+        if let Some(partition) = self.displaced.as_ref().or(self.candidate.as_ref()) { return Self::partition_demands(partition, body); }
+        if self.current.is_some() || self.validation.is_some() || self.initial.is_some() || self.history.is_some() || self.files.is_some() { return Ok(Self::original_demand()); }
+        if let Some(owner) = self.owners.as_ref() { return if owner.uninstalled_owners_terminal_is_empty() { frame(std::mem::size_of::<store::DocumentStoreOwners<O::State, O::Mutation>>()) } else { owner.uninstalled_owners_demands(body) }; }
+        if self.opened_actor.is_some() || self.expected_id.is_some() || self.window_kind_id.is_some() || self.window_id.is_some() { return Ok(Self::original_demand()); }
+        Ok(RetirementDemand { depth: 1, ..Default::default() })
+    }
+
+    fn close_inner(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, String> {
+        if self.terminal { return Ok(PluginLifecycleStep::Complete(Default::default())); }
+        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_message)?;
+        if !super::registry::fits(grant, demand) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
         self.diagnostic.get_or_insert(WindowConfigPackLoadDiagnostic::Cancelled);
-        if let Some(decoder) = self.state_decode.as_mut() {
-            let step = decoder.close_step(grant)?;
-            if step == PluginCloseStep::Complete {
-                if !decoder.terminal_is_empty() {
-                    return Err("retained window config state decoder reported false terminal".into());
-                }
-                self.state_decode.take();
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            return Ok(step);
+        if let Some(step) = self.drive_active(grant).map_err(ValueError::into_message)? { return Ok(PluginLifecycleStep::retained(step, false)); }
+        if let Some(owner) = self.state_decode.as_mut() {
+            if !owner.terminal_is_empty() { return owner.close_step(grant).map(|step| PluginLifecycleStep::retained(step, false)); }
+            drop(self.state_decode.take());
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
-        if let Some(decoder) = self.history_decode.as_mut() {
-            let history = decoder.take_partial();
-            let auxiliary = decoder.take_auxiliary_owners();
-            if !decoder.terminal_is_empty() {
-                return Err("retained window config history decoder retained untransferred owners".into());
-            }
-            self.history_decode.take();
-            *self.active = Some(semio_framework_value::retirement::owned_retirement((history, auxiliary)));
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        if let Some(owner) = self.history_decode.as_mut() {
+            let history = owner.take_partial();
+            let (dictionary, edits) = owner.take_auxiliary_owners();
+            assert!(owner.terminal_is_empty());
+            drop(self.history_decode.take());
+            self.adopt_original(LoadOriginal::HistoryAndAuxiliary((history, dictionary, edits))).map_err(ValueError::into_message)?;
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
-        if let Some(hydration) = self.hydration.as_mut() {
-            return match store::ErasedSnapshotRetirement::close_step(hydration, grant.maximum_items.min(1), grant.maximum_bytes).map_err(semio_framework_value::ValueError::into_message)? {
-                store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(hydration) => {
-                    self.hydration.take();
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                store::SnapshotRetirementStep::Complete => Err("retained window config hydration reported false terminal".into()),
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
-                store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-            };
+        if let Some(owner) = self.hydration.as_mut() {
+            if !store::ErasedSnapshotRetirement::terminal_is_empty(owner) { return store::ErasedSnapshotRetirement::close_step(owner, grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_message); }
+            drop(self.hydration.take());
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
-        match self.drive_active(grant) {
-            Ok(true) => return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
-            Ok(false) => {}
-            Err(_) => return Err("retained window config nested retirement failed".into()),
-        }
-        if let Some(partition) = self.displaced.as_mut() {
-            let step = Self::close_partition(partition, grant)?;
-            if step == PluginCloseStep::Complete {
-                let disposer = partition.disposer.as_ref().ok_or_else(|| "retained displaced window config lost its disposer".to_string())?;
-                if !disposer.terminal_is_empty(&partition.store) {
-                    return Err("retained displaced window config reported false terminal".into());
-                }
-                partition.disposer = None;
-                self.displaced.take();
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            return Ok(step);
-        }
-        if let Some(partition) = self.candidate.as_mut() {
-            let step = Self::close_partition(partition, grant)?;
-            if step == PluginCloseStep::Complete {
-                let disposer = partition.disposer.as_ref().ok_or_else(|| "retained rejected window config lost its disposer".to_string())?;
-                if !disposer.terminal_is_empty(&partition.store) {
-                    return Err("retained rejected window config reported false terminal".into());
-                }
-                partition.disposer = None;
-                self.candidate.take();
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            return Ok(step);
-        }
+        if self.displaced.is_some() { return Self::close_partition(&mut self.displaced, grant, demand); }
+        if self.candidate.is_some() { return Self::close_partition(&mut self.candidate, grant, demand); }
         if let Some(state) = self.current.take().or_else(|| self.validation.take()).or_else(|| self.initial.take()) {
-            let owners = self.owners.as_ref().ok_or_else(|| "retained typed window config lost its owner catalog".to_string())?;
-            *self.active = Some(owners.retire_initial_snapshot_owned(state));
-            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            self.adopt_original(LoadOriginal::State(state)).map_err(ValueError::into_message)?;
+        } else if let Some(history) = self.history.take() {
+            self.adopt_original(LoadOriginal::History(history)).map_err(ValueError::into_message)?;
+        } else if let Some(step) = self.retire_files(grant).map_err(ValueError::into_message)? {
+            return Ok(PluginLifecycleStep::retained(step, false));
+        } else if let Some(owner) = self.owners.as_mut() {
+            if !owner.uninstalled_owners_terminal_is_empty() { return owner.close_uninstalled_owners_step(grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_message); }
+            drop(self.owners.take());
+        } else if let Some(actor) = self.opened_actor.take() {
+            self.adopt_original(LoadOriginal::SharedText(actor.0)).map_err(ValueError::into_message)?;
+        } else if let Some(text) = self.expected_id.take().or_else(|| self.window_kind_id.take()).or_else(|| self.window_id.take()) {
+            self.adopt_original(LoadOriginal::Text(text)).map_err(ValueError::into_message)?;
+        } else {
+            self.initial_digest = None;
+            self.terminal = true;
+            self.phase = WindowConfigPackLoadPhase::Complete;
+            return Ok(PluginLifecycleStep::Complete(Default::default()));
         }
-        if let Some(history) = self.history.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(history));
-            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some((released_items, released_bytes)) = self.retire_files(grant) {
-            return Ok(PluginCloseStep::Pending { released_items, released_bytes });
-        }
-        if let Some(owners) = self.owners.as_mut() {
-            return match owners.close_uninstalled_owners_step(grant.maximum_items.min(1), grant.maximum_bytes).map_err(semio_framework_value::ValueError::into_message)? {
-                store::SnapshotRetirementStep::Complete if owners.uninstalled_owners_terminal_is_empty() => {
-                    self.owners.take();
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                store::SnapshotRetirementStep::Complete => Err("retained window config owner catalog reported false terminal".into()),
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
-                store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-            };
-        }
-        if let Some(actor) = self.opened_actor.take() {
-            *self.active = Some(semio_framework_value::retirement::owned_retirement(actor.0));
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some((released_items, released_bytes)) = self.close_metadata(grant) {
-            return Ok(PluginCloseStep::Pending { released_items, released_bytes });
-        }
-        self.initial_digest = None;
-        self.terminal = true;
-        self.phase = WindowConfigPackLoadPhase::Complete;
-        Ok(PluginCloseStep::Complete)
+        Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     }
 
     fn ownership_is_empty(&self) -> bool {
@@ -1483,6 +1568,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             && self.candidate.is_none()
             && self.displaced.is_none()
             && self.active.is_none()
+            && self.original.is_none()
     }
 }
 
@@ -1511,7 +1597,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPackLoad for TypedWindowConfigPackL
         self.diagnostic
     }
 
-    fn advance(&mut self, grant: WindowConfigPackLoadGrant) -> WindowConfigPackLoadStep {
+    fn advance(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep {
         self.advance_inner(grant)
     }
 
@@ -1523,13 +1609,9 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPackLoad for TypedWindowConfigPackL
         TypedWindowConfigPackLoad::reject_stale(self)
     }
 
-    fn close_step(&mut self, grant: WindowConfigPackLoadGrant) -> Result<PluginCloseStep, String> {
-        self.close_inner(grant)
-    }
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { TypedWindowConfigPackLoad::retirement_demands(self, body) }
 
-    fn demand_bytes(&mut self) -> usize {
-        self.state_decode.as_mut().map_or(0, RetainedWindowConfigStateDecode::demand_bytes).max(self.hydration.as_ref().map_or(0, store::RetainedConfigStoreHydration::demand_bytes))
-    }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, String> { self.close_inner(grant) }
 
     fn terminal_is_empty(&self) -> bool {
         self.ownership_is_empty()
@@ -1553,7 +1635,7 @@ pub(super) fn begin_typed_window_config_pack_load<O: WindowConfigOwner>(registry
 
 pub(super) fn commit_typed_window_config_pack_load<O: WindowConfigOwner>(
     registry_lifetime: u64,
-    partitions: &mut BTreeMap<String, WindowConfigPartition<O>>,
+    partitions: &mut WindowRegistry<String, WindowConfigPartition<O>>,
     load: &mut dyn ErasedWindowConfigPackLoad,
 ) -> Result<WindowConfigPackLoadStep, WindowConfigPackLoadDiagnostic> {
     let typed = load.as_any_mut().downcast_mut::<TypedWindowConfigPackLoad<O>>().ok_or(WindowConfigPackLoadDiagnostic::Stale)?;

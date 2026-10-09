@@ -1,0 +1,18 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧬️schema/🔣️.json",
+    "sha256": "ee853296f8d565213d12b95de1d98e86bad7b906905831e5945650296f7fff2a",
+    "keys": [
+      "copyBytes",
+      "cases"
+    ],
+    "action": "remove-current-trial-schema",
+    "afterAbsent": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧪️tests/🟦️.ts",
+    "beforeSha256": "8510eebbfd172e87f5018896cef48ca9d383dd1b2b025659aa8d4b53a1cddfb6",
+    "afterSha256": "caf1b70a3acd1654ca3549450a9e11b38f4d1805123957af1eefc0b4a93f1797",
+    "action": "remove-only-whole-corpus-admission-preserve-domainValueAjv-Graphlib-JSONPatch"
+  }
+]

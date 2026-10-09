@@ -471,33 +471,23 @@ impl crate::app::NaturalFileDecodeCursor<SurfaceSnapshot> for SurfaceNaturalDeco
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        if maximum_items == 0 || maximum_bytes == 0 || maximum_bytes < crate::app::NaturalFileDecodeCursor::next_close_byte_demand(self) {
-            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::app::PluginLifecycleStep, Fault> {
+        if self.retirement.is_some() {
+            let step=semio_framework_value::close_factory_ticket(&mut self.retirement,grant).map_err(|error|Fault::from(error.into_message()))?;
+            return Ok(crate::app::PluginLifecycleStep::Progress(step.progress()));
         }
-        if let Some(retirement) = self.retirement.as_mut() {
-            if retirement.terminal_is_empty() {
-                let bytes = std::mem::size_of_val(retirement.as_ref());
-                self.retirement = None;
-                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
-            }
-            let step = retirement.close_step(maximum_items, maximum_bytes).map_err(|error| Fault::from(error.message.into_owned()))?;
-            return Ok(match step {
-                store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-                store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "surface natural input retirement is blocked" },
-                store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
-            });
+        if let Some(original)=self.bytes.take(){
+            return match semio_framework_value::retirement::admit_owned_retirement(original,grant){
+                Ok((owner,progress))=>{self.retirement=Some(owner);Ok(crate::app::PluginLifecycleStep::Progress(progress))},
+                Err((error,original))=>{self.bytes=Some(original);Err(Fault::from(error.into_message()))},
+            };
         }
-        if let Some(bytes) = self.bytes.take() {
-            self.retirement = Some(semio_framework_value::retirement::owned_retirement(bytes));
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(PluginCloseStep::Complete)
+        Ok(crate::app::PluginLifecycleStep::Complete(Default::default()))
     }
 
-    fn next_close_byte_demand(&self) -> usize {
-        self.retirement.as_ref().map_or_else(|| if self.bytes.is_some() { semio_framework_value::retirement::owned_retirement_birth_bytes::<Vec<u8>>() } else { 0 }, |owner| if owner.terminal_is_empty() { std::mem::size_of_val(owner.as_ref()) } else { owner.next_close_byte_demand() })
+    fn retirement_demands(&self,body:usize)->Result<crate::app::RetirementDemand,semio_framework_value::ValueError>{
+        if let Some(owner)=self.retirement.as_ref(){return semio_framework_value::factory_ticket_demands(owner,body);}
+        Ok(crate::app::RetirementDemand{capacity_bytes:if self.bytes.is_some(){semio_framework_value::retirement::owned_retirement_birth_bytes::<Vec<u8>>()}else{0},depth:usize::from(self.bytes.is_some()),..Default::default()})
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -870,59 +860,21 @@ fn surface_natural_file_reserved_job(
     (job, completion, snapshot, history)
 }
 
-fn surface_natural_file_step(
-    job: &mut ArtifactReservedToolJob,
-    operation: semio_framework_job::OperationId,
-    cancel: semio_framework_job::CancelToken,
-    work_units: u64,
-    sequence: &mut u64,
-) -> semio_framework_job::StepOutcome {
-    let mut context = semio_framework_job::StepContext::new(
-        operation,
-        semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(work_units, u64::MAX),
-        cancel,
-        semio_framework_job::default_now_us,
-        sequence,
-    );
-    semio_framework_job::InteractiveJob::step(job, &mut context)
+const SURFACE_JOB_POLICY:semio_framework_job::RetainedCloneGrant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};
+const SURFACE_ONE_UNIT_POLICY:semio_framework_job::RetainedCloneGrant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:262144,maximum_release_bytes:1048576,maximum_depth:4096};
+fn surface_natural_file_step(job:&mut ArtifactReservedToolJob,operation:semio_framework_job::OperationId,cancel:semio_framework_job::CancelToken,work_units:u64,sequence:&mut u64,actual:&mut semio_framework_job::RetainedCloneProgress)->semio_framework_job::StepOutcome{
+    let mut context=semio_framework_job::StepContext::new(operation,semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(work_units,u64::MAX,SURFACE_JOB_POLICY),cancel,semio_framework_job::default_now_us,sequence,actual);
+    let outcome=semio_framework_job::InteractiveJob::step(job,&mut context);assert!(context.retained_progress().fits(SURFACE_JOB_POLICY));outcome
 }
-
-fn close_surface_natural_file_payload(payload: &mut semio_framework_job::RetainedJobPayload) {
-    while !payload.terminal_is_empty() {
-        let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
+fn close_surface_natural_file_payload(payload:&mut semio_framework_job::RetainedJobPayload){
+    for _ in 0..16384{if payload.terminal_is_empty(){return}let step=payload.close_step(SURFACE_JOB_POLICY).expect("original Surface payload full-grant close");assert!(step.progress().fits(SURFACE_JOB_POLICY));}panic!("original Surface payload did not retire under its fixed caller policy")
 }
-
-fn close_surface_natural_file_job(job: &mut ArtifactReservedToolJob) {
-    semio_framework_job::InteractiveJob::begin_close(job);
-    assert_eq!(
-        semio_framework_job::InteractiveJob::close_step(job, 0, 0),
-        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }
-    );
-    for _ in 0..16_384 {
-        if semio_framework_job::InteractiveJob::terminal_is_empty(job) {
-            break;
-        }
-        let demand = semio_framework_job::InteractiveJob::next_close_byte_demand(job);
-        assert_eq!(semio_framework_job::InteractiveJob::next_close_byte_demand(job), demand);
-        if demand > 64 {
-            assert_eq!(semio_framework_job::InteractiveJob::close_step(job, 1, 64), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            assert_eq!(semio_framework_job::InteractiveJob::next_close_byte_demand(job), demand);
-            assert!(!semio_framework_job::InteractiveJob::terminal_is_empty(job));
-        }
-        let bytes = 64.max(demand);
-        match semio_framework_job::InteractiveJob::close_step(job, 1, bytes) {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                assert!(released_items > 0 || released_bytes > 0, "positive natural-file close grants must make observable retirement progress");
-                assert!(released_items <= 1);
-                assert!(released_bytes <= bytes);
-            }
-            semio_framework_job::InteractiveJobCloseStep::Complete => {}
-            semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("natural-file job close retained an unmounted owner"),
-        }
-    }
-    assert!(semio_framework_job::InteractiveJob::terminal_is_empty(job), "natural-file job must reach its exact terminal-empty witness");
+fn close_surface_natural_file_job(job:&mut ArtifactReservedToolJob){
+    use semio_framework_job::{InteractiveJob as Job,InteractiveJobCloseStep as Step,RetainedCloneProgress};
+    Job::begin_close(job);let zero=semio_framework_job::RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};assert_eq!(Job::close_step(job,zero).progress(),RetainedCloneProgress::default());
+    for _ in 0..16384{if Job::terminal_is_empty(job){break}let demand=Job::next_close_release_byte_demand(job).expect("original Surface release demand");assert_eq!(Job::next_close_release_byte_demand(job).unwrap(),demand);if demand>64{let denied=semio_framework_job::RetainedCloneGrant{maximum_release_bytes:64,..SURFACE_JOB_POLICY};let step=Job::close_step(job,denied);assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(Job::next_close_release_byte_demand(job).unwrap(),demand);assert!(!Job::terminal_is_empty(job));}
+        let step=Job::close_step(job,SURFACE_JOB_POLICY);assert!(step.progress().fits(SURFACE_JOB_POLICY));match step{Step::Pending{progress}=>assert!(progress!=RetainedCloneProgress::default(),"original Surface fixed policy made no progress"),Step::Complete{..}=>{},other=>panic!("original Surface fixed policy close retained its frontier: {other:?}")}
+    }assert!(Job::terminal_is_empty(job),"original Surface exact terminal witness")
 }
 
 /// 🧵️ A mounted natural-file importer accounts owned input bytes across turns, observes
@@ -939,7 +891,8 @@ fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly() {
     let cancel = semio_framework_job::CancelToken::root_now();
     let (mut cancelled, cancelled_completion, cancelled_snapshot, cancelled_history) = surface_natural_file_reserved_job(data, 4_096);
     let mut sequence = 0;
-    match surface_natural_file_step(&mut cancelled, operation, cancel.clone(), turn, &mut sequence) {
+    let mut actual=semio_framework_job::RetainedCloneProgress::default();
+    match surface_natural_file_step(&mut cancelled, operation, cancel.clone(), turn, &mut sequence,&mut actual) {
         semio_framework_job::StepOutcome::CheckpointReady(mut checkpoint) => {
             assert_eq!(checkpoint.applied_progress, cancel_after);
             close_surface_natural_file_payload(&mut checkpoint.state);
@@ -947,8 +900,9 @@ fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly() {
         other => panic!("first bounded natural-file turn must checkpoint accounted bytes, got {other:?}"),
     }
     cancel.cancel_now();
+    assert!(actual.fits(SURFACE_JOB_POLICY));actual=Default::default();
     assert!(matches!(
-        surface_natural_file_step(&mut cancelled, operation, cancel, turn, &mut sequence),
+        surface_natural_file_step(&mut cancelled, operation, cancel, turn, &mut sequence,&mut actual),
         semio_framework_job::StepOutcome::Cancelled
     ));
     drop((cancelled_completion, cancelled_snapshot, cancelled_history));
@@ -960,8 +914,10 @@ fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly() {
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut sequence = 0;
+    let mut actual=semio_framework_job::RetainedCloneProgress::default();
     for expected in [maximum, u64::try_from(oversized).expect("oversized progress")] {
-        match surface_natural_file_step(&mut refused, operation, cancel.clone(), maximum, &mut sequence) {
+        assert!(actual.fits(SURFACE_JOB_POLICY));actual=Default::default();
+        match surface_natural_file_step(&mut refused, operation, cancel.clone(), maximum, &mut sequence,&mut actual) {
             semio_framework_job::StepOutcome::CheckpointReady(mut checkpoint) => {
                 assert_eq!(checkpoint.applied_progress, expected);
                 close_surface_natural_file_payload(&mut checkpoint.state);
@@ -969,7 +925,8 @@ fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly() {
             other => panic!("natural-file accounting must checkpoint monotonically, got {other:?}"),
         }
     }
-    match surface_natural_file_step(&mut refused, operation, cancel, maximum, &mut sequence) {
+    assert!(actual.fits(SURFACE_JOB_POLICY));actual=Default::default();
+    match surface_natural_file_step(&mut refused, operation, cancel, maximum, &mut sequence,&mut actual) {
         semio_framework_job::StepOutcome::Fault(mut fault) => {
             let detail = String::from_utf8(fault.detail.single_page().expect("single refusal page").to_vec()).expect("UTF-8 refusal");
             assert_eq!(detail, "natural-file codec requires a controlled decoder for this input size");
@@ -1006,10 +963,12 @@ fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut sequence = 0;
+    let mut actual=semio_framework_job::RetainedCloneProgress::default();
     let mut checkpoints = 0;
     let mut last_progress = 0;
     loop {
-        match surface_natural_file_step(&mut job, operation, cancel.clone(), work, &mut sequence) {
+        assert!(actual.fits(SURFACE_JOB_POLICY));actual=Default::default();
+        match surface_natural_file_step(&mut job, operation, cancel.clone(), work, &mut sequence,&mut actual) {
             semio_framework_job::StepOutcome::CheckpointReady(mut checkpoint) => {
                 assert!(checkpoint.applied_progress >= last_progress, "controlled decoder checkpoints are monotonic");
                 last_progress = checkpoint.applied_progress;
@@ -1167,13 +1126,17 @@ fn retained_command_work_receives_exact_one_unit_and_fallback_charges_once() {
             Ok(ArtifactCommandWorkStep::Complete(Emit::default()))
         }
         fn begin_close(&mut self) { self.closing = true; }
-        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-            let bytes = std::mem::size_of::<std::sync::Arc<std::sync::atomic::AtomicU64>>();
-            if self.observed.is_none() { return semio_framework_job::InteractiveJobCloseStep::Complete; }
-            if !self.closing || maximum_items == 0 || maximum_bytes < bytes { return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
-            self.observed = None;
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes }
+        fn close_step(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+            use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
+            let Some(original)=self.observed.as_ref()else{return Step::Complete{progress:RetainedCloneProgress::default()}};let copy=std::mem::size_of::<Option<std::sync::Arc<std::sync::atomic::AtomicU64>>>();let physical=semio_framework_value::shared_retirement_allocation_bytes::<std::sync::atomic::AtomicU64>();
+            if !self.closing||grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<physical||grant.maximum_depth==0{return Step::Pending{progress:RetainedCloneProgress::default()}}if std::sync::Arc::weak_count(original)!=0{return Step::Refused{kind:semio_framework_value::ValueRefusalKind::UnsupportedOwner,progress:Default::default()}}
+            let unique=std::sync::Arc::into_inner(self.observed.take().unwrap()).is_some();Step::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:if unique{physical}else{0},..Default::default()}}
         }
+        fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if self.observed.is_some(){std::mem::size_of::<Option<std::sync::Arc<std::sync::atomic::AtomicU64>>>()}else{0})}
+        fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+        fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if self.observed.is_some(){semio_framework_value::shared_retirement_allocation_bytes::<std::sync::atomic::AtomicU64>()}else{0})}
+        fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(self.observed.is_some()))}
+        fn terminal_frame_release_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}
         fn terminal_is_empty(&self) -> bool { self.closing && self.observed.is_none() }
     }
     for row in fixture["cases"].as_array().unwrap() {
@@ -1185,33 +1148,26 @@ fn retained_command_work_receives_exact_one_unit_and_fallback_charges_once() {
             command: SurfaceEditorCommand::Increment,
             snapshot: std::sync::Arc::new(SurfaceSnapshot::default()), config: std::sync::Arc::new(NoConfig::default()), history: std::sync::Arc::new(HistoryView::empty()),
             interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None,
-            operation: crate::app::AppOperationContext { app_instance_id: 1, parent_document_id: "unit-authority".into(), operation_id: 1, generation: 1, canonical_base_revision: [0;32], authoring_seed: "unit-authority".into() }, completion,
+            operation: crate::app::AppOperationContext { app_instance_id: 1, parent_document_id: "unit-authority".into(), operation_id: 1, generation: 1, canonical_base_revision: [0;32], retained:SURFACE_ONE_UNIT_POLICY, authoring_seed: "unit-authority".into() }, completion,
         }, |_| SURFACE_TOOL_ID, 32, 1, Box::new(work));
         let mut job = ArtifactRetainedCommandJob::new(payload);
         let mut sequence = 0;
         for _ in 0..32 {
-            let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fixture["grantUnits"].as_u64().unwrap(), 100_000), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            let mut actual=semio_framework_job::RetainedCloneProgress::default();
+            let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fixture["grantUnits"].as_u64().unwrap(),100_000,SURFACE_ONE_UNIT_POLICY), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence,&mut actual);
             let mut outcome = job.step(&mut cx);
             assert!(!matches!(outcome, semio_framework_job::StepOutcome::Fault(_)));
             assert_eq!(cx.fuel_remaining(), row["remaining"].as_u64().unwrap());
             for _ in 0..32 {
                 if outcome.terminal_is_empty() { break; }
-                let release = outcome.next_close_byte_demand();
-                match outcome.close_step(1,release) {
-                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= release); },
-                    semio_framework_job::JobPayloadCloseStep::Complete => assert!(outcome.terminal_is_empty()),
-                }
+                let step=outcome.close_step(SURFACE_ONE_UNIT_POLICY).expect("original one-unit outcome full-grant close");assert!(step.progress().fits(SURFACE_ONE_UNIT_POLICY));if matches!(step,semio_framework_job::RetainedCloneStep::Complete(_)){assert!(outcome.terminal_is_empty());}
             }
             assert!(outcome.terminal_is_empty());
             if observed.load(std::sync::atomic::Ordering::SeqCst) != u64::MAX { break; }
         }
         job.begin_close();
         for _ in 0..100_000 {
-            match job.close_step(1,4096) {
-                semio_framework_job::InteractiveJobCloseStep::Complete => break,
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= 4096); },
-                step => panic!("one-unit fixture blocks exact close: {step:?}"),
-            }
+            let step=job.close_step(SURFACE_ONE_UNIT_POLICY);assert!(step.progress().fits(SURFACE_ONE_UNIT_POLICY));match step{semio_framework_job::InteractiveJobCloseStep::Complete{..}=>break,semio_framework_job::InteractiveJobCloseStep::Pending{..}=>{},other=>panic!("one-unit original fixed policy retained its frontier: {other:?}")}
         }
         assert!(job.terminal_is_empty());
         assert!(consumer.take_emit().unwrap().is_none());

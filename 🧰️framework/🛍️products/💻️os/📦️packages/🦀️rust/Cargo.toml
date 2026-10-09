@@ -23,6 +23,10 @@ path = "🦀️.rs"
 name = "sqlite_snapshot_native_admission"
 path = "../../🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🦀️.rs"
 
+[[test]]
+name = "artifact_command_retirement"
+path = "../../🔨️modules/🏪️store/📬️command/♻️retirement/🧪️tests/🚪️public/🦀️.rs"
+
 [features]
 protocol-laws = ["record-codec-laws"]
 record-codec-laws = ["semio-framework-pack/corruption-testing"]

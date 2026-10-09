@@ -1,0 +1,26 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "📋️project.json",
+      "sha256": "28dc133c4b9d356944ab22edc3a76651e429b4aae6918d6fed6679b57d806e25"
+    },
+    {
+      "path": "📜️script.ts",
+      "sha256": "d845a686723187db81cc6fedf7ed07aae9558667958772449bcc8856fffc59b7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/🦀️.rs",
+      "sha256": "83b5ac0bd2e1d2af8122e68acf82245ccbc195dd0d5b449feb0b13a26fa6668c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+      "sha256": "b261fb66da62d367a5a1814d74101c739592284d7cef059b7185d0afeae4b50e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "0030031862b39155d49bf55c5b65dae484167741159581d8183a4dcacdb2ad23"
+    }
+  ]
+}

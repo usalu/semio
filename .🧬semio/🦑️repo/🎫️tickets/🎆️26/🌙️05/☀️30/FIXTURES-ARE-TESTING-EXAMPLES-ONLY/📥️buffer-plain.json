@@ -1,0 +1,26 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧫️fixtures/🔣️.json",
+    "before": "783928ac7a145cef8468876247ce0ff113f423f4cc222cb32e821f42fe1f14f9",
+    "after": "f8bb5153e42324548d63b59d9fe81986981c77dbd4e54e3b8e6a2758d23d926b",
+    "block": "plain inputBuffer policy/capacity; original fields unchanged"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "before": "ec71fb4b183c186aec50d39e00aaf577ffe54a0386cb38a454b62afcb448b8a2",
+    "after": "759384801b1c1e4177fe2475db12ace4fcec723eaea84234422411473908bf87",
+    "block": "shared plain buffer case and actual Grant validation only"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+    "before": "e3916cf0690d269c8b786bd1291b0cb299214dc4d350ab2026c0a82afc2f7d2d",
+    "after": "fcf5e45a60dfff4ec156ea4c7db06b883c93985e0175844fdb0907e8fe68d2a4",
+    "block": "native law reads original plain policy through Serde; no corpus schema"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+    "before": "8363875b789588e036aa8c42f5d3e518cd4f46115b6e82cf4678a3e721000b8d",
+    "after": "b9a52438d64261cd916d6d2de74b3b0a5d66f771fc14b5ccc062f3289bed5244",
+    "block": "zero actual byte copy reports no buffer work"
+  }
+]

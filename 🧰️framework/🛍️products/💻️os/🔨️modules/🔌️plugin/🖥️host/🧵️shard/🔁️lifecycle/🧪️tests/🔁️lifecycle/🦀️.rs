@@ -18,7 +18,7 @@ async fn setup() -> (ShardLoop, Arc<MockGuestRuntime>, Arc<Mutex<Vec<Vec<u8>>>>)
     let mock = Arc::new(MockGuestRuntime::new().await);
     let transport = LoopbackTransport::default();
     let outbound = Arc::clone(&transport.outbound);
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), ShardTransports::Loopback(transport)).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), ShardTransports::Loopback(transport),crate::shard::test_identity_issuer()).await;
     let package = PackageRef { package: PackageId("lifecycle-retry".into()), hash: PackageHash([0; 32]) };
     let compiled = mock.compile(&package, &[]).await.unwrap();
     for actor in [ActorId(1), ActorId(2)] {

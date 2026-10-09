@@ -940,7 +940,7 @@ pub fn mutation_envelopes_from_edit_since<P, Op: crate::mutation::Mutation<P> + 
             Some(actor) => actor,
             None => match op.author_id() {
                 Some(actor) => actor,
-                None => crate::ids::ActorId(edit.actor.clone().unwrap_or_else(|| "unknown".to_string())),
+                None => crate::ids::ActorId(edit.actor.clone().unwrap_or_else(|| "unknown".into())),
             },
         };
         let timestamp = match meta.map(|m| m.timestamp) {
@@ -1036,7 +1036,7 @@ pub fn encode_envelope(envelope: &MutationEnvelope, out: &mut Vec<u8>) {
 pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope, crate::ProtocolError> {
     let mutation_id = crate::ids::MutationId(crate::read_str(bytes, pos)?);
     let document_id = crate::ids::ArtifactId(crate::read_str(bytes, pos)?);
-    let actor = crate::ids::ActorId(crate::read_str(bytes, pos)?);
+    let actor = crate::ids::ActorId(crate::read_str(bytes, pos)?.into());
     let dependency_count = crate::wire::read_varint_u64(bytes, pos)?;
     let mut dependencies = Vec::with_capacity((dependency_count as usize).min(bytes.len()));
     for _ in 0..dependency_count {
@@ -1206,7 +1206,7 @@ pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits
     for _ in 0..count {
         let mutation_id = crate::ids::MutationId(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?);
         let document_id = crate::ids::ArtifactId(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?);
-        let actor = crate::ids::ActorId(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?);
+        let actor = crate::ids::ActorId(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?.into());
         let dependency_count = read_document_backbone_count(bytes, &mut position, limits.maximum_dependencies_per_envelope, "dependencies")?;
         total_dependencies = total_dependencies.checked_add(dependency_count).ok_or_else(|| document_backbone_batch_limit("dependencies"))?;
         if total_dependencies > limits.maximum_total_dependencies {

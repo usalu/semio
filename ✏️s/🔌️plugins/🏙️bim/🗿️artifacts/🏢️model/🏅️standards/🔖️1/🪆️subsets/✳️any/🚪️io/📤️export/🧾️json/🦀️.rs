@@ -99,7 +99,7 @@ pub struct ModelIntoJson;
 impl Serializer<ModelSnapshot> for ModelIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(IoPayload::Text(export_diagnostics(from).map_err(IoError::from_value_error)?)))
     }
 }

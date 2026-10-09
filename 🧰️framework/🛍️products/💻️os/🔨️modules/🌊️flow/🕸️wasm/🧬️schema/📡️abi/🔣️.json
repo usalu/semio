@@ -921,5 +921,22 @@
         "type": "utf8"
       }
     ]
+  },
+  "retainedGrant": {
+    "currencies": [
+      "maximumItems",
+      "maximumCopyBytes",
+      "maximumCapacityBytes",
+      "maximumReleaseBytes",
+      "maximumDepth"
+    ],
+    "transportCopyIndependent": true,
+    "default": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 4294967295,
+      "maximumReleaseBytes": 4294967295,
+      "maximumDepth": 4096
+    }
   }
 }

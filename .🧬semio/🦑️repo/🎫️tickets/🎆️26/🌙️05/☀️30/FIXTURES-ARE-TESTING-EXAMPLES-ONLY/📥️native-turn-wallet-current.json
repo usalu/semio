@@ -1,0 +1,57 @@
+{
+  "sourceHold": "Root original Kernel checkpoint; no Rust mutations after hold notice",
+  "red": {
+    "session": 73542,
+    "nxExit": 1,
+    "durationMilliseconds": 684,
+    "log": "🗑️generated/native-turn-wallet-red.log",
+    "reason": "actual original source missing member_step_grant helper"
+  },
+  "green": {
+    "session": 14336,
+    "nxExit": 0,
+    "durationSeconds": 1.2,
+    "log": "🗑️generated/native-turn-wallet-green.log",
+    "tests": 1,
+    "assertions": 35,
+    "additionalDepthAssertions": 612
+  },
+  "nativeRuntimeProven": false,
+  "endpoints": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "sha256": "d11a33b3889408e135e94b33cada81bc1488eeccf626e4fcba565b7287f12697",
+      "bytes": 32648
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "5c731deca495f7e69bbd44fc6b3b49cc63874d4d11bae7b607da01973432d6e9",
+      "bytes": 70868
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "e3d0874ee5d3fad936efa576346361ef909a33266ad248eb2d9289fc6314a716",
+      "bytes": 81694
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "fb5b569a1bc410a3c2afe6afb43092c919eecd5939abd1841516dc0dda8ce945",
+      "bytes": 96144
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json",
+      "sha256": "9c92e8702ec8413f28ee10b8ff2f75c272a32d75e77c9854c5b4558ac77df845",
+      "bytes": 4539
+    }
+  ],
+  "aggregate": {
+    "session": 95728,
+    "nxExit": 0,
+    "durationSeconds": 3.2,
+    "tests": 5,
+    "assertions": 112,
+    "additionalDepthTests": 1,
+    "additionalDepthAssertions": 612,
+    "log": "🗑️generated/native-turn-wallet-aggregate.log"
+  }
+}

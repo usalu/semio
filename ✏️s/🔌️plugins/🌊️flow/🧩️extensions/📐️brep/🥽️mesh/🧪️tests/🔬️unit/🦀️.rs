@@ -293,7 +293,7 @@ async fn mesh_from_brep_retains_tessellation_import_normals_and_output() {
         for all in [false,true] {
             let node=0x6D_50_00u64+phase_index as u64*2+u64::from(all);
             let parked_request=semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
-                ("operatorId".into(),semio_framework_pack_json::Value::from("brep.mesh.toBrep")),("inputJson".into(),semio_framework_pack_json::Value::from(semio_framework_pack_json::to_json_string(&*request))),
+                ("operatorId".into(),semio_framework_pack_json::Value::from("brep.mesh.toBrep")),("retained".into(),super::super::tests::geometry_test_retained()),("inputJson".into(),semio_framework_pack_json::Value::from(semio_framework_pack_json::to_json_string(&*request))),
                 ("nodeHash".into(),semio_framework_pack_json::Value::from(node)),("budget".into(),semio_framework_pack_json::Value::from(1u64)),("roundUnits".into(),semio_framework_pack_json::Value::from(1u64))]));
             let compact_request=super::super::tests::compact_evaluation_request(&parked_request);let mut trips=0;
             loop {let request=if trips==0 {&parked_request}else{&compact_request};let response=semio_framework_pack_json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry,request.as_bytes()).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(response.get("done").and_then(|value|value.as_bool()),Some(false),"guest phase {phase}");trips+=1;assert!(trips<200000);if trips==1 {assert_eq!(response.get("phase").and_then(|value|value.as_str()),case["guestFirstPhase"].as_str());}if response.get("phase").and_then(|value|value.as_str())==Some(*phase) {break;}}
@@ -322,7 +322,7 @@ async fn mesh_output_encoding_cancels_through_the_existing_graph_owner() {
     let input = neural_engine::ColdOwner::new(Dictionary::new().insert("data",Value::Dictionary(text_dictionary(semio_framework_pack_json::to_string(fixture.get("cases").unwrap().as_array().unwrap()[0].get("mesh").unwrap())))));
     let operator = "brep.mesh.construct"; let node_hash = 0x6D_04_00_i64;
     let request = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
-        ("operatorId".into(),semio_framework_pack_json::Value::from(operator)),
+        ("operatorId".into(),semio_framework_pack_json::Value::from(operator)),("retained".into(),super::super::tests::geometry_test_retained()),
         ("inputJson".into(),semio_framework_pack_json::Value::from(semio_framework_pack_json::to_json_string(&*input))),
         ("nodeHash".into(),semio_framework_pack_json::Value::from(node_hash)),
         ("budget".into(),semio_framework_pack_json::Value::from(1_i64)),
@@ -787,7 +787,7 @@ async fn mesh_modeling_yields_and_cancels_through_graph_evaluation_handler() {
         let input_json = semio_framework_pack_json::to_json_string(&*input);
         let node_hash = 0x6D_00_00 + index as i64;
         let request = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
-            ("operatorId".into(), semio_framework_pack_json::Value::from(operator)),
+            ("operatorId".into(), semio_framework_pack_json::Value::from(operator)),("retained".into(),super::super::tests::geometry_test_retained()),
             ("inputJson".into(), semio_framework_pack_json::Value::from(input_json)),
             ("nodeHash".into(), semio_framework_pack_json::Value::from(node_hash)),
             ("budget".into(), semio_framework_pack_json::Value::from(1_i64)),

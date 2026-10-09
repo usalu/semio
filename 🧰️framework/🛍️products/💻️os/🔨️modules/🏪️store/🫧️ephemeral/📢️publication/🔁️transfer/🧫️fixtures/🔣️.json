@@ -6,40 +6,66 @@
   },
   "retirementGrant": {
     "maximumItems": 1,
-    "maximumBytes": 7
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 64
   },
   "cases": [
     {
       "id": "zero-item",
       "items": 0,
-      "bytes": 4096,
       "cancelBefore": false,
       "prepared": false,
-      "transferCalls": 0
+      "transferCalls": 0,
+      "copyBytes": 4096,
+      "capacityBytes": 256
     },
     {
-      "id": "zero-byte-transfer",
+      "id": "zero-copy-transfer",
       "items": 1,
-      "bytes": 0,
       "cancelBefore": false,
-      "prepared": true,
-      "transferCalls": 1
+      "prepared": false,
+      "transferCalls": 0,
+      "copyBytes": 0,
+      "capacityBytes": 256
     },
     {
       "id": "cancel-before-transfer",
       "items": 1,
-      "bytes": 0,
       "cancelBefore": true,
       "prepared": false,
-      "transferCalls": 0
+      "transferCalls": 0,
+      "copyBytes": 64,
+      "capacityBytes": 256
     },
     {
       "id": "ordinary-transfer",
       "items": 1,
-      "bytes": 7,
       "cancelBefore": false,
       "prepared": true,
-      "transferCalls": 1
+      "transferCalls": 1,
+      "copyBytes": 64,
+      "capacityBytes": 256
+    },
+    {
+      "id": "zero-capacity-transfer",
+      "items": 1,
+      "cancelBefore": false,
+      "prepared": false,
+      "transferCalls": 0,
+      "copyBytes": 64,
+      "capacityBytes": 0
     }
-  ]
+  ],
+  "transferMetadata": {
+    "32": {
+      "copyBytes": 24,
+      "arcBytes": 20
+    },
+    "64": {
+      "copyBytes": 48,
+      "arcBytes": 40
+    }
+  }
 }

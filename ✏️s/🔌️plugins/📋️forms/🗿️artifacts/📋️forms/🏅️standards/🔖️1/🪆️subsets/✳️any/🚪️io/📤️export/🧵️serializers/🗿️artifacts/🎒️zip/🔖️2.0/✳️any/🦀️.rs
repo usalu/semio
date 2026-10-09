@@ -13,7 +13,7 @@ pub struct FormsIntoZip;
 impl Serializer<FormsSnapshot> for FormsIntoZip {
     const INTO: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &FormsSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &FormsSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let archive = decode_zip(&encode_document_archive(from).map_err(|e| IoError::from_value_error(e.into_value_error()))?).map_err(|e| IoError::from_value_error(e.into_value_error()))?;
         Ok(IoOutcome::clean(IoPayload::Binary(store::ArtifactPack::encode_pack(&archive))))
     }

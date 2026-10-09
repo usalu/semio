@@ -1,0 +1,20 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🎟️insertion/🟦️.ts",
+    "action": "retire-only whole-trial validator; retainJSONPatch/Map/Set/reuse",
+    "beforeSha256": "7569a68becb6c196cfc3e3fe697155ff7466e0368099b37d075b3ef316e05786",
+    "afterSha256": "94b751a6135c38da4f76ed53e91241441aa1b083e5b03857e8264154c3e0801d"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧮️expression/🔤️syntax/🧬️schema/🔣️.json",
+    "action": "remove-only whole-trial Schema",
+    "beforeSha256": "b6916cb95f28404c240565c7e95166b7f19053929b6bcf81a320b61736b4eeef",
+    "afterSha256": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🎟️insertion/🔣️.json",
+    "action": "remove-only whole-trial Schema",
+    "beforeSha256": "83ee893b699bc2fba89259e1bab3013d2520fe2a164f7c8bcc9d969c8549c202",
+    "afterSha256": null
+  }
+]

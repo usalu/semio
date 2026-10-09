@@ -1,0 +1,21 @@
+{
+  "rootOct9MeshCurrent": {
+    "session": 69480,
+    "status": 0,
+    "tests": 1,
+    "skipped": 43,
+    "turns": 363,
+    "independent": "Serde",
+    "wholeOwnerQualified": false
+  },
+  "rootOct9SocketNativeCurrent": {
+    "session": 75542,
+    "state": "pending",
+    "earlier7471": {
+      "status": 1,
+      "compilerErrors": 2,
+      "ownerAssertions": 0
+    }
+  },
+  "universalComplete": false
+}

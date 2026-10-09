@@ -1,0 +1,88 @@
+{
+  "sourceCopies": false,
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧬️schema/🔣️.json",
+      "beforeSha256": "199f1e7d3fd9de612155664c1b8b40d355d8476f44d882edf6b4a4517be8269f",
+      "afterSha256": "6c84b8ce21f8a9797986b7473b0369e9239a6ef1437b178d65db4cfe240a0e32",
+      "scope": "genuine produced proposal foreign sequence domain definition; no test corpus admission"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧫️fixtures/🔣️.json",
+      "beforeSha256": "e876ffc21bd242546160197b8928bd64aa093164dfd001b31b1aaaa8f5476114",
+      "afterSha256": "f3f69f6d41e87ff1ccbb5f8fe75400f9633e51ab3fe9a04f53226c6a9a980281",
+      "scope": "plain independent foreign collection caller policy; existing payloads and leaf policy preserved"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts",
+      "beforeSha256": "0894d6d8d51dbdcd5e9affcbfbf58fd9e6f635cf3b2506c0a7befb7bf398b44f",
+      "afterSha256": "7b344b97905f437613c7dc0a58f29112a17ec70a843fa8e6ef5592427209d03f",
+      "scope": "genuine foreign sequence independent oracle and missing paid collection owner RED, existing laws preserved"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🦀️.rs",
+      "beforeSha256": "032c9f17ac68d794805cbf63816ca8b0893405535cd33674adea387bd06bb795",
+      "afterSha256": "74e4ecdb40e83b1a2fb34f36953dda7d183d117d433c72a475f10b2197b28f3d",
+      "scope": "genuine retained original proposal sequence append backing preflight/allocation/memory transfer/free and separate per-field/outer backing close"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+      "beforeSha256": "5f094af5efc4ad6d5951bdc3ccaec43b9c440eb8173ee91b68cff5e5dcd308aa",
+      "afterSha256": "2e0e3de281c1cee5907317a9975114cb1071b0b6d2fb2c3d5cc37c04dda95f22",
+      "logicalBeforeSha256": "c809a25c3f4f4d152a41792abafd065027d5d63e64e1bfc97aabbc9aa524d477",
+      "scope": "actual original retained collection production owner export"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧬️schema/🟦️.ts",
+      "beforeSha256": "5a35a2d2464dde9e1314d2feec1026172e8c947c956e0380561c9613f4e90f2e",
+      "afterSha256": "ea9775c0ce30ad7d2081ab57440e7e9199374e4a92582f73dde89655dba4b81c",
+      "scope": "actual firstparty original foreign sequence admission, indexed sparse refusal, no runtime dependency"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts",
+      "beforeSha256": "7b344b97905f437613c7dc0a58f29112a17ec70a843fa8e6ef5592427209d03f",
+      "afterSha256": "ca3d562a7383e691578de32aa561a9d932c1ba722309dffea987d024dbb81ed2",
+      "scope": "actual original sequence parser/Ajv/JSON/identity/sparse refusal oracle"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🦀️.rs",
+      "beforeSha256": "622b134fa6a14cf6cf7cbe18eeeb3d2a20d4d08302395f237b4ad93a42387b5e",
+      "afterSha256": "c5c0f88187c543a73a14093b5e8434b68e2de4e826bed812d24944f4a1125042",
+      "scope": "meaningful original System-backed sequence refusal/identity/each-prefix cancellation/backing currency law; actual native UNRUN"
+    }
+  ],
+  "state": "genuine collection schema/source RED preparation; no native/publication claim",
+  "red": {
+    "session": 99984,
+    "nxExit": 1,
+    "duration": "6.0s",
+    "log": "🗑️generated/pub-foreign-collection-red.log",
+    "oracle": "real proposal sequence backing has no paid retained owner; actual schema/Ajv/JSON admitted genuine sequence before failure"
+  },
+  "sourceGreen": {
+    "session": 5059,
+    "nxExit": 0,
+    "duration": "3.0s",
+    "log": "🗑️generated/pub-foreign-collection-green.log",
+    "oracle": "current parser/Ajv/JSON/UTF8 + original borrowed producer6 grammar + genuine original sequence parser/refusal"
+  },
+  "nativeAttempt": {
+    "session": 94763,
+    "nxExit": 1,
+    "duration": "36.8s",
+    "cargoExit": 101,
+    "assertions": 0,
+    "failure": "Value E0119 duplicate Debug implementations for FactoryRetirementAdmissionError; before Replication",
+    "log": "pub-foreign-collection-native.log",
+    "currentMatches": 8,
+    "originalRootsAbsent": [
+      34789,
+      35401,
+      35453,
+      35458,
+      35460,
+      35475
+    ],
+    "nativeCredit": false
+  }
+}

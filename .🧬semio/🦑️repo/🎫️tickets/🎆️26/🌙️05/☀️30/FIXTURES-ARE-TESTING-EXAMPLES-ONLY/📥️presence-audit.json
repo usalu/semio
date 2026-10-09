@@ -1,0 +1,25 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "d5e7a22b2dbc9f93ba3d7b8b960eea43fc96a0a9ba1d2001c59d1e3381780136"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "c81a492be829f4f116124e5c10638f89fdcbfa7ca00d17581e605d7d4efe8343"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🦀️.rs",
+      "sha256": "d6c93b68f895079521cc11ac30c0dbef5c35fab4cb985796d3f84f3ce2f90619"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs",
+      "sha256": "b3592fb79d8dc9f96bece19a4d88cb4fb077517cda9b16e131f05fd4ad0a931b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/🦀️.rs",
+      "sha256": "6267fb2d733c8fe8b9ff77e855054c4988970bc7e46418157ba388c84c1d31a3"
+    }
+  ]
+}

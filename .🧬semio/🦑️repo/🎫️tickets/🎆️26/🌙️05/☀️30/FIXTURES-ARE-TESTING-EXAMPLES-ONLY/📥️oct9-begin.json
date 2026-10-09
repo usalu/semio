@@ -1,0 +1,24 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "beforeSha256": "4621f89e5fa89a15b8a8f0230ae6008279db320a4ab33bc6f8df61668aa2a098",
+  "afterSha256": "88e9449587db1af2a665415502342f350f4d62b39892680eda39c81dab7826b9",
+  "actions": [
+    {
+      "logicalScope": "CountingOwnedPreparationFactory delegated actual begin demand/grant",
+      "beforeBlockSha256": "f7340912951f2c0bb605fa979e5bd17fade955fb25ea436f20f126a88ba81139",
+      "afterBlockSha256": "b332e49955551a713cd910626effc0b2f485ec3e42537f70a624ad80055512fc"
+    },
+    {
+      "logicalScope": "DemoMemberWirePreparationFactory exact original cursor birth/refusal",
+      "beforeBlockSha256": "d3a67d50355c66d88fb2b70b87a7dc8d7d8f2c3b317c3e159b9d3097b2acd185",
+      "afterBlockSha256": "df41f930b67c833bfa2363032934c8bd8e447b71ddf7f83807dc5da6bbab33a1"
+    },
+    {
+      "logicalScope": "DemoOneItemPreparationFactory actual frame plus stamped identity birth/copy admission",
+      "beforeBlockSha256": "bfa3b3ff34a2171740df3351b45e1be9e5298ad957d5e4223612a1390d509405",
+      "afterBlockSha256": "890384aa12e85dd0bb654b4f236d7d2d3e5bda85c88b11e2bd1b0199f1e9d362"
+    }
+  ],
+  "copiedSource": false,
+  "nativeAssertions": "UNRUN"
+}

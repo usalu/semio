@@ -1,0 +1,181 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "maximumTurns",
+    "perTurnItems",
+    "livenessMilliseconds",
+    "phases",
+    "profiles",
+    "authority",
+    "deniedFaultReleaseBytes",
+    "faultPlusDomainReleaseBytes"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.job.mounted-physical-close.v1"
+    },
+    "maximumTurns": {
+      "const": 64
+    },
+    "perTurnItems": {
+      "const": 1
+    },
+    "livenessMilliseconds": {
+      "const": 30000
+    },
+    "phases": {
+      "const": [
+        "BeginClose",
+        "PreadmittedFault",
+        "Job",
+        "JobRelease",
+        "ParamsRelease",
+        "PayloadLedger",
+        "AuthorityRelease",
+        "SessionArc",
+        "RetirementSlot",
+        "Empty"
+      ]
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wordBytes",
+          "turns",
+          "totalReceipt"
+        ],
+        "properties": {
+          "wordBytes": {
+            "enum": [
+              4,
+              8
+            ]
+          },
+          "turns": {
+            "type": "array",
+            "minItems": 15,
+            "maxItems": 15,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "phase",
+                "next",
+                "kind",
+                "receipt"
+              ],
+              "properties": {
+                "phase": {
+                  "enum": [
+                    "BeginClose",
+                    "PreadmittedFault",
+                    "Job",
+                    "JobRelease",
+                    "ParamsRelease",
+                    "PayloadLedger",
+                    "AuthorityRelease",
+                    "SessionArc",
+                    "RetirementSlot",
+                    "Empty"
+                  ]
+                },
+                "next": {
+                  "enum": [
+                    "BeginClose",
+                    "PreadmittedFault",
+                    "Job",
+                    "JobRelease",
+                    "ParamsRelease",
+                    "PayloadLedger",
+                    "AuthorityRelease",
+                    "SessionArc",
+                    "RetirementSlot",
+                    "Empty"
+                  ]
+                },
+                "kind": {
+                  "enum": [
+                    "pending",
+                    "complete"
+                  ]
+                },
+                "receipt": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "copiedItems",
+                    "copiedBytes",
+                    "retainedCapacityBytes",
+                    "releasedBytes"
+                  ],
+                  "properties": {
+                    "copiedItems": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "copiedBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "retainedCapacityBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "releasedBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "totalReceipt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "copiedItems",
+              "copiedBytes",
+              "retainedCapacityBytes",
+              "releasedBytes"
+            ],
+            "properties": {
+              "copiedItems": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "copiedBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "retainedCapacityBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "releasedBytes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "authority": {
+      "const": "independentCallerWorkerClosePolicy"
+    },
+    "deniedFaultReleaseBytes": {
+      "const": 4096
+    },
+    "faultPlusDomainReleaseBytes": {
+      "const": 16385
+    }
+  }
+}

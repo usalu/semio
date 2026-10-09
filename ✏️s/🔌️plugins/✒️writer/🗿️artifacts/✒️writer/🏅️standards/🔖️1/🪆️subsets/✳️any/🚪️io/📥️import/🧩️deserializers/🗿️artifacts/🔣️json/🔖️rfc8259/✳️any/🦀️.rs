@@ -21,7 +21,7 @@ impl Deserializer<WriterSnapshot> for JsonIntoWriter {
     /// restores the ephemeral working-scene text cache; that is a documented, orthogonal gap, not a
     /// json-specific loss).
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<WriterSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JsonIntoWriter: expected a text payload".to_string())));
         };

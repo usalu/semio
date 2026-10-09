@@ -613,8 +613,8 @@ impl DrawList {
     pub fn retire_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
         use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
         let empty=RetainedCloneProgress::default();if self.retirement_is_empty(){return Step::Complete{progress:empty}}if grant.maximum_items==0{return Step::Pending{progress:empty}}
-        let bytes=match self.next_retirement_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return Step::Refused(error.kind)};
-        if bytes>grant.maximum_release_bytes{return Step::Pending{progress:empty}}if grant.maximum_depth==0{return Step::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)}
+        let bytes=match self.next_retirement_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return Step::Refused { kind: error.kind, progress: error.retained_progress() }};
+        if bytes>grant.maximum_release_bytes{return Step::Pending{progress:empty}}if grant.maximum_depth==0{return Step::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() }}
         let complete=self.retire_step();let progress=RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes};
         if complete{Step::Complete{progress}}else{Step::Pending{progress}}
     }

@@ -328,14 +328,46 @@
               "type": "null"
             }
           ]
+        },
+        "retainedProgress": {
+          "$ref": "#/$defs/RetainedProgress"
         }
       },
       "required": [
         "origin",
         "code",
         "severity",
-        "message"
+        "message",
+        "retainedProgress"
       ]
+    },
+    "RetainedProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retainedCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   },
   "$ref": "#/$defs/Fault"

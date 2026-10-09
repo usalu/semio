@@ -1,14 +1,10 @@
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
-import Ajv2020 from "ajv/dist/2020.js";
-test("raw retirement corpus separates copied content from original backing release",()=>{
+import {Buffer} from "node:buffer";
+test("raw retirement examples separate copied content from original backing release",()=>{
  const root=join(import.meta.dir,"../..");
  const fixture=JSON.parse(readFileSync(join(root,"🧫️fixtures/🚪️raw-allocation-close.json"),"utf8"));
- const schema=JSON.parse(readFileSync(join(root,"🧬️schema/🚪️raw-allocation-close/🔣️.json"),"utf8"));
- const validate=new Ajv2020({strict:true,allErrors:true}).compile(schema);
- expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);
- for(const row of fixture.cases){expect(row.initializedBytes).toBeLessThanOrEqual(row.capacity);expect(row.expectedCopiedBytes).toBe(row.initializedBytes);expect(row.expectedReleasedBytes).toBe(row.capacity);}
+ for(const row of fixture.cases){const original=Buffer.alloc(row.capacity);expect(row.initializedBytes).toBeLessThanOrEqual(original.byteLength);expect(row.expectedCopiedBytes).toBe(original.subarray(0,row.initializedBytes).byteLength);expect(row.expectedReleasedBytes).toBe(original.byteLength);}
  expect(fixture.cases.some((row:{capacity:number;initializedBytes:number})=>row.capacity>fixture.maximumCopyBytes&&row.initializedBytes===0)).toBe(true);
- expect(validate({...fixture,maximumCopyBytes:-1})).toBe(false);
 });

@@ -13,12 +13,12 @@ impl<'source> SnapshotPatchReadCursor<'source>{
     /// 🛂️ Captures the complete original decoder policy before input read or semantic allocation.
     pub fn new(source:kernel::codec::ByteSpan<'source>,options:&kernel::codec::PackDecodeOptions)->Result<Self,ValueError>{
         let limits=JsonReadLimits{maximum_bytes:options.limits.max_file_len.min(SNAPSHOT_PATCH_MAX_BYTES as u64),maximum_allocation_bytes:options.limits.max_total_alloc.min(usize::MAX as u64)as usize,maximum_depth:usize::from(options.limits.max_depth),maximum_items:options.limits.max_items};
-        Ok(Self{parser:JsonSourceCursor::new_with_limits(PatchSource(source),JsonMemberPolicy::Reject,limits)?,candidate:None,patch:None,admitted:false})
+        Ok(Self{parser:JsonSourceCursor::new(PatchSource(source),JsonMemberPolicy::Reject,limits)?,candidate:None,patch:None,admitted:false})
     }
     /// ⏱️ Advances the original grammar while retaining accepted semantic cells on typed refusal.
-    pub fn step(&mut self,maximum_units:usize,control:&mut NativeDecodeControl<'_>)->Result<bool,ValueError>{
+    pub fn step(&mut self,maximum_units:usize,control:&mut NativeDecodeControl<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<bool,ValueError>{
         if maximum_units==0{return Ok(false);}if self.candidate.is_some(){return Ok(true);}
-        if let Some(value)=self.parser.step(maximum_units,control).map_err(|error|error.into_value_error())?{self.candidate=Some(value);return Ok(true);}Ok(false)
+        if let Some(value)=self.parser.step(maximum_units,control,grant).map_err(|error|error.into_value_error())?{self.candidate=Some(value);return Ok(true);}Ok(false)
     }
     /// 👓️ Borrows the exact accepted semantic candidate without cloning or transferring it.
     pub fn candidate(&self)->Option<&DslValue>{self.candidate.as_ref()}

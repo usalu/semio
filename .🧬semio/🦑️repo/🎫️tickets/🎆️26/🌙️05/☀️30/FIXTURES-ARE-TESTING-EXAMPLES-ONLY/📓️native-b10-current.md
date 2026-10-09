@@ -1,0 +1,11 @@
+# Current Flow VCS And Neural Input Trial Authority Retirement
+
+Root actual full boundary55427 Nx1/58.9s reported four authorities. This lane owns exactly Flow VCS retirement and Neural engine input. The fresh VCS schema fixes all law inputs and expected physical outcomes with const clauses; the Neural schema defines copyBytes/cases and neutral base/overlay/expected examples. Neither defines a produced runtime payload or a canonical domain DTO. Actual Rust native control/retirement and all plain input bytes are preserved.
+
+Fresh original-reference hashes are native-b10-before.json; narrow four Source actions are native-b10-actions.json. No Source was copied into the ticket. The private existing current-corpus branch gained only an early original two-path absence assertion, retaining every prior peer guard. True RED76211 Nx1/99ms lists the two physically present authorities. Both exact schema JSONs and only whole-corpus Ajv reader admissions were retired; the independent JSONPatch/stable-stringify/UTF8 oracles remain.
+
+Current combined guard1898 Nx1/17.7s executed the new absence DEBUG2/2, then failed an unrelated mounted Plugin Source mutation law at tool-job-latest-wins line227. No combined gate pass. Publication received this exact residual.
+
+Original normal semio-framework-os-flow-core:test-vcs-source73229 completed Nx0/1.1s with real DEBUG plainExpectations7/actionVariants16/JSONPatch/UTF8. Original Neural20990 failed before tests because no cached project graph was available after waiting for concurrent graph construction. This lane accidentally shared metadata between two original Source acquisitions; no test or Cargo credit is claimed for that attempt. Serial original Neural renewal2275 with fresh own b10n cache/data completed Nx0/3.9s, executing the original test-input-source through canonical generic native owner-command transport. Real DEBUG plainCases/JSONPatch3/nativeConservation=unqualified confirms assertions executed; no eager Cargo setup or native assertion credit. No flags, input roster or test policy changed.
+
+Current endpoint receipt native-b10-current.json confirms four narrow actions and original plain/Rust observers. No native runtime pass or global fixture-boundary pass is inferred; Root owns the other two reported authorities.

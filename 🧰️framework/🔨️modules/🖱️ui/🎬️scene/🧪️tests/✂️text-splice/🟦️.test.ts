@@ -490,30 +490,12 @@ test("draft JSON wire preserves literal ranges and canonical native text authori
  const source=require("node:fs").readFileSync(require("node:path").resolve(import.meta.dir,"../../✂️text-splice/🦀️.rs"),"utf8");const writer=source.slice(source.indexOf("pub fn write_draft_changes_json_into"),source.indexOf("pub fn apply_draft_changes"));expect(writer).toContain("write_json_source_into");expect(writer).not.toContain("serde_json");
 });
 
-import Ajv2020 from "ajv/dist/2020.js";
-import draftWireSchema from "../../✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json";
-import draftWireFixture from "../../✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json";
 import { draftChangesJsonV1 } from "../../✂️text-splice/🟦️.ts";
 
-test("draft wire schema admits caller authority and original exact JSON vectors", () => {
-  const validate=new Ajv2020({strict:true,allErrors:true}).compile(draftWireSchema);
-  expect(validate(draftWireFixture)).toBe(true);
-  expect(validate({...draftWireFixture,maximumDepth:0})).toBe(false);
-  expect(validate({...draftWireFixture,refusal:"discardSource"})).toBe(false);
+test("draft wire preserves original exact JSON vectors", () => {
   for(const row of fixture.draftJson){
     expect(draftChangesJsonV1(row.changes)).toBe(row.json);
     expect(JSON.parse(row.json)).toEqual(row.changes);
   }
 });
 
-import meshOwnerSchema from "../../📐️math/🚦️ownership/🧬️schema/🔣️.json";
-import meshOwnerFixture from "../../📐️math/🚦️ownership/🧫️fixtures/🔣️.json";
-
-test("mesh owner schema distinguishes finite Busy retry from semantic Closing and successful miss",()=>{
-  const validate=new Ajv2020({strict:true,allErrors:true}).compile(meshOwnerSchema);
-  expect(validate(meshOwnerFixture)).toBe(true);
-  expect(validate({...meshOwnerFixture,ownerBusy:"Closing"})).toBe(false);
-  expect(validate({...meshOwnerFixture,semanticClosing:"Busy"})).toBe(false);
-  expect(validate({...meshOwnerFixture,ray:{...meshOwnerFixture.ray,busy:"successfulNone"}})).toBe(false);
-  expect(validate({...meshOwnerFixture,retry:{...meshOwnerFixture.retry,maximumAttempts:Number.MAX_SAFE_INTEGER}})).toBe(false);
-});

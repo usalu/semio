@@ -9,14 +9,15 @@ fn ready(surface: &str, generation: u64) -> (SurfaceReconciler, Option<SurfaceRe
     let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new(surface), tree(leaf("root")), generation).unwrap_or_else(|_| panic!("admitted output producer"));
     let mut sequence = 0;
     for _ in 0..100_000 {
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(
             semio_framework_job::allocate_operation_id(),
             semio_framework_job::Generation(generation),
-            semio_framework_job::StepBudget::new(1, u64::MAX),
+            semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut sequence,
-        );
+        &mut actual_retained_progress);
         match job.drive_one(&mut cx) {
             SurfaceReconcileJobStep::Ready => return job.take_ready().unwrap_or_else(|_| panic!("exact paired output")),
             SurfaceReconcileJobStep::MoreWork => {}
@@ -133,14 +134,15 @@ fn surface_output_admission_transfers_after_seal_with_no_unreserved_handback() {
     let mut job = SurfaceReconcileJob::try_new_reserved(SurfaceReconciler::new("retained-é"), tree(leaf("root")), reservation).unwrap();
     let mut sequence = 0;
     for _ in 0..100_000 {
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(
             semio_framework_job::allocate_operation_id(),
             semio_framework_job::Generation(920_001),
-            semio_framework_job::StepBudget::new(1, u64::MAX),
+            semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut sequence,
-        );
+        &mut actual_retained_progress);
         match job.drive_one(&mut cx) {
             SurfaceReconcileJobStep::Ready => break,
             SurfaceReconcileJobStep::MoreWork => {}
@@ -179,14 +181,15 @@ fn surface_output_admission_inplace_transfer_retains_source_on_refusal_and_targe
     let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new("in-place-é"), tree(leaf("root")), 930_001).unwrap();
     let mut sequence = 0;
     for _ in 0..100_000 {
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(
             semio_framework_job::allocate_operation_id(),
             semio_framework_job::Generation(930_001),
-            semio_framework_job::StepBudget::new(1, u64::MAX),
+            semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut sequence,
-        );
+        &mut actual_retained_progress);
         match job.drive_one(&mut cx) {
             SurfaceReconcileJobStep::Ready => break,
             SurfaceReconcileJobStep::MoreWork => {}
@@ -235,14 +238,15 @@ fn surface_output_admission_ready_rechecks_cancel_generation_fuel_and_deadline_b
         let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new("ready-revalidation"), tree(leaf("root")), 940_001).unwrap();
         let mut sequence = 0;
         for _ in 0..100_000 {
+            let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
             let mut cx = semio_framework_job::StepContext::new(
                 semio_framework_job::allocate_operation_id(),
                 semio_framework_job::Generation(940_001),
-                semio_framework_job::StepBudget::new(1, u64::MAX),
+                semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),
                 semio_framework_job::root_cancel_token(),
                 now,
                 &mut sequence,
-            );
+            &mut actual_retained_progress);
             match job.drive_one(&mut cx) {
                 SurfaceReconcileJobStep::Ready => break,
                 SurfaceReconcileJobStep::MoreWork => {}
@@ -255,14 +259,15 @@ fn surface_output_admission_ready_rechecks_cancel_generation_fuel_and_deadline_b
             cancel.cancel_now();
         }
         let generation = 940_001 + u64::from(!row["sameGeneration"].as_bool().unwrap());
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(
             semio_framework_job::allocate_operation_id(),
             semio_framework_job::Generation(generation),
-            semio_framework_job::StepBudget::new(row["fuel"].as_u64().unwrap(), row["deadline"].as_u64().unwrap()),
+            semio_framework_job::StepBudget::new(row["fuel"].as_u64().unwrap(), row["deadline"].as_u64().unwrap(),ui_contract::UI_WORKER_RETIREMENT_POLICY),
             cancel,
             now,
             &mut sequence,
-        );
+        &mut actual_retained_progress);
         let outcome = match job.drive_one(&mut cx) {
             SurfaceReconcileJobStep::Ready => "ready",
             SurfaceReconcileJobStep::MoreWork => "pending",
@@ -288,14 +293,15 @@ fn surface_output_pool_direct_job_receiver_keeps_exact_roots_across_refusal_and_
     let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new("direct-pool-é"), tree(leaf("root")), generation).unwrap();
     let mut sequence = 0;
     for _ in 0..100_000 {
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(
             semio_framework_job::allocate_operation_id(),
             semio_framework_job::Generation(generation),
-            semio_framework_job::StepBudget::new(1, u64::MAX),
+            semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut sequence,
-        );
+        &mut actual_retained_progress);
         match job.drive_one(&mut cx) {
             SurfaceReconcileJobStep::Ready => break,
             SurfaceReconcileJobStep::MoreWork => {}

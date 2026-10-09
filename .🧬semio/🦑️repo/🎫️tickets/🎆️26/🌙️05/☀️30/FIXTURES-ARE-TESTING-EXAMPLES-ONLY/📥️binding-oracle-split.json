@@ -1,0 +1,5 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts",
+  "beforeSha256": "ad6670e58d2ce28a3a3fa9ad44397df154b98f0064e68195b8d9ff4d57a1bc9c",
+  "action": "Each plain case executes independently so an earlier failure does not hide later regressions."
+}

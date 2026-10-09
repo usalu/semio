@@ -1,0 +1,49 @@
+{
+  "time": "2026-10-09T13:01:27.802966+00:00",
+  "session": 90516,
+  "exitCode": 0,
+  "nx": "0/10.6s",
+  "namedActualTests": 1,
+  "log": "🗑️generated/native-pack-system-fixed.log",
+  "endpoints": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+      "sha256": "e4d4a9eba69ac564d8e90a0825f07b11ccf59c24187c9af41d8d5d1b609571ed",
+      "afterSha256": "32a5dc99cbea0fe2e95f6f4278228ad50269bcd5431ff2f8859da6a19d49a9af",
+      "currentMatchesBefore": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "f8c1623d3495616dadfe8b3cce9df9e94c5506534efff1f2fc188287ec8dfa07",
+      "afterSha256": "28f75c9128c1244ac178888c332da5db097751b4328315b1812e9d06aa1cfca8",
+      "currentMatchesBefore": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "4208a1fc7b9c6b442870ca9a24743b7da367f01dca7b0b796368d3c50b941824",
+      "afterSha256": "4208a1fc7b9c6b442870ca9a24743b7da367f01dca7b0b796368d3c50b941824",
+      "currentMatchesBefore": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "3a768c3b7d788b39b518318a2324ec576b53a8251f3b764bbf2a2c1ee36622c5",
+      "afterSha256": "3a768c3b7d788b39b518318a2324ec576b53a8251f3b764bbf2a2c1ee36622c5",
+      "currentMatchesBefore": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "a4777a9335ed0f20d357cd4bf5367b099dadd4447c2c705432631fd0485b5e2e",
+      "afterSha256": "a4777a9335ed0f20d357cd4bf5367b099dadd4447c2c705432631fd0485b5e2e",
+      "currentMatchesBefore": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+      "sha256": "0abc5e7e3f6e4b381f889ac6b3a7e1d9ae25439d0399b688e5c8fbcb6ecc7339",
+      "afterSha256": "0abc5e7e3f6e4b381f889ac6b3a7e1d9ae25439d0399b688e5c8fbcb6ecc7339",
+      "currentMatchesBefore": true
+    }
+  ],
+  "definingRefusalSha256": "37caf305fae2d3f7760fff38360bcee56a2bfd99d331f8a39bfd56d930c0a91e",
+  "sourceCopies": false,
+  "originalRoute": "NX_DAEMON=false NX_ISOLATE_PLUGINS=false NX_CACHE_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pw-cache' NX_WORKSPACE_DATA_DIRECTORY='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pw-data' CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build' SEMIO_COMPILER_RESOURCE_ROOT='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build/semio-compiler-resources' bun nx run @semio-tech/framework-pack-json-rs:test-native --skip-nx-cache --outputStyle=static -- long --lib borrowed_json_writer_preserves_actual_post_birth_cancellation_receipt --status-level pass --final-status-level all -- --nocapture >'/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/native-pack-system-fixed.log' 2>&1"
+}

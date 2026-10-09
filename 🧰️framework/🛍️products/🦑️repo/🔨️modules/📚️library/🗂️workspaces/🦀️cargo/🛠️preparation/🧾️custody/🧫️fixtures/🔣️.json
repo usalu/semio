@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "program": "import {observeCargoPreparationSourceV1} from {CUSTODY};\nexport const prepareValue=7;\nobserveCargoPreparationSourceV1(import.meta.path);\n",
+  "missing": [
+    "sourceRoot",
+    "resolverInputs"
+  ],
+  "command": [
+    "prepare"
+  ]
+}

@@ -1,3 +1,4 @@
+import Ajv2020 from "ajv/dist/2020";
 import Ajv from "ajv";
 import { authoredSnapshotSqliteContract, authoredSnapshotPreflightContract,authoredSnapshotSemanticContract } from "../../../../../../🪐️space/🧪️tests/🪶️sqlite/🔬️oracle/🟦️.ts";
 import { fileURLToPath } from "node:url";
@@ -5,8 +6,16 @@ import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import Parser from "web-tree-sitter";
+import callerGrant from "../🧫️fixtures/🫴️grant/🔣️.json";
+import callerGrantSchema from "../🧬️schema/🫴️grant/🔣️.json";
 
 const snapshot=fileURLToPath(new URL("../",import.meta.url)),store=resolve(snapshot,"../../../.."),root=resolve(store,"../../../../..");
+test("original history native caller grant retains five independently authored axes",()=>{
+ const validate=new Ajv2020({strict:true,allErrors:true}).compile(callerGrantSchema);expect(validate(callerGrant)).toBe(true);expect(validate({...callerGrant,extra:1})).toBe(false);
+ for(const axis of callerGrantSchema.required){const missing:Record<string,unknown>={...callerGrant};delete missing[axis];expect(validate(missing)).toBe(false);expect(validate({...callerGrant,[axis]:-1})).toBe(false);expect(validate({...callerGrant,[axis]:0.5})).toBe(false);expect(validate({...callerGrant,[axis]:0})).toBe(true);}
+ expect(Object.keys(callerGrant)).toEqual(["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"]);
+ console.error("[DEBUG] Original History caller grant closed five axes independently validated with Ajv; unchanged authored policy");
+});
 authoredSnapshotSqliteContract({sql:join(snapshot,"🗄️.sql"),fixtures:join(snapshot,"🧫️fixtures")});
 const rustTokens = (node: Parser.SyntaxNode): string[] => {
   if (["line_comment", "block_comment"].includes(node.type)) return [];
@@ -20,8 +29,10 @@ async function sourceTokens(path: string, functionName?: string): Promise<string
   await Parser.init(); const parser = new Parser(); let tree: Parser.Tree | undefined;
   try {
     parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json", root)), "out/tree-sitter-rust.wasm")));
-    tree = parser.parse(readFileSync(path, "utf8")); if (tree.rootNode.hasError()) throw Error("Rust parser refused source: " + path);
-    const functions = tree.rootNode.namedChildren.filter(node => node.type === "function_item" && node.childForFieldName("name")?.text === functionName);
+    tree = parser.parse(readFileSync(path, "utf8")); if(tree.rootNode.hasError())throw Error("Rust parser refused source: "+path);
+    const visit=(node:Parser.SyntaxNode):Parser.SyntaxNode[]=>[node,...node.namedChildren.flatMap(visit)];
+    const parts=functionName?.split("::");
+    const functions=parts?.length===2?visit(tree.rootNode).filter(node=>node.type==="impl_item"&&node.childForFieldName("type")?.text.startsWith(parts[0]!+"<")).flatMap(node=>node.childForFieldName("body")?.namedChildren??[]).filter(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===parts[1]):tree.rootNode.namedChildren.filter(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===functionName);
     if (functionName !== undefined) { expect(functions.length).toBe(1); return rustTokens(functions[0]!); }
     return rustTokens(tree.rootNode);
   } finally { tree?.delete(); parser.delete(); }
@@ -169,4 +180,63 @@ test("Space-history native codec bodies and publication have an explicit IO owne
  const bound=await sourceTokens(join(snapshot,"🚦️native/🦀️.rs"),corpus.law);
  expect(containsTokens(bound,["module_path","!","(",")"])).toBe(true);
  console.log("[DEBUG] Space-history controlled JSON/native codec bodies, neutral owner and actual IO module mount agree");
+});
+
+test("native snapshot owner policy is a closed independent five-axis caller input",async()=>{
+ const defining=join(process.cwd(),"🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot");const fixture=JSON.parse(readFileSync(join(defining,"🧫️fixtures/🔣️.json"),"utf8"));
+ const contract=JSON.parse(readFileSync(join(process.cwd(),"🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🧬️schema/🔣️.json"),"utf8"));const ordered=JSON.parse(readFileSync(join(process.cwd(),"🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json"),"utf8"));const ajv=new Ajv({strict:false,allErrors:true});ajv.addSchema(ordered);ajv.addSchema(contract);const validate=ajv.compile({$ref:contract.$id+"#/$defs/Grant"});
+ for(const row of fixture.cases){expect(validate(row.grant)).toBe(true);expect(validate({...row.grant,undeclared:1})).toBe(false);expect(validate({...row.grant,maximumCopyBytes:-1})).toBe(false);}
+ for(const row of fixture.cases){const db=new HistoryOutputDatabase(":memory:");try{db.exec("CREATE TABLE owner(owned INTEGER NOT NULL,ceiling INTEGER NOT NULL,items INTEGER NOT NULL,copy INTEGER NOT NULL,capacity INTEGER NOT NULL,released INTEGER NOT NULL,depth INTEGER NOT NULL,CHECK(owned<=ceiling))");const g=row.grant;db.run("INSERT INTO owner VALUES(?,?,?,?,?,?,?)",[fixture.initialBytes,fixture.nativeMaximumBytes,g.maximumItems,g.maximumCopyBytes,g.maximumCapacityBytes,g.maximumReleaseBytes,g.maximumDepth]);db.run("UPDATE owner SET owned=owned+?",[new TextEncoder().encode(fixture.copy).length]);expect(db.query("SELECT owned FROM owner").get()).toEqual({owned:row.expectedNativeOwnedBytes});expect(db.query("SELECT items,copy,capacity,released,depth FROM owner").get()).toEqual({items:g.maximumItems,copy:g.maximumCopyBytes,capacity:g.maximumCapacityBytes,released:g.maximumReleaseBytes,depth:g.maximumDepth});if(row.id!=="full")expect(g[row.id]).toBe(0);}finally{db.close();}}
+ console.log("[DEBUG] Native snapshot original owner vectors: genuine Value five-axis Grant contract, zero authority stays zero, independent SQLite cumulative native receipt agrees");
+});
+
+
+test("field close examples preserve genuine progress and actual physical totals", async () => {
+  const corpus = JSON.parse(readFileSync(join(store,"🚪️io/🚫️refusal/🧫️fixtures/🔣️.json"),"utf8"));
+  const progress = JSON.parse(readFileSync(join(root,"🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json"),"utf8"));
+  const valid = new Ajv({strict:true,allErrors:true}).compile(progress);
+  for (const sample of corpus.cases) expect(valid(sample.receipt)).toBe(true);
+  for (const field of progress.required) { const wrong={...corpus.cases[1].receipt};delete wrong[field];expect(valid(wrong)).toBe(false); }
+  expect(valid({...corpus.cases[1].receipt,inferredGrant:1024})).toBe(false);
+  const db=new HistoryOutputDatabase(":memory:");
+  try {
+    db.run("CREATE TABLE failure_receipts(name TEXT PRIMARY KEY, capacity INTEGER NOT NULL, released INTEGER NOT NULL)");
+    for(const sample of corpus.cases){db.run("INSERT INTO failure_receipts VALUES(?,?,?)",[sample.name,sample.receipt.retainedCapacityBytes,sample.receipt.releasedBytes]);const row=db.query("SELECT SUM(capacity) AS capacity,SUM(released) AS released FROM failure_receipts WHERE name=?").get(sample.name) as {capacity:number,released:number};expect(row).toEqual({capacity:sample.expectedTotalCapacity,released:sample.expectedTotalRelease});}
+  } finally { db.close(); }
+  await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",root)),"out/tree-sitter-rust.wasm")));
+  const tree=parser.parse(readFileSync(join(store,"🚪️io/🧬️schema/⚠️diagnostic/🦀️.rs"),"utf8"));
+  try {const visit=(n:Parser.SyntaxNode):Parser.SyntaxNode[]=>[n,...n.namedChildren.flatMap(visit)];const diagnostic=visit(tree.rootNode).find(n=>n.type==="struct_item"&&n.childForFieldName("name")?.text==="SchemaDecodeDiagnostic");expect(diagnostic?.text.includes("retained_progress:RetainedCloneProgress")).toBe(true);expect(diagnostic?.text.includes("refusal_kind:ValueRefusalKind")).toBe(true);expect(readFileSync(join(store,"🦀️.rs"),"utf8")).toContain("OwnedSchemaDecodeDiagnostic=schema_diagnostic::SchemaDecodeDiagnostic<OwnedSchemaPath>");} finally {tree.delete();}
+  console.log("[DEBUG] original failed field close retains all receipt axes; genuine Progress Ajv omissions and SQLite frame/release totals agree");
+});
+
+test("actual retained child owners use independently bounded physical currencies", async () => {
+ const child=join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation");
+ const law=JSON.parse(readFileSync(join(child,"🧫️fixtures/♻️child-currencies/🔣️.json"),"utf8"));
+ const contract=JSON.parse(readFileSync(join(root,"🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json"),"utf8"));
+ const grant={maximumItems:law.maximumItems,maximumCopyBytes:law.maximumCopyBytes,maximumCapacityBytes:law.maximumCapacityBytes,maximumReleaseBytes:law.maximumReleaseBytes,maximumDepth:law.maximumDepth};
+ const ajv=new Ajv({strict:true,allErrors:true});ajv.addSchema(contract);const valid=ajv.compile({$ref:contract.$id+"#/$defs/Grant"}),validProgress=ajv.compile({$ref:contract.$id+"#/$defs/Progress"});expect(valid(grant)).toBe(true);
+ for(const axis of Object.keys(grant)){const missing={...grant};delete missing[axis as keyof typeof grant];expect(valid(missing)).toBe(false);}
+ expect(valid({...grant,inferredGrant:8194})).toBe(false);
+ const db=new HistoryOutputDatabase(":memory:");try{
+  db.run("CREATE TABLE currencies(axis TEXT PRIMARY KEY,granted INTEGER NOT NULL,spent INTEGER NOT NULL,CHECK(spent<=granted))");
+  for(const [axis,granted] of [["items",1],["copy",4096],["capacity",0],["release",4096],["depth",64]] as const)db.run("INSERT INTO currencies VALUES(?,?,0)",[axis,granted]);
+  db.run("UPDATE currencies SET spent=4096 WHERE axis='copy'");expect(db.query("SELECT spent FROM currencies WHERE axis='release'").get()).toEqual({spent:0});
+  const observed=db.query("SELECT MAX(CASE WHEN axis='copy' THEN spent END) AS copiedBytes,MAX(CASE WHEN axis='capacity' THEN spent END) AS retainedCapacityBytes,MAX(CASE WHEN axis='release' THEN spent END) AS releasedBytes FROM currencies").get() as {copiedBytes:number;retainedCapacityBytes:number;releasedBytes:number};
+  const progress={copiedItems:1,...observed,complete:false};expect(validProgress(progress)).toBe(true);expect(progress).toEqual({copiedItems:1,copiedBytes:4096,retainedCapacityBytes:0,releasedBytes:0,complete:false});
+  for(const axis of Object.keys(progress)){const missing={...progress};delete missing[axis as keyof typeof progress];expect(validProgress(missing)).toBe(false);}
+  expect(()=>db.run("UPDATE currencies SET spent=1 WHERE axis='capacity'")).toThrow();
+ }finally{db.close();}
+ for(const path of ["🛫️encoder","🫙️owner","🪪️registry"]){const source=readFileSync(join(child,"🧩️child-operations",path,"🦀️.rs"),"utf8");expect(source).not.toContain("SnapshotRetirementStep");expect(source).toContain("RetainedCloneGrant");for(const demand of ["next_copy_byte_demand","next_capacity_byte_demand","next_release_byte_demand","next_depth_demand"])expect(source).toContain(demand);}
+ console.log("[DEBUG] all8 original child carriers retain independent fixed1/4096/0/4096/64 authority; genuine Grant/Progress Ajv payload projections and SQLite copy-versus-release denial agree; no trial contract or native runtime credit");
+});
+
+
+test("normal decoder release keeps the original independent job wallet on failure",async()=>{
+ const defining=join(store,"🚪️io/🚫️refusal/⏱️step");const law=JSON.parse(readFileSync(join(defining,"🧫️fixtures/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(join(defining,"🧬️schema/🔣️.json"),"utf8"));const valid=new Ajv({strict:true,allErrors:true}).compile(schema);expect(valid(law)).toBe(true);
+ for(const axis of law.deniedAxes){const bad={...law,grant:{...law.grant}};delete bad.grant[axis];expect(valid(bad)).toBe(false);}expect(valid({...law,grant:{...law.grant,inferred:64}})).toBe(false);
+ const db=new HistoryOutputDatabase(":memory:");try{db.run("CREATE TABLE receipt(items INTEGER,copy INTEGER,born INTEGER,freed INTEGER,CHECK(items<=65536 AND copy<=65536 AND born<=65536 AND freed<=65536))");db.run("INSERT INTO receipt VALUES(?,?,?,?)",[1,new TextEncoder().encode(law.source).length,law.birthBytes,law.beforeBytes]);expect(db.query("SELECT items AS copiedItems,copy AS copiedBytes,born AS retainedCapacityBytes,freed AS releasedBytes FROM receipt").get()).toEqual(law.receipt);expect(db.query("SELECT born-freed AS delta FROM receipt").get()).toEqual({delta:32});}finally{db.close();}
+ const tokens=await sourceTokens(join(store,"🦀️.rs"),"ArtifactEnvelopeDecodeAuthority::release_step");expect(containsTokens(tokens,["cx",".","retained_grant","(",")"])).toBe(true);expect(containsTokens(tokens,["cx",".","consume_retained","(","progress",")"])).toBe(true);expect(tokens.includes("artifact_retirement_self_grant")).toBe(false);expect(tokens.includes("record_close_grant")).toBe(false);
+ await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",root)),"out/tree-sitter-rust.wasm")));const tree=parser.parse(readFileSync(join(store,"🧪️tests/🔬️unit/🦀️.rs"),"utf8"));
+ try{const visit=(node:Parser.SyntaxNode):Parser.SyntaxNode[]=>[node,...node.namedChildren.flatMap(visit)];const functions=tree.rootNode.namedChildren.filter(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===law.nativeLaw);expect(functions.length).toBe(1);const original=functions[0]!;expect(original.hasError()).toBe(false);const errors=visit(tree.rootNode).filter(node=>node.type==="ERROR"||node.isMissing());for(const error of errors){expect(error.text).toBe("async");expect(error.endIndex<=original.startIndex||error.startIndex>=original.endIndex).toBe(true);}console.log("[DEBUG] original native-law subtree is syntax clean; unrelated original async-closure grammar qualifications "+JSON.stringify(errors.map(node=>({line:node.startPosition.row+1,column:node.startPosition.column+1}))));const native=rustTokens(original);expect(containsTokens(native,["job",".","step","(","&","mut","cx",")"])).toBe(true);expect(containsTokens(native,["cx",".","retained_progress","(",")"])).toBe(true);}finally{tree.delete();parser.delete();}
+ console.log("[DEBUG] strict five-axis caller policy and SQLite original copy23/birth64/release32 receipt agree; actual Store step uses the same original wallet even after child refusal");
 });

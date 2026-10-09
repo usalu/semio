@@ -1,6 +1,6 @@
 // 🗂️ One retained publication owner binds selected ordinals to its complete original child collection.
 use super::{paged_owner::PagedChildOwner,paged_encoder::{PagedChildGroups,PagedChildGroup}};
-use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,SnapshotRetirementStep,list::PagedList,retirement::allocation_return::ParentAllocationReturn};
+use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress,RetirementDemand,list::PagedList,retirement::allocation_return::ParentAllocationReturn};
 const CAPACITY:usize=isize::MAX as usize;
 fn invalid(detail:&'static str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,detail)}
 pub struct ChildGroupPublicationOwner{children:PagedList<PagedChildOwner,CAPACITY>,indices:PagedList<usize,CAPACITY>,next:usize,complete:bool,closing:bool}
@@ -27,14 +27,21 @@ impl ChildGroupPublicationOwner{
         if let Some(index)=self.children.len().checked_sub(1){let child=self.children.get_mut(index).unwrap();if !child.terminal_is_empty(){return child.return_one(parent,1,maximum_bytes)}self.children.pop();return Ok(PagedListReturnProgress{progressed:true,returned_allocation_bytes:0})}if !self.children.terminal_is_empty(){return self.children.return_empty_page(parent,1)}Ok(PagedListReturnProgress::default())
     }
 }
+impl ChildGroupPublicationOwner{
+ fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.indices.is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<usize>(),depth:1,..Default::default()})}if !self.indices.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:self.indices.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}if let Some(child)=self.children.len().checked_sub(1).and_then(|index|self.children.get(index)){return if child.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<PagedChildOwner>(),depth:1,..Default::default()})}else{super::paged_owner::child_demands(child,copy)}}if !self.children.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:self.children.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}Ok(Default::default())}
+}
 impl ErasedSnapshotRetirement for ChildGroupPublicationOwner{
-    fn close_step(&mut self,items:usize,bytes:usize)->Result<SnapshotRetirementStep,ValueError>{
-        if items==0||bytes==0{return Ok(SnapshotRetirementStep::Pending{released_items:0,released_bytes:0})}self.closing=true;
-        if self.indices.pop().is_some(){return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:0})}if !self.indices.terminal_is_empty(){let step=self.indices.release_empty_page(bytes).map_err(ValueError::from)?;return Ok(SnapshotRetirementStep::Pending{released_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes})}
-        if let Some(index)=self.children.len().checked_sub(1){let child=self.children.get_mut(index).unwrap();if !child.terminal_is_empty(){return child.close_step(1,bytes)}self.children.pop();return Ok(SnapshotRetirementStep::Pending{released_items:1,released_bytes:0})}if !self.children.terminal_is_empty(){let step=self.children.release_empty_page(bytes).map_err(ValueError::from)?;return Ok(SnapshotRetirementStep::Pending{released_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes})}Ok(SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self)->bool{self.indices.terminal_is_empty()&&self.children.terminal_is_empty()}
-    fn next_close_byte_demand(&self)->usize{if !self.indices.is_empty(){return 1}if !self.indices.terminal_is_empty(){return self.indices.next_release_allocation_bytes().unwrap_or(1)}if let Some(child)=self.children.get(self.children.len().saturating_sub(1)){return child.next_close_byte_demand().max(1)}if !self.children.terminal_is_empty(){return self.children.next_release_allocation_bytes().unwrap_or(1)}0}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}self.closing=true;
+  if self.indices.pop().is_some(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}if !self.indices.terminal_is_empty(){let step=self.indices.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
+  if let Some(index)=self.children.len().checked_sub(1){let child=self.children.get_mut(index).unwrap();if !child.terminal_is_empty(){return super::paged_owner::close_child(child,grant)}self.children.pop();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let step=self.children.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))
+ }
+ fn terminal_is_empty(&self)->bool{self.indices.terminal_is_empty()&&self.children.terminal_is_empty()}
+
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
+ fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.demands(copy)?.capacity_bytes)}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
+
 }
 pub struct SelectedChildGroupSources<'a>{owner:&'a ChildGroupPublicationOwner}
 impl PagedChildGroups for SelectedChildGroupSources<'_>{fn len(&self)->usize{self.owner.indices.len()}fn group(&self,index:usize)->Option<PagedChildGroup<'_>>{let ordinal=*self.owner.indices.get(index)?;self.owner.children.get(ordinal)?.view().ok()}}

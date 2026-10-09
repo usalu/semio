@@ -1,0 +1,16 @@
+{
+  "type": "node-terminal",
+  "name": "📸️ Remodeling · Physical Table Order Source Law",
+  "request": "launch",
+  "command": "bun nx exec --projects=@semio-tech/remodel-remodeling-rs --excludeTaskDependencies -- bun test \"${workspaceFolder}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts\" -t \"restores independently reordered physical tables\"",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_DAEMON": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "NX_CACHE_PROJECT_GRAPH": "false"
+  },
+  "presentation": {
+    "group": "🪶️ Snapshot SQLite",
+    "order": 206.1925
+  }
+}

@@ -26,6 +26,10 @@ pub use owned_projection::RetainedOwnedProjection;
 #[path = "🔗️source/🧪️tests/🔬️unit/🦀️.rs"]
 mod source_custody_tests;
 
+#[cfg(test)]
+#[path = "🌐️wire/🧪️tests/🔬️unit/🦀️.rs"]
+mod wire_tests;
+
 static RETAINED_CLONE_SOURCE_IDS: AtomicU64 = AtomicU64::new(1);
 
 #[path = "🔗️source/🦀️.rs"]
@@ -132,7 +136,8 @@ impl FixtureBorrowAuthority{pub(crate) fn borrow<'source,T:?Sized>(&'source self
 #[cfg(test)]
 impl RetainedCloneBorrowAuthority{pub(crate) fn new<A:RetireOwned>(authority:A)->FixtureBorrowAuthority{FixtureBorrowAuthority(RetainedCloneSource::fixture_from_authority(Arc::new(()),authority))}}
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RetainedCloneGrant {
     pub maximum_items: usize,
     /// 🧮️ Bounds payload copying within one clone turn.
@@ -142,6 +147,47 @@ pub struct RetainedCloneGrant {
     pub maximum_release_bytes: usize,
     pub maximum_depth: usize,
 }
+
+/// 🌐️ The canonical five-axis wire schema consumed by first-party schema registries.
+pub const RETAINED_CLONE_GRANT_SCHEMA: &str = include_str!("🌐️wire/🧬️schema/🔣️.json");
+
+impl RetainedCloneGrant {
+    fn wire_fields(self)->[(&'static str,usize);5]{[("maximumItems",self.maximum_items),("maximumCopyBytes",self.maximum_copy_bytes),("maximumCapacityBytes",self.maximum_capacity_bytes),("maximumReleaseBytes",self.maximum_release_bytes),("maximumDepth",self.maximum_depth)]}
+}
+impl crate::ToValue for RetainedCloneGrant {
+    fn to_value(&self)->crate::DslValue{
+        let fields=self.wire_fields();let bytes=5*std::mem::size_of::<(String,crate::DslValue)>()+fields.iter().map(|(name,_)|name.len()).sum::<usize>();
+        let mut accepted=|_|true;self.to_value_controlled(&mut crate::NativeEncodeControl::new(bytes,&mut accepted)).expect("fixed canonical grant encoding")
+    }
+    fn to_value_controlled(&self,control:&mut crate::NativeEncodeControl<'_>)->Result<crate::DslValue,crate::ValueError>{
+        control.scoped_stage(|control|{control.begin_stage(5)?;
+        control.checkpoint()?;let mut entries=control.allocate_vec(5)?;
+        for(name,value)in self.wire_fields(){entries.push((control.copy_text(name)?,crate::DslValue::Number(crate::Number::UInt(u64::try_from(value).map_err(|_|crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical grant exceeds unsigned wire range"))?))));control.step()?;}
+        Ok(crate::DslValue::Object(entries))
+            })
+    }
+}
+impl crate::FromValue for RetainedCloneGrant {
+    fn from_value(value:crate::DslValue)->Result<Self,crate::ValueError>{
+        let mut accepted=|_|true;Self::from_value_controlled(&value,&mut crate::NativeDecodeControl::new(0,&mut accepted))
+    }
+    fn from_value_controlled(value:&crate::DslValue,control:&mut crate::NativeDecodeControl<'_>)->Result<Self,crate::ValueError>{
+        control.scoped_stage(|control|{control.begin_stage(5)?;
+        control.checkpoint()?;
+        let crate::DslValue::Object(entries)=value else{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical retained grant requires an object"));};
+        let names=Self::default().wire_fields().map(|(name,_)|name);let mut fields=[None;5];
+        for(name,value)in entries{
+            let index=names.iter().position(|expected|*expected==name).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical retained grant has an unknown axis"))?;
+            if fields[index].is_some(){return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical retained grant repeats an axis"));}
+            let crate::DslValue::Number(crate::Number::UInt(value))=value else{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical retained grant requires unsigned axes"));};
+            fields[index]=Some(usize::try_from(*value).map_err(|_|crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"canonical retained grant exceeds this address space"))?);control.step()?;
+        }
+        let [Some(maximum_items),Some(maximum_copy_bytes),Some(maximum_capacity_bytes),Some(maximum_release_bytes),Some(maximum_depth)]=fields else{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical retained grant is missing an axis"));};
+        Ok(Self {maximum_items,maximum_copy_bytes,maximum_capacity_bytes,maximum_release_bytes,maximum_depth})
+            })
+    }
+}
+crate::artifact_retire_leaf!(RetainedCloneGrant);
 
 impl RetainedCloneGrant {
     /// 🎟️ Admits one structural allocation while reserving no payload-copy credit.
@@ -171,7 +217,8 @@ impl RetainedCloneBirthDemand {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RetainedCloneProgress {
     pub copied_items: usize,
     pub copied_bytes: usize,
@@ -179,13 +226,53 @@ pub struct RetainedCloneProgress {
     pub released_bytes: usize,
 }
 
+/// 🧾️ Canonical cumulative physical receipt, independent of the per-turn grant.
+pub const RETAINED_CLONE_PROGRESS_SCHEMA:&str=include_str!("🌐️wire/🧬️schema/🧾️progress.json");
+impl RetainedCloneProgress {
+    fn wire_fields(self)->[(&'static str,usize);4]{[("copiedItems",self.copied_items),("copiedBytes",self.copied_bytes),("retainedCapacityBytes",self.retained_capacity_bytes),("releasedBytes",self.released_bytes)]}
+}
+impl crate::ToValue for RetainedCloneProgress {
+    fn to_value(&self)->crate::DslValue{
+        let fields=self.wire_fields();let bytes=4*std::mem::size_of::<(String,crate::DslValue)>()+fields.iter().map(|(name,_)|name.len()).sum::<usize>();
+        let mut accepted=|_|true;self.to_value_controlled(&mut crate::NativeEncodeControl::new(bytes,&mut accepted)).expect("fixed canonical progress encoding")
+    }
+    fn to_value_controlled(&self,control:&mut crate::NativeEncodeControl<'_>)->Result<crate::DslValue,crate::ValueError>{
+        control.scoped_stage(|control|{control.begin_stage(4)?;
+        control.checkpoint()?;let mut entries=control.allocate_vec(4)?;
+        for(name,value)in self.wire_fields(){entries.push((control.copy_text(name)?,crate::DslValue::Number(crate::Number::UInt(u64::try_from(value).map_err(|_|crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical progress exceeds unsigned wire range"))?))));control.step()?;}
+        Ok(crate::DslValue::Object(entries))
+            })
+    }
+}
+impl crate::FromValue for RetainedCloneProgress {
+    fn from_value(value:crate::DslValue)->Result<Self,crate::ValueError>{
+        let mut accepted=|_|true;Self::from_value_controlled(&value,&mut crate::NativeDecodeControl::new(0,&mut accepted))
+    }
+    fn from_value_controlled(value:&crate::DslValue,control:&mut crate::NativeDecodeControl<'_>)->Result<Self,crate::ValueError>{
+        control.scoped_stage(|control|{control.begin_stage(4)?;
+        control.checkpoint()?;
+        let crate::DslValue::Object(entries)=value else{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical retained progress requires an object"));};
+        let names=Self::default().wire_fields().map(|(name,_)|name);let mut fields=[None;4];
+        for(name,value)in entries{
+            let index=names.iter().position(|expected|*expected==name).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical retained progress has an unknown axis"))?;
+            if fields[index].is_some(){return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical retained progress repeats an axis"));}
+            let crate::DslValue::Number(crate::Number::UInt(value))=value else{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical retained progress requires unsigned axes"));};
+            fields[index]=Some(usize::try_from(*value).map_err(|_|crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"canonical retained progress exceeds this address space"))?);control.step()?;
+        }
+        let [Some(copied_items),Some(copied_bytes),Some(retained_capacity_bytes),Some(released_bytes)]=fields else{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"canonical retained progress is missing an axis"));};
+        Ok(Self {copied_items,copied_bytes,retained_capacity_bytes,released_bytes})
+            })
+    }
+}
+crate::artifact_retire_leaf!(RetainedCloneProgress);
+
 impl RetainedCloneProgress {
     pub fn checked_add(self, other: Self) -> Result<Self, crate::ValueError> {
         Ok(Self {
-            copied_items: self.copied_items.checked_add(other.copied_items).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "retained clone item progress overflow"))?,
-            copied_bytes: self.copied_bytes.checked_add(other.copied_bytes).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "retained clone byte progress overflow"))?,
-            released_bytes: self.released_bytes.checked_add(other.released_bytes).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "retained clone release progress overflow"))?,
-            retained_capacity_bytes: self.retained_capacity_bytes.checked_add(other.retained_capacity_bytes).ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained clone capacity progress overflow"))?,
+            copied_items: self.copied_items.checked_add(other.copied_items).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit, "retained clone item progress overflow"))?,
+            copied_bytes: self.copied_bytes.checked_add(other.copied_bytes).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit, "retained clone byte progress overflow"))?,
+            released_bytes: self.released_bytes.checked_add(other.released_bytes).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit, "retained clone release progress overflow"))?,
+            retained_capacity_bytes: self.retained_capacity_bytes.checked_add(other.retained_capacity_bytes).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "retained clone capacity progress overflow"))?,
         })
     }
 
@@ -194,15 +281,15 @@ impl RetainedCloneProgress {
     }
 }
 
-pub fn admit_retained_clone_progress(grant: RetainedCloneGrant, progress: RetainedCloneProgress, scope: &str) -> Result<RetainedCloneProgress, crate::ValueError> {
-    if progress.fits(grant) { Ok(progress) } else { Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!("{scope} exceeded its retained clone item, copy, capacity, or release grant"))) }
+pub fn admit_retained_clone_progress(grant: RetainedCloneGrant, progress: RetainedCloneProgress, _scope: &str) -> Result<RetainedCloneProgress, crate::ValueError> {
+    if progress.fits(grant) { Ok(progress) } else { Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "original retained turn exceeded its item, copy, capacity, or release grant").with_retained_progress(progress)) }
 }
 
 /// 🛡️ Checks both granted closure work and the child's exact terminal ownership witness.
 pub fn admit_retained_clone_close(grant: RetainedCloneGrant, step: RetainedCloneStep, terminal: bool, scope: &str) -> Result<RetainedCloneStep, crate::ValueError> {
     admit_retained_clone_progress(grant, step.progress(), scope)?;
     if matches!(step, RetainedCloneStep::Complete(_)) && !terminal {
-        return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, format!("{scope} completed with retained owners")));
+        return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "original retained turn completed with retained owners").with_retained_progress(step.progress()));
     }
     Ok(step)
 }

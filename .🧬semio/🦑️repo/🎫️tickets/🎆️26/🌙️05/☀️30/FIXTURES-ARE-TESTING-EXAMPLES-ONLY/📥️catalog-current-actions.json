@@ -1,0 +1,14 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+    "beforeSha256": "d5db0f53ed0b6946f8904f8c1d0dff67c77a5b429663e6665fc5e125dcb74299",
+    "action": "regenerate through original registered Nx route from current original schema inventory",
+    "afterSha256": "a94fbce044284a209d5ecc45fb8a4624b8e274432a69a4c54052d861c70937aa"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
+    "beforeSha256": "b5deaf70e1813bd1310abbaf847d416d7230be3dc6cf9c281d2b8837bcd90497",
+    "action": "regenerate through original registered Nx route from current original schema inventory",
+    "afterSha256": "6d4f3b4a9bce5cefe814360b247f6198a8549e26f55189be664de6050a40e3a8"
+  }
+]

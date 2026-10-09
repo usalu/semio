@@ -39,6 +39,7 @@ impl<P, M> BoundedTransientPreparation<P, M> {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct BoundedTransientPreparationFactory<P, M>(std::marker::PhantomData<fn() -> (P, M)>);
 
 impl<P, M> Default for BoundedTransientPreparationFactory<P, M> {
@@ -329,82 +330,58 @@ where
 
 pub struct TransientStoreDisposer<P, M> {
     retirement: Option<store::TransientStoreRetirement<P>>,
-    terminal_root: Option<Weak<P>>,
-    terminal_generation: u64,
-    factory: Arc<dyn store::ArtifactOwnedValueRetirementFactory<P>>,
+    factory: Option<Arc<dyn store::ArtifactOwnedValueRetirementFactory<P>>>,
+    factory_close: Option<semio_framework_value::FactoryAuthority>,
+    closing: bool,
     marker: std::marker::PhantomData<fn() -> M>,
 }
 
 impl<P, M> TransientStoreDisposer<P, M> {
     pub fn new(factory: Arc<dyn store::ArtifactOwnedValueRetirementFactory<P>>) -> Self {
-        Self { retirement: None, terminal_root: None, terminal_generation: 0, factory, marker: std::marker::PhantomData }
-    }
-}
-
-impl<P, M> TransientStoreDisposer<P, M>
-where
-    P: Clone + Default,
-    M: protocol::Mutation<P>,
-{
-    fn owns_terminal(&self, owner: &store::TransientStore<P, M>) -> bool {
-        owner.generation_now() == self.terminal_generation && self.terminal_root.as_ref().is_some_and(|root| owner.current_matches(root))
+        Self { retirement: None, factory: Some(factory), factory_close: None, closing: false, marker: std::marker::PhantomData }
     }
 }
 
 impl<P, M> ArtifactOwnedDisposer<store::TransientStore<P, M>> for TransientStoreDisposer<P, M>
-where
-    P: Clone + Default + Send + Sync + 'static,
-    M: protocol::Mutation<P> + Send + 'static,
-{
-    /// 🧹️ The retained transient's own retirement gets the caller's WHOLE grant: the close ladder
-    /// prices a step per axis, and clamping it to one item here is what made a mesh-scale transient
-    /// answer an empty receipt — eight of those in a row and the structural accountant kills the
-    /// close with `plugin.internal.zero-progress` (ticket 26/09/09).
+where P: Clone + Default + Send + Sync + 'static, M: protocol::Mutation<P> + Send + 'static {
     fn close_step(&mut self, owner: &mut store::TransientStore<P, M>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        if self.terminal_is_empty(owner) { return Ok(PluginLifecycleStep::Complete(Default::default())); }
         let demand = self.retirement_demands(owner, grant.maximum_copy_bytes).map_err(|error| Fault::from(error.into_message()))?;
-        if self.retirement.is_none() && self.terminal_root.is_some() {
-            return self.owns_terminal(owner).then(|| PluginLifecycleStep::Complete(Default::default())).ok_or_else(|| Fault::from("transient terminal owner or generation changed"));
-        }
-        if grant.maximum_depth < demand.depth {
-            return Err(Fault::from("transient disposal exceeds admitted depth"));
-        }
-        if yields(grant, demand) {
-            return Ok(PluginLifecycleStep::Progress(Default::default()));
-        }
-        let Some(retirement) = self.retirement.as_mut() else {
-            self.retirement = Some(owner.begin_retirement(P::default(), self.factory.clone()));
-            self.terminal_root = Some(owner.current_weak());
-            self.terminal_generation = owner.generation_now();
+        depth_refusal(grant, demand, "transient disposal exceeds admitted depth").map_err(|error| Fault::from(error.into_message()))?;
+        if yields(grant, demand) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
+        if !self.closing {
+            self.retirement = Some(owner.begin_close_retirement(self.factory.as_ref().expect("original transient issuer remains").clone()));
+            self.closing = true;
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
-        };
-        if retirement.terminal_is_empty() {
-            self.retirement = None;
-            let progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-            return Ok(if self.owns_terminal(owner) { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) });
         }
-        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = retirement.close_step(child).map_err(|error| Fault::from(error.into_message()))?;
-        let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, retirement.terminal_is_empty(), "transient store retirement").map_err(|error| Fault::from(error.into_message()))?;
-        if retirement.terminal_is_empty() {
-            self.retirement = None;
+        if let Some(retirement) = self.retirement.as_mut() {
+            let step = retirement.close_step(grant).map_err(|error| Fault::from(error.into_message()))?;
+            let step = semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, retirement.terminal_is_empty(), "original transient store retirement").map_err(|error| Fault::from(error.into_message()))?;
+            if retirement.terminal_is_empty() { self.retirement = None; }
+            return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
-        Ok(PluginLifecycleStep::retained(step, self.retirement.is_none() && self.owns_terminal(owner)))
+        if let Some(factory) = self.factory.take() {
+            let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
+            self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory));
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
+        }
+        let factory = self.factory_close.as_mut().expect("original transient issuer close remains");
+        let step = factory.step(grant).map_err(|error| Fault::from(error.into_message()))?;
+        let step = semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, factory.terminal_is_empty(), "original transient disposer issuer").map_err(|error| Fault::from(error.into_message()))?;
+        if factory.terminal_is_empty() { self.factory_close = None; }
+        Ok(PluginLifecycleStep::retained(step, self.terminal_is_empty(owner)))
     }
 
-    fn retirement_demands(&self, _owner: &store::TransientStore<P, M>, body: usize) -> Result<RetirementDemand, ValueError> {
-        if let Some(retirement) = self.retirement.as_ref() {
-            if retirement.terminal_is_empty() {
-                return Ok(RetirementDemand { depth: 1, ..Default::default() });
-            }
-            let mut demand = retirement.retirement_demands(body)?;
-            demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "transient disposal depth overflow"))?;
-            return Ok(demand);
-        }
-        Ok(if self.terminal_root.is_none() { RetirementDemand { copy_bytes: std::mem::size_of::<store::TransientStoreRetirement<P>>(), depth: 1, ..Default::default() } } else { Default::default() })
+    fn retirement_demands(&self, owner: &store::TransientStore<P, M>, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.terminal_is_empty(owner) { return Ok(Default::default()); }
+        if !self.closing { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<store::TransientStoreRetirement<P>>(), depth: 1, ..Default::default() }); }
+        if let Some(retirement) = self.retirement.as_ref() { return retirement.retirement_demands(body); }
+        if self.factory.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        self.factory_close.as_ref().map_or(Ok(Default::default()), |factory| factory.demands(body))
     }
 
     fn terminal_is_empty(&self, owner: &store::TransientStore<P, M>) -> bool {
-        self.retirement.is_none() && self.owns_terminal(owner)
+        self.closing && owner.close_terminal_is_empty() && self.retirement.is_none() && self.factory.is_none() && self.factory_close.is_none()
     }
 }
 

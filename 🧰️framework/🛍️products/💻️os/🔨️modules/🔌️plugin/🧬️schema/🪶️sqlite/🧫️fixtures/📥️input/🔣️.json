@@ -1,0 +1,23 @@
+{
+  "input": {
+    "payload": "snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-"
+  },
+  "cancelAfterCompleted": 256,
+  "partialPrefix": "{\"payload\":\"",
+  "deniedReleaseBytes": 0,
+  "nativeMaximumBytes": 65536,
+  "canonical": "{\"payload\":\"snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-snapshot-\"}",
+  "capacityBytes": 590,
+  "fuel": {
+    "originalCeiling": 64,
+    "origin": 7,
+    "completedOperations": [
+      5,
+      11
+    ],
+    "pendingConsumed": 13,
+    "requestedTurn": 20,
+    "remaining": 28,
+    "admittedTurn": 20
+  }
+}

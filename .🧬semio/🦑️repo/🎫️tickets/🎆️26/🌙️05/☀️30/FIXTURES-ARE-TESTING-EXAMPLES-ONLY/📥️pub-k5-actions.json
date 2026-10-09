@@ -1,0 +1,90 @@
+{
+  "red": "🗑️generated/k5-diagnostics.json",
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📢️publication/🔁️transfer/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "562a2afbdf0b23e7adff4a00d42935933ddd2ad78b7eba905bee8619b735bc76",
+      "beforeBytes": 8010,
+      "afterSha256": "6ccacc7352caa17d63b80533b5c673b9341e1e0a2b9136a35efd087b7b00c7a4",
+      "afterBytes": 8762,
+      "logicalBlock": "assigned actual test consumer or independent plain grant policy; preserve unrelated peer bytes"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧬️retained-clone/🦀️.rs",
+      "beforeSha256": "39de869dbf290999ba249e5656948d519fad0072832f224b23cc11e540d42166",
+      "beforeBytes": 25546,
+      "afterSha256": "bc93cdfd83127a138754778c12fec17440995944528c8ee91b9a0519b55501b6",
+      "afterBytes": 28770,
+      "logicalBlock": "assigned actual test consumer or independent plain grant policy; preserve unrelated peer bytes"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧬️owned-schema-record/🦀️.rs",
+      "beforeSha256": "4d78993cee75c97b45f867ba3d4afda60a23f67020ab162b7cf5d8dd82e2caef",
+      "beforeBytes": 8413,
+      "afterSha256": "24a74d28a80eef7a4364db8a605464e62762679034a849541a2dda165f6bd4f2",
+      "afterBytes": 9131,
+      "logicalBlock": "assigned actual test consumer or independent plain grant policy; preserve unrelated peer bytes"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📢️publication/🔁️transfer/🧫️fixtures/🔣️.json",
+      "beforeSha256": "6e5e50edbdfc7d1276ce7674c73c2639bcbdad5c0a2742ee43cbf2f7b72c525e",
+      "beforeBytes": 820,
+      "afterSha256": "b28a91b0a99384526076dac67bd763e2052635d4870926206ab2ffa2c2779eda",
+      "afterBytes": 1402,
+      "logicalBlock": "assigned actual test consumer or independent plain grant policy; preserve unrelated peer bytes"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧬️owned-schema-record/🔣️.json",
+      "beforeSha256": "5372c7cf90be588f5394ce0d326e4fed0e3b5697cbe77c410418811b07ba2d50",
+      "beforeBytes": 4748,
+      "afterSha256": "03011d9a2cb2e010bf15e1db6583de290f6940bbd5f6af451799d9305868a7ee",
+      "afterBytes": 5931,
+      "logicalBlock": "assigned actual test consumer or independent plain grant policy; preserve unrelated peer bytes"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/📦️nested/🔣️.json",
+      "beforeSha256": "0a55059cb3f93b021a34a8f403ba7fd5f340bdaa92284e40ede9c257413ac19f",
+      "beforeBytes": 1144,
+      "afterSha256": "e820fd80979d95074463cecb0844ad5e92035506baffca8e4fc546e95ca5c2f9",
+      "afterBytes": 1631,
+      "logicalBlock": "assigned actual test consumer or independent plain grant policy; preserve unrelated peer bytes"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "d2dd21b4a281b608ba962b55a2f28863093eb2795c8925e87b8de46a8ff6d1e9",
+      "beforeBytes": 4060,
+      "afterSha256": "bdc3c8fbdb818b3a3c3775fbad2a922cc8c2efdb127169e9a65ba887984bffea",
+      "afterBytes": 7188,
+      "logicalBlock": "assigned actual test consumer or independent plain grant policy; preserve unrelated peer bytes"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "4c8cd3f9b511917e2c323217a464d891fc0cb11e750476672303ef24c7cc72e0",
+      "beforeBlockSha256": "1f3d468fb37ac94ed58ed11966c7387d1e116b4832282599305707b344aa1902",
+      "logicalBlock": "drive_owned_schema only; other Unit peer bytes preserved",
+      "afterSha256": "06eefbcde37b24ebb9cbdaf63847c9ce507f2b494665f1de10f3c4da2f813a27",
+      "afterBytes": 918160
+    }
+  ],
+  "sourceOnlyReceipts": {
+    "red": {
+      "session": 20704,
+      "nxExit": 1,
+      "tests": "4 pass/1 fail",
+      "log": "🗑️generated/pk5-red.log"
+    },
+    "qualifiedIntermediateFailure": {
+      "session": 9849,
+      "nxExit": 1,
+      "reason": "new source predicate wrongly classified genuine BoundedOrdGrant work currency; narrowed to ArtifactStoreOneItemGrant"
+    },
+    "green": {
+      "session": 88582,
+      "nxExit": 0,
+      "tests": "5 pass/0 fail",
+      "log": "🗑️generated/pk5-settled.log"
+    },
+    "native": "UNRUN; original member filter is compiler checkpoint and does not select these non-member laws"
+  },
+  "observedAt": "2026-10-09T12:12:02.004348+00:00"
+}

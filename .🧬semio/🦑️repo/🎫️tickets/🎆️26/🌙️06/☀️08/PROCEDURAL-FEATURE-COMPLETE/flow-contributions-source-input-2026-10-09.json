@@ -1,0 +1,68 @@
+{
+  "portableGreenSession": 40614,
+  "cases": 9,
+  "assertions": 76,
+  "schema": "strict Ajv",
+  "reference": "SQLite named axes",
+  "scope": "source receiving and custody census only",
+  "syntaxSession": 61033,
+  "syntaxOwners": 3,
+  "nativeLawsExecuted": false,
+  "rootNativeSession": 1492,
+  "sources": [
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "02aed514fb8fdc3584e15b02b71589d7676b08c1cb4691dabbcb575a03cf0581",
+      "characters": 114,
+      "windowsCodeUnits": 122
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🎟️contributions/🔣️.json",
+      "sha256": "5afe58ba9ecaa8d27f69b49387ce1c12df16b30cd7e73c09a3e51f1c75427711",
+      "characters": 143,
+      "windowsCodeUnits": 153
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧬️schema/🎟️contributions/🔣️.json",
+      "sha256": "d8c317b5c42129f37cf0c834f8e8e81c31d4009f0e8f49d7069107c998c806a9",
+      "characters": 141,
+      "windowsCodeUnits": 151
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎟️contributions/🟦️.ts",
+      "sha256": "73bd0db9503e62c667c37b0de66b9e7a41e7e1634695fca54c382f240915d047",
+      "characters": 138,
+      "windowsCodeUnits": 148
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎟️contributions/🦀️.rs",
+      "sha256": "84885601b0bb624255c79cced59341c700f5511475aaa3b3c9070be4b6fa14f1",
+      "characters": 138,
+      "windowsCodeUnits": 148
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "4d90b2a5ade532558ccc818587af259a8e62cc2e8a52cccc3c72d63762959775",
+      "characters": 97,
+      "windowsCodeUnits": 104
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "7d7aa918d5d38f38160046ba9f7f853b6c3b531a1edb4a2a7c1ce12b0cc03878",
+      "characters": 100,
+      "windowsCodeUnits": 107
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "92a1156b6c378657071ddc4a0559fc33de941ec5503b3ca1a6e4d540c650f8e3",
+      "characters": 47,
+      "windowsCodeUnits": 47
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "sha256": "f39943893a8bfbafda242279f74f493d57297de3897ef46256752381b72db103",
+      "characters": 55,
+      "windowsCodeUnits": 56
+    }
+  ]
+}

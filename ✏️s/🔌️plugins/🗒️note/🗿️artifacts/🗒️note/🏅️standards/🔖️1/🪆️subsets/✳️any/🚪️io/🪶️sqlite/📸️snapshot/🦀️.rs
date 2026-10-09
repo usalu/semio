@@ -110,12 +110,12 @@ fn encoding_rows(snapshot:&NoteSnapshot,maximum:usize,control:&mut semio_framewo
 }
 
 impl store::ArtifactSqliteSnapshot for NoteSnapshot {
-    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>)->Result<store::io_schema::IoPayload,ValueError>{
+    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
         let mut forecast=Projection::forecast(control)?;self.write_sqlite_rows(&mut forecast)?;forecast.finish_forecast()?;
         let maximum=control.limits().max_rows;
-        store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|{encoding_rows(self,maximum,native)?;self.__dsl_to_record_controlled(native)},control)
+        store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|{encoding_rows(self,maximum,native)?;self.__dsl_to_record_controlled(native)},control,native_owner)
     }
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>)->Result<Self,ValueError>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|Self::__dsl_from_record_controlled(record,native),control)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
     fn retire_sqlite_snapshot(mut self){let mut pending=std::mem::take(&mut self.blocks);while let Some(block)=pending.pop(){if let NoteBlockNode::Group{mut children,..}=block{pending.append(&mut children);}}}
     fn preflight_sqlite_snapshot_encoding(&self, _: sqlite_snapshot::SnapshotEncoding, control: &mut Control<'_>) -> Result<(),ValueError> {
         control.checkpoint(Phase::EncodeNative, 0, 0)?;

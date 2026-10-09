@@ -238,7 +238,7 @@ impl ComposedParentSnapshotDecodeAuthority {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -262,7 +262,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot> for C
         }
         let path = self.path;
         let ComposedParentSnapshotDecodeState::Decode(authority) = &mut self.state else {
-            return Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.snapshot-pack-token-replayed", offset: token.start, line: 0, column: 0, path });
+            return Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.snapshot-pack-token-replayed", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
         };
         match authority.step(source, cx) {
             store::OwnedSchemaHexStep::Pending => Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
@@ -273,14 +273,14 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot> for C
                     line: 0,
                     column: 0,
                     path,
-                })?;
+                 refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
                 let value = <ComposedParentSnapshot as ArtifactPack>::decode_pack(bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic {
                     code: "composed-parent-envelope.snapshot-pack-malformed",
                     offset: token.start,
                     line: 0,
                     column: 0,
                     path,
-                })?;
+                 refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
                 assert!(authority.release(), "completed composed-parent snapshot pack releases its retained bytes exactly once");
                 *self.value = Some(value);
                 self.state = ComposedParentSnapshotDecodeState::Ready;
@@ -344,7 +344,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot> for C
             line: 0,
             column: 0,
             path,
-        })? {
+         refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })? {
             store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
                 drop(self.retirement.take());
                 self.state = ComposedParentSnapshotDecodeState::Complete;
@@ -380,7 +380,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<RecursiveFixtureMutation> for
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-mutation-not-admitted", offset: token.start, line: 0, column: 0, path: self.path })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-mutation-not-admitted", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn publish_reserved(
@@ -389,7 +389,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<RecursiveFixtureMutation> for
         _reservation: store::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-mutation-not-admitted", offset: 0, line: 0, column: 0, path: self.path })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-mutation-not-admitted", offset: 0, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
@@ -413,7 +413,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for ComposedParentRejectedField
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: self.path })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
@@ -725,38 +725,40 @@ impl store::MemberSnapshotOpenOperation for RecursiveBranchSnapshotOpen {
         })
     }
 
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> store::MemberSnapshotOpenStep {
+    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> store::MemberSnapshotOpenStep {
         if let Some(diagnostic) = self.diagnostic {
             return store::MemberSnapshotOpenStep::Rejected(diagnostic);
         }
         if self.terminal {
             return store::MemberSnapshotOpenStep::Rejected(store::MemberOpenDiagnostic::Stale);
         }
+        if let Err(diagnostic) = self.request.as_ref().expect("recursive snapshot retains request").check_step_authority(cx) { return self.reject(diagnostic); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || cx.should_yield() { return store::MemberSnapshotOpenStep::Pending(store::MemberSnapshotOpenProgress { opening: store::MemberOpenProgress { phase: store::MemberOpenPhase::Snapshot, completed: self.input.len() as u64, total: self.expected_bytes.unwrap_or(0) as u64 }, retained_progress: Default::default() }); }
         let frame = match self.request.as_mut().expect("recursive snapshot retains request").step_input(cx) {
             store::MemberOpenInputStep::Framed(frame) => frame,
-            store::MemberOpenInputStep::Pending(progress) => return store::MemberSnapshotOpenStep::Pending(progress),
+            store::MemberOpenInputStep::Pending(progress) => return store::MemberSnapshotOpenStep::Pending(store::MemberSnapshotOpenProgress { opening: progress, retained_progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } }),
             store::MemberOpenInputStep::Rejected(diagnostic) => return self.reject(diagnostic),
         };
         let expected_bytes = frame.snapshot_range().1;
         if self.expected_bytes.is_none() {
-            if self.input.try_reserve_exact(expected_bytes).is_err() {
-                return self.reject(store::MemberOpenDiagnostic::Capacity);
-            }
-            self.expected_bytes = Some(expected_bytes);
+            let mut retained = None;
+            let result = store::admit_member_input_buffer(&mut retained, expected_bytes, grant);
+            if let Some(input) = retained { self.input = input; self.expected_bytes = Some(expected_bytes); }
+            return match result {
+                Ok(progress) => { let progress = progress.unwrap_or_default(); cx.consume_fuel(progress.copied_items as u64); store::MemberSnapshotOpenStep::Pending(store::MemberSnapshotOpenProgress { opening: store::MemberOpenProgress { phase: store::MemberOpenPhase::Snapshot, completed: 0, total: expected_bytes as u64 }, retained_progress: progress }) }
+                Err(_) => self.reject(store::MemberOpenDiagnostic::Capacity),
+            };
         }
         if self.input.len() < expected_bytes {
             let mut chunk = [0u8; 256];
-            let maximum = chunk.len().min(expected_bytes - self.input.len());
+            let maximum = chunk.len().min(expected_bytes - self.input.len()).min(grant.maximum_copy_bytes / 2).min(usize::try_from(cx.fuel_remaining() / 2).unwrap_or(usize::MAX));
             let copied = match self.request.as_ref().expect("recursive snapshot retains request").copy_snapshot_chunk(self.input.len(), &mut chunk[..maximum], cx) {
                 Ok(copied) => copied,
                 Err(diagnostic) => return self.reject(diagnostic),
             };
             self.input.extend_from_slice(&chunk[..copied]);
-            return store::MemberSnapshotOpenStep::Pending(store::MemberOpenProgress {
-                phase: store::MemberOpenPhase::Snapshot,
-                completed: self.input.len() as u64,
-                total: expected_bytes as u64,
-            });
+            cx.consume_fuel(copied as u64);
+            return store::MemberSnapshotOpenStep::Pending(store::MemberSnapshotOpenProgress { opening: store::MemberOpenProgress { phase: store::MemberOpenPhase::Snapshot, completed: self.input.len() as u64, total: expected_bytes as u64 }, retained_progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: usize::from(copied != 0), copied_bytes: copied * 2, ..Default::default() } });
         }
         if self.snapshot.is_none() {
             let snapshot = match <RecursiveBranchSnapshot as ArtifactPack>::decode_pack(&self.input) {
@@ -2232,14 +2234,14 @@ fn install_slow_envelope_decode(
         .unwrap_or_else(|_| panic!("exact envelope decode owner admission"))
 }
 
-/// 🧹️ Pumps the post-`Ready` worker close ladder (same work production loads run via [`VcsArtifactApp::drain_ready_envelope_decode_worker_owners`]).
+/// 🧹️ Pumps the post-`Ready` worker close ladder (same work production loads run via [`VcsArtifactApp::advance_ready_envelope_decode_worker_owners`]).
 fn pump_envelope_decode_worker_close(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle) {
     for _ in 0..32 {
         if app.artifact_envelope_decode_worker_owners_are_terminal(handle) {
             return;
         }
-        app.drain_ready_envelope_decode_worker_owners(handle).expect("envelope decode worker-owner drain");
-        let _ = semio_framework_job::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        app.advance_ready_envelope_decode_worker_owners(handle,app.mounted_policy.maintenance).expect("envelope decode worker-owner drain");
+        let _ = semio_framework_job::pump_worker_job_retirements(8,app.mounted_policy.maintenance);
     }
     assert!(app.artifact_envelope_decode_worker_owners_are_terminal(handle), "envelope decode worker owners still active after bounded drain");
 }
@@ -2262,7 +2264,7 @@ async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestM
         assert!(grant.maximum_copy_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
         let step = app.maintenance_step(grant).expect("envelope decode maintenance");
         if let Some(progress) = step.progress() { assert!(progress.fits(grant)); }
-        let _ = semio_framework_job::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_framework_job::pump_worker_job_retirements(8,app.mounted_policy.maintenance);
         poll = app.poll_artifact_envelope_decode(handle);
         if matches!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault | crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
             return poll;
@@ -2324,7 +2326,7 @@ async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll(
         assert!(grant.maximum_copy_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
         let step = app.maintenance_step(grant).expect("envelope law decode cancellation maintenance");
         if let Some(progress) = step.progress() { assert!(progress.fits(grant)); }
-        let _ = semio_framework_job::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_framework_job::pump_worker_job_retirements(8,app.mounted_policy.maintenance);
     }
     close_member_admission_app(&mut app);
 }

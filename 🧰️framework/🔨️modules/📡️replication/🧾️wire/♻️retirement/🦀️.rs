@@ -30,26 +30,34 @@ fn slot_mut(cause:&mut ProtocolError,slot:TextSlot)->&mut String{
   _=>unreachable!("original protocol slot remains exclusively borrowed"),
  }
 }
-/// 🔎️ Reads the first original owned cause slot without allocating, copying its text, or erasing provider custody.
-pub fn protocol_error_retirement_demand(cause:&Option<ProtocolError>)->Result<RetirementDemand,ValueError>{
- let Some(cause)=cause.as_ref()else{return Ok(RetirementDemand::default())};
+/// 🧾️ Quotes the first original cause slot through a borrow without allocating or transferring ownership.
+pub fn protocol_cause_retirement_demand(cause:&ProtocolError)->Result<RetirementDemand,ValueError>{
  Ok(match slot(cause)?{
   Some((_,capacity))=>RetirementDemand{copy_bytes:2*std::mem::size_of::<String>(),release_bytes:capacity,depth:1,..Default::default()},
   None=>RetirementDemand{copy_bytes:std::mem::size_of::<Option<ProtocolError>>(),depth:1,..Default::default()},
  })
 }
-/// 🎟️ Moves one admitted native descriptor and releases only its actual original backing, preserving refused owners in place.
-pub fn close_protocol_error_one(cause:&mut Option<ProtocolError>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
- if cause.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+/// 🔎️ Reads the first original owned cause slot without allocating, copying its text, or erasing provider custody.
+pub fn protocol_error_retirement_demand(cause:&Option<ProtocolError>)->Result<RetirementDemand,ValueError>{
+ cause.as_ref().map_or(Ok(RetirementDemand::default()),protocol_cause_retirement_demand)
+}
+/// 🎫️ Closes one funded borrowed cause slot; Complete permits its owning parent to release the original descriptor.
+pub fn close_protocol_cause_one(cause:&mut ProtocolError,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
  if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
- let demand=protocol_error_retirement_demand(cause)?;
+ let demand=protocol_cause_retirement_demand(cause)?;
  if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
  let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()};
- let error=cause.as_mut().expect("original protocol cause retained through admission");
- if let Some((slot,_))=slot(error)?{
-  let text=std::mem::take(slot_mut(error,slot));drop(text);
+ if let Some((slot,_))=slot(cause)?{
+  let text=std::mem::take(slot_mut(cause,slot));drop(text);
   Ok(RetainedCloneStep::Progress(progress))
- }else{drop(cause.take());Ok(RetainedCloneStep::Complete(progress))}
+ }else{Ok(RetainedCloneStep::Complete(progress))}
+}
+/// 🎟️ Moves one admitted native descriptor and releases only its actual original backing, preserving refused owners in place.
+pub fn close_protocol_error_one(cause:&mut Option<ProtocolError>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ let Some(error)=cause.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
+ let step=close_protocol_cause_one(error,grant)?;
+ if matches!(step,RetainedCloneStep::Complete(_)){drop(cause.take());}
+ Ok(step)
 }
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

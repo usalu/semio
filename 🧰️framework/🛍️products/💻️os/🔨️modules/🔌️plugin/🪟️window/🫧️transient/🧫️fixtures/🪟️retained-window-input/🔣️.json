@@ -60,6 +60,21 @@
     ],
     "zeroGrantAdvancesCursor": false
   },
+  "retirementPolicy": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 1048576,
+    "release": 1048576,
+    "depth": 64,
+    "maximumTurns": 100000
+  },
+  "retirementBacking": [
+    { "items": 0, "copy": 4096, "capacity": 4096, "release": 4096, "depth": 1, "backing": 4096, "released": 0 },
+    { "items": 1, "copy": 4096, "capacity": 4096, "release": 4095, "depth": 1, "backing": 4096, "released": 0 },
+    { "items": 1, "copy": 4096, "capacity": 4096, "release": 4096, "depth": 0, "backing": 4096, "released": 0 },
+    { "items": 1, "copy": 4096, "capacity": 4096, "release": 0, "depth": 1, "backing": 4096, "released": 0 },
+    { "items": 1, "copy": 0, "capacity": 0, "release": 4096, "depth": 1, "backing": 4096, "released": 4096 }
+  ],
   "liveWriteGeneration": {
     "firstRevision": 4,
     "staleRevision": 5,

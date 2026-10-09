@@ -1,0 +1,32 @@
+{
+  "nodes": {
+    "ticket-interface-current-origin": {
+      "name": "ticket-interface-current-origin",
+      "type": "app",
+      "data": {
+        "root": ".",
+        "name": "ticket-interface-current-origin",
+        "tags": [
+          "npm:private"
+        ],
+        "metadata": {
+          "targetGroups": {},
+          "js": {
+            "packageName": "ticket-interface-current-origin",
+            "packageVersion": "0.0.0",
+            "isInPackageManagerWorkspaces": false
+          }
+        },
+        "targets": {},
+        "implicitDependencies": []
+      }
+    }
+  },
+  "externalNodes": {},
+  "dependencies": {
+    "ticket-interface-current-origin": []
+  },
+  "version": "6.0",
+  "errors": [],
+  "computedAt": 1791540050447
+}

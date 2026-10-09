@@ -32,9 +32,9 @@ pub fn mvd_header(snapshot:&Ifc2x3Snapshot,view:&str,control:&mut SqliteSnapshot
 /// 🔎️ Borrows matching IFC2x3 instances and checkpoints every retained entity type.
 pub fn mvd_instances<'a>(snapshot:&'a Ifc2x3Snapshot,name:&str,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<&'a Part21Instance>,ValueError>{
     control.check_rows(snapshot.document.instances.len())?;let maximum=control.limits().max_rows;
-    control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot,|remaining,progress|{
+    control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot,|remaining,progress,allocation|{
         let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|progress(event.completed,event.total);
-        let mut native=semio_framework_value::NativeEncodeControl::new(remaining,&mut callback);
+        let mut native_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
         let result=(||{native.begin_stage(0)?;let mut result=native.allocate_vec(snapshot.document.instances.len())?;let mut count=0usize;for instance in &snapshot.document.instances{let mut matched=false;for(entity,_)in &instance.entities{matched|=entity.eq_ignore_ascii_case(name);count=count.checked_add(1).filter(|count|*count<=maximum).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"IFC2x3 MVD count exceeds limit"))?;native.step()?;}if matched{result.push(instance);}count=count.checked_add(1).filter(|count|*count<=maximum).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"IFC2x3 MVD count exceeds limit"))?;native.step()?;}Ok(result)})();(result,native.owned_bytes())
     })?
 }
@@ -47,9 +47,9 @@ impl<'a>MvdIdentityIndex<'a>{
 /// 🗂️ Admits concrete borrowed identity backing before controlled sorting and first-owner selection.
 pub fn mvd_identity_index<'a>(snapshot:&'a Ifc2x3Snapshot,control:&mut SqliteSnapshotControl<'_>)->Result<MvdIdentityIndex<'a>,ValueError>{
     control.check_rows(snapshot.document.instances.len())?;
-    control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot,|remaining,progress|{
+    control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot,|remaining,progress,allocation|{
         let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|progress(event.completed,event.total);
-        let mut native=semio_framework_value::NativeEncodeControl::new(remaining,&mut callback);
+        let mut native_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
         let result=(||{native.begin_stage(0)?;let mut entries=native.allocate_vec(snapshot.document.instances.len())?;for(index,instance)in snapshot.document.instances.iter().enumerate(){entries.push((instance.id,index));native.step()?;}sort_paid(&mut entries,|left,right|{native.step()?;Ok(left.cmp(right))})?;let mut kept=0;for index in 0..entries.len(){if kept==0||entries[kept-1].0!=entries[index].0{entries[kept]=entries[index];kept+=1;}native.step()?;}entries.truncate(kept);Ok(MvdIdentityIndex{snapshot,entries})})();(result,native.owned_bytes())
     })?
 }
@@ -70,8 +70,8 @@ fn visit_rows(snapshot:&Ifc2x3Snapshot,p:&mut RowWriter<'_,'_>)->Result<(),Value
 impl Ifc2x3Snapshot{pub(crate)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut writer=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut writer)?;writer.finish_borrowed()}pub(crate)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:SqliteDatabaseLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
 impl ArtifactSqliteSnapshot for Ifc2x3Snapshot{
     fn retire_sqlite_snapshot(self){crate::standards::v2x3::subsets::base::io::sqlite::snapshot::native::close(self)}
-    fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v2x3::subsets::base::io::sqlite::snapshot::native::decode(payload,control)}
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{crate::standards::v2x3::subsets::base::io::sqlite::snapshot::native::encode(self,encoding,control)}
+    fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{crate::standards::v2x3::subsets::base::io::sqlite::snapshot::native::decode(payload,control,native_control)}
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{crate::standards::v2x3::subsets::base::io::sqlite::snapshot::native::encode(self,encoding,control,native_owner)}
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{(||->Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.ifc"||dialect.standard!="2x3"{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown owned IFC2x3 snapshot dialect"));}let root=db.table("ifc2x3_document")?.single_row()?;if root.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"IFC2x3 document identity differs from its projection"));}
         let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"cv20"=>crate::standards::v2x3::subsets::cv20::io::check_cv20_conformance_controlled(self,control)?,"sav"=>crate::standards::v2x3::subsets::sav::io::check_sav_conformance_controlled(self,control)?,"cobie"=>crate::standards::v2x3::subsets::cobie::io::check_cobie_conformance_controlled(self,control)?,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown owned IFC2x3 snapshot subset"))};Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})

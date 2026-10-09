@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "ticket",
+    "sameInstance",
+    "firstOwnedBytes",
+    "closeCapacityBytes",
+    "finalOwnedBytes",
+    "refusedReleaseBytes",
+    "wrongTicket",
+    "pendingOutput",
+    "terminalInstanceDrop",
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "maximumReleaseBytes",
+    "maximumDepth"
+  ],
+  "properties": {
+    "kind": {
+      "const": "original-same-instance-snapshot-close"
+    },
+    "ticket": {
+      "const": 1
+    },
+    "sameInstance": {
+      "const": true
+    },
+    "firstOwnedBytes": {
+      "const": 7
+    },
+    "closeCapacityBytes": {
+      "const": 3
+    },
+    "finalOwnedBytes": {
+      "const": 10
+    },
+    "refusedReleaseBytes": {
+      "const": 0
+    },
+    "wrongTicket": {
+      "const": "refuse-with-custody"
+    },
+    "pendingOutput": {
+      "const": "retain-original-backing"
+    },
+    "terminalInstanceDrop": {
+      "const": "requires-actual-vm-release-descriptor"
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumCopyBytes": {
+      "const": 64
+    },
+    "maximumCapacityBytes": {
+      "const": 3
+    },
+    "maximumReleaseBytes": {
+      "const": 0
+    },
+    "maximumDepth": {
+      "const": 8
+    }
+  }
+}

@@ -22,6 +22,7 @@ path = "🦀️.rs"
 machine = { path = "../../../🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 semio-framework-replication = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
 
 [dev-dependencies]
 # 🔏️ Third-party oracle for the transaction id minting pinned by the transaction-law fixture.

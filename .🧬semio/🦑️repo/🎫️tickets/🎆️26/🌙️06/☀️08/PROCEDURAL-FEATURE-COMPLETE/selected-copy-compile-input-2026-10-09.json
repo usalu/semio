@@ -1,0 +1,78 @@
+{
+  "session": 32212,
+  "status": "preassert",
+  "errors": [
+    {
+      "error": "error[E0425]: cannot find type `RetirementDemand` in this scope",
+      "context": [
+        "    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:2622:105",
+        "     |",
+        "2622 |     pub fn uninstalled_envelope_retirement_demands(&self, _envelope: &ArtifactEnvelope<P, Mutation>) -> RetirementDemand {",
+        "     |                                                                                                         ^^^^^^^^^^^^^^^^ not found in this scope"
+      ]
+    },
+    {
+      "error": "error[E0422]: cannot find struct, variant or union type `RetirementDemand` in this scope",
+      "context": [
+        "    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:2623:9",
+        "     |",
+        "2623 | ...   RetirementDemand { copy_bytes:std::mem::size_of::<(Self,ArtifactEnvelope<P,Mutation>)>()+std::mem::size_of::<UninstalledDocu...",
+        "     |       ^^^^^^^^^^^^^^^^ not found in this scope"
+      ]
+    },
+    {
+      "error": "error[E0119]: conflicting implementations of trait `semio_framework_value::retirement::RetireOwned` for type `os_vcs::Author`",
+      "context": [
+        "   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/♻️retirement/🦀️.rs:184:1",
+        "    |",
+        "184 | artifact_retire_struct!(crate::os_vcs::Author { id, name, avatar });",
+        "    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation for `os_vcs::Author`"
+      ]
+    },
+    {
+      "error": "error[E0119]: conflicting implementations of trait `semio_framework_value::retirement::RetireOwned` for type `artifact_child_owner_schema::OwnerRef`",
+      "context": [
+        "   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🪆️child/🏠️owner/🧬️schema/🦀️.rs:6:58",
+        "    |",
+        "  6 | #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue,semio_framework_value::RetireOwned)]",
+        "    |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation for `artifact_child_owner_schema::OwnerRef`"
+      ]
+    },
+    {
+      "error": "error[E0119]: conflicting implementations of trait `semio_framework_value::retirement::RetireOwned` for type `os_store::component::SpaceMemberPin`",
+      "context": [
+        "     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:29161:104",
+        "      |",
+        "29161 | ...:FromValue,semio_framework_value::RetireOwned)]",
+        "      |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation for `os_store::component::SpaceMemberPin`"
+      ]
+    },
+    {
+      "error": "error[E0119]: conflicting implementations of trait `semio_framework_value::retirement::RetireOwned` for type `os_store::component::SpaceCheckpoint`",
+      "context": [
+        "     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:29176:104",
+        "      |",
+        "29176 | ...:FromValue,semio_framework_value::RetireOwned)]",
+        "      |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation for `os_store::component::SpaceCheckpoint`"
+      ]
+    },
+    {
+      "error": "error[E0119]: conflicting implementations of trait `semio_framework_value::retirement::RetireOwned` for type `os_store::component::SpaceAlternative`",
+      "context": [
+        "     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:29189:104",
+        "      |",
+        "29189 | ...FromValue,semio_framework_value::RetireOwned)]",
+        "      |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation for `os_store::component::SpaceAlternative`"
+      ]
+    },
+    {
+      "error": "error[E0119]: conflicting implementations of trait `semio_framework_value::retirement::RetireOwned` for type `os_store::component::SpaceHistorySnapshot`",
+      "context": [
+        "     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:29213:113",
+        "      |",
+        "29213 | ...omValue,semio_framework_value::RetireOwned)]",
+        "      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation for `os_store::component::SpaceHistorySnapshot`"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "ownership": false,
+  "observedAt": "2026-10-09T04:09:10.434887+00:00",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "sha256": "896deb482c96e50efe7822d8ff249f2a383abdfb4357c88e25512db94e70427d",
+      "absoluteCharacters": 126
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/📏️live-physical-demand/🧬️schema/🔣️.json",
+      "sha256": "d6f778b6507376df531a51bc646ba2729044c12d1fa63944181479af5478b0f6",
+      "absoluteCharacters": 171
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/📏️live-physical-demand/🔣️.json",
+      "sha256": "c1807f5d50b740fb589a6dff7f9032d183cc34428bc87d483fe2c611da77556b",
+      "absoluteCharacters": 162
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🦀️.rs",
+      "sha256": "00bfc5631e827f716dfd4fbae51074bd5c73bac023b56ed22e20ecf4084e6a35",
+      "absoluteCharacters": 126
+    }
+  ],
+  "readerLine": 15,
+  "classification": "complete fixed physical-allocation trial envelope",
+  "preserve": "SQLite physical extent/refusal rows and actual native/source grant receipt laws"
+}

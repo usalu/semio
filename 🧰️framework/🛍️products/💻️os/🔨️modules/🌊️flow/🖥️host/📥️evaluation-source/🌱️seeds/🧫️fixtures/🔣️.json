@@ -1,0 +1,83 @@
+{
+  "cases": [
+    {
+      "id": "number-原",
+      "tree": {
+        "neurons": [
+          {
+            "id": "slider-雪",
+            "kind": "core.number",
+            "params": {
+              "value": 3.5
+            }
+          }
+        ],
+        "synapses": []
+      },
+      "expected": {
+        "slider-雪": {
+          "number": {
+            "schema": "number",
+            "value": 3.5
+          }
+        }
+      }
+    },
+    {
+      "id": "text-高",
+      "tree": {
+        "neurons": [
+          {
+            "id": "note-原",
+            "kind": "core.text",
+            "params": {
+              "value": "retained original text 雪🌳️"
+            }
+          },
+          {
+            "id": "skip",
+            "kind": "input",
+            "params": {}
+          }
+        ],
+        "synapses": []
+      },
+      "expected": {
+        "note-原": {
+          "text": {
+            "schema": "text",
+            "value": "retained original text 雪🌳️"
+          }
+        }
+      }
+    },
+    {
+      "id": "image",
+      "tree": {
+        "neurons": [
+          {
+            "id": "image-雪",
+            "kind": "core.image",
+            "params": {
+              "dataUrl": "data:image/png;base64,AA=="
+            }
+          },
+          {
+            "id": "other",
+            "kind": "input",
+            "params": {}
+          }
+        ],
+        "synapses": []
+      },
+      "expected": {
+        "image-雪": {
+          "image": {
+            "schema": "image",
+            "dataUrl": "data:image/png;base64,AA=="
+          }
+        }
+      }
+    }
+  ]
+}

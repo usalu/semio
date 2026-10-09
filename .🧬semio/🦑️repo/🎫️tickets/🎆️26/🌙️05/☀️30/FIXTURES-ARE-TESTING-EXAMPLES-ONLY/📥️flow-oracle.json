@@ -1,0 +1,187 @@
+{
+  "ownership": false,
+  "executed": false,
+  "role": "independent test-only proposal",
+  "cases": [
+    {
+      "id": "branch-merge",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";let value=fixture;if(flag){value=opaque()}else{value=fixture}new Ajv().compile(schema)(value);",
+      "symbols": [
+        "value declaration",
+        "value write in then",
+        "value write in else",
+        "value validation argument"
+      ],
+      "flow": "Join input states at if exit: then Unknown, else Fixture; resulting Unknown. Never select last lexically visited branch.",
+      "ranges": [
+        {
+          "start": 113,
+          "end": 156,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 122,
+          "end": 136,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 99,
+          "end": 112,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 181,
+          "end": 188,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        }
+      ]
+    },
+    {
+      "id": "receiver-mutation",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";fixture.cases.push(opaque());new Ajv().compile(schema)(fixture);",
+      "symbols": [
+        "fixture import",
+        "fixture receiver in fixture.cases.push",
+        "fixture validation argument"
+      ],
+      "flow": "Receiver member chain aliases imported JSON root; push is unknown mutator. Mark shared root content invalid before subsequent validation.",
+      "ranges": [
+        {
+          "start": 95,
+          "end": 123,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 95,
+          "end": 108,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 149,
+          "end": 158,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        }
+      ]
+    },
+    {
+      "id": "inline-alias-write",
+      "source": "import Ajv from \"ajv\";import fixture from \"./examples.json\";const schema={type:\"object\"};const alias=schema;alias.type=\"string\";new Ajv().compile(schema)(fixture);",
+      "symbols": [
+        "schema declaration",
+        "alias declaration",
+        "schema alias initializer",
+        "alias receiver write",
+        "schema compile argument"
+      ],
+      "flow": "alias initializer shares schema object identity. The member write changes that identity before compile; either updated grammar or unresolved is valid, old object body is invalid.",
+      "ranges": [
+        {
+          "start": 60,
+          "end": 88,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 89,
+          "end": 107,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 108,
+          "end": 127,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 138,
+          "end": 153,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        }
+      ]
+    },
+    {
+      "id": "captured-callback",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";let value=fixture;function later(){new Ajv().compile(schema)(value)}value=opaque();schedule(later);",
+      "symbols": [
+        "value declaration",
+        "value inside later",
+        "later function declaration",
+        "value reassignment",
+        "later argument to schedule"
+      ],
+      "flow": "Function declaration creates closure without execution. Reassignment changes captured slot before callback can run. Unknown schedule timing cannot restore original fixture; invocation evidence remains unresolved.",
+      "ranges": [
+        {
+          "start": 113,
+          "end": 163,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 163,
+          "end": 177,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 178,
+          "end": 193,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        }
+      ]
+    },
+    {
+      "id": "callee-before-arguments",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";let value=fixture;const ajv=new Ajv();function get(){value=opaque();return ajv}get().compile(schema)(value);",
+      "symbols": [
+        "value declaration",
+        "value write in get",
+        "get function declaration",
+        "get receiver call",
+        "value outer validation argument"
+      ],
+      "flow": "Evaluate get() as receiver before compile args and before final validation argument. get writes captured value Unknown. Receiver result Ajv does not undo write.",
+      "ranges": [
+        {
+          "start": 133,
+          "end": 174,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 174,
+          "end": 202,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 148,
+          "end": 162,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        }
+      ]
+    },
+    {
+      "id": "early-return",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";function reader(){if(flag)return opaque();return fixture}new Ajv().compile(schema)(reader());",
+      "symbols": [
+        "reader function declaration",
+        "reader call",
+        "fixture import",
+        "fixture final return reference"
+      ],
+      "flow": "Function has two reachable returns: Unknown on true branch and Fixture on false branch. Join returned values to Unknown; returned then path cannot fall through to final return.",
+      "ranges": [
+        {
+          "start": 113,
+          "end": 136,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 137,
+          "end": 151,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        },
+        {
+          "start": 104,
+          "end": 112,
+          "kind": "portable expected UTF16 span (all sample characters ASCII)"
+        }
+      ]
+    }
+  ]
+}

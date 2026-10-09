@@ -542,8 +542,9 @@ pub async fn poll_kernel<PA: crate::app::PluginApp + 'static>(
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
     cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
+    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
 ) -> Result<semio_framework::kernel::TurnResult, semio_framework::Fault> {
-    poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result).await
+    poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result, identity).await
 }
 
 /// 🧠️ One guest turn under [`with_turn_execution`] accounting — the only door into [`poll_kernel_turn`].
@@ -556,8 +557,9 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     budget: semio_framework::kernel::Budget,
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
+    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
 ) -> Result<T, semio_framework::Fault> {
-    with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, prepare, publish))).await
+    with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, prepare, publish, identity))).await
 }
 
 /// 📏️ `plugin_exchange`'s future is 76 848 B — awaiting it INLINE made it the single largest local
@@ -565,12 +567,13 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
 /// that most turns never reach. Boxed here, the turn generator holds an 8-byte pointer and the
 /// exchange state is allocated only on the turns that actually run a command. See
 /// `📓️poll-task-leak-2026-09-10.md` §3.2.
-fn plugin_exchange_boxed<'a, PA: crate::app::PluginApp>(
+fn plugin_exchange_boxed<'a, 'b, PA: crate::app::PluginApp>(
     runtime: &'a crate::plugin_runtime::PluginRuntime<PA>,
     instance_id: u32,
     command: Option<(u64, crate::plugin_runtime::PluginCommandIngress)>,
+    identity: &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,
 ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<crate::plugin_runtime::PluginExchangeOutput, semio_framework::Fault>> + 'a>> {
-    Box::pin(crate::plugin_runtime::plugin_exchange(runtime, instance_id, command))
+    Box::pin(crate::plugin_runtime::plugin_exchange(runtime, instance_id, command, identity))
 }
 
 /// ↩️ One `Effect::Respond` per inbound `Event::Request` this turn served — kept apart from the
@@ -751,6 +754,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     budget: semio_framework::kernel::Budget,
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
+    identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
 ) -> Result<T, semio_framework::Fault> {
     trace_turn_phase_retention("enter");
     let retryable_lifecycle = command_page.is_none() && cold_pair_page.is_none() && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)));
@@ -865,7 +869,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                         runtime.guest_lifetimes.borrow_mut().remove_uncreated(instance).map_err(reactor_close_fault)?;
                         return Err(error);
                     }
-                    if let Err(error) = crate::plugin_runtime::plugin_open_actor_instance(runtime, request, &app_id.0, &actor).await {
+                    if let Err(error) = crate::plugin_runtime::plugin_open_actor_instance(runtime, request, &app_id.0, &actor, identity).await {
                         INSTANCE_METADATA.with(|metadata| drop(metadata.borrow_mut().remove(instance)));
                         runtime.guest_lifetimes.borrow_mut().remove_uncreated(instance).map_err(reactor_close_fault)?;
                         return Err(error);
@@ -930,7 +934,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 let outcome = crate::host::outcome_to_result(result);
                 match take_extension_response(req, outcome) {
                     Ok((instance, action, args)) if native_close_key(runtime, instance).is_ok() => {
-                        let output = crate::plugin_runtime::plugin_dispatch_response_action(runtime, instance, &action, &args).await;
+                        let output = crate::plugin_runtime::plugin_dispatch_response_action(runtime, instance, &action, &args, identity).await;
                         for frame_bytes in output.frames {
                             route_app_frame(instance, &frame_bytes, &mut document_backbone_effects);
                         }
@@ -975,7 +979,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                             Ok(bytes) => Ok(bytes.clone()),
                             Err(fault) => Err(fault.clone()),
                         };
-                        let output = crate::plugin_runtime::plugin_complete_reserved_spawned_job(runtime, instance, job, reserved_output).await;
+                        let output = crate::plugin_runtime::plugin_complete_reserved_spawned_job(runtime, instance, job, reserved_output, identity).await;
                         route_exchange_output(instance, output, &mut document_backbone_effects);
                     }
                 }
@@ -991,7 +995,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 }
             }
             Event::Message { source: MessageEndpoint::Backbone { uri }, payload } => {
-                let output = crate::plugin_runtime::plugin_receive_document_backbone(runtime, &uri, &payload).await?;
+                let output = crate::plugin_runtime::plugin_receive_document_backbone(runtime, &uri, &payload, identity).await?;
                 if output.document_changed {
                     dirty_document_surfaces(runtime, output.instance_id, &mut dirty).await?;
                 } else {
@@ -1054,13 +1058,13 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     }
     if let Some(pending) = COLD_PAIR_DOCUMENT_LOAD.with(|slot| slot.borrow_mut().take()) {
         let answers_this_turn = !pending.superseded && cold_pair_page_lifetime.is_none_or(|lifetime| lifetime == pending.cursor.lifetime);
-        let status = step_cold_pair_document_load(runtime, pending).await;
+        let status = step_cold_pair_document_load(runtime, pending, identity).await;
         if answers_this_turn {
             cold_pair_ingress = status;
         }
     }
     let cold_pair_loading = matches!(cold_pair_ingress, semio_framework::kernel::ColdPairIngressStatus::Loading(_));
-    let document_load_work = step_restored_document_loads(runtime, &mut effects).await || COLD_PAIR_DOCUMENT_LOAD.with(|slot| slot.borrow().is_some());
+    let document_load_work = step_restored_document_loads(runtime, &mut effects, identity).await || COLD_PAIR_DOCUMENT_LOAD.with(|slot| slot.borrow().is_some());
     let mut command_ingress = semio_framework::kernel::CommandIngressStatus::Idle;
     step_retiring_command_ingress();
     let (mut retained, mut retained_key) = COMMAND_INGRESS.with(|ingress| match ingress.borrow_mut()[COMMAND_INGRESS_LIVE_SLOT].take() {
@@ -1144,7 +1148,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 retained = None;
                 command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-cancelled-by-close".to_vec() };
             } else {
-                match plugin_exchange_boxed(runtime, cursor.instance, None).await {
+                match plugin_exchange_boxed(runtime, cursor.instance, None, identity).await {
                     Ok(output) => {
                         let instance = cursor.instance;
                         if output.presence_terminal == Some(cursor.seq) {
@@ -1174,7 +1178,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     }
     if let Some(owner) = retained.take() {
         match owner {
-            CommandIngressOwner::Generic { cursor, command } => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, command))).await {
+            CommandIngressOwner::Generic { cursor, command } => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, command)), identity).await {
                 Ok(mut output) => {
                     match advance_command_cursor(cursor.clone()) {
                         Ok(terminal) => {
@@ -1277,7 +1281,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 Ok(mut pages) => match pages.try_push(page) {
                     Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                     Ok(()) if cursor.page_count == 1 => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
-                        Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command)))).await {
+                        Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))), identity).await {
                             Ok(mut output) => {
                                 if let Some((_, command)) = output.retry_command.take() {
                                     retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
@@ -1313,7 +1317,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 match pages.try_push(page) {
                     Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                     Ok(()) if cursor.page_index.checked_add(1) == Some(cursor.page_count) => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
-                        Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command)))).await {
+                        Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))), identity).await {
                             Ok(mut output) => {
                                 if let Some((_, command)) = output.retry_command.take() {
                                     retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
@@ -1352,7 +1356,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     let intent_batches = std::mem::take(&mut dirty.intents);
     for DirtyIntentBatch { instance, intents } in intent_batches {
         native_close_key(runtime, instance)?;
-        match crate::plugin_runtime::plugin_dispatch_intents(runtime, instance, &intents).await {
+        match crate::plugin_runtime::plugin_dispatch_intents(runtime, instance, &intents, identity).await {
             Ok(output) => {
                 for frame_bytes in output.frames {
                     route_app_frame(instance, &frame_bytes, &mut effects);
@@ -1397,7 +1401,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     }
 
     trace_turn_phase_retention("ingress");
-    let (continuation, typed_operation_scan) = crate::plugin_runtime::plugin_continue_typed_operations(runtime, crate::plugin_runtime::TypedOperationGrant::turn(budget)).await?;
+    let (continuation, typed_operation_scan) = crate::plugin_runtime::plugin_continue_typed_operations(runtime, crate::plugin_runtime::TypedOperationGrant::turn(budget), identity).await?;
     let typed_operation_contended = typed_operation_scan.contended;
     if let Some((instance, output)) = continuation {
         route_exchange_output(instance, output, &mut effects);
@@ -1487,7 +1491,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         push_admitted_effect(&mut effects, 0, effect);
     }
 
-    let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
+    let resumes_remain = drain_task_resumes(runtime, &mut effects, 64, identity);
     effects.extend(crate::plugin_runtime::plugin_drain_document_backbones(runtime)?);
     let executor_pending = REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || TASK_EXECUTOR.with(|executor| executor.has_pending());
     let command_ingress_pending = COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
@@ -1656,7 +1660,7 @@ async fn supersede_cold_pair_document_load<PA: crate::app::PluginApp>(runtime: &
     }
 }
 
-async fn step_cold_pair_document_load<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, pending: cold_pair::ColdPairDocumentLoad) -> semio_framework::kernel::ColdPairIngressStatus {
+async fn step_cold_pair_document_load<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, pending: cold_pair::ColdPairDocumentLoad, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> semio_framework::kernel::ColdPairIngressStatus {
     use protocol::DocumentArchiveLoadState;
     use semio_framework::kernel::ColdPairIngressStatus;
     let lifetime = pending.cursor.lifetime;
@@ -1665,7 +1669,7 @@ async fn step_cold_pair_document_load<PA: crate::app::PluginApp>(runtime: &crate
     if live.is_none() {
         return finish(pending.load, Err(b"cold-pair.not-live".to_vec()));
     }
-    let status = match crate::plugin_runtime::plugin_poll_document_archive_load(runtime, lifetime.instance_id, pending.operation).await {
+    let status = match crate::plugin_runtime::plugin_poll_document_archive_load(runtime, lifetime.instance_id, pending.operation, identity).await {
         Ok(status) => status,
         Err(fault) => return finish(pending.load, Err(semio_framework_diagnostic::encode_fault_bytes(&fault))),
     };
@@ -1687,7 +1691,7 @@ async fn step_cold_pair_document_load<PA: crate::app::PluginApp>(runtime: &crate
 /// 📸️ Drives every checkpoint-restored document load by one poll (`📓️api-stepped-document-load.md` §4). A terminal load
 /// is acknowledged; a faulted one reaches the instance's shell as a fault, a cancelled one keeps the initial document.
 /// A closed instance's load is dropped with it. Answers whether any load still runs.
-async fn step_restored_document_loads<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>) -> bool {
+async fn step_restored_document_loads<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> bool {
     use protocol::DocumentArchiveLoadState;
     let operation = checkpoint::RESTORE_DOCUMENT_LOAD_OPERATION;
     let loads = RESTORED_DOCUMENT_LOADS.with(|loads| std::mem::take(&mut *loads.borrow_mut()));
@@ -1696,7 +1700,7 @@ async fn step_restored_document_loads<PA: crate::app::PluginApp>(runtime: &crate
         if INSTANCE_METADATA.with(|metadata| metadata.borrow().get(instance).is_none()) {
             continue;
         }
-        let status = match crate::plugin_runtime::plugin_poll_document_archive_load(runtime, instance, operation).await {
+        let status = match crate::plugin_runtime::plugin_poll_document_archive_load(runtime, instance, operation, identity).await {
             Ok(status) => status,
             Err(fault) => {
                 effects.push(shell_fault_effect(instance, &fault));
@@ -2109,7 +2113,7 @@ fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>)
 ///
 /// 🚫️async: E5 executor bridge — `plugin_resume_task` stays genuinely `async fn`; see
 /// `poll`'s `plugin_exchange` call for the same safety argument.
-pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>, max_rounds: u32) -> bool {
+pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>, max_rounds: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> bool {
     for _ in 0..max_rounds {
         let Some(resume) = TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()) else {
             return false;
@@ -2126,7 +2130,7 @@ pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_run
             TaskResumeOutcome::Command(bytes) => crate::plugin_runtime::TaskResumeInput::Command(bytes),
             TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => crate::plugin_runtime::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops },
         };
-        let output = ::semio_framework_async::poll::resolve_ready(crate::plugin_runtime::plugin_resume_task(runtime, resume.instance, &resume.meta, input));
+        let output = ::semio_framework_async::poll::resolve_ready(crate::plugin_runtime::plugin_resume_task(runtime, resume.instance, &resume.meta, input, identity));
         for frame_bytes in output.frames {
             route_app_frame(resume.instance, &frame_bytes, effects);
         }

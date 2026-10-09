@@ -310,14 +310,15 @@ fn semantic_census_zero_fuel_and_expired_deadline_leave_every_cursor_and_owner_u
     {
         let mut zero = SurfaceReconcileJob::try_new(SurfaceReconciler::new("s"), tree(leaf("zero")), generation).expect("admitted");
         let mut sequence = 0;
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::allocate_operation_id(),
             semio_framework_job::Generation(generation),
-            semio_framework_job::StepBudget::new(0, u64::MAX),
+            semio_framework_job::StepBudget::new(0, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut sequence,
-        );
+        &mut actual_retained_progress);
         assert_eq!(zero.drive_one(&mut context), SurfaceReconcileJobStep::MoreWork);
         let cursor = zero.state.as_ref().and_then(|state| state.cursor.as_ref()).expect("cursor retained");
         assert!(cursor.pending_root.is_some());
@@ -328,14 +329,15 @@ fn semantic_census_zero_fuel_and_expired_deadline_leave_every_cursor_and_owner_u
     let generation = 7_002;
     let mut expired = SurfaceReconcileJob::try_new(SurfaceReconciler::new("s"), tree(leaf("deadline")), generation).expect("admitted");
     let mut sequence = 0;
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
     let mut context = semio_framework_job::StepContext::new(
         semio_framework_job::allocate_operation_id(),
         semio_framework_job::Generation(generation),
-        semio_framework_job::StepBudget::new(1, 10),
+        semio_framework_job::StepBudget::new(1, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY),
         semio_framework_job::root_cancel_token(),
         expired_now,
         &mut sequence,
-    );
+    &mut actual_retained_progress);
     assert_eq!(expired.drive_one(&mut context), SurfaceReconcileJobStep::MoreWork);
     assert!(expired.state.as_ref().and_then(|state| state.cursor.as_ref()).is_some_and(|cursor| cursor.pending_root.is_some() && cursor.held_node.is_none()));
 }
@@ -411,14 +413,15 @@ fn persistent_credit_transfers_through_ready_and_returns_only_after_incremental_
     let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new("s"), tree(leaf("credit")), generation).expect("admitted");
     let mut sequence = 0;
     for _ in 0..4_096 {
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::allocate_operation_id(),
             semio_framework_job::Generation(generation),
-            semio_framework_job::StepBudget::new(1, u64::MAX),
+            semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
             &mut sequence,
-        );
+        &mut actual_retained_progress);
         if job.drive_one(&mut context) == SurfaceReconcileJobStep::Ready {
             break;
         }
@@ -471,14 +474,15 @@ fn stale_cancel_and_drop_handoff_preserve_public_terminal_ownership() {
     let generation = 8_001;
     let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new("s"), tree(leaf("exact")), generation).expect("admitted");
     let mut sequence = 0;
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
     let mut context = semio_framework_job::StepContext::new(
         semio_framework_job::allocate_operation_id(),
         semio_framework_job::Generation(generation + 1),
-        semio_framework_job::StepBudget::new(1, u64::MAX),
+        semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),
         semio_framework_job::root_cancel_token(),
         semio_framework_job::default_now_us,
         &mut sequence,
-    );
+    &mut actual_retained_progress);
     assert_eq!(job.drive_one(&mut context), SurfaceReconcileJobStep::Fault);
     let handback_key = job.handback_key().expect("fault retains fixed public handback reservation");
     drop(job);
@@ -496,8 +500,9 @@ fn stale_cancel_and_drop_handoff_preserve_public_terminal_ownership() {
     let cancel = semio_framework_job::root_cancel_token();
     cancel.cancel_now();
     let mut sequence = 0;
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
     let mut context =
-        semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, &mut sequence);
+        semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, semio_framework_job::default_now_us, &mut sequence,&mut actual_retained_progress);
     assert_eq!(job.drive_one(&mut context), SurfaceReconcileJobStep::Fault);
     let mut terminal = job.into_terminal();
     assert!(matches!(terminal.fault(), Some(SurfaceReconcileFault::Cancelled)));

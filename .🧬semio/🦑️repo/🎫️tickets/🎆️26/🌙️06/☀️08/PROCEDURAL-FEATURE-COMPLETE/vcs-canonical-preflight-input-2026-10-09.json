@@ -1,0 +1,33 @@
+{
+  "portableRedSession": 12131,
+  "portableGreenSession": 13106,
+  "portableGreenScope": "closed neutral corpus and source receiving only",
+  "nativeLaw": "original_vcs_close_admission_and_receipts_match_neutral_wallet",
+  "nativeExecuted": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🦀️.rs",
+      "sha256": "1b9108e489520fe5b704111c7f6641958ad715d18bc676094db28ddd13bb060d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️.rs",
+      "sha256": "932c3629ca0205f04609493b5c876b2e728a1b9daf1c098ae980c47b57b0f60f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧫️fixtures/🔣️.json",
+      "sha256": "361b2c6188069d432e5cca527b12c243f13ca36a557d984a3352bb318e4aadb6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+      "sha256": "467d64e483c04cc41d5ad6eae7f5ad4a0808cfda61eca915b365e5757cf82e60"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🟦️.ts",
+      "sha256": "3d0f8a42f9bdc12cb4783f3855976cf00a2df977c30cc15b7f7b0df30a7dd078"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs",
+      "sha256": "030f3543a91475d711066fad23010a627bd6930d4f4835f4e45b8ef7983cc8e5"
+    }
+  ]
+}

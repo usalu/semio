@@ -1,8 +1,9 @@
 
 use super::*;
+use crate::infinite::board::io::text::dag_input::selection::{DagSelectionJsonCursor,DagSelectionTextGrant,DagSelectionTextFault,DagSelectionTextStep};
 
-fn cursor_grant() -> DagCursorGrant {
-    DagCursorGrant { fuel: 1, now_milliseconds: 1, deadline_milliseconds: 8, cancelled: false, interrupted: false }
+fn cursor_grant() -> DagSelectionTextGrant {
+    DagSelectionTextGrant { fuel: 1, now_milliseconds: 1, deadline_milliseconds: 8, cancelled: false, interrupted: false }
 }
 
 #[test]
@@ -16,23 +17,23 @@ fn selected_nodes_cursor_censuses_and_emits_one_byte_per_grant() {
         assert_eq!(host.selected_node_ids(), ids);
         let expected = semio_framework_pack_json::to_json_string(&host.selected_node_ids()).into_bytes();
         assert_eq!(expected, serde_json::to_vec(&host.selected_node_ids()).unwrap());
-        let mut cursor = DagSelectedNodesJsonCursor::default();
+        let mut cursor = DagSelectionJsonCursor::default();
         let mut rejected = cursor_grant();
         rejected.fuel = 0;
-        assert_eq!(cursor.step(&host, rejected), Err(DagCursorFault::NoFuel));
+        assert_eq!(cursor.step(&host, rejected), Err(DagSelectionTextFault::NoFuel));
         let mut output = Vec::new();
         let mut census = None;
         loop {
             match cursor.step(&host, cursor_grant()).unwrap() {
-                DagCursorStep::Census { bytes } => census = Some(bytes),
-                DagCursorStep::Byte(byte) => output.push(byte),
-                DagCursorStep::Complete => break,
-                DagCursorStep::Progress { .. } => {}
+                DagSelectionTextStep::Census { bytes } => census = Some(bytes),
+                DagSelectionTextStep::Byte(byte) => output.push(byte),
+                DagSelectionTextStep::Complete => break,
+                DagSelectionTextStep::Progress { .. } => {}
             }
         }
         assert_eq!(census, Some(expected.len()));
         assert_eq!(output, expected);
-        assert_eq!(cursor.step(&host, cursor_grant()), Ok(DagCursorStep::Complete));
+        assert_eq!(cursor.step(&host, cursor_grant()), Ok(DagSelectionTextStep::Complete));
     }
 }
 
@@ -40,17 +41,17 @@ fn selected_nodes_cursor_censuses_and_emits_one_byte_per_grant() {
 fn selected_edges_cursor_matches_direct_encode() {
     let mut host = DagHost::default_demo();
     let edge = host.host_snapshot.edges.first().expect("demo edge").id.clone();
-    host.set_selection_domains_json(&format!("{{\"nodes\":[],\"edges\":[{edge:?}],\"handles\":[]}}"));
+    host.set_selection_domains(&DagSelectionDomains { edges: vec![edge], ..Default::default() });
     let expected = semio_framework_pack_json::to_json_string(&host.selected_edge_ids()).into_bytes();
-    let mut cursor = DagSelectedNodesJsonCursor::edges();
+    let mut cursor = DagSelectionJsonCursor::edges();
     let mut output = Vec::new();
     let mut census = None;
     loop {
         match cursor.step(&host, cursor_grant()).unwrap() {
-            DagCursorStep::Census { bytes } => census = Some(bytes),
-            DagCursorStep::Byte(byte) => output.push(byte),
-            DagCursorStep::Complete => break,
-            DagCursorStep::Progress { .. } => {}
+            DagSelectionTextStep::Census { bytes } => census = Some(bytes),
+            DagSelectionTextStep::Byte(byte) => output.push(byte),
+            DagSelectionTextStep::Complete => break,
+            DagSelectionTextStep::Progress { .. } => {}
         }
     }
     assert_eq!(census, Some(expected.len()));
@@ -1202,7 +1203,7 @@ fn set_hover_channel_targets_port_handle_at_detail_lod() {
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("detail");
     host.set_hover_channel(Some("combine"), Some("b"));
-    assert_eq!(host.hovered_channel(), Some(DagChannelRef { widget_id: "combine".into(), port: "b".into(), direction: "in".into() }));
+    assert_eq!(host.hovered_channel(), Some(DagChannelRef { widget_id: "combine".into(), port: "b".into(), direction: DagChannelDirection::In }));
     host.set_hover_channel(None, None);
     assert!(host.hovered_channel().is_none());
 }
@@ -1229,7 +1230,7 @@ fn hovered_channel_decodes_port_handle_at_detail_lod() {
     let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
     let (sx, sy) = world_to_screen_px(&host, row_center);
     host.pointer_move_screen(sx, sy, false, false, false);
-    assert_eq!(host.hovered_channel(), Some(DagChannelRef { widget_id: "combine".into(), port: "b".into(), direction: "in".into() }));
+    assert_eq!(host.hovered_channel(), Some(DagChannelRef { widget_id: "combine".into(), port: "b".into(), direction: DagChannelDirection::In }));
 }
 
 #[test]
@@ -2178,4 +2179,20 @@ fn cluster_explode_hit_rect_detects_top_right_affordance() {
     let (x0, y0, x1, y1) = cluster_explode_hit_rect(&node).expect("rect");
     assert!(cluster_explode_hit(&node, (x0 + x1) * 0.5, (y0 + y1) * 0.5));
     assert!(!cluster_explode_hit(&node, node.x - 50.0, node.y - 50.0));
+}
+
+#[test]
+fn screen_hit_projection_matches_neutral_and_serde_classification() {
+    use crate::infinite::board::schema::dag_input::DagScreenHit;
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️screen-hit.json")).unwrap();
+    for case in law["cases"].as_array().unwrap(){
+        let reference:DagScreenHit=serde_json::from_value(case["hit"].clone()).unwrap();
+        let original:DagScreenHit=semio_framework_pack_json::from_json_str(&case["hit"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(original,reference);
+        assert_eq!(original.is_screen_path(),case["screenPath"].as_bool().unwrap());
+        assert_eq!(original.is_draggable_body(),case["draggable"].as_bool().unwrap());
+        let emitted:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&original)).unwrap();
+        assert_eq!(emitted,case["hit"]);
+    }
+    eprintln!("[DEBUG] all neutral screen hit domains share the serde classification");
 }

@@ -1,5 +1,5 @@
 {
-  "maximumInlineBytes": 112,
+  "maximumInlineBytes": 144,
   "cases": [
     {
       "id": "minimal",
@@ -9,7 +9,13 @@
         "severity": "error",
         "message": "",
         "scope": {},
-        "retryable": false
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       },
       "expected": {
         "origin": "app",
@@ -17,7 +23,13 @@
         "severity": "error",
         "message": "",
         "scope": {},
-        "retryable": false
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       }
     },
     {
@@ -48,7 +60,13 @@
             "message": "cancelled"
           }
         ],
-        "retryable": true
+        "retryable": true,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       },
       "expected": {
         "origin": "plugin",
@@ -76,7 +94,13 @@
             "message": "cancelled"
           }
         ],
-        "retryable": true
+        "retryable": true,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       }
     },
     {
@@ -85,7 +109,13 @@
         "origin": "framework",
         "code": "framework.refused",
         "severity": "info",
-        "message": "no scope"
+        "message": "no scope",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       },
       "expected": {
         "origin": "framework",
@@ -93,7 +123,13 @@
         "severity": "info",
         "message": "no scope",
         "scope": {},
-        "retryable": false
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       }
     },
     {
@@ -106,7 +142,13 @@
         "scope": null,
         "span": null,
         "causes": null,
-        "retryable": null
+        "retryable": null,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       },
       "expected": {
         "origin": "os",
@@ -114,7 +156,13 @@
         "severity": "error",
         "message": "null scope",
         "scope": {},
-        "retryable": false
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       }
     },
     {
@@ -128,7 +176,13 @@
           "kind": "brep.mesh.translate",
           "operation": "translate"
         },
-        "retryable": false
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       },
       "expected": {
         "origin": "app",
@@ -140,7 +194,13 @@
           "kind": "brep.mesh.translate",
           "operation": "translate"
         },
-        "retryable": false
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       }
     },
     {
@@ -150,7 +210,13 @@
         "code": "app.refused",
         "severity": "error",
         "message": "",
-        "params": {}
+        "params": {},
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       },
       "expected": {
         "origin": "app",
@@ -158,7 +224,13 @@
         "severity": "error",
         "message": "",
         "scope": {},
-        "retryable": false
+        "retryable": false,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
       }
     }
   ]

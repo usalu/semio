@@ -1723,7 +1723,7 @@ impl std::error::Error for JobPublicationError {}
 
 #[cfg(test)]
 struct JobPayloadProjection {
-    owner: Option<Box<job::RetainedJobPayload>>,
+    owner: Option<job::RetainedJobPayload>,
     bytes: Vec<u8>,
     page: usize,
 }
@@ -1732,7 +1732,7 @@ struct JobPayloadProjection {
 impl JobPayloadProjection {
     fn new(owner: job::RetainedJobPayload) -> Self {
         let bytes = Vec::with_capacity(owner.len());
-        Self { owner: Some(Box::new(owner)), bytes, page: 0 }
+        Self { owner: Some(owner), bytes, page: 0 }
     }
 
     fn step(&mut self) -> (bool, bool) {
@@ -1741,19 +1741,20 @@ impl JobPayloadProjection {
             drop(self.owner.take());
             return (true, false);
         }
-        let Some(page) = owner.page(self.page) else {
+        let wrote = if let Some(page) = owner.page(self.page) {
+            self.bytes.extend_from_slice(page);
             self.page = self.page.saturating_add(1);
-            return (false, false);
-        };
-        self.bytes.extend_from_slice(page);
-        self.page = self.page.saturating_add(1);
-        let step = owner.close_step(1, job::JOB_PAYLOAD_PAGE_BYTES);
-        assert!(matches!(step, job::JobPayloadCloseStep::Pending { released_items: 1, released_bytes } if released_bytes == job::JOB_PAYLOAD_PAGE_BYTES));
+            true
+        } else { false };
+        let demand = owner.retirement_demands().expect("original payload frontier");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let step = owner.close_step(grant).expect("funded original payload projection");
+        assert!(step.progress().fits(grant));
         let complete = owner.terminal_is_empty();
         if complete {
             drop(self.owner.take());
         }
-        (complete, true)
+        (complete, wrote)
     }
 
     fn take_bytes(&mut self) -> Vec<u8> {

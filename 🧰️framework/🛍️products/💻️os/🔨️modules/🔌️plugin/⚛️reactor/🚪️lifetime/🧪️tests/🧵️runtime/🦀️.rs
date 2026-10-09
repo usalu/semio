@@ -66,7 +66,7 @@ async fn reactor_native_lifecycle_retains_exact_close_until_ack() {
     use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleReceipt as Receipt, Event};
     let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️production.json")).unwrap();
     let instance = fixture["open"]["instance_id"].as_u64().unwrap() as u32;
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
     let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "native-fixture".into())]).await.lifecycle_receipt.expect("Captured receipt");
     let Receipt::Captured { lifetime, request_sequence } = captured else { panic!("open must emit Captured") };
@@ -84,7 +84,7 @@ async fn reactor_native_lifecycle_retains_exact_close_until_ack() {
 #[semio_framework_async_macros::async_test]
 async fn reactor_native_lifecycle_rejects_foreign_and_colliding_owners() {
     use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt as Receipt, Event};
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
     assert!(crate::reactor::poll_kernel(&runtime, vec![reactor_native_lifecycle_open(7, 8, "a".repeat(super::PLUGIN_RUNTIME_ACTOR_BYTES + 1))], None, None, reactor_native_lifecycle_budget()).await.is_err());
     assert!(runtime.guest_lifetimes.borrow().get(7).is_none());
@@ -116,7 +116,7 @@ async fn reactor_native_lifecycle_rejects_foreign_and_colliding_owners() {
 #[semio_framework_async_macros::async_test]
 async fn reactor_native_lifecycle_output_failure_preserves_ack_and_owner() {
     use semio_framework::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt as Receipt, Event};
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
     let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(7, 8, "native-fixture".into())]).await.lifecycle_receipt.unwrap();
     let Receipt::Captured { lifetime, .. } = captured else { panic!("real captured owner") };
@@ -152,7 +152,7 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
     for late_clock in [false, true] {
         let (instance_a, instance_b) = if late_clock { (17u32, 18u32) } else { (7u32, 8u32) };
         let surface = format!("{instance_a}:output-fault-window");
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let captured_a = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance_a, 8, "native-fixture".into())]).await.lifecycle_receipt.unwrap();
         let Receipt::Captured { lifetime: a, .. } = captured_a else { unreachable!() };
@@ -202,7 +202,7 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
 async fn reactor_native_open_preserves_the_neutral_actor_authority() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🏪️store/🧫️fixtures/🧫️actor-genesis/🔣️.json")).expect("neutral actor/genesis fixture");
     let actor = fixture["actors"]["opened"].as_str().expect("opened actor");
-    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.expect("production declarations"));
     assert!(crate::plugin_runtime::instance_actor(&runtime, 23).await.is_err(), "a missing admitted actor never invents authority");
     assert!(crate::reactor::poll_kernel(&runtime, vec![reactor_native_lifecycle_open(23, 1, String::new())], None, None, reactor_native_lifecycle_budget()).await.is_err());

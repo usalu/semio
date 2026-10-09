@@ -1,5 +1,5 @@
 import {expect,test} from "bun:test";
-import {mkdtempSync,mkdirSync,readFileSync,writeFileSync} from "node:fs";
+import {existsSync,mkdtempSync,mkdirSync,readFileSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import glob from "fast-glob";
 import TOML from "@iarna/toml";
@@ -8,6 +8,8 @@ import fixture from "../../🧫️fixtures/🧭️native-discovery/🔣️.json"
 
 test("current root patterns discover every authored native owner before preparation",()=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");mkdirSync(output,{recursive:true});
+ const current=discoverCargoWorkspaces(process.cwd()).map(owner=>owner.manifest);
+ for(const row of fixture.owners)if(row.admitted&&existsSync(join(process.cwd(),row.manifest)))expect(current).toContain(row.manifest);
  const root=mkdtempSync(join(output,"native-owner-discovery-")),patterns=(TOML.parse(readFileSync(join(process.cwd(),"Cargo.toml"),"utf8")) as any).workspace.metadata.semio.repository["owner-manifests"] as string[];
  const put=(path:string,body:string)=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),body);};
  const workspace=(owners:readonly string[])=>'[workspace]\nresolver="2"\nmembers=["pkg"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests='+JSON.stringify(owners)+'\nmember-manifests=["pkg/Cargo.toml"]\nexclude-patterns=[]\n';
@@ -21,4 +23,4 @@ test("current root patterns discover every authored native owner before preparat
   const native=Bun.spawnSync(["cargo","metadata","--offline","--no-deps","--format-version","1","--manifest-path",join(root,owner)],{cwd:root,stdout:"pipe",stderr:"pipe"});if(native.exitCode!==0)throw Error(native.stderr.toString());const metadata=JSON.parse(native.stdout.toString());expect(metadata.workspace_members).toHaveLength(1);expect(metadata.packages[0].manifest_path.replaceAll("\\","/")).toBe(join(root,dirname(owner),"pkg/Cargo.toml").replaceAll("\\","/"));
  }
  console.log("[DEBUG] Root native owner discovery agrees with independent glob, TOML and Cargo preparation");
-});
+},60000);

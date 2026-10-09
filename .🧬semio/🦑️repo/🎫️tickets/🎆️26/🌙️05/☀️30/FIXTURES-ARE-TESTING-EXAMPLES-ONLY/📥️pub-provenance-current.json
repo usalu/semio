@@ -1,0 +1,119 @@
+{
+  "redProduction": "🗑️generated/registry-native.log",
+  "trueCurrentCancellationRed": {
+    "session": 13740,
+    "log": "🗑️generated/p-red2.log",
+    "Nx": 1,
+    "cause": "promise resolved/published after SIGINT during actual physical read"
+  },
+  "qualifiedHarnessErrors": [
+    "🗑️generated/p-red.log: missing extracted manifest helper binding",
+    "🗑️generated/p-green.log: actual physical cancellation refused via IO diagnostic rather than expected error substring"
+  ],
+  "green": {
+    "session": 5092,
+    "Nx": 0,
+    "log": "🗑️generated/p-final.log",
+    "tests": [
+      {
+        "pass": 1,
+        "expect": 122
+      },
+      {
+        "pass": 13,
+        "expect": 86
+      }
+    ],
+    "native": false,
+    "CargoStarted": false
+  },
+  "sourceCopies": false,
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+      "role": "authored-logical-action",
+      "beforeSha256": "bd8b18a0706429905adb39ff9c7d299054fdda39d13889c488c38ad4b47d70df",
+      "beforeBytes": 16714,
+      "afterSha256": "f9596b907189f7a011de65181f7432579ae95943e88a70ca4642b217a4596318",
+      "afterBytes": 23443
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/📬️test-body/🔣️.json",
+      "role": "authored-logical-action",
+      "beforeSha256": "cc7968981d220eda0bac78d99d40d044b93b6125cb4ebcd10ce90917bc13142f",
+      "beforeBytes": 7743,
+      "afterSha256": "0d5978de181ff7a8ae8fe75ebb15df7446e2bf3b34e4b6d87f28931bfe5f65f3",
+      "afterBytes": 8237
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "role": "authored-logical-action",
+      "beforeSha256": "d50caced59322f6f56051af8b085ecb59271a1f015c2a1af6b4ceae7fc7b112c",
+      "beforeBytes": 92377,
+      "afterSha256": "92ca2feb788ebcb6353ae292d705ff7a24ebe8c32359556d8b7bcd17b5d39303",
+      "afterBytes": 93479
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
+      "role": "authored-logical-action",
+      "beforeSha256": "114cdbca6e746f5fc44f39987596c17bb62ac634579eadef5fa001296f2be0f7",
+      "beforeBytes": 69219,
+      "afterSha256": "740705bbf4b137991e29551d558730db260ad6e8d8e1eec6cf2d51833e951ea4",
+      "afterBytes": 69427
+    },
+    {
+      "path": ".vscode/launch.json",
+      "role": "authored-logical-action",
+      "beforeSha256": "49120167133f99d763cf728f6a77758f87b5c6146879b9327de4aad08affa32a",
+      "beforeBytes": 5555320,
+      "afterSha256": "2183595241b3af4350e32f18ec37a5602bbd85777c58795b939d18a7d747053e",
+      "afterBytes": 5563702
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "role": "authored-logical-action",
+      "beforeSha256": "25ed40f2cb5af46df8e0784daeac70b2c0c9a685f121f2cd8c74cc62999f2c3c",
+      "beforeBytes": 4608350,
+      "afterSha256": "f97160182f5820ef39ec57d81631817322e15b8bd041df8400792a2f6c6e1310",
+      "afterBytes": 4616732
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+      "role": "authored-logical-action",
+      "beforeSha256": "fdc59cbaa311e1093c8ffc2193816521c036ad2bf789df89f8fe6ec81efb63c9",
+      "beforeBytes": 15321,
+      "afterSha256": "caa3a58e32cce6e75beb81330d3a79393fb9d1b38af6f3a41e594c067ad6c769",
+      "afterBytes": 15371
+    }
+  ],
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "role": "peer-observer-only",
+      "beforeSha256": "aa19527b69830d3472ebd6c4743ea9deff399b239ec428cd29ea6ca777324886",
+      "beforeBytes": 33387,
+      "afterSha256": "aa19527b69830d3472ebd6c4743ea9deff399b239ec428cd29ea6ca777324886",
+      "afterBytes": 33387
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+      "role": "peer-observer-only",
+      "beforeSha256": "16298eeef1d22fe280945f3dafe6fa13bee759c9c6cb3e1d44dfa7a134b0544c",
+      "beforeBytes": 9027,
+      "afterSha256": "16298eeef1d22fe280945f3dafe6fa13bee759c9c6cb3e1d44dfa7a134b0544c",
+      "afterBytes": 9027
+    }
+  ],
+  "caller": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+    "action": "updated",
+    "logicalScope": "cargoStreamingStatus final observation/publication signal lifetime only",
+    "beforeSha256": "fdc59cbaa311e1093c8ffc2193816521c036ad2bf789df89f8fe6ec81efb63c9",
+    "afterSha256": "caa3a58e32cce6e75beb81330d3a79393fb9d1b38af6f3a41e594c067ad6c769",
+    "beforeBlockSha256": "ab0608499b6f425a7eb5de855c85294dd042c80935fc79ebb64089a541f3aa2a",
+    "afterBlockSha256": "249f0e6c2de49479e771f417a703cb40ce696c272aed0b9112799da086651d75",
+    "peerPhysicalAuthorityObservedNotAuthored": true,
+    "restPreserved": true,
+    "sourceCopies": false
+  }
+}

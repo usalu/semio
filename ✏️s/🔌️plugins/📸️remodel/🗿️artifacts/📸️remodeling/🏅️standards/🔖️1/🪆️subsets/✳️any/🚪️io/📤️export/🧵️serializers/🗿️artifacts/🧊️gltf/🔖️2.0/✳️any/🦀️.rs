@@ -20,7 +20,7 @@ pub struct RemodelingIntoGltf;
 impl Serializer<RemodelingSnapshot> for RemodelingIntoGltf {
     const INTO: Dialect = GLTF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &RemodelingSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &RemodelingSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let semio = io_root::scene_mesh_semio(from).map_err(|reason| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→gltf: nothing to export: {reason}"))))?;
         let gltf = ::semio_framework_async::poll::resolve_ready(SemioMeshToGltf::serialize(&semio)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→gltf: {error}"))))?;
         let bytes = encode_glb(&gltf).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→gltf: {error}"))))?;

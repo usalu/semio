@@ -1,6 +1,10 @@
 //! ⏯️ Package glue — wiring only. Domain lives at owner `🦀️.rs`; pure and target-neutral, so the
 //! owner file compiles unmodified on native, `wasm32-unknown-unknown` and `wasm32-wasip2`.
 
+#[cfg(test)]
+#[global_allocator]
+static ORIGINAL_WRITER_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 #[path = "../../🦀️.rs"]
 mod component;
 pub use component::{

@@ -1,0 +1,14 @@
+{
+  "code": "artifact-envelope.target-retirement",
+  "path": "$.vcs",
+  "refusalKind": "ownershipLimit",
+  "retainedProgress": {
+    "copiedItems": 1,
+    "copiedBytes": 24,
+    "retainedCapacityBytes": 40,
+    "releasedBytes": 67
+  },
+  "offset": 0,
+  "line": 0,
+  "column": 0
+}

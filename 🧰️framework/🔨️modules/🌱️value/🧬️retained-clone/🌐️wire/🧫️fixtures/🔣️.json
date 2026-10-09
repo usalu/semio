@@ -1,0 +1,80 @@
+{
+  "title": "Original Inference Retained Wallet",
+  "fields": [
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "maximumReleaseBytes",
+    "maximumDepth"
+  ],
+  "rows": [
+    {
+      "maximumItems": 0,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 0,
+      "maximumDepth": 0
+    },
+    {
+      "maximumItems": 7,
+      "maximumCopyBytes": 3,
+      "maximumCapacityBytes": 129,
+      "maximumReleaseBytes": 4096,
+      "maximumDepth": 2
+    },
+    {
+      "maximumItems": 1,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 37,
+      "maximumReleaseBytes": 65536,
+      "maximumDepth": 9
+    },
+    {
+      "maximumItems": 1,
+      "maximumCopyBytes": 23,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 0,
+      "maximumDepth": 0
+    }
+  ],
+  "maximum64": "18446744073709551615",
+  "nativeAddressSpace": "checked-usize",
+  "missingAxis": "refuse",
+  "unknownAxis": "refuse",
+  "transport": "same-original-caller-wallet",
+  "derivationFromInferenceBudget": "forbidden",
+  "receiptFields": [
+    "copiedItems",
+    "copiedBytes",
+    "retainedCapacityBytes",
+    "releasedBytes"
+  ],
+  "receipts": [
+    {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 3,
+      "retainedCapacityBytes": 129,
+      "releasedBytes": 4096
+    },
+    {
+      "copiedItems": 7,
+      "copiedBytes": 23,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 65536
+    }
+  ],
+  "resultReceipt": "same-original-execution-receipt",
+  "interactiveCancellation": {
+    "signal": "pure",
+    "custody": "same-original-router-slot",
+    "result": "after-outcome-and-session-terminal",
+    "grant": "same-incoming-five-axes",
+    "receipt": "checked-cumulative-original-close"
+  }
+}

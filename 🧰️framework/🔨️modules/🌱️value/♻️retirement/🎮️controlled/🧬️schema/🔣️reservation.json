@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "original",
+    "allocatorMultiplier",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "original-controlled-failed-reservation.v1"
+    },
+    "original": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allocatorMultiplier": {
+      "const": 2
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sameOriginal",
+        "error",
+        "copiedItems",
+        "releasedBytes",
+        "receipt",
+        "terminalHeap",
+        "admissionReceipt"
+      ],
+      "properties": {
+        "sameOriginal": {
+          "const": true
+        },
+        "error": {
+          "const": "invariantViolated"
+        },
+        "copiedItems": {
+          "const": 1
+        },
+        "releasedBytes": {
+          "const": 0
+        },
+        "receipt": {
+          "const": "actual-retained-allocation"
+        },
+        "terminalHeap": {
+          "const": [
+            0,
+            0
+          ]
+        },
+        "admissionReceipt": {
+          "const": "same-actual-receipt"
+        }
+      }
+    }
+  }
+}

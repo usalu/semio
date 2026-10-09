@@ -15,6 +15,9 @@ pub mod numeric_scratch;
 pub mod list;
 #[path = "📦️paged/🦀️.rs"]
 pub mod paged;
+#[path = "📝️shared-utf8/🦀️.rs"]
+pub mod shared_utf8;
+pub use shared_utf8::SharedUtf8;
 //#endregion 🗂️OrderedOwnership
 
 #[path = "🧬️bytes/🦀️.rs"]
@@ -33,6 +36,9 @@ pub use native_decoding::NativeDecodeControl;
 #[path = "🛫️encode/🦀️.rs"]
 pub mod native_encoding;
 pub use native_encoding::NativeEncodeControl;
+
+#[path = "🫴️receiving/🦀️.rs"]
+mod native_receiving;
 
 #[path = "⚠️refusal/🦀️.rs"]
 pub mod refusal;

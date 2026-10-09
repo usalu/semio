@@ -1,0 +1,205 @@
+{
+  "schema": "artifact.catalog-binding-neutral/v1",
+  "cases": [
+    {
+      "id": "linked",
+      "row": {
+        "contributor": {
+          "pluginId": "owner",
+          "packageId": "semio:owner",
+          "version": "0.1.0",
+          "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
+          "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "executionProtocol": {
+            "appChannelVersion": 23
+          }
+        },
+        "owner": {
+          "pluginId": "owner",
+          "packageId": "semio:owner",
+          "version": "0.1.0",
+          "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
+          "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "executionProtocol": {
+            "appChannelVersion": 23
+          }
+        },
+        "artifact": {
+          "kind": "stdio.catalog-neutral",
+          "schema": "catalog.neutral",
+          "packSchemaHash": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "target": null,
+        "capability": {
+          "kind": "linked",
+          "nativeIdentity": {
+            "kind": "typed",
+            "owner": "catalog::OriginalNeutralOwner"
+          },
+          "sqliteSchema": "CREATE TABLE neutral_snapshot (id INTEGER PRIMARY KEY, text TEXT NOT NULL);",
+          "factory": "catalog.original-neutral"
+        }
+      }
+    },
+    {
+      "id": "unlinked",
+      "row": {
+        "contributor": {
+          "pluginId": "owner",
+          "packageId": "semio:owner",
+          "version": "0.1.0",
+          "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
+          "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "executionProtocol": {
+            "appChannelVersion": 23
+          }
+        },
+        "owner": {
+          "pluginId": "owner",
+          "packageId": "semio:owner",
+          "version": "0.1.0",
+          "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
+          "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "executionProtocol": {
+            "appChannelVersion": 23
+          }
+        },
+        "artifact": {
+          "kind": "stdio.catalog-neutral",
+          "schema": "catalog.neutral",
+          "packSchemaHash": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "target": null,
+        "capability": {
+          "kind": "unlinkedGuest"
+        }
+      }
+    },
+    {
+      "id": "hosted",
+      "row": {
+        "contributor": {
+          "pluginId": "host",
+          "packageId": "semio:host",
+          "version": "0.1.0",
+          "componentSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+          "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
+          "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "executionProtocol": {
+            "appChannelVersion": 23
+          }
+        },
+        "owner": {
+          "pluginId": "owner",
+          "packageId": "semio:owner",
+          "version": "0.1.0",
+          "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
+          "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "executionProtocol": {
+            "appChannelVersion": 23
+          }
+        },
+        "artifact": {
+          "kind": "stdio.catalog-neutral",
+          "schema": "catalog.neutral",
+          "packSchemaHash": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "target": {
+          "parentDialect": "stdio.catalog-parent@1/*",
+          "surface": {
+            "surfaceId": "catalog-parent.editor",
+            "appId": "catalog-parent.editor",
+            "windowKindId": "main",
+            "role": "editor",
+            "rendererTarget": "react"
+          },
+          "grant": {
+            "read": true,
+            "write": true,
+            "observe": true
+          },
+          "browserActor": {
+            "kind": "none"
+          }
+        },
+        "capability": {
+          "kind": "linked",
+          "nativeIdentity": {
+            "kind": "typed",
+            "owner": "catalog::OriginalNeutralOwner"
+          },
+          "sqliteSchema": "CREATE TABLE neutral_snapshot (id INTEGER PRIMARY KEY, text TEXT NOT NULL);",
+          "factory": "catalog.original-neutral"
+        }
+      }
+    },
+    {
+      "id": "otherWindow",
+      "row": {
+        "contributor": {
+          "pluginId": "host",
+          "packageId": "semio:host",
+          "version": "0.1.0",
+          "componentSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+          "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
+          "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "executionProtocol": {
+            "appChannelVersion": 23
+          }
+        },
+        "owner": {
+          "pluginId": "owner",
+          "packageId": "semio:owner",
+          "version": "0.1.0",
+          "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
+          "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "executionProtocol": {
+            "appChannelVersion": 23
+          }
+        },
+        "artifact": {
+          "kind": "stdio.catalog-neutral",
+          "schema": "catalog.neutral",
+          "packSchemaHash": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "target": {
+          "parentDialect": "stdio.catalog-parent@1/*",
+          "surface": {
+            "surfaceId": "catalog-parent.editor",
+            "appId": "catalog-parent.editor",
+            "windowKindId": "secondary",
+            "role": "editor",
+            "rendererTarget": "react"
+          },
+          "grant": {
+            "read": true,
+            "write": true,
+            "observe": true
+          },
+          "browserActor": {
+            "kind": "none"
+          }
+        },
+        "capability": {
+          "kind": "linked",
+          "nativeIdentity": {
+            "kind": "typed",
+            "owner": "catalog::OriginalNeutralOwner"
+          },
+          "sqliteSchema": "CREATE TABLE neutral_snapshot (id INTEGER PRIMARY KEY, text TEXT NOT NULL);",
+          "factory": "catalog.original-neutral"
+        }
+      }
+    }
+  ],
+  "duplicateProposal": "refuse",
+  "identicalInstalled": "idempotent",
+  "unknownCapability": "retainUnlinked",
+  "contributorIsOwner": false
+}

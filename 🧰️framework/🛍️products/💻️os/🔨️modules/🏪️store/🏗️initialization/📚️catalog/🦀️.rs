@@ -10,6 +10,47 @@ fn demand<T>(owner: &HistoryPageStack<T>) -> Result<usize, ValueError> {
 }
 
 impl ArtifactStoreInitializationOwnerCatalog {
+    /// 🪶️ Retains the six original page roots without creating any native backing.
+    pub fn empty() -> Self {
+        Self { applied_edit_ids: HistoryPageStack::empty(), redo_edit_ids: HistoryPageStack::empty(), cursor_applied_edit_ids: HistoryPageStack::empty(), cursor_redo_edit_ids: HistoryPageStack::empty(), applied_revision: HistoryPageStack::empty(), redo_revision: HistoryPageStack::empty() }
+    }
+
+    /// 📏️ Quotes the next original page, page descriptor and native directory before allocation.
+    pub fn admission_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        let capacity_bytes = if self.applied_edit_ids.capacity() == 0 { self.applied_edit_ids.next_push_allocation_bytes() }
+        else if self.redo_edit_ids.capacity() == 0 { self.redo_edit_ids.next_push_allocation_bytes() }
+        else if self.cursor_applied_edit_ids.capacity() == 0 { self.cursor_applied_edit_ids.next_push_allocation_bytes() }
+        else if self.cursor_redo_edit_ids.capacity() == 0 { self.cursor_redo_edit_ids.next_push_allocation_bytes() }
+        else if self.applied_revision.capacity() == 0 { self.applied_revision.next_push_allocation_bytes() }
+        else if self.redo_revision.capacity() == 0 { self.redo_revision.next_push_allocation_bytes() } else { 0 };
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: usize::from(!self.admission_is_complete()), ..Default::default() })
+    }
+
+    /// 🎟️ Admits exactly one empty native lane while retaining every previously born page.
+    pub fn admit_next(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+        if self.admission_is_complete() { return Ok(Default::default()); }
+        let demand = self.admission_demands()?;
+        if grant.maximum_items == 0 || grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(Default::default()); }
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "initialization catalog birth requires admitted depth")); }
+        macro_rules! lane {
+            ($field:ident) => {
+                if self.$field.capacity() == 0 {
+                    self.$field = HistoryPageStack::try_new().map_err(|reason| ValueError::literal(ValueRefusalKind::AllocationFailed, reason))?;
+                    let progress = RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
+                    semio_framework_value::retained_clone::admit_retained_clone_progress(grant, progress, "original initialization catalog page birth")?;
+                    return Ok(progress);
+                }
+            };
+        }
+        lane!(applied_edit_ids); lane!(redo_edit_ids); lane!(cursor_applied_edit_ids); lane!(cursor_redo_edit_ids); lane!(applied_revision); lane!(redo_revision);
+        Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "initialization catalog admission lost its original lane"))
+    }
+
+    /// 🏁 Requires all six actual original lane backings before runtime assembly.
+    pub fn admission_is_complete(&self) -> bool {
+        self.applied_edit_ids.capacity() != 0 && self.redo_edit_ids.capacity() != 0 && self.cursor_applied_edit_ids.capacity() != 0 && self.cursor_redo_edit_ids.capacity() != 0 && self.applied_revision.capacity() != 0 && self.redo_revision.capacity() != 0
+    }
+
     /// 📏️ Borrows the next resident native page and its last directory scaffold without allocation.
     pub fn next_release_byte_demand(&self) -> Result<usize, ValueError> {
         if self.applied_edit_ids.capacity() != 0 { return demand(&self.applied_edit_ids); }

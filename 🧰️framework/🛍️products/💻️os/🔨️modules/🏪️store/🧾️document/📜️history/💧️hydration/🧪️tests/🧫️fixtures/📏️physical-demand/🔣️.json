@@ -11,7 +11,100 @@
   "physicalReceiptEqualsExtent": true,
   "terminalFrameSeparate": true,
   "refusedAllocationBytes": 262145,
-  "runtimeAllocationBytes": [43024, 65536, 262144],
-  "foldLogicalBytes": [1, 7, 4096],
-  "foldAllocationBytes": [40, 8194, 65536, 262144]
+  "runtimeAllocationBytes": [
+    43024,
+    65536,
+    262144
+  ],
+  "foldLogicalBytes": [
+    1,
+    7,
+    4096
+  ],
+  "foldAllocationBytes": [
+    40,
+    8194,
+    65536,
+    262144
+  ],
+  "readyAuxiliaryPolicy": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 4096,
+    "maximumReleaseBytes": 4096,
+    "maximumDepth": 64
+  },
+  "readyAuxiliaryCapacity": 37,
+  "verifiedGenesis": {
+    "text": "Ω",
+    "snapshotCapacityBytes": 17,
+    "packCapacityBytes": 37,
+    "policy": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 65536,
+      "maximumDepth": 8
+    }
+  },
+  "messageLedgerBirth": {
+    "capacitySlots": 8192,
+    "pageSlots": 64,
+    "exampleSlotBytes": 48,
+    "policy": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 65536,
+      "maximumDepth": 8
+    },
+    "cancelCuts": [
+      0,
+      1,
+      2,
+      32,
+      127,
+      128,
+      129,
+      130,
+      134
+    ],
+    "ids": [
+      "Ω-0",
+      "Ω-1",
+      "Ω-2"
+    ],
+    "afterReinsert": [
+      "Ω-0",
+      "Ω-2",
+      "Ω-1"
+    ]
+  },
+  "envelopeBirth": {
+    "policy": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 65536,
+      "maximumDepth": 64
+    },
+    "metadata": {
+      "schema": "urn:member:envelope",
+      "id": "Ω-original"
+    },
+    "totalBirthTurns": 140,
+    "cancelCuts": [
+      0,
+      1,
+      4,
+      5,
+      6,
+      7,
+      8,
+      38,
+      133,
+      139,
+      140
+    ]
+  }
 }

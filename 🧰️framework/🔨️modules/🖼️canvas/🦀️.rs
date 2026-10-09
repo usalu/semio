@@ -330,6 +330,12 @@ mod renderer {
         data: SharedArc<Vec<u8>>,
     }
 
+    impl semio_framework_value::retirement::RetireOwned for RasterImage {
+        fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{sequence,deferred,shared::SharedControlledRetirement};sequence(vec![deferred(self.width),deferred(self.height),Box::new(SharedControlledRetirement::lease(self.data))])}
+        fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for,shared::shared_retirement_birth_bytes};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.width),deferred_birth_bytes_for(&self.height),shared_retirement_birth_bytes::<Vec<u8>>()])}
+        fn controlled_retirement_supported()->bool{true}
+    }
+
     impl RasterImage {
         /// 🖼️ Builds an RGBA8 raster image for scene drawing.
         pub fn rgba8(width: u32, height: u32, data: SharedArc<Vec<u8>>) -> Self {
@@ -1201,6 +1207,9 @@ pub use geometry::{append_shape_to_path, geom_sel, Affine, Arc, BezPath, Circle,
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub(crate) use renderer::vello_backend::usvg;
 pub use renderer::draw_list;
+#[path = "♻️retirement/➰️path/🦀️.rs"]
+mod path_retirement;
+pub use path_retirement::CanvasPathRetirement;
 pub use renderer::{
     advance_opaque_scene_retirement, opaque_scene_retirement_status, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, BlendMode, Cap, Color, FillRule, OpaqueSceneRetirementStep, OpaqueSceneRetirementToken, Paint, RasterImage, Rgba8,
     Scene, Stroke,

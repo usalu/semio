@@ -1,0 +1,2059 @@
+{
+  "sourceActionUnion": [
+    {
+      "path": ".nxignore",
+      "actionLedgers": [
+        "📥️root-nx-core-actions.json"
+      ],
+      "codepoints": 37,
+      "utf16": 37
+    },
+    {
+      "path": ".vscode/launch.json",
+      "actionLedgers": [
+        "reader-endpoints",
+        "law-routes-actions"
+      ],
+      "codepoints": 47,
+      "utf16": 47
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "actionLedgers": [
+        "reader-endpoints",
+        "law-routes-actions"
+      ],
+      "codepoints": 55,
+      "utf16": 56
+    },
+    {
+      "path": "nx.json",
+      "actionLedgers": [
+        "📥️root-nx-collection-actions.json"
+      ],
+      "codepoints": 35,
+      "utf16": 35
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+      "actionLedgers": [
+        "six-embedded-reader-actions"
+      ],
+      "codepoints": 161,
+      "utf16": 173
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "six-embedded-actions"
+      ],
+      "codepoints": 157,
+      "utf16": 168
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "six-embedded-reader-actions"
+      ],
+      "codepoints": 182,
+      "utf16": 198
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "six-embedded-actions"
+      ],
+      "codepoints": 185,
+      "utf16": 201
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "six-embedded-reader-actions",
+        "pdf-cancel-actions"
+      ],
+      "codepoints": 182,
+      "utf16": 198
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "six-embedded-actions",
+        "pdf-cancel-actions"
+      ],
+      "codepoints": 185,
+      "utf16": 201
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+      "actionLedgers": [
+        "root-five-actions"
+      ],
+      "codepoints": 148,
+      "utf16": 161
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🔐️lifecycle/🔣️.json",
+      "actionLedgers": [
+        "root-five-actions"
+      ],
+      "codepoints": 156,
+      "utf16": 169
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 147,
+      "utf16": 160
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 152,
+      "utf16": 165
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "six-embedded-actions"
+      ],
+      "codepoints": 146,
+      "utf16": 158
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 149,
+      "utf16": 162
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 153,
+      "utf16": 166
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 152,
+      "utf16": 165
+    },
+    {
+      "path": "📋️project.json",
+      "actionLedgers": [
+        "📥️root-registry-source-actions.json"
+      ],
+      "codepoints": 42,
+      "utf16": 43
+    },
+    {
+      "path": "📜️script.ts",
+      "actionLedgers": [
+        "📥️root-registry-source-actions.json",
+        "📥️root-registry-placement-actions.json",
+        "📥️root-registry-boundary-actions.json"
+      ],
+      "codepoints": 39,
+      "utf16": 40
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-boundary12-test-actions.json",
+        "📥️root-boundary12-actions.json"
+      ],
+      "codepoints": 92,
+      "utf16": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-empty-facet-actions.json"
+      ],
+      "codepoints": 87,
+      "utf16": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "📥️root-boundary12-actions.json"
+      ],
+      "codepoints": 95,
+      "utf16": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "six-embedded-reader-actions"
+      ],
+      "codepoints": 82,
+      "utf16": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "six-embedded-actions"
+      ],
+      "codepoints": 85,
+      "utf16": 91
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 89,
+      "utf16": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 92,
+      "utf16": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+      "actionLedgers": [
+        "ecma-reader-endpoints"
+      ],
+      "codepoints": 82,
+      "utf16": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "ecma-reader-endpoints"
+      ],
+      "codepoints": 90,
+      "utf16": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧫️fixtures/🔣️.json",
+      "actionLedgers": [
+        "ecma-reader-endpoints"
+      ],
+      "codepoints": 95,
+      "utf16": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "ecma-reader-endpoints"
+      ],
+      "codepoints": 93,
+      "utf16": 100
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🟦️.ts",
+      "actionLedgers": [
+        "ecma-reader-endpoints"
+      ],
+      "codepoints": 91,
+      "utf16": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-conflict-actions.json",
+        "📥️root-b10-actions"
+      ],
+      "codepoints": 101,
+      "utf16": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "📥️root-conflict-actions.json",
+        "📥️root-b10-actions"
+      ],
+      "codepoints": 104,
+      "utf16": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "six-embedded-actions"
+      ],
+      "codepoints": 90,
+      "utf16": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 106,
+      "utf16": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🚦️ownership/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "mesh-law-actions"
+      ],
+      "codepoints": 98,
+      "utf16": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions",
+        "mesh-law-actions"
+      ],
+      "codepoints": 95,
+      "utf16": 101
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+      "actionLedgers": [
+        "two-trial-actions"
+      ],
+      "codepoints": 116,
+      "utf16": 126
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "two-trial-actions"
+      ],
+      "codepoints": 112,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 89,
+      "utf16": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 92,
+      "utf16": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "actionLedgers": [
+        "tess-current-actions"
+      ],
+      "codepoints": 106,
+      "utf16": 115
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "tess-current-actions"
+      ],
+      "codepoints": 125,
+      "utf16": 135
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧬️schema/🎟️owners.json",
+      "actionLedgers": [
+        "tess-current-actions"
+      ],
+      "codepoints": 84,
+      "utf16": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-registry-source-actions.json"
+      ],
+      "codepoints": 76,
+      "utf16": 80
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🔣️.json",
+      "actionLedgers": [
+        "📥️root-b8-actions.json"
+      ],
+      "codepoints": 91,
+      "utf16": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-b8-actions.json"
+      ],
+      "codepoints": 97,
+      "utf16": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "📥️root-b8-actions.json"
+      ],
+      "codepoints": 100,
+      "utf16": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-registry-boundary-actions.json"
+      ],
+      "codepoints": 75,
+      "utf16": 80
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📤️exports/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-registry-source-actions.json"
+      ],
+      "codepoints": 74,
+      "utf16": 79
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "actionLedgers": [
+        "📥️root-registry-source-actions.json"
+      ],
+      "codepoints": 87,
+      "utf16": 92
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-registry-source-actions.json"
+      ],
+      "codepoints": 82,
+      "utf16": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "📥️root-registry-boundary-actions.json"
+      ],
+      "codepoints": 66,
+      "utf16": 70
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-registry-boundary-actions.json"
+      ],
+      "codepoints": 64,
+      "utf16": 68
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-registry-source-actions.json"
+      ],
+      "codepoints": 64,
+      "utf16": 68
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/📤️schema-export-entries/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-registry-boundary-actions.json"
+      ],
+      "codepoints": 96,
+      "utf16": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/📤️schema-export-entries/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-registry-boundary-actions.json"
+      ],
+      "codepoints": 96,
+      "utf16": 102
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📋️project.json",
+      "actionLedgers": [
+        "law-routes-actions"
+      ],
+      "codepoints": 121,
+      "utf16": 129
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧪️tests/🟦️.test.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 125,
+      "utf16": 134
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 123,
+      "utf16": 132
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "root-five-actions",
+        "four-recreated-actions"
+      ],
+      "codepoints": 154,
+      "utf16": 165
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧪️tests/🎟️source/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-b8-actions.json"
+      ],
+      "codepoints": 145,
+      "utf16": 156
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧬️schema/🎟️source/🔣️.json",
+      "actionLedgers": [
+        "📥️root-b8-actions.json"
+      ],
+      "codepoints": 148,
+      "utf16": 159
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json",
+      "actionLedgers": [
+        "root-five-actions",
+        "four-recreated-actions"
+      ],
+      "codepoints": 141,
+      "utf16": 150
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+      "actionLedgers": [
+        "geometry-renewed-actions",
+        "four-recreated-actions",
+        "📥️root-b8-actions.json"
+      ],
+      "codepoints": 109,
+      "utf16": 117
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json",
+      "actionLedgers": [
+        "geometry-renewed-actions"
+      ],
+      "codepoints": 112,
+      "utf16": 120
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/🎟️work.json",
+      "actionLedgers": [
+        "geometry-renewed-actions",
+        "four-recreated-actions",
+        "📥️root-b8-actions.json"
+      ],
+      "codepoints": 104,
+      "utf16": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-boundary12-test-actions.json",
+        "📥️root-boundary12-actions.json"
+      ],
+      "codepoints": 112,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-empty-facet-actions.json"
+      ],
+      "codepoints": 107,
+      "utf16": 115
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt/🔣️.json",
+      "actionLedgers": [
+        "📥️root-boundary12-actions.json"
+      ],
+      "codepoints": 115,
+      "utf16": 124
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary13-test-action.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary13-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-test-action.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-actions.json"
+      ],
+      "codepoints": 113,
+      "utf16": 122
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary13-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-actions.json"
+      ],
+      "codepoints": 108,
+      "utf16": 116
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary13-actions.json",
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-actions.json"
+      ],
+      "codepoints": 116,
+      "utf16": 125
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-b8-actions.json",
+        "📥️root-b10-actions",
+        "📥️root-boundary12-test-actions.json",
+        "📥️root-boundary12-actions.json"
+      ],
+      "codepoints": 120,
+      "utf16": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "actionLedgers": [
+        "two-trial-actions",
+        "flow-recreated-actions",
+        "flow-current2-actions",
+        "three-recreated-actions",
+        "four-recreated-actions",
+        "📥️root-b8-actions.json",
+        "📥️root-b10-session-actions"
+      ],
+      "codepoints": 123,
+      "utf16": 133
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-empty-facet-actions.json"
+      ],
+      "codepoints": 115,
+      "utf16": 124
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+      "actionLedgers": [
+        "📥️root-b8-actions.json",
+        "📥️root-b10-actions",
+        "📥️root-boundary12-actions.json"
+      ],
+      "codepoints": 123,
+      "utf16": 133
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "actionLedgers": [
+        "two-trial-actions",
+        "flow-recreated-actions",
+        "flow-current2-actions",
+        "three-recreated-actions",
+        "four-recreated-actions",
+        "📥️root-b8-actions.json",
+        "📥️root-b10-session-actions"
+      ],
+      "codepoints": 126,
+      "utf16": 136
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-boundary12-test-actions.json",
+        "📥️root-boundary12-actions.json"
+      ],
+      "codepoints": 144,
+      "utf16": 156
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-empty-facet-actions.json"
+      ],
+      "codepoints": 118,
+      "utf16": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "📥️root-boundary12-actions.json"
+      ],
+      "codepoints": 126,
+      "utf16": 137
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+      "actionLedgers": [
+        "law-routes-actions"
+      ],
+      "codepoints": 112,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "actionLedgers": [
+        "law-routes-actions"
+      ],
+      "codepoints": 109,
+      "utf16": 118
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
+      "actionLedgers": [
+        "root-five-actions",
+        "three-recreated-actions",
+        "receiving-current-actions"
+      ],
+      "codepoints": 134,
+      "utf16": 145
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json",
+      "actionLedgers": [
+        "root-five-actions",
+        "three-recreated-actions"
+      ],
+      "codepoints": 122,
+      "utf16": 132
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-presence-actions.json"
+      ],
+      "codepoints": 103,
+      "utf16": 110
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-presence-actions.json",
+        "📥️root-k5-presence-actions.json",
+        "📥️root-k6-presence-actions.json",
+        "📥️root-k8b-presence-actions.json"
+      ],
+      "codepoints": 118,
+      "utf16": 127
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-presence-actions.json",
+        "📥️root-k5-presence-actions.json"
+      ],
+      "codepoints": 117,
+      "utf16": 127
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-presence-actions.json",
+        "📥️root-k6-presence-actions.json"
+      ],
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🛂️peer-admission.json",
+      "actionLedgers": [
+        "📥️root-presence-actions.json"
+      ],
+      "codepoints": 117,
+      "utf16": 125
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🧹️retirement.json",
+      "actionLedgers": [
+        "📥️root-presence-actions.json"
+      ],
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-io-refusal-actions.json"
+      ],
+      "codepoints": 128,
+      "utf16": 139
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-detach-policy-actions.json"
+      ],
+      "codepoints": 116,
+      "utf16": 124
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧫️fixtures/🔣️.json",
+      "actionLedgers": [
+        "📥️root-detach-policy-actions.json"
+      ],
+      "codepoints": 112,
+      "utf16": 120
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-presence-actions.json"
+      ],
+      "codepoints": 99,
+      "utf16": 106
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-presence-actions.json",
+        "📥️root-k5-presence-actions.json"
+      ],
+      "codepoints": 114,
+      "utf16": 123
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-planning-policy-test-action.json",
+        "📥️root-planning-policy-test-correction.json",
+        "📥️root-k8b-history-actions.json"
+      ],
+      "codepoints": 108,
+      "utf16": 117
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-k6-planning-actor-action.json",
+        "📥️root-planning-policy-actions.json",
+        "📥️root-k8b-history-actions.json"
+      ],
+      "codepoints": 108,
+      "utf16": 117
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧫️fixtures/🔣️.json",
+      "actionLedgers": [
+        "📥️root-planning-policy-actions.json",
+        "📥️root-k8b-history-actions.json"
+      ],
+      "codepoints": 113,
+      "utf16": 122
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🚫️refusal/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "📥️root-io-refusal-actions.json"
+      ],
+      "codepoints": 105,
+      "utf16": 114
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "actionLedgers": [
+        "📥️root-presence-actions.json",
+        "📥️root-k8b-history-actions.json"
+      ],
+      "codepoints": 79,
+      "utf16": 85
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔗️backbone-detach/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-detach-policy-test-action.json",
+        "📥️root-detach-policy-actions.json"
+      ],
+      "codepoints": 105,
+      "utf16": 113
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-presence-actions.json"
+      ],
+      "codepoints": 94,
+      "utf16": 102
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
+      "actionLedgers": [
+        "plugin-target-correction"
+      ],
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 126,
+      "utf16": 134
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/📏️live-physical-demand/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 171,
+      "utf16": 182
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "nine-laws-reader-actions"
+      ],
+      "codepoints": 137,
+      "utf16": 146
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-raw-current-actions.json",
+        "📥️root-raw-observer-action.json"
+      ],
+      "codepoints": 111,
+      "utf16": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-close/🔣️.json",
+      "actionLedgers": [
+        "📥️root-raw-current-actions.json"
+      ],
+      "codepoints": 122,
+      "utf16": 131
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs",
+      "actionLedgers": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k7-preflight-action.json"
+      ],
+      "codepoints": 108,
+      "utf16": 117
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+      "actionLedgers": [
+        "📥️root-nx-core-target-actions.json"
+      ],
+      "codepoints": 102,
+      "utf16": 108
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+      "actionLedgers": [
+        "📥️root-nx-core-actions.json"
+      ],
+      "codepoints": 101,
+      "utf16": 107
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "actionLedgers": [
+        "📥️root-nx-core-actions.json"
+      ],
+      "codepoints": 111,
+      "utf16": 118
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "📥️root-nx-core-actions.json"
+      ],
+      "codepoints": 104,
+      "utf16": 111
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
+      "actionLedgers": [
+        "📥️catalog-current-actions.json"
+      ],
+      "codepoints": 97,
+      "utf16": 103
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "actionLedgers": [
+        "reader-endpoints"
+      ],
+      "codepoints": 116,
+      "utf16": 124
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "actionLedgers": [
+        "reader-endpoints"
+      ],
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-registry-placement-actions.json",
+        "📥️root-registry-boundary-actions.json"
+      ],
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-registry-placement-actions.json",
+        "📥️root-registry-alternate-test-action.json",
+        "📥️root-registry-route-actions"
+      ],
+      "codepoints": 121,
+      "utf16": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🧫️fixtures/🔣️.json",
+      "actionLedgers": [
+        "📥️root-registry-placement-actions.json"
+      ],
+      "codepoints": 126,
+      "utf16": 135
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "actionLedgers": [
+        "reader-endpoints",
+        "dynamic-member-action",
+        "validator-method-action",
+        "construction-actions",
+        "default-effects-actions"
+      ],
+      "codepoints": 110,
+      "utf16": 118
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "reader-endpoints",
+        "construction-actions"
+      ],
+      "codepoints": 118,
+      "utf16": 127
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
+      "actionLedgers": [
+        "reader-endpoints",
+        "construction-actions",
+        "default-effects-actions"
+      ],
+      "codepoints": 123,
+      "utf16": 132
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🔣️.json",
+      "actionLedgers": [
+        "reader-endpoints"
+      ],
+      "codepoints": 121,
+      "utf16": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🟦️.ts",
+      "actionLedgers": [
+        "reader-endpoints"
+      ],
+      "codepoints": 119,
+      "utf16": 128
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "actionLedgers": [
+        "reader-endpoints",
+        "📥️root-registry-boundary-actions.json"
+      ],
+      "codepoints": 95,
+      "utf16": 102
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-registry-source-actions.json",
+        "📥️root-registry-placement-actions.json"
+      ],
+      "codepoints": 115,
+      "utf16": 124
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🧪️tests/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-registry-test-actions.json",
+        "📥️root-registry-placement-actions.json"
+      ],
+      "codepoints": 123,
+      "utf16": 133
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🧫️fixtures/🔣️.json",
+      "actionLedgers": [
+        "📥️root-registry-test-actions.json",
+        "📥️root-registry-placement-actions.json"
+      ],
+      "codepoints": 128,
+      "utf16": 138
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+      "actionLedgers": [
+        "📥️catalog-current-actions.json"
+      ],
+      "codepoints": 99,
+      "utf16": 105
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "actionLedgers": [
+        "reader-endpoints"
+      ],
+      "codepoints": 93,
+      "utf16": 99
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "actionLedgers": [
+        "📥️root-nx-collection-actions.json",
+        "📥️root-nx-core-actions.json"
+      ],
+      "codepoints": 84,
+      "utf16": 90
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-nx-collection-actions.json",
+        "📥️root-nx-collection-test-actions.json",
+        "📥️root-nx-core-adversarial-actions.json",
+        "📥️root-nx-core-test-actions.json"
+      ],
+      "codepoints": 125,
+      "utf16": 132
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+      "actionLedgers": [
+        "📥️root-registry-test-actions.json",
+        "📥️root-registry-placement-actions.json"
+      ],
+      "codepoints": 112,
+      "utf16": 120
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚡️production-cache-input-boundary/🔣️.json",
+      "actionLedgers": [
+        "📥️root-nx-collection-test-actions.json",
+        "📥️root-nx-core-adversarial-actions.json"
+      ],
+      "codepoints": 130,
+      "utf16": 137
+    }
+  ],
+  "retainedLedgerInputs": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️catalog-current-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️construction-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️default-effects-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️dynamic-member-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️ecma-reader-endpoints.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️flow-current2-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️flow-recreated-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️four-recreated-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️geometry-renewed-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️law-routes-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️mesh-law-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️nine-laws-reader-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️pdf-cancel-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️plugin-target-correction.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️reader-endpoints.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️receiving-current-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b10-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b10-session-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-b8-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-empty-facet-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary12-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary13-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary13-test-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-boundary14-test-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-conflict-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-detach-policy-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-detach-policy-test-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-five-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-io-refusal-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k5-presence-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k6-planning-actor-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k6-presence-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k7-preflight-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k8b-history-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-k8b-presence-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-collection-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-collection-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-adversarial-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-target-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-nx-core-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-planning-policy-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-planning-policy-test-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-planning-policy-test-correction.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-presence-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-raw-current-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-raw-observer-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-alternate-test-action.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-boundary-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-placement-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-route-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-source-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️root-registry-test-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️six-embedded-reader-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️tess-current-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️three-recreated-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️two-trial-actions.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️validator-method-action.json"
+  ],
+  "excluded": [
+    "unchangedPlainInputObservers",
+    "fixtureObserverUnchanged",
+    "compilerSourceObservers",
+    "Low read-only current hashes",
+    "peer-created runtime/publication data"
+  ],
+  "pathViolations": [],
+  "currentWholeFileObservations": [
+    {
+      "path": ".nxignore",
+      "sha256": "db85134d407467819bbcdd7dce6491db848bd4d675c58d30c590a689294c452b",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "da9034a1130c86e6d44549bf5a396e1b29f4bc60d6a49d3eaa3d49a2c9436523",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "sha256": "4b729b2973c471299efaa18dc0eb92b4d54246aed03bb5d45e74133d28acad34",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "nx.json",
+      "sha256": "3413c117a2a97839347771c679df1ead8a7cb1aab96af2c3f64d578c9da42307",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "90f38a54254e37bc827f6322664b307ea62e31ef8b0f360108c58f812fbed435",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧬️schema/🔣️.json",
+      "sha256": "53829d6325b21dd8d386aa083661db05a81df03e508de2492e53b354bad16278",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🟦️.ts",
+      "sha256": "d023c0f058430fad35775059063db88713502e695f40ac9c4339ec123602e601",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "sha256": "7fc9830533d6f190d8339df11d7bcab825ca7e908fd0d4e2dd4d5a29fef1bacb",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+      "sha256": "10c8db99950ff89ccad405af9d315d3e596de1c11cb1ab5e961d0498f867a2d9",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "sha256": "2dff4302ad3ca3c0a95c6953bf250c368135ab483bc4d2ad90d4d571b095413a",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "cba0beda0638c160080a1bc876d5e17d5620b4ec8aacdbf4d19b1e40f995889a",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🔐️lifecycle/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "fc63560cccdc2f28e1333f6c5738f4558b3091557f9599e86a34b42b9a64d161",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧬️schema/🔣️.json",
+      "sha256": "57db163476d755ebf7663b75cce53d05362f9c94ff0e1f5f88cbb7e4ce661ede",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "3df1dd7f78f5a61d45767bc263bf799ea95228f7bd2a61f24dcec4299033a1fc",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "📋️project.json",
+      "sha256": "271ae09fb93bda20a14d1b9bcd6df2978ebd36bc1f64d2458ffb9c0345490a3a",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "📜️script.ts",
+      "sha256": "7c237a1b859e2d2068aec728b8a9e9be0ff48080d093e4ab4385fcbe8d69127b",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧪️tests/🟦️.ts",
+      "sha256": "696ad9d299063afdf373531575059574418341d0bd9b667faf0dd18830d61c85",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️tests/🟦️.ts",
+      "sha256": "a4e058082cacafcf01ef31e11d97f9766528cbece12fb8c2ba45cbb3f0562ebb",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧬️schema/🔣️.json",
+      "sha256": "ff5eb4b7fde1d5b045867b60bbb40d7c4717cda79d2d1dcf07fa1e519d33df35",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
+      "sha256": "dbd529088a9e16745ac88ed8ea61ac5032d439edb7c19d2da45024fde4df6672",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+      "sha256": "4e1cc15199b3205f25efdfa2685dbf8578bf8674f37e4b9025960b553d03cac0",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧪️tests/🟦️.ts",
+      "sha256": "b098fe519439314fffb32a34176c8120d64767eba35c62b5352c582dde2c106f",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧫️fixtures/🔣️.json",
+      "sha256": "9938a8ceea5cd1545c33939bc2566b1cde85710189a09708d76e99ef501a2bcc",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🔣️.json",
+      "sha256": "1daa5b2a4be0b3785bde3561cf18a708d7b876e5c5b018aba4d7dfa18dd4878c",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🟦️.ts",
+      "sha256": "11ecc306fe475b6e20fcef0c84b0306826b7ce70430e513e0660c43b35711860",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts",
+      "sha256": "8ab203bd38583bfd935b85508a95d579b4878a798c8cb1d79f4532b35a9d4ce3",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧬️schema/🔣️.json",
+      "sha256": "89fc0637c551aa17f494103bc8a1a1fc7d6169a2e1a21badecb0f6366e96c28f",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🚦️ownership/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
+      "sha256": "3a64f151cb60efad9f65ff46a74c913d0eb26ec9a059101da2c1e7de0e1c8739",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "61ec2e7957d432cfa013321ee1aaf0b47ea02ef8398da641d37b5976b44024ff",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
+      "sha256": "599bf7b3a2d0f7c64a22efa37a2b81cdbe354b8e9a01867d58823bec2e2a73d6",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "aeadd4889673008b13e74271c8b01f9f829eebd7b910f3011fb52f37da8e1887",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧬️schema/🎟️owners.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs",
+      "sha256": "3cc9d4edaa4e60dc28567de3cc44950dae73c581c8505ce84f9e8877695d7b2e",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🔣️.json",
+      "sha256": "71a583f1ebafed30c0ff23385d559fca131f0be0350299d59e18c39808e8c1b6",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧪️tests/🟦️.ts",
+      "sha256": "9a759034d98c77585ee96ebebc72bd5eb04e8a12a19e43db893a3c9634940598",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/🦀️.rs",
+      "sha256": "a3808c49a92e009386957cd16be3ddf6e3fa767f505b595a0900547312321ad1",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📤️exports/🦀️.rs",
+      "sha256": "487934f3a501ecf255089a2114074adfed1c6d608a2dcd8eb732c0688b12c41f",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "79672947cae81627c79d87d13fb153659286c952d99b3e6e41c111c5b0b6546d",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "a036342d9fe6e53c05f5f33e0cd4f7b19a79ff064dc48691374bb2d224e3bb4a",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🔣️.json",
+      "sha256": "0885c1457f1b55cb61e59b643054d37599bce52c783b330f4c4bb6cebc3a7fba",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+      "sha256": "8e780f288aecae24599c4a624ebc018b03ea6d05069751338a3478587fab7e62",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🦀️.rs",
+      "sha256": "dbcf49a135b17e8d01236402ba936266005c417d02198b3950b1007391720fe9",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/📤️schema-export-entries/🟦️.ts",
+      "sha256": "ce9209564e6dd8f44145610669ddc4dcdf17752bb0b2112b9f67c5c03ce558d3",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/📤️schema-export-entries/🦀️.rs",
+      "sha256": "1742794c4688fc9a0d33048cc4109ab1177dea7fcdd612a7dbaa04285583b1b8",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📋️project.json",
+      "sha256": "7170406bc0cd01f93be87b3b58be6b36d40459091cf1f4da4ab4ce1c2fe7d572",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧪️tests/🟦️.test.ts",
+      "sha256": "83fb8dfbcc5ad46b173bd64cec35a3936ed644a4e1b186e1b2045bfc6dd5b317",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧪️tests/🎟️source/🟦️.ts",
+      "sha256": "8cda8b62c7dc7054d780f5a7853cdef4bc1972ad5cde9bd8cdf808533911554e",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧬️schema/🎟️source/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+      "sha256": "d5d2efdd54fa955ba06943d52e8f23fa665b75126fe68537de2ec0dc363bd2a9",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/🎟️work.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
+      "sha256": "10b34849a391f16acc1e06c11f895c05660e2b9d5998c52950f9519df644e18d",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧪️tests/🟦️.ts",
+      "sha256": "9a8bd1aab2ef443eec943843f564ea8d48cf4511fe161cac7c6afc06f08a7d17",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema",
+      "sha256": null,
+      "isDirectory": true,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧬️schema/🔣️.json",
+      "sha256": "244dbf18b45f6ffc07ac24d3686b33de179df45bc2b7447e7c08cf9da414e05c",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts",
+      "sha256": "fa6feb9421b9eca9f407cd597c447021044880cd046c9268d2f10163a959d122",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "sha256": "687338396a0117cb6bf6b8d88c579dcf5974e47b997cb970ee19e993d9ab674b",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
+      "sha256": "78db2ae52aec41b589bfc68f5ccf06909705fafbbb14ec6fe1f1bead6ea0274f",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "a4a1c8caa011c284d1bd9cb350b26122f3d92d7a3b9927e1169e4e119803072b",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "b8da545832c95d09269c498e33867af3a4c9f0b43511580b5ae86d0999015dfb",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs",
+      "sha256": "8a42b905cedf9e341fbfb3ec22ccd814703af3c409cd43a1ab679b69410b1a15",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "68d8e3336f3575e860d8f20fb97c56dc596ce412a1ebf812cc9b16f39429a798",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "3659df3afbf71368e11789fe1ec3a0424fb609d176ea41869e0fe8428148f185",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs",
+      "sha256": "5e135add973b2cb0516bf2d1b38444b50fa96214caf6f72dd9e7f8a094a06887",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🛂️peer-admission.json",
+      "sha256": "e3e0f1b622c3880d2456c2304e3a5492dee741d1307d9e4ea61b418e92ee0d37",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🧹️retirement.json",
+      "sha256": "e39f510c216875a1f544781dabcc0f61205919ab1f080cd0a680224ee450062b",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "sha256": "87aca987f52caa92aafbb2b75087ee6b47600e5b5dc8235666bc253a5a555764",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
+      "sha256": "ac6cb5dee42ccc3964fa0a2da967d99d794fa5eae76fb29f7117d3ccd08e7454",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧫️fixtures/🔣️.json",
+      "sha256": "c7edbcc161433a0dd7dfc7008d9effa44864734ab96a6930a98c007d72482091",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🦀️.rs",
+      "sha256": "7a881aa6eff2604a4e7b1200d3a552c670041177408ce2e0ac3ac10a7f93f51e",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5cab50cd5e6e7f4485d87fec976d16d6aa3da395a36fcb118c643f4a8060ccbd",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🟦️.ts",
+      "sha256": "f08ed1a22c415594f778f1bd610cb4d145aa57804b764707371c6e4a98ead3b0",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+      "sha256": "0dfc8684305c711194b963b97246e7d698253a4801b91e5cfd83351cff6a65ae",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧫️fixtures/🔣️.json",
+      "sha256": "5ab8908edafee6c1198d49ae3da73bdaac91926febc16fd5991093f03133b279",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🚫️refusal/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "3ca1056203ae8b29ed479c99919d3420cc22a0a3b56fa44b68f68bce8381d9f8",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔗️backbone-detach/🟦️.ts",
+      "sha256": "1477bb54efed42676937a9bce3974fdddb93c378afb31cd68355216bcffeb4b1",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "1c8db1938ad0420f218a89239ce28432cd47750717794b7b77d8382faf89ea58",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "981c60ab467d3ca270aa4b10925e13426211a7416795276000998c0bfb494d40",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "sha256": "50a0555b0d0f477a2a4acdd02a018717dfea886f9b8c4c25e6dc387ade3065ce",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/📏️live-physical-demand/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+      "sha256": "23d854a3d2e81cb262093535ce730194015e02c15e2efa2f03201a08422b6eaa",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-close/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs",
+      "sha256": "886deb4d98e1883424cf8e9a524fc3d723c431fb885bf6ccb0c1015c4d6da86a",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+      "sha256": "115d3678498f1f8732074491d29f77c487f5840569ad03fbc2d47d49ee98af94",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+      "sha256": "81d9edfdc70f071e6215b922b652e75286616ac5f8b429bb7f8fae6d629ee360",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "de5103407a7c451307e5b958b990b742fcd3619803e765caf0ef8e68fd58f2c7",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
+      "sha256": "a2ec937477b67e217dc1d09d2165943f6b0ed4b624aaef8a36ec80d8452fc91e",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
+      "sha256": "6d4f3b4a9bce5cefe814360b247f6198a8549e26f55189be664de6050a40e3a8",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "0e84b6cbcc1e820b8dbe6a45235e0556c59250817d12d26d33cfd0ae58ae07e1",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "cef118f35284abbfe0c2308d71f3431ab03c4f8bda909c76f32227d1545022d5",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🟦️.ts",
+      "sha256": "31520c3fd62e7743ec83a6fbee439093c481eeee50150dd5246ea98e10babe82",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🧪️tests/🟦️.ts",
+      "sha256": "1c3e02937571da407ed9c04ab3c5ef3a23bd6b45143c6e34cd73eedffc891e02",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🧫️fixtures/🔣️.json",
+      "sha256": "0a549522fc8771af54249e77b5c9b5bf9b7073e5fca0b1b494ba3a8c399af6de",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "sha256": "c0c60020d37999a75d4d49fbb969a4716d993ab43e5036b031679ceb9b374698",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts",
+      "sha256": "d269dd0f1ed955b68a62eda16f06d72381c3e11927215ad196b4587fdb76867b",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
+      "sha256": "228fdbc72c2c5c64aede9c29c68b19fea88231203c9721d65aacd983ff5f838d",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🔣️.json",
+      "sha256": "2de0af73668999fd43ac7b85a5fb4efeec9d3f38d222cf91a6304f8da741427d",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🟦️.ts",
+      "sha256": "76f46c4da5361fb9344dbbbb7c94b0dcdc0d1d4081155be6ab9e65974745faa5",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "2d6d406e74a78f91948dd264323c8099b7b3c53a46ab5ddf76494da5dbc9ca78",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🟦️.ts",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🧪️tests/🟦️.ts",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🧫️fixtures/🔣️.json",
+      "sha256": null,
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+      "sha256": "de682b7fa47b32d84b7e1376538b0aeb1150da03a421f9553315c007167fd3e8",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "sha256": "d64c6ec73a121486af383a9834166854f5f2cda57a9b7a10c9c64f1b0a76d5a8",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "sha256": "baf20df1e55d3013a7a340e8838ae8b02af36cff56d310316f1b3691f283a127",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+      "sha256": "571a2357e7940a45e24e1cb07d63f478695feafd5ffbaa3f423a9529b8875978",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+      "sha256": "0be94d9a55996153cfbb4ab87c0cf3480d7a3bb5238c5cd1857f8bf2e356b764",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚡️production-cache-input-boundary/🔣️.json",
+      "sha256": "d7a0c1b5903ad43aff6e626b34c22ea156f983cc47e6a6b03b88d92a8d961e6d",
+      "isDirectory": false,
+      "exclusiveAuthorshipClaim": false
+    }
+  ],
+  "wholeFileExclusivityClaim": false
+}

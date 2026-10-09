@@ -1,0 +1,11 @@
+# Mounted Turn Native Two
+
+The registered offline standalone native route physically closed with Nx/Bun/Cargo exit zero, session 97487. Three original native laws executed: all 28 admitted observations and eight malformed cases; cumulative independent physical receipts with original scheduling fuel; four mandatory phase-policy vectors including explicit empty authority. The complete 28 native verdict artifact then passed the independent strict Ajv output oracle in Bun. No skipped native assertions or fixture-output fallback supplied the artifact.
+
+The defining portable gate had already passed all three complete laws with 109 assertions after genuine generation-zero red. These receipts establish the neutral owner only. Actual GenericPlugin mounted dispatch, FEM preparation allocation authority, 2D/3D sessions, original host suites, and both foreign export leaves remain required receiving work.
+
+Source custody used current files in place, 1550 metadata-only claims: 1546 exact and four qualified peer successors retained without restoration (two Native Job test owners, GenericPlugin, RepoLib schema fixture). No selected source was authored by this lane while native2 was live. Full actual terminal and command receipt: `🗑️generated/mn2/out.txt` and `command.json`; exact claim closure: `closure.json`.
+
+Actual compiler placement differs from the requested private target. The existing General Cargo producer uses the sanctioned shared build root (64 UTF16 units); the owned mounted artifact directory and requested private target were inventoried after physical closure, 36 scoped paths, maximum 197 UTF16 units and zero overflow. This inventory does not grant exclusive ownership of shared output or support a whole Cargo/all-platform bound. No shared output was removed. `compiler.json` retains the exact observations. Offline environment was explicit at the registered outer route and the leaf Cargo invocation; original prelude retained its actual Locking 0 packages output. No new external runtime library was introduced.
+
+All new source/receipt/report paths are bounded to 256 characters and UTF16 units; no tracked source bodies were copied into the ticket. Remaining host binding genuine red is retained separately.

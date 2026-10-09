@@ -53,5 +53,21 @@
     "unchangedMapAllocationShared": true,
     "finalRootDrops": 1,
     "unclosedDropPreservesRoot": true
+  },
+  "factoryCustody": {
+    "copyGrants": [
+      1,
+      3,
+      64
+    ],
+    "handoffCapacityBytes": 0,
+    "handoffReleaseBytes": 0,
+    "sameOriginalSource": true,
+    "refusalCapacityBytes": 0,
+    "refusalReleaseBytes": 0,
+    "terminalDropBytes": 0,
+    "partialTicketPreserved": true,
+    "refusedOriginalPreserved": true,
+    "actualFailedReceiptPreserved": true
   }
 }

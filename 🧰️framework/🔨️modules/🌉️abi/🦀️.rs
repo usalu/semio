@@ -1,6 +1,7 @@
 //! 🌉️ Owned, domain-neutral byte/message ABI and retained paged-transfer kernel.
 
 use std::fmt::{Display, Formatter};
+pub use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 //#region 🧬️Schema
 
@@ -599,10 +600,11 @@ impl<'a> Decoder<'a> {
 
 //#region ⏳️RetainedTransfer
 
-/// ⏱️ One explicit retained-copy allowance; no cursor advances when admission fails.
+/// ⏱️ Independent transport copy and retained ownership allowances preserve caller admission.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct AbiWorkBudget {
     pub byte_credit: usize,
+    pub retained: RetainedCloneGrant,
     pub now_ms: u64,
     pub deadline_ms: Option<u64>,
     pub cancelled: bool,
@@ -611,7 +613,7 @@ pub struct AbiWorkBudget {
 
 impl AbiWorkBudget {
     pub const fn credits(byte_credit: usize) -> Self {
-        Self { byte_credit, now_ms: 0, deadline_ms: None, cancelled: false, interrupted: false }
+        Self { byte_credit, retained: RetainedCloneGrant { maximum_items:0, maximum_copy_bytes:0, maximum_capacity_bytes:0, maximum_release_bytes:0, maximum_depth:0 }, now_ms: 0, deadline_ms: None, cancelled: false, interrupted: false }
     }
 
     fn permit(self, remaining: usize) -> Result<usize, AbiErrorCode> {

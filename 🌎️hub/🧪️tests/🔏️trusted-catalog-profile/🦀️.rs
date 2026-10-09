@@ -96,7 +96,7 @@ pub async fn verified_gis_map_release_profile(root: &Path) -> Result<VerifiedGis
 }
 
 async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<VerifiedGisMapIntegrationProfileV1, AuthorityError> {
-    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
+    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().map_err(|error| AuthorityError::Catalog(format!("GIS assembly unavailable: {error:?}")))?);
     let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
     let mut descriptor = super::decode_package_descriptor(&emitted)?;

@@ -2897,4 +2897,25 @@ class ReturnedReadCustodyScript extends BundleScript {
 }
 router.register("test-returned-read-custody",ReturnedReadCustodyScript);
 
+/** 🪪️ Runs the original metadata schema and independent SQLite semantic oracle. */
+class NativeEditMetadataSourceScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-native-edit-metadata-source accepts no arguments");
+  const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🪪️metadata/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
+ }
+}
+router.register("test-native-edit-metadata-source",NativeEditMetadataSourceScript);
+/** 🪪️ Runs the original actor identity schema and independent SQLite semantic oracle. */
+class SyncActorIdentitySourceScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-sync-actor-identity-source accepts no arguments");
+  const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🪪️actor-identity/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
+ }
+}
+router.register("test-sync-actor-identity-source",SyncActorIdentitySourceScript);
+
 await runScriptMain(router, { defaultCommand: "check" });

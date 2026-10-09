@@ -6,7 +6,7 @@
 // silenced here rather than resolved by its own suggestion.
 #![allow(async_fn_in_trait)]
 
-pub use protocol::causal::{HistoryFoldIndex,HistoryFoldIndexIntoIter};
+pub use protocol::causal::{HistoryFoldIndex,HistoryFoldIndexIntoIter,HistoryFoldSet,HistoryFoldSetIntoIter};
 
 #[path="🎯️component-references/🦀️.rs"]
 mod component_references;

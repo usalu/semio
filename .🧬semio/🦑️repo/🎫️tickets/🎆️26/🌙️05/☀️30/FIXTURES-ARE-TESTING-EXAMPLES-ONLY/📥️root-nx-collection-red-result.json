@@ -1,0 +1,11 @@
+{
+  "exitCode": 1,
+  "tests": 3,
+  "passed": 1,
+  "failed": 2,
+  "assertions": 27,
+  "durationMs": 814,
+  "nativeAssertions": 0,
+  "qualification": "Actual semantic RED: nativeSources includes17 true collection rows, production blanket exclusion rejects genuine module-name row. Physical inference callback not reached in this cut.",
+  "logSha256": "063df74708a82f9b169af36d8f62ac4f528e290638e046817bf13db0386f853a"
+}

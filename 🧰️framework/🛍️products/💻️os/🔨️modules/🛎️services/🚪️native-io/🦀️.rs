@@ -1,7 +1,7 @@
 //! 📂️ Native filesystem and process-observation jobs for interactive OS hosts.
 
 use semio_framework_job::{CommitCandidate, InteractiveJob, InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress, StepContext, StepOutcome};
-use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::fs::{File, ReadDir};
 use std::io::{Read, Seek};
 use std::path::PathBuf;
@@ -127,28 +127,30 @@ pub enum NativeIoValue {
 }
 
 impl NativeIoValue {
-    pub fn retirement_demands(&self) -> (usize, usize) {
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         match self {
-            Self::Bytes(bytes) | Self::Page { bytes, .. } if !bytes.terminal_is_empty() => (bytes.next_close_byte_demand(), 2),
-            Self::Paths(paths) if !paths.is_empty() => (paths.entries[paths.length - 1].as_ref().expect("original path slot").capacity(), 1),
-            Self::Modified(entries) if !entries.is_empty() => (entries.entries[entries.length - 1].as_ref().expect("original modified slot").0.capacity(), 1),
-            _ => (0, 0),
+            Self::Bytes(bytes) | Self::Page { bytes, .. } if !bytes.terminal_is_empty() => native_io_child_demands(bytes.retirement_demands()?),
+            Self::Paths(paths) if !paths.is_empty() => Ok(RetirementDemand { release_bytes: paths.entries[paths.length - 1].as_ref().expect("original path slot").capacity(), depth: 1, ..Default::default() }),
+            Self::Modified(entries) if !entries.is_empty() => Ok(RetirementDemand { release_bytes: entries.entries[entries.length - 1].as_ref().expect("original modified slot").0.capacity(), depth: 1, ..Default::default() }),
+            _ => Ok(Default::default()),
         }
     }
 
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        let (release, depth) = self.retirement_demands();
+        let demand = match self.retirement_demands() { Ok(demand) => demand, Err(error) => return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()} };
         if self.terminal_is_empty() { return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }; }
-        if grant.maximum_items == 0 || grant.maximum_release_bytes < release || grant.maximum_depth < depth {
-            return InteractiveJobCloseStep::Refused(ValueRefusalKind::WorkLimit);
-        }
+        if grant.maximum_items == 0 { return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::WorkLimit,progress:Default::default()}; }
+        if grant.maximum_depth < demand.depth { return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::DepthLimit,progress:Default::default()}; }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::OwnershipLimit,progress:Default::default()}; }
         let progress = match self {
-            Self::Bytes(bytes) | Self::Page { bytes, .. } => match bytes.close_step(1, grant.maximum_release_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => RetainedCloneProgress { copied_items: released_items, released_bytes, ..RetainedCloneProgress::default() },
-                semio_framework_job::JobPayloadCloseStep::Complete => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
-            },
-            Self::Paths(paths) => { drop(paths.pop()); RetainedCloneProgress { copied_items: 1, released_bytes: release, ..RetainedCloneProgress::default() } },
-            Self::Modified(entries) => { drop(entries.pop()); RetainedCloneProgress { copied_items: 1, released_bytes: release, ..RetainedCloneProgress::default() } },
+            Self::Bytes(bytes) | Self::Page { bytes, .. } => {
+                let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+                let step = match bytes.close_step(child) { Ok(step) => step, Err(error) => return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()} };
+                if let Err(error) = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, bytes.terminal_is_empty(), "original native I/O result payload") { return InteractiveJobCloseStep::Refused{kind:error.kind,progress:step.progress()}; }
+                step.progress()
+            }
+            Self::Paths(paths) => { drop(paths.pop()); RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..RetainedCloneProgress::default() } },
+            Self::Modified(entries) => { drop(entries.pop()); RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..RetainedCloneProgress::default() } },
             Self::ResidentBytes(_) => RetainedCloneProgress::default(),
         };
         InteractiveJobCloseStep::Pending { progress }.admit(grant, self.terminal_is_empty())
@@ -167,7 +169,12 @@ impl NativeIoValue {
 //#endregion 📂️Schema
 
 fn native_io_close_grant() -> RetainedCloneGrant {
-    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 }
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 }
+}
+
+fn native_io_child_demands(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> {
+    demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "original native I/O child depth overflow"))?;
+    Ok(demand)
 }
 
 //#region 👷️Job
@@ -200,27 +207,26 @@ impl NativeIoJob {
         Self { state: NativeIoState::Pending(request), result: None, closing: false }
     }
 
-    fn close_target(&self) -> (NativeIoCloseTarget, usize, usize) {
+    fn close_target(&self) -> Result<(NativeIoCloseTarget, RetirementDemand), ValueError> {
         use NativeIoCloseTarget::*;
-        let paths = |paths: &NativePathSet| (Paths, paths.entries[paths.length - 1].as_ref().expect("original path slot").capacity(), 1);
-        let modified = |entries: &NativeModifiedSet| (Modified, entries.entries[entries.length - 1].as_ref().expect("original modified slot").0.capacity(), 1);
+        let release = |target, bytes, depth| Ok((target, RetirementDemand { release_bytes: bytes, depth, ..Default::default() }));
         match &self.state {
-            NativeIoState::Reading { writer, .. } | NativeIoState::ReadingBuffered { writer, .. } | NativeIoState::ReadingPage { writer, .. } | NativeIoState::ReadingPageBuffered { writer, .. } | NativeIoState::ClosingWriterFault { writer, .. } if !writer.terminal_is_empty() => return (Writer, writer.next_close_byte_demand(), 2),
-            NativeIoState::ClosingScanFault { rejected: Some(path), .. } => return (RejectedPath, path.capacity(), 1),
-            NativeIoState::ClosingModifiedFault { rejected: Some((path, _)), .. } => return (RejectedModified, path.capacity(), 1),
-            NativeIoState::Pending(NativeIoRequest::Modified(owner)) | NativeIoState::Scanning { paths: owner, .. } | NativeIoState::ClosingScanFault { paths: owner, .. } | NativeIoState::ReadingModified { paths: owner, .. } | NativeIoState::ClosingModifiedFault { paths: owner, .. } if !owner.is_empty() => return paths(owner),
-            NativeIoState::ReadingModified { modified: owner, .. } | NativeIoState::ClosingModifiedFault { modified: owner, .. } if !owner.is_empty() => return modified(owner),
-            NativeIoState::Pending(NativeIoRequest::ScanDirectory { extension: Some(extension), .. }) | NativeIoState::Scanning { extension: Some(extension), .. } | NativeIoState::ClosingScanFault { extension: Some(extension), .. } => return (Extension, extension.capacity(), 1),
-            NativeIoState::Pending(NativeIoRequest::ReadBytes(path) | NativeIoRequest::ReadPage { path, .. } | NativeIoRequest::ScanDirectory { path, .. }) if path.capacity() != 0 => return (Path, path.capacity(), 1),
-            NativeIoState::ClosingWriterFault { error, .. } | NativeIoState::ClosingScanFault { error, .. } | NativeIoState::ClosingModifiedFault { error, .. } if error.capacity() != 0 => return (Error, error.capacity(), 1),
+            NativeIoState::Reading { writer, .. } | NativeIoState::ReadingBuffered { writer, .. } | NativeIoState::ReadingPage { writer, .. } | NativeIoState::ReadingPageBuffered { writer, .. } | NativeIoState::ClosingWriterFault { writer, .. } if !writer.terminal_is_empty() => return Ok((Writer, native_io_child_demands(writer.retirement_demands()?)?)),
+            NativeIoState::ClosingScanFault { rejected: Some(path), .. } => return release(RejectedPath,path.capacity(),1),
+            NativeIoState::ClosingModifiedFault { rejected: Some((path, _)), .. } => return release(RejectedModified,path.capacity(),1),
+            NativeIoState::Pending(NativeIoRequest::Modified(owner)) | NativeIoState::Scanning { paths: owner, .. } | NativeIoState::ClosingScanFault { paths: owner, .. } | NativeIoState::ReadingModified { paths: owner, .. } | NativeIoState::ClosingModifiedFault { paths: owner, .. } if !owner.is_empty() => return release(Paths,owner.entries[owner.length-1].as_ref().expect("original path slot").capacity(),1),
+            NativeIoState::ReadingModified { modified: owner, .. } | NativeIoState::ClosingModifiedFault { modified: owner, .. } if !owner.is_empty() => return release(Modified,owner.entries[owner.length-1].as_ref().expect("original modified slot").0.capacity(),1),
+            NativeIoState::Pending(NativeIoRequest::ScanDirectory { extension: Some(extension), .. }) | NativeIoState::Scanning { extension: Some(extension), .. } | NativeIoState::ClosingScanFault { extension: Some(extension), .. } => return release(Extension,extension.capacity(),1),
+            NativeIoState::Pending(NativeIoRequest::ReadBytes(path) | NativeIoRequest::ReadPage { path, .. } | NativeIoRequest::ScanDirectory { path, .. }) if path.capacity() != 0 => return release(Path,path.capacity(),1),
+            NativeIoState::ClosingWriterFault { error, .. } | NativeIoState::ClosingScanFault { error, .. } | NativeIoState::ClosingModifiedFault { error, .. } if error.capacity() != 0 => return release(Error,error.capacity(),1),
             NativeIoState::Finished => {},
-            _ => return (FinishState, 0, 1),
+            _ => return release(FinishState,0,1),
         }
         match &self.result {
-            Some(Ok(value)) if !value.terminal_is_empty() => { let (release, depth) = value.retirement_demands(); (ResultValue, release, depth + 1) },
-            Some(Err(error)) if error.capacity() != 0 => (ResultError, error.capacity(), 1),
-            Some(_) => (ClearResult, 0, 1),
-            None => (Complete, 0, 0),
+            Some(Ok(value)) if !value.terminal_is_empty() => Ok((ResultValue,native_io_child_demands(value.retirement_demands()?)?)),
+            Some(Err(error)) if error.capacity() != 0 => release(ResultError,error.capacity(),1),
+            Some(_) => release(ClearResult,0,1),
+            None => release(Complete,0,0),
         }
     }
 
@@ -394,12 +400,15 @@ impl InteractiveJob for NativeIoJob {
                 }
                 StepOutcome::Yield
             }
-            NativeIoState::ClosingWriterFault { mut writer, error } => match writer.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-                semio_framework_job::JobPayloadCloseStep::Complete if writer.terminal_is_empty() => self.finish(Err(error), cx),
-                _ => {
-                    self.state = NativeIoState::ClosingWriterFault { writer, error };
-                    StepOutcome::Yield
-                }
+            NativeIoState::ClosingWriterFault { mut writer, error } => {
+                let authority = native_io_close_grant();
+                let child = RetainedCloneGrant { maximum_depth: authority.maximum_depth - 1, ..authority };
+                let closed = match writer.close_step(child) {
+                    Ok(step) => semio_framework_value::retained_clone::admit_retained_clone_close(child,step,writer.terminal_is_empty(),"original native I/O failed writer").is_ok() && writer.terminal_is_empty(),
+                    Err(_) => false,
+                };
+                if closed { self.finish(Err(error),cx) }
+                else { self.state = NativeIoState::ClosingWriterFault { writer,error }; StepOutcome::Yield }
             },
             NativeIoState::Scanning { mut entries, mut paths, directories_only, extension, first_only } => {
                 let Some(entry) = entries.next() else { return self.finish(Ok(NativeIoValue::Paths(paths)), cx) };
@@ -475,56 +484,61 @@ impl InteractiveJob for NativeIoJob {
         self.closing = true;
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-    fn next_close_capacity_byte_demand(&self, _body: usize) -> Result<usize, ValueError> { Ok(0) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_target().1) }
-    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_target().2) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_target()?.1.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _body: usize) -> Result<usize, ValueError> { Ok(self.close_target()?.1.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_target()?.1.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_target()?.1.depth) }
 
     fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        let (target, release, depth) = self.close_target();
+        let (target, demand) = match self.close_target() { Ok(frontier) => frontier, Err(error) => return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()} };
+        let release = demand.release_bytes;
         if matches!(target, NativeIoCloseTarget::Complete) {
             return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }.admit(grant, self.terminal_is_empty());
         }
-        if grant.maximum_items == 0 || grant.maximum_release_bytes < release || grant.maximum_depth < depth {
-            return InteractiveJobCloseStep::Refused(ValueRefusalKind::WorkLimit);
-        }
+        if grant.maximum_items == 0 { return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::WorkLimit,progress:Default::default()}; }
+        if grant.maximum_depth < demand.depth { return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::DepthLimit,progress:Default::default()}; }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < release { return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::OwnershipLimit,progress:Default::default()}; }
         self.closing = true;
         match target {
             NativeIoCloseTarget::Writer => {
                 let writer = match &mut self.state {
                     NativeIoState::Reading { writer, .. } | NativeIoState::ReadingBuffered { writer, .. } | NativeIoState::ReadingPage { writer, .. } | NativeIoState::ReadingPageBuffered { writer, .. } | NativeIoState::ClosingWriterFault { writer, .. } => writer,
-                    _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+                    _ => return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::InvariantViolated,progress:Default::default()},
                 };
-                return match writer.close_step(1, grant.maximum_release_bytes) {
-                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: released_items, released_bytes, ..RetainedCloneProgress::default() } }.admit(grant, false),
-                    semio_framework_job::JobPayloadCloseStep::Complete => InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+                let child = RetainedCloneGrant { maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant };
+                return match writer.close_step(child) {
+                    Ok(step) => match semio_framework_value::retained_clone::admit_retained_clone_close(child,step,writer.terminal_is_empty(),"original native I/O writer") {
+                        Ok(_) => InteractiveJobCloseStep::Pending {progress:step.progress()}.admit(grant,false),
+                        Err(error) => InteractiveJobCloseStep::Refused{kind:error.kind,progress:step.progress()},
+                    },
+                    Err(error) => InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()},
                 };
             }
             NativeIoCloseTarget::Paths => match &mut self.state {
                 NativeIoState::Pending(NativeIoRequest::Modified(paths)) | NativeIoState::Scanning { paths, .. } | NativeIoState::ClosingScanFault { paths, .. } | NativeIoState::ReadingModified { paths, .. } | NativeIoState::ClosingModifiedFault { paths, .. } => { drop(paths.pop()); },
-                _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+                _ => return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::InvariantViolated,progress:Default::default()},
             },
             NativeIoCloseTarget::Modified => match &mut self.state {
                 NativeIoState::ReadingModified { modified, .. } | NativeIoState::ClosingModifiedFault { modified, .. } => { drop(modified.pop()); },
-                _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+                _ => return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::InvariantViolated,progress:Default::default()},
             },
             NativeIoCloseTarget::Path => match &mut self.state {
                 NativeIoState::Pending(NativeIoRequest::ReadBytes(path) | NativeIoRequest::ReadPage { path, .. } | NativeIoRequest::ScanDirectory { path, .. }) => drop(std::mem::take(path)),
-                _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+                _ => return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::InvariantViolated,progress:Default::default()},
             },
             NativeIoCloseTarget::Extension => match &mut self.state {
                 NativeIoState::Pending(NativeIoRequest::ScanDirectory { extension, .. }) | NativeIoState::Scanning { extension, .. } | NativeIoState::ClosingScanFault { extension, .. } => drop(extension.take()),
-                _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+                _ => return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::InvariantViolated,progress:Default::default()},
             },
             NativeIoCloseTarget::RejectedPath => if let NativeIoState::ClosingScanFault { rejected, .. } = &mut self.state { drop(rejected.take()); },
             NativeIoCloseTarget::RejectedModified => if let NativeIoState::ClosingModifiedFault { rejected, .. } = &mut self.state { drop(rejected.take()); },
             NativeIoCloseTarget::Error => match &mut self.state {
                 NativeIoState::ClosingWriterFault { error, .. } | NativeIoState::ClosingScanFault { error, .. } | NativeIoState::ClosingModifiedFault { error, .. } => drop(std::mem::take(error)),
-                _ => return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated),
+                _ => return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::InvariantViolated,progress:Default::default()},
             },
             NativeIoCloseTarget::FinishState => self.state = NativeIoState::Finished,
             NativeIoCloseTarget::ResultValue => {
-                let Some(Ok(value)) = self.result.as_mut() else { return InteractiveJobCloseStep::Refused(ValueRefusalKind::InvariantViolated) };
+                let Some(Ok(value)) = self.result.as_mut() else { return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::InvariantViolated,progress:Default::default()} };
                 return match value.close_step(RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant }) {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
                     step => step,

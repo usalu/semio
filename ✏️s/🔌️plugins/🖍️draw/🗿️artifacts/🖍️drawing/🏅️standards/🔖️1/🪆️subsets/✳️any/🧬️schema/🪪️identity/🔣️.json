@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DrawingIdentity",
+  "type": "object",
+  "required": [
+    "key"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "key": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "definitions": {
+    "commitment": {
+      "type": "object",
+      "required": [
+        "kind",
+        "digest"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "layer",
+            "path",
+            "group",
+            "boolean",
+            "trace",
+            "shape",
+            "text",
+            "image",
+            "svg",
+            "imageAsset"
+          ]
+        },
+        "digest": {
+          "type": "array",
+          "minItems": 32,
+          "maxItems": 32,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "assignment": {
+      "type": "object",
+      "required": [
+        "source",
+        "target"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

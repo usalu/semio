@@ -24,8 +24,8 @@ impl BitmapSnapshot{
 }
 impl ArtifactSqliteSnapshot for BitmapSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::any::io::text::snapshot::decode_sqlite_snapshot_native(payload,c)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v1::subsets::any::io::text::snapshot::encode_sqlite_snapshot_native(self,encoding,c)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{crate::standards::v1::subsets::any::io::text::snapshot::decode_sqlite_snapshot_native(payload,c,native_control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v1::subsets::any::io::text::snapshot::encode_sqlite_snapshot_native(self,encoding,c,native_owner)}
  fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut p=RowWriter::new(Self::SQLITE_SCHEMA,c)?;self.write_sqlite_rows(&mut p)?;p.finish()}
 fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
  validate_sqlite_database_schema(d,Self::SQLITE_SCHEMA,c.limits())?;c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;

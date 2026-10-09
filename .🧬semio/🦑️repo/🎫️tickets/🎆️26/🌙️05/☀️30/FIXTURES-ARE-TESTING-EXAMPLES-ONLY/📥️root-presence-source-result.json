@@ -1,0 +1,14 @@
+{
+  "sessionId": 91635,
+  "nxExitCode": 0,
+  "duration": "1.1s",
+  "bunTests": 4,
+  "bunDurationMs": 995,
+  "originalStoreGrammarMs": 239.26,
+  "presenceReadGrammarFiles": 7,
+  "presenceReadGrammarMs": 712.89,
+  "unicodeExamples": 7,
+  "nativeAssertions": 0,
+  "typeCheckingPassed": false,
+  "sourceCopies": 0
+}

@@ -25,7 +25,7 @@ async fn neutral_activation_failures_retire_the_exact_kernel_and_guest_owners() 
         let actor = reservation.actor();
         let compiled = mock.compile(&PackageRef { package: package.clone(), hash: PackageHash([0; 32]) }, &[]).await.unwrap();
         let stage = row["stage"].as_str().unwrap();
-        let shards = if stage == "shard" { Vec::new() } else { vec![ShardExecutor::new(Arc::clone(&pool), Arc::clone(&runtime), Vec::new(), OutcomeSink::new()).await] };
+        let shards = if stage == "shard" { Vec::new() } else { vec![ShardExecutor::new(Arc::clone(&pool), Arc::clone(&runtime), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await] };
         if stage == "record" {
             kernel.deactivate(actor).await.unwrap();
         }
@@ -110,7 +110,7 @@ async fn a_guest_refused_at_admission_reaches_the_host_as_its_fault() {
     let reservation = kernel.reserve_activation(request).await.unwrap();
     let actor = reservation.actor();
     let compiled = mock.compile(&PackageRef { package, hash: PackageHash([0; 32]) }, &[]).await.unwrap();
-    let shards = vec![ShardExecutor::new(Arc::clone(&pool), Arc::clone(&runtime), Vec::new(), OutcomeSink::new()).await];
+    let shards = vec![ShardExecutor::new(Arc::clone(&pool), Arc::clone(&runtime), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await];
     let host = semio_framework_os_kernel::CHANNEL_VERSION;
     mock.script_instantiate_refusal(semio_framework_os_kernel::os_spr::admit_guest_channel_version(host - 1, host).unwrap_err()).await;
     let budget = Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };

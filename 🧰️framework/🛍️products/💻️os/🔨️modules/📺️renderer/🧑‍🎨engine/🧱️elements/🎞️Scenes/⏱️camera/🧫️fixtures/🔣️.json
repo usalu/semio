@@ -1,0 +1,240 @@
+{
+  "contract": "semio.scene-camera.storage.v1",
+  "maximumEntries": 256,
+  "maximumIdentifierBytes": 256,
+  "rootGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 64
+  },
+  "identityFields": [
+    "host",
+    "surface",
+    "ownerHost",
+    "ownerWindow",
+    "ownerSurface",
+    "ownerExplicitKey"
+  ],
+  "cases": [
+    {
+      "id": "unmounted-ascii",
+      "host": "host",
+      "surface": "surface",
+      "owner": null,
+      "packed": {
+        "hex": "686f737473757266616365",
+        "bytes": 11,
+        "ranges": [
+          [
+            0,
+            4
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            11,
+            0
+          ],
+          [
+            11,
+            0
+          ],
+          [
+            11,
+            0
+          ],
+          [
+            11,
+            0
+          ]
+        ]
+      },
+      "deadlineMs": 120
+    },
+    {
+      "id": "mounted-explicit",
+      "host": "host",
+      "surface": "surface",
+      "owner": {
+        "documentId": 1,
+        "host": "host",
+        "window": "window",
+        "surface": "surface",
+        "windowGeneration": 2,
+        "componentGeneration": 3,
+        "kind": "canvas2d",
+        "key": {
+          "explicit": "key"
+        },
+        "node": {
+          "index": 7,
+          "generation": 11
+        }
+      },
+      "packed": {
+        "hex": "686f737473757266616365686f737477696e646f77737572666163656b6579",
+        "bytes": 31,
+        "ranges": [
+          [
+            0,
+            4
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            11,
+            4
+          ],
+          [
+            15,
+            6
+          ],
+          [
+            21,
+            7
+          ],
+          [
+            28,
+            3
+          ]
+        ]
+      },
+      "deadlineMs": 120
+    },
+    {
+      "id": "mounted-positional",
+      "host": "host",
+      "surface": "surface",
+      "owner": {
+        "documentId": 1,
+        "host": "host",
+        "window": "window",
+        "surface": "surface",
+        "windowGeneration": 2,
+        "componentGeneration": 3,
+        "kind": "canvas2d",
+        "key": {
+          "positional": [
+            7,
+            9
+          ]
+        },
+        "node": {
+          "index": 7,
+          "generation": 11
+        }
+      },
+      "packed": {
+        "hex": "686f737473757266616365686f737477696e646f7773757266616365",
+        "bytes": 28,
+        "ranges": [
+          [
+            0,
+            4
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            11,
+            4
+          ],
+          [
+            15,
+            6
+          ],
+          [
+            21,
+            7
+          ],
+          [
+            28,
+            0
+          ]
+        ]
+      },
+      "deadlineMs": 120
+    },
+    {
+      "id": "unicode-boundaries",
+      "host": "höst🧭",
+      "surface": "面",
+      "owner": {
+        "documentId": 4,
+        "host": "höst🧭",
+        "window": "fenster",
+        "surface": "面",
+        "windowGeneration": 5,
+        "componentGeneration": 6,
+        "kind": "canvas2d",
+        "key": {
+          "explicit": "é"
+        },
+        "node": {
+          "index": 7,
+          "generation": 11
+        }
+      },
+      "packed": {
+        "hex": "68c3b67374f09fa7ade99da268c3b67374f09fa7ad66656e73746572e99da2c3a9",
+        "bytes": 33,
+        "ranges": [
+          [
+            0,
+            9
+          ],
+          [
+            9,
+            3
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            21,
+            7
+          ],
+          [
+            28,
+            3
+          ],
+          [
+            31,
+            2
+          ]
+        ]
+      },
+      "deadlineMs": 120
+    }
+  ],
+  "lifecycle": [
+    "admit-original-packed-body",
+    "transfer-original-directory",
+    "dispatch-or-restore-original-record",
+    "release-original-packed-body",
+    "release-original-directory"
+  ],
+  "refusal": {
+    "ownerUnchanged": true,
+    "receipt": {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    }
+  },
+  "semanticRules": {
+    "replacement": "latest deadline for same host; original owner equality uses every component witness field",
+    "future": "return same original record unless newer same-host record exists",
+    "retired": "retain original body for paid release; do not restore retired component",
+    "terminal": "body owners and original directory backing absent"
+  }
+}

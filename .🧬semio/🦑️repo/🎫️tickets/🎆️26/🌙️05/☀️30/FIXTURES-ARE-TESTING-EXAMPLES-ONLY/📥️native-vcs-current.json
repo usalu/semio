@@ -1,0 +1,51 @@
+{
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🦀️.rs",
+      "sha256": "450f206e011b8798b4dba0d9d81b546746b9c37cbe46d1878b968d529c5ef3c4",
+      "role": "observer, VCS sources unchanged by this lane; OTS law only authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🔎️measurement/🦀️.rs",
+      "sha256": "3183af97b195220cfc73fc40d86bbda87d9a3c7751ff90771c9fd87679980190",
+      "role": "observer, VCS sources unchanged by this lane; OTS law only authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🔎️measurement/🧬️schema/🔣️.json",
+      "sha256": "e0970d6a6a711c43b9533b0b790191ddaa95b3e5b3f478425f378bc8092a8465",
+      "role": "observer, VCS sources unchanged by this lane; OTS law only authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧬️schema/🧾️receipt/🔣️.json",
+      "sha256": "2a318494d1bad4673ca42e9a90fcc1cd6a65e131760f53edde08868283562467",
+      "role": "observer, VCS sources unchanged by this lane; OTS law only authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧪️tests/🦀️.rs",
+      "sha256": "16088f511e92030fe8dae554ce337fa49aa4cd8754fc134268558a60a54a2a3d",
+      "role": "observer, VCS sources unchanged by this lane; OTS law only authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧫️fixtures/📥️input/🔣️.json",
+      "sha256": "dfcb05724ebe80a25b0e9a9df768e19867c4b08023a8ef984e0e11c238b72761",
+      "role": "observer, VCS sources unchanged by this lane; OTS law only authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "543208a33ade0997aebbbe5c786544fd16577383ca37b6c0ab6c8514d2bb85c8",
+      "role": "observer, VCS sources unchanged by this lane; OTS law only authored"
+    }
+  ],
+  "actualSource": {
+    "session": 82041,
+    "Nx": 0,
+    "duration": "853ms",
+    "selectedLaws": 1,
+    "assertions": 16,
+    "extraDepthAssertions": 612,
+    "log": "🗑️generated/native-vcs-source.log"
+  },
+  "SourceEpoch": "actual66763 compiler E0599 historical; fresh producer defines checked borrowed tagged measurement API",
+  "authorship": "only added neutral/original-source oracle; no VCS Rust/API/schema mutation",
+  "native": "original named VCS projection law still requires renewal"
+}

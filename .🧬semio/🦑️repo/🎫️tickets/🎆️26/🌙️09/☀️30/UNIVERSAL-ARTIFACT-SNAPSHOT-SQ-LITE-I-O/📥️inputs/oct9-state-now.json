@@ -1,0 +1,12 @@
+{
+  "recordedAt": "2026-10-09T05:05:17Z",
+  "rootOct9BimSourceRuntime": {"session": 57260, "pending": false, "exitCode": 0, "passed": 13, "expects": 303, "qualification": "Original package complete Source laws before final oracle strengthening"},
+  "rootOct9BimOracleRuntime": {"session": 7163, "pending": false, "exitCode": 0, "passed": 1, "filtered": 12, "expects": 26, "declaredFloatRoles": 184, "populatedFloatRoles": 184, "qualification": "Original Source-selected STDIO oracle/physical edit law; no Native or optional file-mode credit"},
+  "rootOct9BimSourceStrict": {"session": 10022, "pending": false, "exitCode": 0, "qualification": "Original strict package verification includes package script"},
+  "rootOct9BimPublicMissingBefore": {"session": 66817, "pending": true, "hookHeld": true, "priorCompilerOnlySessions": [25318,92073], "qualification": "Actual Nx exec original test-snapshot-sqlite native; no missing-capability runtime yet"},
+  "rootOct9DagPrerequisite": {"nativeSession": 50426, "exitCode": 0, "passed": 2, "skipped": 69, "ownerClosures": 51, "sourceSession": 60970, "sourcePassed": 8, "sourceExpects": 170, "qualification": "Original scoped physical ownership prerequisite; not universal public IO"},
+  "rootOct9BimOracleFileMode": {"session": 15239, "pending": false, "exitCode": 0, "populatedWords": 4837, "declaredFloatRoles": 184, "populatedFloatRoles": 184, "all47CollectionsRestored": true, "qualification": "Original optional file-mode commands and independent SQLite; no Native public credit"},
+  "rootOct9BimCountAuthority": {"session": 53984, "pending": false, "exitCode": 0, "changedPaths": 1, "tables": 93, "rows": 3972, "qualification": "Retained independent witness digest only; counts unchanged"},
+  "rootOct9BimOracleLaunch": {"session": 76670, "pending": false, "exitCode": 130, "seedOrders": [206.1931,206.1932], "published": false, "refusal": "/nativeCodecs/9/protocolSourceSha256"},
+  "rootCurrentUniversalGoalIncomplete": true
+}

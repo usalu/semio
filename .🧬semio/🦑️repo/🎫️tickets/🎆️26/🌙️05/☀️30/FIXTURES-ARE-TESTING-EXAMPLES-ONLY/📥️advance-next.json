@@ -1,0 +1,36 @@
+{
+  "utc": "2026-10-09T05:55:06.255616+00:00",
+  "mode": "read-only-original-sources",
+  "checkpoint": {
+    "session": 72358,
+    "nxPid": 41260
+  },
+  "sourceCopies": false,
+  "observers": [
+    {
+      "role": "O",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "observedSha256": "17179fe54914fc7c2b00dd478fdffe59fc451c2101e9ab10e2b8b36635425299"
+    },
+    {
+      "role": "H",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "observedSha256": "2f203eca54b61314bdbb576a575e33758299ede42c565eb7668b38c161bfa2da"
+    },
+    {
+      "role": "RootStore",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "observedSha256": "1f7d720949a373e16671e47332121d2992c7e0f17e74814d8ce468c46f85a247"
+    },
+    {
+      "role": "ValueDecode",
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+      "observedSha256": "d7f556420a6cbcc30dc003c054953ae15fb905cf38fe9d3315d998bced618d04"
+    },
+    {
+      "role": "PackRetained",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs",
+      "observedSha256": "4c9972aeabf61f01140653b0af5601a594211d364fecdccdb09ec69c93d6bb26"
+    }
+  ]
+}

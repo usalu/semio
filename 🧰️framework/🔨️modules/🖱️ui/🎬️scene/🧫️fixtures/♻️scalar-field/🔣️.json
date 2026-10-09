@@ -1,0 +1,47 @@
+{
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 32,
+    "maximumCapacityBytes": 8192,
+    "maximumReleaseBytes": 8192,
+    "maximumDepth": 128
+  },
+  "maximumTurns": 4096,
+  "deniedHeap": [
+    0,
+    0
+  ],
+  "handoffHeap": [
+    0,
+    0
+  ],
+  "terminalHeap": [
+    0,
+    0
+  ],
+  "projections": [
+    [
+      {
+        "mode": {
+          "kind": "orthographic"
+        },
+        "orientation": {
+          "type": "free"
+        }
+      },
+      "content"
+    ],
+    [
+      {
+        "mode": {
+          "kind": "threePoint",
+          "fov": 50
+        },
+        "orientation": {
+          "type": "free"
+        }
+      },
+      "preserveCamera"
+    ]
+  ]
+}

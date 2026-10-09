@@ -62,10 +62,10 @@ pub(super) fn project(source: &JsonSnapshot, control: &mut NativeEncodeControl<'
     Ok(Snapshot { schema, nodes })
 }
 
-pub(super) fn encode(source: &JsonSnapshot, encoding: store::sqlite_snapshot::SnapshotEncoding, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::io_schema::IoPayload, ValueError> {
+pub(super) fn encode(source: &JsonSnapshot, encoding: store::sqlite_snapshot::SnapshotEncoding, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
     let maximum_rows = control.limits().max_rows;
     store::encode_sqlite_snapshot_record_native(encoding, "stdio.json", Snapshot::__dsl_spec_producer(), |native| {
         let projected = project(source, native, maximum_rows)?;
         projected.__dsl_to_record_controlled(native)
-    }, control)
+    }, control,native_owner)
 }

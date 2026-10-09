@@ -1,0 +1,33 @@
+{
+  "route": "original TS readers through existing private Nx tests",
+  "nxExitCode": 0,
+  "durationMs": 126,
+  "bunTests": 2,
+  "files": 3,
+  "assertions": 76,
+  "bunDurationMs": 80,
+  "runtimeDebug": [
+    "Validator genuine Schema parser Ajv/SQLite recursive ownership",
+    "Geometry UTF8/Buffer/stableJson + JavaScript Set",
+    "Session original UTF8/Buffer/JSONPatch"
+  ],
+  "hostExportInvoked": false,
+  "dagExportInvoked": false,
+  "nativeExecuted": false,
+  "originalRegisteredHelpers": [
+    {
+      "sessionId": 49183,
+      "target": "semio-framework-os-flow-core:test-host-source",
+      "nxExitCode": 0,
+      "duration": "1.9s",
+      "actualDebug": "35 original host fields / JSONPatch / UTF8"
+    },
+    {
+      "sessionId": 6526,
+      "target": "semio-framework-os-flow-core:test-dag-source",
+      "nxExitCode": 0,
+      "duration": "5.1s",
+      "actualDebug": "47 original DAG + 27 engine fields / JSONPatch / UTF8"
+    }
+  ]
+}

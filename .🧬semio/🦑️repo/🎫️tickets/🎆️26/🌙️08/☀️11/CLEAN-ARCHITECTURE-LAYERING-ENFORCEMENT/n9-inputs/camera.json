@@ -1,0 +1,74 @@
+[
+  {
+    "name": "⏱️ Camera original storage whole native 1 🧪️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/umbrella-native-inputs/📜️script.ts\" native-renderer-camera 1",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+    "env": {
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_DAEMON": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n9k1/nd",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n9k1/nc"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 921.0
+    }
+  },
+  {
+    "name": "⏱️ Camera original storage whole native 2 🧪️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/umbrella-native-inputs/📜️script.ts\" native-renderer-camera 2",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+    "env": {
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_DAEMON": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n9k2/nd",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n9k2/nc"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 921.01
+    }
+  },
+  {
+    "name": "⏱️ Camera original storage whole native 3 🧪️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/umbrella-native-inputs/📜️script.ts\" native-renderer-camera 3",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+    "env": {
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_DAEMON": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n9k3/nd",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n9k3/nc"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 921.02
+    }
+  },
+  {
+    "name": "⏱️ Camera original storage whole native 4 🧪️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/umbrella-native-inputs/📜️script.ts\" native-renderer-camera 4",
+    "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+    "env": {
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_DAEMON": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n9k4/nd",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/n9k4/nc"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 921.03
+    }
+  }
+]

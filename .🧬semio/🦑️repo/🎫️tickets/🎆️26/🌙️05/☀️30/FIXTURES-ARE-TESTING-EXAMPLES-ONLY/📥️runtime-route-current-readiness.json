@@ -1,0 +1,49 @@
+{
+  "executed": false,
+  "authored": false,
+  "observations": [
+    {
+      "path": "📜️script.ts",
+      "authored": false,
+      "sha256": "7c237a1b859e2d2068aec728b8a9e9be0ff48080d093e4ab4385fcbe8d69127b"
+    },
+    {
+      "path": "📋️project.json",
+      "authored": false,
+      "sha256": "271ae09fb93bda20a14d1b9bcd6df2978ebd36bc1f64d2458ffb9c0345490a3a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+      "authored": false,
+      "sha256": "456b22d1b54d756d3c3947c1119a9eef9426df010966dc4f8bc4642042c0b8fd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔣️.json",
+      "authored": false,
+      "sha256": "a5fa2fd2e181ef6ffa2f778381abdb51ffea4b1ad97c8c25bee47321aea41703"
+    },
+    {
+      "path": "🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts",
+      "authored": false,
+      "sha256": "515d243440e71bfa7c7a461b6fafabe74c548f75e6599b167787d16d5fa4da35"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🔣️.json",
+      "authored": false,
+      "sha256": "64ac2a9ed81204d3438fb4af86aa1c2f23fd0b5d8e5840762c2277a1f2083176"
+    }
+  ],
+  "normalCommand": [
+    "bun",
+    "nx",
+    "run",
+    "workspace:runtime-fixture-graph"
+  ],
+  "prerequisites": [
+    "current guest compiler observations for exact declared4 checks",
+    "actual selected actor generation/compiler witnesses",
+    "current Trunk/native compiler+resource receipt",
+    "current browser compiler outputs at actual mounts"
+  ],
+  "proof": "original complete acquisition only; no private fixture substitute"
+}

@@ -47,8 +47,8 @@ fn admit_native_rows(record:&semio_framework_dsl_record::RecordValue,maximum:usi
 }
 impl ArtifactSqliteSnapshot for Puzzle5dSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{admit_schema(c)?;c.check_rows(1)?;let maximum=c.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{admit_native_rows(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)},c)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{forecast(self,c,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{admit_schema(c)?;c.check_rows(1)?;let maximum=c.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {admit_native_rows(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{forecast(self,c,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)}
  fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
   let total=forecast(self,c,SqliteSnapshotPhase::ProjectSnapshot)?;let mut out=Projection::new(Self::SQLITE_SCHEMA,c)?;
   let doc=out.insert(TABLES[0].0,&[Cell::Text(&self.schema),Cell::Text(&self.domain),optional_text(&self.label),Cell::Text(&self.meta.description)])?;
@@ -152,12 +152,11 @@ impl ArtifactSqliteSnapshot for crate::Puzzle5dPlaySnapshot{
  const SQLITE_SCHEMA:&'static str=Puzzle5dSnapshot::SQLITE_SCHEMA;
  fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.typed().to_sqlite_database(c)}
  fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Puzzle5dSnapshot::from_sqlite_database(d,c).map(Self::from_typed)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Puzzle5dSnapshot::decode_sqlite_snapshot_native(payload,c).map(Self::from_typed)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{self.typed().encode_sqlite_snapshot_native(encoding,c)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{Puzzle5dSnapshot::decode_sqlite_snapshot_native(payload,c,native_control).map(Self::from_typed)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{self.typed().encode_sqlite_snapshot_native(encoding,c,native_owner)}
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{self.typed().validate_sqlite_snapshot_subset(dialect,d,c)}
 }
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

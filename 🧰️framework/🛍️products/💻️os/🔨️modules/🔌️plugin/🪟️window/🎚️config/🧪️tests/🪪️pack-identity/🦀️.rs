@@ -2,7 +2,7 @@
 
 use super::*;
 
-struct IdentityWindowOwner;
+pub(super) struct IdentityWindowOwner;
 
 impl WindowConfigOwner for IdentityWindowOwner {
     const WINDOW_KIND_ID: &'static str = "identity-window";
@@ -10,8 +10,11 @@ impl WindowConfigOwner for IdentityWindowOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 16_384;
     type State = retained_pack_load_tests::RetainedLoadCameraConfig;
     type Mutation = retained_pack_load_tests::RetainedLoadCameraConfigMutation;
+    type Edit=retained_pack_load_tests::CameraRetainedEdit;
+    const MAXIMUM_PREPARATION_DEPTH:usize=64;
+    fn build_retained_edit()->Arc<Self::Edit>{Arc::new(retained_pack_load_tests::CameraRetainedEdit)}
 
-    fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> {
+    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         bounded_window_config_store_owners::<Self>()
     }
 
@@ -33,7 +36,7 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
             let source = row["sourceWindowId"].as_str().unwrap();
             let target = row["targetWindowId"].as_str().unwrap();
             let target_exists = row["targetExists"].as_bool().unwrap();
-            let mut registry = WindowConfigOwnerRegistry::new(protocol::ActorId(fixture["openedActor"].as_str().unwrap().to_owned()));
+            let mut registry = WindowConfigOwnerRegistry::new(protocol::ActorId(fixture["openedActor"].as_str().unwrap().to_owned().into()));
             registry.register::<IdentityWindowOwner>().unwrap();
             drop(registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(source).await.unwrap());
             let target_before = if target_exists {
@@ -62,7 +65,7 @@ fn window_config_pack_identity_rejects_foreign_inner_window_without_changing_or_
             };
             let mut closed = false;
             for _ in 0..65_536 {
-                if registry.close_step(1, 16_384).unwrap() == PluginCloseStep::Complete {
+                if matches!(registry.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 }).unwrap(), PluginLifecycleStep::Complete(_)) {
                     closed = true;
                     break;
                 }

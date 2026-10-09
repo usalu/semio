@@ -1,0 +1,75 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+    "before": "9d9addf2a96c139f7426a55b876d8767af0041e288531ceb5c62b3528cee07be",
+    "after": "d11a33b3889408e135e94b33cada81bc1488eeccf626e4fcba565b7287f12697",
+    "blocks": [
+      {
+        "needle": "pub const MEMBER_OPEN_IDENTITY_BYTES: usize = 256;",
+        "matches": 1
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+    "before": "f8334d4465e4e7bd0d52072a12fff05a7d349b58e257b2ac5829022ba22c72b9",
+    "after": "e3d0874ee5d3fad936efa576346361ef909a33266ad248eb2d9289fc6314a716",
+    "blocks": [
+      {
+        "needle": "pub fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocument",
+        "matches": 1
+      },
+      {
+        "needle": "let fuel = progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::try_fro",
+        "matches": 2
+      },
+      {
+        "needle": "cx.consume_fuel(progress_fuel(progress)?);",
+        "matches": 1
+      },
+      {
+        "needle": "match progress_fuel(progress) { Ok(fuel) => cx.consume_fuel(fuel), Err(diagnostic) => return sel",
+        "matches": 8
+      },
+      {
+        "needle": "match step.map_err(|_| MemberOpenDiagnostic::Initialization).and_then(|step| progress_fuel(step.",
+        "matches": 1
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+    "before": "38e8fcca339856c1e4262b6c25bbd8d72c1b75b79f1c7ddb006ad96131d4de45",
+    "after": "5c731deca495f7e69bbd44fc6b3b49cc63874d4d11bae7b607da01973432d6e9",
+    "blocks": [
+      {
+        "needle": "pub fn step_store(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> MemberOpenS",
+        "matches": 1
+      },
+      {
+        "needle": "let fuel = progress.copied_items.checked_add(progress.copied_bytes).ok_or(MemberOpenDiagnostic::",
+        "matches": 1
+      },
+      {
+        "needle": "let fuel = match progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::t",
+        "matches": 1
+      },
+      {
+        "needle": "Ok(Some(progress)) => { self.input_buffer_progress = progress; cx.consume_fuel(progress.copied_i",
+        "matches": 2
+      },
+      {
+        "needle": "self.input_buffer_progress = RetainedCloneProgress { copied_items: 1, copied_bytes: copied * 2, ",
+        "matches": 1
+      },
+      {
+        "needle": "let Some(fuel) = progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::t",
+        "matches": 1
+      },
+      {
+        "needle": "let Some(fuel) = progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::t",
+        "matches": 1
+      }
+    ]
+  }
+]

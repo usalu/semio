@@ -14,7 +14,7 @@ pub struct ZipIntoForms;
 impl Deserializer<FormsSnapshot> for ZipIntoForms {
     const FROM: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<FormsSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<FormsSnapshot> {
         let invalid = |message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message));
         let IoPayload::Binary(bytes) = payload else {
             return Err(invalid("ZipIntoForms: expected a binary zip snapshot".to_string()));

@@ -1,0 +1,16 @@
+{
+  "commandPathConsumers": [],
+  "paths": [
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct9-root-follow-data",
+      "openPids": [],
+      "lsofStatus": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct9-root-follow-cache",
+      "openPids": [],
+      "lsofStatus": 1
+    }
+  ],
+  "performedRemoval": false
+}

@@ -43,3 +43,49 @@ fn retained_empty_initialization_catalog_releases_one_exact_native_page_without_
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     println!("[DEBUG] Empty initialization native catalog terminal0heap, exact six-page release-total={total_released}; catalog birth cold/uncredited");
 }
+
+#[test]
+fn retained_initialization_catalog_birth_denial_and_cancellation_preserve_every_original_page() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let row = &fixture["birthPolicy"];
+    let policy = RetainedCloneGrant { maximum_items: row["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: row["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: row["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: row["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: row["maximumDepth"].as_u64().unwrap() as usize };
+    for cut in fixture["birthCancelCuts"].as_array().unwrap() {
+        let cancel_after = cut.as_u64().unwrap() as usize;
+        let (mut catalog, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(ArtifactStoreInitializationOwnerCatalog::empty);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        let mut born = 0;
+        for _ in 0..cancel_after {
+            let (demand, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.admission_demands().unwrap());
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            assert!(demand.capacity_bytes > 0 && demand.depth == 1);
+            let original = catalog.admitted_items();
+            for denied in [RetainedCloneGrant { maximum_items: 0, ..policy }, RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..policy }, RetainedCloneGrant { maximum_depth: 0, ..policy }] {
+                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.admit_next(denied));
+                assert!(result.is_err() || result.unwrap() == RetainedCloneProgress::default());
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                assert_eq!(catalog.admitted_items(), original);
+                assert_eq!(catalog.admission_demands().unwrap(), demand);
+            }
+            let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.admit_next(policy).unwrap());
+            assert!(progress.fits(policy));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, 0));
+            assert_eq!(progress.retained_capacity_bytes, demand.capacity_bytes);
+            assert_eq!(progress.copied_items, 1);
+            born += progress.retained_capacity_bytes;
+        }
+        assert_eq!(catalog.admission_is_complete(), cancel_after == 6);
+        let mut freed = 0;
+        for _ in 0..6 {
+            if catalog.terminal_is_empty() { break; }
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.close_step(policy).unwrap());
+            assert!(step.progress().fits(policy));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, step.progress().released_bytes));
+            freed += step.progress().released_bytes;
+        }
+        assert!(catalog.terminal_is_empty());
+        assert_eq!(freed, born);
+        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(catalog));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        println!("[DEBUG] Initialization catalog cancel-after={cancel_after} original admitted birth={born} paid release={freed} terminal0heap");
+    }
+}

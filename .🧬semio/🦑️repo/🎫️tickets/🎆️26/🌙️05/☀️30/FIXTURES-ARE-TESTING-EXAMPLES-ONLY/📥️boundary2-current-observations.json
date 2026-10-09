@@ -1,0 +1,43 @@
+{
+  "session": 29013,
+  "exitCode": 1,
+  "duration": "1m 8s",
+  "modules": 4691,
+  "scopes": 3754,
+  "findings": [
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♻️frame-close/🔣️.json",
+      "detail": "The document defines a test corpus contract outside the admitted schema facets.",
+      "sha256": "f8f03b87b1f0041b79dde67c7b3cd418e2ad2ef359062f5590caaee1ab288d57",
+      "rootKeys": [
+        "$schema",
+        "$id",
+        "title",
+        "type",
+        "additionalProperties",
+        "required",
+        "properties",
+        "$defs"
+      ],
+      "role": "read-only original current observation, not authorship"
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-close/🔣️.json",
+      "detail": "The document defines a test corpus contract outside the admitted schema facets.",
+      "sha256": "0debd7cbff1975f050d4da43dd4e7a12dcd907dadcd42b0350258672f53440e3",
+      "rootKeys": [
+        "$schema",
+        "$id",
+        "title",
+        "type",
+        "additionalProperties",
+        "required",
+        "properties",
+        "$defs"
+      ],
+      "role": "read-only original current observation, not authorship"
+    }
+  ]
+}

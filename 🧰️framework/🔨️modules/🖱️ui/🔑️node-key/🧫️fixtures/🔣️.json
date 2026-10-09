@@ -1,0 +1,135 @@
+{
+  "contract": "semio.ui.node-key.borrow.v1",
+  "cases": [
+    {
+      "id": "explicit-ascii",
+      "owned": {
+        "explicit": "key"
+      },
+      "borrowed": {
+        "explicit": "key"
+      },
+      "matches": true
+    },
+    {
+      "id": "explicit-unicode",
+      "owned": {
+        "explicit": "é🧭"
+      },
+      "borrowed": {
+        "explicit": "é🧭"
+      },
+      "matches": true
+    },
+    {
+      "id": "explicit-not-normalized",
+      "owned": {
+        "explicit": "é"
+      },
+      "borrowed": {
+        "explicit": "é"
+      },
+      "matches": false
+    },
+    {
+      "id": "explicit-empty",
+      "owned": {
+        "explicit": ""
+      },
+      "borrowed": {
+        "explicit": ""
+      },
+      "matches": true
+    },
+    {
+      "id": "explicit-case",
+      "owned": {
+        "explicit": "Key"
+      },
+      "borrowed": {
+        "explicit": "key"
+      },
+      "matches": false
+    },
+    {
+      "id": "positional-equal",
+      "owned": {
+        "positional": [
+          7,
+          9
+        ]
+      },
+      "borrowed": {
+        "positional": [
+          7,
+          9
+        ]
+      },
+      "matches": true
+    },
+    {
+      "id": "positional-first",
+      "owned": {
+        "positional": [
+          7,
+          9
+        ]
+      },
+      "borrowed": {
+        "positional": [
+          8,
+          9
+        ]
+      },
+      "matches": false
+    },
+    {
+      "id": "positional-second",
+      "owned": {
+        "positional": [
+          7,
+          9
+        ]
+      },
+      "borrowed": {
+        "positional": [
+          7,
+          10
+        ]
+      },
+      "matches": false
+    },
+    {
+      "id": "positional-boundaries",
+      "owned": {
+        "positional": [
+          0,
+          4294967295
+        ]
+      },
+      "borrowed": {
+        "positional": [
+          0,
+          4294967295
+        ]
+      },
+      "matches": true
+    },
+    {
+      "id": "distinct-kinds",
+      "owned": {
+        "explicit": "7,9"
+      },
+      "borrowed": {
+        "positional": [
+          7,
+          9
+        ]
+      },
+      "matches": false
+    }
+  ],
+  "borrowedText": "originalBacking",
+  "copiedHeapBytes": 0,
+  "releasedHeapBytes": 0
+}

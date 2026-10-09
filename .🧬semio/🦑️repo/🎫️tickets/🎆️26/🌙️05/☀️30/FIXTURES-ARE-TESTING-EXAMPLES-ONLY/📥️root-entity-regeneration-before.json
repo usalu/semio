@@ -1,0 +1,17 @@
+{
+  "outputBefore": [
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🦀️.rs",
+      "sha256": "2f400cfcff3092574a8f9a4f9649cf3451d71e301d62923c2f6db005e1cfded9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🟦️.ts",
+      "sha256": "2cddc1968109a1912b03b8dc567eb91c372fdedd582df0c3b52ec45beb21a397"
+    }
+  ],
+  "generatorObservationOnly": {
+    "path": "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📽️projection/🟦️.ts",
+    "sha256": "d6721583337d55016fcb514fafe538912187a0af0265a231f48ee6353917f66a"
+  },
+  "generatorAuthorshipClaim": false
+}

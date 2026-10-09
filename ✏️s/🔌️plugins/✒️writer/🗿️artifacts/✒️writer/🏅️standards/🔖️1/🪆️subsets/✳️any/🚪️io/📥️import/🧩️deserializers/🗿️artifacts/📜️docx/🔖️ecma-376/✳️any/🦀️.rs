@@ -20,7 +20,7 @@ impl Deserializer<WriterSnapshot> for DocxIntoWriter {
     /// 🪧️ Lossy: only paragraph run text survives — `schema`/`id`/`uri`/`language_id` have no home
     /// in a docx package, tables are dropped, and run-level formatting is not modeled.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<WriterSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "DocxIntoWriter: expected a binary payload".to_string())));
         };

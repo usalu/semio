@@ -29,7 +29,7 @@ impl ArtifactCommandWork<App> for Work {
     workspace.job=Some(DrawingImageAdmissionJob::new(semio_framework_pixels::image_decoding::ImageDecodeInput {mime:"image/png".into(),data:std::sync::Arc::new(std::mem::take(&mut workspace.source)),max_source_bytes:import_image::MAX_SOURCE_BYTES,max_bytes:67108864,max_pixels:import_image::MAX_PIXELS,max_chunks:65536}).map_err(|error|Fault::from(error.to_string()))?);cx.consume_fuel(1);continue;
    }
    let job=workspace.job.as_mut().unwrap();let progress=job.advance(1).map_err(|error|Fault::from(error.to_string()))?;cx.set_stage(if progress.samples>0 {"image-samples"}else{progress.decoding.map_or("image-decode",|progress|progress.phase)});cx.consume_fuel(1);
-   if progress.done {let asset=job.take_result().map_err(|error|Fault::from(error.to_string()))?;let emit=import_image::publish(input.snapshot,input.operation,payload,asset)?;self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(emit));}
+   if progress.done {let asset=job.take_result().map_err(|error|Fault::from(error.to_string()))?;let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|!cx.is_cancelled();let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);let emit=import_image::publish(input.snapshot,input.operation,payload,asset,&mut control)?;self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(emit));}
   }
   Ok(ArtifactCommandWorkStep::Progress {stage:"image-import",preview:b""})
  }

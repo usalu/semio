@@ -40,7 +40,7 @@ use semio_framework_actor::{ActorId as RuntimeActorId, Envelope, Lane as ActorLa
 use semio_framework_async::{CancelToken, CapabilityTokenId, ChannelPolicy, HostAsyncRuntime, HostFuture, OperationContext, ScopeDrainReport, ScopeHandle, ScopeOwner, TraceId};
 #[cfg(test)]
 use semio_framework_job::CommitCandidate;
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadCloseStep, JobPayloadStream, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
 use semio_framework_os_services::{
     CompletionSink, ComputeError, ComputePool, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic,
 };
@@ -416,24 +416,82 @@ pub trait RouterEffectHandler: Send + Sync {
     fn create_job(&self, effect: RouterEffect) -> Box<dyn InteractiveJob + Send>;
 }
 
-struct DynRouterEffectJob(Box<dyn InteractiveJob + Send>);
+struct DynRouterEffectJob(Option<Box<dyn InteractiveJob + Send>>);
+
+impl DynRouterEffectJob {
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let Some(original) = self.0.as_ref() else { return Ok(Default::default()); };
+        if original.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of_val(&self.0), release_bytes: std::mem::size_of_val(&**original), depth: 1, ..Default::default() }); }
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: original.next_close_copy_byte_demand()?, capacity_bytes: original.next_close_capacity_byte_demand(body)?, release_bytes: original.next_close_release_byte_demand()?, depth: original.next_close_depth_demand()?.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "router job wrapper depth overflow"))? })
+    }
+}
 
 impl InteractiveJob for DynRouterEffectJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        self.0.step(cx)
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome { self.0.as_mut().expect("original router job remains live").step(cx) }
+    fn begin_close(&mut self) { if let Some(original) = self.0.as_mut() { original.begin_close(); } }
+    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementTurnError};
+        let result = self.close_demands(grant.maximum_copy_bytes).and_then(|demand| semio_framework_value::advance_retirement_turn(demand,grant,|grant| {
+            let Some(original) = self.0.as_mut() else { return Ok((RetainedCloneStep::Complete(Default::default()),true)); };
+            if original.terminal_is_empty() {
+                drop(self.0.take());
+                return Ok((RetainedCloneStep::Complete(RetainedCloneProgress { copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default() }),true));
+            }
+            let child=semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
+            let step=original.close_step(child).admit(child,original.terminal_is_empty());
+            match step {
+                InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>Ok((RetainedCloneStep::Progress(progress),false)),
+                InteractiveJobCloseStep::Blocked=>Ok((RetainedCloneStep::Progress(Default::default()),false)),
+                InteractiveJobCloseStep::Refused{kind,progress}=>Err(semio_framework_value::ValueError::literal(kind,"original router job refused its caller grant").with_retained_progress(progress)),
+            }
+        }).map_err(|error| match error { RetirementTurnError::Owner(error)|RetirementTurnError::Receipt(error)=>error }));
+        match result {
+            Ok(step) if self.terminal_is_empty()=>InteractiveJobCloseStep::Complete{progress:step.progress()},
+            Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},
+            Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()},
+        }.admit(grant,self.terminal_is_empty())
     }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(body)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.depth) }
+    fn register_close_wake(&self, wake: &std::task::Waker) -> bool { self.0.as_ref().is_some_and(|original| original.register_close_wake(wake)) }
+    fn terminal_is_empty(&self) -> bool { self.0.is_none() }
+}
 
-    fn begin_close(&mut self) {
-        self.0.begin_close();
+fn router_effect_close_demands(writer: &Option<RetainedJobPayloadWriter>, source: &Option<Vec<u8>>) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    use semio_framework_value::RetirementDemand;
+    if let Some(writer) = writer.as_ref() {
+        if writer.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Option<RetainedJobPayloadWriter>>(), depth: 1, ..Default::default() }); }
+        let mut demand = writer.retirement_demands()?;
+        demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "router writer parent depth overflow"))?;
+        return Ok(demand);
     }
+    Ok(source.as_ref().map_or(Default::default(), |source| RetirementDemand { copy_bytes: std::mem::size_of::<Option<Vec<u8>>>(), release_bytes: source.capacity(), depth: 1, ..Default::default() }))
+}
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        self.0.close_step(maximum_items, maximum_bytes)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.0.terminal_is_empty()
-    }
+fn close_router_effect_sources(writer: &mut Option<RetainedJobPayloadWriter>, source: &mut Option<Vec<u8>>, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
+    use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep, RetirementTurnError};
+    let result = router_effect_close_demands(writer, source).and_then(|demand| semio_framework_value::advance_retirement_turn(demand, grant, |child| {
+        if let Some(original) = writer.as_mut() {
+            if original.terminal_is_empty() {
+                *writer = None;
+                return Ok((RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }), false));
+            }
+            let step = original.close_step(semio_framework_value::RetainedCloneGrant { maximum_depth: child.maximum_depth - 1, ..child })?;
+            return Ok((RetainedCloneStep::Progress(step.progress()), false));
+        }
+        if source.is_some() {
+            drop(source.take());
+            return Ok((RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() }), source.is_none()));
+        }
+        Ok((RetainedCloneStep::Complete(Default::default()), true))
+    }).map_err(|error| match error { RetirementTurnError::Owner(error) | RetirementTurnError::Receipt(error) => error }));
+    match result {
+        Ok(step) if writer.is_none() && source.is_none() => InteractiveJobCloseStep::Complete { progress: step.progress() },
+        Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+        Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+    }.admit(grant, writer.is_none() && source.is_none())
 }
 
 struct FaultRouterEffectJob {
@@ -460,7 +518,6 @@ impl InteractiveJob for FaultRouterEffectJob {
         if !complete {
             return StepOutcome::Yield;
         }
-        self.detail = None;
         let writer = self.writer.take().expect("router fault writer");
         StepOutcome::Fault(JobFault { detail: writer.finish().unwrap_or_else(|_| RetainedJobPayload::empty(JobPayloadStream::Fault)) })
     }
@@ -472,26 +529,15 @@ impl InteractiveJob for FaultRouterEffectJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.begin_close();
-        if let Some(writer) = self.writer.as_mut() {
-            return match writer.close_step(maximum_items, maximum_bytes) {
-                JobPayloadCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                JobPayloadCloseStep::Complete => {
-                    self.writer = None;
-                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
-        }
-        if self.detail.is_some() {
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.detail = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        InteractiveJobCloseStep::Complete
+        close_router_effect_sources(&mut self.writer, &mut self.detail, grant)
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(router_effect_close_demands(&self.writer, &self.detail)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(router_effect_close_demands(&self.writer, &self.detail)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(router_effect_close_demands(&self.writer, &self.detail)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(router_effect_close_demands(&self.writer, &self.detail)?.depth) }
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.detail.is_none() && self.writer.is_none()
@@ -520,7 +566,6 @@ impl InteractiveJob for CompleteRouterEffectJob {
         if !complete {
             return StepOutcome::Yield;
         }
-        self.output = None;
         let writer = self.writer.take().expect("router output writer");
         StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: writer.finish().unwrap_or_else(|_| RetainedJobPayload::empty(JobPayloadStream::CommitOutput)) })
     }
@@ -532,26 +577,15 @@ impl InteractiveJob for CompleteRouterEffectJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.begin_close();
-        if let Some(writer) = self.writer.as_mut() {
-            return match writer.close_step(maximum_items, maximum_bytes) {
-                JobPayloadCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                JobPayloadCloseStep::Complete => {
-                    self.writer = None;
-                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
-        }
-        if self.output.is_some() {
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.output = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        InteractiveJobCloseStep::Complete
+        close_router_effect_sources(&mut self.writer, &mut self.output, grant)
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(router_effect_close_demands(&self.writer, &self.output)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(router_effect_close_demands(&self.writer, &self.output)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(router_effect_close_demands(&self.writer, &self.output)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(router_effect_close_demands(&self.writer, &self.output)?.depth) }
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.output.is_none() && self.writer.is_none()
@@ -581,17 +615,11 @@ fn copy_router_effect_payload(payload: &RetainedJobPayload) -> Result<Vec<u8>, S
     Ok(bytes)
 }
 
-fn close_router_effect_outcome(outcome: &mut StepOutcome) {
-    while !outcome.terminal_is_empty() {
-        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
-}
-
-pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, handler: &Arc<dyn RouterEffectHandler>, effect: RouterEffect) -> RouterEffectJobOutcome {
+pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, retained: semio_framework_job::RetainedCloneGrant, handler: &Arc<dyn RouterEffectHandler>, effect: RouterEffect) -> RouterEffectJobOutcome {
     if ctx.cancel.is_cancelled().await {
         return RouterEffectJobOutcome::Cancelled;
     }
-    let mut outcome = match compute.run_job(runtime, scope, ctx, DynRouterEffectJob(handler.create_job(effect))).await {
+    let outcome = match compute.run_job(runtime, scope, ctx, retained, DynRouterEffectJob(Some(handler.create_job(effect)))).await {
         Ok(outcome) => outcome,
         Err(ComputeError::DeadlineExceeded) => return RouterEffectJobOutcome::DeadlineExceeded,
         Err(ComputeError::WorkerLost) => return RouterEffectJobOutcome::WorkerLost,
@@ -605,7 +633,7 @@ pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, r
         },
         StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => RouterEffectJobOutcome::Fault("router effect compute session returned a nonterminal outcome".to_string()),
     };
-    close_router_effect_outcome(&mut outcome);
+    compute.retain_outcome_for_close(outcome,retained);
     result
 }
 
@@ -804,6 +832,7 @@ pub struct AsyncServices<R: HostAsyncRuntime> {
 /// 🎯️ What one `execute()` call dispatches a batch of effects on behalf of.
 #[derive(Clone)]
 pub struct EffectDispatchContext {
+    pub router_turn_grant: semio_framework_job::RetainedCloneGrant,
     /// 🪪️ The STABLE actor identity (`OperationContext.actor`'s own convention) — the actor MUST
     /// already be `ActorScopeRegistry::activate`-d before effects are dispatched for it.
     pub actor: u64,
@@ -993,47 +1022,47 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                 }
                 Effect::BlobWrite { req, media_type, bytes } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::BlobWrite { media_type: *media_type, bytes: bytes.clone() }).await;
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, dispatch.router_turn_grant, RouterEffect::BlobWrite { media_type: *media_type, bytes: bytes.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::BlobLoad { req, hash } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::BlobLoad { hash: hash.clone() }).await;
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, dispatch.router_turn_grant, RouterEffect::BlobLoad { hash: hash.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::DocumentRead { req, doc, lane } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::DocumentRead { doc: doc.0, lane: lane.clone() }).await;
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, dispatch.router_turn_grant, RouterEffect::DocumentRead { doc: doc.0, lane: lane.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::DocumentWrite { req, doc, lane, ops } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::DocumentWrite { doc: doc.0, lane: lane.clone(), ops: ops.clone() }).await;
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, dispatch.router_turn_grant, RouterEffect::DocumentWrite { doc: doc.0, lane: lane.clone(), ops: ops.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::IoCompose { req, key, sources } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::IoCompose { key: key.clone(), sources: sources.clone() }).await;
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, dispatch.router_turn_grant, RouterEffect::IoCompose { key: key.clone(), sources: sources.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::CacheDerive { req, engine_id, input } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::CacheDerive { engine_id: engine_id.clone(), input: input.clone() }).await;
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, dispatch.router_turn_grant, RouterEffect::CacheDerive { engine_id: engine_id.clone(), input: input.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::CacheRead { req, engine_id, key } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::CacheRead { engine_id: engine_id.clone(), key: key.clone() }).await;
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, dispatch.router_turn_grant, RouterEffect::CacheRead { engine_id: engine_id.clone(), key: key.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::InvokeExtension { req, extension_id, capability, request_json, .. } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::InvokeExtension { extension_id: extension_id.clone(), capability: capability.clone(), request_json: request_json.clone() }).await;
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, dispatch.router_turn_grant, RouterEffect::InvokeExtension { extension_id: extension_id.clone(), capability: capability.clone(), request_json: request_json.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::DispatchAction { req, action, args, delay_ms } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::DispatchAction { action: action.clone(), args: args.clone(), delay_ms: *delay_ms }).await;
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, dispatch.router_turn_grant, RouterEffect::DispatchAction { action: action.clone(), args: args.clone(), delay_ms: *delay_ms }).await;
                     report.dispatched += 1;
                 }
                 Effect::SpawnJob { .. } | Effect::CancelJob { .. } => {
@@ -1196,7 +1225,7 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
 
     /// 🐛️ Same reasoning as `dispatch_http`'s own `scope_for_task` — a separate clone so the
     /// bare `scope` below survives the `async move` block for `spawn_scoped(&scope, ..)`.
-    async fn dispatch_router_effect(&self, ctx: OperationContext, scope: ScopeHandle, req: RequestId, effect: RouterEffect) {
+    async fn dispatch_router_effect(&self, ctx: OperationContext, scope: ScopeHandle, req: RequestId, retained: semio_framework_job::RetainedCloneGrant, effect: RouterEffect) {
         let runtime = self.services.runtime.clone();
         let compute = self.services.compute.clone();
         let sink = self.sink.clone();
@@ -1208,7 +1237,7 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                 emit_completed_err(&sink, &ctx_for_task, req, "capability-revoked", "router effect cancelled before dispatch").await;
                 return;
             }
-            let result = run_router_effect_job(&compute, runtime.as_ref(), &scope_for_task, ctx_for_task.clone(), &handler, effect).await;
+            let result = run_router_effect_job(&compute, runtime.as_ref(), &scope_for_task, ctx_for_task.clone(), retained, &handler, effect).await;
             match result {
                 RouterEffectJobOutcome::Complete(bytes) => emit_completed_ok(&sink, &ctx_for_task, req, bytes).await,
                 RouterEffectJobOutcome::Cancelled => emit_completed_err(&sink, &ctx_for_task, req, "capability-revoked", "router effect cancelled").await,

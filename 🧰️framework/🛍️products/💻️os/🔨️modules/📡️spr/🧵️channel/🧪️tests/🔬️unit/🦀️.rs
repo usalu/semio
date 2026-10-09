@@ -6,7 +6,7 @@ async fn sample_envelope(id: &str) -> crate::os_spr::causal::MutationEnvelope {
     crate::os_spr::causal::MutationEnvelope {
         mutation_id: crate::os_spr::ids::MutationId(id.to_string()),
         document_id: crate::os_spr::ids::ArtifactId("document-1".to_string()),
-        actor: crate::os_spr::ids::ActorId("actor-1".to_string()),
+        actor: crate::os_spr::ids::ActorId("actor-1".into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
@@ -631,7 +631,7 @@ async fn generic_decoder_rejects_presence_before_whole_roster_materialization() 
     let encoded = encode_app_command(&AppCommand::Presence { seq: 3, own_color: None, peers: roster }).await.unwrap();
     assert_eq!(encoded.kind(), 28);
     let mut cursor = PresenceCommandCursor::admit_page(3, None, 1, FixedCommandPage::try_copy_from(&[7]).unwrap()).map_err(|(error, _)| error).unwrap();
-    while !cursor.close_release(PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES).0 {}
+    while !cursor.terminal_is_empty() { let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:1};let step=cursor.close_step(grant);assert!(step.progress().fits(grant));if matches!(step,semio_framework_value::RetainedCloneStep::Complete(_)){assert!(cursor.terminal_is_empty());break;} }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1049,10 +1049,10 @@ async fn app_command_fixture_corpus_matches_golden_hex_and_round_trips() {
                 }
             }
             if peers.is_empty() {
-                while !cursor.close_release(PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES).0 {}
+                while !cursor.terminal_is_empty() { let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:1};let step=cursor.close_step(grant);assert!(step.progress().fits(grant));if matches!(step,semio_framework_value::RetainedCloneStep::Complete(_)){assert!(cursor.terminal_is_empty());break;} }
             }
             assert!(entries.iter().map(FixedCommandPage::as_slice).eq(peers.iter()), "Presence retained cursor must preserve exact entry order");
-            while !cursor.close_release(PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES).0 {}
+            while !cursor.terminal_is_empty() { let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:1};let step=cursor.close_step(grant);assert!(step.progress().fits(grant));if matches!(step,semio_framework_value::RetainedCloneStep::Complete(_)){assert!(cursor.terminal_is_empty());break;} }
             assert!(cursor.terminal_is_empty());
             continue;
         }

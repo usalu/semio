@@ -1,0 +1,74 @@
+[
+  {
+    "name": "\ud83e\uddee\ufe0f Services caller retained full native 1 \ud83e\uddea\ufe0f",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/umbrella-native-inputs/\ud83d\udcdc\ufe0fscript.ts\" native-services-retirement 1",
+    "cwd": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+    "env": {
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_DAEMON": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9s1/nd",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9s1/nc"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.7801
+    }
+  },
+  {
+    "name": "\ud83e\uddee\ufe0f Services caller retained full native 2 \ud83e\uddea\ufe0f",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/umbrella-native-inputs/\ud83d\udcdc\ufe0fscript.ts\" native-services-retirement 2",
+    "cwd": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+    "env": {
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_DAEMON": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9s2/nd",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9s2/nc"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.7801999999999
+    }
+  },
+  {
+    "name": "\ud83e\uddee\ufe0f Services caller retained full native 3 \ud83e\uddea\ufe0f",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/umbrella-native-inputs/\ud83d\udcdc\ufe0fscript.ts\" native-services-retirement 3",
+    "cwd": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+    "env": {
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_DAEMON": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9s3/nd",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9s3/nc"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.7803
+    }
+  },
+  {
+    "name": "\ud83e\uddee\ufe0f Services caller retained full native 4 \ud83e\uddea\ufe0f",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/umbrella-native-inputs/\ud83d\udcdc\ufe0fscript.ts\" native-services-retirement 4",
+    "cwd": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+    "env": {
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_DAEMON": "false",
+      "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/\ud83e\uddea\ufe0fnx",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9s4/nd",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f08/\u2600\ufe0f11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/\ud83d\uddd1\ufe0fgenerated/n9s4/nc"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.7804
+    }
+  }
+]

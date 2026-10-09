@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "maximum",
+    "inputBytes",
+    "deniedProgress",
+    "scalarReceipt",
+    "sourceOwned",
+    "sourceMaximum",
+    "grant"
+  ],
+  "properties": {
+    "kind": {
+      "const": "original-host-retirement-source"
+    },
+    "maximum": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "inputBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "deniedProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "capacityBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "scalarReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximum",
+        "owned",
+        "finished",
+        "reserved_return",
+        "phase_start_owned",
+        "phase_start_reserved_return",
+        "received_output",
+        "received_input",
+        "received_retirement"
+      ],
+      "properties": {
+        "maximum": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "owned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "finished": {
+          "type": "boolean"
+        },
+        "reserved_return": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "phase_start_owned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "phase_start_reserved_return": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "received_output": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "received_input": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "received_retirement": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "sourceOwned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sourceMaximum": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximum_items",
+        "maximum_copy_bytes",
+        "maximum_capacity_bytes",
+        "maximum_release_bytes",
+        "maximum_depth"
+      ],
+      "properties": {
+        "maximum_items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximum_copy_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximum_capacity_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximum_release_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximum_depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

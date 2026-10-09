@@ -1,0 +1,112 @@
+{
+  "schema": "native.borrowed-observer/v1",
+  "cases": [
+    {
+      "id": "accept",
+      "maximumBytes": 32,
+      "initialBytes": 7,
+      "chargeBytes": 11,
+      "parentRejectAt": null,
+      "observerRejectAt": null,
+      "unwindAfterCharge": false,
+      "expected": {
+        "outcome": "complete",
+        "ownedBytes": 18,
+        "maximumBytes": 32,
+        "parentEvents": [
+          7,
+          18,
+          18
+        ],
+        "observerEvents": [
+          7,
+          18
+        ]
+      }
+    },
+    {
+      "id": "original-cancel",
+      "maximumBytes": 32,
+      "initialBytes": 7,
+      "chargeBytes": 11,
+      "parentRejectAt": 7,
+      "observerRejectAt": null,
+      "unwindAfterCharge": false,
+      "expected": {
+        "outcome": "canceled",
+        "ownedBytes": 7,
+        "maximumBytes": 32,
+        "parentEvents": [
+          7,
+          7
+        ],
+        "observerEvents": []
+      }
+    },
+    {
+      "id": "interior-observer-cancel",
+      "maximumBytes": 32,
+      "initialBytes": 7,
+      "chargeBytes": 11,
+      "parentRejectAt": null,
+      "observerRejectAt": 18,
+      "unwindAfterCharge": false,
+      "expected": {
+        "outcome": "canceled",
+        "ownedBytes": 18,
+        "maximumBytes": 32,
+        "parentEvents": [
+          7,
+          18,
+          18
+        ],
+        "observerEvents": [
+          7,
+          18
+        ]
+      }
+    },
+    {
+      "id": "caller-limit",
+      "maximumBytes": 17,
+      "initialBytes": 7,
+      "chargeBytes": 11,
+      "parentRejectAt": null,
+      "observerRejectAt": null,
+      "unwindAfterCharge": false,
+      "expected": {
+        "outcome": "ownershipLimit",
+        "ownedBytes": 7,
+        "maximumBytes": 17,
+        "parentEvents": [
+          7,
+          7
+        ],
+        "observerEvents": [
+          7
+        ]
+      }
+    },
+    {
+      "id": "unwind-after-debit",
+      "maximumBytes": 32,
+      "initialBytes": 7,
+      "chargeBytes": 11,
+      "parentRejectAt": null,
+      "observerRejectAt": null,
+      "unwindAfterCharge": true,
+      "expected": {
+        "outcome": "unwound",
+        "ownedBytes": 18,
+        "maximumBytes": 32,
+        "parentEvents": [
+          7,
+          18
+        ],
+        "observerEvents": [
+          7
+        ]
+      }
+    }
+  ]
+}

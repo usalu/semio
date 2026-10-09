@@ -49,6 +49,8 @@ async fn registered_home_admits_its_retained_routes_at_interactive_dispatch() {
 
 #[semio_framework_async_macros::async_test]
 async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
+    let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
@@ -60,9 +62,9 @@ async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
     };
     // 🧯️ `Fault::from(&str)` mints `app.message` and carries the text as the MESSAGE — asserting the
     // code here read `app.message` and had never passed.
-    assert_eq!((fault.code.0.as_str(), fault.message.as_str()), ("app.message", "s.home.session-identity-required"));
+    assert_eq!((fault.code.0.as_str(), fault.message.as_str()), ("app.message", "s.home.create-studio.effect-authority-required"));
     let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
-    let emit = handle_with_identity(&CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg, &identity).expect("handle");
+    let emit = handle_with_identity(&CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg, &identity, &mut authoring).expect("handle");
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "ephemeral create must not download");
     let persistent = list_os_space_catalog_entries(&semio_s_space_core::catalog_port().await).expect("list");

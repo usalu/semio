@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn canonical_sealer_constructor_refusal_keeps_every_original_owner_without_heap_work() {
     let demand = ArtifactStoreOneItemSealer::<u64, FixtureMutation>::constructor_demand();
-    assert_eq!(demand.capacity_bytes, std::mem::size_of::<Edit<FixtureMutation>>() + 3 * ARTIFACT_STORE_ONE_ITEM_ID_BYTES + ArtifactCanonicalEditEncoder::constructor_capacity_bytes());
+    assert_eq!(demand.capacity_bytes, ArtifactStoreCanonicalSource::<FixtureMutation>::source_constructor_demand().capacity_bytes);
     assert!(demand.capacity_bytes <= 4096);
     let mut original = (authority(), fixture().0, Arc::new(17u64), Arc::new(FixtureMutationRetirement) as Arc<dyn ArtifactOwnedValueRetirementFactory<FixtureMutation>>, Arc::new(FixtureSnapshotRetirement) as Arc<dyn SnapshotRetirementFactory<u64>>);
     let authority_address = Arc::as_ptr(&original.0);
@@ -79,13 +79,26 @@ fn scalar_bytes_from_node_matches_serde_json_byte_for_byte() {
 
 #[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue, semio_framework_value_derive::RetireOwned)]
 enum FixtureMutation {
-    Replace { text: String, nested: Vec<String>, enabled: bool, amount: i64 },
+    Replace(FixtureReplace),
+}
+
+#[derive(Clone, Debug, Serialize, ToValue, Deserialize, FromValue, semio_framework_value_derive::RetireOwned)]
+struct FixtureReplace { text:String,nested:Vec<String>,enabled:bool,amount:i64 }
+impl ArtifactCanonicalJsonTree for FixtureMutation {
+    fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonNode<'_>,ValueError>{Ok(ArtifactCanonicalJsonNode::Object(1))}
+    fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{let Self::Replace(body)=self;if ordinal==0{Ok(body)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixture original variant ordinal missing"))}}
+    fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{if ordinal==0{Ok("Replace".into())}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixture original variant key missing"))}}
+}
+impl ArtifactCanonicalJsonTree for FixtureReplace {
+    fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonNode<'_>,ValueError>{Ok(ArtifactCanonicalJsonNode::Object(4))}
+    fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{Ok(match ordinal{0=>&self.text,1=>&self.nested,2=>&self.enabled,3=>&self.amount,_=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixture original field ordinal missing"))})}
+    fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{["text","nested","enabled","amount"].get(ordinal).map(|key|ArtifactCanonicalJsonText::from(*key)).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixture original field key missing"))}
 }
 
 impl ArtifactCanonicalJson for FixtureMutation {
     fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
         use ArtifactCanonicalJsonNode as N;
-        let Self::Replace { text, nested, enabled, amount } = self;
+        let Self::Replace(FixtureReplace { text, nested, enabled, amount }) = self;
         Ok(match path {
             [] => N::Object(1),
             [0] => N::Object(4),
@@ -166,9 +179,9 @@ pub(super) fn authority() -> Arc<ArtifactStoreOneItemLiveAuthority> {
     })
 }
 
-pub(super) fn admit_sealer<P, M>(authority: Arc<ArtifactStoreOneItemLiveAuthority>, edit: Edit<M>, post: Arc<P>, mutation: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot: Arc<dyn SnapshotRetirementFactory<P>>) -> ArtifactStoreOneItemSealer<P, M> {
+pub(super) fn admit_sealer<P, M:semio_framework_value::retirement::RetireOwned+Sync+ArtifactCanonicalJsonTree>(authority: Arc<ArtifactStoreOneItemLiveAuthority>, edit: Edit<M>, post: Arc<P>, mutation: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot: Arc<dyn SnapshotRetirementFactory<P>>) -> ArtifactStoreOneItemSealer<P, M> {
     let demand = ArtifactStoreOneItemSealer::<P, M>::constructor_demand();
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: demand.capacity_bytes, maximum_depth: demand.depth, ..Default::default() };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes:4096, maximum_capacity_bytes: demand.capacity_bytes, maximum_depth: demand.depth, ..Default::default() };
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| authority.begin_one_item_seal(edit, post, mutation, snapshot, grant));
     let (owner, receipt) = result.unwrap_or_else(|_| panic!("canonical sealer exact constructor admission"));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, 0));
@@ -203,7 +216,7 @@ fn finish(sealer: &mut ArtifactStoreOneItemSealer<u64, FixtureMutation>, bytes: 
         let step = sealer.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap();
         assert!(sealer.completed_bytes - previous <= bytes as u64);
         previous = sealer.completed_bytes;
-        if matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(_)) {
+        if matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(..)) {
             return sealer.prepared().unwrap().edit_digest();
         }
     }
@@ -330,7 +343,7 @@ fn canonical_sealer_preserves_large_domains_and_all_wire_metadata_origins() {
     for length in fixture["largeTextBytes"].as_array().unwrap() {
         for origin in fixture["origins"].as_array().unwrap() {
             let mut edit = base.clone();
-            let FixtureMutation::Replace { text, .. } = &mut edit.forwards[0];
+            let FixtureMutation::Replace(FixtureReplace { text, .. }) = &mut edit.forwards[0];
             *text = "x".repeat(length.as_u64().unwrap() as usize);
             edit.finished_at = Some("finished".into());
             edit.mutation_meta[0].origin = crate::os_spr::MutationOrigin::from_value(origin.clone().into()).unwrap();
@@ -364,7 +377,7 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
     let payload_bytes = fields.iter().map(String::len).sum::<usize>();
     let [actor, group, edit, line] = fields;
     let original = Arc::get_mut(&mut authority).unwrap();
-    original.actor = actor; original.group_id = Some(group); original.stamped_edit_id = Some(edit); original.line = Some(line);
+    original.actor = actor.into(); original.group_id = Some(group); original.stamped_edit_id = Some(edit); original.line = Some(line);
     let pointer = Arc::as_ptr(&authority);
     let birth = authority.retirement_birth_demand();
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: law["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: birth.capacity_bytes, maximum_release_bytes: 0, maximum_depth: birth.depth };

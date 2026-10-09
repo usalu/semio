@@ -1,0 +1,38 @@
+{
+  "schema": "framework.job.payload-retirement",
+  "pages": [
+    0,
+    1,
+    3
+  ],
+  "variants": [
+    "yield",
+    "preview",
+    "checkpoint",
+    "complete",
+    "cancelled",
+    "fault"
+  ],
+  "ledgerAliases": [
+    "sole",
+    "shared"
+  ],
+  "pageBytes": 16384,
+  "cancellationCuts": [
+    0,
+    1,
+    2
+  ],
+  "separateLedgerTurn": true,
+  "originalPointerOnRefusal": true,
+  "receiptPhysicalEqualsActual": true,
+  "slotStages": [
+    "payload",
+    "metadata",
+    "parent-complete"
+  ],
+  "slotHeaderRemoval": "in-place",
+  "slotPresenceBytes": 1,
+  "faultSlotHeaderRemoval": "in-place",
+  "faultSlotPresenceBytes": 1
+}

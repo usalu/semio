@@ -110,13 +110,13 @@ pub(crate) fn preflight(snapshot:&JsonSnapshot,control:&mut store::sqlite_snapsh
 
 pub(crate) fn retire(snapshot:JsonSnapshot){decoding::retire_value(snapshot.value)}
 
-pub(crate) fn encode(snapshot:&JsonSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{encoding::encode(snapshot,encoding,control)}
+pub(crate) fn encode(snapshot:&JsonSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{encoding::encode(snapshot,encoding,control)}
 
 pub(crate) fn reconstruct_record(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize)->Result<JsonSnapshot,semio_framework_value::ValueError>{
  let snapshot=decoding::bind(record,control,maximum_rows)?;decoding::reconstruct(snapshot,control)
 }
 
-pub(crate) fn decode(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<JsonSnapshot,semio_framework_value::ValueError>{
+pub(crate) fn decode(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<JsonSnapshot,semio_framework_value::ValueError>{
  let maximum_rows=control.limits().max_rows;
- store::decode_sqlite_snapshot_record_native(payload,"stdio.json",Snapshot::__dsl_spec_producer(),|record,native|reconstruct_record(record,native,maximum_rows),control)
+ store::decode_sqlite_snapshot_record_native(payload,"stdio.json",Snapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {reconstruct_record(record,native,maximum_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
 }

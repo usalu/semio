@@ -1,0 +1,23 @@
+{
+  "schema": "bim.sqlite.control/v1",
+  "mapCount": 300,
+  "cancelAfterWork": 256,
+  "maxRows": 2,
+  "keys": [
+    "",
+    "🙂"
+  ],
+  "binary64Words": ["0000000000000000","8000000000000000","0000000000000001","000fffffffffffff","0010000000000000","7fefffffffffffff","7ff0000000000000","fff0000000000000","7ff8000000000042","7ff0000000000042","fff8000000000042"],
+  "commonPrefix": {
+    "text": "λ🙂",
+    "repeat": 1025,
+    "suffixes": [
+      "Z",
+      "A"
+    ],
+    "expectedSuffixes": [
+      "A",
+      "Z"
+    ]
+  }
+}

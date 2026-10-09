@@ -1,0 +1,24 @@
+{
+  "sourceCopied": false,
+  "nativeExecuted": false,
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "scope": "zero-backing unit owner consumes original item/depth; actual cursor Box admission remains separately funded",
+      "line": 748,
+      "beforeFileSha256": "aabbca7b24158bcee6493ef2eec620e3bf731797fb51393ab5abaf148298b943",
+      "beforeBlockSha256": "20273a96756343fc1043cb47af7bdf47d7092966fc98f762373b690a4894d59d",
+      "afterFileSha256": "1b5d2d0f931c9b729b86a9ec6ba25489802265db534bc495fed8c931bdd87470",
+      "afterBlockSha256": "1f31da0aecfab1b2df97100932f916522bef4e299622962584d9cca231aa0643"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "scope": "displaced reservation native law preserves zero-item/zero-release ownership and separates exact cursor/queue backing frees",
+      "line": 780,
+      "beforeFileSha256": "1b5d2d0f931c9b729b86a9ec6ba25489802265db534bc495fed8c931bdd87470",
+      "beforeBlockSha256": "94e85af0a9f29554b52df903c9b7fcc14832bdb54c6010532c6fb609dac7ce20",
+      "afterFileSha256": "ab73db5617847f2da2c23f1262ef89b6da8fd9ecb3e59b50c23019d0c71fa2d6",
+      "afterBlockSha256": "32722bd441299d8cd42f16a6e8b5c72b2fa469745e8b6164b95447b6a7e2668c"
+    }
+  ]
+}

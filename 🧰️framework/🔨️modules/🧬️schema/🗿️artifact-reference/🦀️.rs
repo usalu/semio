@@ -97,5 +97,3 @@ fn is_kebab_segment(segment: &str) -> bool {
 #[derive(Clone,Debug,PartialEq,Eq,Hash,ToValue,FromValue)]
 #[value(rename_all="camelCase",deny_unknown_fields)]
 pub struct ArtifactRef {pub artifact_id:String,pub dialect:ArtifactDialect}
-
-

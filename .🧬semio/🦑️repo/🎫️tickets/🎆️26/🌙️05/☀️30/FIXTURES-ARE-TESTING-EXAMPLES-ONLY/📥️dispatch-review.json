@@ -1,0 +1,52 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️oct8-normal-publication-serial-dispatch-inputs.json",
+      "present": true,
+      "sha256": "8c294c2e05cec87183d42e51056798edade3c22277c6eab8df90fd1792d1edb8"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
+      "present": true,
+      "sha256": "114cdbca6e746f5fc44f39987596c17bb62ac634579eadef5fa001296f2be0f7"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "present": true,
+      "sha256": "00c95ef4b3527fea44072fbe5e58feb7098d581fcf74a11f660505ac05b905b5"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts",
+      "present": true,
+      "sha256": "b9158a2964786f9b65af46ea35b3ddcd3dc2fada1bc775794722ad8e82c10245"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
+      "present": true,
+      "sha256": "f56c52c5fea28d48bae609662036177aa66d6fae2414485fbd9baca23e70b7ce"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "present": true,
+      "sha256": "f0c34a0f1029afbee6185c7726e13752ce8f65217b7e6328e1031dd0b2b58f0f"
+    }
+  ],
+  "exactCwdExists": true,
+  "projectFilename": "project.json",
+  "selectedPackages": [
+    "stdio",
+    "gis",
+    "note",
+    "writer",
+    "draw",
+    "puzzle"
+  ],
+  "mountedContexts": [
+    "s/react/dev",
+    "s/react/release",
+    "s/wgpu/dev",
+    "s/wgpu/release"
+  ]
+}

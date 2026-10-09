@@ -142,19 +142,19 @@ if (operation === "consumer" || operation === "waiting") {
   process.once("SIGINT", cancelCompile); process.once("SIGTERM", cancelCompile);
   const nativeEnv = { ...env, CARGO_TARGET_DIR: join(root, ".native-target"), CARGO_BUILD_BUILD_DIR: join(root, ".native-build"), CARGO_NET_OFFLINE: "true" };
   try {
-    for (const args of [["generate-lockfile", "--offline"], ["build", "--locked", "--offline"]]) await runTool("cargo", [...args, "--manifest-path", join(root, "reader/Cargo.toml")], root, compile.signal, false, nativeEnv);
+    for (const args of [["generate-lockfile", "--offline"], ["build", "--locked", "--offline"]]) await runTool("cargo",[...args, "--manifest-path", join(root, "reader/Cargo.toml")],root,compile.signal,false,nativeEnv,{version:1,directory:output});
     const binary = join(root, ".native-target/debug", process.platform === "win32" ? "reader.exe" : "reader");
     for (const profile of fixture.profiles) {
       const path = join(publication.nativeRuntimeDirectory(root, fixture.variant, profile), "🔣️runtime.json");
       const manifest = JSON.parse(readFileSync(path, "utf8"));
-      const rows = await runTool(binary, [path, fixture.variant], root, compile.signal, true, nativeEnv);
+      const rows = await runTool(binary,[path, fixture.variant],root,compile.signal,true,nativeEnv,{version:1,directory:output});
       assert.deepEqual(JSON.parse(rows), manifest.modules.map(({ pluginId, wasmSha256 }: any) => ({ pluginId, wasmSha256 })));
-      await assert.rejects(() => runTool(binary, [path, "wrong-variant"], root, compile.signal, true, nativeEnv), /failed \(2\)/);
+      await assert.rejects(() => runTool(binary,[path, "wrong-variant"],root,compile.signal,true,nativeEnv,{version:1,directory:output}), /failed \(2\)/);
     }
     const path = join(root, "reader/manifest.json"), valid = JSON.parse(readFileSync(join(publication.nativeRuntimeDirectory(root, fixture.variant, "dev"), "🔣️runtime.json"), "utf8"));
     const validateNative = async (value: unknown, accepted: boolean) => {
       put("reader/manifest.json", typeof value === "string" ? value : JSON.stringify(value));
-      const result = runTool(binary, [path, fixture.variant, "validate"], root, compile.signal, true, nativeEnv);
+      const result = runTool(binary,[path, fixture.variant, "validate"],root,compile.signal,true,nativeEnv,{version:1,directory:output});
       if (accepted) await result; else await assert.rejects(result, /failed \(2\)/);
     };
     for (const entry of fixture.paths) {

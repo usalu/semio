@@ -7,6 +7,10 @@ impl FactoryPayloadRetirement for RefusingFactory{
  type CloseState=bool;
  fn close_state_birth_bytes(&self)->usize{0}
  fn close_state_constructor_depth(&self)->usize{0}
+ fn close_state_constructor_copy_bytes(&self)->usize {std::mem::size_of::<Self::CloseState>()}
+ fn close_state_preparation_demands(&self,_:&Self::CloseState,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(Default::default())}
+ fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:crate::RetainedCloneGrant)->Result<crate::RetainedCloneStep,crate::ValueError>{Ok(crate::RetainedCloneStep::Complete(Default::default()))}
+ fn close_state_preparation_is_complete(_:&Self::CloseState)->bool{true}
  fn prepare_close_state(&self)->bool{false}
  fn transfer_payload(_:Self,state:&mut bool){*state=true;}
  fn close_state_demands(_: &bool,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}

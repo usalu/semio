@@ -1,0 +1,14 @@
+[
+  {
+    "block": "sqlite_snapshot_framework_space_history_complete_native_semantic_text_roles_and_columns",
+    "beforeBlockSha256": "4d571afc6efb497cb4f6aa68c21ed89cee8f97cc51bbd4ea2f0c0a541717d02c",
+    "afterBlockSha256": "84db6c833ed2e6827c1dcf14e3ac2e39c7eb5d6de563c788ec969b18b33233c0",
+    "action": "original native owner and explicit recipient across successful/short semantic calls; bounded return under actual original policy"
+  },
+  {
+    "block": "sqlite_snapshot_framework_space_history_original_native_owner_cancels_and_keeps_its_complete_receipt",
+    "beforeBlockSha256": "49d9cf23b6864d62a4e535b9411d8c66400b050813df9a9b3fabb057b6a169f6",
+    "afterBlockSha256": "6bb161fb3ce0daef93c463d2d89bc02d28c9ed1a6ca487d9b232c8838fa87386",
+    "action": "same original observed decoder+explicit receiving custody; preserve original charge7/error/SQL assertions then disarm only cleanup"
+  }
+]

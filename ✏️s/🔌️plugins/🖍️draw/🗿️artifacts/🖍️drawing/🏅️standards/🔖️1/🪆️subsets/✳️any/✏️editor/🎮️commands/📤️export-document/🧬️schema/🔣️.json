@@ -9,8 +9,6 @@
   "transparent":{"type":["boolean","null"]}
  },
  "definitions":{
-  "pngLimits":{"type":"object","additionalProperties":false,"required":["maxPixels","maxSourceBytes","maxWork","maxEncodedBytes"],"properties":{"maxPixels":{"type":"integer","minimum":1,"maximum":67108864},"maxSourceBytes":{"type":"integer","minimum":1,"maximum":268439552},"maxWork":{"type":"integer","minimum":1,"maximum":1000000000},"maxEncodedBytes":{"type":"integer","minimum":8,"maximum":67108864}}},
-  "fixture":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["name","source","width","height","transparent","expected"],"properties":{"name":{"type":"string"},"source":{"type":"string"},"width":{"type":"integer","minimum":1},"height":{"type":"integer","minimum":1},"transparent":{"type":"boolean"},"expected":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}}}}},
-  "styleFixtures":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["name","layers","svg","expected","channelTolerance"],"properties":{"name":{"type":"string","minLength":1},"layers":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object"}},"svg":{"type":"string","minLength":1},"expected":{"type":"array","minItems":8,"maxItems":8,"items":{"type":"integer","minimum":0,"maximum":255}},"channelTolerance":{"type":"integer","minimum":0,"maximum":2}}}}
+  "pngLimits":{"type":"object","additionalProperties":false,"required":["maxPixels","maxSourceBytes","maxWork","maxEncodedBytes"],"properties":{"maxPixels":{"type":"integer","minimum":1,"maximum":67108864},"maxSourceBytes":{"type":"integer","minimum":1,"maximum":268439552},"maxWork":{"type":"integer","minimum":1,"maximum":1000000000},"maxEncodedBytes":{"type":"integer","minimum":8,"maximum":67108864}}}
  }
 }

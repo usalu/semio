@@ -4,7 +4,10 @@
     "maximumBytes": 4096,
     "maximumDepth": 64,
     "combinedCapacityCopyAndReleaseMaximum": 4096,
-    "alternateCapacityPayloadAndRelease": true
+    "alternateCapacityPayloadAndRelease": true,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 4096,
+    "maximumReleaseBytes": 4096
   },
   "largeCapacity": {
     "stringByteLength": 8192,
@@ -15,7 +18,11 @@
     "copiedEntriesBeforeLoss": 3,
     "closeGrant": {
       "maximumItems": 1,
-      "maximumBytes": 4096
+      "maximumBytes": 4096,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 4096,
+      "maximumReleaseBytes": 4096,
+      "maximumDepth": 64
     },
     "expected": {
       "driverOwnsCursor": true,

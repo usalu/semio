@@ -9,7 +9,7 @@ use protocol::{Mutation, SemanticMutation};
 
 fn base_document() -> DrawingSnapshot {
     let mut doc = default_drawing_document("mutations-test", None);
-    doc.layers.push(create_drawing_shape_layer_rect("Rect"));
+    doc.layers.push(create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect"));
     doc
 }
 
@@ -32,7 +32,7 @@ async fn rename_layer_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn create_layer_inverse_law() {
     let base = base_document();
-    let mutation = create_layer(None, None, create_drawing_path_layer("New", Vec::new().into()));
+    let mutation = create_layer(None, None, create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("New")).to_string().into()).expect("nonempty authored identity"), "New", Vec::new().into()));
     assert_mutation_inverse_law(&base, &mutation).await;
 }
 
@@ -48,14 +48,14 @@ async fn delete_layer_inverse_law() {
 async fn duplicate_layer_inverse_law() {
     let base = base_document();
     let layer_id = crate::schema::layer_id(&base.layers[0]).clone();
-    let mutation = duplicate_layer(layer_id.into());
+    let mutation = duplicate_layer(layer_id.clone(),vec![crate::schema::identity::DrawingIdentityAssignment{source:layer_id.clone(),target:"duplicate-target".into()}].into());
     assert_mutation_inverse_law(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn reorder_layer_inverse_law() {
     let mut base = base_document();
-    base.layers.push(create_drawing_path_layer("Second", Vec::new().into()));
+    base.layers.push(create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second", Vec::new().into()));
     let layer_id = crate::schema::layer_id(&base.layers[0]).clone();
     let mutation = reorder_layer(layer_id.into(), None, 1);
     assert_mutation_inverse_law(&base, &mutation).await;
@@ -125,7 +125,7 @@ async fn set_layer_opacity_outcome_obeys_the_policy_matrix() {
 #[semio_framework_async_macros::async_test]
 async fn create_layer_outcome_obeys_the_policy_matrix() {
     let base = base_document();
-    assert_outcome_policy_matrix(&base, &create_layer(None, None, create_drawing_path_layer("New", Vec::new().into()))).await;
+    assert_outcome_policy_matrix(&base, &create_layer(None, None, create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("New")).to_string().into()).expect("nonempty authored identity"), "New", Vec::new().into()))).await;
 }
 //#endregion 🧪️OutcomeLaws
 
@@ -147,7 +147,7 @@ fn field_patch_validation_fixtures() {
     for case in cases.as_array().unwrap() {
         let patch = &case["patch"];
         let value = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&patch["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
-        let group_document = DrawingSnapshot { layers: vec![crate::schema::create_drawing_group_layer("Group")].into(), ..Default::default() };
+        let group_document = DrawingSnapshot { layers: vec![crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group")].into(), ..Default::default() };
         let (target, target_id) = if patch["field"] == "isolation" { (&group_document, crate::schema::layer_id(&group_document.layers[0])) } else { (&document, id) };
         let operation = drawing_op_for_layer_field(target, target_id, patch["field"].as_str().unwrap(), &value);
         assert_eq!(operation.is_some(), case["accepted"].as_bool().unwrap(), "{case}");
@@ -161,7 +161,7 @@ fn field_patch_validation_fixtures() {
 #[test]
 fn stroke_fields_preserve_appearance_and_undo() {
     use protocol::Mutation;
-    let original = DrawingSnapshot { layers: vec![create_drawing_shape_layer_rect("Stroke target")].into(), ..Default::default() };
+    let original = DrawingSnapshot { layers: vec![create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Stroke target")).to_string().into()).expect("nonempty authored identity"), "Stroke target")].into(), ..Default::default() };
     let id = crate::schema::layer_id(&original.layers[0]);
     let mut document = original.clone();
     for (field, input) in [("strokeWidth", "3"), ("strokeColor", "#123456"), ("strokeCap", "round"), ("strokeJoin", "bevel"), ("strokeDash", "8")] {
@@ -185,7 +185,7 @@ fn stroke_fields_preserve_appearance_and_undo() {
 #[test]
 fn text_field_edits_preserve_numeric_strings_and_other_facets() {
     use protocol::Mutation;
-    let layer = crate::schema::create_drawing_text_layer("Text");
+    let layer = crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text");
     let id = crate::schema::layer_id(&layer).clone();
     let mut document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     for (field, input) in [("textContent", "123"), ("textContent", "Grüße 🌍\nHello"), ("textSize", "36")] {
@@ -228,8 +228,8 @@ fn all_inspector_blend_modes_preserve_other_fields_and_undo() {
 /// committed over it — one leaf of every relative kind, then a downstream drag that depends on all of them.
 fn selection_history() -> (DrawingSnapshot, Vec<DrawingMutation>) {
     let mut base = base_document();
-    base.layers.push(create_drawing_shape_layer_rect("Other"));
-    base.layers.push(create_drawing_path_layer("Spine", vec![crate::PathSegment::Move { to: [0.0, 0.0] }, crate::PathSegment::Line { to: [10.0, 0.0] }].into()));
+    base.layers.push(create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Other")).to_string().into()).expect("nonempty authored identity"), "Other"));
+    base.layers.push(create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Spine")).to_string().into()).expect("nonempty authored identity"), "Spine", vec![crate::PathSegment::Move { to: [0.0, 0.0] }, crate::PathSegment::Line { to: [10.0, 0.0] }].into()));
     let [_, rect, other, spine] = [0, 1, 2, 3].map(|index| crate::schema::layer_id(&base.layers[index]).clone());
     let anchor = DrawingPathPointTarget { layer_id: spine.clone().into(), index: 1, point: crate::schema::geometry::editing::PathPoint::Anchor };
     let log = vec![
@@ -345,26 +345,26 @@ fn layer_references_read_their_name_and_take_the_canvas_selection() {
 #[semio_framework_async_macros::async_test]
 async fn deleting_or_moving_a_middle_layer_inverts_at_its_original_index() {
     let mut base = base_document();
-    base.layers.push(create_drawing_path_layer("Middle", Vec::new().into()));
-    base.layers.push(create_drawing_path_layer("Last", Vec::new().into()));
+    base.layers.push(create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Middle")).to_string().into()).expect("nonempty authored identity"), "Middle", Vec::new().into()));
+    base.layers.push(create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Last")).to_string().into()).expect("nonempty authored identity"), "Last", Vec::new().into()));
     let middle = crate::schema::layer_id(&base.layers[1]).clone();
     assert_mutation_inverse_sum_law_for(&delete_layer(middle.clone().into()), &base).await;
     assert_mutation_inverse_sum_law_for(&reorder_layer(middle.into(), None, 0), &base).await;
-    assert_mutation_inverse_sum_law_for(&create_layer(None, Some(1), create_drawing_path_layer("Inserted", Vec::new().into())), &base).await;
+    assert_mutation_inverse_sum_law_for(&create_layer(None, Some(1), create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Inserted")).to_string().into()).expect("nonempty authored identity"), "Inserted", Vec::new().into())), &base).await;
 }
 
 /// ⚖️ Absorb law across index shifts: a later delete or insert before an earlier add never moves it, because adds are anchored by id.
 #[semio_framework_async_macros::async_test]
 async fn absorbing_layer_adds_survives_earlier_sibling_shifts() {
     let mut base = base_document();
-    base.layers.push(create_drawing_path_layer("Middle", Vec::new().into()));
-    base.layers.push(create_drawing_path_layer("Last", Vec::new().into()));
+    base.layers.push(create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Middle")).to_string().into()).expect("nonempty authored identity"), "Middle", Vec::new().into()));
+    base.layers.push(create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Last")).to_string().into()).expect("nonempty authored identity"), "Last", Vec::new().into()));
     let (first, last) = (crate::schema::layer_id(&base.layers[0]).clone(), crate::schema::layer_id(&base.layers[2]).clone());
     let steps: Vec<Vec<DrawingMutation>> = vec![
-        vec![create_layer(None, Some(2), create_drawing_path_layer("Inserted", Vec::new().into())), delete_layer(first.clone().into())],
-        vec![create_layer(None, Some(2), create_drawing_path_layer("Inserted", Vec::new().into())), create_layer(None, Some(0), create_drawing_path_layer("Head", Vec::new().into()))],
+        vec![create_layer(None, Some(2), create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Inserted")).to_string().into()).expect("nonempty authored identity"), "Inserted", Vec::new().into())), delete_layer(first.clone().into())],
+        vec![create_layer(None, Some(2), create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Inserted")).to_string().into()).expect("nonempty authored identity"), "Inserted", Vec::new().into())), create_layer(None, Some(0), create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Head")).to_string().into()).expect("nonempty authored identity"), "Head", Vec::new().into()))],
         vec![reorder_layer(last.clone().into(), None, 0), delete_layer(first.clone().into())],
-        vec![create_layer(None, Some(1), create_drawing_path_layer("Inserted", Vec::new().into())), reorder_layer(last.into(), None, 0)],
+        vec![create_layer(None, Some(1), create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Inserted")).to_string().into()).expect("nonempty authored identity"), "Inserted", Vec::new().into())), reorder_layer(last.into(), None, 0)],
     ];
     for pair in steps {
         let d1 = pair[0].diff(&base).diff().clone();

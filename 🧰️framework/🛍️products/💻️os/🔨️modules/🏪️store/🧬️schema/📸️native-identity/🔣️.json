@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:artifact-native-snapshot-identity:v1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "owner"
+      ],
+      "properties": {
+        "kind": {
+          "const": "typed"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "pluginId",
+        "packageHash",
+        "schema"
+      ],
+      "properties": {
+        "kind": {
+          "const": "guest"
+        },
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  ]
+}

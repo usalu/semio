@@ -1,0 +1,94 @@
+{
+  "session": 2516,
+  "exitCode": 1,
+  "nxDurationMs": 164000,
+  "actualCompilerErrors": 0,
+  "nativeTestsRun": 29,
+  "passed": 22,
+  "failed": 7,
+  "filteredOut": 1468,
+  "assertionDurationMs": 454,
+  "nativeExecutionQualified": true,
+  "passedNames": [
+    "io::control::tests::native_snapshot_cursor_retains_paid_original_on_cancellation_and_commits_same_output",
+    "io::control::tests::native_snapshot_paid_wallet_preserves_all_axes_and_refused_receipt",
+    "os_store::component::history_plan_retirement::tests::history_preview_output_retains_original_inputs_until_granted_parent_and_projection_close",
+    "os_store::component::presence_peer_rejection::tests::retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payload",
+    "os_store::component::presence_peer_rejection::tests::retained_presence_peer_rejection_keeps_its_minting_factory_after_source_close",
+    "os_store::component::presence_retirement::tests::committed_wire_witness_is_the_canonical_wire",
+    "os_store::component::presence_retirement::tests::direct_presence_fixture_value_inverse",
+    "os_store::component::presence_retirement::tests::original_presence_examples_supply_independent_physical_close_authority",
+    "os_store::component::presence_retirement::tests::retained_presence_local_replacements_release_shared_aliases_and_retire_exact_final_owners",
+    "os_store::component::presence_retirement::tests::retained_presence_overlapping_rosters_retire_shared_entries_once_across_workers",
+    "os_store::component::presence_retirement::tests::retained_presence_peer_commit_rejects_foreign_and_stale_roots_without_losing_exact_owners",
+    "os_store::component::presence_retirement::tests::retained_presence_read_return_injected_alias_barrier_preserves_unreturned_guard",
+    "os_store::component::presence_retirement::tests::retained_presence_read_return_releases_alias_before_cross_worker_reclamation",
+    "os_store::component::presence_retirement::tests::retained_presence_read_transfer_contention_preserves_unreturned_capability",
+    "os_store::component::presence_retirement::tests::retained_presence_store_close_preserves_distinct_original_local_and_peer_factories",
+    "os_store::component::presence_retirement::tests::retained_presence_store_close_rejects_nonempty_terminal_and_late_commit_without_drop",
+    "os_store::component::retained_read_retirement::tests::captured_store_source_preserves_original_read_on_refusal_and_returns_root_to_its_original_registry",
+    "os_store::component::retained_read_retirement::tests::store_read_terminal_registry_receipt_preserves_original_system_release",
+    "os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_alias_has_exact_physical_custody",
+    "os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_parallel_aliases_credit_exactly_one_frame",
+    "os_store::component::tests::backbone_detach_refusal_tests::backbone_detach_refusal_preserves_descriptor_and_payload_at_full_destination",
+    "os_store::component::tests::backbone_detach_refusal_tests::backbone_detach_refusal_preserves_descriptor_and_payload_at_generation_overflow"
+  ],
+  "failedNames": [
+    "os_store::component::history_plan_retirement::tests::history_completed_plan_retains_original_residue_and_transferred_results",
+    "os_store::component::history_plan_retirement::tests::history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds",
+    "os_store::component::history_plan_retirement::tests::history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories",
+    "os_store::component::history_plan_retirement::tests::history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody",
+    "os_store::component::presence_retirement::tests::retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open",
+    "os_store::component::presence_retirement::tests::retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers",
+    "os_store::component::tests::field_close_failure_preserves_real_receipts_through_the_original_decode_job"
+  ],
+  "panics": [
+    {
+      "test": "os_store::component::history_plan_retirement::tests::history_completed_plan_retains_original_residue_and_transferred_results",
+      "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🕰️history/📐️planning/♻️retirement/../🧪️tests/🦀️.rs:93:695",
+      "detail": "assertion `left == right` failed",
+      "context": "assertion `left == right` failed\n  left: RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 16, released_bytes: 0 }\n right: RetainedCloneProgress { copied_items: 0, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: 0 }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\ntest os_store::component::history_plan_retirement::tests::history_completed_plan_retains_original_residue_and_transferred_results ... FAILED\n\nfailures:\n\nfailures:\n    os_store::component::history_plan_retirement::tests::history_completed_plan_retains_original_residue_and_transferred_results\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 149"
+    },
+    {
+      "test": "os_store::component::history_plan_retirement::tests::history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds",
+      "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🕰️history/📐️planning/♻️retirement/../🧪️tests/🦀️.rs:38:695",
+      "detail": "assertion `left == right` failed",
+      "context": "assertion `left == right` failed\n  left: RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 16, released_bytes: 0 }\n right: RetainedCloneProgress { copied_items: 0, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: 0 }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\ntest os_store::component::history_plan_retirement::tests::history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds ... FAILED\n\nfailures:\n\nfailures:\n    os_store::component::history_plan_retirement::tests::history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored;"
+    },
+    {
+      "test": "os_store::component::history_plan_retirement::tests::history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories",
+      "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🕰️history/📐️planning/♻️retirement/../🧪️tests/🦀️.rs:62:700",
+      "detail": "assertion `left == right` failed",
+      "context": "assertion `left == right` failed\n  left: RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 16, released_bytes: 0 }\n right: RetainedCloneProgress { copied_items: 0, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: 0 }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\ntest os_store::component::history_plan_retirement::tests::history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories ... FAILED\n\nfailures:\n\nfailures:\n    os_store::component::history_plan_retirement::tests::history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories\n\ntest result: FAILED. 0 passed; 1 "
+    },
+    {
+      "test": "os_store::component::history_plan_retirement::tests::history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody",
+      "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🕰️history/📐️planning/♻️retirement/../🧪️tests/🦀️.rs:117:94",
+      "detail": "called `Result::unwrap()` on an `Err` value: ValueError { kind: InvariantViolated, message: \"finished replay original output slots must stay empty until residual handoff\", retained_progress: RetainedCloneProgress { copied_items: 0, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: 0 } }",
+      "context": "called `Result::unwrap()` on an `Err` value: ValueError { kind: InvariantViolated, message: \"finished replay original output slots must stay empty until residual handoff\", retained_progress: RetainedCloneProgress { copied_items: 0, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: 0 } }\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\ntest os_store::component::history_plan_retirement::tests::history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody ... FAILED\n\nfailures:\n\nfailures:\n    os_store::component::history_plan_retirement::tests::history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody\n\ntest"
+    },
+    {
+      "test": "os_store::component::presence_retirement::tests::retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open",
+      "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs:154:5",
+      "detail": "assertion `left == right` failed",
+      "context": "assertion `left == right` failed\n  left: false\n right: true\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\ntest os_store::component::presence_retirement::tests::retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open ... FAILED\n\nfailures:\n\nfailures:\n    os_store::component::presence_retirement::tests::retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1496 filtered out; finished in 0.00s\n\n        FAIL [   0.015s] (13/29) semio-framework-os-kernel os_store::component::presence_retirement::tests::retained_presence_local_capture_cancel_"
+    },
+    {
+      "test": "os_store::component::presence_retirement::tests::retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers",
+      "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:5749:29",
+      "detail": "live local presence owner",
+      "context": "live local presence owner\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\ntest os_store::component::presence_retirement::tests::retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers ... FAILED\n\nfailures:\n\nfailures:\n    os_store::component::presence_retirement::tests::retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1496 filtered out; finished in 0.00s\n\n        FAIL [   0.012s] (20/29) semio-framework-os-kernel os_store::component::presence_retirement::tests::retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers\n     "
+    },
+    {
+      "test": "os_store::component::tests::field_close_failure_preserves_real_receipts_through_the_original_decode_job",
+      "location": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:12198:159",
+      "detail": "original field authority admission",
+      "context": "original field authority admission\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\ntest os_store::component::tests::field_close_failure_preserves_real_receipts_through_the_original_decode_job ... FAILED\n\nfailures:\n\nfailures:\n    os_store::component::tests::field_close_failure_preserves_real_receipts_through_the_original_decode_job\n\ntest result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1496 filtered out; finished in 0.00s\n\n        FAIL [   0.013s] (29/29) semio-framework-os-kernel os_store::component::tests::field_close_failure_preserves_real_receipts_through_the_original_decode_job\n────────────\n     Summary [   0.454s] 29 tests run: 22 passed, 7 failed"
+    }
+  ],
+  "profileFeaturesBudgetOverrides": false,
+  "selection": 29,
+  "executionOnlyOption": "--no-fail-fast",
+  "sameOriginalVectorAsK7": true,
+  "fullKernelRuntimeGraphPublicationCredit": false
+}

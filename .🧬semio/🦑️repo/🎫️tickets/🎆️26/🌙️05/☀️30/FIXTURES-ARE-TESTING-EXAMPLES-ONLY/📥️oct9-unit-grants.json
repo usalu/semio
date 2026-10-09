@@ -1,0 +1,158 @@
+{
+  "sourceCopied": false,
+  "nativeExecuted": false,
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "scope": "remove scalar uniform grant bridge; read actual five explicit plain currencies",
+      "beforeFileSha256": "95594233242d71844a0f52408e2c3520d00911c894f81376c9fb0be59ead491b",
+      "beforeBlockSha256": "b10cd6503896689d3f14a6265d93485dee98c6fc9b5cbea2692d7723e284e7ed",
+      "occurrences": 1,
+      "afterFileSha256": "d9055aed4ffc2d3c35f24d8fb94186640290135c1134b3e90bd32dcb1086983a",
+      "afterBlockSha256": "c07e31d644a966ef122d027b7e926b2a306a439f22eac8e8e318f66a5edb2f2d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "scope": "native plain caller directly declares independent currencies",
+      "beforeFileSha256": "d9055aed4ffc2d3c35f24d8fb94186640290135c1134b3e90bd32dcb1086983a",
+      "beforeBlockSha256": "18724a026ef5cd28b5efbac48a5c4164ccc87d4010d93ba3144366143b79bac9",
+      "occurrences": 7,
+      "afterFileSha256": "3cee067425fecebac8c4b6b104a21f8929555fbb7b00ecb51cc484d317d53b89",
+      "afterBlockSha256": "bab69a43704c4070653f920e2ff517184198d4234f202959503abb0d1e380412"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "scope": "native plain caller directly declares independent currencies",
+      "beforeFileSha256": "3cee067425fecebac8c4b6b104a21f8929555fbb7b00ecb51cc484d317d53b89",
+      "beforeBlockSha256": "222d4907d22bb78d3e50879ba06fb5df968184e7252bb15ffa0ee1e8486fc091",
+      "occurrences": 1,
+      "afterFileSha256": "d0ae76d96f95d4d369b52c3a5f4c0c6bfd1de3dc3c2dae066c37e94d19347f93",
+      "afterBlockSha256": "ddcc9814b56665eecaf87c990e58880b13f17d8395acddbe6e6eb624ff5492dd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "scope": "native plain caller directly declares independent currencies",
+      "beforeFileSha256": "d0ae76d96f95d4d369b52c3a5f4c0c6bfd1de3dc3c2dae066c37e94d19347f93",
+      "beforeBlockSha256": "1737b8ee6f4b2a5e3c969df5db67acb8ee4c4010c8f4b212a43588bf7783492f",
+      "occurrences": 1,
+      "afterFileSha256": "678fd9734aca901e322a5919edd8194649f5aad48353b3be0df74e06871777e4",
+      "afterBlockSha256": "2dd0b5f51f7d16d4385a743c833a4aa4f43301382095793500b2a53c4704c4d9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "scope": "native plain caller directly declares independent currencies",
+      "beforeFileSha256": "678fd9734aca901e322a5919edd8194649f5aad48353b3be0df74e06871777e4",
+      "beforeBlockSha256": "76e2995ca4df72e77a27f94e4d9d2771e6b195b3665c2108363beee7afe9decb",
+      "occurrences": 2,
+      "afterFileSha256": "37a5b7acb97b89d780202bd3db410e2a8f50488a0827564975ed67893e0043a1",
+      "afterBlockSha256": "18e12e3f7a9c30e8d859d13f31196fdc6dd6c2ce669477351709a9b232b9bd74"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "scope": "close lifecycle query never prices its own supplied grant",
+      "beforeFileSha256": "37a5b7acb97b89d780202bd3db410e2a8f50488a0827564975ed67893e0043a1",
+      "beforeBlockSha256": "1865b34dee4a6a7aa6f6f7fecd28463f9f8ab4f027687cd5de546cfea6cac696",
+      "occurrences": 1,
+      "afterFileSha256": "126c5096c61827bbf7e4d29bb87e8156a53106babb71f2a63eb6de235ece32e2",
+      "afterBlockSha256": "ec17c56328e7673a7ea6b9bc2b44ecad6cfeebe435699c3b49e432224c159727"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "scope": "actual lifecycle callers pass original five-axis authority",
+      "beforeFileSha256": "126c5096c61827bbf7e4d29bb87e8156a53106babb71f2a63eb6de235ece32e2",
+      "beforeBlockSha256": "0da58abe8a9a182ddbb35a7a8ab5245c137ae1f058d923399c37cb5c302bf225",
+      "occurrences": 2,
+      "afterFileSha256": "aabbca7b24158bcee6493ef2eec620e3bf731797fb51393ab5abaf148298b943",
+      "afterBlockSha256": "30154c82a7e0bf06b3d17464c3b91dbe59c5d45bcedeff71eeac65d0296ece15"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json",
+      "scope": "plain independently declared five-axis caller policy; original scalar example fields retained",
+      "beforeFileSha256": "b967c7b81ecc874983f8baf48d0d90d94f0640da1c163d8238a12474b6fe501e",
+      "additions": [
+        {
+          "selector": [
+            "grant"
+          ],
+          "field": "maximumCopyBytes",
+          "value": 4096
+        },
+        {
+          "selector": [
+            "grant"
+          ],
+          "field": "maximumCapacityBytes",
+          "value": 4096
+        },
+        {
+          "selector": [
+            "grant"
+          ],
+          "field": "maximumReleaseBytes",
+          "value": 4096
+        },
+        {
+          "selector": [
+            "handoff",
+            "closeGrant"
+          ],
+          "field": "maximumCopyBytes",
+          "value": 4096
+        },
+        {
+          "selector": [
+            "handoff",
+            "closeGrant"
+          ],
+          "field": "maximumCapacityBytes",
+          "value": 4096
+        },
+        {
+          "selector": [
+            "handoff",
+            "closeGrant"
+          ],
+          "field": "maximumReleaseBytes",
+          "value": 4096
+        },
+        {
+          "selector": [
+            "handoff",
+            "closeGrant"
+          ],
+          "field": "maximumDepth",
+          "value": 64
+        }
+      ],
+      "afterFileSha256": "33aa1974a62523220baa77f0ff642f2ee0f2d9fe59a17335efba1d7e3f552e83"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🔗️tool-latest-wins-integration.json",
+      "scope": "plain independently declared five-axis caller policy; original scalar example fields retained",
+      "beforeFileSha256": "3ed17edd0182195078d1d505e06c78507350f2d2bd3c35229dfe079b0f933fad",
+      "additions": [
+        {
+          "selector": [],
+          "field": "maximumCopyBytes",
+          "value": 4096
+        },
+        {
+          "selector": [],
+          "field": "maximumCapacityBytes",
+          "value": 4096
+        },
+        {
+          "selector": [],
+          "field": "maximumReleaseBytes",
+          "value": 4096
+        },
+        {
+          "selector": [],
+          "field": "maximumDepth",
+          "value": 64
+        }
+      ],
+      "afterFileSha256": "1ed7535835c02a70c0b66326e4882fc212656ff7e161caee209ea2eb5e7e797c"
+    }
+  ]
+}

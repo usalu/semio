@@ -1,6 +1,7 @@
 //! 📄️ Flow document: widgets, host_snapshot, and DAG snapshot helpers.
 
 use neural_engine as neural;
+use protocol::causal::transition::HistoryFoldIndex;
 
 use crate::{OrderedMap, OrderedSet};
 use std::collections::{HashMap, HashSet};
@@ -300,7 +301,7 @@ impl FlowHostSnapshot {
                 previews.push(FlowPreviewGui { id: id.clone(), source, mode: "text".into(), preview: preview.clone(), expanded: expanded.clone(), layout: self.layout.get(id).cloned() });
             }
         }
-        FlowArtifact { schema: "flow.artifact".into(), tree: tree_from_host_snapshot(self, &HashMap::new()), ui: FlowUi { camera: self.camera.clone(), nodes, previews } }
+        FlowArtifact { schema: "flow.artifact".into(), tree: tree_from_host_snapshot(self, &HistoryFoldIndex::new()), ui: FlowUi { camera: self.camera.clone(), nodes, previews } }
     }
 }
 
@@ -316,7 +317,7 @@ fn widget_chrome(widget: &Widget) -> NodeChrome {
     }
 }
 
-pub fn tree_from_host_snapshot(host_snapshot: &FlowHostSnapshot, kind_infos: &HashMap<String, OperatorInfo>) -> Tree {
+pub fn tree_from_host_snapshot(host_snapshot: &FlowHostSnapshot, kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Tree {
     let neurons = host_snapshot
         .widgets
         .iter()
@@ -401,7 +402,7 @@ pub fn widget_label(widget: &Widget) -> String {
     }
 }
 
-pub fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> (String, String, String) {
+pub fn widget_display_meta(widget: &Widget, kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> (String, String, String) {
     match widget {
         Widget::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind).map_or_else(
             || {
@@ -500,7 +501,7 @@ fn input_spec_to_port(spec: &ChannelSpec, params: &Dictionary, connected: bool) 
     port
 }
 
-pub fn default_neuron_input_ports(kind: &str, input_ports: &[String], kind_infos: &HashMap<String, OperatorInfo>) -> Vec<String> {
+pub fn default_neuron_input_ports(kind: &str, input_ports: &[String], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Vec<String> {
     default_neuron_input_ports_from_info(input_ports, kind_infos.get(kind))
 }
 
@@ -527,7 +528,7 @@ fn variadic_output_label(index: usize) -> String {
     }
 }
 
-pub fn default_neuron_output_ports(kind: &str, output_ports: &[String], kind_infos: &HashMap<String, OperatorInfo>) -> Vec<String> {
+pub fn default_neuron_output_ports(kind: &str, output_ports: &[String], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Vec<String> {
     default_neuron_output_ports_from_info(output_ports, kind_infos.get(kind))
 }
 
@@ -541,7 +542,7 @@ fn default_neuron_output_ports_from_info(output_ports: &[String], kind_info: Opt
     vec![]
 }
 
-fn build_variadic_output_ports(neuron_kind: &str, output_ports: &[String], kind_infos: &HashMap<String, OperatorInfo>) -> Vec<IoPortSpec> {
+fn build_variadic_output_ports(neuron_kind: &str, output_ports: &[String], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Vec<IoPortSpec> {
     let ports = default_neuron_output_ports(neuron_kind, output_ports, kind_infos);
     let output_spec = kind_infos.get(neuron_kind).and_then(|info| info.outputs.first());
     ports
@@ -566,7 +567,7 @@ fn build_variadic_output_ports(neuron_kind: &str, output_ports: &[String], kind_
         .collect()
 }
 
-fn neuron_output_ports(neuron_kind: &str, output_ports: &[String], kind_infos: &HashMap<String, OperatorInfo>) -> (Vec<IoPortSpec>, bool) {
+fn neuron_output_ports(neuron_kind: &str, output_ports: &[String], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> (Vec<IoPortSpec>, bool) {
     let info = kind_infos.get(neuron_kind);
     let has_variadic_output = info.and_then(|entry| entry.variadic_output.as_ref()).is_some();
     let outputs = if has_variadic_output { build_variadic_output_ports(neuron_kind, output_ports, kind_infos) } else { info.map(|entry| entry.outputs.iter().map(channel_spec_to_output_port).collect::<Vec<_>>()).unwrap_or_default() };
@@ -580,7 +581,7 @@ pub fn neuron_io_layout(
     output_ports: &[String],
     params: &Dictionary,
     synapses: &[SynapseSpec],
-    kind_infos: &HashMap<String, OperatorInfo>,
+    kind_infos: &HistoryFoldIndex<String, OperatorInfo>,
 ) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
     let info = kind_infos.get(neuron_kind);
     let (outputs, has_variadic_output) = neuron_output_ports(neuron_kind, output_ports, kind_infos);
@@ -619,7 +620,7 @@ pub fn neuron_io_layout(
     (vec![], outputs, false, has_variadic_output)
 }
 
-pub fn widget_io_ports(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
+pub fn widget_io_ports(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
     match widget {
         Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, .. } => neuron_io_layout(id, neuron_kind, input_ports, output_ports, params, synapses, kind_infos),
         Widget::InputSlider { .. } => (vec![], vec![io_port_typed(IoPortSpec::named("N", "Num", "number", "Number"), neural::VALUE_TYPE_NUMBER)], false, false),
@@ -672,7 +673,7 @@ fn widget_operator_kind(widget: &Widget) -> Option<String> {
     }
 }
 
-fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> PropertyBag {
+fn widget_properties(widget: &Widget, kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> PropertyBag {
     match widget {
         Widget::Neuron { neuron_kind, params, output_ports, .. } => {
             let mut bag = property_bag_from_dictionary(params);
@@ -714,7 +715,7 @@ fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>
     }
 }
 
-pub fn widget_to_dag_node(widget: &Widget, index: usize, layout: &OrderedMap<WidgetLayout>, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>, size: (f64, f64)) -> DagNodeSpec {
+pub fn widget_to_dag_node(widget: &Widget, index: usize, layout: &OrderedMap<WidgetLayout>, synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>, size: (f64, f64)) -> DagNodeSpec {
     let id = match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
@@ -1132,7 +1133,7 @@ pub fn widget_from_descriptor_with_info(descriptor: &WidgetDescriptor, id: Strin
     }
 }
 
-pub fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos: &HashMap<String, OperatorInfo>) -> Widget {
+pub fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Widget {
     let kind_info = match descriptor {
         WidgetDescriptor::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind),
         _ => None,

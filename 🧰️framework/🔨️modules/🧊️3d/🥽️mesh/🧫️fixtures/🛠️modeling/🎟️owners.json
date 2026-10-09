@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "maximumDeniedReleaseBytes": 8,
+  "sameSourceArrays": true,
+  "handoffReleaseBytes": 0,
+  "terminalDropBytes": 0,
+  "physical": "sourcePlusAdmittedFrames",
+  "oneItemPerGrant": true
+}

@@ -509,10 +509,12 @@ fn memory_draft_port() -> Arc<store::BackbonePorts> {
 
 #[test]
 fn draft_create_list_expire_lifecycle() {
+    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
     let catalog = DraftCatalog::new();
     let port = memory_draft_port();
-    let draft_a = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch-a", 1_000, Some(500));
-    let draft_b = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch-b", 1_000, None);
+    let draft_a = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch-a", 1_000, Some(500), &mut identity).expect("observed draft fixture");
+    let draft_b = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch-b", 1_000, None, &mut identity).expect("observed draft fixture");
     assert_eq!(draft_a.expires_at_ms, Some(1_500));
     assert_eq!(draft_b.expires_at_ms, None, "None ttl means pinned");
 
@@ -528,9 +530,11 @@ fn draft_create_list_expire_lifecycle() {
 
 #[test]
 fn list_drafts_sweeping_expired_removes_stale_entries_first() {
+    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
     let catalog = DraftCatalog::new();
     let port = memory_draft_port();
-    let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "stale", 0, Some(100));
+    let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "stale", 0, Some(100), &mut identity).expect("observed draft fixture");
     assert_eq!(catalog.list_drafts_sweeping_expired(50, &port).len(), 1, "not yet expired");
     assert!(catalog.list_drafts_sweeping_expired(200, &port).is_empty(), "swept before listing");
     assert!(catalog.list_drafts().iter().all(|entry| entry.artifact_id != draft.artifact_id));
@@ -538,9 +542,11 @@ fn list_drafts_sweeping_expired_removes_stale_entries_first() {
 
 #[test]
 fn discard_draft_removes_bookkeeping_and_tombstones_bytes() {
+    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
     let catalog = DraftCatalog::new();
     let port = memory_draft_port();
-    let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "scratch", 0, None);
+    let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "scratch", 0, None, &mut identity).expect("observed draft fixture");
     port.write(&draft_uri(&draft.artifact_id), b"draft-bytes").expect("seed draft bytes");
 
     let removed = catalog.discard_draft(&port, &draft.artifact_id).expect("discard");
@@ -556,9 +562,11 @@ fn discard_draft_removes_bookkeeping_and_tombstones_bytes() {
 /// decode/re-encode anywhere in the path.
 #[test]
 fn draft_promote_moves_envelope_bytes_byte_identical() {
+    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
     let catalog = DraftCatalog::new();
     let port = memory_draft_port();
-    let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch", 0, None);
+    let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch", 0, None, &mut identity).expect("observed draft fixture");
     let original_bytes = b"pretend-pack-plus-spr-envelope-bytes-with-full-vcs-history".to_vec();
     port.write(&draft_uri(&draft.artifact_id), &original_bytes).expect("seed draft bytes");
 
@@ -585,9 +593,11 @@ fn draft_promote_moves_envelope_bytes_byte_identical() {
 /// from the asset uri to the draft uri, byte-identical, and fresh draft bookkeeping reappears.
 #[test]
 fn demote_asset_moves_bytes_back_and_reregisters_draft_bookkeeping() {
+    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
     let catalog = DraftCatalog::new();
     let port = memory_draft_port();
-    let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch", 0, None);
+    let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch", 0, None, &mut identity).expect("observed draft fixture");
     let original_bytes = b"envelope-bytes-round-tripping-through-promote-then-demote".to_vec();
     port.write(&draft_uri(&draft.artifact_id), &original_bytes).expect("seed draft bytes");
 
@@ -619,11 +629,13 @@ fn promote_unknown_draft_errors() {
 /// draft bookkeeping), while two DISTINCT port identities never share one.
 #[test]
 fn draft_catalog_for_is_keyed_by_port_identity() {
+    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
     let port_a = memory_draft_port();
     let port_b = memory_draft_port();
 
     let catalog_a1 = draft_catalog_for(&port_a);
-    let catalog_a1_created = catalog_a1.create_draft("puzzle.2d", "test.puzzle2d", "shared", 0, None);
+    let catalog_a1_created = catalog_a1.create_draft("puzzle.2d", "test.puzzle2d", "shared", 0, None, &mut identity).expect("observed draft fixture");
     let catalog_a2 = draft_catalog_for(&port_a);
     assert_eq!(catalog_a2.list_drafts().iter().map(|entry| entry.artifact_id.clone()).collect::<Vec<_>>(), vec![catalog_a1_created.artifact_id.clone()], "same port identity shares one catalog");
 

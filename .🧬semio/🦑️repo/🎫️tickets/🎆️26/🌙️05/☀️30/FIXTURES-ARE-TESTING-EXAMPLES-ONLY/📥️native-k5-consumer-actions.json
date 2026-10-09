@@ -1,0 +1,20 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "before": "a5541b325572544d0390dd39d4203076fe0787448b8158359f7de7b619ffc194",
+    "after": "1a466ddf97b4936dcaf80ce133cf853ff6e43ae2b9d3fecd7135c6d8c1b133c8",
+    "role": "11 actual k5 progress-domain imports; unchanged observer fields/cancellation/deadline/payload assertions"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "before": "e5ef9f5e64253a7fca15f7e0d093c13835965d198e7e616b373a463cab89d0b4",
+    "after": "e8f71805a6e67c3b473a6620e58d1bff5116990be123e1f8e43ce5d24d266415",
+    "role": "one actual k5 controlled decoder forwards exact original supplied NativeDecodeControl to defining record constructor"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "before": "62032528321df1f38f91e31590a5a32e4b0f2409cf40b77f519426cb0565d36b",
+    "after": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e",
+    "role": "two actual k5 encoder defining implementations forward original supplied native owner/control and original Sqlite progress; no fresh native ledger"
+  }
+]

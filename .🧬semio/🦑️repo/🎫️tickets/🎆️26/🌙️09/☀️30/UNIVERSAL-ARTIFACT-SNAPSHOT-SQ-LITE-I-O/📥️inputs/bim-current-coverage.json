@@ -1,0 +1,4167 @@
+{
+  "mapCounts": {
+    "materials": 20,
+    "wall_types": 11,
+    "slab_types": 11,
+    "roof_types": 11,
+    "column_types": 23,
+    "beam_types": 23,
+    "window_types": 3,
+    "door_types": 6,
+    "curtain_wall_types": 59,
+    "sites": 5,
+    "buildings": 4,
+    "storeys": 4,
+    "grids": 5,
+    "walls": 42,
+    "curtain_walls": 44,
+    "curtain_panel_overrides": 12,
+    "columns": 25,
+    "beams": 15,
+    "slabs": 15,
+    "roofs": 25,
+    "openings": 13,
+    "stairs": 43,
+    "railings": 70,
+    "ramps": 22,
+    "spaces": 17,
+    "ceiling_types": 9,
+    "ceilings": 10,
+    "zones": 2,
+    "area_schemes": 5,
+    "views": 31,
+    "sheets": 12,
+    "viewports": 6,
+    "sheet_revisions": 2,
+    "dimensions": 27,
+    "tags": 6,
+    "text_notes": 3,
+    "leaders": 26,
+    "annotation_styles": 6,
+    "families": 10,
+    "family_parameters": 8,
+    "family_solids": 57,
+    "wall_sweeps": 20,
+    "schedules": 192,
+    "property_templates": 84,
+    "classification_systems": 4,
+    "properties": 3,
+    "classifications": 2
+  },
+  "parametricAndScalarEnumVariants": [
+    {
+      "type": "AnchorEnd",
+      "variant": "End"
+    },
+    {
+      "type": "AnchorEnd",
+      "variant": "Start"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "ColumnCentre"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "Grid"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "OpeningCentre"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "Point"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "WallAxis"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "WallEnd"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "WallFace"
+    },
+    {
+      "type": "AreaMeasure",
+      "variant": "Gross"
+    },
+    {
+      "type": "AreaMeasure",
+      "variant": "Net"
+    },
+    {
+      "type": "Axis",
+      "variant": "Arc"
+    },
+    {
+      "type": "Axis",
+      "variant": "Line"
+    },
+    {
+      "type": "CurtainGrid",
+      "variant": "Lines"
+    },
+    {
+      "type": "CurtainGrid",
+      "variant": "Spacing"
+    },
+    {
+      "type": "CurtainPanel",
+      "variant": "Door"
+    },
+    {
+      "type": "CurtainPanel",
+      "variant": "Empty"
+    },
+    {
+      "type": "CurtainPanel",
+      "variant": "Glass"
+    },
+    {
+      "type": "CurtainPanel",
+      "variant": "Solid"
+    },
+    {
+      "type": "CurtainPanel",
+      "variant": "Window"
+    },
+    {
+      "type": "DetailLevel",
+      "variant": "Coarse"
+    },
+    {
+      "type": "DetailLevel",
+      "variant": "Fine"
+    },
+    {
+      "type": "DetailLevel",
+      "variant": "Medium"
+    },
+    {
+      "type": "DimensionUnit",
+      "variant": "Centimetre"
+    },
+    {
+      "type": "DimensionUnit",
+      "variant": "Metre"
+    },
+    {
+      "type": "DimensionUnit",
+      "variant": "Millimetre"
+    },
+    {
+      "type": "DoorLeaves",
+      "variant": "Double"
+    },
+    {
+      "type": "DoorLeaves",
+      "variant": "Single"
+    },
+    {
+      "type": "EndJoin",
+      "variant": "Butt"
+    },
+    {
+      "type": "EndJoin",
+      "variant": "Miter"
+    },
+    {
+      "type": "EndJoin",
+      "variant": "None"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Casework"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Electrical"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Equipment"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Furniture"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Generic"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Lighting"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Mechanical"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Plumbing"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Profile"
+    },
+    {
+      "type": "HostSide",
+      "variant": "Left"
+    },
+    {
+      "type": "HostSide",
+      "variant": "Right"
+    },
+    {
+      "type": "Infill",
+      "variant": "Glass"
+    },
+    {
+      "type": "Infill",
+      "variant": "None"
+    },
+    {
+      "type": "Infill",
+      "variant": "Panel"
+    },
+    {
+      "type": "IsoSize",
+      "variant": "A0"
+    },
+    {
+      "type": "IsoSize",
+      "variant": "A1"
+    },
+    {
+      "type": "IsoSize",
+      "variant": "A2"
+    },
+    {
+      "type": "IsoSize",
+      "variant": "A3"
+    },
+    {
+      "type": "IsoSize",
+      "variant": "A4"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Core"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Finish"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Insulation"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Membrane"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Structure"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Substrate"
+    },
+    {
+      "type": "LocationLine",
+      "variant": "Center"
+    },
+    {
+      "type": "LocationLine",
+      "variant": "CoreCenter"
+    },
+    {
+      "type": "LocationLine",
+      "variant": "Exterior"
+    },
+    {
+      "type": "LocationLine",
+      "variant": "Interior"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Concrete"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Finish"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Glass"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Insulation"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Masonry"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Membrane"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Metal"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Other"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Wood"
+    },
+    {
+      "type": "OpeningKind",
+      "variant": "Door"
+    },
+    {
+      "type": "OpeningKind",
+      "variant": "Void"
+    },
+    {
+      "type": "OpeningKind",
+      "variant": "Window"
+    },
+    {
+      "type": "Orientation",
+      "variant": "Landscape"
+    },
+    {
+      "type": "Orientation",
+      "variant": "Portrait"
+    },
+    {
+      "type": "Paper",
+      "variant": "Custom"
+    },
+    {
+      "type": "Paper",
+      "variant": "Iso"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Angle"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Boolean"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Integer"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Length"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Material"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Real"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Text"
+    },
+    {
+      "type": "ParametricProfile",
+      "variant": "Circle"
+    },
+    {
+      "type": "ParametricProfile",
+      "variant": "IShape"
+    },
+    {
+      "type": "ParametricProfile",
+      "variant": "Polygon"
+    },
+    {
+      "type": "ParametricProfile",
+      "variant": "Rectangle"
+    },
+    {
+      "type": "Phase",
+      "variant": "Demolished"
+    },
+    {
+      "type": "Phase",
+      "variant": "Existing"
+    },
+    {
+      "type": "Phase",
+      "variant": "New"
+    },
+    {
+      "type": "Phase",
+      "variant": "Temporary"
+    },
+    {
+      "type": "Profile",
+      "variant": "Circle"
+    },
+    {
+      "type": "Profile",
+      "variant": "Custom"
+    },
+    {
+      "type": "Profile",
+      "variant": "Family"
+    },
+    {
+      "type": "Profile",
+      "variant": "IShape"
+    },
+    {
+      "type": "Profile",
+      "variant": "Rectangle"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Angle"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Area"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Boolean"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Integer"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Length"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Real"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Text"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Volume"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Angle"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Area"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Boolean"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Integer"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Length"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Real"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Text"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Volume"
+    },
+    {
+      "type": "RiserKind",
+      "variant": "Closed"
+    },
+    {
+      "type": "RiserKind",
+      "variant": "Open"
+    },
+    {
+      "type": "RoofShape",
+      "variant": "Flat"
+    },
+    {
+      "type": "RoofShape",
+      "variant": "Gable"
+    },
+    {
+      "type": "RoofShape",
+      "variant": "Hip"
+    },
+    {
+      "type": "RoofShape",
+      "variant": "Mansard"
+    },
+    {
+      "type": "RoofShape",
+      "variant": "Shed"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Beam"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Column"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "CurtainWall"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Door"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Finish"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Material"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Railing"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Roof"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Slab"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Space"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Stair"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Void"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Wall"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Window"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Count"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "FinishArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "GrossArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "GrossSideArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "GrossVolume"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Height"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Host"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Id"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Kind"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "LayerArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "LayerMass"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "LayerVolume"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Leaves"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Length"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Level"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Mass"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Material"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Name"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "NetArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "NetSideArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "NetVolume"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Number"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "OpeningArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Panes"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Perimeter"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Phase"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Risers"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Storey"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Surface"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "SurfaceArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Swing"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Thickness"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Type"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Usage"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Width"
+    },
+    {
+      "type": "ScheduleKey",
+      "variant": "Field"
+    },
+    {
+      "type": "ScheduleKey",
+      "variant": "Property"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "Contains"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "Empty"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "Equals"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "Greater"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "GreaterOrEqual"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "Less"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "LessOrEqual"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "NotEmpty"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "NotEquals"
+    },
+    {
+      "type": "SolidAxis",
+      "variant": "X"
+    },
+    {
+      "type": "SolidAxis",
+      "variant": "Y"
+    },
+    {
+      "type": "SolidAxis",
+      "variant": "Z"
+    },
+    {
+      "type": "SolidShape",
+      "variant": "Cuboid"
+    },
+    {
+      "type": "SolidShape",
+      "variant": "Extrusion"
+    },
+    {
+      "type": "SolidShape",
+      "variant": "Revolution"
+    },
+    {
+      "type": "SolidShape",
+      "variant": "Sweep"
+    },
+    {
+      "type": "SpaceBoundary",
+      "variant": "Bounded"
+    },
+    {
+      "type": "SpaceBoundary",
+      "variant": "Explicit"
+    },
+    {
+      "type": "StairFlight",
+      "variant": "LTurn"
+    },
+    {
+      "type": "StairFlight",
+      "variant": "Spiral"
+    },
+    {
+      "type": "StairFlight",
+      "variant": "Straight"
+    },
+    {
+      "type": "StairFlight",
+      "variant": "UTurn"
+    },
+    {
+      "type": "StringerKind",
+      "variant": "Closed"
+    },
+    {
+      "type": "StringerKind",
+      "variant": "Mono"
+    },
+    {
+      "type": "StringerKind",
+      "variant": "None"
+    },
+    {
+      "type": "StringerKind",
+      "variant": "Open"
+    },
+    {
+      "type": "Swing",
+      "variant": "Left"
+    },
+    {
+      "type": "Swing",
+      "variant": "Right"
+    },
+    {
+      "type": "TagCategory",
+      "variant": "Name"
+    },
+    {
+      "type": "TagCategory",
+      "variant": "Number"
+    },
+    {
+      "type": "TagCategory",
+      "variant": "Size"
+    },
+    {
+      "type": "TagCategory",
+      "variant": "Type"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Beam"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "BeamType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Building"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Ceiling"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "CeilingType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Column"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "ColumnType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "CurtainWall"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Door"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "DoorType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Railing"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Ramp"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Roof"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "RoofType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Site"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Slab"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "SlabType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Space"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Stair"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Storey"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Void"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Wall"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "WallType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Window"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "WindowType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Zone"
+    },
+    {
+      "type": "Terminator",
+      "variant": "Arrow"
+    },
+    {
+      "type": "Terminator",
+      "variant": "Dot"
+    },
+    {
+      "type": "Terminator",
+      "variant": "Tick"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "Ceiling"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "Roof"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "Slab"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "Storey"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "StoreyTop"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "Unconnected"
+    },
+    {
+      "type": "Turn",
+      "variant": "Left"
+    },
+    {
+      "type": "Turn",
+      "variant": "Right"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Beams"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Columns"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "CurtainWalls"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Grids"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Openings"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Railings"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Roofs"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Slabs"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Spaces"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Stairs"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Walls"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "CeilingPlan"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "Elevation"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "Orthographic"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "Perspective"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "Plan"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "Section"
+    },
+    {
+      "type": "WallSide",
+      "variant": "Left"
+    },
+    {
+      "type": "WallSide",
+      "variant": "Right"
+    }
+  ],
+  "collectionCases": {
+    "materials": [
+      "complete",
+      "required-only",
+      "category/Masonry",
+      "category/Wood",
+      "category/Metal",
+      "category/Glass",
+      "category/Insulation",
+      "category/Finish",
+      "category/Membrane",
+      "category/Other",
+      "color/required-only"
+    ],
+    "wall_types": [
+      "complete",
+      "required-only",
+      "layers/empty",
+      "layers/item/required-only",
+      "layers/item/function/Substrate",
+      "layers/item/function/Insulation",
+      "layers/item/function/Finish",
+      "layers/item/function/Membrane",
+      "layers/item/function/Core"
+    ],
+    "slab_types": [
+      "complete",
+      "required-only",
+      "layers/empty",
+      "layers/item/required-only",
+      "layers/item/function/Substrate",
+      "layers/item/function/Insulation",
+      "layers/item/function/Finish",
+      "layers/item/function/Membrane",
+      "layers/item/function/Core"
+    ],
+    "roof_types": [
+      "complete",
+      "required-only",
+      "layers/empty",
+      "layers/item/required-only",
+      "layers/item/function/Substrate",
+      "layers/item/function/Insulation",
+      "layers/item/function/Finish",
+      "layers/item/function/Membrane",
+      "layers/item/function/Core"
+    ],
+    "column_types": [
+      "complete",
+      "required-only",
+      "profile/Rectangle/required-only",
+      "profile/Rectangle/Rectangle/required-only",
+      "profile/Circle/complete",
+      "profile/Circle/required-only",
+      "profile/Circle/Circle/required-only",
+      "profile/IShape/complete",
+      "profile/IShape/required-only",
+      "profile/IShape/IShape/required-only",
+      "profile/Custom/complete",
+      "profile/Custom/required-only",
+      "profile/Custom/Custom/required-only",
+      "profile/Custom/Custom/outline/empty",
+      "profile/Custom/Custom/outline/item/required-only",
+      "profile/Custom/Custom/outline/item/point/required-only",
+      "profile/Family/complete",
+      "profile/Family/required-only",
+      "profile/Family/Family/required-only"
+    ],
+    "beam_types": [
+      "complete",
+      "required-only",
+      "profile/Rectangle/required-only",
+      "profile/Rectangle/Rectangle/required-only",
+      "profile/Circle/complete",
+      "profile/Circle/required-only",
+      "profile/Circle/Circle/required-only",
+      "profile/IShape/complete",
+      "profile/IShape/required-only",
+      "profile/IShape/IShape/required-only",
+      "profile/Custom/complete",
+      "profile/Custom/required-only",
+      "profile/Custom/Custom/required-only",
+      "profile/Custom/Custom/outline/empty",
+      "profile/Custom/Custom/outline/item/required-only",
+      "profile/Custom/Custom/outline/item/point/required-only",
+      "profile/Family/complete",
+      "profile/Family/required-only",
+      "profile/Family/Family/required-only"
+    ],
+    "window_types": [
+      "complete",
+      "required-only"
+    ],
+    "door_types": [
+      "complete",
+      "required-only",
+      "leaves/Double",
+      "swing/Right"
+    ],
+    "curtain_wall_types": [
+      "complete",
+      "required-only",
+      "u_grid/Spacing/required-only",
+      "u_grid/Spacing/Spacing/required-only",
+      "u_grid/Lines/complete",
+      "u_grid/Lines/required-only",
+      "u_grid/Lines/Lines/required-only",
+      "u_grid/Lines/Lines/positions/empty",
+      "v_grid/Spacing/required-only",
+      "v_grid/Spacing/Spacing/required-only",
+      "v_grid/Lines/complete",
+      "v_grid/Lines/required-only",
+      "v_grid/Lines/Lines/required-only",
+      "v_grid/Lines/Lines/positions/empty",
+      "interior_mullion/Rectangle/required-only",
+      "interior_mullion/Rectangle/Rectangle/required-only",
+      "interior_mullion/Circle/complete",
+      "interior_mullion/Circle/required-only",
+      "interior_mullion/Circle/Circle/required-only",
+      "interior_mullion/IShape/complete",
+      "interior_mullion/IShape/required-only",
+      "interior_mullion/IShape/IShape/required-only",
+      "interior_mullion/Custom/complete",
+      "interior_mullion/Custom/required-only",
+      "interior_mullion/Custom/Custom/required-only",
+      "interior_mullion/Custom/Custom/outline/empty",
+      "interior_mullion/Custom/Custom/outline/item/required-only",
+      "interior_mullion/Custom/Custom/outline/item/point/required-only",
+      "interior_mullion/Family/complete",
+      "interior_mullion/Family/required-only",
+      "interior_mullion/Family/Family/required-only",
+      "border_mullion/Rectangle/required-only",
+      "border_mullion/Rectangle/Rectangle/required-only",
+      "border_mullion/Circle/complete",
+      "border_mullion/Circle/required-only",
+      "border_mullion/Circle/Circle/required-only",
+      "border_mullion/IShape/complete",
+      "border_mullion/IShape/required-only",
+      "border_mullion/IShape/IShape/required-only",
+      "border_mullion/Custom/complete",
+      "border_mullion/Custom/required-only",
+      "border_mullion/Custom/Custom/required-only",
+      "border_mullion/Custom/Custom/outline/empty",
+      "border_mullion/Custom/Custom/outline/item/required-only",
+      "border_mullion/Custom/Custom/outline/item/point/required-only",
+      "border_mullion/Family/complete",
+      "border_mullion/Family/required-only",
+      "border_mullion/Family/Family/required-only",
+      "panel/Solid/complete",
+      "panel/Solid/required-only",
+      "panel/Solid/Solid/required-only",
+      "panel/Door/complete",
+      "panel/Door/required-only",
+      "panel/Door/Door/required-only",
+      "panel/Window/complete",
+      "panel/Window/required-only",
+      "panel/Window/Window/required-only",
+      "panel/Empty/complete"
+    ],
+    "sites": [
+      "complete",
+      "required-only",
+      "boundary/empty",
+      "boundary/item/required-only"
+    ],
+    "buildings": [
+      "complete",
+      "required-only",
+      "origin/required-only"
+    ],
+    "storeys": [
+      "complete",
+      "required-only"
+    ],
+    "grids": [
+      "complete",
+      "required-only",
+      "start/required-only",
+      "end/required-only"
+    ],
+    "walls": [
+      "complete",
+      "required-only",
+      "axis/Line/required-only",
+      "axis/Line/Line/required-only",
+      "axis/Line/Line/start/required-only",
+      "axis/Line/Line/end/required-only",
+      "axis/Arc/complete",
+      "axis/Arc/required-only",
+      "axis/Arc/Arc/required-only",
+      "axis/Arc/Arc/start/required-only",
+      "axis/Arc/Arc/end/required-only",
+      "location/Interior",
+      "location/Exterior",
+      "location/CoreCenter",
+      "top/Unconnected/required-only",
+      "top/Unconnected/Unconnected/required-only",
+      "top/StoreyTop/complete",
+      "top/StoreyTop/required-only",
+      "top/StoreyTop/StoreyTop/required-only",
+      "top/Storey/complete",
+      "top/Storey/required-only",
+      "top/Storey/Storey/required-only",
+      "top/Roof/complete",
+      "top/Roof/required-only",
+      "top/Roof/Roof/required-only",
+      "top/Slab/complete",
+      "top/Slab/required-only",
+      "top/Slab/Slab/required-only",
+      "top/Ceiling/complete",
+      "top/Ceiling/required-only",
+      "top/Ceiling/Ceiling/required-only",
+      "phase/New",
+      "phase/Demolished",
+      "phase/Temporary",
+      "start_join/Butt",
+      "start_join/None",
+      "end_join/Butt",
+      "end_join/None"
+    ],
+    "curtain_walls": [
+      "complete",
+      "required-only",
+      "axis/Line/required-only",
+      "axis/Line/Line/required-only",
+      "axis/Line/Line/start/required-only",
+      "axis/Line/Line/end/required-only",
+      "axis/Arc/complete",
+      "axis/Arc/required-only",
+      "axis/Arc/Arc/required-only",
+      "axis/Arc/Arc/start/required-only",
+      "axis/Arc/Arc/end/required-only",
+      "top/Unconnected/required-only",
+      "top/Unconnected/Unconnected/required-only",
+      "top/StoreyTop/complete",
+      "top/StoreyTop/required-only",
+      "top/StoreyTop/StoreyTop/required-only",
+      "top/Storey/complete",
+      "top/Storey/required-only",
+      "top/Storey/Storey/required-only",
+      "top/Roof/complete",
+      "top/Roof/required-only",
+      "top/Roof/Roof/required-only",
+      "top/Slab/complete",
+      "top/Slab/required-only",
+      "top/Slab/Slab/required-only",
+      "top/Ceiling/complete",
+      "top/Ceiling/required-only",
+      "top/Ceiling/Ceiling/required-only",
+      "u_grid/Spacing/required-only",
+      "u_grid/Spacing/Spacing/required-only",
+      "u_grid/Lines/complete",
+      "u_grid/Lines/required-only",
+      "u_grid/Lines/Lines/required-only",
+      "u_grid/Lines/Lines/positions/empty",
+      "v_grid/Spacing/required-only",
+      "v_grid/Spacing/Spacing/required-only",
+      "v_grid/Lines/complete",
+      "v_grid/Lines/required-only",
+      "v_grid/Lines/Lines/required-only",
+      "v_grid/Lines/Lines/positions/empty",
+      "phase/New",
+      "phase/Demolished",
+      "phase/Temporary"
+    ],
+    "curtain_panel_overrides": [
+      "complete",
+      "required-only",
+      "panel/Solid/complete",
+      "panel/Solid/required-only",
+      "panel/Solid/Solid/required-only",
+      "panel/Door/complete",
+      "panel/Door/required-only",
+      "panel/Door/Door/required-only",
+      "panel/Window/complete",
+      "panel/Window/required-only",
+      "panel/Window/Window/required-only",
+      "panel/Empty/complete"
+    ],
+    "columns": [
+      "complete",
+      "required-only",
+      "position/required-only",
+      "tilt/required-only",
+      "top/Unconnected/required-only",
+      "top/Unconnected/Unconnected/required-only",
+      "top/StoreyTop/complete",
+      "top/StoreyTop/required-only",
+      "top/StoreyTop/StoreyTop/required-only",
+      "top/Storey/complete",
+      "top/Storey/required-only",
+      "top/Storey/Storey/required-only",
+      "top/Roof/complete",
+      "top/Roof/required-only",
+      "top/Roof/Roof/required-only",
+      "top/Slab/complete",
+      "top/Slab/required-only",
+      "top/Slab/Slab/required-only",
+      "top/Ceiling/complete",
+      "top/Ceiling/required-only",
+      "top/Ceiling/Ceiling/required-only",
+      "phase/New",
+      "phase/Demolished",
+      "phase/Temporary"
+    ],
+    "beams": [
+      "complete",
+      "required-only",
+      "axis/Line/required-only",
+      "axis/Line/Line/required-only",
+      "axis/Line/Line/start/required-only",
+      "axis/Line/Line/end/required-only",
+      "axis/Arc/complete",
+      "axis/Arc/required-only",
+      "axis/Arc/Arc/required-only",
+      "axis/Arc/Arc/start/required-only",
+      "axis/Arc/Arc/end/required-only",
+      "phase/New",
+      "phase/Demolished",
+      "phase/Temporary"
+    ],
+    "slabs": [
+      "complete",
+      "required-only",
+      "boundary/empty",
+      "boundary/item/required-only",
+      "boundary/item/point/required-only",
+      "holes/empty",
+      "holes/item/empty",
+      "holes/item/item/required-only",
+      "holes/item/item/point/required-only",
+      "slope/required-only",
+      "phase/New",
+      "phase/Demolished",
+      "phase/Temporary"
+    ],
+    "roofs": [
+      "complete",
+      "required-only",
+      "footprint/empty",
+      "footprint/item/required-only",
+      "footprint/item/point/required-only",
+      "shape/Shed/complete",
+      "shape/Shed/required-only",
+      "shape/Shed/Shed/required-only",
+      "shape/Gable/complete",
+      "shape/Gable/required-only",
+      "shape/Gable/Gable/required-only",
+      "shape/Hip/complete",
+      "shape/Hip/required-only",
+      "shape/Hip/Hip/required-only",
+      "shape/Mansard/complete",
+      "shape/Mansard/required-only",
+      "shape/Mansard/Mansard/required-only",
+      "phase/New",
+      "phase/Demolished",
+      "phase/Temporary"
+    ],
+    "openings": [
+      "complete",
+      "required-only",
+      "kind/Window/required-only",
+      "kind/Window/Window/required-only",
+      "kind/Door/complete",
+      "kind/Door/required-only",
+      "kind/Door/Door/required-only",
+      "kind/Void/complete",
+      "kind/Void/required-only",
+      "kind/Void/Void/required-only"
+    ],
+    "stairs": [
+      "complete",
+      "required-only",
+      "start/required-only",
+      "flight/LTurn/complete",
+      "flight/LTurn/required-only",
+      "flight/LTurn/LTurn/required-only",
+      "flight/LTurn/LTurn/turn/Right",
+      "flight/UTurn/complete",
+      "flight/UTurn/required-only",
+      "flight/UTurn/UTurn/required-only",
+      "flight/Spiral/complete",
+      "flight/Spiral/required-only",
+      "flight/Spiral/Spiral/required-only",
+      "top/Unconnected/required-only",
+      "top/Unconnected/Unconnected/required-only",
+      "top/StoreyTop/complete",
+      "top/StoreyTop/required-only",
+      "top/StoreyTop/StoreyTop/required-only",
+      "top/Storey/complete",
+      "top/Storey/required-only",
+      "top/Storey/Storey/required-only",
+      "top/Roof/complete",
+      "top/Roof/required-only",
+      "top/Roof/Roof/required-only",
+      "top/Slab/complete",
+      "top/Slab/required-only",
+      "top/Slab/Slab/required-only",
+      "top/Ceiling/complete",
+      "top/Ceiling/required-only",
+      "top/Ceiling/Ceiling/required-only",
+      "stringer/required-only",
+      "stringer/kind/Closed",
+      "stringer/kind/Open",
+      "stringer/kind/Mono",
+      "riser/Closed",
+      "phase/New",
+      "phase/Demolished",
+      "phase/Temporary"
+    ],
+    "railings": [
+      "complete",
+      "required-only",
+      "path/empty",
+      "path/item/required-only",
+      "profile/Rectangle/required-only",
+      "profile/Rectangle/Rectangle/required-only",
+      "profile/Circle/complete",
+      "profile/Circle/required-only",
+      "profile/Circle/Circle/required-only",
+      "profile/IShape/complete",
+      "profile/IShape/required-only",
+      "profile/IShape/IShape/required-only",
+      "profile/Custom/complete",
+      "profile/Custom/required-only",
+      "profile/Custom/Custom/required-only",
+      "profile/Custom/Custom/outline/empty",
+      "profile/Custom/Custom/outline/item/required-only",
+      "profile/Custom/Custom/outline/item/point/required-only",
+      "profile/Family/complete",
+      "profile/Family/required-only",
+      "profile/Family/Family/required-only",
+      "post_profile/Rectangle/required-only",
+      "post_profile/Rectangle/Rectangle/required-only",
+      "post_profile/Circle/complete",
+      "post_profile/Circle/required-only",
+      "post_profile/Circle/Circle/required-only",
+      "post_profile/IShape/complete",
+      "post_profile/IShape/required-only",
+      "post_profile/IShape/IShape/required-only",
+      "post_profile/Custom/complete",
+      "post_profile/Custom/required-only",
+      "post_profile/Custom/Custom/required-only",
+      "post_profile/Custom/Custom/outline/empty",
+      "post_profile/Custom/Custom/outline/item/required-only",
+      "post_profile/Custom/Custom/outline/item/point/required-only",
+      "post_profile/Family/complete",
+      "post_profile/Family/required-only",
+      "post_profile/Family/Family/required-only",
+      "baluster/required-only",
+      "baluster/profile/Rectangle/required-only",
+      "baluster/profile/Rectangle/Rectangle/required-only",
+      "baluster/profile/Circle/complete",
+      "baluster/profile/Circle/required-only",
+      "baluster/profile/Circle/Circle/required-only",
+      "baluster/profile/IShape/complete",
+      "baluster/profile/IShape/required-only",
+      "baluster/profile/IShape/IShape/required-only",
+      "baluster/profile/Custom/complete",
+      "baluster/profile/Custom/required-only",
+      "baluster/profile/Custom/Custom/required-only",
+      "baluster/profile/Custom/Custom/outline/empty",
+      "baluster/profile/Custom/Custom/outline/item/required-only",
+      "baluster/profile/Custom/Custom/outline/item/point/required-only",
+      "baluster/profile/Family/complete",
+      "baluster/profile/Family/required-only",
+      "baluster/profile/Family/Family/required-only",
+      "infill/Glass/complete",
+      "infill/Glass/required-only",
+      "infill/Glass/Glass/required-only",
+      "infill/Panel/complete",
+      "infill/Panel/required-only",
+      "infill/Panel/Panel/required-only",
+      "host/required-only",
+      "host/side/Right",
+      "phase/New",
+      "phase/Demolished",
+      "phase/Temporary"
+    ],
+    "ramps": [
+      "complete",
+      "required-only",
+      "path/empty",
+      "path/item/required-only",
+      "path/item/point/required-only",
+      "top/Unconnected/required-only",
+      "top/Unconnected/Unconnected/required-only",
+      "top/StoreyTop/complete",
+      "top/StoreyTop/required-only",
+      "top/StoreyTop/StoreyTop/required-only",
+      "top/Storey/complete",
+      "top/Storey/required-only",
+      "top/Storey/Storey/required-only",
+      "top/Roof/complete",
+      "top/Roof/required-only",
+      "top/Roof/Roof/required-only",
+      "top/Slab/complete",
+      "top/Slab/required-only",
+      "top/Slab/Slab/required-only",
+      "top/Ceiling/complete",
+      "top/Ceiling/required-only",
+      "top/Ceiling/Ceiling/required-only"
+    ],
+    "spaces": [
+      "complete",
+      "required-only",
+      "boundary/Bounded/required-only",
+      "boundary/Bounded/Bounded/required-only",
+      "boundary/Bounded/Bounded/seed/required-only",
+      "boundary/Explicit/complete",
+      "boundary/Explicit/required-only",
+      "boundary/Explicit/Explicit/required-only",
+      "boundary/Explicit/Explicit/outline/empty",
+      "boundary/Explicit/Explicit/outline/item/required-only",
+      "boundary/Explicit/Explicit/outline/item/point/required-only",
+      "phase/New",
+      "phase/Demolished",
+      "phase/Temporary"
+    ],
+    "ceiling_types": [
+      "complete",
+      "required-only",
+      "layers/empty",
+      "layers/item/required-only",
+      "layers/item/function/Substrate",
+      "layers/item/function/Insulation",
+      "layers/item/function/Finish",
+      "layers/item/function/Membrane",
+      "layers/item/function/Core"
+    ],
+    "ceilings": [
+      "complete",
+      "required-only",
+      "boundary/empty",
+      "boundary/item/required-only",
+      "boundary/item/point/required-only",
+      "holes/empty",
+      "holes/item/empty",
+      "holes/item/item/required-only",
+      "holes/item/item/point/required-only",
+      "slope/required-only"
+    ],
+    "zones": [
+      "complete",
+      "required-only"
+    ],
+    "area_schemes": [
+      "complete",
+      "required-only",
+      "measure/Net",
+      "usages/empty",
+      "zones/empty"
+    ],
+    "views": [
+      "complete",
+      "required-only",
+      "kind/CeilingPlan",
+      "kind/Section",
+      "kind/Elevation",
+      "kind/Orthographic",
+      "kind/Perspective",
+      "plane/required-only",
+      "plane/start/required-only",
+      "plane/end/required-only",
+      "camera/required-only",
+      "camera/target/required-only",
+      "crop/required-only",
+      "crop/min/required-only",
+      "crop/max/required-only",
+      "hidden/empty",
+      "hidden/item/CurtainWalls",
+      "hidden/item/Columns",
+      "hidden/item/Beams",
+      "hidden/item/Slabs",
+      "hidden/item/Roofs",
+      "hidden/item/Openings",
+      "hidden/item/Stairs",
+      "hidden/item/Railings",
+      "hidden/item/Spaces",
+      "hidden/item/Grids",
+      "phase/New",
+      "phase/Demolished",
+      "phase/Temporary",
+      "detail/Medium",
+      "detail/Fine"
+    ],
+    "sheets": [
+      "complete",
+      "required-only",
+      "paper/Iso/required-only",
+      "paper/Iso/Iso/required-only",
+      "paper/Iso/Iso/size/A1",
+      "paper/Iso/Iso/size/A2",
+      "paper/Iso/Iso/size/A3",
+      "paper/Iso/Iso/size/A4",
+      "paper/Custom/complete",
+      "paper/Custom/required-only",
+      "paper/Custom/Custom/required-only",
+      "orientation/Portrait"
+    ],
+    "viewports": [
+      "complete",
+      "required-only",
+      "position/required-only",
+      "crop/required-only",
+      "crop/min/required-only",
+      "crop/max/required-only"
+    ],
+    "sheet_revisions": [
+      "complete",
+      "required-only"
+    ],
+    "dimensions": [
+      "complete",
+      "required-only",
+      "anchors/empty",
+      "anchors/item/Point/required-only",
+      "anchors/item/Point/Point/required-only",
+      "anchors/item/Point/Point/point/required-only",
+      "anchors/item/WallFace/complete",
+      "anchors/item/WallFace/required-only",
+      "anchors/item/WallFace/WallFace/required-only",
+      "anchors/item/WallFace/WallFace/side/Right",
+      "anchors/item/WallAxis/complete",
+      "anchors/item/WallAxis/required-only",
+      "anchors/item/WallAxis/WallAxis/required-only",
+      "anchors/item/WallEnd/complete",
+      "anchors/item/WallEnd/required-only",
+      "anchors/item/WallEnd/WallEnd/required-only",
+      "anchors/item/WallEnd/WallEnd/end/End",
+      "anchors/item/OpeningCentre/complete",
+      "anchors/item/OpeningCentre/required-only",
+      "anchors/item/OpeningCentre/OpeningCentre/required-only",
+      "anchors/item/Grid/complete",
+      "anchors/item/Grid/required-only",
+      "anchors/item/Grid/Grid/required-only",
+      "anchors/item/ColumnCentre/complete",
+      "anchors/item/ColumnCentre/required-only",
+      "anchors/item/ColumnCentre/ColumnCentre/required-only"
+    ],
+    "tags": [
+      "complete",
+      "required-only",
+      "category/Type",
+      "category/Number",
+      "category/Size",
+      "offset/required-only"
+    ],
+    "text_notes": [
+      "complete",
+      "required-only",
+      "position/required-only"
+    ],
+    "leaders": [
+      "complete",
+      "required-only",
+      "anchor/Point/required-only",
+      "anchor/Point/Point/required-only",
+      "anchor/Point/Point/point/required-only",
+      "anchor/WallFace/complete",
+      "anchor/WallFace/required-only",
+      "anchor/WallFace/WallFace/required-only",
+      "anchor/WallFace/WallFace/side/Right",
+      "anchor/WallAxis/complete",
+      "anchor/WallAxis/required-only",
+      "anchor/WallAxis/WallAxis/required-only",
+      "anchor/WallEnd/complete",
+      "anchor/WallEnd/required-only",
+      "anchor/WallEnd/WallEnd/required-only",
+      "anchor/WallEnd/WallEnd/end/End",
+      "anchor/OpeningCentre/complete",
+      "anchor/OpeningCentre/required-only",
+      "anchor/OpeningCentre/OpeningCentre/required-only",
+      "anchor/Grid/complete",
+      "anchor/Grid/required-only",
+      "anchor/Grid/Grid/required-only",
+      "anchor/ColumnCentre/complete",
+      "anchor/ColumnCentre/required-only",
+      "anchor/ColumnCentre/ColumnCentre/required-only",
+      "offset/required-only"
+    ],
+    "annotation_styles": [
+      "complete",
+      "required-only",
+      "terminator/Arrow",
+      "terminator/Dot",
+      "unit/Centimetre",
+      "unit/Millimetre"
+    ],
+    "families": [
+      "complete",
+      "required-only",
+      "category/Equipment",
+      "category/Casework",
+      "category/Plumbing",
+      "category/Lighting",
+      "category/Mechanical",
+      "category/Electrical",
+      "category/Generic",
+      "category/Profile"
+    ],
+    "family_parameters": [
+      "complete",
+      "required-only",
+      "kind/Angle",
+      "kind/Real",
+      "kind/Integer",
+      "kind/Boolean",
+      "kind/Text",
+      "kind/Material"
+    ],
+    "family_solids": [
+      "complete",
+      "required-only",
+      "shape/Extrusion/required-only",
+      "shape/Extrusion/Extrusion/required-only",
+      "shape/Extrusion/Extrusion/profile/Rectangle/required-only",
+      "shape/Extrusion/Extrusion/profile/Rectangle/Rectangle/required-only",
+      "shape/Extrusion/Extrusion/profile/Circle/complete",
+      "shape/Extrusion/Extrusion/profile/Circle/required-only",
+      "shape/Extrusion/Extrusion/profile/Circle/Circle/required-only",
+      "shape/Extrusion/Extrusion/profile/IShape/complete",
+      "shape/Extrusion/Extrusion/profile/IShape/required-only",
+      "shape/Extrusion/Extrusion/profile/IShape/IShape/required-only",
+      "shape/Extrusion/Extrusion/profile/Polygon/complete",
+      "shape/Extrusion/Extrusion/profile/Polygon/required-only",
+      "shape/Extrusion/Extrusion/profile/Polygon/Polygon/required-only",
+      "shape/Extrusion/Extrusion/profile/Polygon/Polygon/points/empty",
+      "shape/Extrusion/Extrusion/profile/Polygon/Polygon/points/item/required-only",
+      "shape/Revolution/complete",
+      "shape/Revolution/required-only",
+      "shape/Revolution/Revolution/required-only",
+      "shape/Revolution/Revolution/profile/Rectangle/required-only",
+      "shape/Revolution/Revolution/profile/Rectangle/Rectangle/required-only",
+      "shape/Revolution/Revolution/profile/Circle/complete",
+      "shape/Revolution/Revolution/profile/Circle/required-only",
+      "shape/Revolution/Revolution/profile/Circle/Circle/required-only",
+      "shape/Revolution/Revolution/profile/IShape/complete",
+      "shape/Revolution/Revolution/profile/IShape/required-only",
+      "shape/Revolution/Revolution/profile/IShape/IShape/required-only",
+      "shape/Revolution/Revolution/profile/Polygon/complete",
+      "shape/Revolution/Revolution/profile/Polygon/required-only",
+      "shape/Revolution/Revolution/profile/Polygon/Polygon/required-only",
+      "shape/Revolution/Revolution/profile/Polygon/Polygon/points/empty",
+      "shape/Revolution/Revolution/profile/Polygon/Polygon/points/item/required-only",
+      "shape/Revolution/Revolution/axis/Y",
+      "shape/Revolution/Revolution/axis/Z",
+      "shape/Sweep/complete",
+      "shape/Sweep/required-only",
+      "shape/Sweep/Sweep/required-only",
+      "shape/Sweep/Sweep/profile/Rectangle/required-only",
+      "shape/Sweep/Sweep/profile/Rectangle/Rectangle/required-only",
+      "shape/Sweep/Sweep/profile/Circle/complete",
+      "shape/Sweep/Sweep/profile/Circle/required-only",
+      "shape/Sweep/Sweep/profile/Circle/Circle/required-only",
+      "shape/Sweep/Sweep/profile/IShape/complete",
+      "shape/Sweep/Sweep/profile/IShape/required-only",
+      "shape/Sweep/Sweep/profile/IShape/IShape/required-only",
+      "shape/Sweep/Sweep/profile/Polygon/complete",
+      "shape/Sweep/Sweep/profile/Polygon/required-only",
+      "shape/Sweep/Sweep/profile/Polygon/Polygon/required-only",
+      "shape/Sweep/Sweep/profile/Polygon/Polygon/points/empty",
+      "shape/Sweep/Sweep/profile/Polygon/Polygon/points/item/required-only",
+      "shape/Sweep/Sweep/path/empty",
+      "shape/Sweep/Sweep/path/item/required-only",
+      "shape/Cuboid/complete",
+      "shape/Cuboid/required-only",
+      "shape/Cuboid/Cuboid/required-only",
+      "offset/required-only"
+    ],
+    "wall_sweeps": [
+      "complete",
+      "required-only",
+      "side/Right",
+      "profile/Rectangle/required-only",
+      "profile/Rectangle/Rectangle/required-only",
+      "profile/Circle/complete",
+      "profile/Circle/required-only",
+      "profile/Circle/Circle/required-only",
+      "profile/IShape/complete",
+      "profile/IShape/required-only",
+      "profile/IShape/IShape/required-only",
+      "profile/Custom/complete",
+      "profile/Custom/required-only",
+      "profile/Custom/Custom/required-only",
+      "profile/Custom/Custom/outline/empty",
+      "profile/Custom/Custom/outline/item/required-only",
+      "profile/Custom/Custom/outline/item/point/required-only",
+      "profile/Family/complete",
+      "profile/Family/required-only",
+      "profile/Family/Family/required-only"
+    ],
+    "schedules": [
+      "complete",
+      "required-only",
+      "category/CurtainWall",
+      "category/Slab",
+      "category/Roof",
+      "category/Column",
+      "category/Beam",
+      "category/Window",
+      "category/Door",
+      "category/Void",
+      "category/Stair",
+      "category/Railing",
+      "category/Space",
+      "category/Finish",
+      "category/Material",
+      "columns/empty",
+      "columns/item/required-only",
+      "columns/item/key/Field/required-only",
+      "columns/item/key/Field/Field/required-only",
+      "columns/item/key/Field/Field/field/Name",
+      "columns/item/key/Field/Field/field/Kind",
+      "columns/item/key/Field/Field/field/Storey",
+      "columns/item/key/Field/Field/field/Level",
+      "columns/item/key/Field/Field/field/Type",
+      "columns/item/key/Field/Field/field/Phase",
+      "columns/item/key/Field/Field/field/Material",
+      "columns/item/key/Field/Field/field/Host",
+      "columns/item/key/Field/Field/field/Number",
+      "columns/item/key/Field/Field/field/Usage",
+      "columns/item/key/Field/Field/field/Surface",
+      "columns/item/key/Field/Field/field/Swing",
+      "columns/item/key/Field/Field/field/Leaves",
+      "columns/item/key/Field/Field/field/Panes",
+      "columns/item/key/Field/Field/field/Count",
+      "columns/item/key/Field/Field/field/Length",
+      "columns/item/key/Field/Field/field/Width",
+      "columns/item/key/Field/Field/field/Height",
+      "columns/item/key/Field/Field/field/Perimeter",
+      "columns/item/key/Field/Field/field/GrossSideArea",
+      "columns/item/key/Field/Field/field/OpeningArea",
+      "columns/item/key/Field/Field/field/NetSideArea",
+      "columns/item/key/Field/Field/field/GrossArea",
+      "columns/item/key/Field/Field/field/NetArea",
+      "columns/item/key/Field/Field/field/SurfaceArea",
+      "columns/item/key/Field/Field/field/GrossVolume",
+      "columns/item/key/Field/Field/field/NetVolume",
+      "columns/item/key/Field/Field/field/Mass",
+      "columns/item/key/Field/Field/field/Risers",
+      "columns/item/key/Field/Field/field/Thickness",
+      "columns/item/key/Field/Field/field/LayerArea",
+      "columns/item/key/Field/Field/field/LayerVolume",
+      "columns/item/key/Field/Field/field/LayerMass",
+      "columns/item/key/Field/Field/field/FinishArea",
+      "columns/item/key/Property/complete",
+      "columns/item/key/Property/required-only",
+      "columns/item/key/Property/Property/required-only",
+      "sort/empty",
+      "sort/item/required-only",
+      "sort/item/key/Field/required-only",
+      "sort/item/key/Field/Field/required-only",
+      "sort/item/key/Field/Field/field/Name",
+      "sort/item/key/Field/Field/field/Kind",
+      "sort/item/key/Field/Field/field/Storey",
+      "sort/item/key/Field/Field/field/Level",
+      "sort/item/key/Field/Field/field/Type",
+      "sort/item/key/Field/Field/field/Phase",
+      "sort/item/key/Field/Field/field/Material",
+      "sort/item/key/Field/Field/field/Host",
+      "sort/item/key/Field/Field/field/Number",
+      "sort/item/key/Field/Field/field/Usage",
+      "sort/item/key/Field/Field/field/Surface",
+      "sort/item/key/Field/Field/field/Swing",
+      "sort/item/key/Field/Field/field/Leaves",
+      "sort/item/key/Field/Field/field/Panes",
+      "sort/item/key/Field/Field/field/Count",
+      "sort/item/key/Field/Field/field/Length",
+      "sort/item/key/Field/Field/field/Width",
+      "sort/item/key/Field/Field/field/Height",
+      "sort/item/key/Field/Field/field/Perimeter",
+      "sort/item/key/Field/Field/field/GrossSideArea",
+      "sort/item/key/Field/Field/field/OpeningArea",
+      "sort/item/key/Field/Field/field/NetSideArea",
+      "sort/item/key/Field/Field/field/GrossArea",
+      "sort/item/key/Field/Field/field/NetArea",
+      "sort/item/key/Field/Field/field/SurfaceArea",
+      "sort/item/key/Field/Field/field/GrossVolume",
+      "sort/item/key/Field/Field/field/NetVolume",
+      "sort/item/key/Field/Field/field/Mass",
+      "sort/item/key/Field/Field/field/Risers",
+      "sort/item/key/Field/Field/field/Thickness",
+      "sort/item/key/Field/Field/field/LayerArea",
+      "sort/item/key/Field/Field/field/LayerVolume",
+      "sort/item/key/Field/Field/field/LayerMass",
+      "sort/item/key/Field/Field/field/FinishArea",
+      "sort/item/key/Property/complete",
+      "sort/item/key/Property/required-only",
+      "sort/item/key/Property/Property/required-only",
+      "filter/empty",
+      "filter/item/required-only",
+      "filter/item/key/Field/required-only",
+      "filter/item/key/Field/Field/required-only",
+      "filter/item/key/Field/Field/field/Name",
+      "filter/item/key/Field/Field/field/Kind",
+      "filter/item/key/Field/Field/field/Storey",
+      "filter/item/key/Field/Field/field/Level",
+      "filter/item/key/Field/Field/field/Type",
+      "filter/item/key/Field/Field/field/Phase",
+      "filter/item/key/Field/Field/field/Material",
+      "filter/item/key/Field/Field/field/Host",
+      "filter/item/key/Field/Field/field/Number",
+      "filter/item/key/Field/Field/field/Usage",
+      "filter/item/key/Field/Field/field/Surface",
+      "filter/item/key/Field/Field/field/Swing",
+      "filter/item/key/Field/Field/field/Leaves",
+      "filter/item/key/Field/Field/field/Panes",
+      "filter/item/key/Field/Field/field/Count",
+      "filter/item/key/Field/Field/field/Length",
+      "filter/item/key/Field/Field/field/Width",
+      "filter/item/key/Field/Field/field/Height",
+      "filter/item/key/Field/Field/field/Perimeter",
+      "filter/item/key/Field/Field/field/GrossSideArea",
+      "filter/item/key/Field/Field/field/OpeningArea",
+      "filter/item/key/Field/Field/field/NetSideArea",
+      "filter/item/key/Field/Field/field/GrossArea",
+      "filter/item/key/Field/Field/field/NetArea",
+      "filter/item/key/Field/Field/field/SurfaceArea",
+      "filter/item/key/Field/Field/field/GrossVolume",
+      "filter/item/key/Field/Field/field/NetVolume",
+      "filter/item/key/Field/Field/field/Mass",
+      "filter/item/key/Field/Field/field/Risers",
+      "filter/item/key/Field/Field/field/Thickness",
+      "filter/item/key/Field/Field/field/LayerArea",
+      "filter/item/key/Field/Field/field/LayerVolume",
+      "filter/item/key/Field/Field/field/LayerMass",
+      "filter/item/key/Field/Field/field/FinishArea",
+      "filter/item/key/Property/complete",
+      "filter/item/key/Property/required-only",
+      "filter/item/key/Property/Property/required-only",
+      "filter/item/op/NotEquals",
+      "filter/item/op/Contains",
+      "filter/item/op/Greater",
+      "filter/item/op/GreaterOrEqual",
+      "filter/item/op/Less",
+      "filter/item/op/LessOrEqual",
+      "filter/item/op/Empty",
+      "filter/item/op/NotEmpty",
+      "group/empty",
+      "group/item/required-only",
+      "group/item/key/Field/required-only",
+      "group/item/key/Field/Field/required-only",
+      "group/item/key/Field/Field/field/Name",
+      "group/item/key/Field/Field/field/Kind",
+      "group/item/key/Field/Field/field/Storey",
+      "group/item/key/Field/Field/field/Level",
+      "group/item/key/Field/Field/field/Type",
+      "group/item/key/Field/Field/field/Phase",
+      "group/item/key/Field/Field/field/Material",
+      "group/item/key/Field/Field/field/Host",
+      "group/item/key/Field/Field/field/Number",
+      "group/item/key/Field/Field/field/Usage",
+      "group/item/key/Field/Field/field/Surface",
+      "group/item/key/Field/Field/field/Swing",
+      "group/item/key/Field/Field/field/Leaves",
+      "group/item/key/Field/Field/field/Panes",
+      "group/item/key/Field/Field/field/Count",
+      "group/item/key/Field/Field/field/Length",
+      "group/item/key/Field/Field/field/Width",
+      "group/item/key/Field/Field/field/Height",
+      "group/item/key/Field/Field/field/Perimeter",
+      "group/item/key/Field/Field/field/GrossSideArea",
+      "group/item/key/Field/Field/field/OpeningArea",
+      "group/item/key/Field/Field/field/NetSideArea",
+      "group/item/key/Field/Field/field/GrossArea",
+      "group/item/key/Field/Field/field/NetArea",
+      "group/item/key/Field/Field/field/SurfaceArea",
+      "group/item/key/Field/Field/field/GrossVolume",
+      "group/item/key/Field/Field/field/NetVolume",
+      "group/item/key/Field/Field/field/Mass",
+      "group/item/key/Field/Field/field/Risers",
+      "group/item/key/Field/Field/field/Thickness",
+      "group/item/key/Field/Field/field/LayerArea",
+      "group/item/key/Field/Field/field/LayerVolume",
+      "group/item/key/Field/Field/field/LayerMass",
+      "group/item/key/Field/Field/field/FinishArea",
+      "group/item/key/Property/complete",
+      "group/item/key/Property/required-only",
+      "group/item/key/Property/Property/required-only",
+      "storeys/empty",
+      "phases/empty",
+      "phases/item/New",
+      "phases/item/Demolished",
+      "phases/item/Temporary"
+    ],
+    "property_templates": [
+      "complete",
+      "required-only",
+      "applies_to/empty",
+      "applies_to/item/Building",
+      "applies_to/item/Storey",
+      "applies_to/item/Wall",
+      "applies_to/item/CurtainWall",
+      "applies_to/item/Column",
+      "applies_to/item/Beam",
+      "applies_to/item/Slab",
+      "applies_to/item/Ceiling",
+      "applies_to/item/Roof",
+      "applies_to/item/Window",
+      "applies_to/item/Door",
+      "applies_to/item/Void",
+      "applies_to/item/Stair",
+      "applies_to/item/Ramp",
+      "applies_to/item/Railing",
+      "applies_to/item/Space",
+      "applies_to/item/Zone",
+      "applies_to/item/WallType",
+      "applies_to/item/SlabType",
+      "applies_to/item/CeilingType",
+      "applies_to/item/RoofType",
+      "applies_to/item/ColumnType",
+      "applies_to/item/BeamType",
+      "applies_to/item/WindowType",
+      "applies_to/item/DoorType",
+      "properties/empty",
+      "properties/item/required-only",
+      "properties/item/kind/Real",
+      "properties/item/kind/Integer",
+      "properties/item/kind/Boolean",
+      "properties/item/kind/Length",
+      "properties/item/kind/Area",
+      "properties/item/kind/Volume",
+      "properties/item/kind/Angle",
+      "properties/item/default_value/Text/required-only",
+      "properties/item/default_value/Text/Text/required-only",
+      "properties/item/default_value/Real/complete",
+      "properties/item/default_value/Real/required-only",
+      "properties/item/default_value/Real/Real/required-only",
+      "properties/item/default_value/Integer/complete",
+      "properties/item/default_value/Integer/required-only",
+      "properties/item/default_value/Integer/Integer/required-only",
+      "properties/item/default_value/Boolean/complete",
+      "properties/item/default_value/Boolean/required-only",
+      "properties/item/default_value/Boolean/Boolean/required-only",
+      "properties/item/default_value/Length/complete",
+      "properties/item/default_value/Length/required-only",
+      "properties/item/default_value/Length/Length/required-only",
+      "properties/item/default_value/Area/complete",
+      "properties/item/default_value/Area/required-only",
+      "properties/item/default_value/Area/Area/required-only",
+      "properties/item/default_value/Volume/complete",
+      "properties/item/default_value/Volume/required-only",
+      "properties/item/default_value/Volume/Volume/required-only",
+      "properties/item/default_value/Angle/complete",
+      "properties/item/default_value/Angle/required-only",
+      "properties/item/default_value/Angle/Angle/required-only",
+      "properties/item/allowed/empty",
+      "properties/item/allowed/item/Text/required-only",
+      "properties/item/allowed/item/Text/Text/required-only",
+      "properties/item/allowed/item/Real/complete",
+      "properties/item/allowed/item/Real/required-only",
+      "properties/item/allowed/item/Real/Real/required-only",
+      "properties/item/allowed/item/Integer/complete",
+      "properties/item/allowed/item/Integer/required-only",
+      "properties/item/allowed/item/Integer/Integer/required-only",
+      "properties/item/allowed/item/Boolean/complete",
+      "properties/item/allowed/item/Boolean/required-only",
+      "properties/item/allowed/item/Boolean/Boolean/required-only",
+      "properties/item/allowed/item/Length/complete",
+      "properties/item/allowed/item/Length/required-only",
+      "properties/item/allowed/item/Length/Length/required-only",
+      "properties/item/allowed/item/Area/complete",
+      "properties/item/allowed/item/Area/required-only",
+      "properties/item/allowed/item/Area/Area/required-only",
+      "properties/item/allowed/item/Volume/complete",
+      "properties/item/allowed/item/Volume/required-only",
+      "properties/item/allowed/item/Volume/Volume/required-only",
+      "properties/item/allowed/item/Angle/complete",
+      "properties/item/allowed/item/Angle/required-only",
+      "properties/item/allowed/item/Angle/Angle/required-only"
+    ],
+    "classification_systems": [
+      "complete",
+      "required-only",
+      "entries/empty",
+      "entries/item/required-only"
+    ],
+    "properties": [
+      "complete"
+    ],
+    "classifications": [
+      "complete"
+    ]
+  },
+  "qualification": {
+    "engine": "Ajv",
+    "strict": true,
+    "annotationKeyword": "x-semio-state",
+    "outcomes": [
+      {
+        "name": "current47maps-allreachablevariants",
+        "valid": true,
+        "errors": null
+      }
+    ],
+    "readback": "canonical43emptyarrays independently strict-Ajv readmitted",
+    "schemaHashes": {
+      "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": "00cc98846c9fa0960c165a41626d67feb4a8e729ea1adb1083c57d055afaf69e",
+      "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json": "8c865f08a21b0f94e84bfca4b4ae7afe142de5f472a76d36be087a209c19f11d"
+    },
+    "witnessSha256": "b4cff8dfabaac3f0ff5c60f19afefd2a04baa78cd7afbcc5cba8ba15426bc680"
+  },
+  "observedEnumVariants": [
+    {
+      "type": "AnchorEnd",
+      "variant": "End"
+    },
+    {
+      "type": "AnchorEnd",
+      "variant": "Start"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "ColumnCentre"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "Grid"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "OpeningCentre"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "Point"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "WallAxis"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "WallEnd"
+    },
+    {
+      "type": "AnnotationAnchor",
+      "variant": "WallFace"
+    },
+    {
+      "type": "AreaMeasure",
+      "variant": "Gross"
+    },
+    {
+      "type": "AreaMeasure",
+      "variant": "Net"
+    },
+    {
+      "type": "Axis",
+      "variant": "Arc"
+    },
+    {
+      "type": "Axis",
+      "variant": "Line"
+    },
+    {
+      "type": "CurtainGrid",
+      "variant": "Lines"
+    },
+    {
+      "type": "CurtainGrid",
+      "variant": "Spacing"
+    },
+    {
+      "type": "CurtainPanel",
+      "variant": "Door"
+    },
+    {
+      "type": "CurtainPanel",
+      "variant": "Empty"
+    },
+    {
+      "type": "CurtainPanel",
+      "variant": "Glass"
+    },
+    {
+      "type": "CurtainPanel",
+      "variant": "Solid"
+    },
+    {
+      "type": "CurtainPanel",
+      "variant": "Window"
+    },
+    {
+      "type": "DetailLevel",
+      "variant": "Coarse"
+    },
+    {
+      "type": "DetailLevel",
+      "variant": "Fine"
+    },
+    {
+      "type": "DetailLevel",
+      "variant": "Medium"
+    },
+    {
+      "type": "DimensionUnit",
+      "variant": "Centimetre"
+    },
+    {
+      "type": "DimensionUnit",
+      "variant": "Metre"
+    },
+    {
+      "type": "DimensionUnit",
+      "variant": "Millimetre"
+    },
+    {
+      "type": "DoorLeaves",
+      "variant": "Double"
+    },
+    {
+      "type": "DoorLeaves",
+      "variant": "Single"
+    },
+    {
+      "type": "EndJoin",
+      "variant": "Butt"
+    },
+    {
+      "type": "EndJoin",
+      "variant": "Miter"
+    },
+    {
+      "type": "EndJoin",
+      "variant": "None"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Casework"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Electrical"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Equipment"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Furniture"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Generic"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Lighting"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Mechanical"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Plumbing"
+    },
+    {
+      "type": "FamilyCategory",
+      "variant": "Profile"
+    },
+    {
+      "type": "HostSide",
+      "variant": "Left"
+    },
+    {
+      "type": "HostSide",
+      "variant": "Right"
+    },
+    {
+      "type": "Infill",
+      "variant": "Glass"
+    },
+    {
+      "type": "Infill",
+      "variant": "None"
+    },
+    {
+      "type": "Infill",
+      "variant": "Panel"
+    },
+    {
+      "type": "IsoSize",
+      "variant": "A0"
+    },
+    {
+      "type": "IsoSize",
+      "variant": "A1"
+    },
+    {
+      "type": "IsoSize",
+      "variant": "A2"
+    },
+    {
+      "type": "IsoSize",
+      "variant": "A3"
+    },
+    {
+      "type": "IsoSize",
+      "variant": "A4"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Core"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Finish"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Insulation"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Membrane"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Structure"
+    },
+    {
+      "type": "LayerFunction",
+      "variant": "Substrate"
+    },
+    {
+      "type": "LocationLine",
+      "variant": "Center"
+    },
+    {
+      "type": "LocationLine",
+      "variant": "CoreCenter"
+    },
+    {
+      "type": "LocationLine",
+      "variant": "Exterior"
+    },
+    {
+      "type": "LocationLine",
+      "variant": "Interior"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Concrete"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Finish"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Glass"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Insulation"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Masonry"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Membrane"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Metal"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Other"
+    },
+    {
+      "type": "MaterialCategory",
+      "variant": "Wood"
+    },
+    {
+      "type": "OpeningKind",
+      "variant": "Door"
+    },
+    {
+      "type": "OpeningKind",
+      "variant": "Void"
+    },
+    {
+      "type": "OpeningKind",
+      "variant": "Window"
+    },
+    {
+      "type": "Orientation",
+      "variant": "Landscape"
+    },
+    {
+      "type": "Orientation",
+      "variant": "Portrait"
+    },
+    {
+      "type": "Paper",
+      "variant": "Custom"
+    },
+    {
+      "type": "Paper",
+      "variant": "Iso"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Angle"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Boolean"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Integer"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Length"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Material"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Real"
+    },
+    {
+      "type": "ParameterKind",
+      "variant": "Text"
+    },
+    {
+      "type": "ParametricProfile",
+      "variant": "Circle"
+    },
+    {
+      "type": "ParametricProfile",
+      "variant": "IShape"
+    },
+    {
+      "type": "ParametricProfile",
+      "variant": "Polygon"
+    },
+    {
+      "type": "ParametricProfile",
+      "variant": "Rectangle"
+    },
+    {
+      "type": "Phase",
+      "variant": "Demolished"
+    },
+    {
+      "type": "Phase",
+      "variant": "Existing"
+    },
+    {
+      "type": "Phase",
+      "variant": "New"
+    },
+    {
+      "type": "Phase",
+      "variant": "Temporary"
+    },
+    {
+      "type": "Profile",
+      "variant": "Circle"
+    },
+    {
+      "type": "Profile",
+      "variant": "Custom"
+    },
+    {
+      "type": "Profile",
+      "variant": "Family"
+    },
+    {
+      "type": "Profile",
+      "variant": "IShape"
+    },
+    {
+      "type": "Profile",
+      "variant": "Rectangle"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Angle"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Area"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Boolean"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Integer"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Length"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Real"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Text"
+    },
+    {
+      "type": "PropertyKind",
+      "variant": "Volume"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Angle"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Area"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Boolean"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Integer"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Length"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Real"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Text"
+    },
+    {
+      "type": "PropertyValue",
+      "variant": "Volume"
+    },
+    {
+      "type": "RiserKind",
+      "variant": "Closed"
+    },
+    {
+      "type": "RiserKind",
+      "variant": "Open"
+    },
+    {
+      "type": "RoofShape",
+      "variant": "Flat"
+    },
+    {
+      "type": "RoofShape",
+      "variant": "Gable"
+    },
+    {
+      "type": "RoofShape",
+      "variant": "Hip"
+    },
+    {
+      "type": "RoofShape",
+      "variant": "Mansard"
+    },
+    {
+      "type": "RoofShape",
+      "variant": "Shed"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Beam"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Column"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "CurtainWall"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Door"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Finish"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Material"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Railing"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Roof"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Slab"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Space"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Stair"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Void"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Wall"
+    },
+    {
+      "type": "ScheduleCategory",
+      "variant": "Window"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Count"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "FinishArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "GrossArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "GrossSideArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "GrossVolume"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Height"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Host"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Id"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Kind"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "LayerArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "LayerMass"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "LayerVolume"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Leaves"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Length"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Level"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Mass"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Material"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Name"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "NetArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "NetSideArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "NetVolume"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Number"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "OpeningArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Panes"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Perimeter"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Phase"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Risers"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Storey"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Surface"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "SurfaceArea"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Swing"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Thickness"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Type"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Usage"
+    },
+    {
+      "type": "ScheduleField",
+      "variant": "Width"
+    },
+    {
+      "type": "ScheduleKey",
+      "variant": "Field"
+    },
+    {
+      "type": "ScheduleKey",
+      "variant": "Property"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "Contains"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "Empty"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "Equals"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "Greater"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "GreaterOrEqual"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "Less"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "LessOrEqual"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "NotEmpty"
+    },
+    {
+      "type": "ScheduleOp",
+      "variant": "NotEquals"
+    },
+    {
+      "type": "SolidAxis",
+      "variant": "X"
+    },
+    {
+      "type": "SolidAxis",
+      "variant": "Y"
+    },
+    {
+      "type": "SolidAxis",
+      "variant": "Z"
+    },
+    {
+      "type": "SolidShape",
+      "variant": "Cuboid"
+    },
+    {
+      "type": "SolidShape",
+      "variant": "Extrusion"
+    },
+    {
+      "type": "SolidShape",
+      "variant": "Revolution"
+    },
+    {
+      "type": "SolidShape",
+      "variant": "Sweep"
+    },
+    {
+      "type": "SpaceBoundary",
+      "variant": "Bounded"
+    },
+    {
+      "type": "SpaceBoundary",
+      "variant": "Explicit"
+    },
+    {
+      "type": "StairFlight",
+      "variant": "LTurn"
+    },
+    {
+      "type": "StairFlight",
+      "variant": "Spiral"
+    },
+    {
+      "type": "StairFlight",
+      "variant": "Straight"
+    },
+    {
+      "type": "StairFlight",
+      "variant": "UTurn"
+    },
+    {
+      "type": "StringerKind",
+      "variant": "Closed"
+    },
+    {
+      "type": "StringerKind",
+      "variant": "Mono"
+    },
+    {
+      "type": "StringerKind",
+      "variant": "None"
+    },
+    {
+      "type": "StringerKind",
+      "variant": "Open"
+    },
+    {
+      "type": "Swing",
+      "variant": "Left"
+    },
+    {
+      "type": "Swing",
+      "variant": "Right"
+    },
+    {
+      "type": "TagCategory",
+      "variant": "Name"
+    },
+    {
+      "type": "TagCategory",
+      "variant": "Number"
+    },
+    {
+      "type": "TagCategory",
+      "variant": "Size"
+    },
+    {
+      "type": "TagCategory",
+      "variant": "Type"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Beam"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "BeamType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Building"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Ceiling"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "CeilingType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Column"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "ColumnType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "CurtainWall"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Door"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "DoorType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Railing"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Ramp"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Roof"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "RoofType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Site"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Slab"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "SlabType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Space"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Stair"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Storey"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Void"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Wall"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "WallType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Window"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "WindowType"
+    },
+    {
+      "type": "TemplateTarget",
+      "variant": "Zone"
+    },
+    {
+      "type": "Terminator",
+      "variant": "Arrow"
+    },
+    {
+      "type": "Terminator",
+      "variant": "Dot"
+    },
+    {
+      "type": "Terminator",
+      "variant": "Tick"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "Ceiling"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "Roof"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "Slab"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "Storey"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "StoreyTop"
+    },
+    {
+      "type": "TopConstraint",
+      "variant": "Unconnected"
+    },
+    {
+      "type": "Turn",
+      "variant": "Left"
+    },
+    {
+      "type": "Turn",
+      "variant": "Right"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Beams"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Columns"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "CurtainWalls"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Grids"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Openings"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Railings"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Roofs"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Slabs"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Spaces"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Stairs"
+    },
+    {
+      "type": "ViewCategory",
+      "variant": "Walls"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "CeilingPlan"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "Elevation"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "Orthographic"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "Perspective"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "Plan"
+    },
+    {
+      "type": "ViewKind",
+      "variant": "Section"
+    },
+    {
+      "type": "WallSide",
+      "variant": "Left"
+    },
+    {
+      "type": "WallSide",
+      "variant": "Right"
+    }
+  ],
+  "unobservedRequestedVariants": [],
+  "arrayRoles": {
+    "area_schemes/usages": [
+      "empty",
+      "nonempty"
+    ],
+    "area_schemes/zones": [
+      "empty",
+      "nonempty"
+    ],
+    "beam_types/outline": [
+      "empty",
+      "nonempty"
+    ],
+    "ceiling_types/layers": [
+      "empty",
+      "nonempty"
+    ],
+    "ceilings/boundary": [
+      "empty",
+      "nonempty"
+    ],
+    "ceilings/holes": [
+      "empty",
+      "nonempty"
+    ],
+    "ceilings/item": [
+      "empty",
+      "nonempty"
+    ],
+    "classification_systems/entries": [
+      "empty",
+      "nonempty"
+    ],
+    "column_types/outline": [
+      "empty",
+      "nonempty"
+    ],
+    "curtain_wall_types/outline": [
+      "empty",
+      "nonempty"
+    ],
+    "curtain_wall_types/positions": [
+      "empty",
+      "nonempty"
+    ],
+    "curtain_walls/positions": [
+      "empty",
+      "nonempty"
+    ],
+    "dimensions/anchors": [
+      "empty",
+      "nonempty"
+    ],
+    "family_solids/path": [
+      "empty",
+      "nonempty"
+    ],
+    "family_solids/points": [
+      "empty",
+      "nonempty"
+    ],
+    "project/phase_names": [
+      "nonempty"
+    ],
+    "property_templates/allowed": [
+      "empty",
+      "nonempty"
+    ],
+    "property_templates/applies_to": [
+      "empty",
+      "nonempty"
+    ],
+    "property_templates/properties": [
+      "empty",
+      "nonempty"
+    ],
+    "railings/outline": [
+      "empty",
+      "nonempty"
+    ],
+    "railings/path": [
+      "empty",
+      "nonempty"
+    ],
+    "ramps/path": [
+      "empty",
+      "nonempty"
+    ],
+    "roof_types/layers": [
+      "empty",
+      "nonempty"
+    ],
+    "roofs/footprint": [
+      "empty",
+      "nonempty"
+    ],
+    "schedules/columns": [
+      "empty",
+      "nonempty"
+    ],
+    "schedules/filter": [
+      "empty",
+      "nonempty"
+    ],
+    "schedules/group": [
+      "empty",
+      "nonempty"
+    ],
+    "schedules/phases": [
+      "empty",
+      "nonempty"
+    ],
+    "schedules/sort": [
+      "empty",
+      "nonempty"
+    ],
+    "schedules/storeys": [
+      "empty",
+      "nonempty"
+    ],
+    "sites/boundary": [
+      "empty",
+      "nonempty"
+    ],
+    "slab_types/layers": [
+      "empty",
+      "nonempty"
+    ],
+    "slabs/boundary": [
+      "empty",
+      "nonempty"
+    ],
+    "slabs/holes": [
+      "empty",
+      "nonempty"
+    ],
+    "slabs/item": [
+      "empty",
+      "nonempty"
+    ],
+    "spaces/outline": [
+      "empty",
+      "nonempty"
+    ],
+    "views/hidden": [
+      "empty",
+      "nonempty"
+    ],
+    "wall_sweeps/outline": [
+      "empty",
+      "nonempty"
+    ],
+    "wall_types/layers": [
+      "empty",
+      "nonempty"
+    ]
+  },
+  "optionalRolePresence": [
+    [
+      "",
+      "annotation_styles",
+      "present"
+    ],
+    [
+      "",
+      "area_schemes",
+      "present"
+    ],
+    [
+      "",
+      "beam_types",
+      "present"
+    ],
+    [
+      "",
+      "beams",
+      "present"
+    ],
+    [
+      "",
+      "buildings",
+      "present"
+    ],
+    [
+      "",
+      "ceiling_types",
+      "present"
+    ],
+    [
+      "",
+      "ceilings",
+      "present"
+    ],
+    [
+      "",
+      "classification_systems",
+      "present"
+    ],
+    [
+      "",
+      "classifications",
+      "present"
+    ],
+    [
+      "",
+      "column_types",
+      "present"
+    ],
+    [
+      "",
+      "columns",
+      "present"
+    ],
+    [
+      "",
+      "curtain_panel_overrides",
+      "present"
+    ],
+    [
+      "",
+      "curtain_wall_types",
+      "present"
+    ],
+    [
+      "",
+      "curtain_walls",
+      "present"
+    ],
+    [
+      "",
+      "dimensions",
+      "present"
+    ],
+    [
+      "",
+      "door_types",
+      "present"
+    ],
+    [
+      "",
+      "families",
+      "present"
+    ],
+    [
+      "",
+      "family_parameters",
+      "present"
+    ],
+    [
+      "",
+      "family_solids",
+      "present"
+    ],
+    [
+      "",
+      "grids",
+      "present"
+    ],
+    [
+      "",
+      "leaders",
+      "present"
+    ],
+    [
+      "",
+      "materials",
+      "present"
+    ],
+    [
+      "",
+      "openings",
+      "present"
+    ],
+    [
+      "",
+      "outline",
+      "present"
+    ],
+    [
+      "",
+      "path",
+      "present"
+    ],
+    [
+      "",
+      "points",
+      "present"
+    ],
+    [
+      "",
+      "positions",
+      "present"
+    ],
+    [
+      "",
+      "properties",
+      "present"
+    ],
+    [
+      "",
+      "property_templates",
+      "present"
+    ],
+    [
+      "",
+      "railings",
+      "present"
+    ],
+    [
+      "",
+      "ramps",
+      "present"
+    ],
+    [
+      "",
+      "roof_types",
+      "present"
+    ],
+    [
+      "",
+      "roofs",
+      "present"
+    ],
+    [
+      "",
+      "schedules",
+      "present"
+    ],
+    [
+      "",
+      "sheet_revisions",
+      "present"
+    ],
+    [
+      "",
+      "sheets",
+      "present"
+    ],
+    [
+      "",
+      "sites",
+      "present"
+    ],
+    [
+      "",
+      "slab_types",
+      "present"
+    ],
+    [
+      "",
+      "slabs",
+      "present"
+    ],
+    [
+      "",
+      "spaces",
+      "present"
+    ],
+    [
+      "",
+      "stairs",
+      "present"
+    ],
+    [
+      "",
+      "storeys",
+      "present"
+    ],
+    [
+      "",
+      "tags",
+      "present"
+    ],
+    [
+      "",
+      "text_notes",
+      "present"
+    ],
+    [
+      "",
+      "viewports",
+      "present"
+    ],
+    [
+      "",
+      "views",
+      "present"
+    ],
+    [
+      "",
+      "wall_sweeps",
+      "present"
+    ],
+    [
+      "",
+      "wall_types",
+      "present"
+    ],
+    [
+      "",
+      "walls",
+      "present"
+    ],
+    [
+      "",
+      "window_types",
+      "present"
+    ],
+    [
+      "",
+      "zones",
+      "present"
+    ],
+    [
+      "AreaScheme",
+      "usages",
+      "present"
+    ],
+    [
+      "AreaScheme",
+      "zones",
+      "present"
+    ],
+    [
+      "Beam",
+      "end_top_offset",
+      "absent"
+    ],
+    [
+      "Beam",
+      "end_top_offset",
+      "present"
+    ],
+    [
+      "Ceiling",
+      "boundary",
+      "present"
+    ],
+    [
+      "Ceiling",
+      "holes",
+      "present"
+    ],
+    [
+      "Ceiling",
+      "slope",
+      "absent"
+    ],
+    [
+      "Ceiling",
+      "slope",
+      "present"
+    ],
+    [
+      "CeilingType",
+      "layers",
+      "present"
+    ],
+    [
+      "ClassificationItem",
+      "parent",
+      "absent"
+    ],
+    [
+      "ClassificationItem",
+      "parent",
+      "present"
+    ],
+    [
+      "ClassificationSystem",
+      "entries",
+      "present"
+    ],
+    [
+      "ClassificationSystem",
+      "source",
+      "absent"
+    ],
+    [
+      "ClassificationSystem",
+      "source",
+      "present"
+    ],
+    [
+      "Column",
+      "tilt",
+      "absent"
+    ],
+    [
+      "Column",
+      "tilt",
+      "present"
+    ],
+    [
+      "CurtainWall",
+      "u_grid",
+      "absent"
+    ],
+    [
+      "CurtainWall",
+      "u_grid",
+      "present"
+    ],
+    [
+      "CurtainWall",
+      "v_grid",
+      "absent"
+    ],
+    [
+      "CurtainWall",
+      "v_grid",
+      "present"
+    ],
+    [
+      "Dimension",
+      "anchors",
+      "present"
+    ],
+    [
+      "Dimension",
+      "lock",
+      "absent"
+    ],
+    [
+      "Dimension",
+      "lock",
+      "present"
+    ],
+    [
+      "Opening",
+      "height",
+      "absent"
+    ],
+    [
+      "Opening",
+      "height",
+      "present"
+    ],
+    [
+      "Opening",
+      "reveal_depth",
+      "absent"
+    ],
+    [
+      "Opening",
+      "reveal_depth",
+      "present"
+    ],
+    [
+      "Opening",
+      "reveal_material",
+      "absent"
+    ],
+    [
+      "Opening",
+      "reveal_material",
+      "present"
+    ],
+    [
+      "Opening",
+      "sill_override",
+      "absent"
+    ],
+    [
+      "Opening",
+      "sill_override",
+      "present"
+    ],
+    [
+      "Opening",
+      "width",
+      "absent"
+    ],
+    [
+      "Opening",
+      "width",
+      "present"
+    ],
+    [
+      "Project",
+      "phase_names",
+      "present"
+    ],
+    [
+      "PropertyDef",
+      "allowed",
+      "present"
+    ],
+    [
+      "PropertyDef",
+      "default_value",
+      "absent"
+    ],
+    [
+      "PropertyDef",
+      "default_value",
+      "present"
+    ],
+    [
+      "PropertyDef",
+      "description",
+      "absent"
+    ],
+    [
+      "PropertyDef",
+      "description",
+      "present"
+    ],
+    [
+      "PropertyDef",
+      "maximum",
+      "absent"
+    ],
+    [
+      "PropertyDef",
+      "maximum",
+      "present"
+    ],
+    [
+      "PropertyDef",
+      "minimum",
+      "absent"
+    ],
+    [
+      "PropertyDef",
+      "minimum",
+      "present"
+    ],
+    [
+      "PropertyDef",
+      "unit",
+      "absent"
+    ],
+    [
+      "PropertyDef",
+      "unit",
+      "present"
+    ],
+    [
+      "PropertyTemplate",
+      "applies_to",
+      "present"
+    ],
+    [
+      "PropertyTemplate",
+      "properties",
+      "present"
+    ],
+    [
+      "Railing",
+      "baluster",
+      "absent"
+    ],
+    [
+      "Railing",
+      "baluster",
+      "present"
+    ],
+    [
+      "Railing",
+      "host",
+      "absent"
+    ],
+    [
+      "Railing",
+      "host",
+      "present"
+    ],
+    [
+      "Railing",
+      "path",
+      "present"
+    ],
+    [
+      "Ramp",
+      "path",
+      "present"
+    ],
+    [
+      "Roof",
+      "footprint",
+      "present"
+    ],
+    [
+      "RoofType",
+      "layers",
+      "present"
+    ],
+    [
+      "Schedule",
+      "columns",
+      "present"
+    ],
+    [
+      "Schedule",
+      "filter",
+      "present"
+    ],
+    [
+      "Schedule",
+      "group",
+      "present"
+    ],
+    [
+      "Schedule",
+      "phases",
+      "present"
+    ],
+    [
+      "Schedule",
+      "sort",
+      "present"
+    ],
+    [
+      "Schedule",
+      "storeys",
+      "present"
+    ],
+    [
+      "ScheduleColumn",
+      "heading",
+      "absent"
+    ],
+    [
+      "ScheduleColumn",
+      "heading",
+      "present"
+    ],
+    [
+      "Site",
+      "boundary",
+      "present"
+    ],
+    [
+      "Slab",
+      "boundary",
+      "present"
+    ],
+    [
+      "Slab",
+      "holes",
+      "present"
+    ],
+    [
+      "Slab",
+      "slope",
+      "absent"
+    ],
+    [
+      "Slab",
+      "slope",
+      "present"
+    ],
+    [
+      "SlabType",
+      "layers",
+      "present"
+    ],
+    [
+      "Space",
+      "ceiling_finish",
+      "absent"
+    ],
+    [
+      "Space",
+      "ceiling_finish",
+      "present"
+    ],
+    [
+      "Space",
+      "floor_finish",
+      "absent"
+    ],
+    [
+      "Space",
+      "floor_finish",
+      "present"
+    ],
+    [
+      "Space",
+      "wall_finish",
+      "absent"
+    ],
+    [
+      "Space",
+      "wall_finish",
+      "present"
+    ],
+    [
+      "Space",
+      "zone",
+      "absent"
+    ],
+    [
+      "Space",
+      "zone",
+      "present"
+    ],
+    [
+      "Storey",
+      "cut_height",
+      "absent"
+    ],
+    [
+      "Storey",
+      "cut_height",
+      "present"
+    ],
+    [
+      "View",
+      "camera",
+      "absent"
+    ],
+    [
+      "View",
+      "camera",
+      "present"
+    ],
+    [
+      "View",
+      "crop",
+      "absent"
+    ],
+    [
+      "View",
+      "crop",
+      "present"
+    ],
+    [
+      "View",
+      "cut_height",
+      "absent"
+    ],
+    [
+      "View",
+      "cut_height",
+      "present"
+    ],
+    [
+      "View",
+      "hidden",
+      "present"
+    ],
+    [
+      "View",
+      "phase",
+      "absent"
+    ],
+    [
+      "View",
+      "phase",
+      "present"
+    ],
+    [
+      "View",
+      "plane",
+      "absent"
+    ],
+    [
+      "View",
+      "plane",
+      "present"
+    ],
+    [
+      "View",
+      "storey",
+      "absent"
+    ],
+    [
+      "View",
+      "storey",
+      "present"
+    ],
+    [
+      "Viewport",
+      "crop",
+      "absent"
+    ],
+    [
+      "Viewport",
+      "crop",
+      "present"
+    ],
+    [
+      "Viewport",
+      "label",
+      "absent"
+    ],
+    [
+      "Viewport",
+      "label",
+      "present"
+    ],
+    [
+      "Wall",
+      "base_slab",
+      "absent"
+    ],
+    [
+      "Wall",
+      "base_slab",
+      "present"
+    ],
+    [
+      "Wall",
+      "end_join",
+      "absent"
+    ],
+    [
+      "Wall",
+      "end_join",
+      "present"
+    ],
+    [
+      "Wall",
+      "start_join",
+      "absent"
+    ],
+    [
+      "Wall",
+      "start_join",
+      "present"
+    ],
+    [
+      "WallType",
+      "layers",
+      "present"
+    ]
+  ],
+  "additionalExplicitCases": [
+    "dimensions/multi-anchor/λ: seven ordered anchor records in one original statement-block vector"
+  ],
+  "canonicalDefaultAjvReceipt": {
+    "engine": "Ajv",
+    "strict": true,
+    "annotationKeyword": "x-semio-state",
+    "outcomes": [
+      {
+        "name": "current47maps-allreachablevariants",
+        "valid": true,
+        "errors": null
+      }
+    ]
+  }
+}

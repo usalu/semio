@@ -294,7 +294,12 @@
           {
             "id": "storybook-static",
             "verb": "dev",
-            "command": ["bun", "./📜️script.ts", "dev", "storybook-static"],
+            "command": [
+              "bun",
+              "./📜️script.ts",
+              "dev",
+              "storybook-static"
+            ],
             "continuous": true,
             "ready": {
               "port": 6010,
@@ -342,12 +347,32 @@
           {
             "id": "run-script",
             "verb": "run",
-            "command": ["bun", "nx", "exec", "--projects={project}", "--", "bun", "{workspace}/{script}"],
+            "command": [
+              "bun",
+              "nx",
+              "exec",
+              "--projects={project}",
+              "--",
+              "bun",
+              "{workspace}/{script}"
+            ],
             "cwd": "{directory}",
             "parameters": [
-              { "id": "script", "kind": "text", "required": true },
-              { "id": "project", "kind": "text", "default": "workspace" },
-              { "id": "directory", "kind": "text", "default": "" }
+              {
+                "id": "script",
+                "kind": "text",
+                "required": true
+              },
+              {
+                "id": "project",
+                "kind": "text",
+                "default": "workspace"
+              },
+              {
+                "id": "directory",
+                "kind": "text",
+                "default": ""
+              }
             ]
           },
           {
@@ -467,7 +492,9 @@
         "groups": [
           {
             "id": "process-extension-tests",
-            "targets": ["test"],
+            "targets": [
+              "test"
+            ],
             "projects": [
               "@semio-tech/process-extension-wood-rust",
               "@semio-tech/process-extension-metal-rust",
@@ -477,7 +504,9 @@
           },
           {
             "id": "sourcing-extension-tests",
-            "targets": ["test"],
+            "targets": [
+              "test"
+            ],
             "projects": [
               "@semio-tech/sourcing-extension-beams-rust",
               "@semio-tech/sourcing-extension-slabs-rust",
@@ -486,7 +515,9 @@
           },
           {
             "id": "stdio-artifact-tests",
-            "targets": ["test"],
+            "targets": [
+              "test"
+            ],
             "projects": [
               "@semio-tech/stdio-*-rs",
               "!@semio-tech/stdio-artifact-contract-rs"
@@ -494,7 +525,9 @@
           },
           {
             "id": "stdio-initial-record-tests",
-            "targets": ["test"],
+            "targets": [
+              "test"
+            ],
             "projects": [
               "@semio-tech/stdio-jpg-rs",
               "@semio-tech/stdio-tiff-rs",
@@ -503,7 +536,9 @@
           },
           {
             "id": "puzzle-spatial-tests",
-            "targets": ["test"],
+            "targets": [
+              "test"
+            ],
             "projects": [
               "@semio-tech/puzzle-3d-rs",
               "@semio-tech/puzzle-5d-rs"
@@ -511,7 +546,9 @@
           },
           {
             "id": "snapshot-sqlite-parent-baselines",
-            "targets": ["test-snapshot-sqlite-native"],
+            "targets": [
+              "test-snapshot-sqlite-native"
+            ],
             "projects": [
               "@semio-tech/block-2d-rs",
               "@semio-tech/block-3d-rs",
@@ -535,21 +572,27 @@
           },
           {
             "id": "snapshot-sqlite-native",
-            "targets": ["test-snapshot-sqlite-native"],
+            "targets": [
+              "test-snapshot-sqlite-native"
+            ],
             "projects": [
               "*"
             ]
           },
           {
             "id": "snapshot-sqlite-source",
-            "targets": ["test-snapshot-sqlite-source"],
+            "targets": [
+              "test-snapshot-sqlite-source"
+            ],
             "projects": [
               "*"
             ]
           },
           {
             "id": "dag-actor-wasm",
-            "targets": ["wasm"],
+            "targets": [
+              "wasm"
+            ],
             "projects": [
               "semio-framework-os-flow-core",
               "@semio-tech/framework-surface-rs",
@@ -1629,7 +1672,7 @@
         "command": "bun ./📜️script.ts schema verify",
         "forwardAllArgs": true
       },
-      "cache": true
+      "cache": false
     },
     "schema-audit": {
       "executor": "nx:run-commands",
@@ -1659,7 +1702,7 @@
     },
     "schema-entries": {
       "executor": "nx:run-commands",
-      "cache": true,
+      "cache": false,
       "options": {
         "command": "bun ./📜️script.ts schema entries",
         "forwardAllArgs": true

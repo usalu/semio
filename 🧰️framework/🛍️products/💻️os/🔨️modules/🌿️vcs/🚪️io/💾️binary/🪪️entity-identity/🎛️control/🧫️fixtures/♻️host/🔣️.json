@@ -1,0 +1,31 @@
+{
+  "kind": "original-host-retirement-source",
+  "maximum": 65536,
+  "inputBytes": 8,
+  "deniedProgress": {
+    "copiedItems": 0,
+    "copiedBytes": 0,
+    "capacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "scalarReceipt": {
+    "maximum": 57,
+    "owned": 3,
+    "finished": true,
+    "reserved_return": 11,
+    "phase_start_owned": 7,
+    "phase_start_reserved_return": 0,
+    "received_output": 5,
+    "received_input": 4,
+    "received_retirement": 13
+  },
+  "sourceOwned": 43,
+  "sourceMaximum": 64,
+  "grant": {
+    "maximum_items": 1,
+    "maximum_copy_bytes": 64,
+    "maximum_capacity_bytes": 4096,
+    "maximum_release_bytes": 4096,
+    "maximum_depth": 32
+  }
+}

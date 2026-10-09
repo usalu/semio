@@ -69,7 +69,7 @@ fn gradients_text_images_opacity_and_arcs_paint_through_their_pdf_constructs() {
     let mut doc = default_drawing_document("laws", None);
     doc.artboard = Some(DrawingArtboard { width: 300.0, height: 150.0 });
     doc.layers.clear();
-    let mut rect = create_drawing_shape_layer_rect("Gradient");
+    let mut rect = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Gradient")).to_string().into()).expect("nonempty authored identity"), "Gradient");
     {
         let base = layer_base_mut(&mut rect);
         base.opacity = 0.5;
@@ -78,7 +78,7 @@ fn gradients_text_images_opacity_and_arcs_paint_through_their_pdf_constructs() {
         base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![4.0, 2.0].into()) });
     }
     doc.layers.push(rect);
-    let mut text = create_drawing_text_layer("Caption");
+    let mut text = create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Caption")).to_string().into()).expect("nonempty authored identity"), "Caption");
     if let DrawingLayerNode::Text(body) = &mut text {
         body.content = "Hi (there) \\ café".into();
         body.size = 14.0;
@@ -90,13 +90,13 @@ fn gradients_text_images_opacity_and_arcs_paint_through_their_pdf_constructs() {
     // 🖼️ A 2×2 RGBA PNG with one transparent pixel.
     let png = semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width: 2, height: 2, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 0, 0, 0, 0] }).expect("png encodes");
     doc.assets.insert(semio_framework_value::paged::PagedUtf8::from("pic"), crate::standards::v1::subsets::any::io::image::drawing_image_from_png(&png));
-    let mut image = create_drawing_image_layer("Picture", "pic");
+    let mut image = create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit((("Picture")).to_string().into()).expect("nonempty authored identity"), "Picture", "pic");
     if let DrawingLayerNode::Image(body) = &mut image {
         body.width = 40.0;
         body.height = 30.0;
     }
     doc.layers.push(image);
-    let mut arc = create_drawing_path_layer("Arc", vec![PathSegment::Move { to: [10.0, 10.0] }, PathSegment::Arc { rx: 20.0, ry: 20.0, rotation: 0.0, large_arc: false, sweep: true, to: [50.0, 10.0] }, PathSegment::Quad { ctrl: [30.0, 60.0], to: [10.0, 10.0] }, PathSegment::Close].into());
+    let mut arc = create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Arc")).to_string().into()).expect("nonempty authored identity"), "Arc", vec![PathSegment::Move { to: [10.0, 10.0] }, PathSegment::Arc { rx: 20.0, ry: 20.0, rotation: 0.0, large_arc: false, sweep: true, to: [50.0, 10.0] }, PathSegment::Quad { ctrl: [30.0, 60.0], to: [10.0, 10.0] }, PathSegment::Close].into());
     layer_base_mut(&mut arc).attributes.fill = Some(FillStyle::RadialGradient { cx: 30.0, cy: 20.0, r: 25.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 0.0, 1.0] }].into() });
     doc.layers.push(arc);
 
@@ -154,7 +154,7 @@ fn numbers_and_strings_follow_the_pdf_lexicon() {
 
 #[test]
 fn text_export_preserves_lines_origin_and_paint_modes() {
-    let mut text = create_drawing_text_layer("Lines");
+    let mut text = create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Lines")).to_string().into()).expect("nonempty authored identity"), "Lines");
     let DrawingLayerNode::Text(body) = &mut text else { unreachable!() };
     body.x = 7.0;
     body.y = 11.0;

@@ -166,3 +166,31 @@ test("SQLite remodeling refuses contradictory independently edited structured ow
   const db=Database.deserialize(bytes);try{db.run("PRAGMA foreign_keys=OFF");db.run("PRAGMA ignore_check_constraints=ON");db.run(sql);await expect(ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow()}finally{db.close()}
  }
 });
+
+test("SQLite remodeling restores independently reordered physical tables and refuses changed owners",async()=>{
+ const snapshot=ownerPhysical0.decodeRemodelingSnapshot(laws.snapshotJson),database=await ownerSqlite0.remodelingSnapshotToSqliteDatabase(snapshot);
+ for(const order of laws.tableOrder.admitted){
+  const tables=order==="reversed"?[...database.tables].reverse():order==="rotated"?[...database.tables.slice(7),...database.tables.slice(0,7)]:database.tables;
+  const oracle=Database.deserialize(await exportSqliteDatabase({...database,tables}));
+  try{
+   expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});
+   expect(oracle.query("PRAGMA foreign_key_check").all()).toEqual([]);
+   expect(oracle.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY rowid").all()).toEqual(tables.map(table=>({name:table.name})));
+   const restoredDatabase=await importSqliteDatabase(new Uint8Array(oracle.serialize()));
+   expect(restoredDatabase.tables.map(table=>table.name)).toEqual(tables.map(table=>table.name));
+   expect(await ownerSqlite0.remodelingSnapshotFromSqliteDatabase(restoredDatabase)).toEqual(snapshot);
+   console.log("[DEBUG] Remodeling original physical table order restores",order,tables.length);
+  }finally{oracle.close()}
+ }
+ const bytes=await exportSqliteDatabase(database);
+ for(const changed of laws.tableOrder.refused){
+  const oracle=Database.deserialize(bytes);
+  try{
+   oracle.run("PRAGMA foreign_keys=OFF");
+   oracle.run(changed==="renamed"?"ALTER TABLE remodel_document RENAME TO unexpected_document":"DROP TABLE remodel_document");
+   expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});
+   await expect(ownerSqlite0.remodelingSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(oracle.serialize())))).rejects.toThrow();
+   console.log("[DEBUG] Remodeling changed physical table owner refused",changed);
+  }finally{oracle.close()}
+ }
+},15000);

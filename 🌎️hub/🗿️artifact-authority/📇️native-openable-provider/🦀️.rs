@@ -102,7 +102,7 @@ fn preview_gis_bindings(version: &str, context: &OperationContext<'_>) -> Result
             return Err(rejected());
         }
         context.checkpoint()?;
-        bindings.push(NativeCodecBinding::new(identity.plugin_id, identity.package_id, identity.artifact_kind, codec));
+        bindings.push(NativeCodecBinding::new(identity.plugin_id, identity.package_id, identity.artifact_kind, Some(identity.factory_id.to_owned()), codec));
     }
     Ok(bindings)
 }
@@ -130,7 +130,7 @@ fn preview_vcs_bindings(version: &str, context: &OperationContext<'_>) -> Result
             return Err(rejected());
         }
         context.checkpoint()?;
-        bindings.push(NativeCodecBinding::new(identity.plugin_id, identity.package_id, identity.artifact_kind, codec));
+        bindings.push(NativeCodecBinding::new(identity.plugin_id, identity.package_id, identity.artifact_kind, Some(identity.factory_id.to_owned()), codec));
     }
     if factories.len() != NATIVE_VCS_PROVIDER_RECEIPTS || artifacts.len() != NATIVE_VCS_PROVIDER_RECEIPTS {
         return Err(rejected());
@@ -185,7 +185,7 @@ impl NativeOpenableCatalogProviderV1 {
             if codec.schema != receipt.schema || codec.extension != receipt.extension || codec.pack_schema_hash != receipt.pack_schema_hash {
                 return Err(provider_error(format!("factory {} result differs from its receipt", receipt.factory_id)));
             }
-            bindings.push(NativeCodecBinding::new(receipt.plugin_id, receipt.package_id, receipt.artifact_kind, codec));
+            bindings.push(NativeCodecBinding::new(receipt.plugin_id, receipt.package_id, receipt.artifact_kind, Some(receipt.factory_id), codec));
         }
         if factories != expected_factories || descriptor_codecs != expected_descriptors || artifact_schemas != expected_pairs {
             return Err(provider_error("provider receipt closure is incomplete"));

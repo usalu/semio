@@ -1,0 +1,15 @@
+# Sync Original Shared Actor Next Current
+
+Read-only 2026-10-09; no edits/runtime.
+
+Actual cold socket producer: Store sync `ConnectedDocumentSocket.socket_actor`2084String receives original socket.actor_id by move3087 after real dial/admission. Current start_connect_hub3024–3051 captures actual hub source/expectation/cancellation, but no RetainedCloneGrant/Native control is available in this narrow path. Hub socket authorization grant is network permission, not physical five-axis ownership grant. Do not reinterpret it or SQL max as storage funding.
+
+Clean one-birth boundary is original socket admission result before ConnectedDocumentSocket publication: supply domain-owned physical admission grant and adopt actual returned owned String once through SharedUtf8::admit. On rejection retain original String and close actual stream under caller's operation owner. Keep ConnectedDocumentSocket2084 and live socket_actor2255 SharedUtf8 thereafter; connection publish/relay3628 reuse actual lease, not .into/to_string per envelope. Exact cold source string capacity must be funded, including empty capacity and Arc frame. Existing grant-source issuer/admitted connect operation needs physical authority extension if none already present; adding unlimited local grant is not authorized.
+
+History envelopes999–1006 already receives original edit/meta actor shared owner. Choose actual meta author or actual edit actor; if both absent refuse meaningful missing provenance instead of fake unknown. Function currently has no physical lease grant; either consume existing actor ownership from owned edit, borrow identity for immediate serialization, or accept original turn grant for shared lease retained in new envelope. Clone pointer preserves bytes but explicit lease bookkeeping is separate receipt requirement.
+
+Preview is live shared identity from decoded ServerFrame. ArtifactEvent669 currentlyString, Native handler3523 and wasm5085 move actor.0SharedUtf8. Change actual event field to SharedUtf8 and move same actual owner; downstream display can borrow as_str. No new payload allocation is required. Caller that persists/copies identity separately must supply physical grant; do not to_string in event fanout.
+
+Relay3617 clones live socket actor and3628 creates one ActorId per envelope. SharedUtf8 retains original actor allocation; authenticate all envelopes against actual connected owner. A funded lease per retained envelope needs actual relay-turn owner policy, not descriptive loop length converted into authorization. Queue/outbox original ownership/cancellation remains separate; no fresh actor or hidden Arc births.
+
+Both native and wasm paths have analogous socket_actor/preview fields; carry same schema-neutral actor string semantics. Add neutral adoption policy and runtime pointer/capacity test at genuine connect admission, live preview move, relay lease/refusal original retained owner. No actual physical grant found in requested scope; required issuer extension is explicit, not assumed.

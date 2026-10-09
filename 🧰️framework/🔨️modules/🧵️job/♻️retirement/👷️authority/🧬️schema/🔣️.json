@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "policy",
+    "stages",
+    "removal",
+    "bodyWords",
+    "wordBytes",
+    "ledgerBytes",
+    "authorityBytes",
+    "denied",
+    "jobRemoval",
+    "jobPresenceBytes",
+    "inlineJobBytes",
+    "paramsPhases",
+    "paramsRetain",
+    "paramsTerminalDrop",
+    "sessionPhases",
+    "sessionAliases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "job-worker-authority-retirement.v1"
+    },
+    "policy": {
+      "const": {
+        "items": 1,
+        "copy": 4096,
+        "capacity": 65536,
+        "release": 262144,
+        "depth": 64
+      }
+    },
+    "stages": {
+      "const": [
+        "ledger",
+        "authority-backing",
+        "parent-complete"
+      ]
+    },
+    "removal": {
+      "const": "original-terminal-authority-in-place"
+    },
+    "bodyWords": {
+      "const": 3
+    },
+    "wordBytes": {
+      "const": [
+        4,
+        8
+      ]
+    },
+    "ledgerBytes": {
+      "const": 128
+    },
+    "authorityBytes": {
+      "const": [
+        20960,
+        65536
+      ]
+    },
+    "denied": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "jobRemoval": {
+      "const": "original-terminal-job-in-place"
+    },
+    "jobPresenceBytes": {
+      "const": 1
+    },
+    "inlineJobBytes": {
+      "const": [
+        0,
+        8192
+      ]
+    },
+    "paramsPhases": {
+      "const": [
+        "original-params-transfer",
+        "original-cancellation",
+        "terminal-cursor-transfer"
+      ]
+    },
+    "paramsRetain": {
+      "const": "original-cancel-pointer-and-ancestors"
+    },
+    "paramsTerminalDrop": {
+      "const": 0
+    },
+    "sessionPhases": {
+      "const": [
+        "original-authority-empty",
+        "original-session-arc-release",
+        "original-retirement-slot-release"
+      ]
+    },
+    "sessionAliases": {
+      "const": [
+        0,
+        1,
+        3
+      ]
+    }
+  }
+}

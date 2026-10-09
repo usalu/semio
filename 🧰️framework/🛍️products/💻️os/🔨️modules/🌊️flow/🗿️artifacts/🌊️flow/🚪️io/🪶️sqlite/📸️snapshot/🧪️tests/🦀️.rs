@@ -86,18 +86,27 @@ impl std::ops::Deref for Owned {
 impl Drop for Owned {
     fn drop(&mut self) {
         if let Some(snapshot) = self.0.take() {
-            let mut cursor = semio_framework_value::retirement::owned_retirement(snapshot);
-            loop {
-                match cursor.close_step(256, usize::MAX).unwrap() {
-                    store::SnapshotRetirementStep::Complete => break,
-                    store::SnapshotRetirementStep::Pending { .. } => {}
-                    store::SnapshotRetirementStep::Blocked => panic!("framework Flow retirement blocked"),
-                }
+            let mut cursor=semio_framework_value::retirement::controlled::ControlledRetirement::new(snapshot).ok().unwrap();
+            while !cursor.terminal_is_empty(){
+                let copy=cursor.next_copy_byte_demand().unwrap();
+                let grant=semio_framework_value::RetainedCloneGrant{maximum_items:256,maximum_copy_bytes:copy,maximum_capacity_bytes:cursor.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:cursor.next_release_byte_demand().unwrap(),maximum_depth:cursor.next_depth_demand().unwrap()};
+                cursor.step(grant).unwrap();
             }
-            assert!(cursor.terminal_is_empty());
         }
     }
 }
+/// 🧪️ Cold fixture controls carry explicit caller authority and retire original rejected recipients.
+fn with_native_control<T>(operation:impl FnOnce(&mut store::io::io_mechanism::IoRunControl<'_, '_>)->T)->T{
+    let maximum=16<<20;let mut receive=|_|true;let mut publish=|_|true;
+    let mut decode=semio_framework_value::NativeDecodeControl::new(maximum,&mut receive);
+    let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut publish);
+    let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:maximum,maximum_capacity_bytes:maximum,maximum_release_bytes:maximum,maximum_depth:512};
+    let mut control=store::io::io_mechanism::IoRunControl::new(&mut decode,&mut encode,grant);let result=operation(&mut control);
+    {let mut owner=control.snapshot_decode().unwrap();while owner.native().has_retirement_owner(){let grant=owner.remaining_grant();let step=owner.native().close_retirement_recipient(grant);let progress=match &step{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};owner.record_progress(progress).unwrap();step.unwrap();}}
+    {let mut owner=control.snapshot_encode().unwrap();while owner.native().has_retirement_owner(){let grant=owner.remaining_grant();let step=owner.native().close_retirement_recipient(grant);let progress=match &step{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};owner.record_progress(progress).unwrap();step.unwrap();}}
+    result
+}
+
 fn observe(value: &DslValue) -> serde_json::Value {
     match value {
         DslValue::Null => serde_json::json!(["null"]),
@@ -309,7 +318,7 @@ fn sqlite_snapshot_framework_flow_erased_both_formats_expose_persisted_entities(
             SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
             SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
         };
-        let result = (capability.export)("flow.host_snapshot", &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()));
+        let result = with_native_control(|native|(capability.export)("flow.host_snapshot", &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),&mut native.snapshot_decode().unwrap()));
         let database = result.unwrap().value;
         assert_eq!(database.tables.len(), 37);
         assert_eq!(database.table("flow_document").unwrap().single_row().unwrap().text(1).unwrap(), "");
@@ -317,7 +326,7 @@ fn sqlite_snapshot_framework_flow_erased_both_formats_expose_persisted_entities(
         let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
         let bytes = independent_sqlite_file(&bytes);
         let database = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-        let payload = (capability.import)("flow.host_snapshot", &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+        let payload = with_native_control(|native|(capability.import)("flow.host_snapshot", &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),&mut native.snapshot_encode().unwrap())).unwrap().value;
         let actual = Owned::new(match payload {
             store::io_schema::IoPayload::Binary(bytes) => FlowHostSnapshot::decode_pack(&bytes).unwrap(),
             store::io_schema::IoPayload::Text(text) => FlowHostSnapshot::parse_dsl(&text).unwrap(),
@@ -366,7 +375,7 @@ fn sqlite_snapshot_framework_flow_native_output_cancels_inside_owned_text_copy()
 async fn sqlite_snapshot_framework_flow_public_io_reaches_actual_persisted_owner_in_both_formats() {
     use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
     use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,store::io_schema::IoPayload,store::io_schema::IoFidelity,store::io_schema::SQLITE_SNAPSHOT};
-    use store::sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotPhase};
+    use store::sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotPhase};
     let codec = store::ArtifactCodec::bare::<FlowHostSnapshot, FlowMutation>(FLOW_DOCUMENT_SCHEMA);
     store::io::register_native_document_codec(Dialect { artifact_kind: "flow.host_snapshot", standard: StandardId("1"), subset: SubsetId("*") }, codec).unwrap();
     let dialect = ArtifactDialect { artifact_kind: laws()["documentSchema"].as_str().unwrap().into(), standard: "1".into(), subset: "*".into() };
@@ -381,12 +390,12 @@ async fn sqlite_snapshot_framework_flow_public_io_reaches_actual_persisted_owner
             SnapshotEncoding::Text => IoPayload::Text(expected.print_dsl()),
         };
         let mut phases = Vec::new();
-        let output = io_run_with_snapshot_control(&export, payload, SqliteDatabaseLimits::default(), &mut |event| { phases.push(event.phase); true }).await.expect("framework Flow native state must reach public physical SQLite").value;
+        let output = with_native_control(|native|io_run_with_snapshot_control(&export, payload,native,&mut SqliteSnapshotControl::new(&mut |event|{phases.push(event.phase);true},SqliteDatabaseLimits::default()))).await.expect("framework Flow native state must reach public physical SQLite").value;
         let IoPayload::Binary(bytes) = output else { panic!("SQLite endpoint must return binary"); };
         for phase in [SqliteSnapshotPhase::DecodeNative, SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::WritePages] { assert!(phases.contains(&phase)); }
         let bytes = independent_sqlite_file_with_metadata(&bytes, Some(encoding));
         phases.clear();
-        let payload = io_run_with_snapshot_control(&import, IoPayload::Binary(bytes), SqliteDatabaseLimits::default(), &mut |event| { phases.push(event.phase); true }).await.expect("independently serialized SQLite must reach framework Flow native state").value;
+        let payload = with_native_control(|native|io_run_with_snapshot_control(&import, IoPayload::Binary(bytes),native,&mut SqliteSnapshotControl::new(&mut |event|{phases.push(event.phase);true},SqliteDatabaseLimits::default()))).await.expect("independently serialized SQLite must reach framework Flow native state").value;
         for phase in [SqliteSnapshotPhase::ReadPages, SqliteSnapshotPhase::ReconstructSnapshot, SqliteSnapshotPhase::EncodeNative] { assert!(phases.contains(&phase)); }
         let actual = Owned::new(match payload {
             IoPayload::Binary(bytes) => FlowHostSnapshot::decode_pack(&bytes).unwrap(),

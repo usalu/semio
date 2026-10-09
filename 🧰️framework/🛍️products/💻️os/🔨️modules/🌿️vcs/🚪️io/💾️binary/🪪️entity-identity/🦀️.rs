@@ -74,7 +74,7 @@ pub fn mint_child_id(parent_id:&str,slot:&str,fingerprint:&[u8],ordinal:u32,cont
 fn compare_identity_text(left:&str,right:&str,control:&mut NativeEncodeControl<'_>)->Result<std::cmp::Ordering,ValueError>{let length=left.len().min(right.len());for offset in(0..length).step_by(256){let end=length.min(offset+256);control.advance(end-offset)?;let order=left.as_bytes()[offset..end].cmp(&right.as_bytes()[offset..end]);if order!=std::cmp::Ordering::Equal{return Ok(order);}}Ok(left.len().cmp(&right.len()))}
 fn ordered_fingerprints<'a>(values:&'a[(String,Vec<u8>)],control:&mut NativeEncodeControl<'_>)->Result<Vec<(usize,&'a(String,Vec<u8>))>,ValueError>{
     control.begin_stage(0)?;let mut ordered=control.allocate_vec(values.len())?;for(index,value)in values.iter().enumerate(){control.step()?;ordered.push((index,value));}
-    fn greater(left:(usize,&(String,Vec<u8>)),right:(usize,&(String,Vec<u8>)),control:&mut NativeEncodeControl<'_>)->Result<bool,ValueError>{let order=compare_identity_text(&left.1.0,&right.1.0,control)?;Ok(order==std::cmp::Ordering::Greater||(order==std::cmp::Ordering::Equal&&left.0>right.0))}
+    fn greater(left:(usize,&(String,Vec<u8>)),right:(usize,&(String,Vec<u8>)),control:&mut NativeEncodeControl<'_>)->Result<bool,ValueError>{control.step()?;let order=compare_identity_text(&left.1.0,&right.1.0,control)?;Ok(order==std::cmp::Ordering::Greater||(order==std::cmp::Ordering::Equal&&left.0>right.0))}
     fn sift(values:&mut[(usize,&(String,Vec<u8>))],mut root:usize,length:usize,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{loop{let Some(mut child)=root.checked_mul(2).and_then(|value|value.checked_add(1)).filter(|child|*child<length)else{return Ok(())};if child+1<length&&greater(values[child+1],values[child],control)?{child+=1;}if !greater(values[child],values[root],control)?{return Ok(());}values.swap(root,child);root=child;}}
     let length=ordered.len();for root in(0..length/2).rev(){sift(&mut ordered,root,length,control)?;}for end in(1..length).rev(){ordered.swap(0,end);sift(&mut ordered,0,end,control)?;}Ok(ordered)
 }
@@ -87,3 +87,12 @@ pub fn mint_space_checkpoint_id(message:&str,pins:&[u8],control:&mut NativeEncod
 
 /// 🌿️ Commits the Space alternative name and its ordered logical checkpoint ids.
 pub fn mint_space_alternative_id(name:&str,ids:&[String],control:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{let mut output=NativeIdentityPreimage::new("space-alternative",control)?;output.write(name.as_bytes(),control)?;output.write(&[0],control)?;for(index,id)in ids.iter().enumerate(){if index!=0{output.write(&[0],control)?;}output.write(id.as_bytes(),control)?;}output.finish(control)}
+
+fn decimal_u64(mut value:u64,buffer:&mut[u8;20])->&[u8]{let mut start=buffer.len();loop{start-=1;buffer[start]=b'0'+(value%10)as u8;value/=10;if value==0{break;}}&buffer[start..]}
+
+/// 🏙️ Commits logical draft metadata and caller sequence without constructing packed text.
+pub fn mint_draft_id(kind:&str,schema:&str,name:&str,now:u64,sequence:u64,control:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{
+    let mut time_digits=[0;20];let mut sequence_digits=[0;20];let time=decimal_u64(now,&mut time_digits);let sequence=decimal_u64(sequence,&mut sequence_digits);
+    let length=add(add(add(add(add(10,kind.len())?,schema.len())?,name.len())?,time.len())?,sequence.len())?;
+    identity("draft",length,control,|input|{for part in[b"draft\0".as_slice(),kind.as_bytes(),&[0],schema.as_bytes(),&[0],name.as_bytes(),&[0],time,&[0],sequence]{input.span(part)?;}Ok(())})
+}

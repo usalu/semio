@@ -24,37 +24,46 @@ pub fn force_snapshot_json(source:&str,options:&str,decode:&mut NativeDecodeCont
 pub fn snap_snapshot_json(source:&str,decode:&mut NativeDecodeControl<'_>,work:&mut LayoutControl<'_>,encode:&mut NativeEncodeControl<'_>)->Result<String,LayoutIoError>{let mut snapshot=crate::infinite::board::io::text::snapshot::decode_board_snapshot_json(source,decode)?;redraw::snap_edge_handles(&mut snapshot,work)?;Ok(semio_framework_pack_json::to_json_string_controlled(&snapshot,encode)?)}
 
 use semio_framework_value_derive::FromValue;
+struct Defaulted<T>(Option<T>);
+impl<T> Default for Defaulted<T>{fn default()->Self{Self(None)}}
+impl<T> Defaulted<T>{fn unwrap_or(self,value:T)->T{self.0.unwrap_or(value)}}
+impl<T:semio_framework_value::FromValue> semio_framework_value::FromValue for Defaulted<T>{
+ fn from_value(value:semio_framework_value::DslValue)->Result<Self,ValueError>{T::from_value(value).map(|value|Self(Some(value)))}
+ fn from_value_controlled(value:&semio_framework_value::DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{T::from_value_controlled(value,control).map(|value|Self(Some(value)))}
+ fn default_value_controlled(control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.checkpoint()?;Ok(Self(None))}
+ fn retire_decoded(self){if let Some(value)=self.0{T::retire_decoded(value)}}
+}
 #[derive(FromValue)]
 #[value(rename_all="camelCase",deny_unknown_fields)]
 struct ForceAdmission {
  #[value(default)]
- iterations:Option<u32>,
+ iterations:Defaulted<u32>,
  #[value(default)]
- ideal_edge_length:Option<f64>,
+ ideal_edge_length:Defaulted<f64>,
  #[value(default)]
- repulsion_strength:Option<f64>,
+ repulsion_strength:Defaulted<f64>,
  #[value(default)]
- spring_strength:Option<f64>,
+ spring_strength:Defaulted<f64>,
  #[value(default)]
- gravity:Option<f64>,
+ gravity:Defaulted<f64>,
  #[value(default)]
  center_x:Option<f64>,
  #[value(default)]
  center_y:Option<f64>,
  #[value(default)]
- time_step:Option<f64>,
+ time_step:Defaulted<f64>,
  #[value(default)]
- velocity_damping:Option<f64>,
+ velocity_damping:Defaulted<f64>,
  #[value(default)]
- max_speed:Option<f64>,
+ max_speed:Defaulted<f64>,
  #[value(default)]
- random_seed:Option<u64>,
+ random_seed:Defaulted<u64>,
  #[value(default)]
- barnes_hut_theta:Option<f64>,
+ barnes_hut_theta:Defaulted<f64>,
  #[value(default)]
- pairwise_repulsion_max_bodies:Option<u32>,
+ pairwise_repulsion_max_bodies:Defaulted<u32>,
  #[value(default)]
- locked_node_ids:Option<Vec<String>>,
+ locked_node_ids:Defaulted<Vec<String>>,
 }
 impl ForceAdmission {fn admit(self,control:&mut NativeDecodeControl<'_>)->Result<ForceGraphLayoutOptions,ValueError>{
  control.checkpoint()?;let defaults=ForceGraphLayoutOptions::default();Ok(ForceGraphLayoutOptions {
@@ -77,37 +86,36 @@ impl ForceAdmission {fn admit(self,control:&mut NativeDecodeControl<'_>)->Result
 #[value(rename_all="camelCase",deny_unknown_fields)]
 struct TreeAdmission {
  #[value(default)]
- layer_spacing:Option<f64>,
+ layer_spacing:Defaulted<f64>,
  #[value(default)]
- sibling_gap:Option<f64>,
+ sibling_gap:Defaulted<f64>,
  #[value(default)]
- direction:Option<String>,
+ direction:Defaulted<String>,
  #[value(default)]
  center_x:Option<f64>,
  #[value(default)]
  center_y:Option<f64>,
  #[value(default)]
- locked_node_ids:Option<Vec<String>>,
+ locked_node_ids:Defaulted<Vec<String>>,
 }
 impl TreeAdmission {fn admit(self,control:&mut NativeDecodeControl<'_>)->Result<HierarchicalTreeLayoutOptions,ValueError>{
- if self.direction.is_none(){control.charge("downwards".len())?;control.checkpoint()?;}
- let defaults=HierarchicalTreeLayoutOptions::default();Ok(HierarchicalTreeLayoutOptions {
- layer_spacing:self.layer_spacing.unwrap_or(defaults.layer_spacing),
- sibling_gap:self.sibling_gap.unwrap_or(defaults.sibling_gap),
- direction:self.direction.unwrap_or(defaults.direction),
+ let direction=match self.direction.0{Some(value)=>value,None=>{control.charge("downwards".len())?;control.checkpoint()?;default_direction()}};Ok(HierarchicalTreeLayoutOptions {
+ layer_spacing:self.layer_spacing.unwrap_or(default_tree_layer_spacing()),
+ sibling_gap:self.sibling_gap.unwrap_or(default_tree_sibling_gap()),
+ direction:direction,
  center_x:self.center_x,
  center_y:self.center_y,
- locked_node_ids:self.locked_node_ids.unwrap_or(defaults.locked_node_ids),
+ locked_node_ids:self.locked_node_ids.unwrap_or(Vec::new()),
  })}}
 #[derive(FromValue)]
 #[value(rename_all="camelCase",deny_unknown_fields)]
 struct DagAdmission {
  #[value(default)]
- layer_spacing:Option<f64>,
+ layer_spacing:Defaulted<f64>,
  #[value(default)]
- sibling_gap:Option<f64>,
+ sibling_gap:Defaulted<f64>,
  #[value(default)]
- orientation:Option<DagLayoutOrientation>,
+ orientation:Defaulted<DagLayoutOrientation>,
  #[value(default)]
  center_x:Option<f64>,
  #[value(default)]

@@ -1,0 +1,40 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📋️project.json",
+      "sha256": "dceba8d14ceef22b5b905680c4112d2e08646f5be9ad2830a2ef6b12dbc50882"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📜️script.ts",
+      "sha256": "01a2fbdf609f6bd0fc30a9a51a969e1acf2bc3fc3049dbb9b2abc7bc9740430d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "sha256": "6d7e248129c033ac99d6db41f88302158153427556a6380bef7aca28db953293"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "sha256": "7a210115535e46e26ce593f68f2bd4ef84f7f276d304315ded2403999f266b8f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+      "sha256": "4e1cc15199b3205f25efdfa2685dbf8578bf8674f37e4b9025960b553d03cac0"
+    }
+  ],
+  "specimens": [
+    {
+      "source": "new Mutator(input); new Ajv().validate(schema,input);",
+      "expectation": "unresolved input origin: unknown constructor may mutate passed original document"
+    },
+    {
+      "source": "const unused={first:opaque(),second:(input.changed=true)}; ajv.validate(schema,input);",
+      "expectation": "unresolved input origin: later object initializer mutates original"
+    },
+    {
+      "source": "const unused=[...mutate(input)]; ajv.validate(schema,input);",
+      "expectation": "explicit unsupported spread plus operand side effects"
+    }
+  ]
+}

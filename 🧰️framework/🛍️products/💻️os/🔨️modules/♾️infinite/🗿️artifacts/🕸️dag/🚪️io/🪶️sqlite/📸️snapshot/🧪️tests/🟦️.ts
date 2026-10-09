@@ -100,3 +100,10 @@ test("framework DAG port intrinsic presence keeps authored null distinct from ab
     expect(db.query("WITH port(id) AS (VALUES(1),(2)) SELECT port.id,v.id IS NOT NULL AS present,i.variant FROM port LEFT JOIN dag_port_value v ON v.port_id=port.id LEFT JOIN dag_intrinsic_value i ON i.id=v.value_id ORDER BY port.id").all()).toEqual([{id:1,present:1,variant:"null"},{id:2,present:0,variant:null}]);
   } finally { db.close(); }
 });
+
+test("framework DAG neutral retirement currencies retain complete authored mutation ownership",()=>{
+ expect(fixture.retirement).toEqual({items:1,copyBytes:[1,7,4096],birthRefusals:["zeroItems","shortCapacity","zeroDepth"],conservation:"originalBackingPlusAdmittedBirthsEqualsPhysicalRelease",sharedAliases:"retainUntilUnique",mutations:14});
+ const db=new Database(":memory:");
+ try{db.exec("CREATE TABLE custody(original INTEGER NOT NULL,born INTEGER NOT NULL,released INTEGER NOT NULL,CHECK(original+born=released)); CREATE TABLE alias_custody(aliases INTEGER NOT NULL,physicalRelease INTEGER NOT NULL,CHECK(aliases=1 OR physicalRelease=0))");db.query("INSERT INTO custody VALUES(?,?,?)").run(17,320,337);expect(db.query("SELECT original+born=released AS conserved FROM custody").get()).toEqual({conserved:1});expect(()=>db.query("INSERT INTO custody VALUES(?,?,?)").run(17,320,336)).toThrow();db.query("INSERT INTO alias_custody VALUES(?,?)").run(2,0);expect(()=>db.query("INSERT INTO alias_custody VALUES(?,?)").run(2,88)).toThrow();db.query("INSERT INTO alias_custody VALUES(?,?)").run(1,88);}finally{db.close();}
+ console.log("[DEBUG] Independent SQLite enforces authored physical custody conservation and neutral five-currency policy");
+});

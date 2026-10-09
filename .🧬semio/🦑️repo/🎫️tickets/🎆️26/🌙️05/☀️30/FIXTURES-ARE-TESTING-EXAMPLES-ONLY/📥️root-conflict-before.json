@@ -1,0 +1,9 @@
+{
+  "originalObservations": {
+    "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json": "651ada00b667d08efc6d9786cc60dfd1a6959e372bcffa4cbb7abdea5f121a0a",
+    "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts": "493bd5971db5f87a1cc331759b1f021fa905334b9ae3db94cb55daf9aeb888da",
+    "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧫️fixtures/🔣️.json": "48b1f2d49cddc86f330281fe2739da40792362bc8e495f825dbb5d13116f890c",
+    "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🦀️.rs": "7775cfb749a180a8946b43429ee7bd28eb381f4375f842a2b8e1e9bf7ccd3e91"
+  },
+  "plainAndRustObservationsOnly": true
+}

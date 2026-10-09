@@ -81,8 +81,9 @@ impl<P: Send + Sync + 'static> PresenceStoreRetirement<P> {
                 Err((error, original)) => { **slot = Some(original); Err(error) },
             };
         }
+        let custody = if self.base_root.is_some() { PresencePeerRootCustody::BaseAlias } else { PresencePeerRootCustody::Displaced };
         let root = if self.base_root.is_some() { self.base_root.take() } else { self.peers.take() };
-        if let Some(root) = root { *self.active_peers = Some(PresencePeersRetirement::from_root(root, self.peer_factory.clone())); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
+        if let Some(root) = root { *self.active_peers = Some(PresencePeersRetirement::from_root(root, self.peer_factory.clone(), custody)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
         if let Some(reads) = self.reads.as_ref() { if !reads.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(Default::default())); } return snapshot_registry_alias_close_step(&mut self.reads, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.local_factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close[0] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
         if let Some(factory) = self.peer_factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close[1] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }

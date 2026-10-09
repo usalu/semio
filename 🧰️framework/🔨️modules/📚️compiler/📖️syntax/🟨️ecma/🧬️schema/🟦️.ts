@@ -35,6 +35,7 @@ export interface EcmaExpression {
   readonly start: number;
   readonly end: number;
   readonly kind: string;
+  readonly async?: boolean;
   readonly name?: string;
   readonly operator?: string;
   readonly value?: string;
@@ -60,6 +61,7 @@ export interface EcmaStatement {
   readonly start: number;
   readonly end: number;
   readonly kind: string;
+  readonly async?: boolean;
   readonly imports?: readonly EcmaImportBinding[];
   readonly name?: string;
   readonly base?: EcmaExpression;

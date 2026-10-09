@@ -1,0 +1,9 @@
+{
+  "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+  "before": "b4d39afef25b2bac982f05a5648c961460d19d1a67d72ce9b9e01ed90a7a78e6",
+  "after": "f3c8dcd3de180e64a1d90bd33a091fc8be12e235a3dfc9c108d1f2828dcdf4a4",
+  "blocks": [
+    "NativeSnapshotEncodeOwner stored checked receipt wallet"
+  ],
+  "sourceCopies": false
+}

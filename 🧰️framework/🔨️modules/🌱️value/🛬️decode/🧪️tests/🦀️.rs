@@ -214,3 +214,78 @@ fn paged_semantic_text_inline_stream_preserves128_and_full8194_without_shadow(){
     for mode in["initial","interior","ignored","short"]{let mut paged=PagedText::<{isize::MAX as usize}>::empty();let mut inline=InlineTextBuffer::empty();let mut active=false;let mut callback=|progress:crate::native_encoding::NativeEncodeProgress|mode!="interior"||progress.completed<256;let mut control=NativeEncodeControl::new(if mode=="initial"{4096}else{65536},&mut callback);let result=paged.encode_with_inline(&mut inline,&mut active,8194,&mut control,|output|{if mode=="short"{output.write_text("first")?;return Err(ValueError::new(ValueRefusalKind::Canceled,"intrinsic producer refused after short source"))}if mode=="ignored"{output.write_text("Set label to ")?;assert!(output.write_text(&payload).is_ok());assert!(output.write_text("too much after full8194").is_err());return Ok(())}write_encoding_format(output,format_args!("Set label to {}",payload))});assert!(result.is_err(),"{mode}");assert!(paged.borrow().is_err(),"{mode}");assert!(inline.borrow().is_err(),"{mode}");assert_eq!(paged.allocated_bytes(),control.owned_bytes());if mode=="initial"{assert!(active);assert_eq!(inline.as_bytes(),b"Set label to ");assert_eq!(paged.byte_len(),0);assert!(paged.allocated_bytes()>0&&paged.allocated_bytes()<=4096);}if mode=="interior"{assert!(active&&paged.byte_len()>0&&paged.byte_len()<8194);}if mode=="short"{assert!(!active);assert_eq!(inline.as_bytes(),b"first");assert_eq!(paged.allocated_bytes(),0);}let allocated=paged.allocated_bytes();assert_eq!(drain(&mut paged,&mut inline),allocated);}
     eprintln!("[DEBUG] intrinsic128 semantic formatter owns short text without heap, transfers bounded prefix into exact full8194 pages, retains actual inline+metadata at initial4096 and every partial/ignored/whole refusal until explicit1/4096 close");
 }
+
+
+#[test]
+fn controlled_value_borrowed_observers_preserve_complete_original_owner() {
+    use std::cell::{Cell, RefCell};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔭️observer/🔣️.json")).unwrap();
+    macro_rules! run {
+        ($control:ty, $progress:ty, $label:literal) => {{
+            for sample in fixture["cases"].as_array().unwrap() {
+                let parent_events = RefCell::new(Vec::new());
+                let observer_events = RefCell::new(Vec::new());
+                let active = Cell::new(false);
+                let capturing = Cell::new(false);
+                let mut parent = |event: $progress| {
+                    if capturing.get() { parent_events.borrow_mut().push(event.owned_bytes); }
+                    !active.get() || sample["parentRejectAt"].is_null() || event.owned_bytes < sample["parentRejectAt"].as_u64().unwrap() as usize
+                };
+                let mut control = <$control>::new(sample["maximumBytes"].as_u64().unwrap() as usize, &mut parent);
+                control.charge(sample["initialBytes"].as_u64().unwrap() as usize).unwrap();
+                capturing.set(true); active.set(true);
+                let mut observer = |event: $progress| {
+                    observer_events.borrow_mut().push(event.owned_bytes);
+                    sample["observerRejectAt"].is_null() || event.owned_bytes < sample["observerRejectAt"].as_u64().unwrap() as usize
+                };
+                let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| control.scoped_observer(&mut observer, |child| -> Result<(), ValueError> {
+                    child.begin_stage(0)?;
+                    let backing = child.allocate_vec::<u8>(sample["chargeBytes"].as_u64().unwrap() as usize)?;
+                    assert_eq!(backing.capacity(), sample["chargeBytes"].as_u64().unwrap() as usize);
+                    if sample["unwindAfterCharge"].as_bool().unwrap() { panic!("owned observer scope unwound"); }
+                    child.checkpoint()
+                })));
+                active.set(false); control.checkpoint().unwrap();
+                let outcome = match result {
+                    Ok(Ok(())) => "complete",
+                    Ok(Err(error)) if error.kind == ValueRefusalKind::Canceled => "canceled",
+                    Ok(Err(error)) if error.kind == ValueRefusalKind::OwnershipLimit => "ownershipLimit",
+                    Err(_) => "unwound",
+                    _ => panic!("unexpected borrowed observer result"),
+                };
+                let actual = serde_json::json!({"outcome":outcome,"ownedBytes":control.owned_bytes(),"maximumBytes":control.maximum_bytes(),"parentEvents":parent_events.borrow().as_slice(),"observerEvents":observer_events.borrow().as_slice()});
+                assert_eq!(actual, sample["expected"], "{} {}", $label, sample["id"]);
+                println!("[DEBUG] borrowed observer {} {} {}", $label, sample["id"], actual);
+            }
+        }};
+    }
+    run!(NativeDecodeControl<'_>, NativeDecodeProgress, "decode");
+    run!(semio_framework_value::native_encoding::NativeEncodeControl<'_>, semio_framework_value::native_encoding::NativeEncodeProgress, "encode");
+}
+
+#[test]
+fn native_decode_caller_buffer_retains_actual_partial_allocation_on_cancel(){
+ use crate::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement,value::observe_retirement_allocations};
+ let plain:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let source=plain["copyWorkload"]["text"].as_str().unwrap().repeat(plain["copyWorkload"]["repetitions"].as_u64().unwrap()as usize).into_bytes();
+ let cancel=plain["copyWorkload"]["cancelAt"].as_u64().unwrap()as usize;let policy=&plain["retainedCopyPolicy"];
+ let reached=std::cell::Cell::new((0usize,0usize));
+ let mut callback=|event:NativeDecodeProgress|{if event.total==source.len(){reached.set((reached.get().0+1,event.completed));event.completed<cancel}else{true}};
+ let mut native=NativeDecodeControl::new(policy["maximumBytes"].as_u64().unwrap()as usize,&mut callback);let mut output=Vec::new();
+ let(result,heap)=observe_retirement_allocations(||native.copy_bytes_into(&source,&mut output));
+ assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(heap,(output.capacity(),0));assert_eq!(output.len(),cancel);assert_eq!(output,&source[..cancel]);assert_eq!(reached.get(),(2,cancel));
+ let pointer=output.as_ptr();let before=(output.len(),output.capacity(),native.owned_bytes());
+ let(result,heap)=observe_retirement_allocations(||native.copy_bytes_into(&source,&mut output));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::InvariantViolated);assert_eq!(heap,(0,0));assert_eq!(output.as_ptr(),pointer);assert_eq!((output.len(),output.capacity(),native.owned_bytes()),before);
+ drop(native);drop(callback);
+ let grant:RetainedCloneGrant=serde_json::from_value(policy["closeGrant"].clone()).unwrap();let mut owner=ControlledRetirement::new(output).unwrap_or_else(|(error,_)|panic!("{error}"));
+ for _ in 0..policy["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let step=owner.step(grant).unwrap();assert!(step.progress().fits(grant));}
+ assert!(owner.terminal_is_empty());
+ println!("[DEBUG] Original native caller buffer cancel keeps partial pointer/capacity, System birth equals retained backing, refusal allocates0, immutable supplied close grant; Serde plain policy exact");
+}
+
+#[test]
+fn native_decode_original_utf8_destination_retains_cancelled_prefix_and_actual_physical_receipt(){
+ use crate::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement,value::observe_retirement_allocations as observe};
+ let plain:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let policy=&plain["retainedTextCopy"];let source=policy["prefix"].as_str().unwrap().repeat(policy["prefixRepeat"].as_u64().unwrap()as usize)+&policy["tail"].as_str().unwrap().repeat(policy["tailRepeat"].as_u64().unwrap()as usize);let normal:RetainedCloneGrant=serde_json::from_value(policy["normalGrant"].clone()).unwrap();let close:RetainedCloneGrant=serde_json::from_value(plain["retainedCopyPolicy"]["closeGrant"].clone()).unwrap();assert!(normal.maximum_items>=1&&normal.maximum_copy_bytes>=source.len()&&normal.maximum_capacity_bytes>=source.len()&&normal.maximum_depth>=1);
+ for cancel in policy["cancelAt"].as_array().unwrap().iter().map(|n|Some(n.as_u64().unwrap()as usize)).chain([None]){let charges=std::sync::atomic::AtomicUsize::new(0);let mut port=|event:crate::native_decoding::NativeDecodeAllocation|{charges.fetch_add(event.bytes,std::sync::atomic::Ordering::Relaxed);Ok(())};let mut reached=Vec::with_capacity(source.len()/65536+3);let mut callback=|event:NativeDecodeProgress|{if event.total==source.len(){reached.push(event.completed);cancel.is_none_or(|limit|event.completed<limit)}else{true}};let mut native=NativeDecodeControl::new_forwarded(policy["maximumBytes"].as_u64().unwrap()as usize,&mut callback,&mut port);native.begin_stage(17).unwrap();native.advance(3).unwrap();let mut output=String::new();let(result,heap)=observe(||native.copy_text_into(&source,&mut output));let progress=RetainedCloneProgress{copied_items:1,copied_bytes:output.len(),retained_capacity_bytes:heap.0,released_bytes:heap.1};assert!(progress.fits(normal));println!("[DEBUG] UTF8 original destination before physical equality cancelAt={cancel:?} actualHeap={heap:?} actualCapacity={} actualLength={} refusal={:?}",output.capacity(),output.len(),result.as_ref().err());assert_eq!(heap,(output.capacity(),0));assert_eq!(charges.load(std::sync::atomic::Ordering::Relaxed),source.len());assert_eq!(output,&source[..output.len()]);assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&output).unwrap()).unwrap(),source[..output.len()]);if cancel.is_some(){assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);}else{result.unwrap();assert_eq!(output,source);}let pointer=output.as_ptr();let before=(output.len(),output.capacity(),native.owned_bytes());if output.capacity()!=0{let(result,heap)=observe(||native.copy_text_into(&source,&mut output));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::InvariantViolated);assert_eq!(heap,(0,0));assert_eq!((output.as_ptr(),output.len(),output.capacity(),native.owned_bytes()),(pointer,before.0,before.1,before.2));}native.advance(14).unwrap();drop(native);drop(callback);drop(port);assert!(reached.iter().skip(1).all(|offset|source.is_char_boundary(*offset)));let mut owner=ControlledRetirement::new(output).unwrap();let(mut born,mut released)=(heap.0,0);for _ in 0..plain["retainedCopyPolicy"]["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break;}let(step,heap)=observe(||owner.step(close).unwrap());assert!(step.progress().fits(close));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;}assert!(owner.terminal_is_empty());assert_eq!(released,born);assert_eq!(observe(||drop(owner)),((),(0,policy["terminalDropBytes"].as_u64().unwrap()as usize)));println!("[DEBUG] original UTF8 destination cancelAt={cancel:?} prefix={} born={born} released={released}, same native capacity port, independent physical/copy receipt and Serde, unchanged parent stage, terminalDrop0",before.0);}
+}

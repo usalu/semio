@@ -122,7 +122,7 @@ fn subscribe_and_unsubscribe_stay_accepted_no_ops() {
 async fn bound_registry_reads_a_workspace_uri_through_to_the_live_backend() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), Arc::new(test_catalog())).expect("opens"));
-    workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "n": 1 })).await.expect("seed");
+    workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let registry = WorkspaceResourceRegistry::with_workspace(Arc::new(test_catalog()), workspace.clone());
 
     let workspace_contents = registry.read("semio://workspace").expect("bound workspace resolves");
@@ -140,7 +140,7 @@ async fn bound_registry_reads_a_workspace_uri_through_to_the_live_backend() {
 async fn a_bound_registry_lists_every_resource_uri_exactly_once() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), Arc::new(test_catalog())).expect("opens"));
-    workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "n": 1 })).await.expect("seed");
+    workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let listed = WorkspaceResourceRegistry::with_workspace(Arc::new(test_catalog()), workspace).list();
     let mut uris: Vec<&str> = listed.iter().map(|resource| resource.uri.as_str()).collect();
     let total = uris.len();

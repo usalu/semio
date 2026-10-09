@@ -16,7 +16,8 @@ use crate::Puzzle2dSnapshot;
 /// connection-parameter payload (`edge_kind`/`gap`/`shift`/`rise`/`rotation`/`turn`/`tilt`/`x`/`y`/
 /// `source_tip`/`target_tip`), proximity `tolerance` (`None`: no precondition), and final-state
 /// insertion `index` (`None`: append; an index past the end clamps to append).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]

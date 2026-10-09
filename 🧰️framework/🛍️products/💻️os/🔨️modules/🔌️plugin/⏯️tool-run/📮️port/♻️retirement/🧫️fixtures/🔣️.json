@@ -1,0 +1,1 @@
+{"grant":{"maximumItems":1,"maximumCopyBytes":4096,"maximumCapacityBytes":4096,"maximumReleaseBytes":262144,"maximumDepth":4096},"cases":[{"strong":2,"weak":0,"queued":1,"allowed":true},{"strong":1,"weak":0,"queued":0,"allowed":true},{"strong":1,"weak":0,"queued":1,"allowed":false},{"strong":1,"weak":1,"queued":0,"allowed":false}]}

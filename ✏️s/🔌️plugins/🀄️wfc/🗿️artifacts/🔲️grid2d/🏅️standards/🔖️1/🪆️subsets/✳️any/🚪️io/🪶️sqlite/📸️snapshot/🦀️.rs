@@ -33,8 +33,8 @@ impl Grid2dSnapshot{
 }
 impl ArtifactSqliteSnapshot for Grid2dSnapshot{
 const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
-fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let value=crate::standards::v1::subsets::any::io::text::snapshot::decode_sqlite_snapshot_native(payload,c)?;value.admit_sqlite_values(c,SqliteSnapshotPhase::DecodeNative)?;Ok(value)}
-fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;crate::standards::v1::subsets::any::io::text::snapshot::encode_sqlite_snapshot_native(self,encoding,c)}
+fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let value=crate::standards::v1::subsets::any::io::text::snapshot::decode_sqlite_snapshot_native(payload,c,native_control)?;value.admit_sqlite_values(c,SqliteSnapshotPhase::DecodeNative)?;Ok(value)}
+fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;crate::standards::v1::subsets::any::io::text::snapshot::encode_sqlite_snapshot_native(self,encoding,c,native_owner)}
 fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
  let mut rows=RowWriter::new(Self::SQLITE_SCHEMA,c)?;self.write_sqlite_rows(&mut rows)?;rows.finish()
 }

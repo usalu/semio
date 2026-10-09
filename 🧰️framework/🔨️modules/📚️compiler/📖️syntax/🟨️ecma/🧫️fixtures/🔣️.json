@@ -229,6 +229,46 @@
     {
       "id": "inline-trial",
       "source": "import Ajv from \"ajv\";import fixture from \"./examples.json\";new Ajv().compile({type:\"object\",required:[\"cases\",\"copyGrants\",\"expected\"],properties:{cases:{type:\"array\"},copyGrants:{type:\"array\"},expected:{type:\"object\"}}})(fixture);"
+    },
+    {
+      "id": "async-test-callback",
+      "source": "test(\"law\",async()=>{const schema=await Bun.file(new URL(\"./schema.json\",import.meta.url)).json();new Ajv().compile(schema)(law);});"
+    },
+    {
+      "id": "postfix-as-cast",
+      "source": "const rows=JSON.parse(read(\"./examples.json\")) as {cases:unknown[]};new Ajv().compile(schema)(rows);"
+    },
+    {
+      "id": "parenthesized-typed-arrow",
+      "source": "const read=(path:string)=>JSON.parse(readFileSync(new URL(path,import.meta.url),\"utf8\"));"
+    },
+    {
+      "id": "selected-local-ref",
+      "source": "new Ajv().addSchema(schema).compile({$ref:`${schema.$id}#/$defs/Grant`})(fixture.grant);"
+    },
+    {
+      "id": "escaped-template-binding",
+      "source": "const read=load;const ref=`${\\u0072ead(\"x\")}`;"
+    },
+    {
+      "id": "bun-await-chain",
+      "source": "const schema=await Bun.file(new URL(\"./schema.json\",import.meta.url)).json();"
+    },
+    {
+      "id": "namespace-new",
+      "source": "new oracle.Ajv().compile(schema)(law);"
+    },
+    {
+      "id": "postfix-satisfies",
+      "source": "const value=rows satisfies {cases:unknown[]};validate(value);"
+    },
+    {
+      "id": "async-helper",
+      "source": "const read=async(path:string)=>await Bun.file(new URL(path,import.meta.url)).json();read(\"x\");"
+    },
+    {
+      "id": "async-function",
+      "source": "async function read(path:string){return await Bun.file(new URL(path,import.meta.url)).json();}read(\"x\");"
     }
   ],
   "identifiers": [

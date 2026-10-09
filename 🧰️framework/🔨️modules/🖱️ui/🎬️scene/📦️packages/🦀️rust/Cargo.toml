@@ -29,6 +29,7 @@ ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", p
 # derived. Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
 protocol = { path = "../../../../📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-ui-viewport = { path = "../../../🪟️viewport/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
 
 [dependencies.semio-framework-geometry]
 path = "../../../../📐️geometry/📦️packages/🦀️rust"

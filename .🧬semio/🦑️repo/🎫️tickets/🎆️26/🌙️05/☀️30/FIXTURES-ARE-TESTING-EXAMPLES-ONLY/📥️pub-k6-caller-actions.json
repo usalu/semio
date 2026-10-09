@@ -1,0 +1,113 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🦀️.rs",
+    "beforeSha256": null,
+    "afterSha256": "ca0baa70e99465a7191adbcae390984a0f23bb57b59304da96ec257be0b651d0",
+    "preimageQualification": "literal before/after guarded edges retained; inline command wrote two files before a later peer-changed grant guard refused, so whole-file before hash was not persisted; no reconstructed source or before-hash claim",
+    "logicalScope": "only current exact caller identity and full independent original plain physical policy edges",
+    "actions": [
+      {
+        "beforeBlockSha256": "17fe006c2d7a747eaa511fdefbf2e17d244483f131b43e0339c5a4c775a25ca7",
+        "afterBlockSha256": "b0f57a9e90081ce1b0c2b13829fa152f6e8eb2463a7f5885924e93b0b80f6575",
+        "count": 1
+      },
+      {
+        "beforeBlockSha256": "9fe441acaee0cbb39994ae7d7b35b4cc7b32bc067fa3a662fcb1693f992f44bd",
+        "afterBlockSha256": "f516fc5fe1cea567d85edb10f4b0577959b577c5d0553eb8cd2ac9140902c130",
+        "count": 2
+      }
+    ],
+    "sourceCopies": false,
+    "currentObserverSha256": "605d4c3da9e42c6305a4a1d03697541ced2b95e7066b28e6c13367baad81f450",
+    "observerQualification": "Current whole-file observation only; peer changes not adopted or source freeze claimed."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/🦀️.rs",
+    "beforeSha256": null,
+    "afterSha256": "9954498e74cab2e529ca9f136443ce643db23f1005a20a5302fef77f0936720a",
+    "preimageQualification": "literal before/after guarded edges retained; inline command wrote two files before a later peer-changed grant guard refused, so whole-file before hash was not persisted; no reconstructed source or before-hash claim",
+    "logicalScope": "only current exact caller identity and full independent original plain physical policy edges",
+    "actions": [
+      {
+        "beforeBlockSha256": "2083ab7a28ece0de5ebe034874515bf9502a6ddcff8eccbf64abd72b00fdfb60",
+        "afterBlockSha256": "f8c5aa25dffd2b598b54cb61fa1b08f47dc62e5867eb9c9dc598e84c9c74763e",
+        "count": 1
+      },
+      {
+        "beforeBlockSha256": "4e4ec2b1fcb8d46f6998ae86d237e9c1bf31e73aa3fbc3f3e8b676a9692e76f2",
+        "afterBlockSha256": "a4538698c6dc0a0b8603cb122d5eee7b84cbbdd8199d0f553b981eea2f3492c1",
+        "count": 1
+      }
+    ],
+    "sourceCopies": false,
+    "currentObserverSha256": "90afcf969568c559deb97fdaaa75a1ec1f4533d1cb401d1c852a5a8322f53e52",
+    "observerQualification": "Current whole-file observation only; peer changes not adopted or source freeze claimed."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️tool-transaction/🦀️.rs",
+    "beforeSha256": "973cc5323217143e87378b856ae16dbac70fb1cd7703c1e7e7267aaa6976bd55",
+    "afterSha256": "c6e1f62f9c4863e69c160e7897a7c47fa81176de5ebe9e763f6efddb1e2fb33a",
+    "logicalScope": "only original same identity borrowed through missing dispatch/finalization and helper direct callers; no reset or new observer",
+    "actions": [
+      {
+        "beforeBlockSha256": "da547eedee5d9cdd022a950b42bf2c44b62f6b80663c8a3c4bba18fb63d3def2",
+        "afterBlockSha256": "cb561061454093ae4bec94238c6b72fff02b7a285018c080dbd355276142ac87",
+        "count": 1
+      }
+    ],
+    "sourceCopies": false,
+    "currentObserverSha256": "c6e1f62f9c4863e69c160e7897a7c47fa81176de5ebe9e763f6efddb1e2fb33a",
+    "observerQualification": "Current whole-file observation only; peer changes not adopted or source freeze claimed."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️viewer-head/🦀️.rs",
+    "beforeSha256": "81b8155a70180c3006f2b1958cd08e9a85854217930f73be354e1fe9aae03410",
+    "afterSha256": "5ccd944cae93d3b6d2857572fdc82c90ac0fc8abb6c5e969c77d3ce4958803ad",
+    "logicalScope": "only original same identity borrowed through missing dispatch/finalization and helper direct callers; no reset or new observer",
+    "actions": [
+      {
+        "beforeBlockSha256": "e27e80e51ce127e4c97b4153867055167c654dcc128ad16a8f18044bbc6d852c",
+        "afterBlockSha256": "0cc85acff2362d94a2316592374acb693e2c4402103adfe3fdb88ba1fc53a705",
+        "count": 1
+      },
+      {
+        "beforeBlockSha256": "4b7ed1c60098faf8c2f96fcc2ffacf5f74564e52b24a05dbdc61c261a632d358",
+        "afterBlockSha256": "195a7d415d5d1fd3fa5fe90e5a05c634b93b3d2cd14d8abcf9f8bd04cc3173f7",
+        "count": 1
+      },
+      {
+        "beforeBlockSha256": "a06c93248354abe23326a8760d45c24536bde1f619fdd461d04cc2b88decd907",
+        "afterBlockSha256": "0d132fae5b3bdb617577cf025e2b0d9eea1d1b3596df4d55d566beb1017d56e1",
+        "count": 1
+      },
+      {
+        "beforeBlockSha256": "d0e4522931d7f65db754dfab8974e62a9860d5db0b04de77e4c3570111664b78",
+        "afterBlockSha256": "e85e2c03c1e196b47d75b2a21c00095e7b7f3a238ca7bf8aabba456318d01b52",
+        "count": 1
+      },
+      {
+        "beforeBlockSha256": "e069ad2792d2e175865ee6958298c263e00e7aee253702d85f1fc361565aaf2d",
+        "afterBlockSha256": "3cc763e2acf0bd50f8d75a090859e499fcf32cbc6f474acc393e3597183b9d8f",
+        "count": 1
+      },
+      {
+        "beforeBlockSha256": "a76ae13881f3ad32191377483edb150939a4e2dd82bf263fce8c52954a0186f5",
+        "afterBlockSha256": "3d9231d554200c60d23c1f86187a65a79c0038fd3570d626249fca53bd71ca93",
+        "count": 1
+      },
+      {
+        "beforeBlockSha256": "fb41a32dd28b043c0ef0016ace027198a168692eaeded09431b80a84ac95a7d7",
+        "afterBlockSha256": "2761de2751c9020607139459cdb392452f65f7173eef44fc4474c933fa9c62ca",
+        "count": 1
+      },
+      {
+        "beforeBlockSha256": "601e19952947360ad27974e5bd62857182fa9915a49e5c1da70f3ecde496fd0c",
+        "afterBlockSha256": "5b2b78286624ac5ff4b9613c584c755fd3df5303d8499daac214fa2ea4914ac5",
+        "count": 1
+      }
+    ],
+    "sourceCopies": false,
+    "currentObserverSha256": "4d171c1409a27223ea6ad2e25f56ab991fc99ede6109c660f813ce2f3368036f",
+    "observerQualification": "Current whole-file observation only; peer changes not adopted or source freeze claimed."
+  }
+]

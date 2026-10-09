@@ -1,7 +1,0 @@
-# Board Typed Layout Boundary
-
-Active implementation scope: exclusive typed snapshot node/handle/edge/region schema, snapshot IO, Normal scene projection, force/hierarchy/layered-DAG and handle-snap semantic cores, controlled Board physical layout IO, Puzzle2d layout/force-command and DAG layout receiving. Parent owns adjacent catalogue/status/session/projection/event work; those bodies are preserved.
-
-The starting source law rejects BoardSnapshot field maps before algorithms change. Neutral fixture schema will retain optional positions for force seeding, declared labels/kinds/visibility/root/locked fields, nested handle identity/angles, and typed endpoints. Pure algorithms receive admitted typed records. JSON decoding/emission and refusal policy stay under Board IO with independent byte/progress/cancellation controls. No semantic JSON helper aliases or root forwards remain. Original whole receiving will be attempted only where the actual dependency floor can reach it; isolated native production algorithm execution is reported separately from full host acceptance.
-
-TDD receipt: source82379 terminal RED, one actual assertion rejected the starting Vec<BTreeMap> nested records; generated/board-layout-source-red.log. Schema contract authored before layout implementation: declared nullable-free optional fields with first-party Value derives, typed circle/rectangle shape, strict unknown-field refusal, retained nested labels/kinds/visibility, optional force-seeding coordinates, exact handle identity and metadata.

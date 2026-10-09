@@ -1,0 +1,21 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+    "before": "b41246b27bdc09fb6912398ccb401dfae608711122c46de6a9aa9e87192d7837",
+    "after": "25cb4206fd1c41eee3c4a97fa581f17dbadafc6688c081b32c0b9a2fda11c1f4",
+    "blocks": [
+      "Fold/Target Ready original custody",
+      "HistoryTransition pending original",
+      "Target original slot admission"
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📥️retained/🦀️.rs",
+    "before": "c10452c193fee1f3a7eec9167fbcb035b981a9668b8b57b3a547b0110df732cf",
+    "after": "058119424e0568e3f3cc4e6762b488016aa8759c2f7d2581abddb9231d3f9555",
+    "blocks": [
+      "Ready original tuple retention",
+      "fold_auxiliary typed paid close/demand/terminal"
+    ]
+  }
+]

@@ -1,6 +1,6 @@
 import { CargoMetadataCaptureBudget } from "./⏱️budget/🟦️.ts";
 import { startNativeProgress } from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import { discoverCargoWorkspaces, prepareCargoWorkspaceInvocation } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1, discoverCargoWorkspaces, prepareCargoWorkspaceInvocation } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -15,7 +15,7 @@ export async function verifyCargoDependencyDirection(repoRoot: string): Promise<
   const metadata: unknown[] = [], budget = new CargoMetadataCaptureBudget(30_000);
   for (const scope of discoverCargoWorkspaces(repoRoot)) {
     const args = ["metadata", "--format-version", "1", "--no-deps", "--offline", "--locked", "--manifest-path", join(repoRoot, scope.manifest)];
-    prepareCargoWorkspaceInvocation(repoRoot, args, repoRoot);
+    prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(repoRoot),repoRoot,args,repoRoot,process.env);
     const remaining = budget.remainingMs;
     if (remaining <= 0) throw new Error("Cargo metadata capture budget exhausted");
     const captureStarted = performance.now();

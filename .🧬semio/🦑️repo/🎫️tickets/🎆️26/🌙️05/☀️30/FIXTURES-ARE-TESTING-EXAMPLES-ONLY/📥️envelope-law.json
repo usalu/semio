@@ -1,0 +1,21 @@
+{
+  "sourceCopies": false,
+  "nativeAuthoredBeforeProduction": true,
+  "actions": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "beforeSha256": "9698a9df4b795490eb6fd2cab9db7fca33b8b3f8e957ad0175b068d4d3e64262",
+      "afterSha256": "dc49ac37256f62018409482650efab05552dd0bbe2ad0f9ee0b86c113a59c33f"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📏️physical-demand/🔣️.json",
+      "beforeSha256": "78fc7e7f6aafc83fcc5165e65f3e29c3d7c35eaae28eb79755db2306700017e8",
+      "afterSha256": "217056cc799ce2f2d38a40be2b57630e404c83e996382e82dcdbbbd6115c3fb0"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "b16a3b69f40456593611c059e1acb26a6cc6a22ae22a9babc642eb58fb073e3a",
+      "afterSha256": "1b4d95b5c8a2dbbf166c36913ab2f620c46e7e8b8af1acf254225935f63db9be"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛬️native-decoding/🦀️.rs",
+    "beforeSha256": "d01eb59ece4046066d92b4862e8b751330912db07130a27d2ec26d3473b3a63b",
+    "afterSha256": "1a9233c9cab78f4530456317ac8d6193c30140a5f82286a9253ef937e7867727",
+    "beforeBlock": "construct: impl FnOnce(&RecordValue,",
+    "afterBlock": "construct: impl FnOnce(&mut RecordValue,",
+    "action": "Owned record remains in original recipient while genuine binder may transfer its payload"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛬️native-decoding/🦀️.rs",
+    "beforeSha256": "1a9233c9cab78f4530456317ac8d6193c30140a5f82286a9253ef937e7867727",
+    "afterSha256": "72df8f0c515b4776ccd765e80f048675bccc1b0d279975a116141bdd7b7d90e2",
+    "beforeBlock": "construct(record.as_ref().unwrap(), output, native, body)?;",
+    "afterBlock": "construct(record.as_mut().unwrap(), output, native, body)?;",
+    "action": "Pass retained mutable original to canonical binder"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "beforeSha256": "ca0e18ddd77f14d5c2bd7c103e7410e9ad0a64fc269d3ffc6f0ef662acd7590e",
+    "afterSha256": "510124ec44155507e35c2bed697258547eb709b86d82dbb1e8d5e5d03b9be7a0",
+    "beforeBlock": "            |record, snapshot_output, native,body| {\n                let Some(semio_framework_dsl_record::FieldValue::List(fields)) = record.get(1) else {\n                    return Err(ValueError::literal(ValueRefusalKind::InvalidValue,\"expected buffers\"));\n                };\n                body.admit_frontier(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:std::mem::size_of::<Option<Self>>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1})?;\n                *snapshot_output=Some(Self{buffers:Vec::new()});\n                body.record_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<Self>>(),..Default::default()})?;\n                let buffers=&mut snapshot_output.as_mut().unwrap().buffers;\n                body.allocate_vec_into(native,fields.len(),buffers,2)?;\n                for field in fields {\n                    native.step()?;\n                    let semio_framework_dsl_record::FieldValue::Bytes64(bytes) = field else {\n                        return Err(ValueError::literal(ValueRefusalKind::InvalidValue,\"expected intrinsic octets\"));\n                    };\n                    body.admit_frontier(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:std::mem::size_of::<Vec<u8>>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:3})?;\n                    buffers.push(Vec::new());\n                    body.record_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Vec<u8>>(),..Default::default()})?;\n                    body.copy_bytes_into(native,bytes,buffers.last_mut().unwrap(),3)?;\n                }\n                COMPLETED_DECODERS.with(|count| count.set(count.get() + 1));\n                Ok(())\n            },\n",
+    "afterBlock": "            bind_original_buffers,\n",
+    "action": "Use paid structural original payload transfer under unchanged cumulative caller policy"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "beforeSha256": "510124ec44155507e35c2bed697258547eb709b86d82dbb1e8d5e5d03b9be7a0",
+    "afterSha256": "a22735b1d13748e2900cdcba91693db4c4e86ffba8d4d7547c95dafa5a533180",
+    "beforeBlock": "impl ArtifactSqliteSnapshot for DecodedBuffers {",
+    "afterBlock": "fn bind_original_buffers(record: &mut RecordValue, snapshot_output: &mut Option<DecodedBuffers>, native: &mut NativeDecodeControl<'_>, body: &mut crate::os_store::NativeSnapshotBodyWallet) -> Result<(), ValueError> {\n    let Some(FieldValue::List(fields)) = record.fields.get_mut(&1) else {\n        return Err(ValueError::literal(ValueRefusalKind::InvalidValue, \"expected buffers\"));\n    };\n    body.admit_frontier(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: std::mem::size_of::<Option<DecodedBuffers>>(), maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 })?;\n    *snapshot_output = Some(DecodedBuffers { buffers: Vec::new() });\n    body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<Option<DecodedBuffers>>(), ..Default::default() })?;\n    let buffers = &mut snapshot_output.as_mut().unwrap().buffers;\n    body.allocate_vec_into(native, fields.len(), buffers, 2)?;\n    for field in fields {\n        let FieldValue::Bytes64(bytes) = field else {\n            return Err(ValueError::literal(ValueRefusalKind::InvalidValue, \"expected intrinsic octets\"));\n        };\n        let copy_bytes = 2 * std::mem::size_of::<Vec<u8>>();\n        body.admit_frontier(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy_bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 3 })?;\n        native.step()?;\n        buffers.push(std::mem::take(bytes));\n        body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() })?;\n    }\n    COMPLETED_DECODERS.with(|count| count.set(count.get() + 1));\n    Ok(())\n}\n\nimpl ArtifactSqliteSnapshot for DecodedBuffers {",
+    "action": "Allocation-free payload transfer preflights before native checkpoint and take; original output installed before funded births"
+  }
+]

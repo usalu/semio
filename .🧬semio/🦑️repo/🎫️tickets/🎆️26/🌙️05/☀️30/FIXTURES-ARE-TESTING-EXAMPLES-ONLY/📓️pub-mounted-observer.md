@@ -1,0 +1,5 @@
+# Current Mounted Original Ownership Observation
+
+The actual current synchronous publisher moves complete artifact/config/draft batches through std::mem::take, then restores the exact original mutation vector when canonical begin rejects. Presence/transient move one original mutation by pop and restore it by push on refusal. This is genuine original-owner movement, so the historical source oracle requiring pop on all five lanes rejects valid batch ownership. The regression should require the exact batch take plus original-refusal restoration and keep hostile cloning/cold asynchronous publication refusals. The actual combined current source route60098 remains RED; no current compiler proof or source authorship is inferred from this observation.
+
+The production private child frame still derives caller physical capacity from its demand quote, and the foreign-step path performs cold diff/encode allocations. These are separately recorded real remaining authority/receipt gaps; correcting the obsolete pop-only marker does not resolve them. Original Source is referenced directly; no checked-in Source copy was made.

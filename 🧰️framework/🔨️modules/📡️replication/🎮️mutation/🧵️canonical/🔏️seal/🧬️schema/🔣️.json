@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "rows",
+    "copyCapacityLimit",
+    "turnLimit",
+    "pauses",
+    "states",
+    "admittedSourceTransfer",
+    "sourceRequiresLiveOwner"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "digest",
+          "canonicalLength"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "canonicalLength": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "copyCapacityLimit": {
+      "const": 4096
+    },
+    "turnLimit": {
+      "const": 100000
+    },
+    "pauses": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "states": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "original",
+          "source",
+          "count",
+          "header",
+          "hash",
+          "hash-byte",
+          "source-close",
+          "original-return",
+          "terminal"
+        ]
+      }
+    },
+    "admittedSourceTransfer": {
+      "const": "same-native-source"
+    },
+    "sourceRequiresLiveOwner": {
+      "const": true
+    }
+  }
+}

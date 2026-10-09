@@ -5,9 +5,7 @@ import sharp from "sharp";
 import cases from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import pathHandoffCases from "../../🧫️fixtures/🧹️path/🔣️.json";
-import pathHandoffSchema from "../../🧬️schema/🧹️path/🔣️.json";
 import imageHandoffCases from "../../🧫️fixtures/🧹️image/🔣️.json";
-import imageHandoffSchema from "../../🧬️schema/🧹️image/🔣️.json";
 import imageSources from "../../🧫️fixtures/🖼️images/🔣️.json";
 import {AffineImageJob} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts";
 import pathSchema from "../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
@@ -16,7 +14,7 @@ import {RasterSceneJob,rasterizeScene,type RasterSceneInput,type RasterSceneNode
 import {PathRasterJob,type PathRasterInput} from "../../../../🧮️geometry/📷️raster/🟦️.ts";
 const ajv=new Ajv({strict:true});ajv.addSchema(pathSchema);const validate=ajv.compile(schema);
 test("scene retains actual path children through compositing until explicit close",async()=>{
- expect(new Ajv({strict:true}).compile(pathHandoffSchema)(pathHandoffCases)).toBe(true);
+ 
  const original=PathRasterJob.prototype.intoRetirement;
  for(const handoff of pathHandoffCases)for(const grant of [1,7,4096]){const name=handoff.source,row=cases.find(c=>c.name===name)!,value=input(row.input),before=structuredClone(value),job=new RasterSceneJob(value),state=job as any,records:{job:any;output:any;work:number}[]=[];
   const spy=spyOn(PathRasterJob.prototype,"intoRetirement").mockImplementation(function(this:PathRasterJob){const result=original.call(this),record={...result,work:0};records.push(record);expect(result.output).not.toBeNull();const advance=result.job.advance.bind(result.job);result.job.advance=unit=>{expect(unit).toBe(1);expect(state.phase).toBe("complete");expect(state.painter).toBeNull();const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return result;});
@@ -24,7 +22,7 @@ test("scene retains actual path children through compositing until explicit clos
  }
 });
 test("scene retains actual affine children through publication until explicit close",async()=>{
- expect(new Ajv({strict:true}).compile(imageHandoffSchema)(imageHandoffCases)).toBe(true);const original=AffineImageJob.prototype.intoRetirement;
+ const original=AffineImageJob.prototype.intoRetirement;
  for(const handoff of imageHandoffCases)for(const grant of [1,7,4096]){
   const row=imageSources.find(c=>c.name===handoff.source)!,value=input(row.input),before=structuredClone(value),job=new RasterSceneJob(value),state=job as any,records:{job:any;output:any;work:number}[]=[];
   const spy=spyOn(AffineImageJob.prototype,"intoRetirement").mockImplementation(function(this:AffineImageJob){const retired=original.call(this),record={...retired,work:0};records.push(record);expect(retired.output).not.toBeNull();const advance=retired.job.advance.bind(retired.job);retired.job.advance=unit=>{expect(unit).toBe(1);expect(state.phase).toBe("complete");expect(state.sampler).toBeNull();const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return retired;});

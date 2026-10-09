@@ -1,0 +1,181 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "ledger": "root-five-actions",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🔐️lifecycle/🔣️.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "root-five-actions",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "root-five-actions",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "root-five-actions",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
+      "present": true,
+      "matchesAction": false,
+      "sha256": "d51e6d38fd9afa25f4caa0882ed0dcc986e05a72e8c723e1409e0ea5d91f7475"
+    },
+    {
+      "ledger": "root-five-actions",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json",
+      "present": true,
+      "matchesAction": false,
+      "sha256": "c94bb31d7d93b34f4b38c22496c80cda84137eaba5b4b80fc811dac99031d632"
+    },
+    {
+      "ledger": "root-five-actions",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+      "present": true,
+      "matchesAction": true,
+      "sha256": "cba0beda0638c160080a1bc876d5e17d5620b4ec8aacdbf4d19b1e40f995889a"
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧺️heap.ts",
+      "present": true,
+      "matchesAction": true,
+      "sha256": "3226c0ff0793d13e54c2a035d7915092ba00e9bd6ed9a6e27fea57d6545e3e2c"
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧪️tests/🟦️.ts",
+      "present": true,
+      "matchesAction": true,
+      "sha256": "757de4df04f4e98af60adb050e97b721768927b6b692aca32856356170171242"
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧪️tests/🟦️.ts",
+      "present": true,
+      "matchesAction": true,
+      "sha256": "29aa8b4999dc15ce167be5452aeadaf994bab99c0b894149ee969fd4f9d146ca"
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🧪️tests/🟦️.ts",
+      "present": true,
+      "matchesAction": true,
+      "sha256": "fdd91d1fd4f531ba411a4b4d2b3aff563ac903230f51cb13bffc97c3e0bde402"
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📏️close-demand/🟦️.ts",
+      "present": true,
+      "matchesAction": true,
+      "sha256": "ede04127d5ddd215a50f45c4a4ad845ad35e56a192684be6af54a3f585995b52"
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+      "present": true,
+      "matchesAction": true,
+      "sha256": "cb4753a173abdb0399f38626126fd713009327a42e9c116b20651758936ecc54"
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧫️fixtures/🧫️diff-only-law-gate/🫧️lanes/🧬️schema/🔣️.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️schema/🧺️heap.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/📦️full-receipt/🔣️.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧬️schema/🔣️.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🧬️schema/🔣️.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🧮️expression/📏️kinds/🧬️schema/🔣️.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🧮️expression/🕸️parameters/🧬️schema/🔣️.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🧮️expression/🧮️evaluation/🧬️schema/🔣️.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🧬️schema/🔣️.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🧵️job/🧬️schema/📇️fixed-operation/🔣️.json",
+      "present": false,
+      "matchesAction": true,
+      "sha256": null
+    },
+    {
+      "ledger": "g10-actions",
+      "path": "🧰️framework/🔨️modules/🧮️expression/🧪️tests/📜️conformance/🐍️.py",
+      "present": true,
+      "matchesAction": true,
+      "sha256": "01ef4d9eb177795c0f9aef4a56f1bb38fcb7082d5c2e723a4a03bee3ca087193"
+    },
+    {
+      "ledger": "pdf-cancel-actions",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "present": true,
+      "matchesAction": true,
+      "sha256": "2dff4302ad3ca3c0a95c6953bf250c368135ab483bc4d2ad90d4d571b095413a"
+    },
+    {
+      "ledger": "pdf-cancel-actions",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+      "present": true,
+      "matchesAction": true,
+      "sha256": "10c8db99950ff89ccad405af9d315d3e596de1c11cb1ab5e961d0498f867a2d9"
+    }
+  ]
+}

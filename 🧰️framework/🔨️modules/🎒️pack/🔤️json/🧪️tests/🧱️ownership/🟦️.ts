@@ -121,3 +121,19 @@ test("neutral borrowed-read fixture retains original Source syntax and independe
   expect(await decodeJsonSyntax(large, JsonMemberPolicy.Reject, operation())).toEqual({kind: "string", value: JSON.parse(large)});
   console.log("[DEBUG] neutral original8194 source and exact numeric lexemes match first-party Source syntax, jsonc-parser and host JSON; Native paged retention remains a separate owning receipt");
 });
+
+
+test("original normal JSON frontiers require independent physical admission", () => {
+  const fixture = JSON.parse(read("🧫️fixtures/🎟️normal/🔣️.json"));
+  for (const source of fixture.sources) {
+    const errors: ParseError[] = [], tree = parseTree(source, errors, {disallowComments: true, allowTrailingComma: false});
+    expect(errors).toEqual([]);
+    expect(getNodeValue(tree!)).toEqual(JSON.parse(source));
+  }
+  const native = read("🦀️.rs");
+  expect(native).toContain("normal_step_demands");
+  expect(native).toContain("normal_step_progress");
+  expect(native).not.toContain("release_empty_page(usize::MAX)");
+  expect(native).not.toContain("maximum_release_bytes:retirement.release_demand()");
+  console.log("[DEBUG] independent jsonc-parser and native JSON oracle preserve same semantic source under normal five-axis policy");
+});

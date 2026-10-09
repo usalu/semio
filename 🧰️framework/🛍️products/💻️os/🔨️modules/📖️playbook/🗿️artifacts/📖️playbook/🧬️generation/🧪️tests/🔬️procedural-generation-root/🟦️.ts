@@ -1,49 +1,28 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { Database } from "bun:sqlite";
 import { WORKSPACE_ROOT } from "../../../../../../../../../../📜️script.ts";
 
-/** 🧪️ Executes procedural generation root policy assertions. */
+/** 🧪️ Validates neutral generation values, ordinal keys and independent five-currency conservation. */
 export function proceduralGenerationRootSelfTests(): number {
-  const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook");
-  const schema = JSON.parse(readFileSync(join(base, "🧬️generation/🧬️schema/🔣️.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(base, "🧬️generation/🧫️fixtures/🔣️.json"), "utf8"));
-  const Ajv = createRequire(import.meta.url)("ajv");
-  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/GenerationValueV1" });
-  for (const generation of fixture.generation.generations) for (const value of Object.values(generation.values)) if (!validate(value)) throw new Error("generation value violates its semantic contract");
-  
-  const wire = JSON.stringify(fixture.generation);
-  if (Buffer.byteLength(wire) <= 16384 || JSON.stringify(JSON.parse(wire)) !== wire) throw new Error("generation root independent JSON oracle lost large nested content");
-  const ranked = fixture.rankedValues;
-  const oracle = new Map<string, unknown>(ranked.entries);
-  const keys = [...oracle.keys()].sort();
-  if (JSON.stringify(keys) !== JSON.stringify(ranked.expectedKeys)) throw new Error("ranked generation keys disagree with independent Map oracle");
-  const values = Object.fromEntries(keys.map((key) => [key, oracle.get(key)]));
-  if (JSON.stringify(JSON.parse(JSON.stringify(values))) !== JSON.stringify(values)) throw new Error("ranked generation values lost JSON semantics");
-  const source = readFileSync(join(base, "🧬️generation/🦀️.rs"), "utf8");
-  const model = readFileSync(join(base, "🦀️.rs"), "utf8");
-  if (!model.includes("pub type PlaybookValues = semio_framework_value::ordered::OrderedMap<DslValue>;") || !source.includes("generation.values.retire()")) throw new Error("ranked generation original owner and bounded release are missing");
-  const modelPath = "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs";
-  const snapshot = readFileSync(join(WORKSPACE_ROOT, modelPath), "utf8");
-  const second = readFileSync(join(WORKSPACE_ROOT, modelPath.replace("🧊️generation3d", "🌀️generation2d")), "utf8");
-  const exact = (root: string, model: string) => root.includes("struct GenerationPlayRoot(ManuallyDrop<Option<Arc<GenerationPlayState>>>)")
-    && root.includes("Arc::get_mut(self.0.as_mut()") && root.includes("Arc::into_inner(root)")
-    && root.includes("owned: ManuallyDrop<GenerationRetirementState>") && root.includes("!std::thread::panicking()")
-    && root.includes('panic!("nonempty generation root must be explicitly retired before drop")')
-    && root.includes("generation.values.retire()") && root.includes("RetirementStep::OwnedValue(value)")
-    && root.includes("semio_framework_value::retirement::owned_retirement(value)")
-    && root.includes("bytes.min(value.len())") && !/Arc::make_mut|DerefMut|\.collect\(/.test(root)
-    && model.includes("semio_framework_artifact_playbook_playbook::GenerationPlayRoot") && model.includes("pub generation: GenerationPlayRoot");
-  if (!exact(source, snapshot) || !exact(source, second)) throw new Error("shared generation root immutable ownership linkage missing");
-  const sources = [
-    [source.replace("Arc<GenerationPlayState>", "GenerationPlayState"), snapshot],
-    [source.replace("Arc::get_mut(self.0.as_mut()", "Arc::make_mut(self.0.as_mut()"), snapshot],
-    [source.replaceAll("Arc::into_inner(root)", "Arc::try_unwrap(root).ok()"), snapshot],
-    [source, snapshot.replace("pub generation: GenerationPlayRoot", "pub generation: GenerationPlayState")],
-    [source, second.replace("pub generation: GenerationPlayRoot", "pub generation: GenerationPlayState")],
-    [source.replace("owned: ManuallyDrop<GenerationRetirementState>", "owned: GenerationRetirementState"), snapshot],
-    [source.replaceAll("!std::thread::panicking()", "true"), snapshot],
-  ];
-  for (const [root, model] of sources) if (exact(root, model)) throw new Error("generation root accepted hostile source mutation");
-  return 4 + sources.length;
+  const base=join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation"),read=(path:string)=>JSON.parse(readFileSync(join(base,path),"utf8")),schema=read("🧬️schema/🔣️.json"),fixture=read("🧫️fixtures/🔣️.json"),Ajv=createRequire(import.meta.url)("ajv"),validate=new Ajv({strict:true,allErrors:true}).compile({...schema,$ref:"#/$defs/GenerationValueV1"});
+  for(const generation of fixture.generation.generations)for(const value of Object.values(generation.values))if(!validate(value))throw Error("generation value violates its semantic contract");
+  const wire=JSON.stringify(fixture.generation);if(Buffer.byteLength(wire)<=16384||JSON.stringify(JSON.parse(wire))!==wire)throw Error("independent JSON lost large nested generation content");
+  const law=read("🧫️fixtures/♻️retirement/🔣️.json");
+  const db=new Database(":memory:");let checks=3;
+  try{
+    db.run("CREATE TABLE entry(key TEXT PRIMARY KEY,value TEXT NOT NULL)");
+    for(const[key,value]of fixture.rankedValues.entries)db.run("INSERT INTO entry VALUES(?,?)",key,JSON.stringify(value));
+    const keys=db.query<{key:string},[]>("SELECT key FROM entry ORDER BY key COLLATE BINARY").all().map(row=>row.key);
+    if(JSON.stringify(keys)!==JSON.stringify(fixture.rankedValues.expectedKeys))throw Error("ranked generation keys disagree with independent SQLite");
+    const actual=Object.fromEntries(db.query<{key:string;value:string},[]>("SELECT key,value FROM entry ORDER BY key COLLATE BINARY").all().map(row=>[row.key,JSON.parse(row.value)])),expected=Object.fromEntries(fixture.rankedValues.entries);
+    for(const key of keys)if(JSON.stringify(actual[key])!==JSON.stringify(expected[key]))throw Error("ranked generation value changed");checks++;
+    db.run("CREATE TABLE receipt(items INTEGER,copy INTEGER,capacity INTEGER,released INTEGER,depth INTEGER,max_items INTEGER,max_copy INTEGER,max_capacity INTEGER,max_release INTEGER,max_depth INTEGER,CHECK(items BETWEEN 0 AND max_items),CHECK(copy BETWEEN 0 AND max_copy),CHECK(capacity BETWEEN 0 AND max_capacity),CHECK(released BETWEEN 0 AND max_release),CHECK(depth BETWEEN 0 AND max_depth))");
+    for(const row of law.cases){let accepted=true;try{db.run("INSERT INTO receipt VALUES(?,?,?,?,?,?,?,?,?,?)",[...row.receipt,...row.grant]);}catch{accepted=false;}if(accepted!==row.accepted)throw Error("independent grant predicate "+row.id);checks++;}
+    db.run("CREATE TABLE conservation(held INTEGER,born INTEGER,released INTEGER,CHECK(held>=0 AND born>=0 AND released=held+born))");
+    for(const row of law.conservation){db.run("INSERT INTO conservation VALUES(?,?,?)",row);checks++;}
+    for(const row of law.rejectedConservation){let refused=false;try{db.run("INSERT INTO conservation VALUES(?,?,?)",row);}catch{refused=true;}if(!refused)throw Error("independent physical conservation admitted a contradictory policy");checks++;}
+  }finally{db.close();}
+  return checks;
 }

@@ -127,7 +127,7 @@ semio_framework_value::artifact_retire_leaf!(ActionKind);
 /// beyond "text". Orthogonal to `ArgPresentation` (which is about the WIDGET, not the value's
 /// semantics): a `Color` format could still render as free text in a minimal shell.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgFormat {
@@ -165,7 +165,7 @@ pub enum ArgFormat {
 /// 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
 /// header comment for the D6 stored/derived split.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgSchema {
@@ -336,7 +336,7 @@ pub fn interaction_entity_kind(interaction_id: &str, granularity_id: &str) -> St
 /// `ActionArgDef::control()` (e.g. a bounded `Number` still renders `Slider` without this, but a
 /// single-bound one needs it to opt in).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgPresentation {
@@ -354,7 +354,7 @@ pub enum ArgPresentation {
 
 /// 🧲️ Where a number's snap points come from beyond its static `snaps`: every multiple of its `step`, a window
 /// config value named `key` (the grid spacing a tool snaps to), or the document value at JSON `pointer`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum SnapSource {
@@ -367,7 +367,7 @@ pub enum SnapSource {
 /// the document the editor previews — an RFC 6901 template whose `{field}` segments take the edited payload's top-level
 /// member: an object's key, or, on an array, the record whose own `field` equals it (`/hostSnapshot/widgets/{id}/params`).
 /// TypeScript twin: `OptionSource`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum OptionSource {
@@ -375,7 +375,7 @@ pub enum OptionSource {
 }
 
 /// 📈️ How a slider or dial maps its travel onto the value range.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum NumberScale {
@@ -385,7 +385,7 @@ pub enum NumberScale {
 
 /// 🔢️ The JSON type of a reference's ids: text ids (the default, left off the wire) or integer ids. A selection id is
 /// always text, so an integer reference stages the integer its selected text spells ([`ReferenceIdType::id_value`]).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ReferenceIdType {
@@ -442,7 +442,7 @@ pub fn reference_id_text(value: &DslValue) -> Option<String> {
 /// 🔘️ One selectable option of a `Select` argument control — the persisted `value` and its
 /// human `label`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ActionArgOption {
@@ -676,7 +676,7 @@ pub enum ActionArgControl {
 /// `ActionDefinition.args` (the common case) means a no-argument action. Mutation inputs come from
 /// [`mutation_input_defs`].
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ActionArgDef {
@@ -1201,7 +1201,7 @@ impl<F: Fn(&str) -> Option<DslValue>> InputSchemaResolver for F {
 }
 
 /// 🚫️ The class of a [`InputSchemaError`], shared verbatim with the TypeScript twin and the lint `schema-mutation-input-ui`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum InputSchemaErrorCode {
     Malformed,
@@ -1216,7 +1216,7 @@ pub enum InputSchemaErrorCode {
 
 /// 🚫️ Why a mutation payload schema yields no input descriptors: the `code`, the RFC 6901 `pointer` of the input
 /// in the payload (`""` for the payload itself, `-` for "every array item") and a human `detail`.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct InputSchemaError {
     pub code: InputSchemaErrorCode,
@@ -5560,7 +5560,7 @@ impl PanelTabDefinition {
 
 //#region 🔖️Surface
 /// 👁️✏️ Whether a surface may change the artifact it is bound to.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_value::RetireOwned)]
 pub enum AppRole {
     Viewer,
     Editor,
@@ -6915,27 +6915,45 @@ pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub active_mode_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub active_window_kind_id: Option<String>,
-    /// 🧰️ Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
-    /// call (`window_id`). On batched `refresh-ui`, the plugin stamps this from
-    /// `active_utility_by_window_id` per window entry — never from the focused window alone.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub active_utility_id: Option<String>,
-    /// 🧰️ Host-owned active utility per window **instance** (never a document field, never a VCS operation). The shell
-    /// sends the full map on every refresh so plugins can build per-pane scene state; tools stay mode-wide via
-    /// `active_tool_id`.
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub active_utility_by_window_id: std::collections::HashMap<String, String>,
     /// 🛠️ The host-owned active tool of the active mode (never a document field, never a VCS operation) —
     /// mutually exclusive with `active_utility_id`: activating one clears the other (see the React
     /// shell's `onAction` interceptors).
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub active_tool_id: Option<String>,
+    /// 🧰️ Host-owned active utility per window **instance** (never a document field, never a VCS operation). The shell
+    /// sends the full map on every refresh so plugins can build per-pane scene state; tools stay mode-wide via
+    /// `active_tool_id`.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub active_utility_by_window_id: std::collections::HashMap<String, String>,
+    /// 🧰️ Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
+    /// call (`window_id`). On batched `refresh-ui`, the plugin stamps this from
+    /// `active_utility_by_window_id` per window entry — never from the focused window alone.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub active_utility_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub active_window_kind_id: Option<String>,
+    /// 🧩️ Parent-owned input for one embedded surface; never persisted in the contributor document.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub extension_input_json: Option<String>,
+    /// 🎯️ The window instance the user is LOOKING at — the shell's own last-focused pane. Sent on
+    /// every call and, unlike [`Self::window_id`], deliberately kept by [`Self::for_panel`] while it
+    /// names a live [`Self::window_instances`] entry: an
+    /// app-level panel is not rendered FOR a window, but a panel that authors per-window settings
+    /// still has to address the pane the user last touched instead of the roster's first entry
+    /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12 §5.1 measured a Settings edit landing on the
+    /// base window kind, a pane nobody is looking at).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub focused_window_id: Option<String>,
+    /// 🗣️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
+    /// `app_labels!`. Non-optional — the shell always resolves one (see `initUiLocaleSync`/
+    /// `detectShellLocale`) before the first `render`, so "nobody set the locale" is unrepresentable.
+    pub locale: Locale,
     /// 📌️ Host-owned panel state, opaque to the guest and bounded independently of embedded input.
     ///
     /// Contributions are deliberately NOT a view-state field. They are installed into the guest by
@@ -6954,56 +6972,37 @@ pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub session_identity: Option<ViewSessionIdentity>,
-    /// 🧩️ Parent-owned input for one embedded surface; never persisted in the contributor document.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub extension_input_json: Option<String>,
-    /// 🗣️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
-    /// `app_labels!`. Non-optional — the shell always resolves one (see `initUiLocaleSync`/
-    /// `detectShellLocale`) before the first `render`, so "nobody set the locale" is unrepresentable.
-    pub locale: Locale,
     /// 🗣️ Active terminology id (`Native` default, or an app-declared alternative term set).
     pub terminology: Terminology,
-    /// 🪟️ The window instance a `render`/`handle_action` call targets — programs key all per-window
-    /// option state (grid, LOD, selection mode, …) off this, never off `active_window_kind_id`, so that
-    /// two window instances of the same kind (e.g. split top/perspective panes) never share options.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub window_id: Option<String>,
-    /// 🎯️ The window instance the user is LOOKING at — the shell's own last-focused pane. Sent on
-    /// every call and, unlike [`Self::window_id`], deliberately kept by [`Self::for_panel`] while it
-    /// names a live [`Self::window_instances`] entry: an
-    /// app-level panel is not rendered FOR a window, but a panel that authors per-window settings
-    /// still has to address the pane the user last touched instead of the roster's first entry
-    /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12 §5.1 measured a Settings edit landing on the
-    /// base window kind, a pane nobody is looking at).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub focused_window_id: Option<String>,
-    /// 🪟️ The live set of open window instances (base + spawned/split), sent on every refresh/action so
-    /// `window_engagements`/`window_measures` can return one entry per instance instead of per kind.
-    #[serde(default)]
-    #[value(default)]
-    pub window_instances: Vec<ViewWindowInstance>,
     /// ⏯️ The tool run trace cursor each window instance's renderer echoes, keyed by window instance id —
     /// host-owned like [`Self::active_utility_by_window_id`]. The guest answers the trace pages after it
     /// inside that window's scene `toolRunTrace` lane (`📋️tool-run-contract.md` §3.2).
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub tool_run_trace_cursor_by_window_id: std::collections::HashMap<String, semio_framework_tool_run::ToolRunTraceCursor>,
-    /// 🪟️ Every tree container the host holds state for, flattened over all panel bodies — the ONE
+    /// 🪟️ Rows the tallest visible panel body fits, the shared first-paint budget a guest spends in
+    /// document order over containers the host has not yet seen. Absent means "the host has not
+    /// measured a viewport yet" — the guest falls back to its own default, never to unbounded.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub tree_viewport_rows: Option<u32>,    /// 🪟️ Every tree container the host holds state for, flattened over all panel bodies — the ONE
     /// source of truth for which containers are open and which rows are on screen. A guest reads them
     /// per body and materialises exactly the named windows; it keeps no expansion state of its own,
     /// which is what lets an open container survive a refresh.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub tree_windows: Vec<TreeWindowRequest>,
-    /// 🪟️ Rows the tallest visible panel body fits, the shared first-paint budget a guest spends in
-    /// document order over containers the host has not yet seen. Absent means "the host has not
-    /// measured a viewport yet" — the guest falls back to its own default, never to unbounded.
+    /// 🪟️ The window instance a `render`/`handle_action` call targets — programs key all per-window
+    /// option state (grid, LOD, selection mode, …) off this, never off `active_window_kind_id`, so that
+    /// two window instances of the same kind (e.g. split top/perspective panes) never share options.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
-    pub tree_viewport_rows: Option<u32>,
+    pub window_id: Option<String>,
+    /// 🪟️ The live set of open window instances (base + spawned/split), sent on every refresh/action so
+    /// `window_engagements`/`window_measures` can return one entry per instance instead of per kind.
+    #[serde(default)]
+    #[value(default)]
+    pub window_instances: Vec<ViewWindowInstance>,
 }
 
 /// 🪟️ One tree container's host-known state: whether the user opened or closed it (`None` = the
@@ -7769,7 +7768,7 @@ pub struct HostedArtifactKind {
 // embed `MediaType`/`MediaClass`/`MediaForm` by value inside plain `#[derive(Serialize,
 // Deserialize)]` types — dropping serde here breaks `cargo check -p semio-framework` today. Both
 // derive families stay load-bearing simultaneously until those crates migrate; revisit once they do.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum MediaClass {
@@ -7785,7 +7784,7 @@ pub enum MediaClass {
 
 /// 🧬️ The shape/representation a `MediaClass` payload takes, orthogonal to `class` — e.g. `ThreeD` × `Brep` vs `ThreeD` × `Mesh`. `Any` only ever appears on the accepting side of a port (see `media_types_compatible`).
 // 🚧️ BLOCKED: see `MediaClass` above — same cross-crate serde dependency.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum MediaForm {
@@ -7817,6 +7816,7 @@ pub struct MediaType {
     pub form: MediaForm,
 }
 
+
 /// 🔌️ How a `MediaType` is actually encoded once it crosses a process boundary — binary payloads
 /// carry a format kind id string (the legacy format enum was retired — ticket 26/08/11/
 /// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6), structured payloads carry
@@ -7824,7 +7824,7 @@ pub struct MediaType {
 // 🚧️ BLOCKED: see `MediaClass` above — `🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️.rs`'s
 // `WorkflowMediaPort`/`MediaContract` (owned by another agent this pass) still embed this by value
 // inside plain `#[derive(Serialize, Deserialize)]` types.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", tag = "kind")]
 pub enum MediaWireFormat {
@@ -7835,7 +7835,7 @@ pub enum MediaWireFormat {
 
 /// 🔀️ Which side of a wire a `MediaPortSpec` sits on.
 // 🚧️ BLOCKED: see `MediaWireFormat` above — same cross-crate serde dependency (`WorkflowMediaPort`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum MediaPortDirection {
@@ -7845,7 +7845,7 @@ pub enum MediaPortDirection {
 
 /// 🔢️ Whether a `MediaPortSpec` accepts/produces exactly one media value or a stream/collection of them — e.g. a mesh-array input that fans in from several upstream producers.
 // 🚧️ BLOCKED: see `MediaWireFormat` above — same cross-crate serde dependency (`WorkflowMediaPort`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum PortMultiplicity {
@@ -7856,7 +7856,7 @@ pub enum PortMultiplicity {
 /// 🔌️ A single port an app exposes on the workflow — `kind_id` optionally pins it to one `ArtifactKindSpec.id` when the port is more specific than its `media_type` alone conveys.
 // 🚧️ BLOCKED: see `MediaWireFormat` above — `WorkflowMediaPort.spec` embeds this by value inside a
 // plain `#[derive(Serialize, Deserialize)]` type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct MediaPortSpec {
@@ -8032,7 +8032,7 @@ impl CommandGrammar {
 
 //#region Media
 /// 🎞️ The value that actually flows over a workflow wire, produced by `ArtifactApp::export_media` and consumed by `ArtifactApp::import_media`. Kept separate from the `MediaType` lattice above (which only negotiates *compatibility*, never carries a value) so headless runners and the UI share one payload shape.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Media {
     pub media_type: MediaType,
@@ -8040,7 +8040,7 @@ pub struct Media {
 }
 
 /// 📦️ Intrinsic payloads own complete typed values; explicit JSON and addressed binary payloads retain their declared media forms.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", tag = "kind")]
 pub enum MediaPayload {
     Structured { schema: String, json: String },
@@ -8132,3 +8132,7 @@ mod gumball_verb_audience_tests;
 //#endregion 🔖️Manifest
 
 // #endregion 🛂️Manifest
+
+#[cfg(test)]
+#[path="🔖️action-args/♻️retirement/🧪️tests/🦀️.rs"]
+mod argument_retirement_tests;

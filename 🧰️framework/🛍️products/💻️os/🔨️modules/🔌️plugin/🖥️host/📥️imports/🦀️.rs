@@ -74,6 +74,8 @@ use host_async_bindings::semio::framework::{effects as wit_effects, host_async a
 // rather than making this whole file generic, which would thread `R` through ~25 trait methods
 // with no caller yet to prove the shape against. Revisit once this world is actually wired.
 pub struct AsyncActorHostState {
+    operation_slot:super::operation::slot::OperationSlot,
+    router_turn_grant: semio_framework_job::RetainedCloneGrant,
     services: Arc<crate::effects::AsyncServices<TokioHostRuntime>>,
     router_handler: Arc<dyn crate::effects::RouterEffectHandler>,
     scope: ScopeHandle,
@@ -98,6 +100,7 @@ impl AsyncActorHostState {
     pub async fn new(
         services: Arc<crate::effects::AsyncServices<TokioHostRuntime>>,
         router_handler: Arc<dyn crate::effects::RouterEffectHandler>,
+        router_turn_grant: semio_framework_job::RetainedCloneGrant,
         scope: ScopeHandle,
         actor: u64,
         generation: u16,
@@ -108,8 +111,10 @@ impl AsyncActorHostState {
         wasi_ctx: WasiCtx,
     ) -> AsyncActorHostState {
         AsyncActorHostState {
+            operation_slot:super::operation::slot::OperationSlot::new(),
             services,
             router_handler,
+            router_turn_grant,
             scope,
             actor,
             generation,
@@ -280,6 +285,7 @@ async fn addressed_actor_id(actor_stable: u64, generation: u16) -> RuntimeActorI
 /// direct-await counterpart to `⚡️effects/🦀️.rs`'s `AsyncEffectExecutor::derive_ctx`, minus
 /// the cross-actor scope lookup (this state IS the one actor).
 struct CallContext {
+    router_turn_grant: semio_framework_job::RetainedCloneGrant,
     ctx: OperationContext,
     services: Arc<crate::effects::AsyncServices<TokioHostRuntime>>,
     router_handler: Arc<dyn crate::effects::RouterEffectHandler>,
@@ -298,6 +304,7 @@ struct CallContext {
 /// or `Copy` fields) happens inside `.with()`, and the actual awaiting happens after, outside it —
 /// see every `HostWithStore` method below for the two-step call site this produces.
 struct CallSnapshot {
+    router_turn_grant: semio_framework_job::RetainedCloneGrant,
     actor: u64,
     generation: u16,
     lane: u8,
@@ -312,6 +319,7 @@ struct CallSnapshot {
 
 fn snapshot_call(state: &mut AsyncActorHostState) -> CallSnapshot {
     CallSnapshot {
+        router_turn_grant:state.router_turn_grant,
         actor: state.actor,
         generation: state.generation,
         lane: state.lane,
@@ -332,7 +340,7 @@ async fn begin_call(snap: CallSnapshot) -> CallContext {
         snap.capability_registry.track(capability, cancel.clone());
     }
     let ctx = OperationContext { actor: snap.actor, generation: snap.generation, trace: snap.trace, lane: snap.lane, deadline_ms: Some(now_ms.saturating_add(lane_ceiling_ms(snap.lane))), cancel: cancel.clone(), capability: snap.capability };
-    CallContext { ctx, services: snap.services, router_handler: snap.router_handler, scope: snap.scope, package: snap.package, actor_id: addressed_actor_id(snap.actor, snap.generation).await, guard: CancelOnDrop::new(cancel) }
+    CallContext { router_turn_grant:snap.router_turn_grant, ctx, services: snap.services, router_handler: snap.router_handler, scope: snap.scope, package: snap.package, actor_id: addressed_actor_id(snap.actor, snap.generation).await, guard: CancelOnDrop::new(cancel) }
 }
 //#endregion 📞️CallContext
 
@@ -564,6 +572,7 @@ mod effect_conversion_tests;
 /// 🌿️ Byte-for-byte the same behaviour as `actor_bindings`'s own `pure::Host for ActorHostState` —
 /// there is one world now and it imports `pure` unchanged.
 impl host_async_bindings::semio::framework::pure::Host for AsyncActorHostState {
+
     /// 🚫️async: E1 — see `actor_bindings::…::pure::Host`'s own tag above; identical WIT contract.
     fn log(&mut self, level: String, message: String) {
         eprintln!("[actor-async:{}:{level}] {message}", self.actor);
@@ -606,7 +615,7 @@ impl wit_host_async::Host for AsyncActorHostState {
 /// `cache-read`/`invoke-extension`/`dispatch-action`) — one explicit resumable router job, driven
 /// one bounded step per worker closure and awaited inline to resolve the guest's future.
 async fn run_router_effect(call: &CallContext, effect: crate::effects::RouterEffect, name: &str) -> Result<Vec<u8>, Vec<u8>> {
-    let result = crate::effects::run_router_effect_job(call.services.compute.as_ref(), call.services.runtime.as_ref(), &call.scope, call.ctx.clone(), &call.router_handler, effect).await;
+    let result = crate::effects::run_router_effect_job(call.services.compute.as_ref(), call.services.runtime.as_ref(), &call.scope, call.ctx.clone(), call.router_turn_grant, &call.router_handler, effect).await;
     match result {
         crate::effects::RouterEffectJobOutcome::Complete(bytes) => Ok(bytes),
         crate::effects::RouterEffectJobOutcome::Cancelled => Err(fault_bytes("capability-revoked", format!("{name} cancelled")).await),
@@ -934,3 +943,20 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
     //#endregion 🚧️not-yet-wired
 }
 //#endregion ⏳️host_async::HostWithStore (the 24 async imports)
+
+/// 🛂️ Generated concurrent imports forward the real inline admission slot to the original caller pump.
+impl host_async_bindings::semio::framework::pure::HostWithStore<AsyncActorHostState> for wasmtime::component::HasSelf<AsyncActorHostState> {
+ async fn operation_begin(accessor:&wasmtime::component::Accessor<AsyncActorHostState,Self>)->Result<u64,u32>{match super::operation::wasmtime::request(accessor,super::operation::slot::OperationRequest::Begin).await{super::operation::slot::OperationReply::Begin(value)=>value,_=>Err(4)}}
+ async fn operation_progress(accessor:&wasmtime::component::Accessor<AsyncActorHostState,Self>,completed:u64,total:u64,owned:u64)->u32{match super::operation::wasmtime::request(accessor,super::operation::slot::OperationRequest::Progress{completed,total,owned}).await{super::operation::slot::OperationReply::Code(value)=>value,_=>4}}
+ async fn operation_allocation(accessor:&wasmtime::component::Accessor<AsyncActorHostState,Self>,bytes:u64,owned:u64,next:u64,maximum:u64)->u32{match super::operation::wasmtime::request(accessor,super::operation::slot::OperationRequest::Allocation{bytes,owned,next,maximum}).await{super::operation::slot::OperationReply::Code(value)=>value,_=>4}}
+ async fn operation_reserve_return(accessor:&wasmtime::component::Accessor<AsyncActorHostState,Self>,kind:host_async_bindings::semio::framework::pure::OperationReturnAllocation,count:u64)->u32{match super::operation::wasmtime::request(accessor,super::operation::slot::OperationRequest::ReserveReturn{kind:super::operation::wasmtime::allocation_kind(kind),count}).await{super::operation::slot::OperationReply::Code(value)=>value,_=>4}}
+ async fn operation_finish(accessor:&wasmtime::component::Accessor<AsyncActorHostState,Self>,owned:u64)->u32{match super::operation::wasmtime::request(accessor,super::operation::slot::OperationRequest::Finish{owned}).await{super::operation::slot::OperationReply::Code(value)=>value,_=>4}}
+}
+
+/// 🪟️ The actual asynchronous actor state retains its own inline receiving slot.
+impl super::operation::wasmtime::OperationHostStore for AsyncActorHostState {
+ fn operation_slot(&mut self)->&mut super::operation::slot::OperationSlot{&mut self.operation_slot}
+ fn operation_log(&mut self,level:String,message:String){host_async_bindings::semio::framework::pure::Host::log(self,level,message)}
+ fn operation_now_ms(&mut self)->i64{host_async_bindings::semio::framework::pure::Host::now_ms(self)}
+ fn operation_trace_span(&mut self,name:String){host_async_bindings::semio::framework::pure::Host::trace_span(self,name)}
+}

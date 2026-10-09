@@ -170,7 +170,7 @@ fn replication_mint_and_the_blake3_crate_reproduce_every_fixture_id() {
     for row in law["ids"].as_array().expect("ids") {
         let (actor, tool, expected) = (text(&row["actor"]), text(&row["tool"]), text(&row["id"]));
         let clock = clock(&row["clock"]);
-        let minted = TransactionRef::mint(&ActorId(actor.to_string()), &clock, tool);
+        let minted = TransactionRef::mint(&ActorId(actor.into()), &clock, tool);
         assert_eq!(minted, TransactionRef { id: expected.to_string(), tool: tool.to_string() }, "{row}");
         let mut material = Vec::new();
         length_prefixed(&mut material, actor);

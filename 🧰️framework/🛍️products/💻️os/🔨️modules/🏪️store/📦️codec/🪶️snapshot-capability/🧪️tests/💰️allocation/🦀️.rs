@@ -5,85 +5,110 @@ use semio_framework_diagnostic::{TextError, TextSpan};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use std::cell::Cell;
 
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_value::RetireOwned)]
 struct AllocationRecord { literal: String }
 
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
 fn literal() -> String { let case = fixture(); case["literal"]["unit"].as_str().unwrap().repeat(case["literal"]["repeat"].as_u64().unwrap() as usize) }
 fn limits() -> SqliteDatabaseLimits { SqliteDatabaseLimits { max_allocation_bytes: fixture()["maximumAllocationBytes"].as_u64().unwrap() as usize, ..SqliteDatabaseLimits::default() } }
 
-fn encode(source: &AllocationRecord, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<IoPayload, ValueError> {
-    store::encode_sqlite_snapshot_record_native(encoding, fixture()["envelopeId"].as_str().unwrap(), AllocationRecord::__dsl_spec_producer(), |native| source.__dsl_to_record_controlled(native), control)
+fn encode(source: &AllocationRecord, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,snapshot_encoding_owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>) -> Result<IoPayload, ValueError> {
+    store::encode_sqlite_snapshot_record_native(encoding, fixture()["envelopeId"].as_str().unwrap(), AllocationRecord::__dsl_spec_producer(), |native| source.__dsl_to_record_controlled(native), control,snapshot_encoding_owner)
 }
-fn decode(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<AllocationRecord, ValueError> {
-    decode_at_binding(payload,control,&Cell::new(false))
+fn decode(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>,snapshot_decoding_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>) -> Result<AllocationRecord, ValueError> {
+    decode_at_binding(payload,control,&Cell::new(false),snapshot_decoding_owner)
 }
-fn decode_at_binding(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,binding:&Cell<bool>)->Result<AllocationRecord,ValueError>{
-    store::decode_sqlite_snapshot_record_native(payload, fixture()["envelopeId"].as_str().unwrap(), AllocationRecord::__dsl_spec_producer(), |record, native| {binding.set(true);let result=AllocationRecord::__dsl_from_record_controlled(record,native);binding.set(false);result}, control)
+fn decode_at_binding(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,binding:&Cell<bool>,snapshot_decoding_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<AllocationRecord,ValueError>{
+    store::decode_sqlite_snapshot_record_native(payload, fixture()["envelopeId"].as_str().unwrap(), AllocationRecord::__dsl_spec_producer(), |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {binding.set(true);let result=AllocationRecord::__dsl_from_record_controlled(record,native);binding.set(false);result})(); *snapshot_output = Some(constructed?); Ok(()) }, control,snapshot_decoding_owner)
 }
 
 #[test]
 fn sqlite_snapshot_native_allocation_encode_settles_success_before_repeated_production() {
+ let snapshot_policy=fixture();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["callerGrant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
+let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
+
     let source = AllocationRecord { literal: literal() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let limits = limits(); let mut yes = |_| true; let mut control = SqliteSnapshotControl::new(&mut yes, limits);
-        let output = encode(&source, encoding, &mut control).unwrap();
+        let output = encode(&source, encoding, &mut control,&mut snapshot_encoding_owner).unwrap();
         let used = limits.max_allocation_bytes - control.allocation_remaining_bytes();
         assert!(used >= source.literal.len(), "{encoding:?}: native ownership must settle into its caller");
         let exact = SqliteDatabaseLimits { max_allocation_bytes: used, ..limits }; let mut yes = |_| true; let mut control = SqliteSnapshotControl::new(&mut yes, exact);
-        assert_eq!(encode(&source, encoding, &mut control).unwrap(), output); assert_eq!(control.allocation_remaining_bytes(), 0);
+        assert_eq!(encode(&source, encoding, &mut control,&mut snapshot_encoding_owner).unwrap(), output); assert_eq!(control.allocation_remaining_bytes(), 0);
         let mut entered = false;
-        let result = store::encode_sqlite_snapshot_record_native(encoding, "fixture.allocation", AllocationRecord::__dsl_spec_producer(), |native| { entered = true; source.__dsl_to_record_controlled(native) }, &mut control);
+        let result = store::encode_sqlite_snapshot_record_native(encoding, "fixture.allocation", AllocationRecord::__dsl_spec_producer(), |native| { entered = true; source.__dsl_to_record_controlled(native) }, &mut control,&mut snapshot_encoding_owner);
         assert!(result.is_err()); assert!(!entered, "metadata must refuse before subsequent literal construction"); assert_eq!(control.allocation_remaining_bytes(), 0);
         let mut yes = |_| true; let mut control = SqliteSnapshotControl::new(&mut yes, SqliteDatabaseLimits { max_value_bytes: fixture()["semanticBytes"].as_u64().unwrap() as usize, ..limits });
-        assert_eq!(encode(&source, encoding, &mut control).unwrap(), output, "native backing is independent of semantic SQL payload");
+        assert_eq!(encode(&source, encoding, &mut control,&mut snapshot_encoding_owner).unwrap(), output, "native backing is independent of semantic SQL payload");
     }
+
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
 }
 
 #[test]
 fn sqlite_snapshot_native_allocation_decode_settles_success_before_repeated_binding() {
+ let snapshot_policy=fixture();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["callerGrant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
+let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snapshot_decoding_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut snapshot_decoding_native=semio_framework_value::NativeDecodeControl::new(snapshot_native_maximum,&mut snapshot_decoding_progress);snapshot_decoding_native.install_retirement_recipient(&mut snapshot_decoding_recipient).unwrap();let mut snapshot_decoding_owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut snapshot_decoding_native,snapshot_caller_grant);
+let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
+
     let source = AllocationRecord { literal: literal() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let limits = limits(); let payload = encode(&source, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        let limits = limits(); let payload = encode(&source, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits),&mut snapshot_encoding_owner).unwrap();
         let mut yes = |_| true; let mut control = SqliteSnapshotControl::new(&mut yes, limits);
-        assert_eq!(decode(&payload, &mut control).unwrap().literal, source.literal);
+        assert_eq!(decode(&payload, &mut control,&mut snapshot_decoding_owner).unwrap().literal, source.literal);
         let used = limits.max_allocation_bytes - control.allocation_remaining_bytes(); assert!(used >= source.literal.len(), "{encoding:?}: parser and binding admission must settle");
         let mut yes = |_| true; let mut control = SqliteSnapshotControl::new(&mut yes, SqliteDatabaseLimits { max_allocation_bytes: used, ..limits });
-        assert_eq!(decode(&payload, &mut control).unwrap().literal, source.literal); assert_eq!(control.allocation_remaining_bytes(), 0);
-        let mut entered = false; let result = store::decode_sqlite_snapshot_record_native(&payload, "fixture.allocation", AllocationRecord::__dsl_spec_producer(), |record, native| { entered = true; AllocationRecord::__dsl_from_record_controlled(record, native) }, &mut control);
+        assert_eq!(decode(&payload, &mut control,&mut snapshot_decoding_owner).unwrap().literal, source.literal); assert_eq!(control.allocation_remaining_bytes(), 0);
+        let mut entered = false; let result = store::decode_sqlite_snapshot_record_native(&payload, "fixture.allocation", AllocationRecord::__dsl_spec_producer(), |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| { entered = true; AllocationRecord::__dsl_from_record_controlled(record, native) })(); *snapshot_output = Some(constructed?); Ok(()) }, &mut control,&mut snapshot_decoding_owner);
         assert!(result.is_err()); assert!(!entered); assert_eq!(control.allocation_remaining_bytes(), 0);
         let mut yes = |_| true; let mut control = SqliteSnapshotControl::new(&mut yes, SqliteDatabaseLimits { max_value_bytes: fixture()["semanticBytes"].as_u64().unwrap() as usize, ..limits });
-        assert_eq!(decode(&payload, &mut control).unwrap().literal, source.literal);
+        assert_eq!(decode(&payload, &mut control,&mut snapshot_decoding_owner).unwrap().literal, source.literal);
     }
+
+drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+
 }
 
 #[test]
 fn sqlite_snapshot_native_allocation_canceled_input_and_output_keep_actual_admission() {
+ let snapshot_policy=fixture();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["callerGrant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
+let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snapshot_decoding_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut snapshot_decoding_native=semio_framework_value::NativeDecodeControl::new(snapshot_native_maximum,&mut snapshot_decoding_progress);snapshot_decoding_native.install_retirement_recipient(&mut snapshot_decoding_recipient).unwrap();let mut snapshot_decoding_owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut snapshot_decoding_native,snapshot_caller_grant);
+let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
+
     let source = AllocationRecord { literal: literal() }; let neutral = fixture(); let threshold = neutral["literal"]["cancelAfterBytes"].as_u64().unwrap() as usize;
     let observed=Cell::new(false);let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.total==source.literal.len()&&event.completed>threshold&&event.completed<event.total{assert_eq!(event.owned_bytes,neutral["cancellation"]["stages"][0]["ownedLiteralBytes"].as_u64().unwrap()as usize);observed.set(true);false}else{true}};let mut borrowed=semio_framework_value::NativeDecodeControl::new(0,&mut callback);assert!(matches!(borrowed.borrow_text(source.literal.as_bytes()),Err(ValueError{kind:ValueRefusalKind::Canceled,..})));assert!(observed.get());assert_eq!(borrowed.owned_bytes(),0);assert!(matches!(borrowed.copy_text(&source.literal),Err(ValueError{kind:ValueRefusalKind::OwnershipLimit,..})));assert_eq!(borrowed.owned_bytes(),0);
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let limits = limits(); let payload = encode(&source, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        let limits = limits(); let payload = encode(&source, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits),&mut snapshot_encoding_owner).unwrap();
         for phase in [SqliteSnapshotPhase::DecodeNative, SqliteSnapshotPhase::EncodeNative] {
             let stage=neutral["cancellation"]["stages"].as_array().unwrap().iter().find(|stage|stage["scope"].as_str()==Some(if phase==SqliteSnapshotPhase::DecodeNative{"owned-binding"}else{"owned-projection"})).unwrap();assert_eq!(stage["phase"].as_str(),Some(if phase==SqliteSnapshotPhase::DecodeNative{"DecodeNative"}else{"EncodeNative"}));assert_eq!(stage["ownedLiteralBytes"].as_u64().unwrap()as usize,source.literal.len());
             let reached = Cell::new(false);let binding=Cell::new(false);let borrowed=Cell::new(false);
             let mut callback = |event: store::sqlite_snapshot::SqliteSnapshotProgress| { let interior=event.phase==phase&&event.total==source.literal.len()&&event.completed>threshold&&event.completed<event.total;if interior&&phase==SqliteSnapshotPhase::DecodeNative&&!binding.get(){borrowed.set(true);}if interior&&(phase!=SqliteSnapshotPhase::DecodeNative||binding.get()){reached.set(true);false}else{true} };
             let mut control = SqliteSnapshotControl::new(&mut callback, limits);
-            let result = match phase { SqliteSnapshotPhase::DecodeNative => decode_at_binding(&payload, &mut control,&binding).map(|_| ()), SqliteSnapshotPhase::EncodeNative => encode(&source, encoding, &mut control).map(|_| ()), _ => unreachable!() };
+            let result = match phase { SqliteSnapshotPhase::DecodeNative => decode_at_binding(&payload, &mut control,&binding,&mut snapshot_decoding_owner).map(|_| ()), SqliteSnapshotPhase::EncodeNative => encode(&source, encoding, &mut control,&mut snapshot_encoding_owner).map(|_| ()), _ => unreachable!() };
             assert!(result.is_err()); assert!(reached.get(), "{encoding:?}/{phase:?}: actual interior copy must cancel");
             assert!(!binding.get());if encoding==SnapshotEncoding::Binary&&phase==SqliteSnapshotPhase::DecodeNative{assert!(borrowed.get(),"borrowed parser validation must finish before the selected owned binding");}
             let used = limits.max_allocation_bytes - control.allocation_remaining_bytes(); assert!(used >= source.literal.len(), "canceled allocated copy must remain charged");
             let canceled = Cell::new(false);let binding=Cell::new(false);
             let mut once = |event: store::sqlite_snapshot::SqliteSnapshotProgress| { if !canceled.get() && event.phase == phase && (phase!=SqliteSnapshotPhase::DecodeNative||binding.get())&&event.total == source.literal.len() && event.completed > threshold && event.completed < event.total { canceled.set(true); false } else { true } };
             let mut repeated = SqliteSnapshotControl::new(&mut once, SqliteDatabaseLimits { max_allocation_bytes: used, ..limits });
-            let result = match phase { SqliteSnapshotPhase::DecodeNative => decode_at_binding(&payload, &mut repeated,&binding).map(|_| ()), SqliteSnapshotPhase::EncodeNative => encode(&source, encoding, &mut repeated).map(|_| ()), _ => unreachable!() };
+            let result = match phase { SqliteSnapshotPhase::DecodeNative => decode_at_binding(&payload, &mut repeated,&binding,&mut snapshot_decoding_owner).map(|_| ()), SqliteSnapshotPhase::EncodeNative => encode(&source, encoding, &mut repeated,&mut snapshot_encoding_owner).map(|_| ()), _ => unreachable!() };
             assert!(result.is_err()); assert!(canceled.get(), "{encoding:?}/{phase:?}: exact canceled admission {used} must reach the same owned copy: {result:?}; remaining {}", repeated.allocation_remaining_bytes()); assert_eq!(repeated.allocation_remaining_bytes(), 0);
-            assert!(encode(&source, encoding, &mut repeated).is_err()); assert_eq!(repeated.allocation_remaining_bytes(), 0);
+            assert!(encode(&source, encoding, &mut repeated,&mut snapshot_encoding_owner).is_err()); assert_eq!(repeated.allocation_remaining_bytes(), 0);
         }
     }
+
+drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
 }
 
 #[test]
 fn sqlite_snapshot_native_allocation_typed_refusal_keeps_admission_and_literal_error() {
+ let snapshot_policy=fixture();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["callerGrant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
+let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snapshot_decoding_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut snapshot_decoding_native=semio_framework_value::NativeDecodeControl::new(snapshot_native_maximum,&mut snapshot_decoding_progress);snapshot_decoding_native.install_retirement_recipient(&mut snapshot_decoding_recipient).unwrap();let mut snapshot_decoding_owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut snapshot_decoding_native,snapshot_caller_grant);
+
+let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
+
     let source = AllocationRecord { literal: literal() };
     let neutral:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧫️fixtures/🔣️.json")).unwrap();
     let kinds=[ValueRefusalKind::InvalidValue,ValueRefusalKind::Canceled,ValueRefusalKind::OwnershipLimit,ValueRefusalKind::AllocationFailed,ValueRefusalKind::WorkLimit,ValueRefusalKind::DepthLimit,ValueRefusalKind::UnsupportedOwner,ValueRefusalKind::InvariantViolated,ValueRefusalKind::InvalidValue];
@@ -93,13 +118,17 @@ fn sqlite_snapshot_native_allocation_typed_refusal_keeps_admission_and_literal_e
         assert_eq!(case["kind"].as_str(),Some(kind.as_str()));
         let message=case["message"].as_str().unwrap();
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-            let limits=limits();let payload=encode(&source,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
+            let limits=limits();let payload=encode(&source,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits),&mut snapshot_encoding_owner).unwrap();
             let mut yes=|_|true;let mut control=SqliteSnapshotControl::new(&mut yes,limits);
-            let result=store::encode_sqlite_snapshot_record_native(encoding,"fixture.allocation",AllocationRecord::__dsl_spec_producer(),|native|{let owned=native.copy_text(&source.literal)?;drop(owned);Err(ValueError::new(kind,message))},&mut control);
+            let result=store::encode_sqlite_snapshot_record_native(encoding,"fixture.allocation",AllocationRecord::__dsl_spec_producer(),|native|{let owned=native.copy_text(&source.literal)?;drop(owned);Err(ValueError::new(kind,message))},&mut control,&mut snapshot_encoding_owner);
             let refusal=result.unwrap_err();assert_eq!(refusal.kind,kind);assert_eq!(refusal.message,message);let terminal=store::io_schema::IoError::from_value_error(refusal);assert_eq!(terminal.cause.kind,kind);assert_eq!(terminal.cause.message,message);assert!(limits.max_allocation_bytes-control.allocation_remaining_bytes()>=source.literal.len());
             let mut yes=|_|true;let mut control=SqliteSnapshotControl::new(&mut yes,limits);
-            let result:Result<(),ValueError>=store::decode_sqlite_snapshot_record_native(&payload,"fixture.allocation",AllocationRecord::__dsl_spec_producer(),|_,native|{let owned=native.copy_text(&source.literal)?;drop(owned);Err(ValueError::new(kind,message))},&mut control);
+            let result:Result<String,ValueError>=store::decode_sqlite_snapshot_record_native(&payload,"fixture.allocation",AllocationRecord::__dsl_spec_producer(),|_,snapshot_output,native,body|{*snapshot_output=Some(String::new());body.copy_text_into(native,&source.literal,snapshot_output.as_mut().unwrap(),1)?;Err(ValueError::new(kind,message))},&mut control,&mut snapshot_decoding_owner);
             let refusal=result.unwrap_err();assert_eq!(refusal.kind,kind);assert_eq!(refusal.message,message);let terminal=store::io_schema::IoError::from_value_error(refusal);assert_eq!(terminal.cause.kind,kind);assert_eq!(terminal.cause.message,message);assert!(limits.max_allocation_bytes-control.allocation_remaining_bytes()>=source.literal.len());
         }
     }
+
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+
+drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
 }

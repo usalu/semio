@@ -1,0 +1,498 @@
+[
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 95,
+    "column": 110,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:95:110\n   |\n95 | ...), StepBudget::new(0, 99, crate::os_store::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut o...\n   |                                               ^^^^^ could not find `tests` in `os_store`\n   |\nhelp: consider importing this module\n   |\n 2 + use crate::os_store::component::tests;\n   |\nhelp: if you import `tests`, refer to it directly\n   |\n95 -     let mut zero = StepContext::new(OperationId(11), Generation(13), StepBudget::new(0, 99, crate::os_store::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_1);\n95 +     let mut zero = StepContext::new(OperationId(11), Generation(13), StepBudget::new(0, 99, tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_1);\n   |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 107,
+    "column": 115,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:107:115\n    |\n107 | ...StepBudget::new(fuel, 99, crate::os_store::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  2 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n107 -         let mut cx = StepContext::new(OperationId(11), Generation(13), StepBudget::new(fuel, 99, crate::os_store::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_2);\n107 +         let mut cx = StepContext::new(OperationId(11), Generation(13), StepBudget::new(fuel, 99, tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_2);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 131,
+    "column": 115,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:131:115\n    |\n131 | ...), StepBudget::new(1, 99, crate::os_store::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  2 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n131 -         let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99, crate::os_store::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_3);\n131 +         let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99, tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_3);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 136,
+    "column": 114,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:136:114\n    |\n136 | ...), StepBudget::new(1, 99, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  2 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n136 -         let mut next = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_4);\n136 +         let mut next = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99, tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_4);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 183,
+    "column": 115,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:183:115\n    |\n183 | ...), StepBudget::new(2, 99, crate::os_store::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  2 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n183 -         let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(2, 99, crate::os_store::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_5);\n183 +         let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(2, 99, tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_5);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 192,
+    "column": 129,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:192:129\n    |\n192 | ... StepBudget::new(64, 999, crate::os_store::tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_reta...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  2 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n192 -         let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(64, 999, crate::os_store::tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_6);\n192 +         let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(64, 999, tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_6);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "line": 130,
+    "column": 115,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs:130:115\n    |\n130 | ...tepBudget::new(4096, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n130 -         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_1);\n130 +         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_1);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "line": 135,
+    "column": 120,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs:135:120\n    |\n135 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n135 -                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);\n135 +                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "line": 156,
+    "column": 104,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs:156:104\n    |\n156 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n156 -     let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_3);\n156 +     let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_3);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "line": 197,
+    "column": 112,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs:197:112\n    |\n197 | ...epBudget::new(grant, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n197 -     let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);\n197 +     let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "line": 254,
+    "column": 116,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs:254:116\n    |\n254 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n254 -             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);\n254 +             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "line": 304,
+    "column": 116,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs:304:116\n    |\n304 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n304 -             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_6);\n304 +             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_6);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "line": 319,
+    "column": 132,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs:319:132\n    |\n319 | ..., StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_reta...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n319 -             let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_7);\n319 +             let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(7, 999, tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_7);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "line": 325,
+    "column": 119,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs:325:119\n    |\n325 | ..., StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n325 -                 let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_8);\n325 +                 let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_8);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "line": 361,
+    "column": 128,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs:361:128\n    |\n361 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n361 -                         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_9);\n361 +                         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_9);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "line": 413,
+    "column": 127,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs:413:127\n    |\n413 | ...t::new(grant as u64, 999, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n413 -             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_10);\n413 +             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_10);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 187,
+    "column": 115,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:187:115\n    |\n187 | ...tepBudget::new(4096, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n187 -         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_1);\n187 +         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_1);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 192,
+    "column": 120,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:192:120\n    |\n192 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n192 -                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);\n192 +                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 227,
+    "column": 104,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:227:104\n    |\n227 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n227 -     let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_3);\n227 +     let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_3);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 239,
+    "column": 110,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:239:110\n    |\n239 | ..., StepBudget::new(0, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n239 -     let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);\n239 +     let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 246,
+    "column": 123,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:246:123\n    |\n246 | ...t::new(grant as u64, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n246 -         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);\n246 +         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 265,
+    "column": 108,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:265:108\n    |\n265 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n265 -     let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_6);\n265 +     let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_6);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 363,
+    "column": 104,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:363:104\n    |\n363 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n363 -     let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_7);\n363 +     let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_7);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 367,
+    "column": 112,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:367:112\n    |\n367 | ..., StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n367 -         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_8);\n367 +         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_8);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 372,
+    "column": 120,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:372:120\n    |\n372 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n372 -                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_9);\n372 +                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_9);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 394,
+    "column": 116,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:394:116\n    |\n394 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n394 -                 let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_10);\n394 +                 let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_10);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 408,
+    "column": 112,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:408:112\n    |\n408 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n408 -             let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_11);\n408 +             let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_11);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 414,
+    "column": 124,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:414:124\n    |\n414 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n414 -                     let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_12);\n414 +                     let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_12);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 422,
+    "column": 116,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:422:116\n    |\n422 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n422 -             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_13);\n422 +             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_13);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 439,
+    "column": 196,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:439:196\n    |\n439 | ..., StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_reta...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n439 -             let mut cx = StepContext::new(OperationId(if event == \"operation\" { 8 } else { 7 }), Generation(if event == \"generation\" { 12 } else { 11 }), StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_14);\n439 +             let mut cx = StepContext::new(OperationId(if event == \"operation\" { 8 } else { 7 }), Generation(if event == \"generation\" { 12 } else { 11 }), StepBudget::new(7, 999, tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_14);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 459,
+    "column": 115,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:459:115\n    |\n459 | ..., StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n459 -             let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_15);\n459 +             let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_15);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 479,
+    "column": 118,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:479:118\n    |\n479 | ..., StepBudget::new(0, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n479 -             let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_16);\n479 +             let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_16);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 483,
+    "column": 116,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:483:116\n    |\n483 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n483 -             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_17);\n483 +             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_17);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 491,
+    "column": 131,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:491:131\n    |\n491 | ...t::new(grant as u64, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n491 -                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_18);\n491 +                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_18);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 507,
+    "column": 116,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:507:116\n    |\n507 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n507 -             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_19);\n507 +             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_19);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 535,
+    "column": 120,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:535:120\n    |\n535 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n535 -                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_20);\n535 +                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_20);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 540,
+    "column": 135,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:540:135\n    |\n540 | ...t::new(grant as u64, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n540 -                     let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_21);\n540 +                     let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_21);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 557,
+    "column": 196,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:557:196\n    |\n557 | ..., StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n557 -             let mut cx = StepContext::new(OperationId(if event == \"operation\" { 8 } else { 7 }), Generation(if event == \"generation\" { 12 } else { 11 }), StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_22);\n557 +             let mut cx = StepContext::new(OperationId(if event == \"operation\" { 8 } else { 7 }), Generation(if event == \"generation\" { 12 } else { 11 }), StepBudget::new(7, 999, tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_22);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 563,
+    "column": 123,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:563:123\n    |\n563 | ..., StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n563 -                 let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_23);\n563 +                 let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_23);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "line": 575,
+    "column": 123,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs:575:123\n    |\n575 | ..., StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  3 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n575 -                 let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_24);\n575 +                 let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_24);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 85,
+    "column": 115,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs:85:115\n   |\n85 | ...tepBudget::new(fuel, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &...\n   |                                               ^^^^^ could not find `tests` in `os_store`\n   |\nhelp: consider importing this module\n   |\n 1 + use crate::os_store::component::tests;\n   |\nhelp: if you import `tests`, refer to it directly\n   |\n85 -         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(fuel, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_1);\n85 +         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(fuel, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_1);\n   |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 108,
+    "column": 116,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs:108:116\n    |\n108 | ..., StepBudget::new(0, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n108 -             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);\n108 +             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 113,
+    "column": 114,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs:113:114\n    |\n113 | ...1), StepBudget::new(7, 1, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n113 -             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 1, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_3);\n113 +             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 1, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_3);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 121,
+    "column": 120,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs:121:120\n    |\n121 | ..., StepBudget::new(0, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n121 -                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);\n121 +                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 125,
+    "column": 118,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs:125:118\n    |\n125 | ...1), StepBudget::new(1, 1, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n125 -                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 1, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);\n125 +                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 1, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 129,
+    "column": 123,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs:129:123\n    |\n129 | ...tepBudget::new(4096, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n129 -                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_6);\n129 +                 let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_6);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 161,
+    "column": 116,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs:161:116\n    |\n161 | ..., StepBudget::new(2, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n161 -             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(2, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_7);\n161 +             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(2, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_7);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 169,
+    "column": 116,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs:169:116\n    |\n169 | ..., StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n169 -             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_8);\n169 +             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_8);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 178,
+    "column": 116,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs:178:116\n    |\n178 | ..., StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n178 -             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_9);\n178 +             let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_9);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 203,
+    "column": 128,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs:203:128\n    |\n203 | ..., StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_reta...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n203 -         let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_10);\n203 +         let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(7, 999, tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_10);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 214,
+    "column": 112,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs:214:112\n    |\n214 | ..., StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, ...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n214 -         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_11);\n214 +         let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_11);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 38,
+    "column": 135,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs:38:135\n   |\n38 | ...pBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some...\n   |                                               ^^^^^ could not find `tests` in `os_store`\n   |\nhelp: consider importing this module\n   |\n 1 + use crate::os_store::component::tests;\n   |\nhelp: if you import `tests`, refer to it directly\n   |\n38 -     let mut cx = StepContext::new(OperationId(811), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_1);\n38 +     let mut cx = StepContext::new(OperationId(811), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_1);\n   |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 53,
+    "column": 47,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs:53:47\n   |\n53 |         hydration.close_step(crate::os_store::tests::physical_test_close_grant()).unwrap();\n   |                                               ^^^^^ could not find `tests` in `os_store`\n   |\nhelp: consider importing this module\n   |\n 1 + use crate::os_store::component::tests;\n   |\nhelp: if you import `tests`, refer to it directly\n   |\n53 -         hydration.close_step(crate::os_store::tests::physical_test_close_grant()).unwrap();\n53 +         hydration.close_step(tests::physical_test_close_grant()).unwrap();\n   |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 101,
+    "column": 139,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs:101:139\n    |\n101 | ...pBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Som...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n101 -         let mut cx = StepContext::new(OperationId(805), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);\n101 +         let mut cx = StepContext::new(OperationId(805), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 109,
+    "column": 139,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs:109:139\n    |\n109 | ...pBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Som...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n109 -         let mut cx = StepContext::new(OperationId(805), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_3);\n109 +         let mut cx = StepContext::new(OperationId(805), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_3);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 145,
+    "column": 139,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs:145:139\n    |\n145 | ...pBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Som...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n145 -         let mut cx = StepContext::new(OperationId(807), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);\n145 +         let mut cx = StepContext::new(OperationId(807), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 169,
+    "column": 135,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs:169:135\n    |\n169 | ...pBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Som...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n169 -     let mut cx = StepContext::new(OperationId(806), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);\n169 +     let mut cx = StepContext::new(OperationId(806), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 205,
+    "column": 135,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs:205:135\n    |\n205 | ...pBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Som...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n205 -     let mut cx = StepContext::new(OperationId(808), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, crate::os_store::tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_6);\n205 +     let mut cx = StepContext::new(OperationId(808), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, tests::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_6);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 238,
+    "column": 142,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs:238:142\n    |\n238 | ...dget::new(fuel, deadline, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original...\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n238 -         let mut cx = StepContext::new(OperationId(803), Generation(1), semio_framework_job::StepBudget::new(fuel, deadline, crate::os_store::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_7);\n238 +         let mut cx = StepContext::new(OperationId(803), Generation(1), semio_framework_job::StepBudget::new(fuel, deadline, tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_7);\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 188,
+    "column": 125,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs:188:125\n    |\n188 | ...aximum_copy_bytes: 512, ..crate::os_store::tests::physical_test_close_grant() };\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n188 -         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: 512, ..crate::os_store::tests::physical_test_close_grant() };\n188 +         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: 512, ..tests::physical_test_close_grant() };\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 209,
+    "column": 60,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs:209:60\n    |\n209 | ...   if matches!(retirement.close_step(crate::os_store::tests::physical_test_close_grant()).expect(\"erased group read retirement r...\n    |                                                          ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n209 -         if matches!(retirement.close_step(crate::os_store::tests::physical_test_close_grant()).expect(\"erased group read retirement remains infallible\"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {\n209 +         if matches!(retirement.close_step(tests::physical_test_close_grant()).expect(\"erased group read retirement remains infallible\"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {\n    |\n\n"
+  },
+  {
+    "code": "E0433",
+    "message": "cannot find `tests` in `os_store`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 359,
+    "column": 141,
+    "rendered": "error[E0433]: cannot find `tests` in `os_store`\n   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs:359:141\n    |\n359 | ...64().unwrap() as usize, ..crate::os_store::tests::physical_test_close_grant() };\n    |                                               ^^^^^ could not find `tests` in `os_store`\n    |\nhelp: consider importing this module\n    |\n  1 + use crate::os_store::component::tests;\n    |\nhelp: if you import `tests`, refer to it directly\n    |\n359 -             let grant = RetainedCloneGrant { maximum_copy_bytes: fixture[\"maximumBodyBytes\"].as_u64().unwrap() as usize, ..crate::os_store::tests::physical_test_close_grant() };\n359 +             let grant = RetainedCloneGrant { maximum_copy_bytes: fixture[\"maximumBodyBytes\"].as_u64().unwrap() as usize, ..tests::physical_test_close_grant() };\n    |\n\n"
+  }
+]

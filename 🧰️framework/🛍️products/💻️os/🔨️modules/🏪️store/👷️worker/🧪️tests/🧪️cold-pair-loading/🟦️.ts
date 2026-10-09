@@ -1,4 +1,5 @@
 import fc from "fast-check";
+import examples from "../../🧫️fixtures/🧫️cold-pair-loading/🔣️.json";
 import type { ColdDocumentPairCursor, ColdPairIngressStatus } from "../../../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
 import type { ActorInstanceLifetime } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 
@@ -44,8 +45,7 @@ function fakeClock(fields: PolicyFields, turnMs: number) {
  * against the language-agnostic examples and fast-check properties on a fake clock. */
 export async function registerColdPairLoadingTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: ColdPairLoadingTestDependencies): Promise<void> {
   const { describe, expect, it } = vitest;
-  const { readFile } = await import("node:fs/promises");
-  const corpus = JSON.parse(await readFile(new URL("../../🧫️fixtures/🧫️cold-pair-loading/🔣️.json", import.meta.url), "utf8")) as Corpus;
+  const corpus = examples as Corpus;
   const lifetime = { activationGeneration: 3n, instanceId: 1, guestLifetime: 5n };
   const cursor: ColdDocumentPairCursor = { lifetime, transferGeneration: BigInt(corpus.cursor.transferGeneration), pageIndex: corpus.cursor.pageIndex, pageCount: corpus.cursor.pageCount };
   const status = (answer: Answer): ColdPairIngressStatus | null => {

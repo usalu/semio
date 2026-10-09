@@ -1,4 +1,8 @@
 {
+  "tableOrder": {
+    "admitted": ["ordered", "reversed", "rotated"],
+    "refused": ["renamed", "missing"]
+  },
   "binary32Words": [
     "00000000",
     "80000000",

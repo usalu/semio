@@ -1,0 +1,18 @@
+[
+  {
+    "code": "E0432",
+    "message": "unresolved import `crate::os_store::ArtifactEditMessageLedgerRetirement`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 375,
+    "column": 54,
+    "currentSha256": "a85402e742df7bcf82017594b04eaa287d71ceba188c5afe3529c6673516a869"
+  },
+  {
+    "code": "E0432",
+    "message": "unresolved import `crate::os_store::ArtifactStoreEnvelopeRetirement`",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 443,
+    "column": 72,
+    "currentSha256": "a85402e742df7bcf82017594b04eaa287d71ceba188c5afe3529c6673516a869"
+  }
+]

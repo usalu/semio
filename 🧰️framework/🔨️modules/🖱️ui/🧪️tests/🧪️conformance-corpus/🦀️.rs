@@ -70,7 +70,8 @@ fn mount(window: &str, snapshot: &serde_json::Value) -> (Ui, usize) {
     let mut sequence = 0;
     let mut reconciled = false;
     for _ in 0..4096 {
-        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(4096, u64::MAX), cancel.clone(), test_clock, &mut sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(4096, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut sequence,&mut actual_retained_progress);
         match ui.step_document_reconcile(window, "conformance", &mut cx) {
             UiDocumentReconcileStep::Pending => {}
             UiDocumentReconcileStep::Complete => {
@@ -87,7 +88,8 @@ fn mount(window: &str, snapshot: &serde_json::Value) -> (Ui, usize) {
     let mut preview_sequence = 0;
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
     let settled = loop {
-        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
         if matches!(ui.step_layouts(&pool, &mut atlas, &mut cx), UiLayoutStep::Idle) {
             break true;
         }

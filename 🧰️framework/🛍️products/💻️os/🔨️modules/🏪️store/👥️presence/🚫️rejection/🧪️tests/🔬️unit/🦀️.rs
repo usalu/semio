@@ -1,33 +1,23 @@
 use super::*;
 
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct Factory(#[factory_child] Arc<std::sync::atomic::AtomicUsize>);
-struct Retirement(std::mem::ManuallyDrop<Option<Arc<i32>>>, Arc<std::sync::atomic::AtomicUsize>);
+use crate::os_store::component::presence_test_retirement::{Factory, CLOSE_GRANT, observed_step, observed_box_close, finish_box};
 
-impl SnapshotRetirementFactory<i32> for Factory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<i32>) -> usize { std::mem::size_of::<Retirement>() }
-
-    fn retire(&self, value: Arc<i32>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(Retirement(std::mem::ManuallyDrop::new(Some(value)), self.0.clone()))
+fn close_publication(original: &mut PresencePeersPublication<i32>) -> usize {
+    let mut released = 0;
+    for _ in 0..4096 {
+        let step = observed_step(CLOSE_GRANT, || original.close_step(CLOSE_GRANT));
+        released += step.progress().released_bytes;
+        if matches!(step, RetainedCloneStep::Complete(_)) { assert!(original.terminal_is_empty()); return released; }
     }
+    panic!("original Presence candidate exceeded bounded close turns")
 }
 
-impl ErasedSnapshotRetirement for Retirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(value) = self.0.take() {
-            if Arc::into_inner(value) == Some(41) {
-                self.1.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            }
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
-    }
+fn admit_rejected(original: PresencePeerAdmissionRejected<i32>) -> Option<Box<dyn ErasedSnapshotRetirement>> {
+    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.into_retirement(CLOSE_GRANT));
+    let (owner, receipt) = result.unwrap_or_else(|_| panic!("original rejection requires supplied constructor grant"));
+    assert!(receipt.fits(CLOSE_GRANT));
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
+    Some(owner)
 }
 
 #[test]
@@ -43,28 +33,16 @@ fn retained_presence_peer_rejection_keeps_its_minting_factory_after_source_close
     let rejected = source.adopt("exact-owner".into(), 41, 0).err().unwrap();
     assert!(Arc::ptr_eq(rejected.factory.as_ref().unwrap(), &original_factory));
     assert!(!Arc::ptr_eq(rejected.factory.as_ref().unwrap(), &foreign_factory));
-    for _ in 0..16 {
-        if source.close_step(1, 4096).unwrap() == SnapshotRetirementStep::Complete {
-            break;
-        }
-    }
+    close_publication(&mut source);
     assert!(source.terminal_is_empty());
     drop(source);
     drop(original_factory);
-    let mut rejected = rejected.into_retirement();
-    for _ in 0..128 {
-        if rejected.close_step(1, 1).unwrap() == SnapshotRetirementStep::Complete {
-            break;
-        }
-    }
-    assert!(rejected.terminal_is_empty());
+    let mut rejected = admit_rejected(rejected);
+    finish_box(&mut rejected);
+    assert!(rejected.is_none());
     assert_eq!(serde_json::json!(original.load(std::sync::atomic::Ordering::Relaxed)), law["expectedOriginalRetirements"]);
     assert_eq!(serde_json::json!(foreign.load(std::sync::atomic::Ordering::Relaxed)), law["expectedForeignRetirements"]);
-    for _ in 0..16 {
-        if other.close_step(1, 4096).unwrap() == SnapshotRetirementStep::Complete {
-            break;
-        }
-    }
+    close_publication(&mut other);
     assert!(other.terminal_is_empty());
 }
 
@@ -81,18 +59,20 @@ fn retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payl
         }
         if state == "transferred" {
             let mut transferred = publication.take_commit().unwrap().into_retirement();
-            for _ in 0..16 {
-                if transferred.close_step(1, 4096).unwrap() == SnapshotRetirementStep::Complete {
+            for _ in 0..4096 {
+                if matches!(crate::os_store::component::presence_test_retirement::observed_close(&mut transferred, CLOSE_GRANT), RetainedCloneStep::Complete(_)) {
                     break;
                 }
             }
             assert!(transferred.terminal_is_empty() && publication.terminal_is_empty());
         }
         let mut seeded_bytes = 0;
+        let mut seeded_capacity = 0;
         if matches!(state, "full" | "created-full") {
             for index in 0..PRESENCE_PEER_SLOTS {
                 let actor = format!("seed-{index:02}");
                 seeded_bytes += actor.len();
+                seeded_capacity += actor.capacity();
                 assert!(publication.adopt(actor, 0, 0).is_ok());
             }
         }
@@ -108,42 +88,48 @@ fn retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payl
         let mut bytes = 0;
         match publication.adopt(actor, 41, 0) {
             Ok(()) => assert!(case["accepted"].as_bool().unwrap()),
-            Err(rejected) => {
+            Err(mut rejected) => {
                 assert!(!case["accepted"].as_bool().unwrap());
                 assert_eq!(rejected.actor(), text);
                 assert_eq!(rejected.actor.as_ptr(), pointer);
                 assert_eq!(rejected.actor.capacity(), capacity);
                 assert_eq!(*rejected.presence(), 41);
                 assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 0);
-                let mut rejected = rejected.into_retirement();
-                assert_eq!(rejected.close_step(0, 4096).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                for _ in 0..4096 {
-                    match rejected.close_step(1, 1).unwrap() {
-                        SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                            assert!(released_items <= 1 && released_bytes <= 1);
-                            bytes += released_bytes;
-                        }
-                        SnapshotRetirementStep::Complete => break,
-                        SnapshotRetirementStep::Blocked => panic!("exact rejected owners require no external alias"),
-                    }
+                let birth = rejected.retirement_birth_demand();
+                for currency in fixture["retirementBirthRefusals"].as_array().unwrap() {
+                    let denied = match currency.as_str().unwrap() {
+                        "items" => RetainedCloneGrant { maximum_items: 0, ..CLOSE_GRANT },
+                        "capacity" => RetainedCloneGrant { maximum_capacity_bytes: birth.capacity_bytes - 1, ..CLOSE_GRANT },
+                        "depth" => RetainedCloneGrant { maximum_depth: 0, ..CLOSE_GRANT },
+                        _ => unreachable!(),
+                    };
+                    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| rejected.into_retirement(denied));
+                    let (_, original) = result.err().unwrap();
+                    rejected = original;
+                    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                    assert_eq!(rejected.actor.as_ptr(), pointer);
+                    assert_eq!(rejected.actor.capacity(), capacity);
+                    assert_eq!(*rejected.presence(), 41);
+                    assert!(Arc::ptr_eq(rejected.factory.as_ref().unwrap(), &(factory.clone() as Arc<dyn SnapshotRetirementFactory<i32>>)));
                 }
-                assert!(rejected.terminal_is_empty());
-                assert_eq!(bytes, expected_bytes);
+                let mut rejected = admit_rejected(rejected);
+                assert_eq!(observed_box_close(&mut rejected, RetainedCloneGrant { maximum_items: 0, ..CLOSE_GRANT }), RetainedCloneStep::Progress(Default::default()));
+                let release_demand = rejected.as_ref().unwrap().next_release_byte_demand().unwrap();
+                assert_eq!(release_demand, capacity);
+                assert_eq!(observed_box_close(&mut rejected, RetainedCloneGrant { maximum_release_bytes: 4096, ..CLOSE_GRANT }), RetainedCloneStep::Progress(Default::default()));
+                assert_eq!(rejected.as_ref().unwrap().next_release_byte_demand().unwrap(), capacity);
+                assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 0);
+                bytes += finish_box(&mut rejected);
+                assert!(rejected.is_none());
+                assert!(bytes >= capacity);
             }
         }
-        for _ in 0..4096 {
-            match publication.close_step(1, 4096).unwrap() {
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1 && released_bytes <= 4096);
-                    bytes += released_bytes;
-                }
-                SnapshotRetirementStep::Complete => break,
-                SnapshotRetirementStep::Blocked => panic!("candidate owns all rejected fixture aliases"),
-            }
-        }
+        bytes += close_publication(&mut publication);
         assert!(publication.terminal_is_empty());
-        assert_eq!(bytes, expected_bytes + seeded_bytes);
+        assert!(bytes >= capacity + seeded_capacity);
+        assert_eq!(text.len(), expected_bytes);
+        assert_eq!(seeded_bytes, if matches!(state, "full" | "created-full") { PRESENCE_PEER_SLOTS * "seed-00".len() } else { 0 });
         assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 1);
-        eprintln!("peer admission case={} retained actor capacity={capacity}, retired initialized bytes={}, exact target snapshots=1", case["name"], expected_bytes);
+        eprintln!("[DEBUG] peer admission case={} retained actor capacity={capacity}, semantic UTF8 bytes={expected_bytes}, physical close receipt={bytes}, exact target snapshots=1", case["name"]);
     }
 }

@@ -2,7 +2,14 @@
   "evaluate": {
     "operatorId": "brep.prim3d.box",
     "inputJson": "{\"width\":{\"$schema\":\"number\",\"value\":1.0},\"depth\":{\"$schema\":\"number\",\"value\":1.0},\"height\":{\"$schema\":\"number\",\"value\":1.0}}",
-    "nodeHash": 700001
+    "nodeHash": 700001,
+    "retained": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 128,
+      "maximumCapacityBytes": 67108864,
+      "maximumReleaseBytes": 67108864,
+      "maximumDepth": 256
+    }
   },
   "tessellate": {
     "tolerance": 0.03125,
@@ -17,7 +24,10 @@
   "steps": 100000,
   "geometrySchema": "geometry",
   "bypassIdentity": {
-    "nodeHashes": [700021,700022],
+    "nodeHashes": [
+      700021,
+      700022
+    ],
     "cancellationGroup": "shared-bypass-cancellation-group",
     "roundUnits": 1,
     "compactHops": 8,
@@ -41,7 +51,11 @@
     "sharedNodeHash": 700011,
     "roundUnits": 1,
     "maximumTurns": 100000,
-    "halfExtents": [0.5,0.5,0.5],
+    "halfExtents": [
+      0.5,
+      0.5,
+      0.5
+    ],
     "liveOwnerMustRemainPendingAfterOtherClose": true,
     "originalReaderHops": 8
   }

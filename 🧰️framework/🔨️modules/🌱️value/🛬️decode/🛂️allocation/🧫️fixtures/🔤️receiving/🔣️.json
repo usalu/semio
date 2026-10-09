@@ -1,0 +1,14 @@
+{
+  "unit": "雪",
+  "repetitions": 22000,
+  "expectedBytes": 66000,
+  "refuseAtMaterialized": 65535,
+  "maximumBytes": 262144,
+  "grant": {
+    "maximumItems": 256,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  }
+}

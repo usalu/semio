@@ -13,7 +13,7 @@ pub struct WriterIntoPdf;
 impl Serializer<WriterSnapshot> for WriterIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let pdf = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: vec![PageDoc { width: PageDoc::DEFAULT_WIDTH, height: PageDoc::DEFAULT_HEIGHT, text: writer_text(from) }] };
         Ok(IoOutcome { value: IoPayload::Binary(<PdfSnapshot as store::ArtifactPack>::encode_pack(&pdf)), diagnostics: Vec::new() })
     }

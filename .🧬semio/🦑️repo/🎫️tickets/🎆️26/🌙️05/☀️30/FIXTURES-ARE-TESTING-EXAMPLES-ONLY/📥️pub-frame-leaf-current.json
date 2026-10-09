@@ -1,0 +1,30 @@
+{
+  "role": "read-only current defining-owner dependencies, not authored Source actions",
+  "sourceCopies": false,
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "sha256": "b5e081fdcf0077058db4dbdac9580396df26b87a335b109d0aa45f9c7783d29a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs",
+      "sha256": "9afa065b97f82a6edc359530b9f6396449ee4b3de6d2a0e2cc2006a1e6b5fb0e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs",
+      "sha256": "6c9731a9bf66625ac6b6f61ba2efa94e9bed292faa35caf1d889e9851a1d7647"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+      "sha256": "34b902f29de2b59866f39f8f0020c5ef8be34ef275372c5ae3a8897429467993"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "sha256": "18028fc67451591418f03dd0a56d9a4dd23c56ad700ab8813b4bec690f3747c5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "1ad985b01e3f4b5e06ad189caac7f256294140c147f7060d17713e206be56148"
+    }
+  ]
+}

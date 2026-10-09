@@ -1,0 +1,41 @@
+{
+  "executed": false,
+  "actionableDirectEdges": [],
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🟦️.ts",
+      "sha256": "31520c3fd62e7743ec83a6fbee439093c481eeee50150dd5246ea98e10babe82",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📤️exports/🦀️.rs",
+      "sha256": "487934f3a501ecf255089a2114074adfed1c6d608a2dcd8eb732c0688b12c41f",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🦀️.rs",
+      "sha256": "dbcf49a135b17e8d01236402ba936266005c417d02198b3950b1007391720fe9",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🟦️.ts",
+      "sha256": "6f49fa6544b98e0c244723c6f24dda2e7238af376ab8a482d8385787a446b8da",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts",
+      "sha256": "b6ee95b41ee0051e7407dbb8e9f26228bfea202d78e5a77edeb2e657ec69072d",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🟦️.ts",
+      "sha256": "75f9fda6567bd46094495271c169596a319dc5b97fdc441e604423a0caa54b37",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+      "sha256": "814e74fc62bdb5afe4b72d6482be74f75db62df12ee5d0b54a91c3c0181e82c8",
+      "authored": false
+    }
+  ]
+}

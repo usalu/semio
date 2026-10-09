@@ -1,0 +1,61 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+    "beforeSha256": "bdc3c8fbdb818b3a3c3775fbad2a922cc8c2efdb127169e9a65ba887984bffea",
+    "logicalScope": "append independent plain-policy/JSON/Buffer/Ajv and original Rust grammar law, not native receipt",
+    "sourceCopies": false,
+    "currentObserverSha256": "4869f0a1f3489e81d4a577d18fd72a92dd9f34d7c81d15ef29160372ffe5f262",
+    "observerQualification": "Current whole-file observation only; peer changes not adopted or source freeze claimed."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️bounded-value-retirement/🦀️.rs",
+    "beforeSha256": "489745a69ea1c59e6f6090994bf46aeb52d94ad07ba882c434059feb54b0e8bc",
+    "logicalScope": "replace positive demand-priced test grants with original immutable plain physical policy; preserve System/pointer/output laws and negative exact frontier reductions; genuine SharedUtf8 actor input",
+    "actions": [
+      {
+        "beforeBlockSha256": "e772a27b071173e0a4300656e4d4bce45cc1a08c9f4b13ff445d31412ebc1488",
+        "afterBlockSha256": "244f0014bfe484dcfa0002ff4c2b28874b63152c6ec1bb75f50c44580840fabc",
+        "count": 2
+      },
+      {
+        "beforeBlockSha256": "49624c587b5021f589bd1ffbe11f0f697ceea77548715ab8e55fa6c53b49d257",
+        "afterBlockSha256": "244f0014bfe484dcfa0002ff4c2b28874b63152c6ec1bb75f50c44580840fabc",
+        "count": 3
+      },
+      {
+        "beforeBlockSha256": "646bb092a6a3e3a33e994ed6db92c19502a37b1a8d19801c166244699413bcec",
+        "afterBlockSha256": "244f0014bfe484dcfa0002ff4c2b28874b63152c6ec1bb75f50c44580840fabc",
+        "count": 3
+      },
+      {
+        "beforeBlockSha256": "aa7c92de81fa41fd88ce25d5a3ea89af32c349661271945166ce40e550317f9e",
+        "afterBlockSha256": "244f0014bfe484dcfa0002ff4c2b28874b63152c6ec1bb75f50c44580840fabc",
+        "count": 1
+      },
+      {
+        "beforeBlockSha256": "a3962e5d1987847d55d96f19e1aa86ec45e6871223309d09547d05e13f784da9",
+        "afterBlockSha256": "244f0014bfe484dcfa0002ff4c2b28874b63152c6ec1bb75f50c44580840fabc",
+        "count": 1
+      },
+      {
+        "beforeBlockSha256": "259ed2860c53417f566c94f816fcfe0dc53b832cc71455159ba775e4a641d792",
+        "afterBlockSha256": "244f0014bfe484dcfa0002ff4c2b28874b63152c6ec1bb75f50c44580840fabc",
+        "count": 1
+      }
+    ],
+    "sourceCopies": false,
+    "afterSha256": "78fdedff01b5336ec222448329ab462e9fdecd09d51e68f68f0019a200a48467",
+    "preservation": "All original real allocator/pointer/outputs retained; exact before/after demand equality on denied owned-member closure preserved separately from independent positive grant",
+    "currentObserverSha256": "78fdedff01b5336ec222448329ab462e9fdecd09d51e68f68f0019a200a48467",
+    "observerQualification": "Current whole-file observation only; peer changes not adopted or source freeze claimed."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs",
+    "beforeSha256": "a807beba237674c1a5902b4dc62e28b172d335b62197ee20f0d1e3e933f4df36",
+    "logicalScope": "canonical independent test-policy helpers and direct callers, fixed original page work/whole-release authority; no demand-to-grant helper/alias/resumption reset",
+    "sourceCopies": false,
+    "afterSha256": "a79c188c31dc157a4b925f111ad4c0a4648d80be52a3eaf60db775a83e83f913",
+    "currentObserverSha256": "a79c188c31dc157a4b925f111ad4c0a4648d80be52a3eaf60db775a83e83f913",
+    "observerQualification": "Current whole-file observation only; peer changes not adopted or source freeze claimed."
+  }
+]

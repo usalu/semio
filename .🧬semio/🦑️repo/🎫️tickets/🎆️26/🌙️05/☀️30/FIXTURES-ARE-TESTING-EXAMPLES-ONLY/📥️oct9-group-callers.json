@@ -1,0 +1,22 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+  "beforeSHA": "ea33111fcb043e668566593ebf6e6a92f0cb88d252bb7662a98eb2dec2950cbe",
+  "afterSHA": "444556cfb3e57204718e7176b75ae309d75acfaf8cfb1723348d36593f296b0e",
+  "actions": [
+    {
+      "scope": "drive_retirement_within full supplied policy",
+      "beforeBlockSHA": "33f727af07786098e6d0ff472c1d66e168bb4f189cee2f256b8651bd3351115e",
+      "afterBlockSHA": "561c598d842ee6ccb5dc05cd6ecdc9f44ddf596bf2d88d2e36e87fcb745bafa7"
+    },
+    {
+      "scope": "3 actual group cursor/current original caller policies",
+      "beforeCallsSHA": "c05830fee68039934a6568ef296c197629cd85ea892cffff83b4a2b67ba9d3bc"
+    },
+    {
+      "scope": "stored-genesis cancellation original captured bytes and decode directory",
+      "beforeBlockSHA": "8b8a446cb125fe01742bbef54feb8143ea37ffb0504b0f7d94a8853f1cfd6945",
+      "afterBlockSHA": "e6d5ab6b1339ae46dac257ddadaa0e55092dc1afbc53aa95fa6329debc025ead"
+    }
+  ],
+  "nativeExecuted": false
+}

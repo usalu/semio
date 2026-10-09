@@ -7,6 +7,10 @@ impl FactoryPayloadRetirement for Factory {
     type CloseState=Option<ControlledRetirement<String>>;
     fn close_state_birth_bytes(&self)->usize {0}
     fn close_state_constructor_depth(&self)->usize {0}
+    fn close_state_constructor_copy_bytes(&self)->usize {std::mem::size_of::<Self::CloseState>()}
+    fn close_state_preparation_demands(&self,_:&Self::CloseState,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(Default::default())}
+    fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:crate::RetainedCloneGrant)->Result<crate::RetainedCloneStep,crate::ValueError>{Ok(crate::RetainedCloneStep::Complete(Default::default()))}
+    fn close_state_preparation_is_complete(_:&Self::CloseState)->bool{true}
     fn prepare_close_state(&self)->Self::CloseState {None}
     fn transfer_payload(value:Self,state:&mut Self::CloseState){*state=Some(ControlledRetirement::new(value.payload).unwrap_or_else(|_|unreachable!()));}
     fn close_state_demands(state:&Self::CloseState,copy:usize)->Result<RetirementDemand,ValueError>{state.as_ref().map_or(Ok(Default::default()),|owner|Ok(RetirementDemand {copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?}))}

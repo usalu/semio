@@ -1,0 +1,19 @@
+# BIM Source Audit
+
+October 9 read-only inspection and bounded probes against the actual mounted provider with independently authored ticket witnesses. No copied checked-in Source, production edits or original owning Nx qualification. Machine findings: `📥️inputs/bim-source-findings.json`. Both report/input paths validated codepoint and UTF16 lengths <=256.
+
+## Proved Restore Defect
+
+Source `Reader.create` at103 calls artifactSqliteTables, which returns rows in parsed schema order (`framework/.../🧩️artifact/🟦️.ts:229–237`), then zips those rows with database.tables input names. A valid reordered input binds unrelated rows to table names. Actual bounded probe: all-role witness exports44 tables/192 rows, minimal omitted maps44 tables/2 rows, both ordinary restores complete; reversing tables causes both restores to refuse `BIM SQLite one document required`. Preserve schema-order names when pairing returned arrays, or build exact names from the validated original tables. This is independent of the three known TypeScript errors.
+
+## Concrete Control Frontier
+
+`entries`14 builds Object.entries and synchronously sorts every map using `compareKeys`15. Forecast71 performs this before per-owner add/checkpoint and before semantic row byte admission. Projection repeats the same materialized sort. A very large map or very long common-prefix keys runs an uninterruptible allocating traversal before row refusal; nested property maps have the same seam. Forecast row-count checks are otherwise exact for inspected authored shapes. Recommend borrowed controlled map inventory, explicit container/key admission before owned sort, checkpointed ordering and avoiding repeated sorting. Fixed-field per-number DataView allocations are small constant work; no large hidden payload copy was found.
+
+## Positive Source Evidence and Limits
+
+All24 map roles and all44 named entity/child tables are represented. Own rich witness runtime count192 matches independent forecast. Fixed codecs align named DDL scalar order; profiles6owners, tops4 and axes2 verify actual inactive owners, singleton cardinality and consumed rows. Restore reads empty holes/property-element/property-set parents without requiring leaves. Custom/Explicit emptiness survives parent discriminants. Optional values distinguish None from0; partial triples are passed to exact scalar reader and refuse. Omitted maps/default arrays normalize to explicit empty maps/arrays in Source restore. No native scalar rematerialization, hidden JSON/BLOB or derived geometry was found.
+
+Literal snapshot.schema survives; external domain references remain uninterpreted strings. Entity/set/property assignments use defineProperty, avoiding __proto__ prototype mutation. compareKeys compares Unicode scalar values, matching Rust UTF8 BTree ordering for wellformed text; astral characters precede/follow BMP values by codepoint rather than JavaScript UTF16 order. JavaScript canonical integer-key Object enumeration can override insertion order; compare semantic map content or explicit ordered SQLite ordinals rather than JSON key byte order. The string validator refuses unpaired surrogates, consistent with Rust UTF8 but stricter than generic JSON-schema string alone; this shared input-domain policy should remain explicit.
+
+Float cells store finite query orNULL, signed64 bits and exact class; reader compares class and numeric query against bit-derived value. Signed zero query normalization is harmless because bits remain authority. Tentative oversize DataView wrapping concern was tested: modifying latitude_bits by2^64 was actually refused by framework validation as `signed64 integer` before scalar reader, so this is not a proved bug. NaN payload cross-engine/native identity is not qualified by these finite own witnesses. Native ownership/cancellation and original Source public IO receipts remain root/High authority.

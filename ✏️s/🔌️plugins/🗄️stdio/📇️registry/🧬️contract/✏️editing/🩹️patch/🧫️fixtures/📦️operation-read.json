@@ -1,5 +1,6 @@
 {
   "maximumCleanupBytes": 131072,
+  "normalStepGrant": {"maximumItems":4096,"maximumCopyBytes":1073741824,"maximumCapacityBytes":1073741824,"maximumReleaseBytes":1073741824,"maximumDepth":4096},
   "invalid": [
     {"source": "{\"operation\":\"set\",\"path\":\"title\",\"value\":1}", "kind": "InvalidValue"},
     {"source": "{\"operation\":\"move\",\"from\":\"/~2\",\"path\":\"/new\"}", "kind": "InvalidValue"},

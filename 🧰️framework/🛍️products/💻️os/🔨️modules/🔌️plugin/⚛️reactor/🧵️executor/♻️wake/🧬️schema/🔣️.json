@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "policy",
+    "tasks",
+    "epochs",
+    "signals",
+    "steps",
+    "foreignWaker",
+    "staleGeneration",
+    "terminalDropBytes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "original-executor-worker-wake.v1"
+    },
+    "policy": {
+      "const": {
+        "items": 1,
+        "copy": 4096,
+        "capacity": 65536,
+        "release": 262144,
+        "depth": 64
+      }
+    },
+    "tasks": {
+      "const": [
+        7,
+        9,
+        21
+      ]
+    },
+    "epochs": {
+      "const": [
+        1,
+        2
+      ]
+    },
+    "signals": {
+      "const": [
+        "caller",
+        "worker"
+      ]
+    },
+    "steps": {
+      "const": [
+        "slot-custody",
+        "original-std-wake",
+        "issued-typed-wake",
+        "ready-slot",
+        "original-typed-retirement"
+      ]
+    },
+    "foreignWaker": {
+      "const": "unsupported"
+    },
+    "staleGeneration": {
+      "const": "ignored"
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  }
+}

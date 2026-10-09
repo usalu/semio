@@ -1,0 +1,11 @@
+{
+  "session": 37285,
+  "outcome": "pre-assertion compile failure",
+  "errors": [
+    "error[E0433]: cannot find type `SqliteSnapshotControl` in this scope\n   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:393:108\n    |\n393 | ...(&export, payload,native,&mut SqliteSnapshotControl::new(&mut |event|{phases.push(event.phase);true},SqliteDatabaseLimits::defau...\n    |                                  ^^^^^^^^^^^^^^^^^^^^^ use of undeclared type `SqliteSnapshotControl`\n    |",
+    "error[E0433]: cannot find type `SqliteSnapshotControl` in this scope\n   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs:398:126\n    |\n398 | ...ad::Binary(bytes),native,&mut SqliteSnapshotControl::new(&mut |event|{phases.push(event.phase);true},SqliteDatabaseLimits::defau...\n    |                                  ^^^^^^^^^^^^^^^^^^^^^ use of undeclared type `SqliteSnapshotControl`\n    |"
+  ],
+  "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+  "sourceSha256AfterImportFix": "5ea826588898b9f81e25a65e307e1ed25b5a550b2f784ff278e820d7a743d2b5",
+  "lawExecuted": false
+}

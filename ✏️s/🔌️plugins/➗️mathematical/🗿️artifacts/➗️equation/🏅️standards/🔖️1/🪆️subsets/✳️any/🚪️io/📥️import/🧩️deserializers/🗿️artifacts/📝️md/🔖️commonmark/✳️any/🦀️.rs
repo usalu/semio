@@ -15,7 +15,7 @@ pub struct MdIntoEquation;
 impl Deserializer<EquationSnapshot> for MdIntoEquation {
     const FROM: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    async fn deserialize(payload: &IoPayload) -> IoResult<EquationSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<EquationSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(invalid_payload("MdIntoEquation", "expected a binary md payload"));
         };

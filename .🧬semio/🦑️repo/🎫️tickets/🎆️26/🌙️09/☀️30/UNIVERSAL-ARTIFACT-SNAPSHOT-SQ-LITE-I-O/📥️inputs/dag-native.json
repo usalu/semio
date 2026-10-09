@@ -1,0 +1,15 @@
+{
+  "command": "bun nx run @semio-tech/framework-infinite-dag-rs:test --skip-nx-cache --skip-remote-cache --excludeTaskDependencies -- long --lib --filter-expr \"test(neutral_fixture_retires_exact) | test(dag_opens_as_an_owned_member)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+  "environment": {
+    "NX_DAEMON": "false",
+    "NX_ISOLATE_PLUGINS": "false",
+    "NX_CACHE_PROJECT_GRAPH": "false",
+    "SEMIO_TEST_LEVEL": "quick",
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/\ud83d\uddd1\ufe0fgenerated/cargo-root-norm-owned",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/\ud83d\uddd1\ufe0fgenerated/cargo-root-norm-owned",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/\ud83d\uddd1\ufe0fgenerated/dag-native",
+    "SEMIO_TEST_RETAIN_ARTIFACTS": "true",
+    "NEXTEST_SUCCESS_OUTPUT": "immediate",
+    "RUST_BACKTRACE": "1"
+  }
+}

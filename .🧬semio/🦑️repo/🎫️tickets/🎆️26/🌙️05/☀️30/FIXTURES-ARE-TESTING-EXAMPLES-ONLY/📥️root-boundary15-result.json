@@ -1,0 +1,13 @@
+{
+  "target": "workspace:schema-check",
+  "args": [
+    "--fixture-boundary"
+  ],
+  "exitCode": 0,
+  "modules": 4753,
+  "scopes": 3755,
+  "findings": 0,
+  "nxDurationMs": 87000,
+  "nativeRuntimeGraphCredit": false,
+  "scope": "Actual original independent fixture-authority gate only; no global architecture or schema verify credit"
+}

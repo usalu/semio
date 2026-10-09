@@ -6,8 +6,56 @@ fn original_refusal(message:&'static str)->ValueError{ValueError::literal(ValueR
 fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"actor retirement depth overflow"))?;Ok(demand)}
 fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 fn progress(step:RetainedCloneStep)->RetainedCloneStep{RetainedCloneStep::Progress(step.progress())}
-impl<P,Mu> TimeTravelStoreState<P,Mu> where P:Send+Sync+'static,Mu: ::protocol::Mutation<P>+Send+'static {
+impl<A:ArtifactApp> TimeTravelLedger<A> {
+ fn session_transfer_copy_bytes()->usize{size_of::<TimeTravelSession>()+size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<TimeTravelSession>>>()}
+ fn session_removal_copy_bytes()->usize{size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<TimeTravelSession>>>()+size_of::<bool>()}
+ pub(super) fn pending_command_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  if !self.closing{return Ok(Default::default())}
+  let Some(owner)=self.pending_command.as_ref()else{return Ok(Default::default())};
+  if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_framework_time_travel::TimeTravelCommandCustody>>(),depth:1,..Default::default()})}
+  nested(owner.retirement_demands(body)?)
+ }
+ pub(super) fn pending_command_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
+  if !self.closing||self.pending_command.is_none(){return Ok(None)}
+  let demand=self.pending_command_retirement_demands(grant.maximum_copy_bytes)?;
+  if !permits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
+  let owner=self.pending_command.as_mut().unwrap();
+  if owner.terminal_is_empty(){drop(self.pending_command.take());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}
+  let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"actor original received command")?;Ok(Some(progress(step)))
+ }
+ pub(super) fn session_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  if !self.closing||self.session_retired{return Ok(Default::default());}
+  let Some(owner)=self.session_retirement.as_ref()else{return Ok(RetirementDemand{copy_bytes:Self::session_transfer_copy_bytes(),depth:1,..Default::default()});};
+  if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:Self::session_removal_copy_bytes(),depth:1,..Default::default()});}
+  nested(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})
+ }
+ pub(super) fn session_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
+  if !self.closing||self.session_retired{return Ok(None);}
+  let demand=self.session_retirement_demands(grant.maximum_copy_bytes)?;
+  if !permits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
+  if let Some(owner)=self.session_retirement.as_mut(){
+   if owner.terminal_is_empty(){drop(self.session_retirement.take());self.session_retired=true;return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}
+   let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=owner.step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original time travel session")?;return Ok(Some(progress(step)));
+  }
+  let original=std::mem::take(&mut self.session);
+  match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.session_retirement=Some(owner);Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))},Err((error,original))=>{self.session=original;Err(error)}}
+ }
+}
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;
+#[cfg(test)]
+pub(crate) use tests::assert_session_original;
+#[cfg(test)]
+pub(crate) use tests::assert_pending_command_original;
+#[cfg(test)]
+pub(crate) use tests::assert_discard_publication_original;
+#[cfg(test)]
+pub(crate) use tests::native_original_actor_grant;
+impl<P,Mu> TimeTravelStoreState<P,Mu> where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+Send+Sync+'static,Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+protocol::OpBinary+protocol::OpText+Send+'static {
  pub(crate) fn original_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  if let Some(demand)=self.discard_effects_retirement_demands(body)?{return Ok(demand)}
   if let Some(owner)=self.retirements.back(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of_val(owner.as_ref()),depth:1,..Default::default()})}else{nested(factory_ticket_demands(owner,body)?)};}
   if self.retirements.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.retirements.capacity().checked_mul(size_of::<Box<dyn store::ErasedSnapshotRetirement>>()).ok_or_else(||original_refusal("actor original queue capacity overflow"))?,depth:1,..Default::default()});}
   if let Some(owner)=self.discarded_active.as_ref(){return nested(factory_ticket_demands(owner,body)?);}
@@ -18,6 +66,7 @@ impl<P,Mu> TimeTravelStoreState<P,Mu> where P:Send+Sync+'static,Mu: ::protocol::
   self.discarded_factory_close.as_ref().map_or(Ok(Default::default()),|owner|nested(owner.demands(body)?))
  }
  pub(crate) fn original_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
+  if let Some(step)=self.discard_effects_retirement_step(grant)?{return Ok(Some(step))}
   if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
   let demand=self.original_retirement_demands(grant.maximum_copy_bytes)?;if !permits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
   if let Some(owner)=self.retirements.back_mut(){

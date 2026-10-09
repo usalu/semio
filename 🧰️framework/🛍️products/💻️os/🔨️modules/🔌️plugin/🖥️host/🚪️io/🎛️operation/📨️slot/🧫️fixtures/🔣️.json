@@ -1,0 +1,115 @@
+{
+  "accepted": [
+    {
+      "kind": "begin"
+    },
+    {
+      "kind": "progress",
+      "completed": 1,
+      "total": 2,
+      "owned": 0
+    },
+    {
+      "kind": "allocation",
+      "bytes": 43,
+      "owned": 0,
+      "next": 43,
+      "maximum": 57
+    },
+    {
+      "kind": "finish",
+      "owned": 43
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "bytes",
+      "count": 1
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "string-bytes",
+      "count": 2
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "u64-list",
+      "count": 3
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "ui-patch-list",
+      "count": 4
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "patch-op-list",
+      "count": 5
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "effect-list",
+      "count": 6
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "presence-update-list",
+      "count": 7
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "string-pair-list",
+      "count": 8
+    }
+  ],
+  "refused": [
+    {
+      "kind": "begin",
+      "maximum": 64
+    },
+    {
+      "kind": "allocation",
+      "bytes": -1,
+      "owned": 0,
+      "next": 43,
+      "maximum": 57
+    },
+    {
+      "kind": "progress",
+      "completed": 1,
+      "total": 2
+    },
+    {
+      "kind": "finish",
+      "owned": 0.5
+    },
+    {
+      "kind": "invented"
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "invented",
+      "count": 1
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "bytes",
+      "count": -1
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "bytes"
+    },
+    {
+      "kind": "reserve-return",
+      "allocation": "bytes",
+      "count": 1,
+      "maximum": 64
+    }
+  ],
+  "authority": {
+    "ceiling": 64,
+    "prior": 7,
+    "guest": 43,
+    "expected": 50
+  }
+}

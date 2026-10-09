@@ -1,0 +1,9 @@
+{
+  "exitCode": 0,
+  "tests": 4,
+  "assertions": 358,
+  "durationMs": 606,
+  "nativeAssertions": 0,
+  "qualification": "Actual original third-party and physical Syslib laws include mid-scan/preabort, current peer, stale exception, literal path and real ancestry; canonical launcher/core graph remain pending",
+  "logSha256": "e7872da6914fe4ee2f492c1c012cb72f0f9da5b063bf6fbd0d2f5cf545581d91"
+}

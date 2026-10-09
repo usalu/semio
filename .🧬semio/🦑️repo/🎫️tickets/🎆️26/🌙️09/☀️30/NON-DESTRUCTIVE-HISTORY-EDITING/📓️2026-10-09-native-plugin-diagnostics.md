@@ -1,0 +1,971 @@
+# Current Native Plugin Diagnostics
+
+Exact registered scope: Actor session retirement plus runtime close budget; managed root-session-runtime-native-20261009-c, pid9564.
+
+{
+  "status": "failed",
+  "completedAt": "2026-10-09T10:03:53.349Z",
+  "errorCount": 956,
+  "summary": [
+    "could not compile `semio-framework-plugin` (lib test) due to 951 previous errors; 2185 warnings emitted"
+  ]
+}
+
+Compilation diagnostics precede native assertions; this is not an executed test result. Preserve all original generated compiler output.
+
+- E0432: unresolved import `semio_framework_value::RetainedCloneGrant` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/📬️mutation/🧪️tests/🦀️.rs:2:29
+- E0432: unresolved import `super::window_config::WindowConfigPackLoadGrant` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:408:63
+- E0432: unresolved imports `semio_framework_value::RetainedCloneGrant`, `semio_framework_value::RetainedCloneStep` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/📤️segmented-download/🦀️.rs:69:33
+- E0432: unresolved import `semio_framework_value::SnapshotRetirementStep` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1641:13
+- E0432: unresolved import `semio_framework_value::SnapshotRetirementStep` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🛫️encoder/🦀️.rs:3:140
+- E0432: unresolved import `semio_framework_value::SnapshotRetirementStep` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:5:157
+- E0432: unresolved import `semio_framework_value::SnapshotRetirementStep` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1712:123
+- E0432: unresolved import `semio_framework_value::SnapshotRetirementStep` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/📢️publication/🦀️.rs:3:102
+- E0432: unresolved import `semio_framework_value::SnapshotRetirementStep` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1753:62
+- E0432: unresolved import `semio_framework_value::SnapshotRetirementStep` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🪪️registry/🦀️.rs:2:102
+- E0432: unresolved import `semio_framework_os_kernel::io::io_mechanism::io_run` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:598:122
+- E0432: unresolved import `semio_framework_os_kernel::io::io_mechanism::io_run` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:729:109
+- E0433: cannot find `JobPayloadCloseStep` in `semio_framework_job` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️.rs:271:135
+- E0433: cannot find `JobPayloadCloseStep` in `semio_framework_job` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️.rs:336:118
+- E0433: cannot find `JobPayloadCloseStep` in `semio_framework_job` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️.rs:547:34
+- E0433: cannot find `JobPayloadCloseStep` in `semio_framework_job` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️.rs:548:34
+- E0433: cannot find `JobPayloadCloseStep` in `semio_framework_job` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️.rs:565:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:274:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:275:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:276:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🦀️.rs:73:65
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🦀️.rs:87:57
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🦀️.rs:191:65
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:37:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:38:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:39:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:88:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:89:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:90:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:100:53
+- E0433: cannot find `JobPayloadCloseStep` in `semio_framework_job` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1191:42
+- E0433: cannot find `JobPayloadCloseStep` in `semio_framework_job` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1192:42
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:97:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:100:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:102:19
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:138:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:139:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:140:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:562:99
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:589:93
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️bounded-reload/🦀️.rs:135:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️bounded-reload/🦀️.rs:136:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️bounded-reload/🦀️.rs:137:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-child-member-registry/🦀️.rs:309:68
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-child-member-registry/🦀️.rs:345:136
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs:21:132
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:11555:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:11556:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:11557:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:11558:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12143:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12144:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12145:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12146:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12177:35
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12179:32
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12180:32
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12183:32
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12184:32
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18492:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18493:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18494:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18495:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18499:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18509:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18513:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18526:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18530:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18688:35
+- E0407: method `next_close_byte_demand` is not a member of trait `semio_framework_job::InteractiveJob` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19017:9
+- E0407: method `close_step` is not a member of trait `ArtifactReservedJob` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-artifact-reserved-tool-job/🦀️.rs:39:9
+- E0407: method `terminal_is_empty` is not a member of trait `ArtifactReservedJob` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-artifact-reserved-tool-job/🦀️.rs:44:9
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:202:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:205:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:207:23
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:222:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:225:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:227:23
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:433:65
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1259:99
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1269:61
+- E0407: method `next_close_byte_demand` is not a member of trait `ErasedSnapshotRetirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🛫️encoder/🦀️.rs:55:5
+- E0407: method `next_close_byte_demand` is not a member of trait `ErasedSnapshotRetirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:27:5
+- E0407: method `next_close_byte_demand` is not a member of trait `ErasedSnapshotRetirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:45:5
+- E0407: method `next_close_byte_demand` is not a member of trait `ErasedSnapshotRetirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:69:5
+- E0407: method `next_close_byte_demand` is not a member of trait `ErasedSnapshotRetirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:94:5
+- E0407: method `next_close_byte_demand` is not a member of trait `ErasedSnapshotRetirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/📢️publication/🦀️.rs:37:5
+- E0407: method `next_close_byte_demand` is not a member of trait `ErasedSnapshotRetirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🪪️registry/🦀️.rs:35:5
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24122:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24123:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24124:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24125:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24129:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24198:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24199:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24200:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24201:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24205:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24774:31
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24775:31
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24776:31
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24785:31
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24789:31
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24790:31
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24791:31
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33701:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33702:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33703:24
+- E0407: method `mounted_job_maintenance_demands` is not a member of trait `ArtifactApp` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:38795:9
+- E0407: method `mounted_job_close_demands` is not a member of trait `ArtifactApp` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:38802:9
+- E0407: method `mounted_job_maintenance_demands` is not a member of trait `ArtifactApp` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39222:9
+- E0407: method `mounted_job_close_demands` is not a member of trait `ArtifactApp` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39229:9
+- E0433: cannot find `SnapshotRetirementStep` in `os_store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:20:37
+- E0433: cannot find `SnapshotRetirementStep` in `os_store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:21:41
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:477:83
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:19:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:23:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:286:48
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:288:74
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:290:46
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:291:72
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:293:19
+- E0407: method `next_close_byte_demand` is not a member of trait `store::ErasedSnapshotRetirement` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:296:5
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:263:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:266:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:271:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:275:35
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:281:23
+- E0407: method `close_step` is not a member of trait `ArtifactReservedJob` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:739:9
+- E0407: method `terminal_is_empty` is not a member of trait `ArtifactReservedJob` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:747:9
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:760:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:763:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:765:23
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:794:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:795:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:796:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1550:153
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1553:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1554:28
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1558:28
+- E0433: cannot find `SnapshotRetirementStep` in `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3330:389
+- E0433: cannot find `SnapshotRetirementStep` in `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3330:539
+- E0433: cannot find `SnapshotRetirementStep` in `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3330:690
+- E0433: cannot find `SnapshotRetirementStep` in `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3343:244
+- E0433: cannot find `SnapshotRetirementStep` in `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3343:343
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4614:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4618:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4621:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4623:23
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4670:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4673:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4675:23
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4752:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4753:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4754:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:181:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:184:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:186:19
+- E0407: method `next_close_byte_demand` is not a member of trait `store::ArtifactEnvelopeSnapshotFieldAuthority` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:309:5
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:323:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:328:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:334:34
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:337:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:348:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:351:27
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:353:20
+- E0407: method `next_close_byte_demand` is not a member of trait `store::ArtifactEnvelopeMutationFieldAuthority` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:375:5
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:397:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:400:19
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:421:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:424:19
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:787:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:790:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:795:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:797:31
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:799:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:800:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:808:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:812:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:814:31
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:816:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:827:30
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:831:19
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1003:27
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1007:27
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1021:27
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1022:27
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1155:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1156:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1157:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1161:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1166:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1167:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1168:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1172:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1178:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1179:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1180:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1184:24
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1308:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1309:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1310:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1322:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1323:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1324:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:240:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:241:20
+- E0433: cannot find `SnapshotRetirementStep` in `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:242:20
+- E0425: cannot find function `io_run` in module `semio_framework_os_kernel::io::io_mechanism` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🦀️.rs:572:64
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:545:27
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:560:27
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:574:30
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:757:27
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:1663:182
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:1694:167
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:2116:172
+- E0425: cannot find type `RetainedCloneGrant` in crate `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:125:60
+- E0425: cannot find type `RetainedCloneStep` in crate `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:125:113
+- E0425: cannot find type `RetainedCloneGrant` in crate `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:168:60
+- E0425: cannot find type `RetainedCloneStep` in crate `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:168:113
+- E0433: cannot find `RetainedCloneStep` in `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🦀️.rs:169:111
+- E0433: cannot find type `BTreeMap` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs:32:92
+- E0425: cannot find type `BTreeMap` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs:234:49
+- E0425: cannot find type `RetainedCloneGrant` in crate `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🦀️.rs:348:60
+- E0425: cannot find type `RetainedCloneStep` in crate `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🦀️.rs:348:113
+- E0425: cannot find type `RetainedCloneGrant` in crate `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🦀️.rs:386:60
+- E0425: cannot find type `RetainedCloneStep` in crate `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🦀️.rs:386:113
+- E0433: cannot find `RetainedCloneStep` in `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🦀️.rs:387:111
+- E0404: expected trait, found derive macro `RetireOwned` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/📬️mutation/🧪️tests/🦀️.rs:4:10
+- E0433: cannot find `window_config` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/📬️mutation/🧪️tests/🦀️.rs:16:87
+- E0433: cannot find `window_transient` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/📬️mutation/🧪️tests/🦀️.rs:17:87
+- E0425: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:183:74
+- E0425: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:257:68
+- E0425: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:318:74
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:95:92
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7471:130
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7492:184
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7508:191
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7545:135
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7888:149
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7894:186
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7900:254
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7910:167
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7931:183
+- E0422: cannot find struct, variant or union type `RetainedCloneGrant` in crate `semio_framework_value` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7991:52
+- E0425: cannot find type `ValueError` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9206:123
+- E0425: cannot find type `ValueError` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9210:125
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9486:120
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9534:145
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs:21:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15852:123
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15869:164
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15873:155
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15879:113
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15886:109
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15895:151
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15907:114
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15937:103
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15946:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15949:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15984:143
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16002:94
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16029:116
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16035:87
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16043:97
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16057:65
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15852:123
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15869:164
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15873:155
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15879:113
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15886:109
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15895:151
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15907:114
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15937:103
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15946:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15949:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15984:143
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16002:94
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16029:116
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16035:87
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16043:97
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16057:65
+- E0433: cannot find module or crate `kernel` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19627:102
+- E0433: cannot find module or crate `kernel` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19628:99
+- E0433: cannot find module or crate `kernel` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19629:86
+- E0433: cannot find module or crate `kernel` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19629:140
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22586:31
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22742:236
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22810:246
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22842:248
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22983:267
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:23006:258
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:23042:259
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:200:92
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:220:96
+- E0425: cannot find function `artifact_retirement_box_byte_demand` in crate `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24762:76
+- E0425: cannot find function `owned_retirement` in module `semio_framework_value::retirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24823:73
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26197:127
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26210:166
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26215:212
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26526:73
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26560:77
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27216:90
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27235:98
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27456:133
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27557:107
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27576:98
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27604:153
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27615:70
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27623:122
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27815:168
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27952:165
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27979:136
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:28019:98
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:28083:174
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29035:162
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29124:168
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29409:192
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29426:107
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29524:82
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29742:130
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29948:186
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29990:112
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30006:124
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30052:177
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30073:180
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30243:177
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30958:39
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30969:133
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31095:212
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31162:88
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31254:184
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31295:123
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31318:136
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31410:157
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31745:115
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32038:43
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32072:39
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32083:147
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32153:141
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32218:148
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32434:145
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33152:157
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33268:139
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33506:121
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33541:122
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34528:123
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34547:164
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34580:155
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34586:113
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34595:109
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34609:114
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34619:151
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34731:103
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34770:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34782:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34914:143
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35006:94
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35080:116
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35086:87
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35100:97
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35134:65
+- E0425: cannot find function `owned_retirement` in module `semio_framework_value::retirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35474:76
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35667:137
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35865:141
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35889:137
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:37938:116
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:38027:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:38051:117
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39712:120
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39735:221
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39769:221
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39856:119
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15852:123
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15869:164
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15873:155
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15879:113
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15886:109
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15895:151
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15907:114
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15937:103
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15946:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15949:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15984:143
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16002:94
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16029:116
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16035:87
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16043:97
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16057:65
+- E0425: cannot find function `io_run` in module `semio_framework_os_kernel::io::io_mechanism` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:577:67
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️.rs:392:222
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️.rs:459:160
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️.rs:529:272
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15852:123
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15869:164
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15873:155
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15879:113
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15886:109
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15895:151
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15907:114
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15937:103
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15946:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15949:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15984:143
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16002:94
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16029:116
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16035:87
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16043:97
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16057:65
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41177:205
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41209:142
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41214:159
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42559:162
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42589:164
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42628:145
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42638:155
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42764:170
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42805:152
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42941:144
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:44015:164
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:44088:165
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:44210:204
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:44462:164
+- E0425: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:17:72
+- E0425: cannot find function `snapshot_close_step` in module `extension_retirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:18:228
+- E0425: cannot find function `snapshot_close_step` in module `extension_retirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:22:38
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:49:17
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:50:17
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:63:124
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:70:58
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:74:126
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:77:52
+- E0425: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:119:72
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:120:74
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:120:109
+- E0425: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:129:72
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:131:38
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:131:121
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:155:46
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:155:121
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:158:62
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:161:66
+- E0425: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:197:68
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:197:97
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:210:61
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:212:62
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:227:59
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:228:42
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:232:55
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:234:48
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:243:62
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:245:57
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:246:57
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:248:67
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:249:59
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:260:57
+- E0433: cannot find type `PluginCloseStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:317:84
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:285:69
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:261:92
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:758:96
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1637:35
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1659:35
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1672:35
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1685:35
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1698:35
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1711:35
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1724:35
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1737:35
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15852:123
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15869:164
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15873:155
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15879:113
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15886:109
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15895:151
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15907:114
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15937:103
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15946:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15949:84
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:15984:143
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16002:94
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16029:116
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16035:87
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16043:97
+- E0433: cannot find `os_vcs` in `crate` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16057:65
+- E0425: cannot find value `owned_retirement` in module `semio_framework_value::retirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3330:252
+- E0425: cannot find function `owned_retirement` in module `semio_framework_value::retirement` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3343:63
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4612:96
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4668:96
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:179:92
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:321:91
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:395:92
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:419:92
+- E0425: cannot find type `SnapshotRetirementStep` in crate `store` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:785:91
+- E0603: crate `store` is private — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/♻️metadata/🧪️tests/🦀️.rs:28:53
+- E0603: crate `vcs` is private — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧵️retained-command/♻️metadata/🧪️tests/🦀️.rs:28:187
+- E0050: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🦀️.rs:122:19
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🦀️.rs:121:1
+- E0277: the trait bound `RetainedLoadCameraConfig: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/🪪️pack-identity/🦀️.rs:11:18
+- E0277: the trait bound `RetainedLoadCameraConfigMutation: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/🪪️pack-identity/🦀️.rs:12:21
+- E0277: the trait bound `RetainedLoadCameraConfig: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs:194:26
+- E0277: the trait bound `RetainedLoadCameraConfigMutation: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs:195:29
+- E0277: the trait bound `RetainedLoadCameraConfig: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs:194:26
+- E0277: the trait bound `RetainedLoadCameraConfigMutation: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🦀️.rs:195:29
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:168:1
+- E0050: method `retire` has 2 parameters but the declaration in trait `dsl::SnapshotRetirementFactory::retire` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:251:15
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:257:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:256:1
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:298:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:198:19
+- E0277: the trait bound `DummySnapshot: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:304:21
+- E0277: the trait bound `DummyMutation: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:305:21
+- E0277: the trait bound `DummyCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:314:20
+- E0061: this function takes 5 arguments but 4 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/📸️checkpoint/🦀️.rs:110:18
+- E0061: this function takes 6 arguments but 5 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🧪️tests/📥️inbound-request/🦀️.rs:71:5
+- E0061: this function takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:1029:37
+- E0061: this function takes 8 arguments but 7 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/⚛️reactor-driver/🦀️.rs:18:18
+- E0061: this function takes 8 arguments but 7 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧪️tests/⚛️reactor-driver/🦀️.rs:40:5
+- E0061: this function takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/🧪️tests/📡️live/🦀️.rs:20:51
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/🧪️tests/📡️live/🦀️.rs:20:51
+- E0061: this function takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:17:47
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:17:47
+- E0061: this function takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:19:47
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:19:47
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:457:24
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:458:5
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏯️tool-run/🦀️.rs:2228:56
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏯️tool-run/🦀️.rs:2303:26
+- E0061: this method takes 10 arguments but 9 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏯️tool-run/🦀️.rs:2508:30
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏯️tool-run/🦀️.rs:2513:14
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:611:19
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:617:22
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:625:9
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:1353:22
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:1356:18
+- E0061: this method takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:1361:9
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:1571:9
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:1661:9
+- E0061: this function takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:105:47
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:105:47
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:113:19
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:114:22
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:117:15
+- E0061: this method takes 5 arguments but 4 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:119:9
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:151:9
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🛠️tool-machine/🦀️.rs:533:31
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏪️time-travel/🦀️.rs:791:62
+- E0061: this method takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏪️time-travel/🦀️.rs:2578:26
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏪️time-travel/🦀️.rs:2893:18
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏪️time-travel/🦀️.rs:2985:26
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏪️time-travel/🦀️.rs:3625:26
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:184:19
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:203:9
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1369:19
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1375:23
+- E0061: this method takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1387:8
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1412:24
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1580:27
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1794:15
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:1868:29
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2074:15
+- E0277: the trait bound `InertLabelOp: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2774:96
+- E0061: this function takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2774:50
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2774:50
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:2777:27
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:164:19
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:171:15
+- E0061: this method takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:238:8
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/../🧪️folder-reload-route/🦀️.rs:264:17
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:203:19
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:311:22
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:359:19
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:366:13
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:371:27
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1074:24
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1081:26
+- E0061: this function takes 2 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1087:21
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1177:25
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1183:17
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1234:19
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1244:13
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:1425:19
+- E0277: the trait bound `P: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:33:83
+- E0277: the trait bound `Mu: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:33:86
+- E0061: this function takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:33:51
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:33:51
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:35:19
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:51:15
+- E0061: this method takes 2 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️node-drag-history/🦀️.rs:58:22
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7480:30
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8100:21
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8101:40
+- E0061: this function takes 3 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8141:25
+- E0061: this function takes 3 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8142:25
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8170:25
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8171:25
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8194:32
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8196:13
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8215:17
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8216:13
+- E0061: this function takes 5 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8629:27
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8633:34
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8634:31
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8637:25
+- E0061: this method takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8640:21
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8695:37
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8697:37
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8980:24
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8981:24
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9012:24
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9013:13
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9014:24
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9015:13
+- E0061: this method takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9033:24
+- E0061: this method takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9034:24
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9037:39
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9039:13
+- E0061: this method takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9040:24
+- E0061: this function takes 3 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9061:30
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9064:20
+- E0061: this function takes 3 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9074:32
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9075:22
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9077:22
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9103:30
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9107:20
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9108:13
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9117:32
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9120:22
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9123:22
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9137:17
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9138:13
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:9156:31
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs:121:360
+- E0063: missing field `worker_resume_pending` in initializer of `component::app::MountedTypedCommandFullOperation<A>` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs:117:21
+- E0063: missing fields `identity`, `identity_progress` and `worker_resume_pending` in initializer of `component::app::MountedTypedCommandFullOperation<A>` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/../../../../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/📦️driver/🦀️.rs:6:27
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22599:17
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22613:17
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22616:23
+- E0061: this method takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22659:27
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22660:21
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22664:21
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22665:21
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22666:21
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22680:17
+- E0061: this method takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22725:29
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22757:13
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22764:25
+- E0061: this method takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22789:25
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22823:37
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22871:33
+- E0061: this function takes 2 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:23107:21
+- E0061: this method takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:23114:25
+- E0560: struct `dsl::ArtifactStoreOneItemGrant` has no field named `maximum_bytes` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:248:123
+- E0609: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:250:26
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:253:27
+- E0063: missing fields `identity` and `identity_progress` in initializer of `component::app::MountedTypedCommandFullOperation<A>` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:264:31
+- E0609: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:359:74
+- E0609: no field `maximum_bytes` on type `dsl::ArtifactStoreOneItemGrant` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:376:65
+- E0061: this method takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:376:27
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:377:21
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:381:21
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:382:21
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:383:21
+- E0061: this method takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:433:26
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:493:31
+- E0063: missing fields `identity` and `identity_progress` in initializer of `component::app::MountedTypedCommandFullOperation<A>` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:502:35
+- E0061: this method takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:632:31
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:633:25
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:637:25
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:638:25
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:639:25
+- E0061: this function takes 4 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:902:23
+- E0063: missing fields `identity` and `identity_progress` in initializer of `component::app::MountedTypedCommandFullOperation<A>` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:924:17
+- E0063: missing fields `identity` and `identity_progress` in initializer of `component::app::MountedTypedCommandFullOperation<A>` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1003:17
+- E0061: this method takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1057:24
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1057:89
+- E0061: this method takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1077:31
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1079:35
+- E0061: this method takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1086:13
+- E0061: this method takes 1 argument but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1092:23
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1093:17
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1097:17
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1098:17
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:1099:17
+- E0308: arguments to this function are incorrect — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:25873:134
+- E0596: cannot borrow `permit.identity` as mutable, as `permit` is not declared as mutable — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31231:139
+- E0560: struct `dsl::ArtifactStoreOneItemGrant` has no field named `maximum_bytes` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32693:82
+- E0308: arguments to this function are incorrect — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42724:28
+- E0308: arguments to this function are incorrect — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42742:28
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:44582:83
+- E0061: this function takes 2 arguments but 1 argument was supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:253:36
+- E0061: this function takes 4 arguments but 3 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:384:22
+- E0061: this function takes 1 argument but 0 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:474:53
+- E0308: mismatched types — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:474:53
+- E0061: this method takes 1 argument but 2 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs:477:38
+- E0061: this function takes 5 arguments but 3 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:297:19
+- E0061: this method takes 3 arguments but 2 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:303:28
+- E0061: this method takes 1 argument but 2 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:307:86
+- E0308: mismatched types — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:307:20
+- E0061: this method takes 1 argument but 2 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:339:19
+- E0308: mismatched types — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:340:16
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2223:28
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2443:39
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2444:27
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2471:35
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2473:27
+- E0061: this function takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2498:28
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2499:23
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2521:9
+- E0061: this function takes 5 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2531:32
+- E0061: this function takes 5 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2548:32
+- E0061: this function takes 5 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2555:32
+- E0061: this function takes 5 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2567:9
+- E0061: this method takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2617:39
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2618:31
+- E0061: this method takes 4 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2648:35
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2650:27
+- E0061: this function takes 5 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2668:32
+- E0061: this function takes 5 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3629:32
+- E0061: this function takes 6 arguments but 5 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs:15:15
+- E0061: this function takes 6 arguments but 5 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3728:26
+- E0061: this function takes 6 arguments but 5 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3770:26
+- E0061: this function takes 2 arguments but 3 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4351:21
+- E0061: this method takes 2 arguments but 1 argument was supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4569:36
+- E0061: this method takes 5 arguments but 4 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4575:13
+- E0061: this function takes 1 argument but 0 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4588:51
+- E0308: mismatched types — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4588:51
+- E0061: this function takes 4 arguments but 2 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:891:19
+- E0061: this method takes 5 arguments but 4 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:903:24
+- E0308: mismatched types — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1265:51
+- E0061: this function takes 2 arguments but 3 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1282:17
+- E0061: this function takes 4 arguments but 2 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1290:19
+- E0061: this method takes 5 arguments but 4 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1293:9
+- E0061: this method takes 2 arguments but 1 argument was supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1365:28
+- E0308: mismatched types — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1454:54
+- E0061: this method takes 4 arguments but 3 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1456:27
+- E0061: this function takes 3 arguments but 2 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1511:31
+- E0061: this function takes 2 arguments but 3 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1518:17
+- E0308: mismatched types — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1541:51
+- E0061: this function takes 4 arguments but 2 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1612:28
+- E0061: this method takes 5 arguments but 4 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:1615:18
+- E0616: field `mounted_policy` of struct `component::app::VcsArtifactApp` is private — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:2265:72
+- E0061: this function takes 3 arguments but 2 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:142:31
+- E0061: this function takes 2 arguments but 3 arguments were supplied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:146:17
+- E0061: this function takes 3 arguments but 2 arguments were supplied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4971:26
+- E0053: method `build_document_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:335:41
+- E0053: method `build_config_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:338:39
+- E0053: method `build_draft_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-dummy/🦀️.rs:341:38
+- E0050: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:31:19
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:30:1
+- E0050: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:64:19
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-no-state/🦀️.rs:63:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:333:19
+- E0277: the trait bound `component::app::mutation_fixture::surface::SurfaceSnapshot: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:503:21
+- E0277: the trait bound `SurfaceEditorCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:513:20
+- E0053: method `build_document_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:578:41
+- E0053: method `build_config_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:581:39
+- E0053: method `build_draft_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:584:38
+- E0277: the trait bound `component::app::mutation_fixture::surface::SurfaceSnapshot: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:642:21
+- E0277: the trait bound `SurfaceViewerCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:650:20
+- E0050: method `mounted_job_maintenance_step` has 3 parameters but the declaration in trait `component::app::ArtifactViewer::mounted_job_maintenance_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:669:50
+- E0050: method `mounted_job_close_step` has 3 parameters but the declaration in trait `component::app::ArtifactViewer::mounted_job_close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:676:44
+- E0053: method `build_document_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:695:41
+- E0053: method `build_config_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:698:39
+- E0050: method `close_step` has 3 parameters but the declaration in trait `component::retained_command::ArtifactCommandWork::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-surface/🦀️.rs:1160:23
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:215:19
+- E0277: the trait bound `TxnSnapshot: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:321:21
+- E0277: the trait bound `transaction::mutations::TxnMutation: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:322:21
+- E0277: the trait bound `transaction::TxnCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:331:20
+- E0053: method `build_document_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:387:41
+- E0053: method `build_config_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:391:39
+- E0053: method `build_draft_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧬️mutation-fixtures/../🧬️mutation-fixtures-transaction/🦀️.rs:395:38
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:95:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:94:1
+- E0050: method `retire` has 2 parameters but the declaration in trait `dsl::SnapshotRetirementFactory::retire` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:122:15
+- E0050: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:132:19
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:131:1
+- E0050: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:156:19
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:155:1
+- E0053: method `build_document_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:233:41
+- E0053: method `build_config_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:237:39
+- E0053: method `build_draft_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/♻️publication-retirement-authority/🦀️.rs:241:38
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:181:19
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:267:19
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:322:19
+- E0053: method `build_document_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:476:41
+- E0053: method `build_config_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:480:39
+- E0053: method `build_draft_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/🦀️.rs:484:38
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🔬️tool-run/../🧪️tool-run-member/🦀️.rs:71:19
+- E0053: method `build_document_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:95:41
+- E0053: method `build_config_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:99:39
+- E0053: method `build_draft_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️time-travel/🦀️.rs:103:38
+- E0277: the trait bound `LabelReloadCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:93:20
+- E0053: method `build_document_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:125:41
+- E0053: method `build_config_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:129:39
+- E0053: method `build_draft_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-label-reload/🦀️.rs:133:38
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs:6:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19042:23
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19788:23
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🤖️agent-lane-preview/🦀️.rs:70:23
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22409:23
+- E0046: not all trait items implemented, missing: `next_close_copy_byte_demand`, `next_close_capacity_byte_demand`, `next_close_release_byte_demand`, `next_close_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:163:5
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:220:23
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:219:5
+- E0050: method `retire` has 2 parameters but the declaration in trait `dsl::SnapshotRetirementFactory::retire` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs:241:19
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🛫️encoder/🦀️.rs:53:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🛫️encoder/🦀️.rs:52:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:25:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:24:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:43:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:42:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:57:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:56:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:92:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🫙️owner/🦀️.rs:91:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/📢️publication/🦀️.rs:31:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/📢️publication/🦀️.rs:30:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🪪️registry/🦀️.rs:29:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-typed-command-full-operation/./🧩️child-operations/🪪️registry/🦀️.rs:28:1
+- E0277: the trait bound `declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:177:25
+- E0277: the trait bound `std1_any::Std1AnyMutation: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:178:25
+- E0277: the trait bound `Std1AnyCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:187:24
+- E0277: the trait bound `declarations::fixture::Std1AnySnapshot: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:202:25
+- E0277: the trait bound `std1_any::Std1AnyMutation: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:203:25
+- E0277: the trait bound `Std1AnyCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:210:24
+- E0277: the trait bound `declarations::fixture::Std1StrictSnapshot: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:225:25
+- E0277: the trait bound `std1_strict::Std1StrictMutation: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:226:25
+- E0277: the trait bound `Std1StrictCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:235:24
+- E0277: the trait bound `declarations::fixture::Std1StrictSnapshot: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:250:25
+- E0277: the trait bound `std1_strict::Std1StrictMutation: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:251:25
+- E0277: the trait bound `Std1StrictCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:258:24
+- E0277: the trait bound `declarations::fixture::Std2AnySnapshot: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:273:25
+- E0277: the trait bound `std2_any::Std2AnyMutation: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:274:25
+- E0277: the trait bound `Std2AnyCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:283:24
+- E0277: the trait bound `declarations::fixture::Std2AnySnapshot: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:298:25
+- E0277: the trait bound `std2_any::Std2AnyMutation: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:299:25
+- E0277: the trait bound `Std2AnyCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs:306:24
+- E0050: method `close_step` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:17:23
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:14:5
+- E0050: method `close_step` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:119:23
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:116:5
+- E0050: method `close_step` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:129:23
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:126:5
+- E0050: method `close_step` has 3 parameters but the declaration in trait `component::plugin_runtime::extension_retirement::ExtensionResourceOwner::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:197:27
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:194:9
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:285:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:284:1
+- E0050: method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:301:21
+- E0046: not all trait items implemented, missing: `retirement_birth_bytes` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:300:1
+- E0050: method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:306:21
+- E0046: not all trait items implemented, missing: `retirement_birth_bytes` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/📨️emission/🦀️.rs:305:1
+- E0050: method `begin` has 2 parameters but the declaration in trait `dsl::ArtifactStoreOneItemPreparationFactory::begin` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:207:13
+- E0046: not all trait items implemented, missing: `begin_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:198:5
+- E0046: not all trait items implemented, missing: `next_close_copy_byte_demand`, `next_close_capacity_byte_demand`, `next_close_release_byte_demand`, `next_close_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:217:5
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:143:19
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:389:19
+- E0050: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:449:19
+- E0046: not all trait items implemented, missing: `retirement_demands` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/⏳️completion/🦀️.rs:448:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:717:23
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:758:23
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:757:5
+- E0050: method `retire` has 2 parameters but the declaration in trait `dsl::SnapshotRetirementFactory::retire` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:779:19
+- E0050: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:788:23
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:787:5
+- E0050: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:811:23
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:810:5
+- E0277: the trait bound `TestCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1020:24
+- E0053: method `build_document_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1026:45
+- E0053: method `build_config_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1030:43
+- E0053: method `build_draft_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1034:42
+- E0050: method `close_step` has 4 parameters but the declaration in trait `component::app::ArtifactOwnedDisposer::close_step` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1301:23
+- E0046: not all trait items implemented, missing: `retirement_demands` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1300:5
+- E0050: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1372:23
+- E0277: the trait bound `TestCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1475:24
+- E0053: method `build_document_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1492:45
+- E0053: method `build_config_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1495:43
+- E0053: method `build_draft_store_owners` has an incompatible type for trait — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:1498:42
+- E0277: the trait bound `TestCommand: RetireOwned` is not satisfied — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:2187:24
+- E0050: method `close_step` has 3 parameters but the declaration in trait `component::retained_command::ArtifactCommandWork::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:3330:27
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4612:23
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4607:5
+- E0050: method `retire` has 2 parameters but the declaration in trait `dsl::SnapshotRetirementFactory::retire` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4639:19
+- E0050: method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4660:25
+- E0046: not all trait items implemented, missing: `retirement_birth_bytes` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4659:5
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4668:23
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4667:5
+- E0050: method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3 — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4687:25
+- E0046: not all trait items implemented, missing: `retirement_birth_bytes` — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs:4686:5
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:179:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:178:1
+- E0050: method `retire_owned` has 2 parameters but the declaration in trait `retire_owned` has 3 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:204:21
+- E0046: not all trait items implemented, missing: `retirement_birth_bytes` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:203:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ArtifactEnvelopeSnapshotFieldAuthority::close_step` has 2 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:321:19
+- E0046: not all trait items implemented, missing: `next_close_copy_byte_demand`, `next_close_capacity_byte_demand`, `next_close_release_byte_demand`, `next_close_depth_demand` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:249:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ArtifactEnvelopeMutationFieldAuthority::close_step` has 2 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:395:19
+- E0046: not all trait items implemented, missing: `next_close_copy_byte_demand`, `next_close_capacity_byte_demand`, `next_close_release_byte_demand`, `next_close_depth_demand` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:374:1
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ArtifactEnvelopeSprConflictAuthority::close_step` has 2 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:419:19
+- E0046: not all trait items implemented, missing: `next_close_copy_byte_demand`, `next_close_capacity_byte_demand`, `next_close_release_byte_demand`, `next_close_depth_demand` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:408:1
+- E0277: the trait bound `ComposedParentEnvelopeOwnedFieldCatalog: FactoryRetirement` is not satisfied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:434:101
+- E0277: the trait bound `ComposedParentSnapshot: RetireOwned` is not satisfied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:511:21
+- E0277: the trait bound `RecursiveFixtureMutation: RetireOwned` is not satisfied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:512:21
+- E0053: method `build_document_store_owners` has an incompatible type for trait — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:542:41
+- E0053: method `build_config_store_owners` has an incompatible type for trait — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:559:39
+- E0053: method `build_draft_store_owners` has an incompatible type for trait — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:561:38
+- E0050: method `close_step` has 3 parameters but the declaration in trait `dsl::ErasedSnapshotRetirement::close_step` has 2 — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:785:19
+- E0046: not all trait items implemented, missing: `next_copy_byte_demand`, `next_capacity_byte_demand`, `next_release_byte_demand`, `next_depth_demand` — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧩️composition/🦀️.rs:784:1
+- E0277: the trait bound `TestCommand: RetireOwned` is not satisfied — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:29:20
+- E0053: method `build_document_store_owners` has an incompatible type for trait — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:60:41
+- E0053: method `build_config_store_owners` has an incompatible type for trait — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:81:39
+- E0053: method `build_draft_store_owners` has an incompatible type for trait — /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs:89:38
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/🧪️tests/📡️live/🦀️.rs:38:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/🧪️tests/📡️live/🦀️.rs:42:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/🧪️tests/📡️live/🦀️.rs:43:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📡️live/🧪️tests/📡️live/🦀️.rs:83:61
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:54:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:55:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:56:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:64:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:68:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:69:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:81:13
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:85:13
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📖️capture/🧪️tests/📖️capture/🦀️.rs:86:13
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:38:13
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:39:13
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:40:13
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:47:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:51:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:52:17
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:64:64
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:150:122
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:185:23
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:188:23
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:191:12
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:212:52
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:259:23
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:262:23
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:268:23
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:272:27
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:276:23
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:279:12
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/📃️query/🧪️tests/📃️query/🦀️.rs:352:118
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs:12:60
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs:15:13
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs:20:13
+- E0433: cannot find type `SnapshotRetirementStep` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🕹️interaction/♻️retirement/🧪️tests/♻️retirement/🦀️.rs:24:13
+- E0425: cannot find function `extension_next_close_byte_demand` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:313:20
+- E0425: cannot find function `extension_next_close_byte_demand` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:315:26
+- E0425: cannot find function `extension_next_close_byte_demand` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:318:24
+- E0425: cannot find function `extension_next_close_byte_demand` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:322:24
+- E0425: cannot find function `extension_next_close_byte_demand` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:326:24
+- E0425: cannot find function `extension_next_close_byte_demand` in this scope — 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧪️tests/🔬️extension-retirement/🦀️.rs:330:21
+- compiler: could not compile `semio-framework-plugin` (lib test) due to 951 previous errors; 2185 warnings emitted — 
+- compiler: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --lib` exited with code 101 — 
+- compiler: cargo exited with status 101 — 
+- compiler: native:owner-command failed (1) — 
+- compiler: script "nx" exited with code 1 — 

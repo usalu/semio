@@ -1,0 +1,7 @@
+# Corrected Target Placement
+
+Fresh JSON object-level observations are in `📥️target-shape.json`. Both Plugin web test-lifecycle and Library schema-read-inventory are now actual project.targets properties, absent from namedInputs. Every namedInputs value is an array in both files. Commands point to defining permanent scripts; respective original selectors/controlled dispatch are preserved. This is current Source metadata proof, not Nx/runtime test success; corrected Plugin58084 is pending per Root.
+
+My prior cohort-now review incorrectly inferred Plugin target placement from a matching property/command excerpt without checking the enclosing project object. Its claim of normal target availability before correction is withdrawn. Live/seed command presence and script selection were valid independent observations but did not establish project.targets. Root's later correction is separately attributed by its own action ledger, never this read-only lane. Library placement was already correct.
+
+Bounded counterexamples remain qualified: current reference helper acquires immediate LHS receiver before RHS and evaluates immediate computed key, but dynamic nested selection can still lose root document identity. call member with computed property evaluates object separately then evaluates full callee again, double-running effectful receiver. Original artifact-definition schema stays genuine; only origin certainty needs refinement. Three plain cases remain in two-laws input, no new schema authority or Source edits. All new ticket paths below256.

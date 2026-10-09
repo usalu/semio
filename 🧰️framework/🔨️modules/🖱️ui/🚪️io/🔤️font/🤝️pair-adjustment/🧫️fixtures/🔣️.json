@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "queries": {
+    "accepted": [
+      {
+        "leftGlyph": 0,
+        "rightGlyph": 0
+      },
+      {
+        "leftGlyph": 65535,
+        "rightGlyph": 65535
+      },
+      {
+        "leftGlyph": 17,
+        "rightGlyph": 42
+      }
+    ],
+    "refused": [
+      {
+        "leftGlyph": -1,
+        "rightGlyph": 0
+      },
+      {
+        "leftGlyph": 0,
+        "rightGlyph": 65536
+      },
+      {
+        "leftGlyph": 0.5,
+        "rightGlyph": 0
+      },
+      {
+        "leftGlyph": 0,
+        "rightGlyph": 0,
+        "cache": []
+      }
+    ]
+  },
+  "adjustments": {
+    "accepted": [
+      {
+        "advanceUnits": 0
+      },
+      {
+        "advanceUnits": -2147483648
+      },
+      {
+        "advanceUnits": 2147483647
+      }
+    ],
+    "refused": [
+      {
+        "advanceUnits": 2147483648
+      },
+      {
+        "advanceUnits": -2147483649
+      },
+      {
+        "advanceUnits": 0.5
+      },
+      {
+        "advanceUnits": 0,
+        "cache": []
+      }
+    ]
+  },
+  "malformedSources": [
+    {
+      "name": "empty",
+      "bytes": [],
+      "kind": "invalidValue"
+    },
+    {
+      "name": "zero-font-signature",
+      "bytes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "kind": "invalidValue"
+    },
+    {
+      "name": "truncated-original-header",
+      "bytes": [
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "kind": "invalidValue"
+    },
+    {
+      "name": "bounded-directory",
+      "bytes": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        33,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "kind": "unsupportedOwner"
+    },
+    {
+      "name": "missing-original-directory",
+      "bytes": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "kind": "invalidValue"
+    }
+  ],
+  "required": {
+    "denialBirthBytes": 0,
+    "denialReleaseBytes": 0,
+    "refusalMessageStorage": "borrowed"
+  }
+}

@@ -289,6 +289,87 @@
           }
         }
       ]
+    },
+    "RetainedCloneGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "AbiWorkBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "byteCredit",
+        "retained",
+        "nowMs",
+        "deadlineMs",
+        "cancelled",
+        "interrupted"
+      ],
+      "properties": {
+        "byteCredit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "retained": {
+          "$ref": "#/definitions/RetainedCloneGrant"
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deadlineMs": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cancelled": {
+          "type": "boolean"
+        },
+        "interrupted": {
+          "type": "boolean"
+        }
+      }
     }
   },
   "$defs": {

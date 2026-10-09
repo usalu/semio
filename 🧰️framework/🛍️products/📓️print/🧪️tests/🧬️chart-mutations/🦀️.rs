@@ -90,7 +90,7 @@ fn native_registry_dispatch_is_deterministic_and_controlled() {
     let base = snapshot();
     let payload = protocol::pack_rt::encode_wire_value(&base.to_value());
     let budgets = WireArtifactInferenceBudget { work_units: 100, allocation_bytes: 1_000_000, recursion_depth: 64 };
-    let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budgets, cancellation_id: "chart-test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Bypass, canonical_payload: &payload, dependencies: &[] };
+    let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budgets, retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 }, cancellation_id: "chart-test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Bypass, canonical_payload: &payload, dependencies: &[] };
     let mut registry = ArtifactInferenceServiceRegistry::new();
     registry.register(chart_inference_service()).unwrap();
     register_chart_artifact().unwrap();

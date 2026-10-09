@@ -1,0 +1,27 @@
+{
+  "native": {
+    "handle": 46550,
+    "exitCode": 0,
+    "passed": 3,
+    "skipped": 323,
+    "assertionSeconds": 127.563
+  },
+  "portable4": {
+    "handle": 61127,
+    "exitCode": 0,
+    "strictAuthority": false
+  },
+  "portable5": {
+    "handle": 22255,
+    "exitCode": 0,
+    "strictAuthority": true,
+    "negativeAuthorities": 6
+  },
+  "sources": {
+    "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🦀️.rs": "9aea54dadebc8f40b3e5e1641dafb82c58b4620d5ab116fdb7433cbdb75cefa0",
+    "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🦀️.rs": "7775cfb749a180a8946b43429ee7bd28eb381f4375f842a2b8e1e9bf7ccd3e91",
+    "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts": "5006c565646aa889bec88da60cf7f9a032b84bab142368eb90603f1083807b4a",
+    "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json": "c0601ba8dbbb50df15b149acc9b2021ee36caa9f1879d9c68309484e5bc8af81",
+    "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧫️fixtures/🔣️.json": "48b1f2d49cddc86f330281fe2739da40792362bc8e495f825dbb5d13116f890c"
+  }
+}

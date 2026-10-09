@@ -1,0 +1,20 @@
+{
+  "paths": [
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧬️schema/🔣️.json",
+      "exists": false,
+      "role": "original requested path; read-only observation, not authorship"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🚦️public/🧬️schema/🔣️.json",
+      "exists": false,
+      "role": "original requested path; read-only observation, not authorship"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️control/🧬️schema/🔣️.json",
+      "exists": false,
+      "role": "original requested path; read-only observation, not authorship"
+    }
+  ],
+  "limitation": "Absence of named old paths alone does not prove current runtime exclusivity or semantics of replacement contracts."
+}

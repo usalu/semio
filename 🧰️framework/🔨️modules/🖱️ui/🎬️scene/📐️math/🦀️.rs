@@ -3036,4 +3036,4 @@ pub fn grid_placement_anchor(orbit_target: Vec3, datum: [f64; 3]) -> Vec3 {
 
 #[cfg(test)]
 #[path = "../🧪️tests/🔬️math-unit/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;

@@ -840,6 +840,13 @@ pub struct RetainedValueProgress {
 }
 
 impl RetainedValueCursor {
+    /// 📏️ Quotes the original scalar frame or whole stack allocation before close.
+    pub fn retirement_demands(&self) -> semio_framework_value::RetirementDemand {
+        use semio_framework_value::RetirementDemand;
+        if self.terminal_is_empty() { return Default::default(); }
+        let copy_bytes = if self.pending.is_some() { std::mem::size_of::<(u64, u8)>() } else if !self.stack.is_empty() { std::mem::size_of::<Expect>() } else { 0 };
+        RetirementDemand { copy_bytes, release_bytes: if copy_bytes == 0 { self.stack_allocation_bytes() } else { 0 }, depth: 1, ..Default::default() }
+    }
     pub fn try_new(limits: PackLimits, maximum_allocation_bytes: usize) -> Result<Self, PackRefusal> {
         if limits.max_depth == 0{return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::DepthLimit,limit:"retained value depth credits"});}
         if limits.max_items == 0{return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,limit:"retained value item credits"});}

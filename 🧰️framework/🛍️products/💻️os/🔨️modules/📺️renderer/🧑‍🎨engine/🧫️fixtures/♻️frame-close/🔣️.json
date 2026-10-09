@@ -1,0 +1,229 @@
+{
+  "schema": "semio.frame-close.v1",
+  "caller": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 64
+  },
+  "cases": [
+    {
+      "id": "inline-directive-header",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 64
+      },
+      "step": {
+        "kind": "pending",
+        "progress": {
+          "copiedItems": 1,
+          "copiedBytes": 1,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "terminal": false,
+      "expected": "pending"
+    },
+    {
+      "id": "blocked-keeps-owner",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 64
+      },
+      "step": {
+        "kind": "blocked",
+        "progress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "terminal": false,
+      "expected": "blocked"
+    },
+    {
+      "id": "refusal-preserved",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 64
+      },
+      "step": {
+        "kind": "refused",
+        "progress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "terminal": false,
+      "expected": "refused"
+    },
+    {
+      "id": "terminal-zero-receipt",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 64
+      },
+      "step": {
+        "kind": "complete",
+        "progress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "terminal": true,
+      "expected": "complete"
+    },
+    {
+      "id": "foreign-terminal",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 64
+      },
+      "step": {
+        "kind": "complete",
+        "progress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "terminal": false,
+      "expected": "notTerminalEmpty"
+    },
+    {
+      "id": "excess-copiedItems",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 64
+      },
+      "step": {
+        "kind": "pending",
+        "progress": {
+          "copiedItems": 2,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "terminal": false,
+      "expected": "ownershipLimit"
+    },
+    {
+      "id": "excess-copiedBytes",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 64
+      },
+      "step": {
+        "kind": "pending",
+        "progress": {
+          "copiedItems": 0,
+          "copiedBytes": 65537,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "terminal": false,
+      "expected": "ownershipLimit"
+    },
+    {
+      "id": "excess-retainedCapacityBytes",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 64
+      },
+      "step": {
+        "kind": "pending",
+        "progress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 65537,
+          "releasedBytes": 0
+        }
+      },
+      "terminal": false,
+      "expected": "ownershipLimit"
+    },
+    {
+      "id": "excess-releasedBytes",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 64
+      },
+      "step": {
+        "kind": "pending",
+        "progress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 16777217
+        }
+      },
+      "terminal": false,
+      "expected": "ownershipLimit"
+    },
+    {
+      "id": "engine-packet-backing-release",
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 64
+      },
+      "step": {
+        "kind": "complete",
+        "progress": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 65536
+        }
+      },
+      "terminal": true,
+      "expected": "complete"
+    }
+  ],
+  "enginePacketBacking": {
+    "slots": 256,
+    "copy": "originalBoxHeader",
+    "release": "originalArrayLayout",
+    "undersizedRelease": "retainExactBacking",
+    "complete": "backingAbsent"
+  }
+}

@@ -121,14 +121,15 @@ fn step_once<S: crate::CommandSink, D: crate::ProjectionDelta>(transaction: &mut
         Some(0)
     }
     let mut preview_sequence = 0;
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
     let mut cx = semio_framework_job::StepContext::new(
         semio_framework_job::allocate_operation_id(),
         semio_framework_job::Generation(0),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX),
+        semio_framework_job::StepBudget::new(fuel, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),
         semio_framework_job::CancelToken::root_now(),
         clock,
         &mut preview_sequence,
-    );
+    &mut actual_retained_progress);
     transaction.step(runtime, &mut cx)
 }
 
@@ -407,7 +408,8 @@ fn cancellation_discards_an_active_node_cursor_without_advancing_the_surface_rev
     let token = semio_framework_job::CancelToken::root_now();
     token.cancel_now();
     let mut preview_sequence = 0;
-    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), token, clock, &mut preview_sequence);
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), token, clock, &mut preview_sequence,&mut actual_retained_progress);
     assert!(matches!(transaction.step(&mut runtime, &mut cx), FrameTransactionStep::Cancelled(_)));
     assert_eq!(runtime.surfaces.get(&surface).expect("surface").current_revision(), ui_contract::UiRevision(0));
 
@@ -447,8 +449,9 @@ fn an_expired_wall_clock_budget_returns_before_consuming_input() {
     runtime.push_delta(FakeDelta { target, value: 1 }).expect("delta");
     let mut transaction = FrameTransaction::new(FrameTransactionLimits::default());
     let mut preview_sequence = 0;
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
     let mut cx =
-        semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, 10), semio_framework_job::CancelToken::root_now(), clock, &mut preview_sequence);
+        semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), semio_framework_job::CancelToken::root_now(), clock, &mut preview_sequence,&mut actual_retained_progress);
 
     assert!(matches!(transaction.step(&mut runtime, &mut cx), FrameTransactionStep::Yield { usage: FrameTransactionUsage { items: 0, .. }, .. }));
     assert_eq!(runtime.inbox.len(), 1);

@@ -63,7 +63,7 @@ pub fn with_compiler_resources_v1<R>(producer_manifest: &str, producer_source: &
     value
 }
 
-/// 📖️ Preserves exactly the bytes returned by the real proc-macro read.
+/// 📖️ Records the size and digest of original bytes consumed in place by the real proc-macro read.
 #[track_caller]
 pub fn read(path: impl AsRef<Path>) -> io::Result<Vec<u8>> {
     let path = absolute(path);
@@ -73,13 +73,8 @@ pub fn read(path: impl AsRef<Path>) -> io::Result<Vec<u8>> {
     CURRENT.with(|current| {
         if let Some(capture) = current.borrow_mut().as_mut() {
             (capture.track)(&path);
-            if let Some(directory) = &capture.directory {
-                let pool = directory.parent().expect("compiler capture root").join("snapshots");
-                fs::create_dir_all(&pool).expect("create compiler resource snapshot pool");
-                let output = pool.join(format!("{}.bin", content_hash::sha256_hex(&bytes)));
-                let snapshot_operation = operation(file!(), line!(), "read"); match fs::read(&output) { Ok(previous) if previous == bytes => {}, _ => { let temporary = directory.join(format!("read-{}.tmp", capture.rows.len())); fs::write(&temporary, &bytes).expect("preserve original compiler resource bytes"); fs::rename(temporary, &output).expect("complete compiler resource snapshot"); } }
-                (capture.track)(&output);
-                capture.rows.push(format!("{{\"kind\":\"read\",\"path\":{},\"output\":{},\"callsite\":{},\"operation\":{},\"snapshotOperation\":{}}}", path_text(&path), path_text(&output), callsite(location), read_operation, snapshot_operation));
+            if capture.directory.is_some() {
+                capture.rows.push(format!("{{\"kind\":\"read\",\"path\":{},\"bytes\":{},\"sha256\":{},\"callsite\":{},\"operation\":{}}}", path_text(&path), bytes.len(), quoted(&content_hash::sha256_hex(&bytes)), callsite(location), read_operation));
             }
         }
     });

@@ -17,7 +17,7 @@ pub fn from_dsl_text(text: &str) -> Result<Fem2dSnapshot, IoError> {
 impl Deserializer<Fem2dSnapshot> for TxtIntoFem2d {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<Fem2dSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<Fem2dSnapshot> {
         deserialize_dsl_txt(payload)
     }
 }

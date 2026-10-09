@@ -1,0 +1,35 @@
+{
+  "recordedAt": "2026-10-09T10:27:00Z",
+  "rootSocketNativeCurrent": {
+    "previous": {
+      "session": 67298,
+      "exitCode": 1,
+      "assertions": 0,
+      "preparationSourceChanged": true
+    },
+    "latest": {
+      "session": 7471,
+      "exitCode": 1,
+      "assertions": 0,
+      "compilerOwner": "semio-framework-mesh-engine",
+      "compilerErrors": 2
+    }
+  },
+  "rootMeshNativePrerequisite": {
+    "actualOriginalGrantMounted": true,
+    "normalFrontierQuotedFromOriginalText": true,
+    "originalOwnerNativeSession": 69553,
+    "pending": true
+  },
+  "rootRequestedFleetConfiguration": {
+    "main": "gpt-6.1-sol/xhigh",
+    "mainConfigurationObservable": false,
+    "execution": [
+      "native_owner_execution:gpt-6.1-sol/high",
+      "window_owner_execution:gpt-6.1-sol/high"
+    ],
+    "readOnly": "current_readonly_audit:gpt-6.1-sol/low",
+    "maximumConcurrent": 4
+  },
+  "rootUniversalComplete": false
+}

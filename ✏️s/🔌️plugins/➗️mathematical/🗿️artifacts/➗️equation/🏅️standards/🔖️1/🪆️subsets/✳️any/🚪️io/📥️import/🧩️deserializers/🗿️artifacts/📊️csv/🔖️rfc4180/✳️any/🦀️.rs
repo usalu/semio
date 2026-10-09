@@ -17,7 +17,7 @@ pub struct CsvIntoEquation;
 impl Deserializer<EquationSnapshot> for CsvIntoEquation {
     const FROM: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn deserialize(payload: &IoPayload) -> IoResult<EquationSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<EquationSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(crate::standards::v1::subsets::any::io::invalid_payload("CsvIntoEquation", "expected a binary csv payload"));
         };

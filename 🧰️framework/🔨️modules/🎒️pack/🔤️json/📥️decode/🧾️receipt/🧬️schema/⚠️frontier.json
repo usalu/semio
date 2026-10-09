@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.pack.json.failed-frontier-receipts.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sources",
+    "refusals",
+    "copyPrefixBytes",
+    "cumulativeCopiedItems",
+    "physicalDepth",
+    "maximumTurns"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "string"
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "frontier",
+          "kind",
+          "copiedItems",
+          "copiedBytes",
+          "retainedCapacityBytes",
+          "releasedBytes"
+        ],
+        "properties": {
+          "frontier": {
+            "enum": [
+              "stringCapacity",
+              "grammar"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "allocationPort",
+              "trailingSyntax"
+            ]
+          },
+          "copiedItems": {
+            "const": 1
+          },
+          "copiedBytes": {
+            "const": 0
+          },
+          "retainedCapacityBytes": {
+            "const": 0
+          },
+          "releasedBytes": {
+            "const": 0
+          }
+        }
+      }
+    },
+    "copyPrefixBytes": {
+      "const": 4
+    },
+    "cumulativeCopiedItems": {"const": 10},
+    "physicalDepth": {
+      "const": 3
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, cpSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 
@@ -15,19 +15,18 @@ export async function testImportEdgeEquality(workspace: string, output: string):
   const pg = JSON.parse(readFileSync(pgPath, "utf8")), fm = JSON.parse(readFileSync(fmPath, "utf8"));
   const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/import-edges");
   const cases = JSON.parse(readFileSync(join(fixtureRoot, "cases.json"), "utf8"));
-  const root = mkdtempSync(join(output, "import-edges-"));
+  const root = mkdtempSync(join(output, "e-"));
   const dataDir = join(root, ".nx/workspace-data");
   mkdirSync(dataDir, { recursive: true });
   process.env.NX_WORKSPACE_DATA_DIRECTORY = dataDir;
   const key = (edge: ImportEdge) =>
     `${edge.source}\0${edge.target}\0${edge.sourceFile ?? ""}\0${edge.type}`;
   try {
-    for (const name of ["a", "b"]) cpSync(join(fixtureRoot, name), join(root, name), { recursive: true });
     const projects = {
       "fixture-a": { name: "fixture-a", root: "a", targets: {} },
       "fixture-b": { name: "fixture-b", root: "b", targets: {} },
     };
-    const hash = (file: string) => createHash("sha256").update(readFileSync(join(root, file))).digest("hex");
+    const hash = (file: string) => createHash("sha256").update(readFileSync(join(fixtureRoot, file))).digest("hex");
     const fileMap = {
       projectFileMap: {
         "fixture-a": [
@@ -43,7 +42,7 @@ export async function testImportEdgeEquality(workspace: string, output: string):
       nonProjectFiles: [],
     };
     const context = {
-      workspaceRoot: root,
+      workspaceRoot: fixtureRoot,
       projects,
       fileMap,
       filesToProcess: fileMap,
@@ -71,7 +70,7 @@ export async function testImportEdgeEquality(workspace: string, output: string):
     assert.ok(nodes && fm.fileMap, "current Nx graph snapshots must declare nodes and fileMap");
     const repoProjects = Object.fromEntries(Object.entries(nodes).map(([name, node]: any) => [name, { name, root: node.data.root, targets: node.data.targets || {} }]));
     const fileMapRepo = fm.fileMap;
-    const repoData = mkdtempSync(join(root, "repository-facts-"));
+    const repoData = mkdtempSync(join(root, "r-"));
     process.env.NX_WORKSPACE_DATA_DIRECTORY = repoData;
     const repoContext = {
       workspaceRoot: workspace,

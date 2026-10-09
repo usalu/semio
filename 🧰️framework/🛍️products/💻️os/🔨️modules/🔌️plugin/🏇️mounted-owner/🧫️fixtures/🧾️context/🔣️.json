@@ -1,0 +1,483 @@
+{
+  "contract": "framework.plugin.mounted-original-context-receipt",
+  "depthIsNotConsumed": true,
+  "sameOriginalRecipient": true,
+  "policyCannotIncreaseCaller": true,
+  "successfulChildDebitedOnce": true,
+  "nestedJobs": [
+    {
+      "id": "missing-child-debit-is-refused",
+      "debit": "owner",
+      "receipt": {
+        "copiedItems": 1,
+        "copiedBytes": 4,
+        "retainedCapacityBytes": 8,
+        "releasedBytes": 16
+      }
+    },
+    {
+      "id": "child-records-original-context",
+      "debit": "child",
+      "receipt": {
+        "copiedItems": 1,
+        "copiedBytes": 4,
+        "retainedCapacityBytes": 8,
+        "releasedBytes": 16
+      }
+    },
+    {
+      "id": "partial-child-debit-is-refused",
+      "debit": "partial",
+      "receipt": {
+        "copiedItems": 1,
+        "copiedBytes": 4,
+        "retainedCapacityBytes": 8,
+        "releasedBytes": 16
+      }
+    },
+    {
+      "id": "foreign-child-debit-is-refused",
+      "debit": "foreign",
+      "receipt": {
+        "copiedItems": 1,
+        "copiedBytes": 4,
+        "retainedCapacityBytes": 8,
+        "releasedBytes": 16
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "id": "same-original-context",
+      "policy": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "context": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "already": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "receipt": {
+        "copiedItems": 1,
+        "copiedBytes": 4,
+        "retainedCapacityBytes": 8,
+        "releasedBytes": 16
+      },
+      "remaining": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4,
+        "maximumCapacityBytes": 8,
+        "maximumReleaseBytes": 16,
+        "maximumDepth": 3
+      }
+    },
+    {
+      "id": "previous-original-child",
+      "policy": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "context": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "already": {
+        "copiedItems": 1,
+        "copiedBytes": 4,
+        "retainedCapacityBytes": 8,
+        "releasedBytes": 16
+      },
+      "receipt": {
+        "copiedItems": 1,
+        "copiedBytes": 4,
+        "retainedCapacityBytes": 8,
+        "releasedBytes": 16
+      },
+      "remaining": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 3
+      }
+    },
+    {
+      "id": "empty-context-maximumItems",
+      "policy": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "context": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "already": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "receipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      }
+    },
+    {
+      "id": "empty-policy-maximumItems",
+      "policy": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "context": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "already": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "receipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      }
+    },
+    {
+      "id": "empty-context-maximumCopyBytes",
+      "policy": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "context": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "already": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "receipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      }
+    },
+    {
+      "id": "empty-policy-maximumCopyBytes",
+      "policy": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "context": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "already": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "receipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      }
+    },
+    {
+      "id": "empty-context-maximumCapacityBytes",
+      "policy": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "context": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "already": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "receipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      }
+    },
+    {
+      "id": "empty-policy-maximumCapacityBytes",
+      "policy": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "context": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "already": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "receipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      }
+    },
+    {
+      "id": "empty-context-maximumReleaseBytes",
+      "policy": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "context": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 3
+      },
+      "already": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "receipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 3
+      }
+    },
+    {
+      "id": "empty-policy-maximumReleaseBytes",
+      "policy": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 3
+      },
+      "context": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "already": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "receipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 3
+      }
+    },
+    {
+      "id": "empty-context-maximumDepth",
+      "policy": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "context": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 0
+      },
+      "already": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "receipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 0
+      }
+    },
+    {
+      "id": "empty-policy-maximumDepth",
+      "policy": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 0
+      },
+      "context": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 3
+      },
+      "already": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "receipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "remaining": {
+        "maximumItems": 2,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 16,
+        "maximumReleaseBytes": 32,
+        "maximumDepth": 0
+      }
+    }
+  ]
+}

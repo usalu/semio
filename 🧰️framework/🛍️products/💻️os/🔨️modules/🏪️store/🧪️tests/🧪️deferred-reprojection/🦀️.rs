@@ -21,10 +21,10 @@ async fn store_named(id: &str, n: Option<i32>) -> ArtifactStore<DemoSnapshot, De
 }
 
 /// 🌱️ The author of `edits` and a replica holding its whole log.
-async fn authored(id: &str, n: Option<i32>, edits: Vec<Vec<DemoMutation>>) -> (ArtifactStore<DemoSnapshot, DemoMutation>, Vec<crate::os_spr::MutationEnvelope>) {
+async fn authored(id: &str, n: Option<i32>, edits: Vec<Vec<DemoMutation>>, identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ArtifactStore<DemoSnapshot, DemoMutation>, Vec<crate::os_spr::MutationEnvelope>) {
     let mut author = store_named(id, n).await;
     for mutations in edits {
-        author.dispatch(ArtifactCommand::Apply { mutations, transaction: None }).await.expect("a clean edit applies");
+        author.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, identity).await.expect("a clean edit applies");
     }
     let log = author.event_log().expect("log");
     (author, log)
@@ -92,6 +92,9 @@ fn replay_owner_work<M: super::Mutation<DemoSnapshot> + OpBinary>(store: &Artifa
 /// inside the ingest adopted — the corpus' expected state, the same revision, log, supersessions and outcomes.
 #[semio_framework_async_macros::async_test]
 async fn a_deferred_remote_supersession_adopts_what_an_undeferred_one_adopts() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️supersede-replay/🔣️.json")).expect("corpus parses");
     let hex = |text: &str| text.as_bytes().chunks(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("ascii hex"), 16).expect("hex pair")).collect::<Vec<u8>>();
     let mut deferred_cases = 0;
@@ -99,7 +102,7 @@ async fn a_deferred_remote_supersession_adopts_what_an_undeferred_one_adopts() {
         let name = case["name"].as_str().expect("case name");
         let initial: Option<i32> = serde_json::from_value(case["initial"]["n"].clone()).expect("initial n");
         let edits = case["edits"].as_array().expect("edits").iter().map(|edit| edit.as_array().expect("edit").iter().map(|operation| DemoMutation::from_value(operation.clone().into()).expect("corpus operation")).collect()).collect();
-        let (author, log) = authored(name, initial, edits).await;
+        let (author, log) = authored(name, initial, edits, &mut identity).await;
         let operations: Vec<(usize, u32, MutationId)> = author.mutation_ops().expect("operations").into_iter().map(|operation| (operation.position, operation.op_index, operation.mutation_id)).collect();
         let inputs: Vec<protocol::SupersededInput> = case["supersessions"]
             .as_array()
@@ -141,8 +144,11 @@ async fn a_deferred_remote_supersession_adopts_what_an_undeferred_one_adopts() {
 /// from the start to the undeferred adoption.
 #[semio_framework_async_macros::async_test]
 async fn cancelling_a_deferred_replay_at_any_step_leaves_the_store_untouched() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let edits: Vec<Vec<DemoMutation>> = std::iter::once(vec![set(1)]).chain((1..12).map(add).map(|operation| vec![operation])).collect();
-    let (author, log) = authored("deferred-cancel", Some(0), edits).await;
+    let (author, log) = authored("deferred-cancel", Some(0), edits, &mut identity).await;
     let target = author.mutation_ops().expect("operations")[0].mutation_id.clone();
     let supersede = remote_supersede("deferred-cancel", vec![replaced(&target, set(100))], 0);
     let mut undeferred = replica("deferred-cancel", Some(0), &log, None).await;
@@ -177,13 +183,16 @@ async fn cancelling_a_deferred_replay_at_any_step_leaves_the_store_untouched() {
 /// is the fold of every event either replica holds; a further remote supersession joins the waiting change.
 #[semio_framework_async_macros::async_test]
 async fn a_local_edit_or_a_further_remote_change_restarts_the_deferred_replay() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let edits: Vec<Vec<DemoMutation>> = std::iter::once(vec![set(1)]).chain((1..8).map(add).map(|operation| vec![operation])).collect();
-    let (author, log) = authored("deferred-restart", Some(0), edits).await;
+    let (author, log) = authored("deferred-restart", Some(0), edits, &mut identity).await;
     let ids: Vec<MutationId> = author.mutation_ops().expect("operations").into_iter().map(|operation| operation.mutation_id).collect();
     let mut deferred = replica("deferred-restart", Some(0), &log, Some(2)).await;
     deferred.ingest_remote(remote_supersede("deferred-restart", vec![replaced(&ids[0], set(10))], 0)).await.expect("admitted");
     deferred.step_reprojection(None).await.expect("a step");
-    deferred.dispatch(ArtifactCommand::Apply { mutations: vec![add(100)], transaction: None }).await.expect("a local edit while the replay waits");
+    deferred.dispatch(ArtifactCommand::Apply { mutations: vec![add(100)], transaction: None }, &mut identity).await.expect("a local edit while the replay waits");
     assert_eq!(deferred.snapshot_ref().n, Some(129), "the local edit lands on the history before the change");
     let later = remote_supersede("deferred-restart", vec![replaced(&ids[3], add(0))], 1);
     deferred.ingest_remote(later.clone()).await.expect("a further remote change joins the waiting one");
@@ -205,8 +214,11 @@ async fn a_local_edit_or_a_further_remote_change_restarts_the_deferred_replay() 
 /// naming its live prefix.
 #[semio_framework_async_macros::async_test]
 async fn the_prefix_ring_grows_with_the_square_root_of_the_history() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let edits: Vec<Vec<DemoMutation>> = std::iter::once(vec![set(1)]).chain((1..100).map(|_| vec![add(1)])).collect();
-    let (author, log) = authored("deferred-ring", Some(0), edits).await;
+    let (author, log) = authored("deferred-ring", Some(0), edits, &mut identity).await;
     let first = author.mutation_ops().expect("operations")[0].mutation_id.clone();
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "deferred-ring", DemoSnapshot { n: Some(0) }, None)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners());
@@ -214,7 +226,9 @@ async fn the_prefix_ring_grows_with_the_square_root_of_the_history() {
     for event in &log {
         store.ingest_remote(event.clone()).await.expect("the replica takes the log");
         while store.maintenance_retirements_under_pressure() {
-            store.maintenance_retirements_step(64, 1 << 20).expect("displaced owners retire");
+            let grant=physical_test_close_grant();
+        let receipt=store.maintenance_retirements_step(grant).expect("displaced owners retire under original plain full policy").progress();
+        assert!(receipt.fits(grant));
         }
     }
     store.ingest_remote(remote_supersede("deferred-ring", vec![replaced(&first, set(1000))], 0)).await.expect("a remote supersession of the first operation");
@@ -235,7 +249,7 @@ std::thread_local! {
 
 /// 🧮️ A demo operation that counts every fold of it (`diff`), so a law can bound the work one turn does, and names its
 /// author (`None`: the store's local author) so one store can hold another actor's edits.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 struct CountedOp(DemoMutation, Option<&'static str>);
 
 impl CountedOp {
@@ -330,20 +344,22 @@ const LONG_HISTORY: i32 = 240;
 /// 🧹️ Retires every owner the last command displaced, as a runtime's maintenance turn does between commands.
 fn settle(store: &mut ArtifactStore<DemoSnapshot, CountedOp>) {
     while store.maintenance_retirements_under_pressure() {
-        store.maintenance_retirements_step(64, 1 << 20).expect("displaced owners retire");
+        let grant=physical_test_close_grant();
+        let receipt=store.maintenance_retirements_step(grant).expect("displaced owners retire under original plain full policy").progress();
+        assert!(receipt.fits(grant));
     }
 }
 
 /// 🌱️ A store with a long production-shaped history (owners installed, prefix ring live): `set(1)` authored by `early`,
 /// then `add(1)` × 239 authored by `later`, so `early`'s undo is an interior revert at position 0 that replays every later
 /// edit. The store authors as `early` afterwards and defers local replays by `budget`.
-async fn long_history(id: &str, budget: Option<ReplayTurnBudget>) -> ArtifactStore<DemoSnapshot, CountedOp> {
+async fn long_history(id: &str, budget: Option<ReplayTurnBudget>, identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ArtifactStore<DemoSnapshot, CountedOp> {
     let mut store = ArtifactStore::new_with_actor(create_document_envelope::<DemoSnapshot, CountedOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None), ActorId("early".into())).await;
     store.enable_convergence_early_exit();
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(set(1), Some("early"))], transaction: None }).await.expect("the early edit");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(set(1), Some("early"))], transaction: None }, identity).await.expect("the early edit");
     for _ in 1..LONG_HISTORY {
         settle(&mut store);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(add(1), Some("later"))], transaction: None }).await.expect("a later edit");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(add(1), Some("later"))], transaction: None }, identity).await.expect("a later edit");
     }
     settle(&mut store);
     store.defer_local_replays(budget);
@@ -381,8 +397,11 @@ async fn drive_local(store: &mut ArtifactStore<DemoSnapshot, CountedOp>) -> (usi
 /// store adopts.
 #[semio_framework_async_macros::async_test]
 async fn long_local_history_steps_replay_across_turns_and_adopt_what_an_undeferred_dispatch_adopts() {
-    let mut deferred = long_history("local-deferred", Some(ReplayTurnBudget::operations(LOCAL_BUDGET))).await;
-    let mut undeferred = long_history("local-undeferred", None).await;
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut deferred = long_history("local-deferred", Some(ReplayTurnBudget::operations(LOCAL_BUDGET)), &mut identity).await;
+    let mut undeferred = long_history("local-undeferred", None, &mut identity).await;
     let first = |store: &ArtifactStore<DemoSnapshot, CountedOp>| store.mutation_ops().expect("operations")[0].mutation_id.clone();
     let steps: Vec<(&str, Box<dyn Fn(&ArtifactStore<DemoSnapshot, CountedOp>) -> ArtifactCommand<CountedOp>>)> = vec![
         ("interior undo", Box::new(|_: &ArtifactStore<DemoSnapshot, CountedOp>| ArtifactCommand::Undo)),
@@ -401,18 +420,18 @@ async fn long_local_history_steps_replay_across_turns_and_adopt_what_an_undeferr
         let before = counted_view(&deferred);
         let folds = CountedOp::folds();
         let next = command(&deferred);
-        let receipt = deferred.dispatch(next).await;
+        let receipt = deferred.dispatch(next, &mut identity).await;
         assert!(receipt.is_ok(), "{name}: {receipt:?}");
         settle(&mut deferred);
         assert!(CountedOp::folds() - folds <= LOCAL_BUDGET + 1, "{name}: the dispatch folded {} operations", CountedOp::folds() - folds);
         assert!(deferred.local_step_pending(), "{name}: a long step waits for later turns");
         assert_eq!(counted_view(&deferred), before, "{name}: nothing of the step shows or is logged while it waits");
-        assert_eq!(deferred.dispatch(ArtifactCommand::Undo).await.err().map(|error| error.into_fault().code.0 == "history.replaying"), Some(true), "{name}: another history step waits");
+        assert_eq!(deferred.dispatch(ArtifactCommand::Undo, &mut identity).await.err().map(|error| error.into_fault().code.0 == "history.replaying"), Some(true), "{name}: another history step waits");
         let (turns, verdict) = drive_local(&mut deferred).await;
         assert!(verdict.is_ok(), "{name}: {verdict:?}");
         assert!(turns as i32 >= (LONG_HISTORY - 2) / LOCAL_BUDGET as i32, "{name}: the replay spreads over the turns ({turns})");
         let next = command(&undeferred);
-        undeferred.dispatch(next).await.unwrap_or_else(|error| panic!("{name}: undeferred {error}"));
+        undeferred.dispatch(next, &mut identity).await.unwrap_or_else(|error| panic!("{name}: undeferred {error}"));
         settle(&mut undeferred);
         let (deferred_view, undeferred_view) = (counted_view(&deferred), counted_view(&undeferred));
         assert_eq!(
@@ -430,11 +449,14 @@ async fn long_local_history_steps_replay_across_turns_and_adopt_what_an_undeferr
 /// the history before it and restarts its replay, whose adoption folds both.
 #[semio_framework_async_macros::async_test]
 async fn a_waiting_local_step_is_discarded_with_zero_trace_and_an_edit_restarts_it() {
-    let mut store = long_history("local-discard", Some(ReplayTurnBudget::operations(LOCAL_BUDGET))).await;
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut store = long_history("local-discard", Some(ReplayTurnBudget::operations(LOCAL_BUDGET)), &mut identity).await;
     let first = store.mutation_ops().expect("operations")[0].mutation_id.clone();
     let before = counted_view(&store);
     for steps in [0usize, 1, 5] {
-        store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: first.clone(), replacement: Some(CountedOp(set(100), None)) }] }).await.expect("the finalize waits");
+        store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: first.clone(), replacement: Some(CountedOp(set(100), None)) }] }, &mut identity).await.expect("the finalize waits");
         for _ in 0..steps {
             assert!(store.step_reprojection(None).await.expect("a step").is_some(), "still waiting after {steps} steps");
         }
@@ -443,9 +465,9 @@ async fn a_waiting_local_step_is_discarded_with_zero_trace_and_an_edit_restarts_
         assert_eq!(counted_view(&store), before, "a discard after {steps} steps leaves zero trace");
         assert!(!store.discard_local_step(), "nothing left to discard");
     }
-    store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: first, replacement: Some(CountedOp(set(100), None)) }] }).await.expect("the finalize waits");
+    store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: first, replacement: Some(CountedOp(set(100), None)) }] }, &mut identity).await.expect("the finalize waits");
     store.step_reprojection(None).await.expect("a step");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(add(1000), None)], transaction: None }).await.expect("an edit while the finalize waits");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(add(1000), None)], transaction: None }, &mut identity).await.expect("an edit while the finalize waits");
     assert_eq!(store.snapshot_ref().n, Some(LONG_HISTORY + 1000), "the edit lands on the history before the finalize");
     assert_eq!(store.reprojection_progress().map(|progress| progress.done), Some(0), "the edit restarts the finalize's replay");
     assert!(drive_local(&mut store).await.1.is_ok());
@@ -458,17 +480,20 @@ async fn a_waiting_local_step_is_discarded_with_zero_trace_and_an_edit_restarts_
 /// dispatch answers at once — and nothing of it is recorded.
 #[semio_framework_async_macros::async_test]
 async fn a_deferred_finalize_whose_report_blocks_is_refused_with_nothing_recorded() {
-    let mut deferred = long_history("local-blocked", Some(ReplayTurnBudget::operations(LOCAL_BUDGET))).await;
-    let mut undeferred = long_history("local-blocked-undeferred", None).await;
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut deferred = long_history("local-blocked", Some(ReplayTurnBudget::operations(LOCAL_BUDGET)), &mut identity).await;
+    let mut undeferred = long_history("local-blocked-undeferred", None, &mut identity).await;
     let withdraw_n = |store: &ArtifactStore<DemoSnapshot, CountedOp>| ArtifactCommand::Supersede {
         scope: None,
         inputs: vec![SupersedeInput { target: store.mutation_ops().expect("operations")[0].mutation_id.clone(), replacement: Some(CountedOp(DemoMutation::DeleteN(DeleteN {}), None)) }],
     };
     let next = withdraw_n(&undeferred);
-    let refused = undeferred.dispatch(next).await.err().expect("an undeferred blocking finalize is refused");
+    let refused = undeferred.dispatch(next, &mut identity).await.err().expect("an undeferred blocking finalize is refused");
     let before = counted_view(&deferred);
     let next = withdraw_n(&deferred);
-    deferred.dispatch(next).await.expect("the deferred finalize waits");
+    deferred.dispatch(next, &mut identity).await.expect("the deferred finalize waits");
     let (_, verdict) = drive_local(&mut deferred).await;
     let verdict = verdict.err().expect("the blocking finalize is refused once replayed");
     assert!(matches!(&verdict, VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages } if !messages.is_empty()), "{verdict:?}");
@@ -489,12 +514,15 @@ fn fold_clock_us() -> Option<u64> {
 /// runtime's own turn deadline ends a turn earlier still; the adoption equals the undeferred dispatch's.
 #[semio_framework_async_macros::async_test]
 async fn a_deferred_local_step_yields_on_its_wall_deadline_before_its_operation_cap() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     const WALL_US: u64 = 4_000;
     let budget = ReplayTurnBudget { wall_us: WALL_US, operations: 256, now_us: fold_clock_us };
-    let mut deferred = long_history("local-wall", Some(budget)).await;
-    let mut undeferred = long_history("local-wall-undeferred", None).await;
+    let mut deferred = long_history("local-wall", Some(budget), &mut identity).await;
+    let mut undeferred = long_history("local-wall-undeferred", None, &mut identity).await;
     let folds = CountedOp::folds();
-    deferred.dispatch(ArtifactCommand::Undo).await.expect("the interior undo waits");
+    deferred.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("the interior undo waits");
     settle(&mut deferred);
     assert!(CountedOp::folds() - folds <= 5, "the dispatch folded {} operations in its 4 ms", CountedOp::folds() - folds);
     assert!(deferred.local_step_pending(), "the interior undo outlasts one wall budget");
@@ -518,7 +546,7 @@ async fn a_deferred_local_step_yields_on_its_wall_deadline_before_its_operation_
         assert!(turns < 10_000, "the deferred undo finishes");
     }
     assert!(turns as i32 >= (LONG_HISTORY - 2) / 5, "the replay spreads over wall-bounded turns ({turns})");
-    undeferred.dispatch(ArtifactCommand::Undo).await.expect("the undeferred undo");
+    undeferred.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("the undeferred undo");
     settle(&mut undeferred);
     let (deferred_view, undeferred_view) = (counted_view(&deferred), counted_view(&undeferred));
     assert_eq!(
@@ -533,9 +561,12 @@ async fn a_deferred_local_step_yields_on_its_wall_deadline_before_its_operation_
 
 #[semio_framework_async_macros::async_test]
 async fn operation_capped_reprojection_preserves_structural_deadlines_and_exact_mutation_limit() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📏️reprojection-operation-authority.json")).unwrap();
     let count = law["mutationCount"].as_u64().unwrap() as usize;
-    let (author, _) = authored("operation-authority", Some(0), (0..count).map(|_| vec![add(1)]).collect()).await;
+    let (author, _) = authored("operation-authority", Some(0), (0..count).map(|_| vec![add(1)]).collect(), &mut identity).await;
     let make = || EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), author.applied_edit_ids.iter().cloned().collect(), 0, "demo/v1", Default::default(), &author.envelope.vcs.edits).unwrap();
     let mut replay = make();
     assert!(matches!(replay.step_operations(&author.envelope.vcs.edits, 0, &mut || false).unwrap(), ReplayStep::Pending(_)));
@@ -561,4 +592,10 @@ async fn operation_capped_reprojection_preserves_structural_deadlines_and_exact_
     assert_eq!(deadline_checks, 1);
     assert_eq!(deadline.state.as_ref().unwrap().n, Some(1));
     println!("[DEBUG] Replay operation authority12/cap1 retains structural deadline checks and zero-cap unchanged projection");
+}
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for CountedOp {
+ fn canonical_tree_node(&self)->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,ValueError>{semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_node(&self.0)}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree,ValueError>{semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_child(&self.0,ordinal)}
+ fn canonical_tree_key(&self,ordinal:usize)->Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>,ValueError>{semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_key(&self.0,ordinal)}
 }

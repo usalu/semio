@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "ceiling": 17,
+  "prior": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "text": "snow雪",
+  "tail": "x",
+  "expected": 13,
+  "refusedBytes": 3,
+  "wrapperBytes": 8,
+  "allocations": {
+    "accepted": [
+      {
+        "bytes": 5,
+        "owned_bytes": 0,
+        "next_owned_bytes": 5,
+        "maximum_bytes": 17
+      }
+    ],
+    "refused": [
+      {
+        "bytes": -1,
+        "owned_bytes": 0,
+        "next_owned_bytes": 0,
+        "maximum_bytes": 17
+      },
+      {
+        "bytes": 1,
+        "owned_bytes": 0,
+        "next_owned_bytes": 1
+      }
+    ]
+  },
+  "retainedPayload": [
+    4,
+    5,
+    6
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "beforeSha256": "d88adeea98616d5408d7dc37a4c2550d40233421efa3fd847809a02b7c6c31be",
+      "afterSha256": "2b03016c576f0fab8c1b59dd3e68453435daf2f816922663946dd4872a929ff9",
+      "action": "Hoist function-local nested vars, acquire member reference before RHS, evaluate computed keys once, invalidate escaped or opaque-mutated validator authority."
+    }
+  ]
+}

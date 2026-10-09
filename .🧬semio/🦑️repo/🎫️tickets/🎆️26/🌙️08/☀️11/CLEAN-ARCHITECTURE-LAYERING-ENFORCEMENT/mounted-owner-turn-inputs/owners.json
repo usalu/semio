@@ -1,0 +1,2617 @@
+{
+  "version": 1,
+  "metadataOnly": true,
+  "trackedSourceCopies": 0,
+  "owners": [
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/🦀️.rs",
+      "priorSha256": "983e05c6804639c4cbf31ace13a6369f4eef30f8c981149a3c16b92abbc87550",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/🦀️.rs",
+      "priorSha256": "c4f02a1ae98518269043203b9d36656803ad0abc30cb8719d6540e4078b07146",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️.rs",
+      "priorSha256": "6ecc126c769b4dbd5c68165c7b08f9fd8b189d8d14b32cc463d5087dbadfaedf",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/🦀️.rs",
+      "priorSha256": "9e15be10cac944303bcef54bd9900cad4936307229ec2ff417be56e4e6f22478",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/🦀️.rs",
+      "priorSha256": "f8885f462e3ec50ba5ab7c3f5d0d4540e31ac78489c65eb02c26050781f0564b",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/🦀️.rs",
+      "priorSha256": "1c916e6d491aed1ae5a8355ff2986832e904fa65d584b2f6647d82599362b82a",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️.rs",
+      "priorSha256": "d330bc364bbea0f708779c6ec1b195d5800246deb1ef829972e58ecc4c113950",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/🦀️.rs",
+      "priorSha256": "97955f668386a8ab439c5029e1a630904c81ed2e46a93e1289be5402dac79cfe",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🦀️.rs",
+      "priorSha256": "9473680ca9529c66961d6f870c40c6aad3028eeb8a8b8ac40fd4847638282a77",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/🦀️.rs",
+      "priorSha256": "06c15ca0b8a22f07c021f655234507719166ca36faa93b51ee82f65b5cf2fb95",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/🦀️.rs",
+      "priorSha256": "94c5910e5acd9eda91c3afca452b00f07d3520dd6aa79147bac78654b827d2f0",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/🦀️.rs",
+      "priorSha256": "3f07713251c42b8c0d453ebf0a571ae467daff0e4e8f2f3f03466c4188887a35",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/🦀️.rs",
+      "priorSha256": "7743ebd172c5a638add2d9615312087b4efdd56f6d0144108897e021ef78b51d",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🦀️.rs",
+      "priorSha256": "b6690757779b24b70699b258825b6e7d6d45c9bc8ae6fc5ae5c9df60721846f5",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🦀️.rs",
+      "priorSha256": "b5ca23aa6ec2566ab62fa9e3392b892e3d514d83daaf40a1dcb1ea1098821b48",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🦀️.rs",
+      "priorSha256": "67d11866db88f6c737fde4db0eaa25983a643e69d62b21fc4fc7ea0fae657c6e",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🦀️.rs",
+      "priorSha256": "8fd4978100abd8f7dfeb0e600e003996967bb610043899a8b12cdb22cc49ab1a",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs",
+      "priorSha256": "fc02d5e19f8bea3541977c018a7b6b87b5524c7f214560dbf186170720964670",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/🦀️.rs",
+      "priorSha256": "f40b2871c17c3d3907d1ecfecf92fa7913d55937b128e437291cfaa7d4a321c7",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/🦀️.rs",
+      "priorSha256": "023e27fe3b20648e0586f66f2873361aac50c706c70e0192dfad302f37ed9167",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/🦀️.rs",
+      "priorSha256": "81eb1190341e9b0661eacd213fb2a301a7699456035de1760ba62677e458592c",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/🦀️.rs",
+      "priorSha256": "f11cec0e819fa743581971cfcc00de6f207fa0daa0c3b9d9b8aa92d8485f950b",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/🦀️.rs",
+      "priorSha256": "2b84a54a30a31cb44721b291ccbf4ace2f39fba79d068585a4ae522b3dce3520",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/🦀️.rs",
+      "priorSha256": "d7a76ab54c151f2432251dfc270c2dae47bb36de14e429ad20b43aa513d61d92",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/🦀️.rs",
+      "priorSha256": "818470558bb7c046e0da2dd4260c42b4aa1128619b14b549cab18d1af655c4ab",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/🦀️.rs",
+      "priorSha256": "8915067bffeb7cd17554031baf843d62628272a996016f4ca9d18e90d4de0d20",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️tests/🔬️unit/🦀️.rs",
+      "priorSha256": "85b51d496a4338e7c84d18327ab4e88dd5c188e13dc0975b3f8d0c1eb1713545",
+      "sites": 2,
+      "lineChanges": 2,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/🦀️.rs",
+      "priorSha256": "70c2b92d02f1dcad71aea1cee1f417aef5fe25720bb544e3428e822b9ab92a9b",
+      "sites": 2,
+      "lineChanges": 2,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "802a8b15b66a76061a90900785dfd57a44d2e24f4e077ab8fbbb1b09602de1b6",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/➗️mathematical/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "35e089b173138d8947be8313d583a5b2cd4acf87d3a1f77cfd63e17ea9cd8a6c",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🀄️wfc/🦀️.rs",
+      "priorSha256": "fd81737bd7407c410779d3d378d2b8c75256dd64a992c59e57fd04547fa83368",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌀️procedural/🦀️.rs",
+      "priorSha256": "8771e075d9622c900160f1ff831bdb15bc9bccd488148549597d1e2446ea05c0",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "983a667938fc9c133af3500485a6d19ac13582ac07655bf3ddd1ad2e885e5329",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌍️gis/🦀️.rs",
+      "priorSha256": "dfd1fd9370e598ead6e78b4f6a553e3d7a87b9ab3946eacbfb0ff1305e8de661",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "a08a5a02815204b1c61d40dcd9d4a67abda332e07374bca8be497b06e7ab61d0",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/🪪️native-openable-identity/🦀️.rs",
+      "priorSha256": "bf859047dc8506e0392de55bbcc9d5191e03199495abbfe06c9160be85282b80",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "d987ac7f651475fab1ce237ac7b9c205099dbe06eae99c06b2f14bf45b806260",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎥️shooting/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "2c189f9fbf7db01ba92f078571de739e93bbc612b6211c759d65ac234b272e1d",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "6a3ff7dc041b9b300f02be3f55dc0db11d6a9f39ee66113e854d7f1c0d46928e",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎪️demonstrator/🪪️manifest/🎪️demonstrator/🧪️tests/🔬️unit/🦀️.rs",
+      "priorSha256": "b4c59ac64b6b2855a972c045a3360eb9d670aa277267d31be59c809d102b0b6d",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎬️sequence/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "d121ef2684bc8bc354453d46de0e2a4f613553282645a26a21a516e8b7628f5e",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "cdd71bdb16235200cb586357761a41f674cca596d93d38ad6e6c2b8e132016b0",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "d6e6c61c2c11b4ab87dfcc4ddc8bf057092b64994547229e1cda66796b397790",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "181e1a5f99d4b1f9714177fb815bbe79beba3318b8f6bb5d9c3bf57117e78eca",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "e13c258f95e490af623bec3ad5fe3461e0cf06165a38d9c4b6e0c0b13ec28daa",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/💡️reasoning/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "4da32d63d6900b7d53280a2b26f5e8f6236f4473cde72f454d37aa2e8f69633e",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📋️forms/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "0a992a60bf55883b79a02ce74db2df306c30211b830b6cdc5b04d4071dc72d2a",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📏️layout/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "3c90c3f45202e5bb95c8a76b7eda31b091c96ab3ac8fef7c5e48b4563461cfb7",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📐️cad/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "def02fe35e727a0ed4d00205fb71b1c737c84988d1b0b4d028266c2ca59b94dc",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "priorSha256": "54e1bb95003d24099c2d2d4fed71c009b1ff76859ead3d7ff111816d8d7f7b12",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📖️playbook/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "22f1810d4efb6e4937e73b14b30f2ea6cbf4bbf40adda99c9a91235b770532a1",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📜️imperative/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "3217d874ab605bf14a6592f1a715aaf8eb73c5112d35e6587dbc89cbd946a7ad",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "5ca39986080bc56b0555d3bda55163a0666262209d09d6b7f86f75684cbff188",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "ecab20fb76f2bcbab1b97450b3ad550ecb2cd29b426843d88045023475e2a1b4",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🔱️trinity/🦀️.rs",
+      "priorSha256": "f960459788c0ab750410ee5c1c4b09a20739d2458921ab7f1d5ee4dcf6ed2ce4",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🕸️dag/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "f39468a6f825f812d6cac00371541c49287b2927a529c897c9784750e92c6bdc",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "0e1a7c1a75c124bf892fa0fa7b75ecb3c655a790227193f2c81ee372b1e007d6",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "2077ecf114e0f2e0b1bf756be5dd22331e36e4a8ebda244d63882a2d85793b21",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🦀️.rs",
+      "priorSha256": "f6f4f795bb34b7319f573eaeaab7783b7089141ea8631b03756945c33beafe7b",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/🦀️.rs",
+      "priorSha256": "e2cfea2e9679eff892ed7455f4bffce4b9f8c834b7cece8f7c5fe15a2f64e080",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/🦀️.rs",
+      "priorSha256": "cb9dde219e5ec3b0815b9b250f263e8f0956b6ea79cf7028b7731f01fdcf67e8",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/🦀️.rs",
+      "priorSha256": "861f448891c3591bb7d6f8523b4d9c77149803c6ce46a8e1f99e50ad96007c16",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🦀️.rs",
+      "priorSha256": "57aa4cef5130229602818e301bfeb533772d15c0860ecfbb6f1629c6bd8e9493",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/🦀️.rs",
+      "priorSha256": "35ce1b7af8da71e114bb893d8908ff17f0d798fe152ff4ce5bf642ab53526552",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/🦀️.rs",
+      "priorSha256": "d53cd655d547d534325c7afc51a3972783b3bc095430e679827b9766d5da8f3a",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/🦀️.rs",
+      "priorSha256": "55553e8f0cd5e50aed0540931973016405c2953af3f63f63e0f6016fc5f331f9",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/🦀️.rs",
+      "priorSha256": "643e2a214fb22804aafe70ac36a12c653bffd53611a5eea3fbb27ce8516e4ea3",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/🦀️.rs",
+      "priorSha256": "6d19d53007eac3c0b55423be638073ad2c82433c134df6caf06cb3f1dd8a949d",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🦀️.rs",
+      "priorSha256": "32fc15ccd3cca6c2309bb92b00df84cd547b9b69f73d0ec79dd14c892d763734",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "531e39220d025456b3cc574345198d40310545195c39427fd5b9f25dd56a4cbb",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧩️puzzle/🦀️.rs",
+      "priorSha256": "abd5b3cb3c2f7ac45eadb469b064ba3670c6fed2fdb6b36309a4e5a28e11a500",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧩️puzzle/🧪️tests/🔬️surface/🦀️.rs",
+      "priorSha256": "4b016a42e774a9465cc8c51cc3ae7dfb9435afb89da8c41a8368d38a04927589",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧱️block/🦀️.rs",
+      "priorSha256": "85aae07d700ba82e93048084a762ad350db798cfa4106df3d526a64baecd6412",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/🦀️.rs",
+      "priorSha256": "a63f16587d286414c9cd30326a0839e41fbd4ad6f5acfcdf8e4abec6fb62840a",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪵️sourcing/📦️packages/🦀️rust/🦀️.rs",
+      "priorSha256": "de4e4997d9e1bfd26b076d50092878763a4e3c18727618e7de180ef3c35bd638",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🔏️trusted-catalog-profile/🦀️.rs",
+      "priorSha256": "d51b3fcde0f06701906cb2ff5d6a5f8e22135a1f95f5341d27e4ab52a82f5513",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📸️checkpoint/🧪️tests/🔬️unit/🦀️.rs",
+      "priorSha256": "8b5534822b993c5afe5e3c755ccf8fe91132a336239bf65041840e735d01056c",
+      "sites": 2,
+      "lineChanges": 2,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🧪️tests/📏️future-size/🦀️.rs",
+      "priorSha256": "f7a1a7c463bc313393d72edae55b58307598b5b7510d0f2c1697b679e0a54832",
+      "sites": 2,
+      "lineChanges": 2,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🧪️tests/📥️inbound-request/🦀️.rs",
+      "priorSha256": "dcfb87b77903477f8b34e596ae1bc3a1e37f5037eca74d0b97dbd61802402bba",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs",
+      "priorSha256": "8ddb7e99857557e9e1beeaa1434815976e236dd1a7a7b47589bc25ab7585212f",
+      "sites": 5,
+      "lineChanges": 5,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs",
+      "priorSha256": "c6e5e41913aaf87e1f8dabdb683ebd2ab879d95f9fb44c00488817e9116df27d",
+      "sites": 7,
+      "lineChanges": 7,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛂️describe/🧪️tests/🔬️unit/🦀️.rs",
+      "priorSha256": "e648a4a26fde670f06feca3835788fd5142f6538c4ec727079e660aced8ea199",
+      "sites": 3,
+      "lineChanges": 3,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-declarations-fixture/🦀️.rs",
+      "priorSha256": "08dfd7ad1395dd18a636a3ae5ab2ff72f94f837402c888dbfbc6f1a71822f660",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️extension-retirement/🦀️.rs",
+      "priorSha256": "96d4cb3354f7f4232c07e5150fba57a170bbeaf686ecac4114dc4465e828d76b",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-dff-public-action-admission/🦀️.rs",
+      "priorSha256": "fee3ef297939dfb6488aa7cc9403b7ca342e114cd48b80dcc0a7719858e02510",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs",
+      "priorSha256": "16f87bfc7d6f0aab97c0737a7b2136d9085fb63b3b7db31b7f5b30a848bb9e26",
+      "sites": 16,
+      "lineChanges": 16,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️surface-view-state-routing/🦀️.rs",
+      "priorSha256": "db8b7c3dba278a5a8992a399c0febb0b50031accc1be20e75eeb421fae3aeafd",
+      "sites": 1,
+      "lineChanges": 1,
+      "policy": {
+        "preparation": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "maintenance": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        },
+        "close": {
+          "maximum_items": 1,
+          "maximum_copy_bytes": 32768,
+          "maximum_capacity_bytes": 262144,
+          "maximum_release_bytes": 1048576,
+          "maximum_depth": 4096
+        }
+      },
+      "authority": "Explicit caller ceiling retaining original runtime limits; never demand-funded"
+    }
+  ]
+}

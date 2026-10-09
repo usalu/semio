@@ -82,6 +82,13 @@ pub mod direct {
     wit_bindgen::generate!({
         world: "actor",
         path: "../../🧬️schema",
+        async: [
+            "-import:semio:framework/pure@1.0.0#operation-begin",
+            "-import:semio:framework/pure@1.0.0#operation-progress",
+            "-import:semio:framework/pure@1.0.0#operation-allocation",
+            "-import:semio:framework/pure@1.0.0#operation-reserve-return",
+            "-import:semio:framework/pure@1.0.0#operation-finish",
+        ],
     });
 
     pub use semio::framework::{effects, host_async, types};
@@ -181,7 +188,7 @@ struct HttpResponseWire {
 }
 
 impl Host {
-    pub async fn new(registry: RequestRegistry) -> Self {
+    pub fn new(registry: RequestRegistry) -> Self {
         Self { backend: HostBackend::Poll(registry) }
     }
 

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Owned Core Checkpoint Bytes",
+  "type": "array",
+  "minItems": 66,
+  "items": [
+    {
+      "type": "integer",
+      "const": 83
+    },
+    {
+      "type": "integer",
+      "const": 69
+    },
+    {
+      "type": "integer",
+      "const": 77
+    },
+    {
+      "type": "integer",
+      "const": 73
+    },
+    {
+      "type": "integer",
+      "const": 79
+    },
+    {
+      "type": "integer",
+      "const": 87
+    },
+    {
+      "type": "integer",
+      "const": 67
+    },
+    {
+      "type": "integer",
+      "const": 80
+    },
+    {
+      "type": "integer",
+      "const": 1
+    }
+  ],
+  "additionalItems": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 255
+  },
+  "$comment": "SEMIOWCP version 1; little-endian original module fingerprint and host-call counter, five counted state collections and optional machine."
+}

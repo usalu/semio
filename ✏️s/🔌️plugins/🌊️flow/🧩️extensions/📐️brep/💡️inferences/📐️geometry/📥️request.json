@@ -5,7 +5,8 @@
   "type": "object",
   "required": [
     "operatorId",
-    "inputJson"
+    "inputJson",
+    "retained"
   ],
   "properties": {
     "operatorId": {
@@ -42,6 +43,39 @@
     "resume": {
       "type": "boolean",
       "description": "Resume the same parked owner with empty inputJson and dependencyJson; operator, node hash, version and cancellation identity must match."
+    },
+    "retained": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   },
   "additionalProperties": true,

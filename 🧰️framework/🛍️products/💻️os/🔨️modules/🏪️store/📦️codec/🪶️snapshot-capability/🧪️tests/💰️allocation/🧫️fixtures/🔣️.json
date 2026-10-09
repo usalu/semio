@@ -13,9 +13,21 @@
   "cancellation": {
     "priorAdmissionBytes": 8,
     "stages": [
-      { "phase": "DecodeNative", "scope": "borrowed-validation", "ownedLiteralBytes": 0 },
-      { "phase": "DecodeNative", "scope": "owned-binding", "ownedLiteralBytes": 140000 },
-      { "phase": "EncodeNative", "scope": "owned-projection", "ownedLiteralBytes": 140000 }
+      {
+        "phase": "DecodeNative",
+        "scope": "borrowed-validation",
+        "ownedLiteralBytes": 0
+      },
+      {
+        "phase": "DecodeNative",
+        "scope": "owned-binding",
+        "ownedLiteralBytes": 140000
+      },
+      {
+        "phase": "EncodeNative",
+        "scope": "owned-projection",
+        "ownedLiteralBytes": 140000
+      }
     ]
   },
   "ledgerCases": [
@@ -49,5 +61,13 @@
       ],
       "remaining": 0
     }
-  ]
+  ],
+  "nativeMaximumBytes": 1073741824,
+  "callerGrant": {
+    "maximumItems": 65536,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  }
 }

@@ -1,10 +1,122 @@
 {
   "operations": [
-    {"kind":"set","key":3,"value":30},{"kind":"set","key":2,"value":20},{"kind":"set","key":1,"value":10},
-    {"kind":"set","key":6,"value":60},{"kind":"set","key":5,"value":50},{"kind":"set","key":4,"value":40},
-    {"kind":"get","key":3},{"kind":"first"},{"kind":"remove","key":3},{"kind":"get","key":3},
-    {"kind":"set","key":3,"value":31},{"kind":"first"},{"kind":"reset"},{"kind":"get","key":5},{"kind":"first"},
-    {"kind":"set","key":5,"value":55},{"kind":"set","key":-7,"value":70},{"kind":"first"},{"kind":"first"},{"kind":"first"}
+    {
+      "kind": "set",
+      "key": 3,
+      "value": 30
+    },
+    {
+      "kind": "set",
+      "key": 2,
+      "value": 20
+    },
+    {
+      "kind": "set",
+      "key": 1,
+      "value": 10
+    },
+    {
+      "kind": "set",
+      "key": 6,
+      "value": 60
+    },
+    {
+      "kind": "set",
+      "key": 5,
+      "value": 50
+    },
+    {
+      "kind": "set",
+      "key": 4,
+      "value": 40
+    },
+    {
+      "kind": "get",
+      "key": 3
+    },
+    {
+      "kind": "first"
+    },
+    {
+      "kind": "remove",
+      "key": 3
+    },
+    {
+      "kind": "get",
+      "key": 3
+    },
+    {
+      "kind": "set",
+      "key": 3,
+      "value": 31
+    },
+    {
+      "kind": "first"
+    },
+    {
+      "kind": "reset"
+    },
+    {
+      "kind": "get",
+      "key": 5
+    },
+    {
+      "kind": "first"
+    },
+    {
+      "kind": "set",
+      "key": 5,
+      "value": 55
+    },
+    {
+      "kind": "set",
+      "key": -7,
+      "value": 70
+    },
+    {
+      "kind": "first"
+    },
+    {
+      "kind": "first"
+    },
+    {
+      "kind": "first"
+    }
   ],
-  "expected": [null,null,null,null,null,null,30,[1,10],30,null,null,[2,20],null,null,null,null,null,[-7,70],[5,55],null]
+  "expected": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    30,
+    [
+      1,
+      10
+    ],
+    30,
+    null,
+    null,
+    [
+      2,
+      20
+    ],
+    null,
+    null,
+    null,
+    null,
+    null,
+    [
+      -7,
+      70
+    ],
+    [
+      5,
+      55
+    ],
+    null
+  ],
+  "closeReleaseBytes": 1,
+  "maximumCloseTurns": 100000
 }

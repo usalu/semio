@@ -1,0 +1,7 @@
+# Original History Caller Policy
+
+Original Source trueRED Nx1/136ms5pass1fail64 assertions reached missing independently supplied policy. Root adds one finite five-axis caller policy in the same plain language-neutral examples. Six positive native grants, including original projection frame birth, now use it; no authority copied from any demand. Original1/3/64 copy rows remain explicit denial probes,5-axis underquotes/no-effect assertions and exact System requests/releases/pointers/terminal Drop semantics remain. Capacity inquiries use supplied policy copy ceiling. Original native assertions are authored-unrun; original Source renewal pending. Actual Source actions/before hashes retained in 📥️root-planning-policy*.
+
+Original private Source69770 terminated Nx1 in431ms: five laws passed, independent-policy law failed at an overbroad string exclusion matching the intentional demand-derived denial vectors. This was an oracle scope defect, not an observed native refusal. The narrow correction checks all six positive grant constructions while retaining each undergrant vector. Native System laws remain unrun.
+
+Corrected original private Source72251 GREEN Nx0/648ms, six laws86 assertions with actual DEBUG Ajv/SQLite. All six positive native grants use the independent plain cleanup policy; denied frontiers remain quote-based no-effect checks. The actual five native System/custody laws remain UNRUN. Current Source hashes are observations, not exclusive shared-file authorship.

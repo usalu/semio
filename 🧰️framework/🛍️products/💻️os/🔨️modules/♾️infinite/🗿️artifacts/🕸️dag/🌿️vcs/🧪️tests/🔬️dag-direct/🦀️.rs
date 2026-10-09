@@ -168,10 +168,10 @@ fn direct_delete_inverse_declares_descending_edges_before_node() {
 async fn direct_store_undo_restores_incident_edge_order() {
     let before = base();
     let mut store = create_dag_store("dag", before.clone(), opened_dag_test_actor()).await.expect("store");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::DeleteNode(DeleteNode { id: "a".into() })], transaction: None }).await.expect("delete");
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+    crate::os_store::test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DagMutation::DeleteNode(DeleteNode { id: "a".into() })], transaction: None }).await.expect("delete");
+    crate::os_store::test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(store.snapshot().expect("restored projection"), before);
-    store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+    crate::os_store::test_support::dispatch_test_command(&mut store, ArtifactCommand::Redo).await.expect("redo");
     assert_eq!(store.snapshot().expect("deleted projection"), apply(&before, &DagMutation::DeleteNode(DeleteNode { id: "a".into() })));
     close_dag_test_store(store);
 }

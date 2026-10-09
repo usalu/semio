@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "version": 1,
+    "scope": {
+      "schemaVersion": 1,
+      "manifest": "Cargo.toml"
+    },
+    "control": {
+      "schemaVersion": 1,
+      "discovery": {
+        "maximumUnits": 750000000,
+        "maximumOwnedBytes": 2147483648,
+        "maximumDepth": 256
+      },
+      "retirement": {
+        "maximumUnits": 20000000,
+        "maximumOwnedBytes": 134217728,
+        "maximumDepth": 256
+      },
+      "progressIntervalMilliseconds": 1000
+    },
+    "maximumElapsedMilliseconds": 120000
+  },
+  "missing": [
+    "scope",
+    "control",
+    "maximumElapsedMilliseconds"
+  ],
+  "invalidDeadlines": [
+    0,
+    -1,
+    86400001
+  ],
+  "oversizedGrants": [
+    {
+      "phase": "discovery",
+      "key": "maximumUnits"
+    },
+    {
+      "phase": "discovery",
+      "key": "maximumOwnedBytes"
+    },
+    {
+      "phase": "discovery",
+      "key": "maximumDepth"
+    },
+    {
+      "phase": "retirement",
+      "key": "maximumUnits"
+    },
+    {
+      "phase": "retirement",
+      "key": "maximumOwnedBytes"
+    },
+    {
+      "phase": "retirement",
+      "key": "maximumDepth"
+    }
+  ],
+  "authoredDeadlines": [
+    120000,
+    600000,
+    3600000,
+    86400000
+  ]
+}

@@ -49,7 +49,7 @@ fn document_backbone_event_envelopes(event: &ArtifactEvent) -> Option<Vec<Mutati
 #[semio_framework_async_macros::async_test]
 async fn document_opening_attempt_wire_preserves_outer_owner_without_widening_actor_messages() {
     let attempt = "11111111-1111-4111-8111-111111111111";
-    let request = backbone_worker_wire::BackboneWorkerRequest::Open { document_id: "document-a".into(), client_instance_id: Some(attempt.into()), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: Some(true), actor: "actor-a".into() };
+    let request = backbone_worker_wire::BackboneWorkerRequest::Open { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, document_id: "document-a".into(), client_instance_id: Some(attempt.into()), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: Some(true), actor: "actor-a".into() };
     let wire = backbone_worker_wire::encode_request(&request);
     let decoded = backbone_worker_wire::decode_request(&wire).await.expect("decode exact opening owner");
     assert!(matches!(decoded, backbone_worker_wire::BackboneWorkerRequest::Open { client_instance_id: Some(owner), .. } if owner == attempt));
@@ -182,7 +182,7 @@ async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_
 // extension (this crate never compiled with `--features sync` before this packet, so the
 // mismatch was never exercised at runtime). `extension_suffix` is the id's LAST segment, so
 // `"demo.demo"` keeps `__DSL_EXTENSION` == "demo", unchanged from the old bare-extension form.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, crate::os_dsl::DslArtifact, semio_framework_value::RetireOwned)]
 #[artifact(id = "demo.demo")]
 pub(super) struct DemoSnapshot {
     n: i32,
@@ -280,7 +280,7 @@ impl MutationDiff<DemoSnapshot> for DemoDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 #[serde(tag = "operation")]
 #[value(tag = "operation")]
 pub(super) enum DemoMutation {
@@ -468,7 +468,7 @@ async fn a_seeded_hub_actor_says_hello_at_the_canonical_pair_baseline() {
     let (events, _) = broadcast::channel(8);
     let mut actor = native_actor::ArtifactActor::new(
         test_pool(),
-        ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "seed-test".into() },
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "seed-test".into() },
         remote,
         receiver,
         events,
@@ -512,7 +512,7 @@ async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue(
     let (events, _) = broadcast::channel(8);
     let mut actor = native_actor::ArtifactActor::new(
         test_pool(),
-        ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "local-only".into() },
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "local-only".into() },
         remote,
         receiver,
         events,
@@ -530,7 +530,7 @@ async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue(
     actor.fail_test_bootstrap().await;
     assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, Vec::new()));
     let first = sample_operation_envelope("after-bootstrap-failure", 1).await;
-    let first_actor = first.actor.0.clone();
+    let first_actor = first.actor.0.as_str().to_owned();
     actor.relay_test_envelope(first).await;
     assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, vec![first_actor.clone()]));
 
@@ -540,14 +540,14 @@ async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue(
     assert_eq!(actor.socket_epoch_test_state().0, None);
     assert!(!actor.socket_epoch_test_state().1);
     let second = sample_operation_envelope("after-eof", 2).await;
-    let second_actor = second.actor.0.clone();
+    let second_actor = second.actor.0.as_str().to_owned();
     actor.relay_test_envelope(second).await;
     assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, vec![first_actor.clone(), second_actor.clone()]));
 
     let mut socket = connect(&mut actor, fresh).await;
     assert!(matches!(receive_frame(&mut socket).await, ClientFrame::SocketHelloV1 { .. }));
     let before_session = sample_operation_envelope("before-fresh-session", 3).await;
-    let before_session_actor = before_session.actor.0.clone();
+    let before_session_actor = before_session.actor.0.as_str().to_owned();
     actor.relay_test_envelope(before_session).await;
     assert_eq!(actor.socket_epoch_test_state(), (Some(fresh.into()), false, 0, vec![first_actor, second_actor, before_session_actor]));
     assert!(tokio::time::timeout(std::time::Duration::from_millis(30), socket.next()).await.is_err(), "queued mutations cannot cross the socket before Session confirms the receipt actor");
@@ -555,7 +555,7 @@ async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue(
     let first_batch = receive_frame(&mut socket).await;
     let ClientFrame::Commands { batch_id, envelopes } = first_batch else { panic!("fresh Session must flush one command batch") };
     assert_eq!(envelopes.len(), 3);
-    assert!(envelopes.iter().all(|envelope| envelope.actor.0 == fresh));
+    assert!(envelopes.iter().all(|envelope| envelope.actor.0.as_str() == fresh));
     assert!(tokio::time::timeout(std::time::Duration::from_millis(30), socket.next()).await.is_err(), "each queued mutation is sent exactly once after Session");
     assert_eq!(actor.socket_epoch_test_state(), (Some(fresh.into()), true, 1, Vec::new()));
     actor.inject_hub_frame(ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: bootstrap_frontier("demo", 3, "after-session", 3, 0x66) }).await;
@@ -571,7 +571,7 @@ async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue(
     actor.inject_hub_frame(ServerFrame::Session { actor: reconnected.into(), color: 6 }).await;
     let ClientFrame::Commands { envelopes, .. } = receive_frame(&mut reconnected_socket).await else { panic!("reconnect Session must flush queued mutation") };
     assert_eq!(envelopes.len(), 1);
-    assert_eq!(envelopes[0].actor.0, reconnected);
+    assert_eq!(envelopes[0].actor.0.as_str(), reconnected);
     assert!(tokio::time::timeout(std::time::Duration::from_millis(30), reconnected_socket.next()).await.is_err(), "reconnect flush is exactly once");
     assert_eq!(actor.socket_epoch_test_state(), (Some(reconnected.into()), true, 1, Vec::new()));
 }
@@ -584,7 +584,7 @@ async fn confirmed_hub_actor(name: &str, socket_actor: &str) -> (native_actor::A
     let (events, _) = broadcast::channel(8);
     let mut actor = native_actor::ArtifactActor::new(
         test_pool(),
-        ArtifactActorConfig { document_id: "authored-stamps".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: name.into() },
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "authored-stamps".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: name.into() },
         remote,
         receiver,
         events,
@@ -607,6 +607,9 @@ async fn confirmed_hub_actor(name: &str, socket_actor: &str) -> (native_actor::A
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::test]
 async fn concurrent_supersessions_of_one_operation_converge_through_the_hub_socket() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     const LEFT: &str = "hub.v1.1111111111111111111111111111111111111111111111111111111111111111";
     const RIGHT: &str = "hub.v1.2222222222222222222222222222222222222222222222222222222222222222";
     let genesis = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "authored-stamps", DemoSnapshot { n: 0 }, None);
@@ -621,8 +624,8 @@ async fn concurrent_supersessions_of_one_operation_converge_through_the_hub_sock
     }
     let target = shared.mutation_id.clone();
     let supersede = |n: i32| ArtifactCommand::Supersede { scope: None, inputs: vec![crate::os_store::SupersedeInput { target: target.clone(), replacement: Some(DemoMutation::SetN { n }) }] };
-    left.dispatch(supersede(7)).await.expect("left supersedes");
-    right.dispatch(supersede(9)).await.expect("right supersedes concurrently");
+    left.dispatch(supersede(7), &mut identity).await.expect("left supersedes");
+    right.dispatch(supersede(9), &mut identity).await.expect("right supersedes concurrently");
     let authored = |store: &crate::os_store::ArtifactStore<DemoSnapshot, DemoMutation>| store.envelope().transitions.last().cloned().expect("an authored supersession");
     let (left_authored, right_authored) = (authored(&left), authored(&right));
     let (winner, value) = if (left_authored.timestamp.cmp_key(), &left_authored.mutation_id.0) > (right_authored.timestamp.cmp_key(), &right_authored.mutation_id.0) { (&left_authored, 7) } else { (&right_authored, 9) };
@@ -634,7 +637,7 @@ async fn concurrent_supersessions_of_one_operation_converge_through_the_hub_sock
     let ClientFrame::Commands { envelopes: left_wire, .. } = receive_frame(&mut left_socket).await else { panic!("the left replica relays one command batch") };
     for (wire, authored, socket_actor) in [(&left_wire[0], &left_authored, LEFT), (&right_wire[0], &right_authored, RIGHT)] {
         assert_eq!((&wire.mutation_id, wire.timestamp), (&authored.mutation_id, authored.timestamp), "the wire carries the authored identity and clock");
-        assert_eq!(wire.actor.0, socket_actor, "only the actor is bound to the socket subject");
+        assert_eq!(wire.actor.0.as_str(), socket_actor, "only the actor is bound to the socket subject");
     }
     left.ingest_remote(right_wire[0].clone()).await.expect("left ingests the right supersession from the hub");
     right.ingest_remote(left_wire[0].clone()).await.expect("right ingests the left supersession from the hub");
@@ -658,7 +661,7 @@ async fn native_bootstrap_commits_pair_before_failed_local_replay_then_restarts_
     let (events, mut event_rx) = broadcast::channel(32);
     let mut actor = native_actor::ArtifactActor::new(
         test_pool(),
-        ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "actor-bootstrap-test".into() },
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "actor-bootstrap-test".into() },
         remote,
         receiver,
         events,
@@ -729,7 +732,7 @@ async fn native_inline_and_chunked_bootstrap_install_the_same_typed_pair_after_c
         let (events, _) = broadcast::channel(32);
         let actor = native_actor::ArtifactActor::new(
             test_pool(),
-            ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "actor-bootstrap-test".into() },
+            ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "actor-bootstrap-test".into() },
             remote,
             receiver,
             events,
@@ -802,7 +805,7 @@ async fn bootstrap_sequence_refuses_a_command_tail_that_arrives_before_the_snaps
         let (events, event_receiver) = broadcast::channel(32);
         let actor = native_actor::ArtifactActor::new(
             test_pool(),
-            ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "actor-order-test".into() },
+            ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "actor-order-test".into() },
             remote,
             receiver,
             events,
@@ -891,13 +894,30 @@ async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
     envelopes.pop().expect("exactly one op envelope for a single-op edit")
 }
 
+/// 🪪️ Admits the fixture caller's independent byte ceiling and observes the original cumulative identity operation.
+async fn receive_under_fixture_identity(session: &mut SyncSession<DemoSnapshot, DemoMutation>, envelope: MutationEnvelope) -> Result<(), SyncError> {
+    const CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut observed = 0;
+    let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+        assert!(progress.owned_bytes <= CEILING);
+        observed = progress.owned_bytes;
+        true
+    };
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(CEILING, &mut observer).expect("declared fixture receive identity authority");
+    let result = session.receive(envelope, &mut identity).await;
+    drop(identity.pause().expect("original fixture receive identity receipt"));
+    drop(observer);
+    eprintln!("[DEBUG] original receive identity owned={observed} ceiling={CEILING}");
+    result
+}
+
 //#region 🧪️SyncSession
 #[semio_framework_async_macros::async_test]
 async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
     let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
     let store = crate::os_store::test_support::plain_test_store(envelope).await;
     let mut session = SyncSession::new(store).await;
-    session.receive(sample_operation_envelope("edit-1", 5).await).await.expect("receive");
+    receive_under_fixture_identity(&mut session, sample_operation_envelope("edit-1", 5).await).await.expect("receive");
     assert_eq!(session.store.snapshot().expect("snapshot").n, 5);
     assert_eq!(session.store.envelope().vcs.edits.len(), 1);
     crate::os_store::test_support::close_plain_test_store(&mut session.store);
@@ -911,9 +931,9 @@ async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
     let first = sample_operation_envelope("edit-1", 5).await;
     let mut second = sample_operation_envelope("edit-2", 9).await;
     second.dependencies = vec![first.mutation_id.clone()];
-    session.receive(second).await.expect("receive second first");
+    receive_under_fixture_identity(&mut session, second).await.expect("receive second first");
     assert_eq!(session.store.envelope().vcs.edits.len(), 0, "buffered until edit-1 arrives");
-    session.receive(first).await.expect("receive first");
+    receive_under_fixture_identity(&mut session, first).await.expect("receive first");
     assert_eq!(session.store.envelope().vcs.edits.len(), 2, "both edits now applied");
     assert_eq!(session.store.snapshot().expect("snapshot").n, 9);
     crate::os_store::test_support::close_plain_test_store(&mut session.store);
@@ -1020,7 +1040,7 @@ async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() 
     let (events, _) = broadcast::channel(8);
     let mut actor = native_actor::ArtifactActor::new(
         test_pool(),
-        ArtifactActorConfig {
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
             document_id: "document".into(),
             schema: "demo/v1".into(),
             bindings: vec![PersistenceBinding::Hub { base_url: hostile_origin, space_id: "space".into(), surface: Some("trusted.surface".into()) }],
@@ -1119,7 +1139,7 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
     let wire_envelope = MutationEnvelope {
         mutation_id: MutationId("op-1".to_string()),
         document_id: ArtifactId("doc-1".to_string()),
-        actor: ActorId("actor-1".to_string()),
+        actor: ActorId("actor-1".into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
@@ -1153,7 +1173,7 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
     .await;
     check_server(&fixtures_dir, "🧩️server-snapshot-chunk/💾️.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: crate::os_spr::SnapshotChunkBytes::try_from_slice(&[1, 2, 3, 4]).unwrap() }, Lane::Command).await;
     check_server(&fixtures_dir, "🏁️server-snapshot-done/💾️.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command).await;
-    check_server(&fixtures_dir, "🎮️server-commands/💾️.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: ActorId("actor-1".to_string()), frontier: frontier.clone() }, Lane::Command).await;
+    check_server(&fixtures_dir, "🎮️server-commands/💾️.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: ActorId("actor-1".into()), frontier: frontier.clone() }, Lane::Command).await;
     check_server(
         &fixtures_dir,
         "✅️server-ack-accepted/💾️.bin",
@@ -1179,7 +1199,7 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         Lane::Command,
     )
     .await;
-    check_server(&fixtures_dir, "👁️server-preview/💾️.bin", &ServerFrame::Preview { actor: ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
+    check_server(&fixtures_dir, "👁️server-preview/💾️.bin", &ServerFrame::Preview { actor: ActorId("actor-1".into()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
     check_server(&fixtures_dir, "👥️server-presence/💾️.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), presence_to_bytes(&sample_presence_peer_with_interaction().await).await] }, Lane::Preview).await;
     check_server(&fixtures_dir, "🎫️server-credit-grant/💾️.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command).await;
     check_server(&fixtures_dir, "🚨️server-error/💾️.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command).await;
@@ -1193,7 +1213,7 @@ async fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
     MutationEnvelope {
         mutation_id: MutationId("op-2".to_string()),
         document_id: ArtifactId("doc-1".to_string()),
-        actor: ActorId("actor-2".to_string()),
+        actor: ActorId("actor-2".into()),
         dependencies: vec![MutationId("op-1".to_string())],
         observed: None,
         target: Vec::new(),
@@ -1364,7 +1384,7 @@ async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
         inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().expect("encode")) }],
         meta: None, lane: None,
     };
-    let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1").await.expect("envelopes from history edit");
+    let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1", semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}).await.expect("envelopes from history edit");
     assert_eq!(envelopes.len(), 1, "single-op edit yields one envelope");
     assert_eq!(envelopes[0].mutation_id.0, "ext-1#0", "meta-less fallback: edit id # op index");
     let recovered = <DemoMutation as OpBinary>::decode_op(&envelopes[0].diff.payload).expect("decode op");
@@ -1466,15 +1486,18 @@ mod actor_tests {
     /// The store ingests the pushed operation on tick(); the timeline grows and snapshot updates.
     #[tokio::test]
     async fn folder_external_edit_delivers_remote_operations() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
         ensure_demo_codec_registered().await;
         let dir = crate::os_store::test_support::tempdir().expect("tempdir");
         let host = ArtifactHost::new(test_pool());
-        let channels = host.open(ArtifactActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
+        let channels = host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
         let mut events = host.subscribe("doc-a").await;
         let mut store = crate::os_store::test_support::plain_test_store(demo_envelope("doc-a").await).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply");
         channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
@@ -1766,7 +1789,7 @@ mod actor_tests {
             return;
         }
         semio_hub.record("server.session-sent");
-        let commands = ServerFrame::Commands { envelopes: backlog, origin: ActorId("semio_hub-backlog".to_string()), frontier: frontier.clone() };
+        let commands = ServerFrame::Commands { envelopes: backlog, origin: ActorId("semio_hub-backlog".into()), frontier: frontier.clone() };
         if write.send(WsMessage::Binary(encode_server_frame(&commands, Lane::Command).await.into())).await.is_err() {
             semio_hub.record("server.commands-send-failed");
             return;
@@ -1797,7 +1820,7 @@ mod actor_tests {
                                 }
                                 Ok((_, ClientFrame::PreviewPublish { key, seq, payload })) => {
                                     semio_hub.record("client.preview-publish");
-                                    let _ = semio_hub.broadcast.send(ServerFrame::Preview { actor: ActorId("mock-semio_hub-peer".to_string()), key, seq, payload });
+                                    let _ = semio_hub.broadcast.send(ServerFrame::Preview { actor: ActorId("mock-semio_hub-peer".into()), key, seq, payload });
                                 }
                                 Ok((_, ClientFrame::Bye)) => semio_hub.record("client.bye"),
                                 Ok(_) => semio_hub.record("client.other"),
@@ -1829,10 +1852,13 @@ mod actor_tests {
     /// events relayed by the hub, and B's fold lands on exactly A's position after each one.
     #[tokio::test]
     async fn two_hosts_converge_through_hub() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
         ensure_demo_codec_registered().await;
         let (addr, hub) = spawn_mock_hub_with_session_gate(true).await;
         let base_url = format!("ws://{addr}");
-        let config = |actor: &str| ArtifactActorConfig {
+        let config = |actor: &str| ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
             document_id: "shared".into(),
             schema: "demo/v1".into(),
             bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
@@ -1868,7 +1894,7 @@ mod actor_tests {
             ArtifactCommand::Redo,
         ];
         for command in steps {
-            store_a.dispatch(command).await.expect("a authors the step");
+            store_a.dispatch(command, &mut identity).await.expect("a authors the step");
             channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
             wait_for_mock_hub_event("B DocumentBackbone", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
             store_b.tick().await.expect("b folds the relayed events");
@@ -1890,7 +1916,7 @@ mod actor_tests {
         let host_a = ArtifactHost::new(test_pool());
         configure_mock_hub(&host_a, &base_url, 'a', &hub);
         let channels_a = host_a
-            .open(ArtifactActorConfig {
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
                 document_id: "raw-shared".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
@@ -1905,7 +1931,7 @@ mod actor_tests {
         let host_b = ArtifactHost::new(test_pool());
         configure_mock_hub(&host_b, &base_url, 'b', &hub);
         let channels_b = host_b
-            .open(ArtifactActorConfig {
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
                 document_id: "raw-shared".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
@@ -1948,7 +1974,7 @@ mod actor_tests {
         let host = ArtifactHost::new(test_pool());
         configure_mock_hub_with_plan_window(&host, &base_url, 'a', &hub, 3_000);
         let channels = host
-            .open(ArtifactActorConfig {
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
                 document_id: "plan-window".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
@@ -1975,13 +2001,16 @@ mod actor_tests {
     /// B connects fresh (since_version 0) and its Welcome backlog replays both operations.
     #[tokio::test]
     async fn reconnect_since_catch_up_replays_backlog() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
         let (addr, hub) = spawn_mock_hub().await;
         let base_url = format!("ws://{addr}");
 
         let host_a = ArtifactHost::new(test_pool());
         configure_mock_hub(&host_a, &base_url, 'a', &hub);
         let channels_a = host_a
-            .open(ArtifactActorConfig {
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
                 document_id: "catchup".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
@@ -1996,7 +2025,7 @@ mod actor_tests {
         wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
         for n in [3, 4] {
-            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], transaction: None }).await.expect("apply on a");
+            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], transaction: None }, &mut identity).await.expect("apply on a");
             channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
             tokio::time::sleep(Duration::from_millis(80)).await;
         }
@@ -2004,7 +2033,7 @@ mod actor_tests {
         let host_b = ArtifactHost::new(test_pool());
         configure_mock_hub(&host_b, &base_url, 'b', &hub);
         let channels_b = host_b
-            .open(ArtifactActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
             .await;
         let key_b = channels_b.document_key.clone();
         let mut events_b = host_b.subscribe_key(&key_b).await;
@@ -2030,13 +2059,16 @@ mod actor_tests {
     /// Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
     #[tokio::test]
     async fn detach_drains_pending_outbound_operations() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
         let (addr, hub) = spawn_mock_hub().await;
         let base_url = format!("ws://{addr}");
 
         let host_b = ArtifactHost::new(test_pool());
         configure_mock_hub(&host_b, &base_url, 'b', &hub);
         let channels_b = host_b
-            .open(ArtifactActorConfig {
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
                 document_id: "drain".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
@@ -2053,14 +2085,14 @@ mod actor_tests {
         let host_a = ArtifactHost::new(test_pool());
         configure_mock_hub(&host_a, &base_url, 'a', &hub);
         let channels_a =
-            host_a.open(ArtifactActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
+            host_a.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
         let mut events_a = host_a.subscribe_key(&channels_a.document_key).await;
         let mut store_a = crate::os_store::test_support::plain_test_store(demo_envelope("drain").await).await;
         let key_a = channels_a.document_key.clone();
         store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
         wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
-        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], transaction: None }).await.expect("apply on a");
+        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], transaction: None }, &mut identity).await.expect("apply on a");
         host_a.close_key(&key_a);
 
         let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
@@ -2076,19 +2108,22 @@ mod actor_tests {
     // `ArtifactEvent::CommandOutcome` wiring actually fires (not just that it compiles).
     #[tokio::test]
     async fn command_outcome_accepted_fires_after_hub_ack() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
         let (addr, hub) = spawn_mock_hub().await;
         let base_url = format!("ws://{addr}");
         let host = ArtifactHost::new(test_pool());
         configure_mock_hub(&host, &base_url, 'a', &hub);
         let channels =
-            host.open(ArtifactActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
+            host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
         let key = channels.document_key.clone();
         let mut events = host.subscribe_key(&key).await;
         let mut store = crate::os_store::test_support::plain_test_store(demo_envelope("outcome").await).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
         wait_for_mock_hub_event("A Session", &hub, &mut events, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply");
         channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
         let event = wait_for_event(&mut events, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await;
@@ -2110,7 +2145,7 @@ mod actor_tests {
         let host_a = ArtifactHost::new(test_pool());
         configure_mock_hub(&host_a, &base_url, 'a', &hub);
         let channels_a = host_a
-            .open(ArtifactActorConfig {
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
                 document_id: "preview".into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
@@ -2123,7 +2158,7 @@ mod actor_tests {
         let host_b = ArtifactHost::new(test_pool());
         configure_mock_hub(&host_b, &base_url, 'b', &hub);
         let channels_b = host_b
-            .open(ArtifactActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
             .await;
         let key_a = channels_a.document_key.clone();
         let key_b = channels_b.document_key.clone();
@@ -2166,7 +2201,7 @@ mod actor_tests {
         let dir = crate::os_store::test_support::tempdir().expect("tempdir");
         let host = ArtifactHost::new(test_pool());
         let channels =
-            host.open(ArtifactActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
+            host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
         let mut events = host.subscribe(&fixture.document_id).await;
         let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None)).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
@@ -2321,7 +2356,7 @@ async fn document_archive_actor_refuses_malformed_and_over_limit_candidates_with
     let (events, _) = broadcast::channel(8);
     let mut actor = native_actor::ArtifactActor::new(
         test_pool(),
-        ArtifactActorConfig { document_id: "root-1".into(), schema: "s.test.root/1/*".into(), bindings: Vec::new(), watch_external: false, actor: "local".into() },
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "root-1".into(), schema: "s.test.root/1/*".into(), bindings: Vec::new(), watch_external: false, actor: "local".into() },
         remote,
         receiver,
         events,
@@ -2378,14 +2413,17 @@ async fn document_archive_text_storage_round_trips_complete_owned_bytes() {
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let dir = crate::os_store::test_support::tempdir().expect("tempdir");
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
 
     let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }).await.expect("apply e1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply e1");
     let post_e1 = store.snapshot().expect("post-e1");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }).await.expect("apply e2");
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo e2");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }, &mut identity).await.expect("apply e2");
+    store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo e2");
     assert_eq!(store.snapshot().expect("live"), post_e1, "precondition: live store is back at post-e1");
 
     let files = print_document_pack(store.envelope()).await.expect("print document pack");
@@ -2397,7 +2435,7 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     let mut reloaded = crate::os_store::test_support::plain_test_store(parsed.envelope).await;
     assert_eq!(reloaded.snapshot().expect("reloaded"), post_e1);
 
-    reloaded.dispatch(ArtifactCommand::Redo).await.expect("redo e2 after folder reload");
+    reloaded.dispatch(ArtifactCommand::Redo, &mut identity).await.expect("redo e2 after folder reload");
     assert_eq!(reloaded.snapshot().expect("post-redo"), DemoSnapshot { n: 2 });
     crate::os_store::test_support::close_plain_test_store(&mut store);
     crate::os_store::test_support::close_plain_test_store(&mut reloaded);
@@ -2412,6 +2450,9 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let dir = crate::os_store::test_support::tempdir().expect("tempdir");
     let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
     assert_eq!(storage.read("demo", "demo").await.expect("read empty"), None, "absent document reads as None");
@@ -2421,11 +2462,11 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     storage.write("demo", "demo", &files).await.expect("write");
 
     let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }).await.expect("apply 1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }).await.expect("apply 2");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }, &mut identity).await.expect("apply 2");
     let second_edit = store.envelope().vcs.edits.last().expect("second edit");
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
@@ -2461,6 +2502,9 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn folder_text_storage_round_trips_pack() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let dir = crate::os_store::test_support::tempdir().expect("tempdir");
     let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
     assert_eq!(storage.read_pack("demo", "demo").await.expect("read empty"), None, "absent pack reads as None");
@@ -2471,11 +2515,11 @@ async fn folder_text_storage_round_trips_pack() {
     storage.write_pack("demo", "demo", &files, &dsl_mirror).await.expect("write pack");
 
     let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }).await.expect("apply 1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }).await.expect("apply 2");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }, &mut identity).await.expect("apply 2");
     let second_edit = store.envelope().vcs.edits.last().expect("second edit");
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
@@ -2566,7 +2610,7 @@ async fn a_rebootstrap_waits_for_the_hosts_reseed_and_says_hello_at_its_baseline
     let (events, mut event_rx) = broadcast::channel(32);
     let mut actor = native_actor::ArtifactActor::new(
         test_pool(),
-        ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: "http://hub.local".into(), space_id: "space-reseed".into(), surface: None }], watch_external: false, actor: "rebootstrap-test".into() },
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: "http://hub.local".into(), space_id: "space-reseed".into(), surface: None }], watch_external: false, actor: "rebootstrap-test".into() },
         remote,
         receiver,
         events,
@@ -2624,7 +2668,7 @@ async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
     let (events, mut event_rx) = broadcast::channel(32);
     let mut actor = native_actor::ArtifactActor::new(
         test_pool(),
-        ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: "http://hub.local".into(), space_id: "space-supersede".into(), surface: None }], watch_external: false, actor: "supersede-test".into() },
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: "http://hub.local".into(), space_id: "space-supersede".into(), surface: None }], watch_external: false, actor: "supersede-test".into() },
         remote,
         receiver,
         events,
@@ -2715,7 +2759,7 @@ async fn the_folder_archive_presence_corpus_matches_the_native_actor() {
         let (events, mut observed) = broadcast::channel(64);
         let mut actor = native_actor::ArtifactActor::new(
             test_pool(),
-            ArtifactActorConfig { document_id: document.into(), schema: schema.into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: false, actor: "local".into() },
+            ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: document.into(), schema: schema.into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: false, actor: "local".into() },
             remote,
             receiver,
             events,

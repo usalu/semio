@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Owned Operation Return Word",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pointer",
+    "length"
+  ],
+  "properties": {
+    "pointer": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "length": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "length": {
+          "maximum": 4294967294,
+          "type": "integer"
+        }
+      }
+    },
+    {
+      "properties": {
+        "length": {
+          "const": 4294967295,
+          "type": "integer"
+        },
+        "pointer": {
+          "minimum": 1,
+          "maximum": 8,
+          "type": "integer"
+        }
+      }
+    }
+  ],
+  "$comment": "Little-endian lower u32 pointer and upper u32 extent; reserved maximal extent returns the original typed refusal code without allocation."
+}

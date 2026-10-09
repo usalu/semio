@@ -1,0 +1,60 @@
+{
+  "rows": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🔭️observer/🧬️schema/🔣️.json",
+      "sha": "6f2794d39864a84a763fbcb373b12490d96e1e3438aa4d79a21daba925dafe30",
+      "bytes": 3076
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/🔣️.json",
+      "sha": "364980762c2bcfb58b7f6061da51579133d0af1dec90633bc62c4fe47ba44daf",
+      "bytes": 2349
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts",
+      "sha": "c9738c4c7d0269afc82284fced6bba64a8aa7f730973496ff1300fa1ac697a64",
+      "bytes": 10253
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "sha": "7c40d6936831e90130b7bb9bb564d3be92abbce0542e40cbc32d7ed704a0ca73",
+      "bytes": 23597
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧫️fixtures/🔭️observer/🔣️.json",
+      "sha": "f4fb6e5eaf336d5261dd6bdbf0106e625011d181566de8ca250595b1480e06ad",
+      "bytes": 2303
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json",
+      "sha": "8c57ffd931c7ede713456fbc3e5b1e42875d0856986c5dd54ea3a75964f43858",
+      "bytes": 2040
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs",
+      "sha": "24af53e0a5eb676683f7b14f85039773b5b5be09b4c192a425109aacb18afbf0",
+      "bytes": 6206
+    }
+  ],
+  "classification": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🔭️observer/🧬️schema/🔣️.json",
+      "rootRequired": [
+        "schema",
+        "cases"
+      ],
+      "role": "whole-trial expected-result corpus"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/🔣️.json",
+      "rootRequired": [
+        "schema",
+        "nativeMaximumBytes",
+        "initialBytes",
+        "copy",
+        "cases"
+      ],
+      "role": "whole-trial expected-result corpus"
+    }
+  ]
+}

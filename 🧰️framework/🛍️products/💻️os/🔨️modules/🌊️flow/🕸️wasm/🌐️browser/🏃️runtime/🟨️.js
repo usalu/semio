@@ -57,6 +57,7 @@ export async function createFlowBrowserRuntime({ source, imports = {}, instantia
       });
       return closePromise;
     },
+    stepProgress: () => host.stepProgress(),
     terminalIsEmpty: () => closing && sessions.size === 0 && host.terminalIsEmpty(),
   });
 }

@@ -1,0 +1,5 @@
+# Member Request Independent Physical Policy
+
+Fresh original native test helpers derived positive release and depth grants from current request frontier. The Source-only language-neutral law55826 records true RED Nx1/563ms for missing independent plain physicalCloseGrant. New plain policy is fixed1item/copy0/capacity0/release262144/depth64; original fixture values remain unchanged. Every original positive request close uses this admitted bound, and queried release remains only for observation or strict negative reduction. Request setup initializes the immutable policy outside measured close turns. Actual pointer/capacity/lifecycle/System assertions remain unchanged.
+
+Exact three endpoint actions/hashes are native-request-policy-*.json. Source GREEN82524 is Nx0/1.9s: one policy law using genuine canonical Grant/Ajv and independent typed array/JSONPatch negative reduction, plus existing recursive depth612. This is actual neutral/source evidence. Native request physical laws remain UNRUN against the current Kernel cohort; source policy itself supplies no native type or allocator proof.

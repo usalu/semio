@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "nativeLaw": "normal_decode_release_records_original_wallet_even_after_child_fault",
+  "grant": {
+    "maximumItems": 65536,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 64
+  },
+  "source": "original field payload!",
+  "beforeBytes": 32,
+  "birthBytes": 64,
+  "receipt": {
+    "copiedItems": 1,
+    "copiedBytes": 23,
+    "retainedCapacityBytes": 64,
+    "releasedBytes": 32
+  },
+  "deniedAxes": [
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "maximumReleaseBytes",
+    "maximumDepth"
+  ]
+}

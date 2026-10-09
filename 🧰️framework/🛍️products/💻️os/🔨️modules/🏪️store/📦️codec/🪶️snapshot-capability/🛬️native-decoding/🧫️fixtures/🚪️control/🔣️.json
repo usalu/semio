@@ -1,0 +1,28 @@
+{
+  "schema": "io.snapshot-record-original-decode-control/v1",
+  "envelope": "fixture.receiving",
+  "literal": "snow 雪",
+  "nativeBytes": 1073741824,
+  "grant": {
+    "maximumItems": 256,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "expectedHeader": "semio fixture.receiving.dsl v1",
+  "expectedKey": "value",
+  "cases": [
+    {
+      "id": "admitted",
+      "release": 16777216,
+      "accepted": true
+    },
+    {
+      "id": "zeroRelease",
+      "release": 0,
+      "accepted": false
+    }
+  ],
+  "nativeLiteral": "semio fixture.receiving.dsl v1\nvalue=\"snow 雪\"\n"
+}

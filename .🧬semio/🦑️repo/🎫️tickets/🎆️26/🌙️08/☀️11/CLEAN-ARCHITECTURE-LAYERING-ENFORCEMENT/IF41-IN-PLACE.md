@@ -1,0 +1,31 @@
+# Interface41 In-Place Validation
+
+No frozen-mirror successor41 phase ran. The first in-place baseline is physically closed. The registered mirror routes are inadmissible under the replacement path and source-copy rules and will not be invoked.
+
+The current Root retains the withdrawal of stdio field-sweep/allowlist/subset helpers and the S2 sweep invocation. Current runtime composition already supplies an explicit neutral actor publication port and the three selected package roots. The neutral structural source view and canonical ECMA extraction already exist physically; they will be preserved. Cargo selection and the runtime actor observation helpers still expose synchronous predecessors. Root R13/R14 still has presence/transient blanket exceptions and contradictory documentation.
+
+The owned change will use complete current sources as the base, publish only substantive schema/controller/async call changes and exact R13/R14 removal, and preserve current API signatures outside those required async operation boundaries. All original law bodies, assertions, fixtures and finite controls remain in their tracked owners. No tracked sources or serialized source bodies will be copied into this ticket. Existing historical proposals are read-only comparison inputs.
+
+The replacement owning script will execute full suites directly from the repository, using Bun under registered Nx routes. Receipts contain source references, hashes, lengths and identity metadata only; output paths are checked against the 256 UTF16-unit limit. It will contain no snapshot or source-copy operations. Original 60,000ms Bun cases, long test level, depth64, 8MiB work/64MiB byte budgets and native 120,000ms controls remain mandatory.
+
+Initial source metadata: [plan](🗑️generated/i41/plan.json). Further runtime awaits the new concrete in-place route registration and current-source admission.
+
+The direct baseline physically closed through registered Nx session26906: outer1/child1, five original tests executed (2 pass/3 fail),22 assertions,26 exact before/after source claims. All three failures reach the actual mandatory General workspace boundary. Full case bodies and assertions remain unchanged. The real test child now supplies the actual General workspace; its General producer binding reads tracked source directly. Metadata-only publication record: [caller change](🗑️generated/i41/caller-publication.json). Fresh receiving route pending registration.
+
+The current in-place strict lane feature is schema-first and references the four complete original Rust programs. Its independent Ajv/TypeScript oracle preserves all original programs and adds exact strict R13/R14 expectations. Root scanner, rule docs and original exemption expectations remain unchanged until the actual red route closes. Its route input is [strict red](i41/strict-red-launch.json).
+
+The finite Cargo controller defining feature now has its original nine portable work/ownership vectors and two actual owning receiving laws, with real yielding/cancellation/accounting assertions. The controller module is still absent: [controller red](i41/controller-red-launch.json) admits only that exact missing defining preimage and propagates the real Bun failure. No actual async Cargo/Hub API publication is claimed. The complete async composition remains required after real controller/physical parser gates.
+
+The first receiving green command awaits new registration: [receiving route](i41/receiving-launch.json). All raw mirror/archived40 history remains untouched. Broader original/joint routes cannot run until their explicit physical fixture/dynamic closure is admitted. The existing scratch-git original Root inventory law is preserved and has not been invoked under the replacement Git rule.
+
+Receiving1 physically closed Nx/Bun0/child0 (session51479), all five original laws and48 assertions,26 exact claims. Strict-red physically closed1/child1 (session84121), independent oracle law passed and real scanner missed the original lane breaches;597 claims exact. Controller-red physically closed1/child1 (session70724), exact absent defining-module error and six source claims exact. No failure was converted into success.
+
+Root now owns only the precise R13/R14 scanner conditions/docs change and four original expected-vector updates; all original program bytes and current stdio/S2 withdrawals remain preserved. Root hash ac6eb7e30b6d174d3117ab74c79ee847665893293bbfadfb951fadcad6c02a39. Actual finite CargoController now admits real controls, cumulative accounting and yielding/cancellation; synchronous Cargo/Hub APIs are untouched pending their coherent async implementation. Both new green rows are concrete at [green routes](i41/green-launch.json), pending registration.
+
+A metadata-only current-law callsite audit is retained at [original route frontier](🗑️generated/i41/original-route-frontier.json). Static callsites do not prove transitive/dynamic absence of source transport or Git mutations. Original whole/receiving authority remains intact; broader execution requires explicit actual-owner fixture behavior reconciliation, rather than replaying mirrored laws.
+
+Strict-green physically closed outer0/child0 session45094: four pure laws,259 assertions,597 exact claims. Controller-green physically closed outer0/child0 session54303: two laws,36 assertions,seven exact claims,all original nine vectors. These scope claims do not accept the whole original architecture/native corpus.
+
+After both intervals closed, the metadata driver was precisely updated to use the existing neutral descriptor/path-joined observer and a combined stdout/stderr64MiB budget. Its current TypeScript syntax parses; this successor producer has not run. Source-body transport remains absent.
+
+The next genuine asynchronous selector red route is concrete at [async red](i41/async-red-launch.json). Its schema-first scope vectors, full original commandSelection cases, independent TOML/fast-glob oracles and cancellation/work refusal assertions are authored in the actual Cargo owner. The exact CLI operation module remains the admitted missing defining preimage. No substantive selector/caller publication has happened yet; General and Hub current fourth-root/publication-port and canonical schema peers remain unchanged.

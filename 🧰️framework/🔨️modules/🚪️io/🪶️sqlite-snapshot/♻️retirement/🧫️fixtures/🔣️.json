@@ -1,0 +1,61 @@
+{
+  "schema": "io.sqlite-original-field-retirement/v1",
+  "nativeMaximumBytes": 1073741824,
+  "maximumTurns": 4096,
+  "grant": {
+    "maximumItems": 256,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "deniedGrant": {
+    "maximumItems": 0,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 0
+  },
+  "table": {
+    "name": "entry",
+    "sql": "CREATE TABLE entry (id INTEGER, amount REAL, text TEXT, absent TEXT, bytes BLOB)",
+    "rowid": 7,
+    "integer": 7,
+    "real": 1.5,
+    "text": "雪🌠",
+    "blob": [
+      0,
+      128,
+      255
+    ]
+  },
+  "query": "SELECT id, amount, text, absent, hex(bytes) AS bytes FROM entry",
+  "queryResult": [
+    {
+      "id": 7,
+      "amount": 1.5,
+      "text": "雪🌠",
+      "absent": null,
+      "bytes": "0080FF"
+    }
+  ],
+  "diagnostic": {
+    "code": "fixture.original.sqlite",
+    "message": "ursprüngliche Diagnose",
+    "span": {
+      "line": 1,
+      "column": 1,
+      "length": 3
+    }
+  },
+  "sqliteLimits": {
+    "maximumFileBytes": 285212672,
+    "maximumValueBytes": 268435456,
+    "maximumAllocationBytes": 536870912,
+    "maximumSchemaBytes": 4194304,
+    "maximumRows": 1000000,
+    "maximumColumns": 1024,
+    "maximumTables": 4096,
+    "maximumPages": 1000000
+  }
+}

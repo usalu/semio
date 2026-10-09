@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "id": "empty-spare",
+      "text": "",
+      "capacity": 64
+    },
+    {
+      "id": "unicode",
+      "text": "Grüße-😀",
+      "capacity": 4096
+    },
+    {
+      "id": "large-backing",
+      "text": "ticket",
+      "capacity": 16384
+    }
+  ],
+  "maximumBodyBytes": 4096,
+  "maximumTurns": 128,
+  "capacityAccounting": "actual-admitted-cursor-birth",
+  "physicalConservation": "source+cursor-birth+terminal-box",
+  "constructorBirthBytes": 0,
+  "refusalBirthBytes": 0,
+  "terminalDropBytes": 0
+}

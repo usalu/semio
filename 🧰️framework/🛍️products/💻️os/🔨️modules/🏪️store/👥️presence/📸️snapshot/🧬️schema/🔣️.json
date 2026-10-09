@@ -1,0 +1,12 @@
+{
+  "schema": "semio.artifact.presence-native-snapshot/v1",
+  "input": "Original Borrowed Presence Pack",
+  "output": "Original Typed Presence Owner",
+  "requiredCapabilities": ["Controlled Native Decode", "Controlled Native Encode", "Original Typed Retirement"],
+  "authority": ["Original Native Callback", "Original Cancellation", "Original Allocation Port", "Independent Items", "Independent Copy Bytes", "Independent Capacity Bytes", "Independent Release Bytes", "Independent Depth"],
+  "receiving": "Install Every Partial Field in the Original Recipient Before Any Fallible Construction",
+  "refusal": "Return Actual Progress and Retain Every Original Partial Owner",
+  "publication": "Transfer the Original Typed Owner After Complete Native Acceptance",
+  "uncontrolledPackFallback": false,
+  "unrelatedSqliteCapabilityRequired": false
+}

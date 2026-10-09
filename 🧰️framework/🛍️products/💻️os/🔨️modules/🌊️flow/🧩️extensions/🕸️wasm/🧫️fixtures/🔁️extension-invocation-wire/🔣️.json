@@ -3,7 +3,8 @@
   "note": "The evaluate capability owns initial input/dependency source once in its existing retained map. Compact resume requests use resume:true, empty inputJson/dependencyJson, and the exact parked operator/node hash/version/cancellation header. Full changed sources are replacement requests. Language-agnostic rows define the ordinary unaddressed wire and retainedAdmission defines bounded addressed admission.",
   "requestFields": [
     "operatorId",
-    "inputJson"
+    "inputJson",
+    "retained"
   ],
   "envelopeFields": [
     "done",
@@ -29,17 +30,37 @@
     "roundUnits": 1,
     "maximumTurns": 10000,
     "rows": [
-      { "name": "ok", "complete": true, "faulted": false },
-      { "name": "empty-output", "complete": true, "faulted": false },
-      { "name": "operator-fault", "complete": true, "faulted": true },
-      { "name": "pending", "complete": false, "faulted": false },
-      { "name": "cancelled", "complete": true, "faulted": false }
+      {
+        "name": "ok",
+        "complete": true,
+        "faulted": false
+      },
+      {
+        "name": "empty-output",
+        "complete": true,
+        "faulted": false
+      },
+      {
+        "name": "operator-fault",
+        "complete": true,
+        "faulted": true
+      },
+      {
+        "name": "pending",
+        "complete": false,
+        "faulted": false
+      },
+      {
+        "name": "cancelled",
+        "complete": true,
+        "faulted": false
+      }
     ]
   },
   "rows": [
     {
       "name": "ok",
-      "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{\\\"number\\\":2}\"}",
+      "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{\\\"number\\\":2}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128}}",
       "outcome": "ok",
       "done": true,
       "phase": "complete",
@@ -50,7 +71,7 @@
     },
     {
       "name": "empty-output",
-      "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{}\"}",
+      "requestJson": "{\"operatorId\":\"test.echo\",\"inputJson\":\"{}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128}}",
       "outcome": "ok",
       "done": true,
       "phase": "complete",
@@ -61,7 +82,7 @@
     },
     {
       "name": "operator-fault",
-      "requestJson": "{\"operatorId\":\"test.missing\",\"inputJson\":\"{}\"}",
+      "requestJson": "{\"operatorId\":\"test.missing\",\"inputJson\":\"{}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128}}",
       "outcome": "ok",
       "done": true,
       "phase": "complete",
@@ -72,7 +93,7 @@
     },
     {
       "name": "bad-request",
-      "requestJson": "{\"inputJson\":\"{}\"}",
+      "requestJson": "{\"inputJson\":\"{}\",\"retained\":{\"maximumItems\":1,\"maximumCopyBytes\":4096,\"maximumCapacityBytes\":1048576,\"maximumReleaseBytes\":1048576,\"maximumDepth\":128}}",
       "outcome": "fault",
       "fault": "missing field `operatorId`"
     }
@@ -92,7 +113,14 @@
     "maximumUnits": 1,
     "maximumBytes": 3,
     "ownershipCeiling": 1,
-    "phases": ["output-measure", "output-write", "output-retire", "output-envelope-measure", "output-envelope-write", "output-envelope-retire"]
+    "phases": [
+      "output-measure",
+      "output-write",
+      "output-retire",
+      "output-envelope-measure",
+      "output-envelope-write",
+      "output-envelope-retire"
+    ]
   },
   "retainedAdmission": {
     "keyUnit": "鍵😀",
@@ -138,5 +166,91 @@
         0
       ]
     }
+  },
+  "failedNormalReceipt": {
+    "source": "{\"payload\":[",
+    "sameSource": true,
+    "retainActualChildReceiptOnFailure": true,
+    "zeroGrantChangesNothing": true,
+    "independentAxes": [
+      "copiedItems",
+      "copiedBytes",
+      "retainedCapacityBytes",
+      "releasedBytes"
+    ],
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 1048576,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 128
+    }
+  },
+  "commandRetainedAuthority": {
+    "retained": {
+      "maximumItems": 3,
+      "maximumCopyBytes": 23,
+      "maximumCapacityBytes": 64,
+      "maximumReleaseBytes": 512,
+      "maximumDepth": 3
+    },
+    "sameIncomingAxes": true,
+    "missingAuthorityRefused": true
+  },
+  "originalInferenceCloseAuthority": {
+    "outcomeCloseTurns": 1,
+    "sameOwnerUntilTerminal": true,
+    "failedActualReceiptPreserved": true,
+    "receiptRecordedBeforeGrantValidation": true
+  },
+  "originalOperatorPlanCustody": {
+    "scalarCursor": true,
+    "sameInputOnRefusal": true,
+    "coldFallback": false
+  },
+  "originalOperatorFinishCustody": {
+    "scalarCursor": true,
+    "sameOutputOnRefusal": true,
+    "coldValidation": false
+  },
+  "originalTurnWallet": {
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 1048576,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 128
+    },
+    "mandatoryRequestPolicy": true,
+    "retainZeroIdentity": true,
+    "reuseFullWallet": false,
+    "preserveFailedReceipt": true,
+    "children": [
+      {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 0
+      }
+    ],
+    "remaining": {
+      "maximumItems": 0,
+      "maximumCopyBytes": 4093,
+      "maximumCapacityBytes": 1048512,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 128
+    }
+  },
+  "originalTypedFailure": {
+    "causes": [
+      "native",
+      "json",
+      "operator",
+      "literal"
+    ],
+    "formatDuringNormal": false,
+    "sameOriginalCause": true,
+    "sameActualReceipt": true,
+    "terminalCauseClose": true
   }
 }

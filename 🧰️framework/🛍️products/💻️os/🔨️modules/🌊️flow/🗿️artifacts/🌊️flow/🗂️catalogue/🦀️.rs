@@ -98,8 +98,8 @@ pub fn flow_neuron_kind_infos_json() -> String {
 /// off the registry with no JSON in between, and SHARED: the map is a pure projection of the
 /// registry, so it is rebuilt exactly once per [`flow_extension_registry_generation`] and every host
 /// after that clones an `Arc`, not 108 kB of operator records.
-pub fn flow_neuron_kind_info_map() -> std::sync::Arc<std::collections::HashMap<String, OperatorInfo>> {
-    static CACHE: std::sync::LazyLock<std::sync::Mutex<Option<(u64, std::sync::Arc<std::collections::HashMap<String, OperatorInfo>>)>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(None));
+pub fn flow_neuron_kind_info_map() -> std::sync::Arc<protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>> {
+    static CACHE: std::sync::LazyLock<std::sync::Mutex<Option<(u64, std::sync::Arc<protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>>)>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(None));
     let generation = flow_extension_registry_generation();
     let mut cache = CACHE.lock().expect("flow neuron kind info cache");
     if let Some((cached_generation, infos)) = cache.as_ref() {

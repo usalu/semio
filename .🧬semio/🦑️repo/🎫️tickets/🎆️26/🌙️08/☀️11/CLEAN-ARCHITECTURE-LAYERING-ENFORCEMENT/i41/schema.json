@@ -1,0 +1,519 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "epoch",
+    "controls",
+    "originalLaws",
+    "originalRows",
+    "retirements",
+    "requiredPaths",
+    "portableCases",
+    "receivingTests",
+    "routes",
+    "receivingBindings",
+    "strictBindings",
+    "controllerBindings",
+    "controllerAbsentSource",
+    "asyncBindings",
+    "asyncAbsentSource",
+    "actorBindings",
+    "cargoBindings",
+    "storageBindings",
+    "storageAbsentSource",
+    "nativeDependencyBindings",
+    "commandBindings",
+    "commandAbsentSource",
+    "broadCommandBindings",
+    "broadCommandAbsentSource",
+    "writerBindings",
+    "freshBindings",
+    "nativeOrchestrationBindings"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "epoch": {
+      "const": 41
+    },
+    "controls": {
+      "const": {
+        "testLevel": "long",
+        "bunTimeoutMilliseconds": 60000,
+        "maximumUnits": 8388608,
+        "maximumOwnedBytes": 67108864,
+        "maximumDepth": 64,
+        "nativeBudgetMilliseconds": 120000,
+        "phaseBudgetMilliseconds": 600000,
+        "maximumOutputBytes": 67108864
+      }
+    },
+    "originalLaws": {
+      "type": "array",
+      "minItems": 41,
+      "maxItems": 41,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "originalRows": {
+      "type": "array",
+      "minItems": 177,
+      "maxItems": 177,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "retirements": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "requiredPaths": {
+      "type": "array",
+      "minItems": 53,
+      "maxItems": 53,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "portableCases": {
+      "type": "array",
+      "minItems": 36,
+      "maxItems": 36
+    },
+    "receivingTests": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "routes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiving",
+        "joint",
+        "original",
+        "strict",
+        "controller",
+        "controller-test",
+        "async-red",
+        "async-defining",
+        "storage-red",
+        "storage-green",
+        "cargo-receiving",
+        "native-dependencies",
+        "command-red",
+        "command-green",
+        "native-orchestration"
+      ],
+      "properties": {
+        "receiving": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/🗺️owner-test-manifests/🟦️.ts"
+          ]
+        },
+        "joint": {
+          "const": [
+            "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧪️tests/🟦️.ts",
+            "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧪️tests/🟦️.ts"
+          ]
+        },
+        "original": {
+          "const": [
+            "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧩️map-create-region-group/🟦️.ts",
+            "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🗣️verb-vocabulary/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/🗺️owner-test-manifests/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️artifact-packages/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🕰️queued-preparation/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🪆️nested-owners/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/♻️taxonomy-pattern-compiler-reuse/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/❄️frozen-markdown-coordinates/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🍃️artifact-support-leaf-authority/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎫️ticket-role-routing/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🏺️historical-package-owner-identity/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/👀️readme-reviewed-fixture-inputs/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/💠️inventory-artifact-shards/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📈️reference-coordinate-progress/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📜️historical-document-evidence/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚚️readme-move-source-authority/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚧️cargo-discovery-exclusions/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛑️taxonomy-cli-cancellation/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛟️transaction-recovery-authority/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🛫️preflight-reference-basis/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟢️readme-current-source-activation/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️mutation-leaf-identity/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️mutation-wire-witness/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️script-async-runners/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-case-pair/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️cargo-dependency-direction/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔔️deferred-wake-ownership/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧲️rust-physical-reference-context/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/🚪️source-admission-io/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/🧪️multi-scope-verification/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️mutation-fixtures/🟦️.ts"
+          ]
+        },
+        "strict": {
+          "const": [
+            "🧪️tests/🧪️diff-only-law-gate/🫧️lanes/🟦️.ts"
+          ]
+        },
+        "controller": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🧪️tests/🟦️.ts"
+          ]
+        },
+        "controller-test": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🧪️tests/🟦️.ts"
+          ]
+        },
+        "async-red": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧪️tests/🟦️.ts"
+          ]
+        },
+        "async-defining": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧪️tests/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🧪️tests/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📖️toml/🧪️tests/🟦️.ts"
+          ]
+        },
+        "actor-red": {
+          "type": "array",
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts"
+          ]
+        },
+        "actor-green": {
+          "type": "array",
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+            "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts"
+          ]
+        },
+        "current-red": {
+          "type": "array",
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts"
+          ]
+        },
+        "current-green": {
+          "type": "array",
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+            "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts"
+          ]
+        },
+        "cargo-red": {
+          "type": "array",
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🟦️.ts"
+          ]
+        },
+        "storage-red": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧪️tests/🟦️.ts"
+          ]
+        },
+        "storage-green": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧪️tests/🟦️.ts"
+          ]
+        },
+        "cargo-receiving": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🕰️queued-preparation/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧪️tests/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧪️tests/🟦️.ts"
+          ]
+        },
+        "native-dependencies": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🧪️tests/🟦️.ts"
+          ]
+        },
+        "command-red": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧪️tests/🟦️.ts"
+          ]
+        },
+        "command-green": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧪️tests/🟦️.ts"
+          ]
+        },
+        "broad-command-red": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🧪️tests/🟦️.ts"
+          ]
+        },
+        "writer-red": {
+          "const": [
+            "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts"
+          ]
+        },
+        "writer-green": {
+          "const": [
+            "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts"
+          ]
+        },
+        "broad-command-green": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🧪️tests/🟦️.ts"
+          ]
+        },
+        "fresh-red": {
+          "const": [
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts"
+          ]
+        },
+        "fresh-receiving": {
+          "const": [
+            "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts"
+          ]
+        },
+        "native-orchestration": {
+          "const": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/🗺️owner-test-manifests/🟦️.ts"
+          ]
+        }
+      }
+    },
+    "receivingBindings": {
+      "const": [
+        "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/🗺️owner-test-manifests/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧬️schema/🗺️owner-test-manifests/🔣️.json",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧫️fixtures/🔣️.json",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts"
+      ]
+    },
+    "strictBindings": {
+      "const": [
+        "📜️script.ts",
+        "🧫️fixtures/🧫️diff-only-law-gate/🔣️.json",
+        "🧫️fixtures/🧫️diff-only-law-gate/🫧️lanes/🔣️.json",
+        "🧫️fixtures/🧫️diff-only-law-gate/🫧️lanes/🧬️schema/🔣️.json"
+      ]
+    },
+    "controllerBindings": {
+      "const": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🧬️schema/🔣️.json"
+      ]
+    },
+    "controllerAbsentSource": {
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🟦️.ts"
+    },
+    "asyncBindings": {
+      "const": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json"
+      ]
+    },
+    "asyncAbsentSource": {
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🟦️.ts"
+    },
+    "actorBindings": {
+      "type": "array",
+      "const": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🔣️.json",
+        "🌎️hub/🧫️fixtures/🧱️foundation-source/🔣️.json",
+        "🌎️hub/🧫️fixtures/🧱️foundation-source/🎭️actors/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧬️schema/🔣️.json"
+      ]
+    },
+    "cargoBindings": {
+      "const": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/📇️invocation-inventory/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🏃️invocation/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🏃️invocation/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🎯️selected-preparation/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🏎️nextest-configuration/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🕰️queued-preparation/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🧭️native-discovery/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🪆️nested-owners/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/📇️discovery/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/📇️invocation-inventory/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🛠️preparation/🔣️.json",
+        "Cargo.toml",
+        "🧰️framework/Cargo.toml",
+        "🧰️framework/.config/nextest.toml",
+        ".config/nextest.toml"
+      ]
+    },
+    "storageBindings": {
+      "const": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧫️fixtures/🔣️.json"
+      ]
+    },
+    "storageAbsentSource": {
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts"
+    },
+    "nativeDependencyBindings": {
+      "const": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/📦️native-dependencies/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+        "📋️project.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/📇️invocation-inventory/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🏃️invocation/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🏃️invocation/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🎯️selected-preparation/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🏎️nextest-configuration/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🕰️queued-preparation/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🧭️native-discovery/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🪆️nested-owners/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/📇️discovery/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/📇️invocation-inventory/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🛠️preparation/🔣️.json",
+        "Cargo.toml",
+        "🧰️framework/Cargo.toml",
+        "🧰️framework/.config/nextest.toml",
+        ".config/nextest.toml"
+      ]
+    },
+    "commandBindings": {
+      "const": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json"
+      ]
+    },
+    "commandAbsentSource": {
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🟦️.ts"
+    },
+    "broadCommandBindings": {
+      "const": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🧫️fixtures/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧫️fixtures/🔣️.json"
+      ]
+    },
+    "broadCommandAbsentSource": {
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🟦️.ts"
+    },
+    "writerBindings": {
+      "const": [
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧫️fixtures/🔣️.json",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧬️schema/🔣️.json",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🦀️.rs",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/🦀️.rs",
+        "🧰️framework/🔨️modules/🔏️hash/🦀️.rs"
+      ]
+    },
+    "freshBindings": {
+      "const": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧾️fresh-source-epoch/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧾️fresh-source-epoch/📃️dep-info.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧊️fresh-staging/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧵️fresh-process/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🧫️fixtures/🔣️.json",
+        "🌎️hub/🏗️bootstrap/🧾️provenance/🟦️.ts"
+      ]
+    },
+    "nativeOrchestrationBindings": {
+      "const": [
+        "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/🗺️owner-test-manifests/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧬️schema/🗺️owner-test-manifests/🔣️.json",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧫️fixtures/🔣️.json",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/📋️owner-cmd-policy/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/📣️progress/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧫️fixtures/📬️test-body/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧾️fresh-source-epoch/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧾️fresh-source-epoch/📃️dep-info.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧊️fresh-staging/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧵️fresh-process/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🧫️fixtures/🔣️.json",
+        "🌎️hub/🏗️bootstrap/🧾️provenance/🟦️.ts"
+      ]
+    }
+  }
+}

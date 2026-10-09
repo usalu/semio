@@ -17,7 +17,7 @@ pub struct DrawingIntoJson;
 impl Serializer<DrawingSnapshot> for DrawingIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &DrawingSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &DrawingSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(from));
         let json = JsonSnapshot::from_value(value);
         Ok(IoOutcome::clean(IoPayload::Text(write_json_pretty(&json.value))))

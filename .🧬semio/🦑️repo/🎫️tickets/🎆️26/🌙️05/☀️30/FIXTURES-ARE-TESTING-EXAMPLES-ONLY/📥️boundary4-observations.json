@@ -1,0 +1,78 @@
+{
+  "session": 17998,
+  "nxExit": 1,
+  "duration": "46.5s",
+  "modules": 4682,
+  "scopes": 3751,
+  "findings": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🎟️insertion/🔣️.json",
+      "code": "schema-fixture-defines-schema",
+      "detail": "The document defines a test corpus contract outside the admitted schema facets.",
+      "present": true,
+      "sha256": "83ee893b699bc2fba89259e1bab3013d2520fe2a164f7c8bcc9d969c8549c202",
+      "title": null,
+      "rootFields": [
+        "version",
+        "sourceCapacityBytes",
+        "sourceRows",
+        "insertions",
+        "expected",
+        "copyGrants",
+        "maximumTurns",
+        "reuse",
+        "setExpectedKeys"
+      ],
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
+      "code": "schema-fixture-defines-schema",
+      "detail": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json defines schema authority inside examples. Ordinary parser specimens require an explicit inert data declaration.",
+      "present": true,
+      "sha256": "495052845e3b88633e201797b1123138068b1ea591dd9cd0b13f873954e0774f",
+      "title": "Original Authoring Authority Receiving Frontier",
+      "rootFields": [
+        "version",
+        "sources",
+        "storeFrontiers",
+        "reservedFrontiers",
+        "publicPluginFrontiers",
+        "expectedFakeWrappers",
+        "checkIdentityScopes",
+        "checkPluginSelfCalls",
+        "runtimeFrontiers",
+        "checkRuntimeCalls",
+        "guestBoundaryCalls",
+        "groupWireFrontier",
+        "draftHome"
+      ],
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/♻️frame-close/📐️schema.json",
+      "code": "schema-fixture-defines-schema",
+      "detail": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/♻️frame-close/📐️schema.json defines schema authority inside examples; contract identity cannot be declared inert.",
+      "present": true,
+      "sha256": "f6ee9229aef359319b04a3c15e346cac7f54bcc25b331d7243499bd15c6ca25d",
+      "title": null,
+      "rootFields": [
+        "schema",
+        "caller",
+        "cases",
+        "$schema"
+      ],
+      "ownership": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json",
+      "code": "schema-fixture-defines-schema",
+      "detail": "RawAllocationCloseFixtureV2 defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas.",
+      "present": true,
+      "sha256": "72a6e78eafcf0728fd03bb7196e54945b9d5735189537b0d90d900d74a7f7d86",
+      "title": "Semio OS Plugin Retained Command",
+      "rootFields": [],
+      "ownership": false
+    }
+  ]
+}

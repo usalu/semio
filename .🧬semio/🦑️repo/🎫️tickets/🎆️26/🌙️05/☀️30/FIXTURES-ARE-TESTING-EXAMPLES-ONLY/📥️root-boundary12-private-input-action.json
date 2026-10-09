@@ -1,0 +1,9 @@
+[
+  {
+    "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+    "action": "update",
+    "beforeSha256": "53609e95b9485fca0a3ea150b233be9cf652863e72b8f269172d4eef7c9f8a21",
+    "afterSha256": "9fef0ab37b15e3f98e5c0dada454e66be5693da07f1f954145731d5e384f3cfc",
+    "qualification": "Retained private original reader invocations, same existing Nx target and test budgets, no Source copies/native equivalence"
+  }
+]

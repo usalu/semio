@@ -22,16 +22,16 @@ pub(crate) fn capture(parent:&RewritingSnapshot,children:&ChildContentView)->Res
 
 pub(crate) fn owned_parent(parent:&RewritingSnapshot,read:ArtifactChildRead<SemioGraphSnapshot>,control:&mut SqliteSnapshotControl<'_>)->Result<RewritingSnapshot,ValueError>{
  read.check_identity(WORKING_CHILD_SLOT,&parent.working_graph.content.target)?;
- let record=control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint|{
+ let record=control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{
   let mut callback=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(progress.completed,progress.total);
-  let mut native=NativeEncodeControl::new(remaining,&mut callback);
+  let mut native_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
   let result=parent.__dsl_to_record_controlled(&mut native);
   (result,native.owned_bytes())
  })??;
  let record=semio_framework_dsl_record::native_encoding::EncodedRecord::from_record(record);
- let output=control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint|{
+ let output=control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{
   let mut callback=|progress:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(progress.completed,progress.total);
-  let mut native=NativeDecodeControl::new(remaining,&mut callback);
+  let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
   let result=RewritingSnapshot::__dsl_from_record_controlled(record.as_record(),&mut native);
   (result,native.owned_bytes())
  })??;

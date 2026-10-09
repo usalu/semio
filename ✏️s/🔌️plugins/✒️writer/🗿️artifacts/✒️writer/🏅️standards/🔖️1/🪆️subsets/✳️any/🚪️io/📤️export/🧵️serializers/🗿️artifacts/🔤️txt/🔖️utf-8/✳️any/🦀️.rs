@@ -18,7 +18,7 @@ impl Serializer<WriterSnapshot> for WriterIntoTxt {
     /// 🪧️ Lossy: only the document's content text survives — `schema`/`id`/`uri`/`language_id` have
     /// no home in a plain-text file.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         Ok(IoOutcome { value: IoPayload::Text(writer_text(from)), diagnostics: Vec::new() })
     }
 }

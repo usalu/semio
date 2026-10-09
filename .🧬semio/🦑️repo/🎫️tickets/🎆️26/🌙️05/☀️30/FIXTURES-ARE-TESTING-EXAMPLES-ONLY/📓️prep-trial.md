@@ -1,0 +1,7 @@
+# Store Preparation Trial Authority Retirement
+
+Root actual full fixture boundary current6 is RED for the exclusive Store preparation cases/receipt schema. The registered current-corpus facet produced scoped prep-red.log RED at that exact authority before removal. A first guarded edit refused because a peer added transferCases to the same Schema/tests; it made no mutations. Fresh preimages were captured without Source copies, and the current cut preserves those new original transfer laws and every current plain example byte.
+
+The exclusive Schema was removed. Only whole-fixture Ajv import/schema import/compile assertion was removed from the actual test consumer. Original independent SQLite five-axis comparisons and actual preparation/ephemeral birth/refusal/source laws remain. No Rust producer, grant, Source implementation, or original budget changed. prep-trial.json records the exact two Source actions and narrow existing private guard/call additions.
+
+Actual prep-source.log has2pass/0fail24assertions in61ms for that original file with its SQLite oracle. The registered combined Nx run is1/2.4s because the later existing Plugin ChildEmit source assertion still refuses a scalar source spelling; no whole-facet GREEN or native/runtime proof is claimed. Fresh preparation plain fixture before/after SHA is identical. Historical preimage mismatch is retained rather than adopted as own fixture authorship.

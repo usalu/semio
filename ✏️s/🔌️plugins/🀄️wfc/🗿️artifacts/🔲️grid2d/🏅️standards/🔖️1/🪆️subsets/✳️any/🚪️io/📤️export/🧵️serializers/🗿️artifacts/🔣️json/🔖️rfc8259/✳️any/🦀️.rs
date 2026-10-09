@@ -20,7 +20,7 @@ pub struct Grid2dIntoJson;
 impl Serializer<Grid2dSnapshot> for Grid2dIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Grid2dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &Grid2dSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let json = serialize(from);
         let bytes = <JsonSnapshot as store::ArtifactPack>::encode_pack(&json);
         if bytes.is_empty() {

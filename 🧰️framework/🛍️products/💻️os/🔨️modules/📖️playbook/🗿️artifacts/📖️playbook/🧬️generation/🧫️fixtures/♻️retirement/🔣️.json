@@ -1,0 +1,184 @@
+{
+  "schema": "semio.playbook.generation-lease-retirement.v1",
+  "baselines": [
+    1,
+    4096
+  ],
+  "aliasMode": "lease",
+  "weakLeaseMode": "retainUntilReturned",
+  "cases": [
+    {
+      "id": "Exact Full Close",
+      "grant": [
+        1,
+        8,
+        13,
+        17,
+        2
+      ],
+      "receipt": [
+        1,
+        8,
+        13,
+        17,
+        2
+      ],
+      "accepted": true
+    },
+    {
+      "id": "Shared Lease Close",
+      "grant": [
+        1,
+        0,
+        0,
+        128,
+        1
+      ],
+      "receipt": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "accepted": true
+    },
+    {
+      "id": "Zero Items Hold",
+      "grant": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "receipt": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "accepted": true
+    },
+    {
+      "id": "Item Refusal",
+      "grant": [
+        0,
+        8,
+        13,
+        17,
+        2
+      ],
+      "receipt": [
+        1,
+        8,
+        13,
+        17,
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "id": "Copy Refusal",
+      "grant": [
+        1,
+        7,
+        13,
+        17,
+        2
+      ],
+      "receipt": [
+        1,
+        8,
+        13,
+        17,
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "id": "Capacity Refusal",
+      "grant": [
+        1,
+        8,
+        12,
+        17,
+        2
+      ],
+      "receipt": [
+        1,
+        8,
+        13,
+        17,
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "id": "Release Refusal",
+      "grant": [
+        1,
+        8,
+        13,
+        16,
+        2
+      ],
+      "receipt": [
+        1,
+        8,
+        13,
+        17,
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "id": "Depth Refusal",
+      "grant": [
+        1,
+        8,
+        13,
+        17,
+        1
+      ],
+      "receipt": [
+        1,
+        8,
+        13,
+        17,
+        2
+      ],
+      "accepted": false
+    }
+  ],
+  "conservation": [
+    [
+      17,
+      7,
+      24
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      4096,
+      32,
+      4128
+    ]
+  ],
+  "rejectedConservation": [
+    [
+      17,
+      7,
+      23
+    ],
+    [
+      4096,
+      32,
+      4096
+    ]
+  ]
+}

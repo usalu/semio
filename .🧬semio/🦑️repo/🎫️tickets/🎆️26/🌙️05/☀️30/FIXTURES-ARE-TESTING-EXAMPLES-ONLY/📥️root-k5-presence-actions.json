@@ -1,0 +1,20 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "a384b405cae4edeb3f67d9a7044ffabf1b63c281bafedfb478d2aeae6a79aec7",
+    "afterSha256": "7b81429da57105d120e3be3409c3d75fd93103d5bb44082e4439685651101978",
+    "action": "Bind original tests to actual private component helper/constant owner; import original atomic Ordering without exposing test-only helper to runtime."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "f2137c6d1f046740d317d71990a13e2cc82c6900e53bb9c0d9ac06fdc74cdff9",
+    "afterSha256": "3659df3afbf71368e11789fe1ec3a0424fb609d176ea41869e0fe8428148f185",
+    "action": "Bind original tests to actual private component helper/constant owner; import original atomic Ordering without exposing test-only helper to runtime."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "4025e9834fa3c09303038d3611c81ce070ff5e1b0ecfc7834d163aeafcdb81d4",
+    "afterSha256": "5cab50cd5e6e7f4485d87fec976d16d6aa3da395a36fcb118c643f4a8060ccbd",
+    "action": "Bind original tests to actual private component helper/constant owner; import original atomic Ordering without exposing test-only helper to runtime."
+  }
+]

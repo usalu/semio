@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Owned Host Checkpoint Bytes",
+  "type": "array",
+  "minItems": 20,
+  "items": [
+    {
+      "type": "integer",
+      "const": 83
+    },
+    {
+      "type": "integer",
+      "const": 77
+    },
+    {
+      "type": "integer",
+      "const": 79
+    },
+    {
+      "type": "integer",
+      "const": 87
+    },
+    {
+      "type": "integer",
+      "const": 78
+    },
+    {
+      "type": "integer",
+      "const": 72
+    },
+    {
+      "type": "integer",
+      "const": 48
+    },
+    {
+      "type": "integer",
+      "const": 49
+    }
+  ],
+  "additionalItems": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 255
+  },
+  "$comment": "Original borrowed metadata JSON length u32 little endian; original actor checkpoint length u64 little endian; exact metadata and actor extents follow."
+}

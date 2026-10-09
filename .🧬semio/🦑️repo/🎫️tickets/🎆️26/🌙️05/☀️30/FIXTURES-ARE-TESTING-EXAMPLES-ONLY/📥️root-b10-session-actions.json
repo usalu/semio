@@ -1,0 +1,14 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+    "beforeSha256": "cfc804ef326c69e1e140aa9e47e3170366e2f4cb02e82605bc96f96e78a34406",
+    "afterSha256": null,
+    "action": "Retire fresh whole Session example collection schema."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+    "beforeSha256": "0bb79433f345d6647907550c83e8afc5c8c62cdabcd24a955a6657854a72bf01",
+    "afterSha256": "687338396a0117cb6bf6b8d88c579dcf5974e47b997cb970ee19e993d9ab674b",
+    "action": "Remove exact recreated whole-schema admission/mirrored negatives only; retain original JSONPatch/UTF8/identity/cancellation/retention controls."
+  }
+]

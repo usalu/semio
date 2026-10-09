@@ -1,0 +1,15 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🚫️refusal/🧬️schema/🔣️.json",
+    "action": "remove",
+    "beforeSha256": "8ca11b566e0ae91d4890b3bd3bdf078e5631357930833dc53352e9f785109c5f",
+    "afterSha256": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "90c8f3b620d9df369d86c44a4cbd4f5b0735bee37608967f1720aa7385857847",
+    "afterSha256": "51f20652322d414f58c38a7f0ab1ab7df9d5add065a070ed907ff634fcfdb709",
+    "qualification": "Original plain examples validate only canonical Value progress; actual SQLite/grammar/failure laws preserved"
+  }
+]

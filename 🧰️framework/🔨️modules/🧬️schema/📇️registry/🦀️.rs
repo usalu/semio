@@ -634,7 +634,7 @@ pub fn registered_referenced_schema_documents() -> Vec<&'static str> { catalog()
 
 //#region 🔖️SchemaExportEntries
 /// 📤️ The runtime export registry rendered as the `schema-export-registry-entries-v1` dump that
-/// `schema verify --rust-entries` reads. Entries are sorted and deduplicated by
+/// `schema verify` reads. Entries are sorted and deduplicated by
 /// `(scope, export, format)`, so the dump of one binary is byte-stable across runs.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SchemaExportEntries {

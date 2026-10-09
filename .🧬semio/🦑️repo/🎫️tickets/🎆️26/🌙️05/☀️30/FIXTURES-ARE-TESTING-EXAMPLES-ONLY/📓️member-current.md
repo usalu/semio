@@ -1,0 +1,15 @@
+# Current Direct Member Input Custody
+
+InitialMemberStoreOpen CaptureGenesis and CopyHistory now fund one exact original contiguous Vec input birth before allocation, installation or copying. Item, depth and capacity denials leave the original absent slot unchanged. Allocation layout is checked before the fallible reserve; an accepted buffer is retained before receipt admission. The original allocation extent is published from its actual Vec capacity.
+
+Birth and copying happen in separate turns. Both source-to-page and page-to-original-buffer copies fit the independent caller copy axis and remaining work fuel. A zero actual byte copy publishes no copied item. A private input-buffer receipt records only these known turns; it is not a complete public MemberOpen physical advancement contract.
+
+The existing plain birth fixture now holds the individual inputBuffer capacity37 and explicit five-axis policy. All prior values remain unchanged. TypeScript validates that actual policy with the genuine production Grant schema, then compares Buffer/RFC6902 admission behavior. There is no whole-corpus validator or new schema authority. The actual Rust test reads the same plain case with Serde and checks zero/below-capacity/depth denials, actual System birth, occupied-slot original pointer identity, separately funded retirement and terminal Drop. It has not run.
+
+The initial buffer test dispatch7755 was a test-string syntax failure and has no production RED credit. Corrected source RED66757 completed Nx1 before production admission edits. Green12068 completed Nx0/3.8 seconds,2 laws/47 assertions plus depth1/612. Shared plain renewal76034 passed. Combined25945 completed Nx0/2.2 seconds,10 selected laws. Final focused28010 after the two-copy fuel correction completed Nx0/1.8 seconds,3 selected laws plus depth1/612; ten original Rust files parsed without source copies.
+
+An additional target binding law produced actual source RED before repair. Hydration now replaces the original address by transferring its nonzero empty backing into the retained target_address slot; BeginTargets admits that original for paid cleanup before the next transition. This avoids confusing an empty logical vector with zero physical capacity. Existing controlled target admission and cancellation retain the original slot.
+
+Full MemberOpen advancement remains unfinished. The current SnapshotOpen step(cx), typed P::decode_pack and RetainedHistoryDecode scalar advancement still lack a genuine supplied five-axis physical receipt. Those paths were not reported as controlled by this direct-buffer repair. No guessed payload progress, demand-priced caller grant, codec disablement or old API alias was introduced.
+
+Exact actions and current source observer hashes are in member-current.json. Existing concurrent bodies and test values were preserved. Permanent commands, original Native15/Hub5 and compiler/package/feature/profile budgets were unchanged. Normal Replication native attempt75509 stopped before Cargo at Nx graph admission; justified identical fresh-epoch renewal96207 is now active and is separately recorded.

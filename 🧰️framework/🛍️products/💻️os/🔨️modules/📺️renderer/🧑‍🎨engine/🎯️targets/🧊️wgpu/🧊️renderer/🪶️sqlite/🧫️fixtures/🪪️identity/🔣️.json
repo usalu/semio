@@ -1,0 +1,10 @@
+{
+  "typedOwner": "NativeSocketProbeSnapshot",
+  "sqlCapabilityIndependent": true,
+  "guestFields": [
+    "pluginId",
+    "packageHash",
+    "schema"
+  ],
+  "opaqueFallbackAllowed": false
+}

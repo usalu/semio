@@ -1,0 +1,45 @@
+{
+  "endpoints": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "currentSha256": "e9de34b64e6418ce2d1e11f0327fc090c08a63aa21b195d0d50c3efbb2a07581",
+      "role": "authored narrow blocks; remainder observer only"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "currentSha256": "9d9addf2a96c139f7426a55b876d8767af0041e288531ceb5c62b3528cee07be",
+      "role": "authored narrow blocks; remainder observer only"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "currentSha256": "72699dc8abcb427a9717a6157eb31a3d51ee99c56ada1887328f5e84981f25b6",
+      "role": "authored narrow blocks; remainder observer only"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs",
+      "currentSha256": "cd098a38ff1c45649a9a3eec1c359a24d074a9bbddc3aa876b44de28764705d4",
+      "role": "authored narrow blocks; remainder observer only"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+      "currentSha256": "e8573b6a583a8e4428c1b930d4376ebfba443b9c6efa60299cf445343b52f1f8",
+      "role": "authored narrow blocks; remainder observer only"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "currentSha256": "2eddd0f94a76fd9d5098bab33481c80fb76dc94f5f1bfbced84e19fa5a3b1230",
+      "role": "authored narrow blocks; remainder observer only"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧫️fixtures/🔣️.json",
+      "currentSha256": "47242c7045f327b163bfc469942146a879f4658e6992449a980ba3405106ca93",
+      "role": "authored narrow blocks; remainder observer only"
+    }
+  ],
+  "proof": {
+    "red": "71485 Nx1/764ms no supplied step grant",
+    "green": "97380 Nx0/4.1s3laws85+depth1/612+15originalRustgrammar",
+    "native": "member_actual_snapshot_input_turns_preserve_original_grants_and_system_receipts authored/unrun",
+    "scope": "paid input pending turn; coldTypedReady/fullMember/H advancement remains required"
+  }
+}

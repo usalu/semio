@@ -1,0 +1,11 @@
+{
+  "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/pcn-data",
+  "logicalRemovedBytes": 349422345,
+  "physicalRemovedBytes": 355045376,
+  "beforeFree": 2448502784,
+  "afterFree": 2808393728,
+  "observedFreeDelta": 359890944,
+  "psNoConsumer": true,
+  "lsofExit": 1,
+  "preserved": "all receipts/logs/preimages/inputs/audits, foreign jobs/caches, durable Cargo"
+}

@@ -1,6 +1,9 @@
 //! 💾️ Binary operation representation contracts and owned octets.
 
 //#region 🔖️OpBinary
+#[path="📑️operation-sequence/🦀️.rs"]
+pub mod operation_sequence;
+
 #[path = "📦️bytes/🦀️.rs"]
 pub mod operation_bytes;
 

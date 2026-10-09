@@ -10,10 +10,12 @@ export class NativeDecodeControl {
   private started=false;
   private stage=0;
   private maximum:number;
-  constructor(maximumBytes:number,private readonly progress:(event:NativeDecodeProgress)=>boolean,private readonly signal?:AbortSignal) {
+  constructor(maximumBytes:number,private progress:(event:NativeDecodeProgress)=>boolean,private readonly signal?:AbortSignal) {
     if(!Number.isSafeInteger(maximumBytes)||maximumBytes<0)throw new ValueError("ownershipLimit", "Invalid native decoding allocation ceiling");
     this.maximum=maximumBytes;
   }
+  /** 🔭️ Composes the original and nested observers on the same cumulative caller owner. */
+  async scopedObserver<T>(observer:(event:NativeDecodeProgress)=>boolean,operation:(control:NativeDecodeControl)=>Promise<T>):Promise<T>{const parent=this.progress;this.progress=event=>parent(event)&&observer(event);try{return await operation(this);}finally{this.progress=parent;}}
   /** 📏️ Current domain allocation ceiling within the caller allowance. */
   get maximumBytes():number{return this.maximum;}
   /** 📊️ Ownership admitted throughout the complete decoding operation. */

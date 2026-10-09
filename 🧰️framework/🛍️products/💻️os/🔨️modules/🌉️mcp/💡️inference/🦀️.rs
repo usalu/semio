@@ -1658,6 +1658,8 @@ struct GuestInferenceRun {
     payload: Vec<u8>,
 }
 
+const INFERENCE_MEMORY_POLICY: semio_framework_value::retained_clone::RetainedCloneGrant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 1_048_576, maximum_release_bytes: 268_435_456, maximum_depth: 1024 };
+
 /// 🏃️ The one guest engine both `inference_run` and a guest job drive: bind the artifact's document
 /// into the request, route it to the service's plugin guest, run it under `cancel`, reporting each
 /// step on `job_id`. `Ok(None)` is a run the caller's cancel stopped.
@@ -1680,6 +1682,7 @@ fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &crate::acti
         generation: arguments.get("generation").and_then(serde_json::Value::as_u64).unwrap_or(0),
         cancellation_id: arguments.get("cancellationId").and_then(serde_json::Value::as_str).map_or_else(mint_inference_request_id, str::to_string),
         work_units: arguments.get("workUnits").and_then(serde_json::Value::as_u64).unwrap_or(INFERENCE_DEFAULT_WORK_UNITS),
+        retained: INFERENCE_MEMORY_POLICY,
         canonical_payload: inference_run_payload_bytes(arguments),
         artifact_id: artifact_id.unwrap_or_default().to_string(),
         artifact_document,

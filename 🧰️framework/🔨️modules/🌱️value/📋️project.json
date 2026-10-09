@@ -1,6 +1,17 @@
 {
   "name": "@semio-tech/framework-value",
   "targets": {
+    "test-heap-owner": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test heap-owner",
+        "forwardAllArgs": true,
+        "cwd": "🧰️framework/🔨️modules/🌱️value"
+      }
+    },
     "test-neutral-owner": {
       "executor": "nx:run-commands",
       "options": {

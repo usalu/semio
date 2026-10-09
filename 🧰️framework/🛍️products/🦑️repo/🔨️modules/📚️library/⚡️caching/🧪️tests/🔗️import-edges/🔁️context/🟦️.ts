@@ -54,7 +54,7 @@ for (const vector of fixture.contexts) test(`immutable source facts resolve curr
   const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifact) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
   mkdirSync(artifact, { recursive: true });
-  const root = mkdtempSync(join(artifact, `import-context-${vector.id}-`)), previous = process.env.NX_WORKSPACE_DATA_DIRECTORY;
+  const root = mkdtempSync(join(artifact, `c-${createHash("sha256").update(vector.id).digest("hex").slice(0,8)}-`)), previous = process.env.NX_WORKSPACE_DATA_DIRECTORY;
   process.env.NX_WORKSPACE_DATA_DIRECTORY = join(root, ".nx/workspace-data");
   const hash = createHash("sha256").update(vector.source).digest("hex");
   let current: Phase, calls: { file: string; package: string }[] = [];
@@ -81,12 +81,13 @@ for (const vector of fixture.contexts) test(`immutable source facts resolve curr
         writeFileSync(join(dirname(manifest), "index.js"), "module.exports = {};\n");
       }
       const imported = await oracle(phase.file, vector.source);
-      const resolved = spawnSync("node", ["-e", 'const fs=require("node:fs"),{TargetProjectLocator}=require(process.argv[1]),x=JSON.parse(fs.readFileSync(0,"utf8")),l=new TargetProjectLocator(x.nodes,x.externalNodes,new Map(),new Map()); const core=x.imported.filter(require("node:module").isBuiltin);console.log(JSON.stringify({core,targets:[...new Set(x.imported.map(s=>l.findProjectFromImport(s,s.startsWith(".")?x.file:x.absolute)).filter(Boolean))].sort()}));', require.resolve("nx/src/plugins/js/project-graph/build-dependencies/target-project-locator")], { input: JSON.stringify({ nodes, externalNodes, imported, file: phase.file, absolute }), encoding: "utf8", timeout: 10000 });
+      const resolved = spawnSync("node", ["-e", 'const fs=require("node:fs"),{TargetProjectLocator}=require(process.argv[1]),x=JSON.parse(fs.readFileSync(0,"utf8")),l=new TargetProjectLocator(x.nodes,x.externalNodes,new Map(),new Map()); const core=x.imported.filter(require("node:module").isBuiltin);console.log(JSON.stringify({core,targets:[...new Set(x.imported.map(s=>l.findProjectFromImport(s,s.startsWith(".")?x.file:x.absolute)).filter(Boolean))].sort()}));', require.resolve("nx/src/plugins/js/project-graph/build-dependencies/target-project-locator")], { input: JSON.stringify({ nodes, externalNodes, imported, file: phase.file, absolute }), env:{...process.env,NX_WORKSPACE_ROOT_PATH:root}, encoding: "utf8", timeout: 10000 });
       expect(resolved.status, resolved.stderr).toBe(0);
       const { targets: expected, core } = JSON.parse(resolved.stdout) as { targets: string[]; core: string[] };
       expect(expected, `${vector.id}: installed Nx resolution`).toEqual(phase.targets);
       const projectFiles = { caller: [{ file: phase.file, hash }] }, byPackage = new Map(Object.entries(phase.packages)), locked = { resolveImport: resolver, externalNodes };
       for (const temperature of ["cold", "warm"]) {
+        expect(join(cacheInternals.moduleSourceFactCacheRoot(root),"0".repeat(64)+".json").length, `${vector.id}: cache output path admission`).toBeLessThanOrEqual(256);
         calls = [];
         const targets = new Set<string>();
         await cacheInternals.collectImportEdges(root, projectFiles, projects, byPackage, locked, (_source: string, target: string) => { targets.add(target); });

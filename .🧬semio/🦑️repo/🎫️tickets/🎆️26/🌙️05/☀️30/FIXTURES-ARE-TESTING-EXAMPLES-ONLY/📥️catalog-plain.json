@@ -1,0 +1,20 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧫️fixtures/🔣️.json",
+    "beforeSha256": "030baeed098de37abdf01e5f9fed401e25319ab692db6ccd54007af393a23cd4",
+    "afterSha256": "e71b0ed491e9b1fb9fdb7685dbf9abb0d3beeb0f393617692326e7d65681f7df",
+    "action": "append plain policy/extents/cancel cuts, every original value preserved; no corpus authority"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "e94de05bebc25daa3af219b2caad3c2534a07b330a22171bab84ade5317709f2",
+    "afterSha256": "42c8c08914e0cb02f00022ad49506589526b30672ad50406a5492c1205e631da",
+    "action": "consume same plain supplied policy, production Grant schema only; no whole corpus validator"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "beforeSha256": "ed0e50f201eb9937e243b199db1557546fe0a04920aaf09ff9e1d547b2030c57",
+    "afterSha256": "72e056ebe0214bed64888ed9abcabbf57a68a14113acaeb54052f1fb6a219116",
+    "action": "consume same plain supplied policy, production Grant schema only; no whole corpus validator"
+  }
+]

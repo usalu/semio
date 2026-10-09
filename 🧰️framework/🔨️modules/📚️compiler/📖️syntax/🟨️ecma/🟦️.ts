@@ -289,11 +289,28 @@ class EcmaParser {
   }
   private primaryValue(): Omit<EcmaExpression, "start" | "end"> | null {
     const token = this.peek();
+    if (token.text === "async" && !this.lineBreak(token.end, this.peek(1).start) && (this.peek(1).text === "(" && this.tokens[this.matching(this.index + 1, "(", ")") + 1]?.text === "=>" || this.peek(1).kind === "identifier" && this.peek(2).text === "=>" || this.peek(1).text === "function")) {
+      this.take(); const value = this.primaryValue();
+      return value && ["arrow", "function"].includes(value.kind) ? { ...value, async: true } : null;
+    }
+    if (token.text === "function") {
+      this.take(); const name = this.peek().kind === "identifier" ? this.take().text : undefined;
+      if (!this.consume("(")) return null;
+      const close = this.matching(this.index - 1, "(", ")"); if (close < 0) return null;
+      const parameters = this.parameters(this.tokens.slice(this.index, close)); if (!parameters) return null;
+      while (this.index <= close) this.take();
+      const body = this.block();
+      return body ? { kind: "function", name, parameters, body } : null;
+    }
     if (token.text === "await" || token.text === "!" || token.text === "+" || token.text === "-" || token.text === "delete" || token.text === "yield") {
       this.take(); const object = this.expression(9); return object ? { kind: "unary", operator: token.text, object } : null;
     }
     if (token.text === "new") {
-      this.take(); const callee = this.primary();
+      this.take(); let callee = this.primary();
+      while (callee && this.consume(".")) {
+        const property = this.take(); if (property.kind !== "identifier") return null;
+        callee = this.node({ kind: "member", object: callee, property: property.text }, callee.start);
+      }
       if (!callee || !this.consume("(")) return null;
       const args = this.expressionList(")");
       return args ? { kind: "new", callee, arguments: args } : null;
@@ -303,7 +320,7 @@ class EcmaParser {
       if (close > this.index && this.tokens[close + 1]?.text === "=>") {
         const parameters = this.parameters(this.tokens.slice(this.index + 1, close));
         if (!parameters) return null;
-        this.index = close + 2;
+        while (this.index <= close + 1) this.take();
         const body = this.peek().text === "{" ? this.block() : this.expression();
         return body ? { kind: "arrow", parameters, body } : null;
       }
@@ -347,11 +364,11 @@ class EcmaParser {
       this.take();
       const expressions: EcmaExpression[] = [];
       for (const source of token.expressions ?? []) {
-        const parser = new EcmaParser(ecmaTokens(source.text, source.start, this.checkCancellation), this.checkCancellation, source.text, source.start), expression = parser.expression();
+        const parser = new EcmaParser(ecmaSemanticTokens(source.text, source.start, this.checkCancellation), this.checkCancellation, source.text, source.start), expression = parser.expression();
         if (!expression || parser.peek().kind !== "eof") return null;
         expressions.push(expression);
       }
-      return { kind: "template", expressions };
+      return { kind: "template", value: token.text, expressions };
     }
     if (["string", "number", "regex"].includes(token.kind) || ["true", "false", "null", "undefined"].includes(token.text)) { this.take(); return { kind: token.kind === "regex" ? "regex" : "literal", value: token.text }; }
     if (token.kind !== "identifier") return null;
@@ -365,6 +382,19 @@ class EcmaParser {
   expression(minimum = 0): EcmaExpression | null {
     const start = this.peek().start, value = this.expressionValue(minimum);
     return value ? this.node(value, start) : null;
+  }
+  private annotation(): string | null {
+    const start = this.peek().start, stack: string[] = [], pairs: Readonly<Record<string, string>> = { "{": "}", "[": "]", "(": ")", "<": ">" };
+    let consumed = false;
+    while (this.peek().kind !== "eof") {
+      const token = this.peek();
+      if (!stack.length && [",", ")", ";", "=", "=>", "as", "satisfies", "+", "-", "*", "/", "===", "!==", "&&", "||", "??"].includes(token.text)) break;
+      if (pairs[token.text]) stack.push(pairs[token.text]!);
+      else if (["}", "]", ")", ">"].includes(token.text)) { if (stack.pop() !== token.text) return null; }
+      else if (!["identifier", "string", "number"].includes(token.kind) && ![":", ";", "?", "|", "&", ".", ",", "=>"].includes(token.text)) return null;
+      this.take(); consumed = true;
+    }
+    return consumed && !stack.length ? this.source.slice(start - this.sourceOffset, this.tokens[this.index - 1]!.end - this.sourceOffset) : null;
   }
   private expressionValue(minimum: number): EcmaExpression | null {
     let left = this.primary();
@@ -384,6 +414,10 @@ class EcmaParser {
         left = this.node({ kind: "call", callee: left, arguments: args }, left.start); continue;
       }
       if (this.consume("!")) { left = this.node({ kind: "nonnull", object: left }, left.start); continue; }
+      if (minimum < 8 && ["as", "satisfies"].includes(this.peek().text)) {
+        const operator = this.take().text, value = this.annotation(); if (value === null) return null;
+        left = this.node({ kind: "assertion", operator, value, object: left }, left.start); continue;
+      }
       const precedence: Readonly<Record<string, number>> = { "=": 1, "??=": 1, "+=": 1, "-=": 1, "*=": 1, "/=": 1, "??": 3, "||": 4, "&&": 5, "===": 6, "!==": 6, "==": 6, "!=": 6, "<": 7, "<=": 7, ">": 7, ">=": 7, "+": 8, "-": 8, "*": 9, "/": 9, "%": 9 };
       const operator = this.peek().text, rank = precedence[operator] ?? 0;
       if (rank <= minimum) break;
@@ -513,8 +547,12 @@ class EcmaParser {
   }
   private statementValue(): Omit<EcmaStatement, "start" | "end"> | null {
     if (this.peek().kind === "eof" || this.peek().text === "}") return null;
+    if (["while", "do", "switch", "try", "catch", "finally", "break", "continue", "with", "debugger", "interface", "type"].includes(this.peek().text)) return null;
     if (this.peek().text === "import" && this.peek(1).text !== "(") return this.importStatement();
     if (this.consume("export")) { const statement = this.statement(); return statement ? { kind: "export", statement } : null; }
+    if (this.peek().text === "async" && this.peek(1).text === "function" && !this.lineBreak(this.peek().end, this.peek(1).start)) {
+      this.take(); const value = this.functionStatement(); return value ? { ...value, async: true } : null;
+    }
     if (this.peek().text === "function") return this.functionStatement();
     if (this.peek().text === "@") return null;
     if (this.peek().text === "class") return this.classStatement();
@@ -550,11 +588,13 @@ class EcmaParser {
   }
 }
 
+function ecmaSemanticTokens(content: string, offset = 0, checkCancellation?: () => void): readonly EcmaToken[] {
+  return ecmaTokens(content, offset, checkCancellation).map(token => token.kind === "identifier" ? { ...token, text: ecmaIdentifierValue(token, checkCancellation)! } : token);
+}
 
 /** 🌲️ Returns a complete closed syntax tree, or unresolved syntax without partial authority. */
 export function ecmaProgram(content: string, checkCancellation?: () => void): readonly EcmaStatement[] | null {
-  const tokens = ecmaTokens(content, 0, checkCancellation);
+  const tokens = ecmaSemanticTokens(content, 0, checkCancellation);
   if (tokens.some(token => token.kind === "invalid")) return null;
-  const semantic = tokens.map(token => token.kind === "identifier" ? { ...token, text: ecmaIdentifierValue(token, checkCancellation)! } : token);
-  return new EcmaParser(semantic, checkCancellation, content).program();
+  return new EcmaParser(tokens, checkCancellation, content).program();
 }

@@ -378,7 +378,7 @@ fn admit_native_rows(record: &semio_framework_dsl_record::RecordValue, maximum: 
 }
 impl ArtifactSqliteSnapshot for Block5dSnapshot {
     const SQLITE_SCHEMA: &'static str = SQL;
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         admit_schema(c)?;
         c.check_rows(7)?;
         let maximum = c.limits().max_rows;
@@ -386,16 +386,16 @@ impl ArtifactSqliteSnapshot for Block5dSnapshot {
             payload,
             <Self as store::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
-            |record, native| {
+            |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
                 admit_native_rows(record, maximum, native)?;
                 Self::__dsl_from_record_controlled(record, native)
-            },
+            })(); *snapshot_output = Some(constructed?); Ok(()) },
             c,
-        )
+        native_control)
     }
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>) -> Result<store::io_schema::IoPayload, ValueError> {
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
-        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c)
+        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
     }
     fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         let total = forecast(self, c, SqliteSnapshotPhase::ProjectSnapshot)?;
@@ -537,4 +537,3 @@ impl ArtifactSqliteSnapshot for Block5dSnapshot {
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

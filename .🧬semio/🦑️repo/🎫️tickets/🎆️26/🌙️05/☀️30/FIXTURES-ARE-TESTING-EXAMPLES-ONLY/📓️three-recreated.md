@@ -1,0 +1,7 @@
+# Three Recreated Testing Schemas
+
+The renewed current corpus guards in Native and Publication rejected exactly three recreated physical authorities: Flow session-source and the two VCS identity/receiving envelopes. The newer VCS receiving schema added groupWireFrontier, and the Flow whole-trial wrapper added latch-admission shape checks. These are still whole testing-envelope contracts. No actual writer/creator has been established. The Source/data changes were inspected freshly; no prior whole-file content was restored.
+
+Root retired the three exact current documents and only the recreated Flow Ajv/schema imports, whole-fixture admission and mirror-shape negative checks. All fresh actual UTF8/Buffer, JSON, RFC6902 publication and latch behavior was retained. Three plain input files were hash-checked unchanged across the mutation as observations, not Source authorship. `📥️three-recreated-preimages.json` and `📥️three-recreated-actions.json` retain this narrow record without Source copies.
+
+Original normal Nx `semio-framework-os-flow-core:test-session-source` session 22714 terminated GREEN (exit 0, 997 ms). Its original Source test executed one actual law and 39 assertions in 20 ms, with DEBUG for three actual cases, independent UTF8/Buffer/JSONPatch, unchanged original shared publication, and latch admission/reset. The full physical/corpus guard and native/mounted-runtime verification remain outstanding; this receipt does not establish their success.

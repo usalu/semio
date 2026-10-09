@@ -46,5 +46,5 @@ mod manifest;
 // `plugin_exports!` entry points — no other crate ever needs to disable them. This
 // crate's `Cargo.toml` never declared a `plugin-entry` feature, so the gate this line used to
 // carry was permanently false: the export never compiled in, on any build, ever.
-semio_framework_plugin::plugin_exports!(manifest::plugin, manifest::DemonstratorApps);
+semio_framework_plugin::plugin_exports!({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }, manifest::plugin, manifest::DemonstratorApps);
 //#endregion 🛂️Manifest

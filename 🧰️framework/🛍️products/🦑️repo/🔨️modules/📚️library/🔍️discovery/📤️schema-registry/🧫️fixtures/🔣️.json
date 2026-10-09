@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "name": "quoted-generator",
+      "generator": "native registry \"🐚\"\n\u0000",
+      "expectedValid": true
+    },
+    {
+      "name": "empty-generator",
+      "generator": "",
+      "expectedValid": false
+    },
+    {
+      "name": "wrong-contract",
+      "contractId": "wrong",
+      "expectedValid": false
+    },
+    {
+      "name": "invalid-format",
+      "format": "unknown",
+      "expectedValid": false
+    }
+  ]
+}

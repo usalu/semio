@@ -33,7 +33,13 @@ impl OwnedChildEmit {
     pub fn retirement_demands(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
         if let Some(batch)=self.mutations.as_ref(){let mut demand=batch.next_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"owned child source depth overflow"))?;return Ok(demand);}
-        Ok(self.metadata.as_ref().map_or(Default::default(),|metadata|RetirementDemand{release_bytes:metadata.next_close_byte_demand(),depth:1,..Default::default()}))
+        if let Some(metadata)=self.metadata.as_ref(){
+            if metadata.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+            let mut demand=metadata.retirement_demands()?;
+            demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"owned metadata depth overflow"))?;
+            return Ok(demand);
+        }
+        Ok(Default::default())
     }
     /// 🎟️ Keeps logical work independent from original typed source and metadata physical release.
     pub fn close_granted(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
@@ -51,10 +57,11 @@ impl OwnedChildEmit {
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(metadata)=self.metadata.as_mut(){
-            let step=metadata.close_one(1,grant.maximum_release_bytes);
-            let progress=match step{PluginCloseStep::Pending{released_items,released_bytes}=>RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()},PluginCloseStep::Complete=>{self.metadata.take();RetainedCloneProgress{copied_items:1,..Default::default()}},PluginCloseStep::Blocked{..}|PluginCloseStep::AwaitingInput{..}=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"funded child metadata release refused its declared whole allocation"))};
-            if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"child metadata exceeded its physical release grant"));}
-            return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)});
+            if metadata.terminal_is_empty(){self.metadata.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+            let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
+            let step=metadata.close_one(child)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child,step,metadata.terminal_is_empty(),"original owned child metadata")?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
@@ -75,7 +82,7 @@ trait ChildEmitPreparationOwner: Send {
     fn begin_close(&mut self);
     fn close_step(&mut self, grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>;
     fn terminal_is_empty(&self)->bool;
-    fn retirement_demands(&mut self, body:usize)->Result<RetirementDemand,ValueError>;
+    fn retirement_demands(&self, body:usize)->Result<RetirementDemand,ValueError>;
     fn refusal(&self)->Option<&::protocol::ProtocolError>;
     fn retirement_refusal(&self)->Option<&semio_framework_value::ValueError>;
     fn accepted_prefix(&self)->Option<&ChildEmit>;
@@ -144,7 +151,7 @@ impl ChildEmitPreparation {
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{self.owner.close_step(grant)}
     pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
     pub fn owner_cell_bytes(&self)->usize{std::mem::size_of_val(self.owner.as_ref())}
-    pub fn retirement_demands(&mut self,body:usize)->Result<RetirementDemand,ValueError>{self.owner.retirement_demands(body)}
+    pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.owner.retirement_demands(body)}
     pub fn refusal(&self)->Option<&::protocol::ProtocolError>{self.owner.refusal()}
     pub fn retirement_refusal(&self)->Option<&semio_framework_value::ValueError>{self.owner.retirement_refusal()}
     pub fn accepted_prefix(&self)->Option<&ChildEmit>{self.owner.accepted_prefix()}
@@ -364,14 +371,11 @@ where M:Send+'static {
             if step.progress()!=idle{return Ok(PluginLifecycleStep::Progress(step.progress()));}
         }
         if let Some(prefix)=self.prefix.as_mut(){
-            let progress=match prefix.close_one(1,grant.maximum_release_bytes){
-                PluginCloseStep::Pending{released_items,released_bytes}=>RetainedCloneProgress{copied_items:released_items,released_bytes,..idle},
-                PluginCloseStep::Complete=>{self.prefix.take();RetainedCloneProgress{copied_items:1,..idle}},
-                PluginCloseStep::Blocked{reason}=>return Ok(PluginLifecycleStep::Blocked{reason}),
-                PluginCloseStep::AwaitingInput{reason}=>return Ok(PluginLifecycleStep::AwaitingInput{reason}),
-            };
-            if !progress.fits(grant){return Err(Fault::from("owned-child-emission-prefix-release-over-grant"));}
-            return Ok(PluginLifecycleStep::Progress(progress));
+            if prefix.terminal_is_empty(){self.prefix.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
+            let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
+            let step=prefix.close_one(child).map_err(value_fault)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child,step,prefix.terminal_is_empty(),"original child preparation prefix").map_err(value_fault)?;
+            return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if self.cause.is_some(){
             let step=close_protocol_owned_cause_one(&mut self.cause,grant);
@@ -383,12 +387,15 @@ where M:Send+'static {
     fn terminal_is_empty(&self)->bool{
         self.remaining.is_none()&&self.owned_source.is_none()&&self.current.is_none()&&self.retirement.is_none()&&self.retired_schema.is_none()&&self.prefix.is_none()&&self.cause.is_none()&&self.close_refusal.is_none()&&self.factory.is_none()&&self.backing_bytes==0
     }
-    fn retirement_demands(&mut self,body:usize)->Result<RetirementDemand,ValueError>{
+    fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if !self.retire_stage_is_empty(){return self.retire_demands(body);}
-        if let Some(prefix)=self.prefix.as_ref(){return Ok(RetirementDemand{release_bytes:prefix.next_close_byte_demand(),depth:1,..Default::default()});}
-        if let Some(cause)=self.cause.as_mut(){
-            return Ok(match protocol_owned_cause_text(cause){Ok(Some(text))=>RetirementDemand{release_bytes:text.capacity(),depth:1,..Default::default()},Ok(None)=>RetirementDemand{depth:1,..Default::default()},Err(())=>Default::default()});
+        if let Some(prefix)=self.prefix.as_ref(){
+            if prefix.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+            let mut demand=prefix.retirement_demands()?;
+            demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original prefix depth overflow"))?;
+            return Ok(demand);
         }
+        if self.cause.is_some(){return ::protocol::protocol_error_retirement_demand(&self.cause);}
         Ok(Default::default())
     }
     fn refusal(&self)->Option<&::protocol::ProtocolError>{self.cause.as_ref()}
@@ -404,41 +411,11 @@ impl<M> Drop for TypedChildEmitPreparation<M>{
 }
 
 
-fn protocol_owned_cause_text(cause:&mut ::protocol::ProtocolError)->Result<Option<&mut String>,()> {
-    use ::protocol::ProtocolError as Error;
-    match cause{
-        Error::Malformed{detail,..}|Error::Io(detail)=>Ok((detail.capacity()!=0).then_some(detail)),
-        Error::Pack(error)=>match error{
-            store::PackError::TransportFailure(_)=>Err(()),
-            store::PackError::Refusal(refusal)=>match refusal{
-                store::PackRefusal::Malformed{detail,..}=>Ok((detail.capacity()!=0).then_some(detail)),
-                store::PackRefusal::ValueRefusal(error)|store::PackRefusal::Io{error,..}=>match &mut error.message{std::borrow::Cow::Borrowed(_)=>Ok(None),std::borrow::Cow::Owned(message)=>Ok((message.capacity()!=0).then_some(message))},
-                store::PackRefusal::TextRefusal(error)=>{
-                    if error.message.capacity()!=0{return Ok(Some(&mut error.message));}
-                    Ok(error.expected.as_mut().filter(|value|value.capacity()!=0))
-                },
-                store::PackRefusal::BadMagic|store::PackRefusal::UnsupportedVersion{..}|store::PackRefusal::UnknownRequiredFlags(_)|store::PackRefusal::Truncated(_)|store::PackRefusal::ChecksumMismatch{..}|store::PackRefusal::ContentHashMismatch|store::PackRefusal::LimitExceeded{..}|store::PackRefusal::RetainedMalformed{..}|store::PackRefusal::RetainedAllocation{..}|store::PackRefusal::NonCanonical(_)|store::PackRefusal::UnsupportedCodec(_)|store::PackRefusal::TransportAdmission{..}=>Ok(None),
-            }
-        },
-        Error::ChainMismatch{..}|Error::TornTail(_)|Error::UnknownCriticalRecord(_)|Error::DictMiss(_)|Error::DictOutOfOrder{..}|Error::VerifierRequired|Error::SignatureInvalid{..}|Error::FrameFraming(_)|Error::LimitExceeded(_)=>Ok(None),
-    }
-}
 pub(crate) fn close_protocol_owned_cause_one(cause:&mut Option<::protocol::ProtocolError>,grant:RetainedCloneGrant)->PluginLifecycleStep{
-    let idle=RetainedCloneProgress::default();
-    let Some(error)=cause.as_mut()else{return PluginLifecycleStep::Complete(idle)};
-    match protocol_owned_cause_text(error){
-        Err(())=>PluginLifecycleStep::AwaitingInput{reason:"owned encoder transport cause requires its genuine provider retirement handoff"},
-        Ok(Some(text))=>{
-            let bytes=text.capacity();
-            if grant.maximum_items==0||bytes>grant.maximum_release_bytes{return PluginLifecycleStep::Progress(idle);}
-            *text=String::new();
-            PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..idle})
-        },
-        Ok(None)=>{
-            if grant.maximum_items==0{return PluginLifecycleStep::Progress(idle);}
-            cause.take();
-            PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle})
-        },
+    match ::protocol::close_protocol_error_one(cause,grant){
+        Ok(step)=>PluginLifecycleStep::retained(step,cause.is_none()),
+        Err(error) if error.kind==ValueRefusalKind::UnsupportedOwner=>PluginLifecycleStep::AwaitingInput{reason:"owned encoder transport cause requires its genuine provider retirement handoff"},
+        Err(_)=>PluginLifecycleStep::Blocked{reason:"original encoder cause retains its canonical retirement refusal"},
     }
 }
 

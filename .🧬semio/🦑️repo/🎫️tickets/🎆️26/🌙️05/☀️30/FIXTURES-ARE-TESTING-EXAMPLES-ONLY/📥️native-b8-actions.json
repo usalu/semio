@@ -1,0 +1,26 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts",
+    "action": "update whole-trial admission only",
+    "before": "c9738c4c7d0269afc82284fced6bba64a8aa7f730973496ff1300fa1ac697a64",
+    "after": "4c8cc40399e4a85c41a2c084ced4261860207283c405bfc14af2bf8ea1eb1a2f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "action": "update whole-trial admission only",
+    "before": "7c40d6936831e90130b7bb9bb564d3be92abbce0542e40cbc32d7ed704a0ca73",
+    "after": "8b5ea57c6b03bb44d06542067538d6081783574830a5604991ff8c9af16c0e2d"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🔭️observer/🧬️schema/🔣️.json",
+    "action": "remove whole-trial authority",
+    "before": "6f2794d39864a84a763fbcb373b12490d96e1e3438aa4d79a21daba925dafe30",
+    "after": null
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧬️schema/🔣️.json",
+    "action": "remove whole-trial authority",
+    "before": "364980762c2bcfb58b7f6061da51579133d0af1dec90633bc62c4fe47ba44daf",
+    "after": null
+  }
+]

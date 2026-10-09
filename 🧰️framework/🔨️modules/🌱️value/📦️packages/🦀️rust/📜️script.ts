@@ -7,6 +7,14 @@ import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/
 import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 
 /** 🌱️ Tests the actual neutral value package under its explicitly supplied native policy. */
+class NativeRecipientSourceTestScript extends BundleScript{
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-native-recipient-source");const test=resolve(this.root,"../../🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🟦️.ts");await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",test],this.repoRoot,"value:recipient:types",30000);await runOwnedCommand(process.execPath,["test",test],this.repoRoot,"value:recipient:source",30000);}
+}
+/** 🔐️ Executes original detached recipient identity and real retained physical custody laws. */
+class NativeRecipientTestScript extends BundleScript{
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-native-recipient");await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value"],cwd:this.root,extraArgs:["--lib","native_local_original","--","--nocapture"]},readCargoTestPolicyV1(process.env));}
+}
+/** 🧮️ Exercises the existing complete neutral value package route. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args[0] === "portable") {
@@ -34,8 +42,9 @@ class OrderedRetirementSourceTestScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("Expected test-ordered-retirement-source");
   const tests=resolve(this.root,"../../🗂️ordered/♻️retirement/🧪️tests/🟦️.ts");
-  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",tests],this.repoRoot,"value:ordered:retirement:types",30000);
-  await runOwnedCommand(process.execPath,["test",tests],this.repoRoot,"value:ordered:retirement:source",30000);
+  const paged=resolve(this.root,"../../📋️list/🧪️tests/📋️list/🟦️.ts");
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",tests,paged],this.repoRoot,"value:ordered:retirement:types",30000);
+  await runOwnedCommand(process.execPath,["test",tests,paged],this.repoRoot,"value:ordered:retirement:source",30000);
  }
 }
 class ControlledValueTestScript extends BundleScript {
@@ -88,4 +97,4 @@ class DecodeOwnershipTestScript extends BundleScript {
  }
 }
 
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-decode-ownership", DecodeOwnershipTestScript).register("test-graphql-int64-source",GraphqlInt64SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-controlled-construction", ControlledValueTestScript).register("test-controlled-encoding",ControlledEncodingTestScript).register("test-refusal-portable", RefusalPortableTestScript).register("test-refusal-codec",RefusalCodecTestScript).register("test-ordered-retirement-source",OrderedRetirementSourceTestScript), { defaultCommand: "test" });
+await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-native-recipient-source",NativeRecipientSourceTestScript).register("test-native-recipient",NativeRecipientTestScript).register("test-decode-ownership", DecodeOwnershipTestScript).register("test-graphql-int64-source",GraphqlInt64SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-controlled-construction", ControlledValueTestScript).register("test-controlled-encoding",ControlledEncodingTestScript).register("test-refusal-portable", RefusalPortableTestScript).register("test-refusal-codec",RefusalCodecTestScript).register("test-ordered-retirement-source",OrderedRetirementSourceTestScript), { defaultCommand: "test" });

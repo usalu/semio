@@ -1,0 +1,579 @@
+{
+  "files": {
+    "/schema.json": {
+      "$id": "https://example.test/schema",
+      "type": "object",
+      "properties": {
+        "cases": {
+          "type": "array"
+        }
+      },
+      "$defs": {
+        "Grant": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/examples.json": {
+      "cases": [
+        {
+          "value": {
+            "items": 1
+          }
+        }
+      ],
+      "scene": {
+        "items": 1
+      },
+      "grant": {
+        "items": 1
+      }
+    },
+    "/alternate.json": {
+      "$id": "https://example.test/schema",
+      "type": "array"
+    }
+  },
+  "cases": [
+    {
+      "id": "static-whole",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "resolution": "whole",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "validator-alias",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; const check=new Ajv().compile(schema);const original=fixture;check(original);",
+      "expected": {
+        "reads": 1,
+        "resolution": "whole",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "file-url",
+      "source": "import Ajv from \"ajv\"; import {readFileSync} from \"node:fs\"; const read=p=>JSON.parse(readFileSync(new URL(p,import.meta.url),\"utf8\"));const schema=read(\"./schema.json\"),law=read(\"./examples.json\");new Ajv().compile(schema)(law);",
+      "expected": {
+        "reads": 1,
+        "resolution": "whole",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "escaped-reader-alias",
+      "source": "import Ajv from \"ajv\";import {readFileSync as \\u0072ead} from \"node:fs\";const law=JSON.parse(read(new URL(\"./examples.json\",import.meta.url),\"utf8\"));import schema from \"./schema.json\";new Ajv().compile(schema)(law);",
+      "expected": {
+        "reads": 1,
+        "resolution": "whole",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "projected-scene",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; new Ajv().compile(schema)(fixture.scene);",
+      "expected": {
+        "reads": 1,
+        "resolution": "projected",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "loop-row",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; for(const row of fixture.cases)new Ajv().compile(schema)(row.value);",
+      "expected": {
+        "reads": 1,
+        "resolution": "projected",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "domain-snapshot",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "resolution": "whole",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "runtime-request",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; export const validateRequest=new Ajv().compile(schema);validateRequest(fixture);",
+      "expected": {
+        "reads": 1,
+        "resolution": "whole",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "shadowed-validator",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; function run(Ajv){new Ajv().compile(schema)(fixture)}",
+      "expected": {
+        "reads": 0,
+        "resolution": "whole",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "reassigned",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; let value=fixture;value=getValue();new Ajv().compile(schema)(value);",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "computed-source",
+      "source": "import Ajv from \"ajv\";const schema=await import(path);const fixture=await load(path);new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 0,
+        "resolution": "whole",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "fake-comments",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; /* new Ajv().compile(schema)(fixture) */ const text=\"compile(schema)(fixture)\";",
+      "expected": {
+        "reads": 0,
+        "resolution": "whole",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "inline-trial",
+      "source": "import Ajv from \"ajv\";import fixture from \"./examples.json\";new Ajv().compile({type:\"object\",required:[\"cases\",\"copyGrants\",\"expected\"],properties:{cases:{type:\"array\"},copyGrants:{type:\"array\"},expected:{type:\"object\"}}})(fixture);",
+      "expected": {
+        "reads": 1,
+        "resolution": "whole",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "unsupported-while",
+      "source": "while(x){check(x);}",
+      "expected": {
+        "reads": 0,
+        "resolution": "unresolved",
+        "unresolved": true,
+        "completeSyntax": false
+      }
+    },
+    {
+      "id": "namespace-ajv",
+      "source": "import * as oracle from \"ajv\";import schema from \"./schema.json\";import example from \"./examples.json\";new oracle.default().compile(schema)(example);",
+      "expected": {
+        "reads": 1,
+        "resolution": "whole",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "selected-schema-ref",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import example from \"./examples.json\";new Ajv().addSchema(schema).getSchema(`${schema.$id}#/$defs/Grant`)(example.grant);",
+      "expected": {
+        "reads": 1,
+        "resolution": "projected",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "member-mutated-source",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";fixture.cases.push(opaque());new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "branch-origin-join",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";let value=fixture;if(condition)value=opaque();else value=fixture;new Ajv().compile(schema)(value);",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "mutated-inline-schema",
+      "source": "import Ajv from \"ajv\";import fixture from \"./examples.json\";const schema={type:\"object\"};schema.type=opaque();new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 0,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "shadowed-json-reader",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";function read(JSON){const value=JSON.parse(readFileSync(new URL(\"./examples.json\",import.meta.url),\"utf8\"));new Ajv().compile(schema)(value);}",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "callee-before-argument",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const check=new Ajv().compile(schema);let current=check;current(current=opaque());",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "conditional-write",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";let value=fixture;flag?(value=opaque()):(value=fixture);new Ajv().compile(schema)(value);",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "block-var",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";var value=fixture;{var value=opaque()}new Ajv().compile(schema)(value);",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "async-result",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const read=async()=>fixture;new Ajv().compile(schema)(read());",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "delete-content",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";delete fixture.cases;new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "validator-replaced",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const ajv=new Ajv();ajv.compile=()=>opaque();ajv.compile(schema)(fixture);",
+      "expected": {
+        "reads": 0,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "short-circuit-write",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";let value=fixture;flag&&(value=opaque());new Ajv().compile(schema)(value);",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "conditional-registry",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import other from \"./alternate.json\";import fixture from \"./examples.json\";const ajv=new Ajv();if(flag)ajv.addSchema(schema);else ajv.addSchema(other);ajv.getSchema(\"https://example.test/schema\")(fixture);",
+      "expected": {
+        "reads": 0,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "awaited-helper",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const read=async()=>fixture;new Ajv().compile(schema)(await read());",
+      "expected": {
+        "reads": 1,
+        "resolution": "whole",
+        "unresolved": false
+      }
+    },
+    {
+      "id": "conditional-helper-return",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const read=()=>{if(flag)return opaque();return fixture;};new Ajv().compile(schema)(read());",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "async-bun-json",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";const fixture=Bun.file(new URL(\"./examples.json\",import.meta.url)).json();new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "resolution": "unresolved",
+        "unresolved": true
+      }
+    },
+    {
+      "id": "nested-var-hoist",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";function run(){new Ajv().compile(schema)(fixture);{var schema=opaque()}}run();",
+      "expected": {
+        "reads": 0,
+        "unresolved": true,
+        "resolution": "unresolved"
+      },
+      "runtime": {
+        "compileSchema": "undefined",
+        "validations": 0,
+        "mutationKeys": [],
+        "error": true
+      }
+    },
+    {
+      "id": "lhs-reference-order",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const other={};let target=fixture;target.cases=(target=other);new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "unresolved": true,
+        "resolution": "unresolved"
+      },
+      "runtime": {
+        "compileSchema": "schema.json",
+        "validations": 1,
+        "mutationKeys": [
+          "cases"
+        ],
+        "error": false
+      }
+    },
+    {
+      "id": "computed-key-side-effect",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";function key(){fixture.cases=opaque();return \"x\"}const object={};object[key()]=0;new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "unresolved": true,
+        "resolution": "unresolved"
+      },
+      "runtime": {
+        "compileSchema": "schema.json",
+        "validations": 1,
+        "mutationKeys": [
+          "cases"
+        ],
+        "error": false
+      }
+    },
+    {
+      "id": "escaped-ajv-instance",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const ajv=new Ajv();opaque(ajv);ajv.compile(schema)(fixture);",
+      "expected": {
+        "reads": 0,
+        "unresolved": true,
+        "resolution": "unresolved"
+      },
+      "runtime": {
+        "compileSchema": "absent",
+        "validations": 0,
+        "mutationKeys": [],
+        "error": false
+      }
+    },
+    {
+      "id": "dynamic-nested-write",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const key=opaque();fixture[key][0].id=\"changed\";new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "unresolved": true,
+        "resolution": "unresolved"
+      }
+    },
+    {
+      "id": "computed-receiver-once",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const ajv=new Ajv();let calls=0;function receiver(){calls+=1;return ajv}receiver()[\"compile\"](schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "unresolved": false,
+        "resolution": "whole"
+      }
+    },
+    {
+      "id": "computed-key-before-args",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const ajv=new Ajv();let value=fixture;function key(){value=opaque();return \"compile\"}ajv[key()](schema)(value);",
+      "expected": {
+        "reads": 1,
+        "unresolved": true,
+        "resolution": "unresolved"
+      }
+    },
+    {
+      "id": "direct-validate",
+      "source": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; new Ajv().validate(schema,fixture);",
+      "expected": {
+        "reads": 1,
+        "unresolved": false,
+        "resolution": "whole"
+      }
+    },
+    {
+      "id": "unsupported-validator-method",
+      "source": "import Ajv from \"ajv\";new Ajv().addKeyword(opaque());",
+      "expected": {
+        "reads": 0,
+        "unresolved": true,
+        "resolution": "unresolved"
+      }
+    },
+    {
+      "id": "object-later-effect",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const discard={first:opaque(),second:(fixture.x=1)};new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "unresolved": true,
+        "resolution": "unresolved"
+      },
+      "runtime": {
+        "compileSchema": "schema.json",
+        "validations": 1,
+        "mutationKeys": [
+          "x"
+        ],
+        "error": false
+      }
+    },
+    {
+      "id": "array-spread-effect",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";function mutate(value){value.x=1;return []}const discard=[...mutate(fixture)];new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "unresolved": true,
+        "resolution": "unresolved"
+      },
+      "runtime": {
+        "compileSchema": "schema.json",
+        "validations": 1,
+        "mutationKeys": [
+          "x"
+        ],
+        "error": false
+      }
+    },
+    {
+      "id": "object-spread-effect",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";function mutate(value){value.x=1;return {}}const discard={...mutate(fixture),later:1};new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "unresolved": true,
+        "resolution": "unresolved"
+      },
+      "runtime": {
+        "compileSchema": "schema.json",
+        "validations": 1,
+        "mutationKeys": [
+          "x"
+        ],
+        "error": false
+      }
+    },
+    {
+      "id": "unknown-constructor-escape",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";new Mutator(fixture);new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "unresolved": true,
+        "resolution": "unresolved"
+      },
+      "runtime": {
+        "compileSchema": "schema.json",
+        "validations": 1,
+        "mutationKeys": [
+          "x"
+        ],
+        "error": false
+      }
+    },
+    {
+      "id": "template-later-effect",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const unused=`${opaque()}${fixture.changed=true}`;new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 1,
+        "unresolved": true,
+        "resolution": "unresolved"
+      },
+      "runtime": {
+        "compileSchema": "schema.json",
+        "validations": 1,
+        "mutationKeys": [
+          "changed"
+        ],
+        "error": false
+      }
+    },
+    {
+      "id": "parameter-default-effect",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";function touch(x=(fixture.changed=true)){}touch();new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 0,
+        "unresolved": true,
+        "resolution": "unresolved"
+      },
+      "runtime": {
+        "compileSchema": "schema.json",
+        "validations": 1,
+        "mutationKeys": [
+          "changed"
+        ],
+        "error": false
+      }
+    },
+    {
+      "id": "destructuring-default-effect",
+      "source": "import Ajv from \"ajv\";import schema from \"./schema.json\";import fixture from \"./examples.json\";const {missing=(fixture.changed=true)}={};new Ajv().compile(schema)(fixture);",
+      "expected": {
+        "reads": 0,
+        "unresolved": true,
+        "resolution": "unresolved",
+        "completeSyntax": false
+      },
+      "runtime": {
+        "compileSchema": "schema.json",
+        "validations": 1,
+        "mutationKeys": [
+          "changed"
+        ],
+        "error": false
+      }
+    }
+  ],
+  "index": {
+    "paths": [
+      "/z.ts",
+      "/missing.ts",
+      "/a.mjs",
+      "/z.ts",
+      "/examples.json"
+    ],
+    "sources": {
+      "/z.ts": "import Ajv from \"ajv\"; import schema from \"./schema.json\"; import fixture from \"./examples.json\"; new Ajv().compile(schema)(fixture);",
+      "/a.mjs": "while (ready) { opaque() }"
+    },
+    "expectedPaths": [
+      "/a.mjs",
+      "/missing.ts",
+      "/z.ts"
+    ],
+    "expectedComplete": [
+      false,
+      false,
+      true
+    ],
+    "expectedUnavailable": [
+      "/missing.ts"
+    ]
+  }
+}

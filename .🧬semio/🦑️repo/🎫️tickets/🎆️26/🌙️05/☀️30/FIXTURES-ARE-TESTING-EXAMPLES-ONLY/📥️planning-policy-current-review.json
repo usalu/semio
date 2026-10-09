@@ -1,0 +1,35 @@
+{
+  "executed": false,
+  "names": [
+    "history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds",
+    "history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories",
+    "history_completed_plan_retains_original_residue_and_transferred_results",
+    "history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody",
+    "history_preview_output_retains_original_inputs_until_granted_parent_and_projection_close",
+    "backbone_detach_refusal_preserves_descriptor_and_payload_at_full_destination",
+    "backbone_detach_refusal_preserves_descriptor_and_payload_at_generation_overflow"
+  ],
+  "nextestExpression": "test(history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds) | test(history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories) | test(history_completed_plan_retains_original_residue_and_transferred_results) | test(history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody) | test(history_preview_output_retains_original_inputs_until_granted_parent_and_projection_close) | test(backbone_detach_refusal_preserves_descriptor_and_payload_at_full_destination) | test(backbone_detach_refusal_preserves_descriptor_and_payload_at_generation_overflow)",
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+      "sha256": "8e674cdd88836e85d32aff3ca7a52fb7534db49ccba866891331d7d40d0a6467",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🟦️.ts",
+      "sha256": "deba2bb228e4b3ef018f2283d842966099103aa117f4793d0d33e79ccec110fd",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧫️fixtures/🔣️.json",
+      "sha256": "6998e22584c6bcb7bcb6d7bf63f1cffb59b3818167b72b4518c0d0742516bdfe",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
+      "sha256": "ac6cb5dee42ccc3964fa0a2da967d99d794fa5eae76fb29f7117d3ccd08e7454",
+      "authored": false
+    }
+  ]
+}

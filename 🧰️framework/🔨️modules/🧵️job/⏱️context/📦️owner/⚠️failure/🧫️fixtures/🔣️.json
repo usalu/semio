@@ -1,0 +1,15 @@
+{
+  "operation": 98145,
+  "generation": 17,
+  "producerBytes": 64,
+  "incomingCapacityBytes": 0,
+  "remainingCapacityBytes": 0,
+  "fuel": 7,
+  "deadlineUs": 1500,
+  "externalRecipient": "same-actual-receipt",
+  "refusal": "invariantViolated",
+  "denialHeap": [
+    0,
+    0
+  ]
+}

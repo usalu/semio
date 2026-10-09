@@ -1,0 +1,30 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json",
+      "sha256": "54a8f482fce0635a2fb4807925a03a83655a449e692e9d96f82eaa8014b5a5dc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/🎟️work.json",
+      "sha256": "9ef7f7c87dc609f601f189b06ddeff1aec9f18a1cc9e86f8a034b36241ac0bdd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+      "sha256": "c2760a0fd73eec2457bd6000c7ee7ec4daaea9d3ba3c38842f4bf47be8185f25"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🦀️.rs",
+      "sha256": "2547789d0614b9694bc66939da07a339d7e4a129be0395268001bf1466a9e816"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧫️fixtures/♻️ownership/🔣️.json",
+      "sha256": "8d9e5a7b123adfd394a5ca4551dd86435d76d66a8d35a21fd545dd79d398be34"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧫️fixtures/🎟️work.json",
+      "sha256": "0276c2f136765aa5c65067636c3c132b4276c9222bb74a2c9c974296563a34ee"
+    }
+  ]
+}

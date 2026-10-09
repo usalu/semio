@@ -283,6 +283,9 @@
               }
             }
           ]
+        },
+        "async": {
+          "type": "boolean"
         }
       }
     },
@@ -353,6 +356,9 @@
         },
         "iterable": {
           "$ref": "#/$defs/EcmaExpression"
+        },
+        "async": {
+          "type": "boolean"
         }
       }
     }

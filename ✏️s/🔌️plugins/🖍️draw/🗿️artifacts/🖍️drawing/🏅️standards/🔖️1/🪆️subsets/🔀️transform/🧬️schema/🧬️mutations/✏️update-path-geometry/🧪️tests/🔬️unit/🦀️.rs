@@ -23,7 +23,7 @@ fn path_geometry_mutation_roundtrip_fixture() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let before: Vec<PathSegment> = serde_json::from_value(fixture["before"].clone()).unwrap();
     let after: Vec<PathSegment> = serde_json::from_value(fixture["after"].clone()).unwrap();
-    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Curve", before.into());
+    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", before.into());
     let id = crate::schema::layer_id(&layer).to_string();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let mutation = super::mutation::update_path_geometry(id.into(), after.clone().into());

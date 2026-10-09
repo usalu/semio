@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "ordering": "originalOrdinal",
+  "equalKeys": "retainOccurrences",
+  "cases": [
+    {
+      "id": "reversed-ascii",
+      "source": {
+        "kind": "object",
+        "members": [
+          {
+            "name": "z",
+            "value": {
+              "kind": "boolean",
+              "value": true
+            }
+          },
+          {
+            "name": "a",
+            "value": {
+              "kind": "boolean",
+              "value": false
+            }
+          }
+        ]
+      },
+      "bodyHex": "00010111100207017a0207016101"
+    },
+    {
+      "id": "ascending-ascii",
+      "source": {
+        "kind": "object",
+        "members": [
+          {
+            "name": "a",
+            "value": {
+              "kind": "boolean",
+              "value": false
+            }
+          },
+          {
+            "name": "z",
+            "value": {
+              "kind": "boolean",
+              "value": true
+            }
+          }
+        ]
+      },
+      "bodyHex": "0001011110020701610107017a02"
+    },
+    {
+      "id": "utf8-versus-utf16",
+      "source": {
+        "kind": "object",
+        "members": [
+          {
+            "name": "😀",
+            "value": {
+              "kind": "boolean",
+              "value": true
+            }
+          },
+          {
+            "name": "",
+            "value": {
+              "kind": "boolean",
+              "value": false
+            }
+          }
+        ]
+      },
+      "bodyHex": "0001011110020704f09f9880020703ee808001"
+    },
+    {
+      "id": "nested-repeated-symbol",
+      "source": {
+        "kind": "object",
+        "members": [
+          {
+            "name": "z",
+            "value": {
+              "kind": "object",
+              "members": [
+                {
+                  "name": "b",
+                  "value": {
+                    "kind": "text",
+                    "value": "same"
+                  }
+                },
+                {
+                  "name": "a",
+                  "value": {
+                    "kind": "text",
+                    "value": "same"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "a",
+            "value": {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "text",
+                  "value": "same"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "bodyHex": "010473616d65010111100207017a1002070162060007016106000701610c010600"
+    },
+    {
+      "id": "stable-duplicate-key",
+      "source": {
+        "kind": "object",
+        "members": [
+          {
+            "name": "z",
+            "value": {
+              "kind": "null"
+            }
+          },
+          {
+            "name": "a",
+            "value": {
+              "kind": "boolean",
+              "value": false
+            }
+          },
+          {
+            "name": "a",
+            "value": {
+              "kind": "boolean",
+              "value": true
+            }
+          }
+        ]
+      },
+      "bodyHex": "00010111100307017a120701610107016102"
+    }
+  ]
+}

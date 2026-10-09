@@ -178,7 +178,7 @@ fn fixture_replay<'a>(_pack: &'a [u8], _spr: &'a [u8], _envelopes: &'a [u8]) -> 
 }
 
 fn fixture_artifact_codec() -> ArtifactCodec {
-    ArtifactCodec { schema: "fixture.number@1".to_string(), extension: "fixture", snapshot_sqlite: None, pack_schema_hash: [0x11; 32], compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_replay }
+    ArtifactCodec { schema: "fixture.number@1".to_string(), extension: "fixture", native_identity: directory::os_store::ArtifactNativeSnapshotIdentity::typed::<i64>(), snapshot_sqlite: None, pack_schema_hash: [0x11; 32], compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_replay }
 }
 
 fn fixture_manifest() -> semio_framework::PluginManifest {

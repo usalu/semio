@@ -812,7 +812,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot> for WriterSna
         cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path };
+        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
         if matches!(self.state, WriterSnapshotDecodeState::AwaitToken) {
             if !terminal {
                 return Err(diagnostic("writer-envelope.snapshot-pack-must-be-scalar", token.start));
@@ -882,7 +882,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot> for WriterSna
         }
         let path = self.path;
         let retirement = self.retirement.as_mut().expect("Writer snapshot retirement remains retained");
-        match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.snapshot-retirement-fault", offset: 0, line: 0, column: 0, path })? {
+        match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.snapshot-retirement-fault", offset: 0, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })? {
             store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
                 drop(self.retirement.take());
                 self.state = WriterSnapshotDecodeState::Complete;
@@ -935,7 +935,7 @@ impl WriterMutationDecodeAuthority {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
     fn finish_string(&mut self, field_id: u16, authority: &mut store::OwnedSchemaStringAuthority<WRITER_ENVELOPE_FIELD_BYTES>) -> Result<(), store::OwnedSchemaDecodeDiagnostic> {
@@ -1079,7 +1079,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMut
             active.authority.cancel();
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        if self.retirement.is_some() { return store::artifact_retirement_box_close_step(&mut self.retirement, maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.mutation-retirement-fault", offset: 0, line: 0, column: 0, path: self.path }); }
+        if self.retirement.is_some() { return store::artifact_retirement_box_close_step(&mut self.retirement, maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.mutation-retirement-fault", offset: 0, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }); }
         if let Some(value) = self.value.take() {
             *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterMutationRetirementFactory, value));
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -1173,7 +1173,7 @@ impl WriterSnapshotDecodeAuthority {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 }
 
@@ -1234,7 +1234,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for WriterRejectedConflictAutho
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {

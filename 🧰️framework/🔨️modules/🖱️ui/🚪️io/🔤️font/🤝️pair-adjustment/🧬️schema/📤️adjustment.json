@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Font Pair Adjustment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "advanceUnits"
+  ],
+  "properties": {
+    "advanceUnits": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    }
+  }
+}

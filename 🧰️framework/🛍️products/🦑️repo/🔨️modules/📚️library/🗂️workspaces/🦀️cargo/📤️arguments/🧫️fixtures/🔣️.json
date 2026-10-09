@@ -1,0 +1,56 @@
+{
+  "accepted": [
+    {
+      "schemaVersion": 1,
+      "manifest": "Cargo.toml"
+    },
+    {
+      "schemaVersion": 1,
+      "manifest": "general/Cargo.toml"
+    }
+  ],
+  "rejected": [
+    {
+      "schemaVersion": 1
+    },
+    {
+      "schemaVersion": 1,
+      "manifest": "../Cargo.toml"
+    },
+    {
+      "schemaVersion": 1,
+      "manifest": "/Cargo.toml"
+    },
+    {
+      "schemaVersion": 1,
+      "manifest": "C:/Cargo.toml"
+    },
+    {
+      "schemaVersion": 1,
+      "manifest": "Cargo.toml",
+      "owner": "implicit"
+    }
+  ],
+  "excludedIndependentOwner": {
+    "rootMembers": [
+      "root-package"
+    ],
+    "ownerManifests": [
+      "nested/Cargo.toml"
+    ],
+    "rootExclusions": [
+      "nested"
+    ],
+    "rootName": "neutral_parent_excluding_child",
+    "childMembers": [
+      "package"
+    ],
+    "childName": "neutral_excluded_child_owner",
+    "childManifest": "nested/package/Cargo.toml",
+    "args": [
+      "check",
+      "-p",
+      "neutral_excluded_child_owner"
+    ]
+  }
+}

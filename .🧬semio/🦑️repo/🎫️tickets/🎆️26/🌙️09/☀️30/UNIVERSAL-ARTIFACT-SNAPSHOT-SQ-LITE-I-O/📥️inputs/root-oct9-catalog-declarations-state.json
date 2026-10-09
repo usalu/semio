@@ -1,0 +1,53 @@
+{
+  "rootCatalogDeclarationsUpdatedUtc": "2026-10-09T12:37:20Z",
+  "rootCatalogDeclarationsSource": {
+    "session": 51442,
+    "exit": 0,
+    "passed": 7,
+    "failed": 0,
+    "expects": 218,
+    "strict": true,
+    "independentAjv": true,
+    "independentSqlite": true,
+    "actualDebug": true,
+    "compiledGuestExecuted": false
+  },
+  "rootCatalogDeclarationsNative": {
+    "socketSession": 62797,
+    "hostedSession": 11628,
+    "status": "pending",
+    "assertionsExecuted": 0
+  },
+  "rootNativeCatalogFactory": {
+    "sourceSession": 40458,
+    "sourceExit": 1,
+    "sourcePassed": 7,
+    "sourceFailed": 4,
+    "originalJpgDigestGuard": true,
+    "nativeSession": 6112,
+    "nativeExit": 1,
+    "nativePreparationCustodyChange": "discovery source changed concurrently",
+    "nativeAssertions": 0
+  },
+  "rootLatestNativeSocket": {
+    "priorSession": 32673,
+    "priorExit": 1,
+    "priorOriginalReplicationErrors": 2,
+    "currentSession": 62797,
+    "currentStatus": "pending",
+    "nativeAssertions": 0
+  },
+  "rootLatestNativeClipboard": {
+    "session": 42231,
+    "exit": 0,
+    "passed": 1,
+    "skipped": 83,
+    "actualDebug": true
+  },
+  "rootCatalogGuestUnknownCapabilityRetained": true,
+  "rootCatalogInventedDialect": false,
+  "rootCatalogFullAssemblyMounted": true,
+  "rootCatalogGuiSeedOnlyOrder": 408.781031,
+  "rootUniversalComplete": false,
+  "universalComplete": false
+}

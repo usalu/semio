@@ -1,0 +1,34 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "beforeSha256": "220e52206d0dafb38686c98979ceaf57f777595a010b8821a399e44ae2867ea5"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "c81a492be829f4f116124e5c10638f89fdcbfa7ca00d17581e605d7d4efe8343"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "d5e7a22b2dbc9f93ba3d7b8b960eea43fc96a0a9ba1d2001c59d1e3381780136"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🦀️.rs",
+    "beforeSha256": "693b4cd5ea9b83cc7a0c3437460e4f42f9db9e375f74a034ef5c534f8e8ce28e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "24ad1b3245e4c956a1d21995a03a01375689df604d1d91d9a61028ef708429c2"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🧹️retirement.json",
+    "beforeSha256": "0a5a72ba3400773d10376534baa1d4da1f5596076606a7a9b3619fac430e2fb1"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧫️fixtures/🛂️peer-admission.json",
+    "beforeSha256": "d2d9dc9ab0edebbe978f7bf232c804347962e71be02c71b61e48396312602294"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs",
+    "beforeSha256": null
+  }
+]

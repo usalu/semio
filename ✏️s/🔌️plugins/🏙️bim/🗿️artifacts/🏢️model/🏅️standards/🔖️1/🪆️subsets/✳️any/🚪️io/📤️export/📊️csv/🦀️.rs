@@ -125,7 +125,7 @@ pub struct ModelIntoCsv;
 impl Serializer<ModelSnapshot> for ModelIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let report = crate::standards::v1::subsets::any::io::with_inferred("ModelIntoCsv", from, |inferred| report_csv(from, inferred))?;
         Ok(IoOutcome::clean(IoPayload::Text(report)))
     }

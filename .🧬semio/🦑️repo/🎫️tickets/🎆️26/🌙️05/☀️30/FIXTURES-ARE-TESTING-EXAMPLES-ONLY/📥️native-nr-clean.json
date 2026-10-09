@@ -1,0 +1,26 @@
+{
+  "completion": "Own original-source verification87970 terminal Nx0; no current own process or open handle uses exact directories",
+  "authorized": "Root exact nr-data/nr-cache only",
+  "before": [
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/nr-data",
+      "files": 7,
+      "logicalBytes": 276063,
+      "allocatedBytes": 286720,
+      "lsofPIDs": [],
+      "nonsymlink": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/nr-cache",
+      "files": 30,
+      "logicalBytes": 131512,
+      "allocatedBytes": 188416,
+      "lsofPIDs": [],
+      "nonsymlink": true
+    }
+  ],
+  "actions": "delete only exact owned regenerable Nx metadata directories; proof logs/inputs/Source/durable Cargo unchanged",
+  "deletedAllocatedBytes": 475136,
+  "exactDirectoriesAbsent": true,
+  "dfAfter": "Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on\n/dev/disk3s5   926Gi   881Gi   553Mi   100%     23M  5.7M   80%   /System/Volumes/Data\n"
+}

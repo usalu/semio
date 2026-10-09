@@ -52,8 +52,11 @@ pub struct EntityKind {
     pub filterable: bool,
 }
 
+/// 📚️ Immutable entity-kind catalog in canonical declaration order.
+pub type EntityKindCatalog = &'static [EntityKind];
+
 /// 📚️ The entity-kind catalog in declaration order — the Rust projection of \`🏷️entity-kinds/🔣️.json\`.
-pub const ENTITY_KINDS: &[EntityKind] = &[
+pub const ENTITY_KINDS: EntityKindCatalog = &[
 ${rows}
 ];
 

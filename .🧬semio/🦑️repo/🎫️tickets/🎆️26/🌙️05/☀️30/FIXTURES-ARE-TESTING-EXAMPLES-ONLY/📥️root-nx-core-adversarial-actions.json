@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚡️production-cache-input-boundary/🔣️.json",
+    "action": "update",
+    "beforeSha256": "ea18354b8890f7184baaacd3a2d0e40c0cab4c9b3ebffcd851c3206b265a9971",
+    "afterSha256": "d7a0c1b5903ad43aff6e626b34c22ea156f983cc47e6a6b03b88d92a8d961e6d",
+    "qualification": "Plain neutral literal-metacharacter owner path validates exact exceptions rather than wildcard broadening"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "24f58c294afb2b3b33431b1e066470c4b7601189a18c92dcffdf9944dd0be1c9",
+    "afterSha256": "571a2357e7940a45e24e1cb07d63f478695feafd5ffbaa3f423a9529b8875978",
+    "qualification": "Actual external ignore/real filesystem laws cover mid-scan cancellation, stale exception removal, literal paths, current peer writes and symlinked ancestor refusal; owned test configurations remain in ticket outputs"
+  }
+]

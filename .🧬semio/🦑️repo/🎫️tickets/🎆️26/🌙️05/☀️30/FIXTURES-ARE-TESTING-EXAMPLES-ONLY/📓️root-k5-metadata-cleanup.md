@@ -1,0 +1,3 @@
+# Completed Root Metadata Reclamation
+
+The existing generation route60494 ended Nx1 before running due to ENOSPC/project-graph cache failure; it provides no generated/type proof. All Root native/compiler and current Host/Conflict routes are terminal. Exact six Root-owned completed Nx metadata/cache directories were checked for live recorded roots, process references, top-level symlinks and lsof opened files before removal. Only these disposable generated metadata directories were removed. Logs, actual Source actions/input/report files, compiler receipts, durable native caches and foreign jobs are preserved. Reclaimed logical bytes: 1053054130. Immediate available space increased by 1091743744 bytes. Exact records are retained in 📥️root-k5-metadata-cleanup.json.

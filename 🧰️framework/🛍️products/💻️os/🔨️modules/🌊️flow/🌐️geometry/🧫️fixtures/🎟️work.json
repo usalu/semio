@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "handles": [
+    "mesh",
+    "texture",
+    "mesh"
+  ],
+  "expected": [
+    "mesh",
+    "texture"
+  ],
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "handoff": {
+    "capacityBytes": 0,
+    "releaseBytes": 0,
+    "sameVector": true,
+    "sameKeys": true
+  },
+  "refusal": {
+    "sameVector": true,
+    "capacityBytes": 0,
+    "releaseBytes": 0
+  },
+  "maximumDeniedReleaseBytes": 8,
+  "completion": "originalRequestAndRemovedOwnersRetired",
+  "requestCapacityItems": 7,
+  "refusedHandles": [
+    "mesh-🧱️-ö"
+  ],
+  "terminalDropBytes": 0,
+  "cancellation": {"beginCapacityBytes":0,"beginReleaseBytes":0,"sameOwner":true,"itemsPerTurn":1,"terminalIncludesRemovedPayloads":true,"terminalDropBytes":0}
+}

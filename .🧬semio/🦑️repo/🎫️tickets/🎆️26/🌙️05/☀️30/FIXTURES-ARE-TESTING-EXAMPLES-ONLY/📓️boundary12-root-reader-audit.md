@@ -1,0 +1,9 @@
+# Boundary12 Root Reader Cut
+
+Four actual whole-law admissions confirmed in original TS readers. Font kerning test3 compiles complete cases/error corpus, then independently parses original production font bytes with OpenType, compares first-party pair units/em, preserves exact borrowed bytes and SQLite count. Remove only whole schema acquisition/admission and unused import; keep second ENDE>1000-pair OpenType oracle and genuine Font owner.
+
+Flow wasm retained-receipt test11–12 compiles whole corpus and a nested RetainedProgress definition. Whole admission retires; individual row.progress admission/required-axis/extra-depth negatives are genuine production receipt checks and must instead use unchanged canonical Value retained-clone wire progress.json. Keep actual createFlowHost/createFlowBrowserRuntime/WebAssembly/BigUint64Array reference outcomes, cancellation/failure retainedProgress and four-axis query counts.
+
+Flow Host source10–13 reads whole fixed expected envelope and compiles/mutates expectations. Only that mirror admission is removable. Retain actual Rust FlowHost field census, independent JSONPatch/stableStringify/UTF8/capacity tests and native ownership laws. Selected-copy reader12–13 compiles complete cases/factoryCustody then null-mutates custody; retain actual document projection, selected pointer/copy equality, behavioral mutants and original Pack-parser/native System/pointer custody laws.
+
+Bounded native readers consume unchanged plain examples, not these schema admissions. No genuine production reader of the four whole envelopes established in inspected owners; external/dynamic references are not globally excluded. Current schema existence/hashes and all bounded test-source hashes recorded separately. Concurrent parent retirement may supersede this cut. No tests, Cargo, Source edits or author attribution.

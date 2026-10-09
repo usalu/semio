@@ -1,0 +1,32 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+    "sha": "97968d09115e5791c896069e050545a6ed122b9696118c1552f7cbc0af75fe7c",
+    "bytes": 25048,
+    "role": "authored current source/plain policy"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs",
+    "sha": "1d1b653bc40c81fd060530b8fcfb260dd979d9aab860c58698d8949c336fc469",
+    "bytes": 21659,
+    "role": "authored current source/plain policy"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "sha": "4e3f5eda4070a77fa92ebb45ab85ebc8b4508518d93b6f42d025ae4713b7c86c",
+    "bytes": 88616,
+    "role": "authored current source/plain policy"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧫️fixtures/📖️canonical-reader.json",
+    "sha": "55ad2749506e070bbe93099310db0cb926db94a0e87bee9ae9c42c4bef216395",
+    "bytes": 755,
+    "role": "authored current source/plain policy"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧫️fixtures/🗺️canonical-borrowed-map.json",
+    "sha": "fa37fcd20fc2f5ac727faa80cf8d2f427a67d6d1c426ad3565ac4ce1372bbe81",
+    "bytes": 11027,
+    "role": "observer unchanged"
+  }
+]

@@ -1,0 +1,33 @@
+{
+  "version": "borrowed-font-pair-kerning.v1",
+  "locales": [
+    "en",
+    "de"
+  ],
+  "cases": [
+    {
+      "font": "🚀️anta/🏛️latin/📖️regular",
+      "left": "A",
+      "right": "V",
+      "em": -0.0928
+    },
+    {
+      "font": "🚀️anta/🏛️latin/📖️regular",
+      "left": "f",
+      "right": "o",
+      "em": -0.0391
+    },
+    {
+      "font": "⌨️share-tech-mono/🏛️latin/📖️regular",
+      "left": "f",
+      "right": "o",
+      "em": 0.0
+    }
+  ],
+  "maximumErrorEm": 0.0005,
+  "originalHeap": {
+    "birth": 0,
+    "release": 0
+  },
+  "retirement": "StaticBorrow"
+}

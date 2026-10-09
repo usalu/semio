@@ -1,0 +1,33 @@
+{
+  "schema": "semio.value.shared-utf8-original-lease.v1",
+  "values": [
+    "",
+    "🐚é",
+    "z\u0000雪"
+  ],
+  "capacities": [
+    32,
+    128,
+    512
+  ],
+  "aliases": [
+    0,
+    1,
+    2
+  ],
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 4096,
+    "maximumDepth": 1
+  },
+  "arcWords": 2,
+  "stringWords": 3,
+  "expected": {
+    "captureHeapBytes": 0,
+    "closeHeapBytes": 0,
+    "lastOriginalPointerPreserved": true,
+    "ungrantedHeapBytes": 0
+  }
+}

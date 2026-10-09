@@ -1,0 +1,53 @@
+{
+  "schema": "io.original-nested-snapshot-receiving/v1",
+  "text": "雪",
+  "nativeMaximumBytes": 1073741824,
+  "grant": {
+    "maximumItems": 256,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  },
+  "cases": [
+    {
+      "id": "complete",
+      "cancelChild": false,
+      "cancelParent": false,
+      "published": true
+    },
+    {
+      "id": "child-cancel",
+      "cancelChild": true,
+      "cancelParent": false,
+      "published": false
+    },
+    {
+      "id": "parent-cancel",
+      "cancelChild": false,
+      "cancelParent": true,
+      "published": false
+    }
+  ],
+  "bodyCopy": {
+  "text": "雪",
+  "repeat": 70000,
+  "cancelAt": 65536,
+  "nativeMaximumBytes": 1073741824,
+  "maximumTurns": 100000,
+  "grant": {
+    "maximumItems": 8,
+    "maximumCopyBytes": 262144,
+    "maximumCapacityBytes": 262144,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 64
+  },
+  "closeGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  }
+}
+}

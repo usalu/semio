@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "paths",
+    "producer"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "enum": [
+        "discovery",
+        "received"
+      ]
+    },
+    "paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 65536,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+      }
+    },
+    "producer": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256",
+            "unit"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "unit": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "discovery"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "paths": {
+            "maxItems": 0,
+            "type": "array"
+          },
+          "producer": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "paths": {
+            "minItems": 1,
+            "type": "array"
+          },
+          "producer": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -9,10 +9,10 @@
         }
         bundle.begin_close();
         for _ in 0..100000 {
-            let bytes = 65536.max(bundle.next_close_byte_demand());
-            let step = bundle.close_step(1, bytes).unwrap();
-            if let PluginCloseStep::Pending { released_items,released_bytes } = step { assert!(released_items <= 1); assert!(released_bytes <= bytes); }
-            if step == PluginCloseStep::Complete { assert!(bundle.terminal_is_empty()); return; }
+            let grant=geometry_test_close_grant(&bundle,1,64);
+            let step=bundle.close_step(grant).unwrap();
+            assert!(step.progress().unwrap().fits(grant));
+            if matches!(step,PluginLifecycleStep::Complete(_)) {assert!(bundle.terminal_is_empty());return;}
         }
         panic!("BREP guest bundle resource retirement did not finish");
     }
@@ -24,11 +24,11 @@
             let (mut owner,scope)=scoped_bundle();let input=semio_framework_pack_json::object([
                 ("mesh".into(),semio_framework_pack_json::object([("$schema".into(),semio_framework_pack_json::Value::from("mesh")),("data".into(),semio_framework_pack_json::Value::from(semio_framework_pack_json::to_string(imports.get("toBrep").unwrap().get("mesh").unwrap())))])),
                 ("tolerance".into(),semio_framework_pack_json::object([("$schema".into(),semio_framework_pack_json::Value::from("number")),("value".into(),semio_framework_pack_json::Value::from(0.001))]))]);
-            let request=semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("operatorId".into(),semio_framework_pack_json::Value::from("brep.mesh.toBrep")),("inputJson".into(),semio_framework_pack_json::Value::from(semio_framework_pack_json::to_string(&input))),("nodeHash".into(),semio_framework_pack_json::Value::from(0x6D_60_00+index as u64)),("budget".into(),semio_framework_pack_json::Value::from(1u64)),("roundUnits".into(),semio_framework_pack_json::Value::from(1u64))]));let compact=super::tests::compact_evaluation_request(&request);let mut trips=0;
+            let request=semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("operatorId".into(),semio_framework_pack_json::Value::from("brep.mesh.toBrep")),("retained".into(),super::tests::geometry_test_retained()),("inputJson".into(),semio_framework_pack_json::Value::from(semio_framework_pack_json::to_string(&input))),("nodeHash".into(),semio_framework_pack_json::Value::from(0x6D_60_00+index as u64)),("budget".into(),semio_framework_pack_json::Value::from(1u64)),("roundUnits".into(),semio_framework_pack_json::Value::from(1u64))]));let compact=super::tests::compact_evaluation_request(&request);let mut trips=0;
             loop {let answer=geometry_test_envelope(&owner,if trips==0{&request}else{&compact});assert_eq!(answer.get("done").and_then(semio_framework_pack_json::Value::as_bool),Some(false));trips+=1;assert!(trips<10000,"missing {phase}");if answer.get("phase").and_then(semio_framework_pack_json::Value::as_str)==Some(phase) {break;}}
-            owner.begin_close();if flow_extension_sdk::evaluation_retirement_pending(&scope) {assert_eq!(owner.close_step(0,8).unwrap(),PluginCloseStep::Pending {released_items:0,released_bytes:0});assert_eq!(owner.close_step(1,0).unwrap(),PluginCloseStep::Pending {released_items:0,released_bytes:0});}
-            let mut trips=0;while flow_extension_sdk::evaluation_retirement_pending(&scope) {assert!(matches!(owner.close_step(1,8).unwrap(),PluginCloseStep::Pending {released_items:0..=1,released_bytes:0..=8}));trips+=1;assert!(trips<10000);}
-            drop(scope);loop {let bytes=65536.max(owner.next_close_byte_demand());let step=owner.close_step(1,bytes).unwrap();trips+=1;assert!(trips<100000);if step==PluginCloseStep::Complete {assert!(owner.terminal_is_empty());break;}assert!(matches!(step,PluginCloseStep::Pending {released_items:0..=1,released_bytes} if released_bytes<=bytes));}
+            owner.begin_close();if flow_extension_sdk::evaluation_retirement_pending(&scope) {let grant=geometry_test_close_grant(&owner,1,8);assert_eq!(owner.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..grant}).unwrap().progress(),Some(Default::default()));assert_eq!(owner.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,..grant}).unwrap().progress(),Some(Default::default()));}
+            let mut trips=0;while flow_extension_sdk::evaluation_retirement_pending(&scope) {let grant=geometry_test_close_grant(&owner,1,8);let small=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_release_bytes:8,..grant};let step=owner.close_step(small).unwrap();assert!(step.progress().unwrap().fits(small));if step.progress()==Some(Default::default()){assert!(owner.close_step(grant).unwrap().progress().unwrap().fits(grant));}trips+=1;assert!(trips<10000);}
+            drop(scope);loop {let grant=geometry_test_close_grant(&owner,1,64);let step=owner.close_step(grant).unwrap();trips+=1;assert!(trips<100000);assert!(step.progress().unwrap().fits(grant));if matches!(step,PluginLifecycleStep::Complete(_)){assert!(owner.terminal_is_empty());break;}}
             eprintln!("[DEBUG] Existing BRep bundle drained inflight toBrep at {phase} before Session close,steps={trips}");
         }
         let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🚪️retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -56,21 +56,18 @@
         let mesh = semio_framework_pack_json::parse_bytes(&bundle.invoke("tessellate",tessellate.as_bytes()).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(mesh.get("done").and_then(semio_framework_pack_json::Value::as_bool),Some(false));
         assert!(mesh.get("unitsDone").and_then(semio_framework_pack_json::Value::as_f64).unwrap() > 0.0);
-        assert_eq!(bundle.close_step(0,bytes).unwrap(),PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        let probe=geometry_test_close_grant(&bundle,0,bytes);assert_eq!(bundle.close_step(probe).unwrap().progress(),Some(Default::default()));
         bundle.begin_close();
         assert_eq!(bundle.invoke("evaluate",evaluate.as_bytes()).unwrap_err().code.0.as_str(),"extension.closing");
         bundle.cancel_close();
-        assert!(matches!(bundle.close_step(items,bytes).unwrap(),PluginCloseStep::Blocked { .. }));
+        let paused=geometry_test_close_grant(&bundle,items,bytes);assert!(matches!(bundle.close_step(paused).unwrap(),PluginLifecycleStep::Blocked { .. }));
         bundle.resume_close();
         let mut released = 0;
         let mut released_bytes_total = 0;
         for _ in 0..fixture.get("steps").and_then(semio_framework_pack_json::Value::as_f64).unwrap() as usize {
-            let supplied_bytes = bytes.max(bundle.next_close_byte_demand());
-            match bundle.close_step(items,supplied_bytes).unwrap() {
-                PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= items); assert!(released_bytes <= supplied_bytes); released += released_items; released_bytes_total += released_bytes; }
-                PluginCloseStep::Complete => { assert!(bundle.terminal_is_empty()); assert!(released > 4); assert!(released_bytes_total > 0); return; }
-                step => panic!("unexpected BREP close status {step:?}"),
-            }
+            let grant=geometry_test_close_grant(&bundle,items,bytes);let step=bundle.close_step(grant).unwrap();
+            let receipt=step.progress().unwrap_or_else(||panic!("unexpected BREP close status {step:?}"));assert!(receipt.fits(grant));released+=receipt.copied_items;released_bytes_total+=receipt.released_bytes;
+            if matches!(step,PluginLifecycleStep::Complete(_)){assert!(bundle.terminal_is_empty());assert!(released>4);assert!(released_bytes_total>0);return;}
         }
         panic!("actual BREP geometry and tessellation did not retire");
     }
@@ -78,7 +75,7 @@
 
 fn geometry_test_request(operator: &str, input: semio_framework_pack_json::Value, node_hash: u64, budget: u64, wall: u64) -> String {
     semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
-        ("operatorId".into(), semio_framework_pack_json::Value::from(operator)),
+        ("operatorId".into(), semio_framework_pack_json::Value::from(operator)),("retained".into(),super::tests::geometry_test_retained()),
         ("inputJson".into(), semio_framework_pack_json::Value::from(semio_framework_pack_json::to_string(&input))),
         ("nodeHash".into(), semio_framework_pack_json::Value::from(node_hash)),
         ("budget".into(), semio_framework_pack_json::Value::from(budget)),
@@ -130,12 +127,13 @@ fn geometry_test_mesh_signature(chunks:Vec<String>)->(Vec<[i64;6]>,Vec<[i64;6]>,
     corners.sort_unstable();edges.sort_unstable();(corners,edges,triangles,area,volume)
 }
 
+fn geometry_test_close_grant(bundle:&ExtensionBundle,items:usize,copy:usize)->semio_framework_value::retained_clone::RetainedCloneGrant {
+    let copy=copy.max(bundle.retirement_demands(copy).unwrap().copy_bytes);let demand=bundle.retirement_demands(copy).unwrap();
+    semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
+}
 fn close_geometry_test_bundle(bundle: &mut ExtensionBundle) {
     bundle.begin_close();
-    for _ in 0..100000 {
-        let bytes = 65536.max(bundle.next_close_byte_demand());
-        if bundle.close_step(64, bytes).unwrap() == PluginCloseStep::Complete { return; }
-    }
+    for _ in 0..100000 {let grant=geometry_test_close_grant(bundle,1,64);let step=bundle.close_step(grant).unwrap();assert!(step.progress().unwrap().fits(grant));if matches!(step,PluginLifecycleStep::Complete(_)){assert!(bundle.terminal_is_empty());return;}}
     panic!("geometry inference owner failed to close");
 }
 
@@ -245,7 +243,7 @@ async fn named_geometry_inference_owns_worker_invocation_and_dependency_identity
     let service = semio_framework_plugin::artifact_inference_service(super::geometry_inference::GEOMETRY_ARTIFACT_KIND, super::geometry_inference::GEOMETRY_INFERENCE_SCHEMA).unwrap().unwrap();
     assert!(service.metadata().payload.is_some());
     let budgets = semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: 1048576, work_units: 1, recursion_depth: 64 };
-    let context_required = semio_framework_plugin::ArtifactInferenceExecutionRequest { policy: &[], budgets: &budgets, cancellation_id: "context-proof", previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Cold, canonical_payload: b"{}", dependencies: &[] };
+    let context_required = semio_framework_plugin::ArtifactInferenceExecutionRequest { policy: &[], budgets: &budgets, retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(fixture.get("request").unwrap().get("retained").unwrap()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), cancellation_id: "context-proof", previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Cold, canonical_payload: b"{}", dependencies: &[] };
     assert_eq!(service.infer(&context_required).err().expect("context refusal").code, "artifact-inference.context-required");
     let mut registry = semio_framework_plugin::ArtifactInferenceServiceRegistry::default();
     registry.register(service).unwrap();
@@ -304,10 +302,10 @@ fn named_geometry_bypass_preserves_original_node_identity_and_round_grants() {
     use semio_framework_plugin::{WireArtifactInferenceRequest,WireArtifactInferenceResult,WireArtifactInferenceBudget,WireArtifactInferenceCacheMode};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();let law=&fixture["bypassIdentity"];let (mut owner,reader)=scoped_bundle();let identity=reader.owner_identity();let metadata=super::geometry_inference::geometry_inference_service().metadata();let mut receipts=Vec::new();
     for hash in law["nodeHashes"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()) {
-        let mut payload=serde_json::json!({"operatorId":fixture["evaluate"]["operatorId"],"inputJson":fixture["evaluate"]["inputJson"],"nodeHash":hash,"dependencyJson":"","operatorVersion":"bypass-v1","budget":law["roundUnits"],"roundUnits":law["roundUnits"],"wallMicros":1,"resume":false});
+        let mut payload=serde_json::json!({"operatorId":fixture["evaluate"]["operatorId"],"inputJson":fixture["evaluate"]["inputJson"],"nodeHash":hash,"dependencyJson":"","operatorVersion":"bypass-v1","budget":law["roundUnits"],"roundUnits":law["roundUnits"],"wallMicros":1,"resume":false,"retained":fixture["evaluate"]["retained"]});
         for hop in 0..=law["compactHops"].as_u64().unwrap() {
             if hop>0 {payload["inputJson"]=serde_json::json!("");payload["resume"]=serde_json::json!(true);}
-            let request=WireArtifactInferenceRequest {wire_version:semio_framework_plugin::ARTIFACT_INFERENCE_WIRE_VERSION,owner:metadata.owner.into(),artifact_kind:metadata.artifact_kind.into(),artifact_schema:metadata.artifact_schema.into(),artifact_schema_version:1,inference_schema:metadata.inference_schema.into(),inference_schema_version:1,algorithm_version:1,policy_version:1,revision:1,generation:1,source_dialect:"s.flow.flow.standard.v1.dialect.canonical".into(),policy:vec![],budgets:WireArtifactInferenceBudget {allocation_bytes:1048576,work_units:law["roundUnits"].as_u64().unwrap(),recursion_depth:64},cancellation_id:law["cancellationGroup"].as_str().unwrap().into(),previous_state:None,requested_cache_mode:WireArtifactInferenceCacheMode::Bypass,canonical_payload:serde_json::to_vec(&payload).unwrap(),dependencies:vec![]};
+            let request=WireArtifactInferenceRequest {wire_version:semio_framework_plugin::ARTIFACT_INFERENCE_WIRE_VERSION,owner:metadata.owner.into(),artifact_kind:metadata.artifact_kind.into(),artifact_schema:metadata.artifact_schema.into(),artifact_schema_version:1,inference_schema:metadata.inference_schema.into(),inference_schema_version:1,algorithm_version:1,policy_version:1,revision:1,generation:1,source_dialect:"s.flow.flow.standard.v1.dialect.canonical".into(),policy:vec![],budgets:WireArtifactInferenceBudget {allocation_bytes:1048576,work_units:law["roundUnits"].as_u64().unwrap(),recursion_depth:64},retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(&super::tests::geometry_test_retained()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),cancellation_id:law["cancellationGroup"].as_str().unwrap().into(),previous_state:None,requested_cache_mode:WireArtifactInferenceCacheMode::Bypass,canonical_payload:serde_json::to_vec(&payload).unwrap(),dependencies:vec![]};
             let result:WireArtifactInferenceResult=semio_framework_pack_json::from_json_str(std::str::from_utf8(&owner.artifact_infer(semio_framework_pack_json::to_json_string(&request).as_bytes()).unwrap()).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let envelope:serde_json::Value=serde_json::from_slice(&result.canonical_payload).unwrap();let progress=flow_extension_sdk::evaluation_progress(&reader,fixture["evaluate"]["operatorId"].as_str().unwrap(),hash);receipts.push((result.complete,result.actual_cache_mode,envelope,progress.map(|value|value.units_done),reader.owner_identity()));
         }
@@ -383,7 +381,7 @@ async fn named_geometry_inference_resumes_with_progress_matches_output_and_cance
         owner: metadata.owner.into(), artifact_kind: metadata.artifact_kind.into(), artifact_schema: metadata.artifact_schema.into(), artifact_schema_version: 1,
         inference_schema: metadata.inference_schema.into(), inference_schema_version: 1, algorithm_version: 1, policy_version: 1,
         revision: 1, generation: 1, source_dialect: "s.flow.flow.standard.v1.dialect.canonical".into(), policy: vec![],
-        budgets: semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: 1048576, work_units: 1, recursion_depth: 64 }, cancellation_id: "geometry-retained-cancel".into(),
+        budgets: semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: 1048576, work_units: 1, recursion_depth: 64 }, retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(&super::tests::geometry_test_retained()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), cancellation_id: "geometry-retained-cancel".into(),
         previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Cold,
         canonical_payload: request.into_bytes(), dependencies: vec![],
     };
@@ -391,7 +389,7 @@ async fn named_geometry_inference_resumes_with_progress_matches_output_and_cance
     semio_framework_plugin::extension_activate().await.unwrap();
     let named_result = semio_framework_plugin::wire_artifact_infer(semio_framework_pack_json::to_json_string(&named).as_bytes()).await;
     let cancellation = semio_framework_plugin::cancel_artifact_inference(&named.cancellation_id);
-    while flow_extension_sdk::evaluation_retirement_pending(&scope){flow_extension_sdk::retire_cancelled_evaluations_close_step(&scope,1,8);}
+    while flow_extension_sdk::evaluation_retirement_pending(&scope){let copy=flow_extension_sdk::evaluation_retirement_demands(&scope,8).unwrap().copy_bytes.max(8);let demand=flow_extension_sdk::evaluation_retirement_demands(&scope,copy).unwrap();let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let step=flow_extension_sdk::retire_cancelled_evaluations_close_step(&scope,grant).unwrap();assert!(step.progress().fits(grant));}
     let retired = flow_extension_sdk::evaluation_progress(&scope,"brep.bool.cut", 0xfeedcafe).is_none();drop(scope);
     semio_framework_plugin::plugin_runtime::extension_dispose_cold().unwrap();
     let answer = named_result.unwrap();
@@ -415,7 +413,7 @@ async fn named_geometry_inference_standard_gateway_uses_registered_extension_con
         owner: metadata.owner.into(), artifact_kind: metadata.artifact_kind.into(), artifact_schema: metadata.artifact_schema.into(), artifact_schema_version: 1,
         inference_schema: metadata.inference_schema.into(), inference_schema_version: 1, algorithm_version: 1, policy_version: 1,
         revision: 1, generation: 1, source_dialect: "s.flow.flow.standard.v1.dialect.canonical".into(), policy: vec![],
-        budgets: WireArtifactInferenceBudget { allocation_bytes: 1048576, work_units: 1, recursion_depth: 64 }, cancellation_id: "named-geometry-standard-gateway".into(),
+        budgets: WireArtifactInferenceBudget { allocation_bytes: 1048576, work_units: 1, recursion_depth: 64 }, retained:semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(&super::tests::geometry_test_retained()),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), cancellation_id: "named-geometry-standard-gateway".into(),
         previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold,
         canonical_payload: semio_framework_pack_json::to_string(fixture.get("request").unwrap()).into_bytes(), dependencies: vec![],
     };

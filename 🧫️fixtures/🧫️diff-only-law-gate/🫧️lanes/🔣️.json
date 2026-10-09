@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "cases": [
+    {"id": "ephemeral-presence-snapshot-inverse", "expected": ["1|R13", "5|R13", "7|R14"]},
+    {"id": "ephemeral-transient-nested-leaf", "expected": ["2|R14"]},
+    {"id": "ephemeral-window-transient-type", "expected": ["1|R13", "5|R13", "7|R14"]},
+    {"id": "ephemeral-window-presence-type", "expected": ["1|R13", "5|R13", "7|R14"]}
+  ]
+}

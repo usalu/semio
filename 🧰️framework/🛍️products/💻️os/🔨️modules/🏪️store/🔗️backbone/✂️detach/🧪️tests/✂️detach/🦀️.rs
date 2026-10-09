@@ -4,6 +4,16 @@ use super::*;
 async fn observe_refusal(case_id: &str) {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let case = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == case_id).unwrap();
+    let cleanup_grant = |name: &str| {
+        let policy = &fixture["cleanup"][name];
+        semio_framework_value::RetainedCloneGrant {
+            maximum_items: policy["maximumItems"].as_u64().unwrap() as usize,
+            maximum_copy_bytes: policy["maximumCopyBytes"].as_u64().unwrap() as usize,
+            maximum_capacity_bytes: policy["maximumCapacityBytes"].as_u64().unwrap() as usize,
+            maximum_release_bytes: policy["maximumReleaseBytes"].as_u64().unwrap() as usize,
+            maximum_depth: policy["maximumDepth"].as_u64().unwrap() as usize,
+        }
+    };
     let mut store = super::super::ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "detach-refusal", DemoSnapshot { n: Some(4) }, None), ActorId("actor:detach-fixture".into())).await.expect("real initialized Store");
     store.install_document_store_owners_exact(demo_closable_store_owners());
     let (mut local, peer) = MemoryBackbone::pair("detach-local", "detach-peer").await;
@@ -55,7 +65,9 @@ async fn observe_refusal(case_id: &str) {
             if retirement.terminal_is_empty() {
                 break;
             }
-            retirement.close_step(1, 17).expect("retire exact returned owner before assertions");
+            let grant = cleanup_grant("backbone");
+            let step = retirement.close_step(grant).expect("retire exact returned owner before assertions");
+            assert!(step.progress().fits(grant));
         }
         assert!(retirement.terminal_is_empty());
     }
@@ -63,7 +75,9 @@ async fn observe_refusal(case_id: &str) {
         if SpaceMember::close_owned_terminal_is_empty(&store) {
             break;
         }
-        SpaceMember::close_owned_step(&mut store, 1, 512).expect("close original Store before assertions");
+        let grant = cleanup_grant("store");
+        let step = SpaceMember::close_owned_step(&mut store, grant).expect("close original Store before assertions");
+        assert!(step.progress().fits(grant));
     }
     assert!(SpaceMember::close_owned_terminal_is_empty(&store));
     assert_eq!((refused, panicked, descriptor_preserved, generation_preserved, backbone_preserved, payload_preserved, revision_preserved), (true, false, true, true, true, true, true), "{case_id}");

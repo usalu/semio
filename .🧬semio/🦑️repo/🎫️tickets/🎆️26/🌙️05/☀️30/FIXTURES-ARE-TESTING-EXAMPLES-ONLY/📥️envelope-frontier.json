@@ -1,0 +1,36 @@
+{
+  "observedUtc": "2026-10-09T05:33:28.639244+00:00",
+  "mode": "read-only-original-sources",
+  "compilerCheckpoint": {
+    "session": 27371,
+    "nxPid": 25852
+  },
+  "sourceCopies": false,
+  "observers": [
+    {
+      "role": "root",
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "686b2d68c9214bbfe68ab70122fb032938ea770477f0b373860f256adea37f7c"
+    },
+    {
+      "role": "H",
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "062d4b22f5cac072776985c6e21737b63ea266d3d20f1586f62d6b202dc3ec7b"
+    },
+    {
+      "role": "V",
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🌱️genesis/🦀️.rs",
+      "sha256": "6130411e6132967084ee2d8b91ed9710b9c7e321501c4539f57c562715a1b162"
+    },
+    {
+      "role": "vcs",
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs",
+      "sha256": "97c78dd0ed6725122eb996ba745a48470d58c143b046040b23f723f8d7c6286b"
+    },
+    {
+      "role": "index",
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🦀️.rs",
+      "sha256": "87aa09111bcc0d4421cd53d0526ffb668c129ba11ce92dc8a6d9c213a38ba5cd"
+    }
+  ]
+}

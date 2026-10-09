@@ -143,48 +143,16 @@ pub(crate) fn bitmap_document_from_dsl(parsed: BitmapSnapshotDsl) -> Result<Bitm
 
 
 /// 🛬️ Moves the authored bitmap grammar into persisted fields under one native ownership control.
-pub(crate) fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<BitmapSnapshot,semio_framework_value::ValueError>{
+pub(crate) fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<BitmapSnapshot,semio_framework_value::ValueError>{
     let maximum_rows=control.limits().max_rows;
-    let snapshot=store::decode_sqlite_snapshot_record_native(payload,<BitmapSnapshot as store::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|record,native|{
-        let parsed=BitmapSnapshotDsl::__dsl_from_record_controlled(record,native)?;
-        let entities=parsed.palette.len().checked_add(parsed.pinned.len()).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("bitmap native entity count overflow").to_string()))?;
-        if entities.checked_add(4).is_none_or(|rows|rows>maximum_rows){return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("bitmap native entity count exceeds caller limit").to_string()));}
-        native.scoped_stage(|native|{
-            native.begin_stage(entities)?;
-            let mut palette=native.allocate_vec::<BitmapColor>(parsed.palette.len())?;
-            let mut pinned=native.allocate_vec::<BitmapPinnedPixel>(parsed.pinned.len())?;
-            for color in parsed.palette{palette.push(BitmapColor{r:color.r,g:color.g,b:color.b,a:color.a});native.step()?;}
-            for pin in parsed.pinned{pinned.push(BitmapPinnedPixel{x:pin.x,y:pin.y,color:pin.color});native.step()?;}
-            native.checkpoint()?;
-            native.charge(parsed.input_pixels.len()/4*3)?;
-            let pixels=decode_pixel_text(&parsed.input_pixels)?;
-            Ok(BitmapSnapshot{schema:parsed.schema,seed:parsed.seed,input:BitmapInput{width:parsed.input_width,height:parsed.input_height,palette,pixels},output:BitmapOutputSpec{width:parsed.output_width,height:parsed.output_height,periodic:parsed.output_periodic},model:BitmapOverlappingModel{pattern_size:parsed.pattern_size,symmetry:parsed.symmetry,periodic_input:parsed.periodic_input,ground:parsed.ground},pinned})
-        })
-    },control)?;snapshot.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)
+    let snapshot=store::decode_sqlite_snapshot_record_native(payload,<BitmapSnapshot as store::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {construct_native_record(record,native,maximum_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;snapshot.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)
 }
 
 /// 🛫️ Admits every owned bitmap native field before its canonical record and physical output.
-pub(crate) fn encode_sqlite_snapshot_native(document:&BitmapSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{
+pub(crate) fn encode_sqlite_snapshot_native(document:&BitmapSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{
     let rows=4usize.checked_add(document.input.palette.len()).and_then(|n|n.checked_add(document.pinned.len())).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"bitmap native entity count overflow"))?;
     control.check_rows(rows)?;document.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative)?;
-    store::encode_sqlite_snapshot_record_native(encoding,<BitmapSnapshot as store::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|native|{
-        let schema=native.copy_text(&document.schema)?;
-        native.charge(document.input.pixels.len().div_ceil(3)*4)?;
-        let input_pixels=encode_base64(&document.input.pixels);
-        let palette=native.scoped_stage(|native|->Result<Vec<BitmapColorDsl>,semio_framework_value::ValueError>{
-            native.begin_stage(document.input.palette.len())?;
-            let mut values=native.allocate_vec::<BitmapColorDsl>(document.input.palette.len())?;
-            for color in &document.input.palette{values.push(BitmapColorDsl{r:color.r,g:color.g,b:color.b,a:color.a});native.step()?;}
-            native.checkpoint()?;Ok(values)
-        })?;
-        let pinned=native.scoped_stage(|native|->Result<Vec<BitmapPinnedPixelDsl>,semio_framework_value::ValueError>{
-            native.begin_stage(document.pinned.len())?;
-            let mut values=native.allocate_vec::<BitmapPinnedPixelDsl>(document.pinned.len())?;
-            for pin in &document.pinned{values.push(BitmapPinnedPixelDsl{x:pin.x,y:pin.y,color:pin.color});native.step()?;}
-            native.checkpoint()?;Ok(values)
-        })?;
-        BitmapSnapshotDsl{schema,seed:document.seed,input_width:document.input.width,input_height:document.input.height,input_pixels,output_width:document.output.width,output_height:document.output.height,output_periodic:document.output.periodic,pattern_size:document.model.pattern_size,symmetry:document.model.symmetry,periodic_input:document.model.periodic_input,ground:document.model.ground,palette,pinned}.__dsl_to_record_controlled(native)
-    },control)
+    store::encode_sqlite_snapshot_record_native(encoding,<BitmapSnapshot as store::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|native|project_native_record(document,native),control,native_owner)
 }
 
 impl store::ArtifactDsl for BitmapSnapshot {
@@ -336,3 +304,41 @@ pub fn decode_base64(text: &str) -> Option<Vec<u8>> {
 
 /// 🖼️ Decodes the physical base64 spelling into intrinsic palette octets.
 pub fn decode_pixel_text(text:&str)->Result<Vec<u8>,semio_framework_value::ValueError>{decode_base64(text).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"Bitmap pixels require canonical base64"))}
+
+/// 🫴️ Binds the literal bitmap fields under original native admission.
+pub(crate)fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,maximum_rows:usize)->Result<BitmapSnapshot,semio_framework_value::ValueError>{
+        let parsed=BitmapSnapshotDsl::__dsl_from_record_controlled(record,native)?;
+        let entities=parsed.palette.len().checked_add(parsed.pinned.len()).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("bitmap native entity count overflow").to_string()))?;
+        if entities.checked_add(4).is_none_or(|rows|rows>maximum_rows){return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("bitmap native entity count exceeds caller limit").to_string()));}
+        native.scoped_stage(|native|{
+            native.begin_stage(entities)?;
+            let mut palette=native.allocate_vec::<BitmapColor>(parsed.palette.len())?;
+            let mut pinned=native.allocate_vec::<BitmapPinnedPixel>(parsed.pinned.len())?;
+            for color in parsed.palette{palette.push(BitmapColor{r:color.r,g:color.g,b:color.b,a:color.a});native.step()?;}
+            for pin in parsed.pinned{pinned.push(BitmapPinnedPixel{x:pin.x,y:pin.y,color:pin.color});native.step()?;}
+            native.checkpoint()?;
+            native.charge(parsed.input_pixels.len()/4*3)?;
+            let pixels=decode_pixel_text(&parsed.input_pixels)?;
+            Ok(BitmapSnapshot{schema:parsed.schema,seed:parsed.seed,input:BitmapInput{width:parsed.input_width,height:parsed.input_height,palette,pixels},output:BitmapOutputSpec{width:parsed.output_width,height:parsed.output_height,periodic:parsed.output_periodic},model:BitmapOverlappingModel{pattern_size:parsed.pattern_size,symmetry:parsed.symmetry,periodic_input:parsed.periodic_input,ground:parsed.ground},pinned})
+        })
+    }
+
+/// 🫴️ Binds the literal bitmap fields under original native admission.
+pub(crate)fn project_native_record(document:&BitmapSnapshot,native:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{
+        let schema=native.copy_text(&document.schema)?;
+        native.charge(document.input.pixels.len().div_ceil(3)*4)?;
+        let input_pixels=encode_base64(&document.input.pixels);
+        let palette=native.scoped_stage(|native|->Result<Vec<BitmapColorDsl>,semio_framework_value::ValueError>{
+            native.begin_stage(document.input.palette.len())?;
+            let mut values=native.allocate_vec::<BitmapColorDsl>(document.input.palette.len())?;
+            for color in &document.input.palette{values.push(BitmapColorDsl{r:color.r,g:color.g,b:color.b,a:color.a});native.step()?;}
+            native.checkpoint()?;Ok(values)
+        })?;
+        let pinned=native.scoped_stage(|native|->Result<Vec<BitmapPinnedPixelDsl>,semio_framework_value::ValueError>{
+            native.begin_stage(document.pinned.len())?;
+            let mut values=native.allocate_vec::<BitmapPinnedPixelDsl>(document.pinned.len())?;
+            for pin in &document.pinned{values.push(BitmapPinnedPixelDsl{x:pin.x,y:pin.y,color:pin.color});native.step()?;}
+            native.checkpoint()?;Ok(values)
+        })?;
+        BitmapSnapshotDsl{schema,seed:document.seed,input_width:document.input.width,input_height:document.input.height,input_pixels,output_width:document.output.width,output_height:document.output.height,output_periodic:document.output.periodic,pattern_size:document.model.pattern_size,symmetry:document.model.symmetry,periodic_input:document.model.periodic_input,ground:document.model.ground,palette,pinned}.__dsl_to_record_controlled(native)
+    }

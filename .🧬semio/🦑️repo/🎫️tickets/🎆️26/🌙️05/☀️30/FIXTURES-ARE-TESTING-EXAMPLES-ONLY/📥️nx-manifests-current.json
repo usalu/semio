@@ -1,0 +1,29 @@
+{
+  "owned": false,
+  "censusBounds": "original repository walk, no symlink following; excluded node_modules/.git/.nx/.semio/target/dist/build/generated/pkg/lake/temp/coverage/storybook caches",
+  "counts": {
+    "emojiProject": 587,
+    "ordinaryProject": 2,
+    "package": 291,
+    "canonicalCollectionManifests": 5,
+    "moduleNamedCollectionManifests": 0
+  },
+  "observations": [
+    {
+      "path": "package.json",
+      "sha256": "adecfcc3b54b3ed00cc159f3d7512647f3efe8c77e9291afb999753c5b065943"
+    },
+    {
+      "path": ".nxignore",
+      "sha256": "e69deb121e72bb6487b559fb922100c54cb7a7fb8e4d7c7967d6f8dbdacb52ad"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "0a50f74af2bbcd4757aac1a9de8472ef3ae3be86e3c8a910d3feaba347f2fb90"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🌱️sources/🔣️.json",
+      "sha256": "9018aa861baa843ab3e0cdb707fa06b2420c1c51df912a15e88f219a3c252e13"
+    }
+  ]
+}

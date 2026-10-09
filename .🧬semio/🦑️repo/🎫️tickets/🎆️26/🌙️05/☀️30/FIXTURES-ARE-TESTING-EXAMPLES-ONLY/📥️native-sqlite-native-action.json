@@ -1,0 +1,7 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+  "beforeSha256": "a22735b1d13748e2900cdcba91693db4c4e86ffba8d4d7547c95dafa5a533180",
+  "afterSha256": "ef019c4782a2d7f41e227bc1a1493989034f5d53d24a3bfefdde49999c47f2b5",
+  "addedNativeLaw": "sqlite_snapshot_binding_moves_original_octet_allocations_with_exact_structural_receipt",
+  "qualification": "System/original-pointer law authored after natural existing admission RED; not executed yet"
+}

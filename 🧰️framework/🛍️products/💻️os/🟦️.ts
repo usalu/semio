@@ -1,3 +1,5 @@
+import {parseRetainedCloneGrant,type RetainedCloneGrant} from "../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts";
+export type {RetainedCloneGrant} from "../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts";
 import { descriptorDigestEncodingV1, descriptorDigestV1 } from "./🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts";
 import { parseDirectorySessionAuthorityJsonV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts";
 export { parseDirectorySessionAuthorityJsonV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts";
@@ -672,6 +674,7 @@ export type ArtifactActorConfig = {
   readonly bindings: readonly PersistenceBinding[];
   readonly watchExternal?: boolean;
   readonly actor: string;
+  readonly actorIdentityGrant: RetainedCloneGrant;
   /** 🧬️ W5.7: this document kind's `store::DocumentCodec.pack_schema_hash`, for hub schema-hash
    * validation (`ClientFrame::SocketHelloV1.pack_schema_hash`) — the shell fills this from the wasm
    * renderer's `document_pack_schema_hash(schema)` export before calling `openArtifact`. Omitted
@@ -843,6 +846,7 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
     };
   }
   if (parsed.kind === "open" || parsed.kind === "close") {
+    if(parsed.kind === "open")parseRetainedCloneGrant(parsed.actorIdentityGrant);
     const clientInstanceId = parsed.clientInstanceId === undefined ? undefined : workerWireClientInstanceIdV1(parsed.clientInstanceId);
     if (parsed.clientInstanceId !== undefined && clientInstanceId === null) throw new Error("backbone worker request: invalid client instance id");
   }

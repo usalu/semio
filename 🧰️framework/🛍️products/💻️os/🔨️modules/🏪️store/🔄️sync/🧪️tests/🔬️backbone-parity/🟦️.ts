@@ -1,5 +1,4 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import examples from "../../⚖️parity/🧫️fixtures/🔣️.json";
 import Ajv from "ajv";
 import { HISTORY_TRANSITION_DIFF_SCHEMA, encodeClientFrame, encodePresencePeer, type MutationEnvelope, type ServerFrame, type WireFrontierSummary, type WireMutationEnvelope } from "@semio-tech/framework-replication";
 import { decodeBackboneMessage, type ArtifactActorConfig } from "../../../../../🟦️.ts";
@@ -126,7 +125,7 @@ function armRelay(state: ArtifactState, frontierSummary: WireFrontierSummary): v
 }
 
 function seedState(documentId: string, spaceId: string, actor: string, deps: BackboneWorkerTestDependencies): ArtifactState {
-  const config: ArtifactActorConfig = {
+  const config: ArtifactActorConfig = {actorIdentityGrant:{maximumItems:1024,maximumCopyBytes:65536,maximumCapacityBytes:65536,maximumReleaseBytes:65536,maximumDepth:64},
     documentId,
     schema: "demo/v1",
     bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://parity.test", spaceId }],
@@ -212,13 +211,8 @@ function buildServerFrame(documentId: string, frame: Record<string, unknown>): S
 }
 
 /** ⚖️ Registers language-agnostic backbone parity scenarios against the TS worker twin. */
-export async function registerBackboneParityTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, sourceUrl: string): Promise<void> {
-  const parityRoot = new URL("../../⚖️parity", import.meta.url);
-  const { readdirSync } = await import("node:fs");
-  const parityDir = fileURLToPath(parityRoot);
-  const fixtureDirName = readdirSync(parityDir).find((name) => name.includes("fixture"));
-  if (!fixtureDirName) throw new Error("backbone parity examples directory missing");
-  const fixture = JSON.parse(readFileSync(`${parityDir}/${fixtureDirName}/🔣️.json`, "utf8")) as Fixture;
+export async function registerBackboneParityTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies): Promise<void> {
+  const fixture = examples as Fixture;
 
   vitest.it("a mounted browser actor retracts a refused history step and rebuilds only for refused operations", async () => {
     const priorSink = dependencies.testSeams.workerPostTestSink;

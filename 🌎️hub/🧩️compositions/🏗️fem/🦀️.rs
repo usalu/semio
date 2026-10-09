@@ -66,4 +66,12 @@ mod surface_tests;
 //#endregion 🧪️SurfaceTests
 
 #[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(plugin, FemApps);
+semio_framework_plugin::plugin_exports!(
+    semio_framework_plugin::MountedOwnerPolicyV1 {
+        preparation: semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 },
+        maintenance: semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 },
+        close: semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 },
+    },
+    plugin,
+    FemApps
+);

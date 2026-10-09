@@ -1,0 +1,14 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+  "beforeBlockSha256": "8843de60d097b74aa05e3656d9dce24b1e345a7bfb815c7b56cc4b15c68b9226",
+  "afterBlockSha256": "dc8376907f29c61b15d5be52ea21ff3ec8f77428a7380c434604cac5a33541fb",
+  "beforeSha256": "888b17f60377656cc9dbfba702a2863f142e0eb7e9f5d25d892b05b823f53af5",
+  "afterSha256": "bd6b5e35c5fd7b5350f4f5694cf9ca8adb73b7588036cd6473492247bbb6d7e9",
+  "blocks": [
+    "native input original5controls +explicit original5recipient slots",
+    "six calls borrow persistent original full owner; same cumulative owner across repeated input",
+    "post-observation bounded returned-custody close under immutable caller policy"
+  ],
+  "actualRed": "k6 six naked-native-control type mismatches",
+  "native": "UNRUN"
+}

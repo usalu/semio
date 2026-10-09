@@ -1,0 +1,21 @@
+{
+  "name": "@semio-tech/framework-plugin-mounted-owner-rs",
+  "targets": {
+    "test-portable": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts portable",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust"
+      }
+    }
+  }
+}

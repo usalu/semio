@@ -19,6 +19,7 @@ crate-type = ["cdylib", "rlib"]
 path = "📚️library/🦀️.rs"
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]
+semio-framework-os-renderer-camera = { path = "../../../../🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 # ⏱️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): the interactivity watchdog

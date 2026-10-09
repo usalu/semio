@@ -210,6 +210,27 @@ fn history_chunk_ref<T>(chunk: &HistoryPageChunk<T>, remaining: usize) -> &Histo
 impl<T> HistoryPageStack<T> {
     /// 🪶️ Creates an empty retained catalog without allocating resident pages.
     pub fn empty() -> Self { Self { head: None, pages: 0, len: 0 } }
+    /// 🧮 Quotes the exact original first stack page and its directory.
+    pub fn initial_page_birth_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if self.pages != 0 { return Ok(Default::default()); }
+        let capacity_bytes = std::mem::size_of::<Option<T>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .and_then(|bytes| bytes.checked_add(std::mem::size_of::<HistoryValuePage<T>>()))
+            .and_then(|bytes| bytes.checked_add(std::mem::size_of::<HistoryPageChunk<T>>()))
+            .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history stack original page extent overflowed"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: 1, ..Default::default() })
+    }
+    /// 🎟️ Admits the first original stack page before installing any physical backing.
+    pub fn admit_initial_page(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, ValueError> {
+        if self.pages != 0 { return Ok(Default::default()); }
+        let demand = self.initial_page_birth_demand()?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history stack birth requires original depth")); }
+        if grant.maximum_items == 0 || grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(Default::default()); }
+        *self = Self::try_new().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history stack original page allocation refused"))?;
+        let progress = semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
+        semio_framework_value::retained_clone::admit_retained_clone_progress(grant, progress, "original history stack first page")?;
+        Ok(progress)
+    }
+
 
     /// 🎟️ Reports all backing allocations required by exactly the next pushed entry.
     pub fn next_push_allocation_bytes(&self) -> usize {
@@ -746,6 +767,29 @@ impl<T> Default for ArtifactHistoryLedger<T> {
 impl<T> ArtifactHistoryLedger<T> {
     /// 🪹️ Creates an inline ledger frame without native slot or directory backing.
     pub fn empty() -> Self { Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0, seek: std::sync::atomic::AtomicU64::new(ARTIFACT_HISTORY_NO_SEEK) } }
+
+    /// 🧮 Quotes the exact slot backing, original page and directory before birth.
+    pub fn initial_page_birth_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if self.page_count != 0 { return Ok(Default::default()); }
+        let capacity_bytes = std::mem::size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .and_then(|bytes| bytes.checked_add(std::mem::size_of::<ArtifactHistorySlotPage<T>>()))
+            .and_then(|bytes| bytes.checked_add(std::mem::size_of::<ArtifactHistoryPageChunk<T>>()))
+            .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history ledger original page extent overflowed"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: 1, ..Default::default() })
+    }
+    /// 🧱 True after the original first page remains installed.
+    pub fn initial_page_is_admitted(&self) -> bool { self.page_count != 0 }
+    /// 🎟️ Installs one genuine history page under the supplied independent currencies.
+    pub fn admit_initial_page(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, ValueError> {
+        if self.page_count != 0 { return Ok(Default::default()); }
+        let demand = self.initial_page_birth_demand()?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history ledger birth requires original depth")); }
+        if grant.maximum_items == 0 || grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(Default::default()); }
+        self.open_page().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history ledger original page allocation refused"))?;
+        let progress = semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
+        semio_framework_value::retained_clone::admit_retained_clone_progress(grant, progress, "original history ledger first page")?;
+        Ok(progress)
+    }
 
     pub fn new() -> Self {
         let mut ledger = Self::empty();

@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:cargo-command-entrypoint:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scope",
+    "control",
+    "maximumElapsedMilliseconds"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "manifest"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*\\\\)(?:[^/]+/)*Cargo\\.toml$"
+        }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "discovery",
+        "retirement",
+        "progressIntervalMilliseconds"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "discovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumUnits",
+            "maximumOwnedBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumUnits": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 750000000
+            },
+            "maximumOwnedBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483648
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 256
+            }
+          }
+        },
+        "retirement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumUnits",
+            "maximumOwnedBytes",
+            "maximumDepth"
+          ],
+          "properties": {
+            "maximumUnits": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 20000000
+            },
+            "maximumOwnedBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 134217728
+            },
+            "maximumDepth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 256
+            }
+          }
+        },
+        "progressIntervalMilliseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000
+        }
+      }
+    },
+    "maximumElapsedMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 86400000
+    }
+  }
+}

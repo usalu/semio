@@ -1,0 +1,1 @@
+[{"name":"⚖️gate📜️space-history🪶️sqlite🟦️source","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/framework-os-kernel:test-space-history-sqlite-source --skip-nx-cache","cwd":"${workspaceFolder}","env":{"SEMIO_TEST_LEVEL":"quick","NX_DAEMON":"false","NX_ISOLATE_PLUGINS":"false"},"presentation":{"group":"4_gate","order":408.771}}]

@@ -196,16 +196,23 @@ impl semio_framework_job::InteractiveJob for NativeClipboardJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if self.operation.is_some() {
-            if maximum_items == 0 {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.operation = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+    fn close_step(&mut self, grant:semio_framework_value::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep as Close;
+        use semio_framework_value::RetainedCloneProgress as Progress;
+        if !self.closing{return Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: Progress::default() }}
+        let released_bytes=match &self.operation{Some(NativeClipboardOperation::Write(text))=>text.capacity(),_=>0};
+        if self.operation.is_some(){
+            if grant.maximum_items==0||grant.maximum_depth==0||released_bytes>grant.maximum_release_bytes{return Close::Pending{progress:Progress::default()}}
+            self.operation=None;
+            return Close::Complete{progress:Progress{copied_items:1,released_bytes,..Progress::default()}}
         }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        Close::Complete{progress:Progress::default()}
     }
+
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(match &self.operation{Some(NativeClipboardOperation::Write(text))=>text.capacity(),_=>0})}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(self.operation.is_some()))}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.operation.is_none()

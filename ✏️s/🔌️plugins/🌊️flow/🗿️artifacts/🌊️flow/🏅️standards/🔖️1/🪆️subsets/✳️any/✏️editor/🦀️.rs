@@ -585,7 +585,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         }
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation } = *input;
         let context = context.ok_or_else(|| Fault::from("flow-window-context-required"))?;
         let view = context.view_state.as_ref().ok_or_else(|| Fault::from("flow-window-view-required"))?;
@@ -1802,13 +1802,26 @@ fn flow_contributions_contract() -> semio_framework::ToolExecutionContract {
 /// 🧩️ Installs one contributions page against the app instance's retained evaluation session.
 struct FlowContributionsWork {
     instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    instance_retirement: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement>,
     completed: bool,
     closing: bool,
 }
 
+/// 🧾️ The original registry turn reaches the external receipt before yielding or refusing.
+fn flow_contributions_registry_receipt(cx:&mut semio_framework_job::StepContext<'_>,result:Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<bool,Fault>{
+    let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
+    cx.consume_retained(progress).map_err(Fault::from)?;
+    match result{Ok(semio_framework_value::RetainedCloneStep::Complete(progress))=>Ok(progress==Default::default()),Ok(_)=>Ok(false),Err(error)=>Err(Fault::from(error))}
+}
+
 impl FlowContributionsWork {
     fn new(instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { instance_owner: Some(instance_owner), completed: false, closing: false }
+        Self { instance_owner: Some(instance_owner), instance_retirement: None, completed: false, closing: false }
+    }
+
+    fn close_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if let Some(owner)=self.instance_retirement.as_ref(){let mut demand=owner.demands(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original contributions alias depth overflow"))?;return Ok(demand)}
+        Ok(if self.instance_owner.is_some(){semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement::constructor_demands()}else{Default::default()})
     }
 }
 
@@ -1827,15 +1840,20 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         (!self.closing && !self.completed && matches!(command, FlowCommand::SetContributions(payload) if payload.json.len() <= FLOW_CONTRIBUTIONS_RAW_BYTES)).then_some(1)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
         if self.closing || self.completed {
             return Err(Fault::from("flow-contributions-work-terminal"));
         }
         let FlowCommand::SetContributions(payload) = input.command else {
             return Err(Fault::from("flow-contributions-route-rejected"));
         };
+        let maintenance=semio_framework_artifact_flow_flow::retire_flow_extension_registries_step(cx.retained_grant());
+        if !flow_contributions_registry_receipt(cx,maintenance)?{
+            return Ok(ArtifactCommandWorkStep::Progress{stage:"flow-contributions-retirement",preview:br#"{"en":"Preparing operators","de":"Operatoren werden vorbereitet"}"#});
+        }
         let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-contributions-instance-owner"))?;
-        instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| owner.with_session(|session| set_contributions::install(payload, session))?)?;
+        let install=instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| owner.with_session(|session| set_contributions::install(payload, session))?);
+        match install{Ok(_)=>{},Err(fault)if fault.message=="flow.registry-retirement-full"=>return Ok(ArtifactCommandWorkStep::Progress{stage:"flow-contributions-retirement",preview:br#"{"en":"Preparing operators","de":"Operatoren werden vorbereitet"}"#}),Err(fault)=>return Err(fault)}
         self.completed = true;
         Ok(ArtifactCommandWorkStep::Complete(Emit::default()))
     }
@@ -1844,18 +1862,32 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+    fn terminal_frame_release_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.depth)}
+
+    fn close_step(&mut self, grant:semio_framework_value::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep as Step;
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueRefusalKind};
+        if !self.closing||grant.maximum_items==0{return Step::Blocked}
+        let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return Step::Refused{kind:error.kind,progress:error.retained_progress()}};
+        if grant.maximum_depth<demand.depth{return Step::Refused{kind:ValueRefusalKind::DepthLimit,progress:Default::default()}}
+        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Step::Pending{progress:Default::default()}}
+        if let Some(original)=self.instance_owner.take(){self.instance_retirement=Some(semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement::new(original));return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
+        if let Some(owner)=self.instance_retirement.as_mut(){
+            let grant=semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
+            let result=owner.step(grant);
+            let terminal=owner.terminal_is_empty();
+            if terminal{self.instance_retirement=None;}
+            return match result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Err(fault)=>Step::Refused{kind:fault.value_refusal_kind().unwrap_or(ValueRefusalKind::InvariantViolated),progress:fault.retained_progress}};
         }
-        if self.instance_owner.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        Step::Complete{progress:Default::default()}
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.instance_owner.is_none()
+        self.closing && self.instance_owner.is_none() && self.instance_retirement.is_none()
     }
 }
 
@@ -1951,34 +1983,35 @@ impl FlowInstanceOperationOwner {
 }
 
 impl semio_framework_plugin::ArtifactInstanceOperationOwner for FlowInstanceOperationOwner {
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
-        self
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {self}
+
+    fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        let Some(session)=self.eval_session.as_ref()else{return Ok(Default::default())};
+        let mut demand=if self.closing{semio_framework_value::RetirementDemand{copy_bytes:session.next_close_copy_byte_demand()?,capacity_bytes:session.next_close_capacity_byte_demand(body)?,release_bytes:session.next_close_release_byte_demand()?,depth:session.next_close_depth_demand()?}}else{semio_framework_value::RetirementDemand{copy_bytes:session.next_retirement_copy_byte_demand()?,capacity_bytes:session.next_retirement_capacity_byte_demand(body)?,release_bytes:session.next_retirement_release_byte_demand()?,depth:session.next_retirement_depth_demand()?}};
+        demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original Flow instance session depth overflow"))?;Ok(demand)
     }
 
-    fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        let Some(session) = self.eval_session.as_mut() else { return Ok(semio_framework_plugin::PluginCloseStep::Complete) };
-        let step = session.close_step(maximum_items, maximum_bytes);
-        if session.terminal_is_empty() {
-            self.eval_session = None;
-        }
-        Ok(match step {
-            semio_framework_job::InteractiveJobCloseStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "Flow evaluation session awaits its exact close grant" },
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
-            semio_framework_job::InteractiveJobCloseStep::Complete => semio_framework_plugin::PluginCloseStep::Complete,
-        })
+    fn maintenance_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,Fault>{
+        use semio_framework_plugin::PluginLifecycleStep as Step;
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
+        let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(Fault::from)?;
+        if grant.maximum_items==0{return Ok(Step::Progress(Default::default()))}
+        if grant.maximum_depth<demand.depth{return Err(Fault::from(ValueError::literal(ValueRefusalKind::DepthLimit,"original Flow instance session exceeds parent depth")))}
+        let Some(session)=self.eval_session.as_mut()else{return Ok(Step::Complete(Default::default()))};
+        let child=semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
+        if !self.closing{return session.retirement_step(child).map(|step|match step{RetainedCloneStep::Progress(progress)=>Step::Progress(progress),RetainedCloneStep::Complete(progress)=>Step::Complete(progress)}).map_err(Fault::from)}
+        if session.terminal_is_empty(){self.eval_session=None;return Ok(Step::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+        let result=session.close_step(child);
+        let terminal=session.terminal_is_empty();
+        if terminal{self.eval_session=None;}
+        match result{semio_framework_job::InteractiveJobCloseStep::Blocked=>Ok(Step::Progress(Default::default())),semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>Ok(if self.eval_session.is_none(){Step::Complete(progress)}else{Step::Progress(progress)}),semio_framework_job::InteractiveJobCloseStep::Refused{kind,progress}=>Err(Fault::from(ValueError::literal(kind,"original Flow instance session refused close").with_retained_progress(progress)))}
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        self.closing = true;
-        if let Some(session) = self.eval_session.as_mut() {
-            session.begin_close();
-        }
-        self.maintenance_step(maximum_items, maximum_bytes)
+    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,Fault>{
+        self.closing=true;if let Some(session)=self.eval_session.as_mut(){session.begin_close();}self.maintenance_step(grant)
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.eval_session.is_none()
-    }
+    fn terminal_is_empty(&self)->bool{self.closing&&self.eval_session.is_none()}
 }
 
 /// 🧪️ Stateless app definition; the evaluation session is retained by the exact app-instance owner.
@@ -2128,6 +2161,7 @@ impl ArtifactEditor for FlowPlayApp {
                 operation_id: request.operation.operation.0,
                 generation: request.operation.generation.0,
                 canonical_base_revision: request.canonical_base_revision,
+                retained: request.retained,
                 authoring_seed: request.authoring_seed.clone(),
             };
             let payload = ArtifactRetainedCommandPayload::new(
@@ -2808,3 +2842,7 @@ mod example;
 #[cfg(test)]
 #[path="🧪️tests/📨️child-preparation/🦀️.rs"]
 mod child_preparation_owner_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🎟️contributions/🦀️.rs"]
+mod contributions_receiving_tests;

@@ -9,7 +9,7 @@ use super::*;
 use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, SetCount, SetLabel, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
 use crate::{RequestId, ViewWindowInstance};
 use semio_framework_tool_run::{
-    JobKindId, ToolRunCounter, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepRing, ToolRunTick,
+    JobKindId, ToolRunId, ToolRunCounter, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepRing, ToolRunTick,
     ToolRunTickWriter, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict,
 };
 use semio_framework_ui_scene::{Board2dScene, World3dScene};
@@ -65,20 +65,40 @@ fn encoded(mutation: TestMutation) -> Vec<u8> {
 /// trace record per unit; a revalidation retracts from the first unit the head no longer continues.
 /// ✍️ Both jobs write through `ToolRunTickWriter::with_provisional_base`: a resumed or revalidate job starts at
 /// the provisional length it continues from, so its `retract_to` below that length emits `retractTo`.
+#[derive(semio_framework_value::RetireOwned)]
+struct ToyRunJobOriginal { writer:ToolRunTickWriter,provisional_counts:Vec<i32> }
 struct ToyRunJob {
     purpose: ToolRunJobPurpose,
-    writer: ToolRunTickWriter,
+    original:std::mem::ManuallyDrop<ToyRunJobOriginal>,
+    original_live:bool,
+    original_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ToyRunJobOriginal>>,
     base_count: i32,
     target: u32,
     done: u32,
     resumed_from: u32,
-    provisional_counts: Vec<i32>,
     checkpoint_due: bool,
     finished: bool,
     closing: bool,
 }
 
+impl Drop for ToyRunJob {
+    fn drop(&mut self){assert!(std::thread::panicking()||self.closing&&!self.original_live&&self.original_close.is_none(),"toy original writer/counts require granted terminal closure");}
+}
+
+#[test]
+fn original_toy_run_job_closes_same_writer_counts_under_fixed_full_grant(){
+    use semio_framework_job::InteractiveJob;
+    let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
+    for count in[0,1,8192]{let(job,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let identity=ToolRunIdentity::new(ToolRunId{app_instance_id:7,run:11},[17;32]);let mut writer=ToolRunTickWriter::new(identity);writer.payload(vec![b'x';8192]);ToyRunJob{purpose:ToolRunJobPurpose::Run,original:std::mem::ManuallyDrop::new(ToyRunJobOriginal{writer,provisional_counts:(0..count).collect()}),original_live:true,original_close:None,base_count:0,target:0,done:0,resumed_from:0,checkpoint_due:false,finished:false,closing:false}});let mut job=job;let mut born=heap.requested_bytes;let mut released=heap.released_bytes;let pointer=job.original.provisional_counts.as_ptr();assert_eq!(serde_json::to_value(&job.original.provisional_counts).unwrap(),serde_json::json!((0..count).collect::<Vec<_>>()));job.begin_close();let mut turns=0;
+     while !job.terminal_is_empty(){let(demand,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.original_demands(grant.maximum_copy_bytes).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut denied=vec![RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}];if demand.copy_bytes>0{denied.push(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant});}if demand.capacity_bytes>0{denied.push(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant});}if demand.release_bytes>0{denied.push(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant});}for grant in denied{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant));assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if job.original_live{assert_eq!(job.original.provisional_counts.as_ptr(),pointer);}}
+      let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);
+     }assert_eq!(born,released);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] original ToyRun writer/counts count={count} turns={turns} sameNativePointer fixed5currencies physical={released} terminalDrop0");
+    }
+}
+
 impl ToyRunJob {
+    fn original_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.original_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of_val(&self.original_close),depth:1,..Default::default()});}return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"toy original writer depth overflow"))?});}Ok(if self.original_live{RetirementDemand{copy_bytes:2*std::mem::size_of::<ToyRunJobOriginal>()+std::mem::size_of_val(&self.original_close),depth:1,..Default::default()}}else{Default::default()})}
+
     fn emit(cx: &mut semio_framework_job::StepContext<'_>, tick: ToolRunTick) -> semio_framework_job::StepOutcome {
         let bytes = tick.encode().expect("toy tick encodes");
         match cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Preview, &bytes) {
@@ -99,7 +119,7 @@ impl ToyRunJob {
 
     fn run_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         if self.done > self.target {
-            self.writer.retract_to(self.target * 2);
+            self.original.writer.retract_to(self.target * 2);
             self.done = self.target;
         }
         let mut units = 0;
@@ -107,20 +127,21 @@ impl ToyRunJob {
             self.done += 1;
             units += 1;
             let unit = u64::from(self.done);
-            self.writer.append_op(encoded(SetCount { value: self.base_count + self.done as i32 }.into())).expect("toy op fits the provisional cap");
-            self.writer.append_op(encoded(SetLabel { value: format!("unit-{}", self.done) }.into())).expect("toy op fits the provisional cap");
-            self.writer.append_entity(unit);
-            self.writer.upsert(unit, ToolRunVerdict::Success, 1, ToolRunTraceSubject::Entity { entity: unit });
+            self.original.writer.append_op(encoded(SetCount { value: self.base_count + self.done as i32 }.into())).expect("toy op fits the provisional cap");
+            self.original.writer.append_op(encoded(SetLabel { value: format!("unit-{}", self.done) }.into())).expect("toy op fits the provisional cap");
+            self.original.writer.append_entity(unit);
+            self.original.writer.upsert(unit, ToolRunVerdict::Success, 1, ToolRunTraceSubject::Entity { entity: unit });
             cx.consume_fuel(1);
             if cx.should_yield() {
                 break;
             }
         }
-        if self.writer.is_empty() {
+        if self.original.writer.is_empty() {
             return Self::complete();
         }
-        self.writer.progress(ToolRunProgress {
-            identity: self.writer.identity(),
+        let identity=self.original.writer.identity();
+        self.original.writer.progress(ToolRunProgress {
+            identity,
             sequence: 0,
             state: ToolRunState::Running,
             stage: 0,
@@ -132,8 +153,8 @@ impl ToyRunJob {
             steps: ToolRunStepRing::new(),
         });
         self.checkpoint_due = true;
-        self.writer.payload(self.done.to_le_bytes().to_vec());
-        let tick = self.writer.finish().expect("a pending toy tick");
+        self.original.writer.payload(self.done.to_le_bytes().to_vec());
+        let tick = self.original.writer.finish().expect("a pending toy tick");
         Self::emit(cx, tick)
     }
 
@@ -143,12 +164,12 @@ impl ToyRunJob {
         }
         self.finished = true;
         let head = self.base_count;
-        let Some(first) = self.provisional_counts.iter().enumerate().position(|(index, value)| *value != head + index as i32 + 1) else { return Self::complete() };
-        self.writer.retract_to(first as u32 * 2);
-        for unit in first + 1..=self.provisional_counts.len() {
-            self.writer.upsert(unit as u64, ToolRunVerdict::Danger, 2, ToolRunTraceSubject::Entity { entity: unit as u64 });
+        let Some(first) = self.original.provisional_counts.iter().enumerate().position(|(index, value)| *value != head + index as i32 + 1) else { return Self::complete() };
+        self.original.writer.retract_to(first as u32 * 2);
+        for unit in first + 1..=self.original.provisional_counts.len() {
+            self.original.writer.upsert(unit as u64, ToolRunVerdict::Danger, 2, ToolRunTraceSubject::Entity { entity: unit as u64 });
         }
-        let tick = self.writer.finish().expect("a pending revalidation tick");
+        let tick = self.original.writer.finish().expect("a pending revalidation tick");
         Self::emit(cx, tick)
     }
 }
@@ -178,20 +199,17 @@ impl semio_framework_job::InteractiveJob for ToyRunJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if !self.provisional_counts.is_empty() || self.provisional_counts.capacity() != 0 {
-            self.provisional_counts = Vec::new();
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.original_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.original_demands(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.original_demands(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.original_demands(0)?.depth)}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+        let empty=Default::default();if self.terminal_is_empty(){return semio_framework_job::InteractiveJobCloseStep::Complete{progress:empty};}let demand=match self.original_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};if !self.closing||(grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth){return semio_framework_job::InteractiveJobCloseStep::Pending{progress:empty};}
+        if let Some(owner)=self.original_close.as_mut(){if owner.terminal_is_empty(){drop(self.original_close.take());return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}};}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return match owner.step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy writer and counts")){Ok(step)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};}
+        let original=unsafe{std::mem::ManuallyDrop::take(&mut self.original)};match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.original_close=Some(owner);self.original_live=false;semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}}},Err((error,original))=>{self.original=std::mem::ManuallyDrop::new(original);semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
     }
+    fn terminal_is_empty(&self)->bool{self.closing&&!self.original_live&&self.original_close.is_none()}
 
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.provisional_counts.capacity() == 0
-    }
 }
 
 /// 🎯️ The toy run job honours the in-place retarget hooks when it is built through
@@ -199,11 +217,11 @@ impl semio_framework_job::InteractiveJob for ToyRunJob {
 /// one retracts on its next step) and wakes a job that already completed.
 impl ToolRunRetargetableJob<TestConfig> for ToyRunJob {
     fn rebind(&mut self, identity: ToolRunIdentity) {
-        self.writer.rebind(identity);
+        self.original.writer.rebind(identity);
     }
 
     fn reconfigure(&mut self, identity: ToolRunIdentity, config: std::sync::Arc<TestConfig>) -> bool {
-        self.writer.rebind(identity);
+        self.original.writer.rebind(identity);
         self.target = toy_target(&config);
         true
     }
@@ -212,9 +230,46 @@ impl ToolRunRetargetableJob<TestConfig> for ToyRunJob {
 /// 🗜️ A run that places `initialCount`, checkpoints, then compacts: its first compaction tick retracts everything
 /// and re-appends the first count, every later tick re-appends the next, each followed by a wait on its port, and a
 /// checkpoint ends the compaction — the shape of a layout run whose compaction spans several driver turns.
+struct ToyPortJobCustody {
+    writer:std::mem::ManuallyDrop<ToolRunTickWriter>,writer_live:bool,
+    writer_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ToolRunTickWriter>>,
+    port:std::mem::ManuallyDrop<Option<ToolRunJobPort>>,
+    port_close:Option<OriginalToolRunJobPortRetirement>,
+}
+impl ToyPortJobCustody {
+    fn new(writer:ToolRunTickWriter,port:ToolRunJobPort)->Self{Self{writer:std::mem::ManuallyDrop::new(writer),writer_live:true,writer_close:None,port:std::mem::ManuallyDrop::new(Some(port)),port_close:None}}
+    fn port(&self)->&ToolRunJobPort{self.port.as_ref().expect("live toy port")}
+    fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(owner)=self.writer_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of_val(&self.writer_close),depth:1,..Default::default()});}return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original toy port writer depth overflow"))?});}
+        if self.writer_live{return Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<ToolRunTickWriter>()+std::mem::size_of_val(&self.writer_close),depth:1,..Default::default()});}
+        if let Some(owner)=self.port_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of_val(&self.port_close),depth:1,..Default::default()});}let mut demand=owner.demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original toy port depth overflow"))?;return Ok(demand);}
+        if let Some(port)=self.port.as_ref(){let mut demand=port.original_close_demands()?;demand.depth+=1;return Ok(demand);}
+        Ok(Default::default())
+    }
+    fn terminal_is_empty(&self)->bool{!self.writer_live&&self.writer_close.is_none()&&self.port.is_none()&&self.port_close.is_none()}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+        let empty=Default::default();if self.terminal_is_empty(){return semio_framework_job::InteractiveJobCloseStep::Complete{progress:empty};}let demand=match self.demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return semio_framework_job::InteractiveJobCloseStep::Refused{kind:e.kind,progress:e.retained_progress()}};if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return semio_framework_job::InteractiveJobCloseStep::Pending{progress:empty};}
+        if let Some(owner)=self.writer_close.as_mut(){if owner.terminal_is_empty(){drop(self.writer_close.take());return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}};}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return match owner.step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy port writer")){Ok(step)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()},Err(e)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:e.kind,progress:e.retained_progress()}};}
+        if self.writer_live{let original=unsafe{std::mem::ManuallyDrop::take(&mut self.writer)};return match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.writer_close=Some(owner);self.writer_live=false;semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}}},Err((e,original))=>{self.writer=std::mem::ManuallyDrop::new(original);semio_framework_job::InteractiveJobCloseStep::Refused{kind:e.kind,progress:e.retained_progress()}}};}
+        let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
+        if let Some(owner)=self.port_close.as_mut(){if owner.terminal_is_empty(){drop(self.port_close.take());return semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}};}return match owner.close_step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original toy port lease")){Ok(step)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()},Err(e)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:e.kind,progress:e.retained_progress()}};}
+        match ToolRunJobPort::admit_original_close(&mut self.port,child){Ok(Some((owner,progress)))=>{self.port_close=Some(owner);semio_framework_job::InteractiveJobCloseStep::Pending{progress}},Ok(None)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:empty},Err(e)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:e.kind,progress:e.retained_progress()}}
+    }
+}
+impl Drop for ToyPortJobCustody{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"toy port job abandoned original writer or lease");}}
+macro_rules! toy_port_job_close {
+    ()=>{
+        fn begin_close(&mut self){self.closing=true;}
+        fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.original.demands(0)?.copy_bytes)}
+        fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.original.demands(body)?.capacity_bytes)}
+        fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.original.demands(0)?.release_bytes)}
+        fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.original.demands(0)?.depth)}
+        fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{if !self.closing{return semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()};}self.original.close_step(grant)}
+        fn terminal_is_empty(&self)->bool{self.closing&&self.original.terminal_is_empty()}
+    };
+}
 struct ToyCompactJob {
-    port: ToolRunJobPort,
-    writer: ToolRunTickWriter,
+    original:ToyPortJobCustody,
     stage: usize,
     closing: bool,
 }
@@ -224,7 +279,7 @@ impl semio_framework_job::InteractiveJob for ToyCompactJob {
         if cx.is_cancelled() {
             return semio_framework_job::StepOutcome::Cancelled;
         }
-        if self.port.is_waiting() {
+        if self.original.port().is_waiting() {
             return semio_framework_job::StepOutcome::Yield;
         }
         let expected = &fixture()["compact"];
@@ -239,20 +294,20 @@ impl semio_framework_job::InteractiveJob for ToyCompactJob {
         self.stage += 1;
         match self.stage {
             1 => {
-                self.writer.append_op(encoded(SetCount { value: number(&expected["initialCount"]) as i32 }.into())).expect("toy op fits");
-                self.writer.append_entity(1);
-                let tick = self.writer.finish().expect("the initial tick");
+                self.original.writer.append_op(encoded(SetCount { value: number(&expected["initialCount"]) as i32 }.into())).expect("toy op fits");
+                self.original.writer.append_entity(1);
+                let tick = self.original.writer.finish().expect("the initial tick");
                 ToyRunJob::emit(cx, tick)
             }
             2 => checkpoint(cx),
             stage if stage < 3 + counts.len() => {
                 let index = stage - 3;
                 if index == 0 {
-                    self.writer.retract_to(0);
+                    self.original.writer.retract_to(0);
                 }
-                self.writer.append_op(encoded(SetCount { value: counts[index] as i32 }.into())).expect("toy op fits");
-                let tick = self.writer.finish().expect("a compaction tick");
-                self.port.wait();
+                self.original.writer.append_op(encoded(SetCount { value: counts[index] as i32 }.into())).expect("toy op fits");
+                let tick = self.original.writer.finish().expect("a compaction tick");
+                self.original.port().wait();
                 ToyRunJob::emit(cx, tick)
             }
             stage if stage == 3 + counts.len() => checkpoint(cx),
@@ -260,21 +315,7 @@ impl semio_framework_job::InteractiveJob for ToyCompactJob {
         }
     }
 
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if self.closing {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Blocked
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing
-    }
+    toy_port_job_close!();
 }
 
 thread_local! {
@@ -286,8 +327,7 @@ thread_local! {
 /// [`ToolRunJobPort`], waits, and counts the hop answered when the port is woken — the shape of a run whose
 /// algorithm units live in another component.
 struct ToyWaitJob {
-    port: ToolRunJobPort,
-    writer: ToolRunTickWriter,
+    original:ToyPortJobCustody,
     hops: u64,
     dispatched: u64,
     answered: u64,
@@ -301,8 +341,8 @@ impl semio_framework_job::InteractiveJob for ToyWaitJob {
         }
         if self.dispatched > self.answered {
             self.answered = self.dispatched;
-            self.writer.upsert(self.answered, ToolRunVerdict::Success, 1, ToolRunTraceSubject::Entity { entity: self.answered });
-            let tick = self.writer.finish().expect("an answered hop tick");
+            self.original.writer.upsert(self.answered, ToolRunVerdict::Success, 1, ToolRunTraceSubject::Entity { entity: self.answered });
+            let tick = self.original.writer.finish().expect("an answered hop tick");
             return ToyRunJob::emit(cx, tick);
         }
         if self.dispatched == self.hops {
@@ -310,26 +350,12 @@ impl semio_framework_job::InteractiveJob for ToyWaitJob {
         }
         self.dispatched += 1;
         cx.consume_fuel(1);
-        self.port.wait();
-        self.port.dispatch(Effect::DispatchAction { req: RequestId(self.dispatched), action: text(&fixture()["port"]["hopAction"]).into(), args: None, delay_ms: 0 });
+        self.original.port().wait();
+        self.original.port().dispatch(Effect::DispatchAction { req: RequestId(self.dispatched), action: text(&fixture()["port"]["hopAction"]).into(), args: None, delay_ms: 0 });
         semio_framework_job::StepOutcome::Yield
     }
 
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if self.closing {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Blocked
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing
-    }
+    toy_port_job_close!();
 }
 
 /// 🧸️ The toy run or revalidate job a request describes: it continues from the request's checkpoint.
@@ -341,15 +367,15 @@ fn toy_run_job(request: ToolRunJobRequest<'_, ToyRunApp>) -> ToyRunJob {
     });
     ToyRunJob {
         purpose: request.purpose,
-        writer: ToolRunTickWriter::with_provisional_base(request.identity, request.provisional.len() as u32),
         base_count: request.snapshot.count,
         target: toy_target(&request.config),
         done,
         resumed_from: done,
-        provisional_counts: match request.purpose {
+        original:std::mem::ManuallyDrop::new(ToyRunJobOriginal{writer:ToolRunTickWriter::with_provisional_base(request.identity,request.provisional.len()as u32),provisional_counts: match request.purpose {
             ToolRunJobPurpose::Run => Vec::new(),
             ToolRunJobPurpose::Revalidate => provisional_counts.collect(),
         },
+}),original_live:true,original_close:None,
         checkpoint_due: false,
         finished: false,
         closing: false,
@@ -365,8 +391,11 @@ impl WindowConfigOwner for ToyWorldWindowConfig {
     const MAXIMUM_PUBLICATION_BYTES: usize = 1_024;
     type State = TestConfig;
     type Mutation = TestConfigMutation;
+    type Edit=crate::component::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit;
+    const MAXIMUM_PREPARATION_DEPTH:usize=64;
+    fn build_retained_edit()->std::sync::Arc<Self::Edit>{std::sync::Arc::new(crate::component::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit)}
 
-    fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> {
+    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         crate::app::bounded_window_config_store_owners::<Self>()
     }
 
@@ -415,11 +444,11 @@ impl ArtifactApp for ToyRunApp {
             return Ok(Some(Box::new(member::toy_member_job(request)?)));
         }
         if request.tool_id == text(&fixture()["compact"]["toolId"]) {
-            return Ok(Some(Box::new(ToyCompactJob { port: request.port, writer: ToolRunTickWriter::with_provisional_base(request.identity, request.provisional.len() as u32), stage: 0, closing: false })));
+            return Ok(Some(Box::new(ToyCompactJob { original:ToyPortJobCustody::new(ToolRunTickWriter::with_provisional_base(request.identity,request.provisional.len()as u32),request.port),stage:0,closing:false })));
         }
         if request.tool_id == text(&fixture()["port"]["toolId"]) || request.tool_id == text(&fixture()["concurrentReadOnly"]["readOnlyToolId"]) {
             request.instance_owner.with_mut::<EmptyArtifactInstanceOperationOwner, _>(|_| Ok(()))?;
-            return Ok(Some(Box::new(ToyWaitJob { port: request.port, writer: ToolRunTickWriter::new(request.identity), hops: number(&fixture()["port"]["hops"]), dispatched: 0, answered: 0, closing: false })));
+            return Ok(Some(Box::new(ToyWaitJob { original:ToyPortJobCustody::new(ToolRunTickWriter::new(request.identity),request.port),hops: number(&fixture()["port"]["hops"]), dispatched: 0, answered: 0, closing: false })));
         }
         Ok(Some(Box::new(toy_run_job(request))))
     }
@@ -473,16 +502,16 @@ impl ArtifactApp for ToyRunApp {
             .map_err(|_| PluginAssemblyError::new("toy", "world build"))
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
     }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>, RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Config, Self::ConfigMutation>>> {
+        Some(bounded_config_store_owners::<Self::Config, Self::ConfigMutation>(grant))
     }
 
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
+    fn build_draft_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>, RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Draft, Self::DraftMutation>>> {
+        Some(bounded_document_store_owners::<Self::Draft, Self::DraftMutation>(grant))
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -607,27 +636,40 @@ async fn toy_manifest() -> App {
     App::from_builder(builder.mode_tools("edit", tools).await).await
 }
 
-async fn toy_app(target: u64) -> ToyApp {
-    let mut app = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into())).await;
-    set_target(&mut app, target).await;
+/// 🎟️ The neutral fixture declares independent ceilings before original app admission.
+fn toy_fixture_caller_policy()->(crate::MountedOwnerPolicyV1,usize){let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let g=&law["native"]["grant"];let grant=RetainedCloneGrant{maximum_items:number(&g[0])as usize,maximum_copy_bytes:number(&g[1])as usize,maximum_capacity_bytes:number(&g[2])as usize,maximum_release_bytes:number(&g[3])as usize,maximum_depth:number(&g[4])as usize};(crate::MountedOwnerPolicyV1{preparation:grant,maintenance:grant,close:grant}.validate().unwrap(),number(&law["native"]["maximumIdentityBytes"])as usize)}
+struct ToyFixtureCaller<'a>{policy:crate::MountedOwnerPolicyV1,identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'a>,receipts:Vec<artifact_app_laws::TypedOperationFixtureOwnershipReceipt>}
+impl ToyFixtureCaller<'_>{
+    fn retain_original_receipts<P:PluginApp>(&mut self,app:&mut P){
+        if let Some((kind,phase,grant,progress))=app.take_constructor_receipt(){let expected=match phase{crate::app::ArtifactStoreConstructorPhase::Preparation=>self.policy.preparation,crate::app::ArtifactStoreConstructorPhase::Close=>self.policy.close};assert_eq!(grant,expected);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::Constructor{kind,phase,grant,progress});}
+        if let Some((operation,grant,progress))=app.take_typed_operation_preparation_receipt(){assert_eq!(grant,self.policy.preparation);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::Preparation{operation,grant,progress});}
+        if let Some((grant,progress))=app.take_history_command_receipt(){assert_eq!(grant,self.policy.maintenance);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::History{grant,progress});}
+        if let Some((grant,progress))=app.take_tool_run_receipt(){assert_eq!(grant,self.policy.maintenance);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::ToolRun{grant,progress});}
+    }
+}
+async fn advance_toy<P:PluginApp>(app:&mut P,caller:&mut ToyFixtureCaller<'_>)->Result<(),Fault>{caller.retain_original_receipts(app);let result=app.advance_typed_operation_publication(&mut caller.identity).await;caller.retain_original_receipts(app);result}
+
+async fn toy_app(target: u64, caller:&mut ToyFixtureCaller<'_>) -> ToyApp {
+    let mut app = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into()), caller.policy, &mut caller.identity).await;
+    set_target(&mut app, target, caller).await;
     app
 }
 
-async fn set_target(app: &mut ToyApp, target: u64) {
-    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }).await.expect("toy target config applies");
+async fn set_target(app: &mut ToyApp, target: u64, caller:&mut ToyFixtureCaller<'_>) {
+    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }, &mut caller.identity).await.expect("toy target config applies");
 }
 
 fn toy_meta() -> ActionMeta {
     artifact_app_laws::meta(text(&fixture()["actor"]))
 }
 
-async fn tool_run_action(app: &mut ToyApp, action: &str, arguments: Vec<(String, DslValue)>) -> DslValue {
-    app.handle_action(action, Some(&DslValue::Object(arguments)), &toy_meta()).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}")).output
+async fn tool_run_action(app: &mut ToyApp, action: &str, arguments: Vec<(String, DslValue)>, caller:&mut ToyFixtureCaller<'_>) -> DslValue {
+    app.handle_action(action, Some(&DslValue::Object(arguments)), &toy_meta(), &mut caller.identity).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}")).output
 }
 
-async fn run_action(app: &mut ToyApp, action: &str) -> DslValue {
+async fn run_action(app: &mut ToyApp, action: &str, caller:&mut ToyFixtureCaller<'_>) -> DslValue {
     let arguments = run_arguments(app);
-    tool_run_action(app, action, arguments).await
+    tool_run_action(app, action, arguments, caller).await
 }
 
 fn run_arguments(app: &ToyApp) -> Vec<(String, DslValue)> {
@@ -635,18 +677,18 @@ fn run_arguments(app: &ToyApp) -> Vec<(String, DslValue)> {
     vec![("runId".into(), DslValue::String(slot.run.to_string())), ("generation".into(), DslValue::String(slot.generation.to_string()))]
 }
 
-async fn start(app: &mut ToyApp, tool_id: &str) {
-    let output = tool_run_action(app, "toolRunStart", vec![("toolId".into(), DslValue::String(tool_id.into()))]).await;
+async fn start(app: &mut ToyApp, tool_id: &str, caller:&mut ToyFixtureCaller<'_>) {
+    let output = tool_run_action(app, "toolRunStart", vec![("toolId".into(), DslValue::String(tool_id.into()))], caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "start spawns the run job");
 }
 
-async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool) {
+async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool, caller:&mut ToyFixtureCaller<'_>) {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     while std::time::Instant::now() < deadline {
         if done(app) {
             return;
         }
-        app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        advance_toy(app, caller).await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
     }
     panic!("{what} never settled; state {:?}", app.tool_runs.state());
 }
@@ -684,20 +726,26 @@ async fn drain(probe: &mut MemoryBackbone) -> (usize, usize) {
     })
 }
 
-fn close(app: &mut ToyApp) {
-    artifact_app_laws::close_registered_fixture_app(app);
+fn close(app: &mut ToyApp, caller:&mut ToyFixtureCaller<'_>) {
+    caller.retain_original_receipts(app);
+    artifact_app_laws::close_registered_fixture_app(app,caller.policy);
     assert!(app.tool_runs.terminal_is_empty(), "the tool run ledger retires every owner on close");
 }
 //#endregion 🧰️Harness
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_ticks_render_the_overlay_while_the_committed_document_stays_untouched() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["overlay"];
-    let mut app = toy_app(number(&expected["units"])).await;
+    let mut app = toy_app(number(&expected["units"]), &mut caller).await;
     let generation = app.store.generation();
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "overlay run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding()).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "overlay run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding(), &mut caller).await;
     assert_eq!(app.store.generation(), generation, "ticks never touch the store generation");
     assert_eq!(app.snapshot().expect("committed snapshot").count, number(&expected["committedCount"]) as i32);
     assert_eq!(app.tool_runs.provisional().len() as u64, number(&expected["provisionalOps"]));
@@ -723,26 +771,31 @@ async fn tool_run_ticks_render_the_overlay_while_the_committed_document_stays_un
     let presence = app.tool_run_presence().expect("presence summary");
     assert_eq!((presence.completed, presence.total), (number(&expected["units"]), Some(number(&expected["units"]))));
     assert!(app.tool_run_trace_delta(None).is_some_and(|delta| !delta.is_empty() && !delta.contains(['+', '/', '='])), "trace delta is base64url");
-    run_action(&mut app, "toolRunAbort").await;
-    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted)).await;
+    run_action(&mut app, "toolRunAbort", &mut caller).await;
+    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted), &mut caller).await;
     assert!(render_text(&mut app, "main").await.contains(text(&expected["committedBodyText"])), "an aborted run renders the committed document again");
-    close(&mut app);
+    close(&mut app, &mut caller);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_abort_leaves_store_generation_edits_command_log_and_outbox_untouched() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["abort"];
-    let mut app = toy_app(number(&expected["target"])).await;
+    let mut app = toy_app(number(&expected["target"]), &mut caller).await;
     let mut probe = attach_probe(&mut app, "tool-run-abort").await;
     drain(&mut probe).await;
     app.refresh_cache().await.expect("backfill the command log before the invariant capture");
     let (generation, edits, commands) = (app.store.generation(), app.store.envelope().vcs.edits.len(), app.command_log.len());
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "first provisional unit", |app| app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeAbort"]) * number(&fixture["opsPerUnit"])).await;
-    let output = run_action(&mut app, "toolRunAbort").await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "first provisional unit", |app| app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeAbort"]) * number(&fixture["opsPerUnit"]), &mut caller).await;
+    let output = run_action(&mut app, "toolRunAbort", &mut caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("closeJob"));
-    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
+    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!(app.tool_runs.state().map(ToolRunState::as_str), Some(text(&expected["state"])));
     assert_eq!(app.store.generation(), generation, "abort: store generation");
     assert_eq!(app.store.envelope().vcs.edits.len(), edits, "abort: envelope.vcs.edits length");
@@ -751,7 +804,7 @@ async fn tool_run_abort_leaves_store_generation_edits_command_log_and_outbox_unt
     assert!(app.tool_runs.provisional().is_empty(), "abort retires every provisional op");
     assert_eq!(app.snapshot().expect("committed").count, 0);
     drop(probe);
-    close(&mut app);
+    close(&mut app, &mut caller);
 }
 
 /// ⚖️ LAW: a run that has not completed finalizes its PARTIAL result — the run job stops at its tick boundary and the one
@@ -759,40 +812,50 @@ async fn tool_run_abort_leaves_store_generation_edits_command_log_and_outbox_unt
 /// after it; the run ends `finalized` and the document holds exactly that many units.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_finalize_while_running_publishes_exactly_the_partial_result_computed_so_far() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["partialFinalize"];
-    let mut app = toy_app(number(&expected["target"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
+    let mut app = toy_app(number(&expected["target"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
     let ops_per_unit = number(&fixture["opsPerUnit"]);
-    pump_until(&mut app, "the partial result", |app| app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeFinalize"]) * ops_per_unit).await;
+    pump_until(&mut app, "the partial result", |app| app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeFinalize"]) * ops_per_unit, &mut caller).await;
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Running), "the run is still computing");
     let computed = app.tool_runs.provisional().len();
     let edits = app.store.envelope().vcs.edits.len();
-    let output = run_action(&mut app, "toolRunFinalize").await;
+    let output = run_action(&mut app, "toolRunFinalize", &mut caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
-    pump_until(&mut app, "partial finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work()).await;
+    pump_until(&mut app, "partial finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!((app.store.envelope().vcs.edits.len() - edits) as u64, number(&expected["editsAdded"]));
     let edit = app.store.envelope().vcs.edits.last().expect("finalized edit");
     assert_eq!(edit.forwards.len(), computed, "the edit carries exactly the ops computed until the finalize");
     assert!(edit.mutation_meta.iter().all(|meta| meta.group_id.as_deref() == Some(text(&expected["groupId"]))));
     assert_eq!(app.snapshot().expect("committed").count as u64, computed as u64 / ops_per_unit, "the document holds exactly the computed units");
     assert!(app.tool_runs.provisional().is_empty());
-    close(&mut app);
+    close(&mut app, &mut caller);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_finalize_publishes_one_grouped_edit_one_mutations_batch_and_undo_removes_all() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["finalize"];
-    let mut app = toy_app(number(&expected["units"])).await;
+    let mut app = toy_app(number(&expected["units"]), &mut caller).await;
     let mut probe = attach_probe(&mut app, "tool-run-finalize").await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
     drain(&mut probe).await;
     let (generation, edits, commands) = (app.store.generation(), app.store.envelope().vcs.edits.len(), app.command_log.len());
-    let output = run_action(&mut app, "toolRunFinalize").await;
+    let output = run_action(&mut app, "toolRunFinalize", &mut caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
-    pump_until(&mut app, "finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work()).await;
+    pump_until(&mut app, "finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!(app.store.generation() - generation, number(&expected["storeGenerationAdded"]));
     assert_eq!((app.store.envelope().vcs.edits.len() - edits) as u64, number(&expected["editsAdded"]));
     assert_eq!((app.command_log.len() - commands) as u64, number(&expected["commandRowsAdded"]));
@@ -803,11 +866,11 @@ async fn tool_run_finalize_publishes_one_grouped_edit_one_mutations_batch_and_un
     let committed = app.snapshot().expect("committed after finalize");
     assert_eq!((committed.count, committed.label.as_str()), (number(&expected["countAfterFinalize"]) as i32, text(&expected["labelAfterFinalize"])));
     assert!(app.tool_runs.provisional().is_empty());
-    app.store.dispatch(ArtifactCommand::Undo).await.expect("undo the finalized run");
+    app.store.dispatch(ArtifactCommand::Undo, &mut caller.identity).await.expect("undo the finalized run");
     let undone = app.snapshot().expect("committed after undo");
     assert_eq!((undone.count, undone.label.as_str()), (number(&expected["countAfterUndo"]) as i32, text(&expected["labelAfterUndo"])), "one undo removes the whole run");
     drop(probe);
-    close(&mut app);
+    close(&mut app, &mut caller);
 }
 
 /// ⚖️ LAW: a finalized run is ONE tool transaction — every op of its one edit carries the same `TransactionRef`
@@ -815,12 +878,17 @@ async fn tool_run_finalize_publishes_one_grouped_edit_one_mutations_batch_and_un
 /// tool's own declared label in every locale.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_finalize_is_one_transaction_labelled_by_its_tool_in_every_locale() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
-    let mut app = toy_app(number(&fixture["finalize"]["units"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
-    run_action(&mut app, "toolRunFinalize").await;
-    pump_until(&mut app, "finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work()).await;
+    let mut app = toy_app(number(&fixture["finalize"]["units"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
+    run_action(&mut app, "toolRunFinalize", &mut caller).await;
+    pump_until(&mut app, "finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work(), &mut caller).await;
     let edit = app.store.envelope().vcs.edits.last().expect("finalized edit");
     let edit_id = edit.id.clone();
     let transaction = edit.mutation_meta.first().and_then(|meta| meta.transaction.clone()).expect("the finalized edit is a tool transaction");
@@ -831,7 +899,7 @@ async fn tool_run_finalize_is_one_transaction_labelled_by_its_tool_in_every_loca
     let row = history.commands.iter().find(|row| row.edit_id.as_deref() == Some(edit_id.as_str())).expect("the run's history row");
     assert_eq!(row.transaction.as_ref(), Some(&transaction));
     assert_eq!((row.label.resolve(Terminology::Native, Locale::En).to_string(), row.label.resolve(Terminology::Native, Locale::De).to_string()), ("Toy fill".to_string(), "Spielfüllung".to_string()));
-    close(&mut app);
+    close(&mut app, &mut caller);
 }
 
 /// ⚖️ LAW: a large finalize never piles up returned document roots — after every driver turn the document Store
@@ -839,53 +907,63 @@ async fn tool_run_finalize_is_one_transaction_labelled_by_its_tool_in_every_loca
 /// root and the base its current op reads instead of one whole document per op.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_large_finalize_reclaims_each_folded_root_before_the_next_op() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let law = &fixture["largeFinalize"];
     let units = number(&law["units"]);
     let maximum = number(&law["maximumReturnedReads"]) as usize;
-    let mut app = toy_app(units).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
+    let mut app = toy_app(units, &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
     let edits = app.store.envelope().vcs.edits.len();
-    let output = run_action(&mut app, "toolRunFinalize").await;
+    let output = run_action(&mut app, "toolRunFinalize", &mut caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
     let (mut turns, mut peak) = (0usize, 0usize);
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
     while !(app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work()) {
         assert!(std::time::Instant::now() < deadline, "the large finalize never settled; state {:?}", app.tool_runs.state());
-        app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("large finalize driver turn faulted: {fault:?}"));
+        advance_toy(&mut app, &mut caller).await.unwrap_or_else(|fault| panic!("large finalize driver turn faulted: {fault:?}"));
         turns += 1;
         peak = peak.max(app.store.returned_snapshot_read_count());
         assert!(peak <= maximum, "turn {turns}: {peak} returned document roots are still held (at most {maximum})");
     }
     assert_eq!(app.store.envelope().vcs.edits.len() - edits, 1, "still exactly one grouped edit");
     assert_eq!(app.store.envelope().vcs.edits.last().expect("finalized edit").forwards.len() as u64, units * number(&fixture["opsPerUnit"]), "every provisional op landed");
-    close(&mut app);
+    close(&mut app, &mut caller);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_remote_ingest_rebases_and_a_revalidation_conflict_returns_to_complete_with_the_next_generation() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["conflict"];
-    let mut app = toy_app(number(&fixture["overlay"]["units"])).await;
+    let mut app = toy_app(number(&fixture["overlay"]["units"]), &mut caller).await;
     let mut probe = attach_probe(&mut app, "tool-run-conflict").await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
-    let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId("remote".into())).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
+    let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId("remote".into()), caller.policy, &mut caller.identity).await;
     let mut remote_probe = attach_probe(&mut remote, "tool-run-conflict-remote").await;
     assert_eq!(remote.store.local_actor_id(), &protocol::ActorId("remote".into()));
-    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: number(&expected["remoteCount"]) as i32 }.into()], transaction: None }).await.expect("remote edit");
+    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: number(&expected["remoteCount"]) as i32 }.into()], transaction: None }, &mut caller.identity).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
     }
     let generation = app.store.generation();
-    app.tick_backbone().await.expect("ingest remote edit");
+    app.tick_backbone(&mut caller.identity).await.expect("ingest remote edit");
     assert_eq!(app.store.generation(), generation + 1, "the remote edit is ingested");
-    pump_until(&mut app, "rebase refold settles", |app| app.tool_runs.slot().is_some_and(|slot| u64::from(slot.generation) == number(&expected["generationAfterRebase"])) && !app.tool_runs.is_refolding()).await;
+    pump_until(&mut app, "rebase refold settles", |app| app.tool_runs.slot().is_some_and(|slot| u64::from(slot.generation) == number(&expected["generationAfterRebase"])) && !app.tool_runs.is_refolding(), &mut caller).await;
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Complete));
     let store_generation = app.store.generation();
-    run_action(&mut app, "toolRunFinalize").await;
-    pump_until(&mut app, "revalidation returns", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work()).await;
+    run_action(&mut app, "toolRunFinalize", &mut caller).await;
+    pump_until(&mut app, "revalidation returns", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work(), &mut caller).await;
     let slot = app.tool_runs.slot().expect("slot");
     assert_eq!(slot.state.as_str(), text(&expected["state"]));
     assert_eq!(u64::from(slot.generation), number(&expected["generationAfterConflict"]));
@@ -894,103 +972,123 @@ async fn tool_run_remote_ingest_rebases_and_a_revalidation_conflict_returns_to_c
     assert!(app.tool_runs.provisional().is_empty(), "conflicting ops are retracted");
     assert!(app.tool_runs.steps().expect("steps").iter().any(|step| step.reason == semio_framework_tool_run::TOOL_RUN_REASON_CONFLICT), "a danger conflict step is shown");
     drop((probe, remote_probe));
-    close(&mut app);
-    close(&mut remote);
+    close(&mut app, &mut caller);
+    close(&mut remote, &mut caller);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_stale_generation_and_run_actions_are_silent_no_ops_and_an_illegal_action_publishes_nothing() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
-    let mut app = toy_app(number(&fixture["abort"]["target"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "run is running", |app| app.tool_runs.state() == Some(ToolRunState::Running)).await;
+    let mut app = toy_app(number(&fixture["abort"]["target"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "run is running", |app| app.tool_runs.state() == Some(ToolRunState::Running), &mut caller).await;
     let slot = app.tool_runs.slot().expect("slot");
-    let stale = tool_run_action(&mut app, "toolRunPause", vec![("runId".into(), DslValue::String(slot.run.to_string())), ("generation".into(), DslValue::String(number(&fixture["stale"]["wrongGeneration"]).to_string()))]).await;
+    let stale = tool_run_action(&mut app, "toolRunPause", vec![("runId".into(), DslValue::String(slot.run.to_string())), ("generation".into(), DslValue::String(number(&fixture["stale"]["wrongGeneration"]).to_string()))], &mut caller).await;
     assert_eq!(stale.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["stale"]["code"])));
-    let wrong_run = tool_run_action(&mut app, "toolRunAbort", vec![("runId".into(), DslValue::String(number(&fixture["stale"]["wrongRun"]).to_string())), ("generation".into(), DslValue::String(slot.generation.to_string()))]).await;
+    let wrong_run = tool_run_action(&mut app, "toolRunAbort", vec![("runId".into(), DslValue::String(number(&fixture["stale"]["wrongRun"]).to_string())), ("generation".into(), DslValue::String(slot.generation.to_string()))], &mut caller).await;
     assert_eq!(wrong_run.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["stale"]["code"])));
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Running), "stale actions change nothing");
     let generation = app.store.generation();
-    let illegal = run_action(&mut app, "toolRunResume").await;
+    let illegal = run_action(&mut app, "toolRunResume", &mut caller).await;
     assert_eq!(illegal.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["illegal"]["code"])));
     assert_eq!(app.store.generation(), generation, "an illegal action publishes nothing");
-    let busy = tool_run_action(&mut app, "toolRunStart", vec![("toolId".into(), DslValue::String(text(&fixture["toolId"]).into()))]).await;
+    let busy = tool_run_action(&mut app, "toolRunStart", vec![("toolId".into(), DslValue::String(text(&fixture["toolId"]).into()))], &mut caller).await;
     assert_eq!(busy.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["busy"]["code"])));
     let panel: Value = serde_json::from_str(&render_text(&mut app, FRAMEWORK_TOOL_RUN_BODY_KEY).await).expect("panel parses");
     let finalize = find_node(&panel, &panel_id(&fixture["panel"]["finalize"]["id"], slot.run)).expect("finalize button");
     assert_eq!((finalize["disabled"].as_bool().unwrap_or(false), finalize["accessibility"].get("description")), (false, None), "a running run offers finalize for the partial result it holds");
-    run_action(&mut app, "toolRunAbort").await;
-    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
-    close(&mut app);
+    run_action(&mut app, "toolRunAbort", &mut caller).await;
+    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
+    close(&mut app, &mut caller);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_pause_then_step_drives_exactly_one_unit_per_step() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["pauseStep"];
-    let mut app = toy_app(number(&expected["target"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running)).await;
-    assert_eq!(run_action(&mut app, "toolRunPause").await.get("toolRun").and_then(DslValue::as_str), Some("stopScheduling"));
+    let mut app = toy_app(number(&expected["target"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running), &mut caller).await;
+    assert_eq!(run_action(&mut app, "toolRunPause", &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("stopScheduling"));
     for _ in 0..8 {
-        app.advance_typed_operation_publication().await.expect("paused turn");
+        advance_toy(&mut app, &mut caller).await.expect("paused turn");
     }
     let mut provisional = app.tool_runs.provisional().len() as u64;
     for _ in 0..number(&expected["steps"]) {
-        assert_eq!(run_action(&mut app, "toolRunStep").await.get("toolRun").and_then(DslValue::as_str), Some("driveOneUnit"));
-        pump_until(&mut app, "single step settles", |app| !app.tool_runs.has_pending_work()).await;
+        assert_eq!(run_action(&mut app, "toolRunStep", &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("driveOneUnit"));
+        pump_until(&mut app, "single step settles", |app| !app.tool_runs.has_pending_work(), &mut caller).await;
         let after = app.tool_runs.provisional().len() as u64;
         assert_eq!(after - provisional, number(&expected["opsPerStep"]), "one step is exactly one algorithm unit");
         provisional = after;
         for _ in 0..8 {
-            app.advance_typed_operation_publication().await.expect("paused turn");
+            advance_toy(&mut app, &mut caller).await.expect("paused turn");
         }
         assert_eq!(app.tool_runs.provisional().len() as u64, provisional, "a paused run schedules nothing");
     }
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Paused));
-    assert_eq!(run_action(&mut app, "toolRunPause").await.get("toolRun").and_then(DslValue::as_str), Some("schedule"), "the shared mod+alt+enter chord binds toolRunPause, which resumes a paused run");
+    assert_eq!(run_action(&mut app, "toolRunPause", &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("schedule"), "the shared mod+alt+enter chord binds toolRunPause, which resumes a paused run");
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Running));
-    run_action(&mut app, "toolRunAbort").await;
-    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
-    close(&mut app);
+    run_action(&mut app, "toolRunAbort", &mut caller).await;
+    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
+    close(&mut app, &mut caller);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_reconfigure_resumes_from_its_checkpoint_and_a_lowered_target_retracts() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["reconfigure"];
     let ops_per_unit = number(&fixture["opsPerUnit"]);
-    let mut app = toy_app(number(&expected["initialTarget"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "initial target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
+    let mut app = toy_app(number(&expected["initialTarget"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "initial target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
     let run = app.tool_runs.slot().expect("slot").run;
-    set_target(&mut app, number(&expected["raisedTarget"])).await;
-    pump_until(&mut app, "raised target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["raisedTarget"]) * ops_per_unit).await;
+    set_target(&mut app, number(&expected["raisedTarget"]), &mut caller).await;
+    pump_until(&mut app, "raised target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["raisedTarget"]) * ops_per_unit, &mut caller).await;
     let slot = app.tool_runs.slot().expect("slot");
     assert_eq!((slot.run, u64::from(slot.generation)), (run, number(&expected["generationAfterRaise"])), "reconfigure keeps the run id and bumps the generation");
     assert_eq!(app.tool_runs.progress().expect("progress").counters.first().map(|counter| counter.value), Some(number(&expected["resumedFrom"])), "the job resumed from its checkpoint");
     assert!(render_text(&mut app, "main").await.contains(&format!("count={}", number(&expected["raisedTarget"]))));
-    set_target(&mut app, number(&expected["loweredTarget"])).await;
-    pump_until(&mut app, "lowered target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["loweredTarget"]) * ops_per_unit && !app.tool_runs.is_refolding()).await;
+    set_target(&mut app, number(&expected["loweredTarget"]), &mut caller).await;
+    pump_until(&mut app, "lowered target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["loweredTarget"]) * ops_per_unit && !app.tool_runs.is_refolding(), &mut caller).await;
     assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterLower"]));
     assert!(render_text(&mut app, "main").await.contains(&format!("count={}", number(&expected["loweredTarget"]))), "the retracted tail leaves the overlay");
     assert_eq!(app.snapshot().expect("committed").count, 0, "reconfigure never commits");
-    run_action(&mut app, "toolRunAbort").await;
-    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
-    close(&mut app);
+    run_action(&mut app, "toolRunAbort", &mut caller).await;
+    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
+    close(&mut app, &mut caller);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_freeze_policy_rejects_local_artifact_emits_with_busy() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
-    let mut app = toy_app(number(&fixture["abort"]["target"])).await;
-    start(&mut app, text(&fixture["freezeToolId"])).await;
-    let result = app.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { artifact_mutations: vec![SetCount { value: 1 }.into()], ..Default::default() }, &toy_meta()).await;
+    let mut app = toy_app(number(&fixture["abort"]["target"]), &mut caller).await;
+    start(&mut app, text(&fixture["freezeToolId"]), &mut caller).await;
+    let result = app.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { artifact_mutations: vec![SetCount { value: 1 }.into()], ..Default::default() }, &toy_meta(), &mut caller.identity).await;
     let fault = result.err().expect("a freezing run rejects local artifact emits");
     assert_eq!(fault.code, FaultCode::new(text(&fixture["busy"]["code"])));
-    run_action(&mut app, "toolRunAbort").await;
-    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
-    close(&mut app);
+    run_action(&mut app, "toolRunAbort", &mut caller).await;
+    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
+    close(&mut app, &mut caller);
 }
 
 /// ⏱️ Bench-style law: a Nakagin-sized fill (771 ticks, two ops each) appends to the overlay in O(k).
@@ -999,10 +1097,15 @@ async fn tool_run_freeze_policy_rejects_local_artifact_emits_with_busy() {
 /// would exceed it on every late tick.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_overlay_append_per_tick_stays_below_two_milliseconds_for_nakagin_sized_ticks() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["bench"];
-    let mut app = toy_app(number(&fixture["defaultTarget"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
+    let mut app = toy_app(number(&fixture["defaultTarget"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
     let identity = app.tool_runs.identity().expect("identity");
     let label = "x".repeat(number(&expected["labelBytes"]) as usize);
     let ticks = number(&expected["ticks"]);
@@ -1033,9 +1136,9 @@ async fn tool_run_overlay_append_per_tick_stays_below_two_milliseconds_for_nakag
     assert!(over_budget <= number(&expected["allowedPreemptedTicks"]), "{over_budget} of {ticks} overlay appends exceeded {budget:?} (worst {worst:?})");
     assert_eq!(app.tool_runs.provisional().len() as u64, ticks * 2);
     assert!(render_text(&mut app, "main").await.contains(&format!("count={ticks}")));
-    run_action(&mut app, "toolRunAbort").await;
-    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
-    close(&mut app);
+    run_action(&mut app, "toolRunAbort", &mut caller).await;
+    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
+    close(&mut app, &mut caller);
 }
 
 //#region 🔌️IntegrationSeams
@@ -1067,21 +1170,26 @@ fn cursor_after(delta: &ToolRunTraceDelta) -> ToolRunTraceCursor {
     ToolRunTraceCursor { run: delta.identity.id.run, generation: delta.identity.generation, page: delta.next }
 }
 
-async fn abort_and_close(app: &mut ToyApp) {
-    run_action(app, "toolRunAbort").await;
-    pump_until(app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
-    close(app);
+async fn abort_and_close(app: &mut ToyApp, caller:&mut ToyFixtureCaller<'_>) {
+    run_action(app, "toolRunAbort", caller).await;
+    pump_until(app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), caller).await;
+    close(app, caller);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_scene_render_carries_the_trace_lane_and_honours_the_echoed_cursor() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["traceLane"];
-    let mut app = toy_app(number(&expected["units"])).await;
+    let mut app = toy_app(number(&expected["units"]), &mut caller).await;
     let (idle, idle_delta) = render_world(&mut app, None).await;
     assert!(idle_delta.is_none() && idle.lanes.iter().all(|lane| lane.lane != text(&expected["laneName"])), "no run, no lane");
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "trace run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding()).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "trace run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding(), &mut caller).await;
     let store_pages = app.tool_runs.trace().expect("trace").next_page();
     assert!(store_pages > number(&expected["resumePage"]) as u32, "the run logged several trace pages ({store_pages})");
     let (scene, delta) = render_world(&mut app, None).await;
@@ -1101,25 +1209,30 @@ async fn tool_run_scene_render_carries_the_trace_lane_and_honours_the_echoed_cur
     let (_, rebound) = render_world(&mut app, Some(ToolRunTraceCursor { generation: slot.generation + 1, page: resume, ..cursor_after(&delta) })).await;
     let rebound = rebound.expect("a generation mismatch resends");
     assert!(rebound.clear && rebound.pages.first().map(|page| page.page) == Some(0), "a run/generation mismatch sends clear and resends from page 0");
-    run_action(&mut app, "toolRunAbort").await;
-    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
-    assert_eq!(run_action(&mut app, "toolRunDismiss").await.get("toolRun").and_then(DslValue::as_str), Some("clearTrace"));
+    run_action(&mut app, "toolRunAbort", &mut caller).await;
+    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
+    assert_eq!(run_action(&mut app, "toolRunDismiss", &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("clearTrace"));
     assert!(app.tool_runs.slot().is_none(), "a dismissed run leaves no slot");
     let (_, cleared) = render_world(&mut app, Some(cursor_after(&delta))).await;
     let cleared = cleared.expect("a dismissed run clears a renderer still holding pages");
     assert!(cleared.clear && cleared.pages.is_empty() && cleared.next == 0);
     let (_, empty) = render_world(&mut app, Some(cursor_after(&cleared))).await;
     assert!(empty.is_none(), "a cleared renderer at page 0 gets nothing");
-    close(&mut app);
+    close(&mut app, &mut caller);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_trace_backlog_keeps_the_scene_dirty_until_the_echoed_cursor_stalls() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["traceLane"];
-    let mut app = toy_app(number(&expected["units"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "trace run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding()).await;
+    let mut app = toy_app(number(&expected["units"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "trace run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding(), &mut caller).await;
     while app.take_typed_operation_ui_scope().is_some() {}
     app.flush_tool_run_ui_dirty();
     while app.take_typed_operation_ui_scope().is_some() {}
@@ -1145,16 +1258,21 @@ async fn tool_run_trace_backlog_keeps_the_scene_dirty_until_the_echoed_cursor_st
         while app.take_typed_operation_ui_scope().is_some() {}
     }
     assert_eq!(dirty_refreshes, number(&expected["stallRefreshes"]), "a renderer that never echoes costs a bounded number of refreshes");
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_tick_dirty_scope_is_the_panel_plus_the_scene_windows_and_excludes_unrelated_windows() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["dirtyScope"];
-    let mut app = toy_app(number(&fixture["abort"]["target"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running)).await;
+    let mut app = toy_app(number(&fixture["abort"]["target"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running), &mut caller).await;
     render_world(&mut app, None).await;
     let other = text(&fixture["traceLane"]["otherWindowId"]);
     let tree = app.render(text(&expected["excludedWindowBody"]), None, &window_view(other, None)).await.expect("render the unrelated window");
@@ -1162,7 +1280,7 @@ async fn tool_run_tick_dirty_scope_is_the_panel_plus_the_scene_windows_and_exclu
     app.flush_tool_run_ui_dirty();
     while app.take_typed_operation_ui_scope().is_some() {}
     let before = app.tool_runs.provisional().len();
-    pump_until(&mut app, "a tick lands", |app| app.tool_runs.provisional().len() > before).await;
+    pump_until(&mut app, "a tick lands", |app| app.tool_runs.provisional().len() > before, &mut caller).await;
     let scope = app.take_typed_operation_ui_scope().expect("a tick owes a dirty scope");
     let strings = |value: &Value| value.as_array().expect("strings").iter().map(|item| text(item).to_string()).collect::<Vec<_>>();
     assert_eq!(
@@ -1172,68 +1290,83 @@ async fn tool_run_tick_dirty_scope_is_the_panel_plus_the_scene_windows_and_exclu
     );
     let UiDirtyScope::Partial { window_bodies, .. } = &scope else { unreachable!() };
     assert!(!window_bodies.iter().any(|body| body == text(&expected["excludedWindowBody"])), "a window without a scene surface is not dirtied by a tick");
-    let pause = run_action(&mut app, "toolRunPause").await;
+    let pause = run_action(&mut app, "toolRunPause", &mut caller).await;
     assert_eq!(pause.get("toolRun").and_then(DslValue::as_str), Some("stopScheduling"));
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_presence_and_the_ephemeral_snapshot_follow_the_run_with_completed_never_above_total() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["presence"];
     let reconfigure = &fixture["reconfigure"];
-    let mut app = toy_app(number(&fixture["abort"]["target"])).await;
+    let mut app = toy_app(number(&fixture["abort"]["target"]), &mut caller).await;
     assert!(app.tool_run_presence().is_none() && app.ephemeral_snapshot().await.tool_run.is_none(), "no run, no presence summary");
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "running", |app| app.tool_runs.state() == Some(ToolRunState::Running) && app.tool_runs.progress().is_some_and(|progress| progress.completed > 0)).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "running", |app| app.tool_runs.state() == Some(ToolRunState::Running) && app.tool_runs.progress().is_some_and(|progress| progress.completed > 0), &mut caller).await;
     let running = app.tool_run_presence().expect("running presence");
     assert_eq!((running.tool_id.as_str(), running.state.wire_name()), (text(&fixture["toolId"]), text(&expected["running"])));
     assert!(running.total.is_none_or(|total| running.completed <= total));
     assert_eq!(app.ephemeral_snapshot().await.tool_run, Some(running), "the ephemeral snapshot carries the summary the heartbeat publishes");
-    run_action(&mut app, "toolRunAbort").await;
-    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
+    run_action(&mut app, "toolRunAbort", &mut caller).await;
+    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!(app.tool_run_presence().map(|presence| presence.state.wire_name()), Some(text(&expected["aborted"])));
-    close(&mut app);
-    let mut app = toy_app(number(&reconfigure["raisedTarget"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "raised run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
-    set_target(&mut app, number(&reconfigure["loweredTarget"])).await;
+    close(&mut app, &mut caller);
+    let mut app = toy_app(number(&reconfigure["raisedTarget"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "raised run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
+    set_target(&mut app, number(&reconfigure["loweredTarget"]), &mut caller).await;
     let mut clamped = true;
-    pump_until(&mut app, "lowered run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&reconfigure["loweredTarget"]) * number(&fixture["opsPerUnit"])).await;
+    pump_until(&mut app, "lowered run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&reconfigure["loweredTarget"]) * number(&fixture["opsPerUnit"]), &mut caller).await;
     for _ in 0..4 {
         let presence = app.tool_run_presence().expect("presence");
         clamped &= presence.total.is_none_or(|total| presence.completed <= total);
-        app.advance_typed_operation_publication().await.expect("turn");
+        advance_toy(&mut app, &mut caller).await.expect("turn");
     }
     let presence = app.tool_run_presence().expect("presence");
     assert!(clamped, "completed never exceeds total");
     assert_eq!((presence.state.wire_name(), presence.total), (text(&expected["complete"]), Some(number(&expected["loweredTotal"]))));
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tool_run_provisional_entities_ride_the_instance_records_the_producer_stamps() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["provisional"];
-    let mut app = toy_app(number(&expected["units"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding()).await;
+    let mut app = toy_app(number(&expected["units"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding(), &mut caller).await;
     let (scene, _) = render_world(&mut app, None).await;
     let instances: Vec<Value> = serde_json::from_str(&scene.instances_json).expect("instances json");
     let flagged: Vec<&str> = instances.iter().filter(|instance| instance["provisional"] == Value::Bool(true)).map(|instance| text(&instance["id"])).collect();
     assert_eq!(flagged, expected["flaggedInstances"].as_array().expect("flagged").iter().map(text).collect::<Vec<_>>(), "ArtifactView::tool_run().provisional_entities drives the provisional instance flag");
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 #[semio_framework_async_macros::async_test]
 async fn tool_run_job_port_hands_effects_to_the_host_and_a_waiting_job_keeps_nothing_runnable_until_woken() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["port"];
-    let mut app = toy_app(1).await;
-    start(&mut app, text(&expected["toolId"])).await;
+    let mut app = toy_app(1, &mut caller).await;
+    start(&mut app, text(&expected["toolId"]), &mut caller).await;
     for hop in 1..=number(&expected["hops"]) {
         pump_until(&mut app, "the hop is handed to the host", |app| {
             app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting) && !app.tool_runs.port().is_some_and(ToolRunJobPort::has_effects) && app.tool_runs.trace().is_some_and(|trace| trace.len() as u64 == hop - 1)
-        })
+        }, &mut caller)
         .await;
         let mut effects = Vec::new();
         while let Some(effect) = app.take_typed_operation_effect() {
@@ -1245,14 +1378,14 @@ async fn tool_run_job_port_hands_effects_to_the_host_and_a_waiting_job_keeps_not
             app.flush_tool_run_ui_dirty();
         }
         assert!(!app.tool_runs.has_pending_work() && !app.tool_run_has_pending_work(), "hop {hop}: a waiting job keeps its instance idle");
-        app.advance_typed_operation_publication().await.expect("an idle turn");
+        advance_toy(&mut app, &mut caller).await.expect("an idle turn");
         assert!(app.take_typed_operation_effect().is_none(), "hop {hop}: an unwoken job is never stepped again");
         app.tool_runs.port().expect("the run's port").wake();
         assert!(app.tool_runs.has_pending_work(), "hop {hop}: the wake makes the run runnable again");
     }
-    pump_until(&mut app, "every hop answered", |app| app.tool_runs.state().map(ToolRunState::as_str) == Some(text(&expected["state"]))).await;
+    pump_until(&mut app, "every hop answered", |app| app.tool_runs.state().map(ToolRunState::as_str) == Some(text(&expected["state"])), &mut caller).await;
     assert_eq!(app.tool_runs.trace().expect("trace").len() as u64, number(&expected["traceRecords"]), "one trace record per answered hop");
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 //#endregion 🔌️IntegrationSeams
 
@@ -1299,20 +1432,25 @@ fn every_action_arg_carrier_of_an_exact_integer_reads_the_same_identity() {
 /// `handle_action` door the shell dispatches through.
 #[semio_framework_async_macros::async_test]
 async fn a_finalize_in_the_wire_carrier_finalizes_the_run_it_names() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let carrier = text(&fixture["actionArgCarriers"]["finalizeCarrier"]);
-    let mut app = toy_app(number(&fixture["finalize"]["units"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "the run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
+    let mut app = toy_app(number(&fixture["finalize"]["units"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "the run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
     let slot = app.tool_runs.slot().expect("a complete run has a slot");
     let row = serde_json::json!({ "carrier": carrier, "value": f64::from(slot.generation) });
     let arguments = vec![("runId".to_string(), DslValue::String(slot.run.to_string())), ("generation".to_string(), carrier_value(&row))];
-    let output = tool_run_action(&mut app, "toolRunFinalize", arguments).await;
+    let output = tool_run_action(&mut app, "toolRunFinalize", arguments, &mut caller).await;
     println!("[STATS] finalize carrier={carrier} output={output:?}");
     assert_eq!(output.get("rejected").and_then(DslValue::as_str), None, "a finalize naming the run's own generation is never stale, whatever carrier the number arrived in");
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"), "it begins the finalize");
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Finalizing), "and the run leaves complete");
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 //#endregion 🔢️ActionArgCarriers
 
@@ -1330,38 +1468,43 @@ async fn a_finalize_in_the_wire_carrier_finalizes_the_run_it_names() {
 /// ▶️ And the slot is free: the next start is admitted, with no finalize action anywhere in this test.
 #[semio_framework_async_macros::async_test]
 async fn a_read_only_run_finalizes_itself_and_frees_its_slot_for_the_next_start() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["readOnlyRun"];
     let tool_id = text(&expected["toolId"]);
-    let mut app = toy_app(number(&expected["units"])).await;
-    start(&mut app, tool_id).await;
-    pump_until(&mut app, "the read-only run leaves complete on its own", |app| app.tool_runs.state().is_some_and(|state| state != ToolRunState::Running && state != ToolRunState::Starting && state != ToolRunState::Complete)).await;
+    let mut app = toy_app(number(&expected["units"]), &mut caller).await;
+    start(&mut app, tool_id, &mut caller).await;
+    pump_until(&mut app, "the read-only run leaves complete on its own", |app| app.tool_runs.state().is_some_and(|state| state != ToolRunState::Running && state != ToolRunState::Starting && state != ToolRunState::Complete), &mut caller).await;
     let state = app.tool_runs.state().expect("a state");
     println!("[STATS] readOnlyRun state={} after its job completed, with no finalize action dispatched", state.as_str());
     assert_ne!(state, ToolRunState::Complete, "a read-only run never parks in complete waiting for a finalize nobody owes it");
-    pump_until(&mut app, "the read-only run settles", |app| app.tool_runs.state().is_some_and(ToolRunState::is_terminal) && !app.tool_runs.has_pending_work()).await;
-    let output = tool_run_action(&mut app, "toolRunStart", vec![("toolId".into(), DslValue::String(tool_id.into()))]).await;
+    pump_until(&mut app, "the read-only run settles", |app| app.tool_runs.state().is_some_and(ToolRunState::is_terminal) && !app.tool_runs.has_pending_work(), &mut caller).await;
+    let output = tool_run_action(&mut app, "toolRunStart", vec![("toolId".into(), DslValue::String(tool_id.into()))], &mut caller).await;
     assert_eq!(output.get("rejected").and_then(DslValue::as_str), None, "the finished read-only run never refuses the next start as busy");
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "and the next start really spawns a job");
     assert_eq!(expected["startsAgainWithoutAnyFinalizeAction"].as_bool(), Some(true));
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 //#region 🎯️RetargetAndSettings
 /// 📡️ A remote peer sets the count to `count`; `probe` forwards its mutation batch and `app` ingests it.
-async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, channel: &str, count: u64) {
-    let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId("remote".into())).await;
+async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, channel: &str, count: u64, caller:&mut ToyFixtureCaller<'_>) {
+    let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId("remote".into()), caller.policy, &mut caller.identity).await;
     let mut remote_probe = attach_probe(&mut remote, channel).await;
     assert_eq!(remote.store.local_actor_id(), &protocol::ActorId("remote".into()));
-    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: count as i32 }.into()], transaction: None }).await.expect("remote edit");
+    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: count as i32 }.into()], transaction: None }, &mut caller.identity).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
     }
     let generation = app.store.generation();
-    app.tick_backbone().await.expect("ingest remote edit");
+    app.tick_backbone(&mut caller.identity).await.expect("ingest remote edit");
     assert_eq!(app.store.generation(), generation + 1, "the remote edit is ingested");
     drop(remote_probe);
-    close(&mut remote);
+    close(&mut remote, caller);
 }
 
 /// ⚖️ LAW: a base change during a run hands every later tick the new identity — a plain job is rebuilt under it
@@ -1369,27 +1512,32 @@ async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, chann
 /// instead of producing ticks the ledger drops as stale.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_base_change_rebinds_the_running_job_so_ticks_never_carry_a_stale_identity() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["rebind"];
     for (tool_id, rebuilt) in [(text(&fixture["toolId"]), true), (text(&fixture["retarget"]["toolId"]), false)] {
-        let mut app = toy_app(number(&expected["target"])).await;
+        let mut app = toy_app(number(&expected["target"]), &mut caller).await;
         let mut probe = attach_probe(&mut app, &format!("tool-run-rebind-{tool_id}")).await;
-        start(&mut app, tool_id).await;
+        start(&mut app, tool_id, &mut caller).await;
         pump_until(&mut app, "first checkpointed unit", |app| {
             app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeRebase"]) * number(&fixture["opsPerUnit"]) && app.tool_runs.checkpoint().is_some() && app.tool_runs.state() == Some(ToolRunState::Running)
-        })
+        }, &mut caller)
         .await;
-        ingest_remote_count(&mut app, &mut probe, &format!("tool-run-rebind-remote-{tool_id}"), number(&expected["remoteCount"])).await;
-        pump_until(&mut app, "rebase observed", |app| app.tool_runs.slot().is_some_and(|slot| u64::from(slot.generation) == number(&expected["generationAfterRebase"]))).await;
+        ingest_remote_count(&mut app, &mut probe, &format!("tool-run-rebind-remote-{tool_id}"), number(&expected["remoteCount"]), &mut caller).await;
+        pump_until(&mut app, "rebase observed", |app| app.tool_runs.slot().is_some_and(|slot| u64::from(slot.generation) == number(&expected["generationAfterRebase"])), &mut caller).await;
         let identity = app.tool_runs.identity().expect("identity");
         let after_rebase = app.tool_runs.provisional().len();
-        pump_until(&mut app, "the run appends after the rebase", |app| app.tool_runs.provisional().len() > after_rebase + 2 * number(&fixture["opsPerUnit"]) as usize).await;
+        pump_until(&mut app, "the run appends after the rebase", |app| app.tool_runs.provisional().len() > after_rebase + 2 * number(&fixture["opsPerUnit"]) as usize, &mut caller).await;
         assert_eq!(app.tool_runs.identity(), Some(identity), "{tool_id}: appending never moved the identity again");
         let resumed_from = app.tool_runs.progress().expect("progress").counters.first().map_or(0, |counter| counter.value);
         println!("[STATS] rebind {tool_id}: provisional {after_rebase} -> {} resumedFrom={resumed_from}", app.tool_runs.provisional().len());
         assert_eq!(resumed_from > 0, rebuilt, "{tool_id}: a plain job is rebuilt from its checkpoint, a retargetable job keeps running");
         drop(probe);
-        abort_and_close(&mut app).await;
+        abort_and_close(&mut app, &mut caller).await;
     }
 }
 
@@ -1397,28 +1545,33 @@ async fn tool_run_base_change_rebinds_the_running_job_so_ticks_never_carry_a_sta
 /// generation of the dispatch; an identity argument that is stale still no-ops.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_chord_actions_without_an_identity_resolve_the_live_run_and_stale_identities_still_no_op() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["chord"];
-    let mut app = toy_app(number(&expected["target"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "running", |app| app.tool_runs.state() == Some(ToolRunState::Running)).await;
-    let output = app.handle_action("toolRunPause", None, &toy_meta()).await.expect("chord pause").output;
+    let mut app = toy_app(number(&expected["target"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "running", |app| app.tool_runs.state() == Some(ToolRunState::Running), &mut caller).await;
+    let output = app.handle_action("toolRunPause", None, &toy_meta(), &mut caller.identity).await.expect("chord pause").output;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("stopScheduling"), "a chord without arguments pauses the live run");
     let window_only = vec![("windowId".to_string(), DslValue::String(text(&expected["windowArgument"]).into()))];
-    assert_eq!(tool_run_action(&mut app, "toolRunResume", window_only).await.get("toolRun").and_then(DslValue::as_str), Some("schedule"), "arguments that name no identity resolve the live run too");
+    assert_eq!(tool_run_action(&mut app, "toolRunResume", window_only, &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("schedule"), "arguments that name no identity resolve the live run too");
     let slot = app.tool_runs.slot().expect("slot");
-    let stale = tool_run_action(&mut app, "toolRunPause", vec![("runId".into(), DslValue::String(slot.run.to_string())), ("generation".into(), DslValue::String(number(&fixture["stale"]["wrongGeneration"]).to_string()))]).await;
+    let stale = tool_run_action(&mut app, "toolRunPause", vec![("runId".into(), DslValue::String(slot.run.to_string())), ("generation".into(), DslValue::String(number(&fixture["stale"]["wrongGeneration"]).to_string()))], &mut caller).await;
     assert_eq!(stale.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["stale"]["code"])), "a stale identity still no-ops");
-    let generation_only = tool_run_action(&mut app, "toolRunPause", vec![("generation".into(), DslValue::String(slot.generation.to_string()))]).await;
+    let generation_only = tool_run_action(&mut app, "toolRunPause", vec![("generation".into(), DslValue::String(slot.generation.to_string()))], &mut caller).await;
     assert_eq!(generation_only.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["stale"]["code"])), "a partial identity is checked as named, never completed from the live run");
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Running));
-    let output = app.handle_action("toolRunAbort", None, &toy_meta()).await.expect("chord abort").output;
+    let output = app.handle_action("toolRunAbort", None, &toy_meta(), &mut caller.identity).await.expect("chord abort").output;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("closeJob"), "a chord abort aborts the live run");
-    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
-    let output = app.handle_action("toolRunDismiss", None, &toy_meta()).await.expect("chord dismiss").output;
+    pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
+    let output = app.handle_action("toolRunDismiss", None, &toy_meta(), &mut caller.identity).await.expect("chord dismiss").output;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("clearTrace"));
     assert!(app.tool_runs.slot().is_none());
-    close(&mut app);
+    close(&mut app, &mut caller);
 }
 
 /// ⚖️ LAW: `settingsChanged` fires only when a value behind a declared settings pointer changes. Republishing the
@@ -1426,30 +1579,35 @@ async fn tool_run_chord_actions_without_an_identity_resolve_the_live_run_and_sta
 /// and its job — and a run that declares no settings reads is never reconfigured at all.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_settings_changed_fires_only_for_the_declared_settings_reads() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["settingsReads"];
     for tool_id in [text(&fixture["toolId"]), text(&expected["undeclaredToolId"])] {
         let declared = tool_id == text(&fixture["toolId"]);
-        let mut app = toy_app(number(&expected["target"])).await;
-        start(&mut app, tool_id).await;
-        pump_until(&mut app, "running with provisional units", |app| app.tool_runs.state() == Some(ToolRunState::Running) && !app.tool_runs.provisional().is_empty()).await;
+        let mut app = toy_app(number(&expected["target"]), &mut caller).await;
+        start(&mut app, tool_id, &mut caller).await;
+        pump_until(&mut app, "running with provisional units", |app| app.tool_runs.state() == Some(ToolRunState::Running) && !app.tool_runs.provisional().is_empty(), &mut caller).await;
         let config_generation = app.config_store.generation();
-        set_target(&mut app, number(&expected["target"])).await;
+        set_target(&mut app, number(&expected["target"]), &mut caller).await;
         assert!(app.config_store.generation() > config_generation, "{tool_id}: the republished target is a real config publication");
         app.tool_runs.note_window_config_published();
         for _ in 0..8 {
-            app.advance_typed_operation_publication().await.expect("turn");
+            advance_toy(&mut app, &mut caller).await.expect("turn");
         }
         assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterUnrelatedPublications"]), "{tool_id}: unrelated publications never reconfigure");
         assert_eq!(app.tool_runs.progress().expect("progress").counters.first().map(|counter| counter.value), Some(0), "{tool_id}: the job was never rebuilt");
-        set_target(&mut app, number(&expected["changedTarget"])).await;
+        set_target(&mut app, number(&expected["changedTarget"]), &mut caller).await;
         for _ in 0..8 {
-            app.advance_typed_operation_publication().await.expect("turn");
+            advance_toy(&mut app, &mut caller).await.expect("turn");
         }
         let generation = u64::from(app.tool_runs.slot().expect("slot").generation);
         println!("[STATS] settingsReads {tool_id}: declared={declared} generation after the changed target={generation}");
         assert_eq!(generation, if declared { number(&expected["generationAfterChangedTarget"]) } else { 0 }, "{tool_id}: only a declared read reconfigures");
-        abort_and_close(&mut app).await;
+        abort_and_close(&mut app, &mut caller).await;
     }
 }
 
@@ -1457,70 +1615,85 @@ async fn tool_run_settings_changed_fires_only_for_the_declared_settings_reads() 
 /// place — a raise continues and a lower retracts without any rebuild — and a base change rebinds it in place.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_reconfigure_resume_retargets_a_retargetable_job_in_place() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["retarget"];
     let ops_per_unit = number(&fixture["opsPerUnit"]);
-    let mut app = toy_app(number(&expected["initialTarget"])).await;
+    let mut app = toy_app(number(&expected["initialTarget"]), &mut caller).await;
     let mut probe = attach_probe(&mut app, "tool-run-retarget").await;
-    start(&mut app, text(&expected["toolId"])).await;
-    pump_until(&mut app, "initial target completes and its resident job is no work", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work()).await;
+    start(&mut app, text(&expected["toolId"]), &mut caller).await;
+    pump_until(&mut app, "initial target completes and its resident job is no work", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work(), &mut caller).await;
     let run = app.tool_runs.slot().expect("slot").run;
-    set_target(&mut app, number(&expected["raisedTarget"])).await;
-    pump_until(&mut app, "raised target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["raisedTarget"]) * ops_per_unit).await;
+    set_target(&mut app, number(&expected["raisedTarget"]), &mut caller).await;
+    pump_until(&mut app, "raised target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["raisedTarget"]) * ops_per_unit, &mut caller).await;
     let slot = app.tool_runs.slot().expect("slot");
     assert_eq!((slot.run, u64::from(slot.generation)), (run, number(&expected["generationAfterRaise"])));
     assert_eq!(app.tool_runs.progress().expect("progress").counters.first().map(|counter| counter.value), Some(number(&expected["resumedFrom"])), "the raise retargeted the resident job, no rebuild replayed a checkpoint");
-    set_target(&mut app, number(&expected["loweredTarget"])).await;
-    pump_until(&mut app, "lowered target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["loweredTarget"]) * ops_per_unit && !app.tool_runs.is_refolding()).await;
+    set_target(&mut app, number(&expected["loweredTarget"]), &mut caller).await;
+    pump_until(&mut app, "lowered target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["loweredTarget"]) * ops_per_unit && !app.tool_runs.is_refolding(), &mut caller).await;
     assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterLower"]));
     assert!(render_text(&mut app, "main").await.contains(&format!("count={}", number(&expected["loweredTarget"]))), "the retracted tail leaves the overlay");
     assert_eq!(app.tool_runs.progress().expect("progress").counters.first().map(|counter| counter.value), Some(number(&expected["resumedFrom"])));
-    ingest_remote_count(&mut app, &mut probe, "tool-run-retarget-remote", number(&expected["remoteCount"])).await;
-    set_target(&mut app, number(&expected["raisedTarget"])).await;
-    pump_until(&mut app, "rebased and raised", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["raisedTarget"]) * ops_per_unit && !app.tool_runs.is_refolding()).await;
+    ingest_remote_count(&mut app, &mut probe, "tool-run-retarget-remote", number(&expected["remoteCount"]), &mut caller).await;
+    set_target(&mut app, number(&expected["raisedTarget"]), &mut caller).await;
+    pump_until(&mut app, "rebased and raised", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["raisedTarget"]) * ops_per_unit && !app.tool_runs.is_refolding(), &mut caller).await;
     assert_eq!(app.tool_runs.progress().expect("progress").counters.first().map(|counter| counter.value), Some(number(&expected["resumedFrom"])), "the rebased run was rebound and retargeted in place");
     assert_eq!(app.snapshot().expect("committed").count, number(&expected["remoteCount"]) as i32, "reconfigure never commits");
     drop(probe);
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 /// ⚖️ LAW: a retract followed by re-appends spread over several ticks keeps the previous overlay rendered until the
 /// job reaches its checkpoint; only then does the refolded overlay replace it.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_retract_keeps_the_previous_overlay_until_the_job_reaches_its_checkpoint() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["compact"];
-    let mut app = toy_app(1).await;
-    start(&mut app, text(&expected["toolId"])).await;
+    let mut app = toy_app(1, &mut caller).await;
+    start(&mut app, text(&expected["toolId"]), &mut caller).await;
     let counts: Vec<u64> = expected["compactCounts"].as_array().expect("counts").iter().map(number).collect();
     for (index, _) in counts.iter().enumerate() {
-        pump_until(&mut app, "a compaction page landed and was folded", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting) && app.tool_runs.provisional().len() == index + 1 && !app.tool_runs.has_pending_work()).await;
+        pump_until(&mut app, "a compaction page landed and was folded", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting) && app.tool_runs.provisional().len() == index + 1 && !app.tool_runs.has_pending_work(), &mut caller).await;
         let body = render_text(&mut app, "main").await;
         println!("[STATS] compact page {index}: rendered {body}");
         assert!(app.tool_runs.is_refolding(), "page {index}: the retract refold waits for its boundary");
         assert!(body.contains(text(&expected["renderedWhileCompacting"])), "page {index}: the previous overlay stays rendered: {body}");
         app.tool_runs.port().expect("the run's port").wake();
     }
-    pump_until(&mut app, "the compaction checkpoint swaps the overlay", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding()).await;
+    pump_until(&mut app, "the compaction checkpoint swaps the overlay", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding(), &mut caller).await;
     let body = render_text(&mut app, "main").await;
     assert!(body.contains(text(&expected["renderedAfterCheckpoint"])), "the refolded overlay replaces the previous one at the boundary: {body}");
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 /// ⚖️ LAW: the run's trace key allocator hands out keys above every key its ticks upserted and every key allocated
 /// before, the request carries the entity marks, and the request names the window the run was started from.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_requests_carry_trace_key_allocation_entity_marks_and_the_starting_window() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["traceKeys"];
     let window = &fixture["startWindow"];
-    let mut app = toy_app(number(&expected["units"])).await;
+    let mut app = toy_app(number(&expected["units"]), &mut caller).await;
     TOY_REQUEST_WINDOWS.with(|windows| windows.borrow_mut().clear());
     let mut meta = toy_meta();
     meta.view_state = Some(window_view(text(&window["windowId"]), None));
-    let output = app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(text(&fixture["toolId"]).into()))])), &meta).await.expect("start").output;
+    let output = app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(text(&fixture["toolId"]).into()))])), &meta, &mut caller.identity).await.expect("start").output;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"));
-    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
+    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
     assert_eq!(app.tool_runs.window(), Some((text(&window["windowId"]), text(&window["windowKindId"]))));
     let requests = TOY_REQUEST_WINDOWS.with(|windows| windows.borrow().clone());
     assert!(requests.iter().any(|(tool, window_id, window_config)| tool == text(&fixture["toolId"]) && window_id.as_deref() == Some(text(&window["windowId"])) && !window_config), "the job request names the starting window: {requests:?}");
@@ -1532,18 +1705,23 @@ async fn tool_run_requests_carry_trace_key_allocation_entity_marks_and_the_start
     let marks = app.tool_runs.entity_marks();
     assert_eq!(marks.iter().map(|(_, entity)| *entity).collect::<Vec<_>>(), (1..=number(&expected["units"])).collect::<Vec<_>>());
     assert!(marks.iter().all(|(end, _)| *end as usize <= app.tool_runs.provisional().len()));
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 /// ⚖️ LAW: a board-2d scene surface carries the `toolRunTrace` lane exactly like a world-3d one — the spine names
 /// the lane with its byte length and hash, and the carrier holds the whole trace delta of the run.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_board_scene_render_carries_the_trace_lane() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["boardLane"];
-    let mut app = toy_app(number(&expected["units"])).await;
-    start(&mut app, text(&fixture["toolId"])).await;
-    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding()).await;
+    let mut app = toy_app(number(&expected["units"]), &mut caller).await;
+    start(&mut app, text(&fixture["toolId"]), &mut caller).await;
+    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding(), &mut caller).await;
     let mut view = window_view(text(&expected["windowId"]), None);
     view.window_instances.push(ViewWindowInstance { id: text(&expected["windowId"]).to_string(), window_kind_id: text(&expected["windowId"]).to_string() });
     let tree = app.render(text(&expected["bodyKey"]), None, &view).await.unwrap_or_else(|fault| panic!("render board: {fault:?}"));
@@ -1557,18 +1735,18 @@ async fn tool_run_board_scene_render_carries_the_trace_lane() {
     let delta = ToolRunTraceDelta::decode(&base64_codec::base64_url_decode(lane).expect("base64url")).expect("one ToolRunTraceDelta");
     assert!(delta.clear, "a renderer without a cursor gets clear plus the whole log");
     assert_eq!(delta.pages.iter().map(|page| page.ops.len()).sum::<usize>() as u64, number(&expected["units"]));
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 /// 🪟️ Publishes `selected` into the world window config of `window_id` through the production emit path.
-async fn publish_window_selection(app: &mut ToyApp, window_id: &str, selected: u64) {
+async fn publish_window_selection(app: &mut ToyApp, window_id: &str, selected: u64, caller:&mut ToyFixtureCaller<'_>) {
     let fixture = fixture();
     let mut view = window_view(window_id, None);
     view.window_instances.push(ViewWindowInstance { id: text(&fixture["windowSettingsReads"]["otherWindowId"]).to_string(), window_kind_id: text(&fixture["windowSettingsReads"]["windowKindId"]).to_string() });
     let mut meta = toy_meta();
     meta.view_state = Some(view);
     let mutation = WindowConfigMutation::of::<ToyWorldWindowConfig>(window_id, ChangeTestConfigSelection { selected: Some(selected.to_string()) }.into());
-    app.dispatch_emit("setWorldSelection", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { window_config_mutations: vec![mutation], ..Default::default() }, &meta)
+    app.dispatch_emit("setWorldSelection", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { window_config_mutations: vec![mutation], ..Default::default() }, &meta, &mut caller.identity)
         .await
         .unwrap_or_else(|fault| panic!("window config publication: {fault:?}"));
 }
@@ -1578,33 +1756,38 @@ async fn publish_window_selection(app: &mut ToyApp, window_id: &str, selected: u
 /// same kind or of an unchanged value never reconfigures, and a changed value on the starting window does.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_window_settings_reads_follow_the_starting_window_only() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["windowSettingsReads"];
     let (start_window, other_window) = (text(&expected["startWindowId"]), text(&expected["otherWindowId"]));
-    let mut app = toy_app(number(&expected["target"])).await;
-    publish_window_selection(&mut app, start_window, 1).await;
+    let mut app = toy_app(number(&expected["target"]), &mut caller).await;
+    publish_window_selection(&mut app, start_window, 1, &mut caller).await;
     TOY_REQUEST_WINDOWS.with(|windows| windows.borrow_mut().clear());
     let mut meta = toy_meta();
     let mut view = window_view(start_window, None);
     view.window_instances.push(ViewWindowInstance { id: other_window.to_string(), window_kind_id: text(&expected["windowKindId"]).to_string() });
     meta.view_state = Some(view);
-    let output = app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(text(&expected["toolId"]).into()))])), &meta).await.expect("start").output;
+    let output = app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(text(&expected["toolId"]).into()))])), &meta, &mut caller.identity).await.expect("start").output;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"));
-    pump_until(&mut app, "running with provisional units", |app| app.tool_runs.state() == Some(ToolRunState::Running) && !app.tool_runs.provisional().is_empty()).await;
+    pump_until(&mut app, "running with provisional units", |app| app.tool_runs.state() == Some(ToolRunState::Running) && !app.tool_runs.provisional().is_empty(), &mut caller).await;
     let requests = TOY_REQUEST_WINDOWS.with(|windows| windows.borrow().clone());
     assert!(requests.iter().any(|(tool, window_id, window_config)| tool == text(&expected["toolId"]) && window_id.as_deref() == Some(start_window) && *window_config), "the job request carries the starting window's config snapshot: {requests:?}");
-    publish_window_selection(&mut app, other_window, 7).await;
-    publish_window_selection(&mut app, start_window, 1).await;
+    publish_window_selection(&mut app, other_window, 7, &mut caller).await;
+    publish_window_selection(&mut app, start_window, 1, &mut caller).await;
     for _ in 0..8 {
-        app.advance_typed_operation_publication().await.expect("turn");
+        advance_toy(&mut app, &mut caller).await.expect("turn");
     }
     assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterOtherWindow"]), "another window and an unchanged value never reconfigure");
-    publish_window_selection(&mut app, start_window, 2).await;
+    publish_window_selection(&mut app, start_window, 2, &mut caller).await;
     for _ in 0..8 {
-        app.advance_typed_operation_publication().await.expect("turn");
+        advance_toy(&mut app, &mut caller).await.expect("turn");
     }
     assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterStartWindow"]), "a changed value on the starting window reconfigures");
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 /// ⚖️ LAW: a window config partition closes through the physical release its own store publishes — its resident backings (the 1 024-slot
@@ -1612,29 +1795,39 @@ async fn tool_run_window_settings_reads_follow_the_starting_window_only() {
 /// reaches the exact terminal-empty witness instead of answering `Pending { 0, 0 }` against an ordinary-page grant for ever.
 #[semio_framework_async_macros::async_test]
 async fn a_published_window_config_closes_through_its_own_published_physical_demand() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
-    let mut app = toy_app(1).await;
-    publish_window_selection(&mut app, text(&fixture["windowSettingsReads"]["startWindowId"]), 1).await;
+    let mut app = toy_app(1, &mut caller).await;
+    publish_window_selection(&mut app, text(&fixture["windowSettingsReads"]["startWindowId"]), 1, &mut caller).await;
     for _ in 0..8 {
-        app.advance_typed_operation_publication().await.expect("turn");
+        advance_toy(&mut app, &mut caller).await.expect("turn");
     }
-    close(&mut app);
+    close(&mut app, &mut caller);
 }
 
 /// ⚖️ LAW: a tick dirties the bodies of the window kinds the run declares it renders in, next to the panel and the scene
 /// windows, and those bodies read the run's progress, step ring and latest tick payload through `ArtifactView::tool_run()`.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_payload() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["readerWindows"];
-    let mut app = toy_app(number(&expected["target"])).await;
-    start(&mut app, text(&expected["toolId"])).await;
-    pump_until(&mut app, "job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running)).await;
+    let mut app = toy_app(number(&expected["target"]), &mut caller).await;
+    start(&mut app, text(&expected["toolId"]), &mut caller).await;
+    pump_until(&mut app, "job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running), &mut caller).await;
     render_world(&mut app, None).await;
     app.flush_tool_run_ui_dirty();
     while app.take_typed_operation_ui_scope().is_some() {}
     let before = app.tool_runs.provisional().len();
-    pump_until(&mut app, "a tick lands", |app| app.tool_runs.provisional().len() > before).await;
+    pump_until(&mut app, "a tick lands", |app| app.tool_runs.provisional().len() > before, &mut caller).await;
     let scope = app.take_typed_operation_ui_scope().expect("a tick owes a dirty scope");
     let strings = |value: &Value| value.as_array().expect("strings").iter().map(|item| text(item).to_string()).collect::<Vec<_>>();
     assert_eq!(
@@ -1642,8 +1835,8 @@ async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_
         UiDirtyScope::Partial { window_bodies: strings(&expected["windowBodies"]), panel_bodies: strings(&expected["panelBodies"]), utilities: false, tools: false, engagements: false, measures: false, labels: false },
         "the reader window refreshes with every tick, nothing unrelated does"
     );
-    run_action(&mut app, "toolRunPause").await;
-    pump_until(&mut app, "paused and settled", |app| app.tool_runs.state() == Some(ToolRunState::Paused) && !app.tool_runs.has_pending_work()).await;
+    run_action(&mut app, "toolRunPause", &mut caller).await;
+    pump_until(&mut app, "paused and settled", |app| app.tool_runs.state() == Some(ToolRunState::Paused) && !app.tool_runs.has_pending_work(), &mut caller).await;
     let view = app.tool_runs.view().expect("run view");
     let payload = view.payload.as_deref().and_then(|payload| payload.try_into().ok()).map(u32::from_le_bytes).expect("the latest tick payload");
     assert_eq!(u64::from(payload), view.progress.completed, "the payload is the latest tick's: the toy writes its completed units");
@@ -1651,14 +1844,14 @@ async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_
     let body = render_text(&mut app, "main").await;
     println!("[STATS] reader body {body}");
     assert!(body.contains(&format!("completed={} steps={} payload={payload}", view.progress.completed, view.progress.steps.len())), "the reader body renders the run state it reads: {body}");
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 /// ▶️ Starts `tool_id` from window `window_id` and answers the dispatch output.
-async fn start_in_window(app: &mut ToyApp, tool_id: &str, window_id: &str) -> DslValue {
+async fn start_in_window(app: &mut ToyApp, tool_id: &str, window_id: &str, caller:&mut ToyFixtureCaller<'_>) -> DslValue {
     let mut meta = toy_meta();
     meta.view_state = Some(window_view(window_id, None));
-    app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(tool_id.into()))])), &meta).await.unwrap_or_else(|fault| panic!("start {tool_id}: {fault:?}")).output
+    app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(tool_id.into()))])), &meta, &mut caller.identity).await.unwrap_or_else(|fault| panic!("start {tool_id}: {fault:?}")).output
 }
 
 /// ⚖️ LAW: read-only runs run concurrently, one per (tool, window), each with its own run id, trace and panel group; a
@@ -1666,27 +1859,32 @@ async fn start_in_window(app: &mut ToyApp, tool_id: &str, window_id: &str) -> Ds
 /// presence follows the mutating run.
 #[semio_framework_async_macros::async_test]
 async fn read_only_runs_in_two_windows_run_concurrently_and_a_second_mutating_start_is_busy() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["concurrentReadOnly"];
     let read_only = text(&expected["readOnlyToolId"]);
     let windows: Vec<&str> = expected["windows"].as_array().expect("windows").iter().map(text).collect();
-    let mut app = toy_app(number(&expected["target"])).await;
+    let mut app = toy_app(number(&expected["target"]), &mut caller).await;
     for window in &windows {
-        assert_eq!(start_in_window(&mut app, read_only, window).await.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "{window}: a read-only run starts beside the other window's");
+        assert_eq!(start_in_window(&mut app, read_only, window, &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "{window}: a read-only run starts beside the other window's");
     }
-    assert_eq!(start_in_window(&mut app, read_only, windows[0]).await.get("rejected").and_then(DslValue::as_str), Some(text(&expected["busy"])), "one non-terminal read-only run per tool and window");
+    assert_eq!(start_in_window(&mut app, read_only, windows[0], &mut caller).await.get("rejected").and_then(DslValue::as_str), Some(text(&expected["busy"])), "one non-terminal read-only run per tool and window");
     pump_until(&mut app, "both read-only runs are running and waiting on their hop", |app| {
         let views = app.tool_runs.views();
         views.len() == 2 && views.iter().all(|view| view.state == ToolRunState::Running)
-    })
+    }, &mut caller)
     .await;
     let views = app.tool_runs.views();
     assert_ne!(views[0].identity.id.run, views[1].identity.id.run, "each run has its own id");
     for (window, view) in windows.iter().zip(&views) {
         assert_eq!(app.tool_runs.view_for(Some(window)).map(|found| found.identity.id.run), Some(view.identity.id.run), "{window} renders its own run");
     }
-    assert_eq!(start_in_window(&mut app, text(&expected["mutatingToolId"]), windows[0]).await.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "a mutating run starts beside read-only runs");
-    assert_eq!(start_in_window(&mut app, text(&expected["secondMutatingToolId"]), windows[1]).await.get("rejected").and_then(DslValue::as_str), Some(text(&expected["busy"])), "a second mutating start is busy");
+    assert_eq!(start_in_window(&mut app, text(&expected["mutatingToolId"]), windows[0], &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "a mutating run starts beside read-only runs");
+    assert_eq!(start_in_window(&mut app, text(&expected["secondMutatingToolId"]), windows[1], &mut caller).await.get("rejected").and_then(DslValue::as_str), Some(text(&expected["busy"])), "a second mutating start is busy");
     assert_eq!(app.tool_run_presence().map(|presence| presence.tool_id), Some(text(&expected["mutatingToolId"]).to_string()), "presence follows the mutating run");
     let panel: Value = serde_json::from_str(&render_text(&mut app, FRAMEWORK_TOOL_RUN_BODY_KEY).await).expect("panel parses");
     for view in app.tool_runs.views() {
@@ -1698,17 +1896,17 @@ async fn read_only_runs_in_two_windows_run_concurrently_and_a_second_mutating_st
         assert_eq!(delta.map(|delta| delta.identity.id.run), Some(view.identity.id.run), "run {} has its own trace", view.identity.id.run);
     }
     let first = views[0].clone();
-    let aborted = tool_run_action(&mut app, "toolRunAbort", vec![("runId".into(), DslValue::String(first.identity.id.run.to_string())), ("generation".into(), DslValue::uint(u64::from(first.identity.generation)))]).await;
+    let aborted = tool_run_action(&mut app, "toolRunAbort", vec![("runId".into(), DslValue::String(first.identity.id.run.to_string())), ("generation".into(), DslValue::uint(u64::from(first.identity.generation)))], &mut caller).await;
     assert_eq!(aborted.get("toolRun").and_then(DslValue::as_str), Some("closeJob"), "an action addresses its run by runId");
-    pump_until(&mut app, "the addressed run aborts alone", |app| app.tool_runs.views().iter().any(|view| view.identity.id.run == first.identity.id.run && view.state == ToolRunState::Aborted)).await;
+    pump_until(&mut app, "the addressed run aborts alone", |app| app.tool_runs.views().iter().any(|view| view.identity.id.run == first.identity.id.run && view.state == ToolRunState::Aborted), &mut caller).await;
     let states: Vec<(u64, ToolRunState)> = app.tool_runs.views().iter().map(|view| (view.identity.id.run, view.state)).collect();
     println!("[STATS] concurrent runs {states:?}");
     assert!(states.iter().filter(|(run, _)| *run != first.identity.id.run).all(|(_, state)| !state.is_terminal()), "the other runs keep running: {states:?}");
     for view in app.tool_runs.views().into_iter().filter(|view| !view.state.is_terminal()) {
-        tool_run_action(&mut app, "toolRunAbort", vec![("runId".into(), DslValue::String(view.identity.id.run.to_string())), ("generation".into(), DslValue::uint(u64::from(view.identity.generation)))]).await;
+        tool_run_action(&mut app, "toolRunAbort", vec![("runId".into(), DslValue::String(view.identity.id.run.to_string())), ("generation".into(), DslValue::uint(u64::from(view.identity.generation)))], &mut caller).await;
     }
-    pump_until(&mut app, "every run settles", |app| app.tool_runs.views().iter().all(|view| view.state.is_terminal()) && !app.tool_runs.has_pending_work()).await;
-    close(&mut app);
+    pump_until(&mut app, "every run settles", |app| app.tool_runs.views().iter().all(|view| view.state.is_terminal()) && !app.tool_runs.has_pending_work(), &mut caller).await;
+    close(&mut app, &mut caller);
 }
 
 /// 🧾️ A `BuiltNode` as the host wire JSON every renderer's `BuiltNode` reads — every field spelled out.
@@ -1737,10 +1935,15 @@ const TOOL_RUN_PANEL_RUNNING: &str = include_str!("../../🧫️fixtures/⏯️t
 /// its description) and an empty step log and trace list. `SEMIO_TOOL_RUN_PANEL_OUT` rewrites the fixture.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_panel_of_a_running_run_is_the_shell_fixture() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
-    let mut app = toy_app(1).await;
-    start(&mut app, text(&fixture["port"]["toolId"])).await;
-    pump_until(&mut app, "the run waits on its first hop", |app| app.tool_runs.state() == Some(ToolRunState::Running) && app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting)).await;
+    let mut app = toy_app(1, &mut caller).await;
+    start(&mut app, text(&fixture["port"]["toolId"]), &mut caller).await;
+    pump_until(&mut app, "the run waits on its first hop", |app| app.tool_runs.state() == Some(ToolRunState::Running) && app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting), &mut caller).await;
     while app.take_typed_operation_effect().is_some() {}
     let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render the panel");
     let panel = artifact_app_laws::observe_and_retire_fixture_tree(tree, built_node_wire);
@@ -1749,7 +1952,7 @@ async fn tool_run_panel_of_a_running_run_is_the_shell_fixture() {
     }
     assert_eq!(panel, serde_json::from_str::<Value>(TOOL_RUN_PANEL_RUNNING).expect("the panel fixture parses"), "the running panel is the shell fixture");
     app.tool_runs.port().expect("the run's port").wake();
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 /// 🔁️ Every sibling key list under `node` names each key once — the admission law a retained UI surface enforces.
@@ -1768,11 +1971,16 @@ fn assert_unique_sibling_keys(node: &Value) {
 /// makes the panel unadmittable.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_panel_lists_a_re_upserted_trace_key_once_at_its_newest_position() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["verdictRevisions"];
-    let mut app = toy_app(1).await;
-    start(&mut app, text(&expected["toolId"])).await;
-    pump_until(&mut app, "the run waits on its first hop", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting)).await;
+    let mut app = toy_app(1, &mut caller).await;
+    start(&mut app, text(&expected["toolId"]), &mut caller).await;
+    pump_until(&mut app, "the run waits on its first hop", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting), &mut caller).await;
     while app.take_typed_operation_effect().is_some() {}
     let identity = app.tool_runs.identity().expect("identity");
     let mut writer = ToolRunTickWriter::new(identity);
@@ -1789,16 +1997,21 @@ async fn tool_run_panel_lists_a_re_upserted_trace_key_once_at_its_newest_positio
     let expected_rows: Vec<String> = expected["traceRows"].as_array().expect("trace rows").iter().map(|key| format!("{scope}.trace.{}", number(key))).collect();
     assert_eq!(rows, expected_rows, "one attempt row per trace key, newest first");
     app.tool_runs.port().expect("the run's port").wake();
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 /// ⚖️ LAW: while the active tool declares a run and this instance holds none of it, the panel offers a ready group
 /// whose enabled Start dispatches `toolRunStart` with the tool id; once the run exists its own group replaces it.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_panel_offers_start_for_the_active_run_tool_until_its_run_exists() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["readyGroup"];
-    let mut app = toy_app(1).await;
+    let mut app = toy_app(1, &mut caller).await;
     let view = ViewModel { active_tool_id: Some(text(&expected["toolId"]).to_string()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &view).await.expect("render the idle panel");
     let panel = artifact_app_laws::observe_and_retire_fixture_tree(tree, built_node_wire);
@@ -1810,14 +2023,14 @@ async fn tool_run_panel_offers_start_for_the_active_run_tool_until_its_run_exist
     assert_eq!(start_button["disabled"], false, "Start is enabled with no run");
     assert_eq!(start_button["bindings"][0]["action"]["name"], "toolRunStart");
     assert_eq!(start_button["bindings"][0]["args"]["toolId"], expected["toolId"], "Start names the active tool");
-    start(&mut app, text(&expected["toolId"])).await;
-    pump_until(&mut app, "the run waits on its first hop", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting)).await;
+    start(&mut app, text(&expected["toolId"]), &mut caller).await;
+    pump_until(&mut app, "the run waits on its first hop", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting), &mut caller).await;
     while app.take_typed_operation_effect().is_some() {}
     let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &view).await.expect("render the running panel");
     let panel = artifact_app_laws::observe_and_retire_fixture_tree(tree, built_node_wire);
     assert!(find_node(&panel, text(&expected["groupId"])).is_none(), "the run's group replaces the ready group");
     app.tool_runs.port().expect("the run's port").wake();
-    abort_and_close(&mut app).await;
+    abort_and_close(&mut app, &mut caller).await;
 }
 
 /// ⚖️ LAW: a TERMINAL run arms nothing. Once a run is finalized or aborted the ledger owes the driver no work
@@ -1831,18 +2044,23 @@ async fn tool_run_panel_offers_start_for_the_active_run_tool_until_its_run_exist
 /// once per ANSWER, never once per REFRESH, and a terminal run answers nothing.
 #[semio_framework_async_macros::async_test]
 async fn a_terminal_run_arms_no_further_work_however_many_turns_the_host_takes() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     let fixture = fixture();
     let expected = &fixture["terminalQuiet"];
     let turns = number(&expected["turns"]);
     for row in expected["rows"].as_array().expect("the terminalQuiet rows") {
         let id = text(&row["id"]);
-        let mut app = toy_app(number(&row["units"])).await;
-        start(&mut app, text(&row["toolId"])).await;
+        let mut app = toy_app(number(&row["units"]), &mut caller).await;
+        start(&mut app, text(&row["toolId"]), &mut caller).await;
         if text(&row["terminalBy"]) == "abort" {
-            pump_until(&mut app, "the run leaves starting", |app| app.tool_runs.state().is_some_and(|state| state != ToolRunState::Starting)).await;
-            run_action(&mut app, "toolRunAbort").await;
+            pump_until(&mut app, "the run leaves starting", |app| app.tool_runs.state().is_some_and(|state| state != ToolRunState::Starting), &mut caller).await;
+            run_action(&mut app, "toolRunAbort", &mut caller).await;
         }
-        pump_until(&mut app, "the run reaches a terminal state", |app| app.tool_runs.state().is_some_and(ToolRunState::is_terminal) && !app.tool_runs.has_pending_work()).await;
+        pump_until(&mut app, "the run reaches a terminal state", |app| app.tool_runs.state().is_some_and(ToolRunState::is_terminal) && !app.tool_runs.has_pending_work(), &mut caller).await;
         while app.take_typed_operation_effect().is_some() {}
         let mut armed: Vec<String> = Vec::new();
         let mut pending_turns = 0u64;
@@ -1850,7 +2068,7 @@ async fn a_terminal_run_arms_no_further_work_however_many_turns_the_host_takes()
             if app.tool_runs.has_pending_work() {
                 pending_turns += 1;
             }
-            app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{id}: a quiet turn faulted: {fault:?}"));
+            advance_toy(&mut app, &mut caller).await.unwrap_or_else(|fault| panic!("{id}: a quiet turn faulted: {fault:?}"));
             while let Some(effect) = app.take_typed_operation_effect() {
                 armed.push(format!("{effect:?}"));
             }
@@ -1860,7 +2078,7 @@ async fn a_terminal_run_arms_no_further_work_however_many_turns_the_host_takes()
         assert!(state.is_terminal(), "{id}: the run stays terminal");
         assert_eq!(pending_turns == 0, expected_flag(&row["expected"]["hasPendingWork"]) == false, "{id}: a terminal run is no driver work over {turns} turns");
         assert_eq!(armed.len() as u64, number(&row["expected"]["effects"]), "{id}: a terminal run arms nothing, got {armed:?}");
-        close(&mut app);
+        close(&mut app, &mut caller);
     }
 }
 
@@ -1883,10 +2101,15 @@ fn expected_flag(value: &Value) -> bool {
 /// `sourcing.module` / `cad.computer` / `process.machines` host packs could never be retained.
 #[semio_framework_async_macros::async_test]
 async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
     for (bytes, rendered) in [(2_909usize, true), (3_706, true), (4_360, true), (16_384, true), (65_536, true), (3_820, false)] {
-        let mut app = toy_app(1).await;
+        let mut app = toy_app(1, &mut caller).await;
         app.config_store
-            .dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], transaction: None })
+            .dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], transaction: None }, &mut caller.identity)
             .await
             .expect("a retained config past one envelope page applies");
         if rendered {

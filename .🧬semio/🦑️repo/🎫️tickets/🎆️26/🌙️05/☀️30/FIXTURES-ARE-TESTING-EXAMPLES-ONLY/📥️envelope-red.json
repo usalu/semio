@@ -1,0 +1,14 @@
+{
+  "session": 80796,
+  "nxExit": 1,
+  "duration": "1.5s",
+  "reason": "absent genuine initial_page_birth_demand after Grant/RFC6902 cases",
+  "sourceCopiesRetained": false,
+  "redactedDiagnosticRows": [
+    {
+      "line": 43,
+      "diagnosticSourceBytes": 87729,
+      "diagnosticSourceSha256": "caba023835e7e2208506d95709607ab6cecf3fc586a04244e8cedf468f9ff09c"
+    }
+  ]
+}

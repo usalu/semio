@@ -1,0 +1,7 @@
+# Root Six Actual Outcomes and Cache Policy
+
+Independently inspected actual native-seventeen.log (Native46258), not the older body-native failure log. Terminal summary35954 is 17 run, 14 passed, 3 failed, 1484 skipped; overall Nx1. All four named History and both Presence laws have actual PASS rows35956–35961. Duplicate rows are nextest final reporting, not repeated execution. This establishes these six executed assertions only, not whole compilation ownership or global/runtime purity. Current original test hashes are retained separately from the actual acquisition epoch; no peer authorship adopted.
+
+Genuine production cache policy owner is caching/🔣️policy.json, governed by caching/🧬️schema/🔣️.json NxCachePolicy. Canonical schema is strict additionalProperties=false; current observed config has no exampleCollections field. Add a schema-first required closed policy object for four normalized names, genuine moduleMember and manifest basenames before publisher use. These are cache/discovery admission rules, not a Schema validating testing examples. Preserve original policy role/identity and test samples without creating separate corpus authority.
+
+The policy should provide literal collection names and basename ownership; defining implementation must enforce normalized full ancestry and module-member exception, generate exact current manifest exceptions only and escape ignore syntax. Keep ordinary/package core semantics and source freshness/cancellation explicit. The actual six-law positive does not validate this pending feature.

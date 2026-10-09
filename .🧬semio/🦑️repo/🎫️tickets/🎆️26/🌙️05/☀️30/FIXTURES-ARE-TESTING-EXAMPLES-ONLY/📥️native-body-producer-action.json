@@ -1,0 +1,8 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+  "beforeSHA": "bd0b4f1555918379067f6c11e3fd961a7778d5d654eb97158364294d903919b1",
+  "afterSHA": "ca0e18ddd77f14d5c2bd7c103e7410e9ad0a64fc269d3ffc6f0ef662acd7590e",
+  "beforeBlockSHA": "8520d3c0cff8d99b033d882ffefb570647959fcf89669cba42d6c0312509e128",
+  "afterBlockSHA": "bde3c4d2723a3afe38429e1ad594ecc8cb75f4c3ccb69bd909fb7a71a8499dbb",
+  "action": "current producer uses body wallet for structural output/outer vector/slot moves and exact native original byte producer; retained output installed before later refusal"
+}

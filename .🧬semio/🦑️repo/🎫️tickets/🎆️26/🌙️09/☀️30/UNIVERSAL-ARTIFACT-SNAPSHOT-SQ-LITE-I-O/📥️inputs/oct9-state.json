@@ -1,0 +1,48 @@
+{
+  "recordedAt": "2026-10-09T04:33:00Z",
+  "rootOct9BimCurrentSchema": {
+    "maps": 47,
+    "nativeFields": 49,
+    "tables": 93,
+    "maxColumns": 59,
+    "expectedRows": 3972,
+    "independentFloatShapeLaws": 1656,
+    "independentClosedBranchLaws": 906,
+    "ownedForeignKeys": 109,
+    "noBlobColumns": true,
+    "qualification": "Independent schema/role admission only; original Native pending"
+  },
+  "rootOct9BimSourceStrict": {
+    "session": 14726,
+    "pending": false,
+    "exitCode": 0,
+    "qualification": "Original package verify-snapshot-sqlite source terminal0"
+  },
+  "rootOct9BimSourceRuntime": {
+    "session": 45617,
+    "pending": true,
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/bim-current-source.log"
+  },
+  "rootOct9BimPublicMissingBefore": {
+    "session": 25318,
+    "pending": true,
+    "hookHeld": true,
+    "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/bim-public-before.log"
+  },
+  "rootOct9TimeTravelPrerequisite": {
+    "native": {
+      "session": 65805,
+      "exitCode": 0,
+      "passed": 1,
+      "skipped": 17
+    },
+    "source": {
+      "session": 93782,
+      "exitCode": 0,
+      "passed": 1,
+      "expects": 16
+    },
+    "qualification": "Scoped actual populated ReplayReport owner prerequisite only"
+  },
+  "rootCurrentUniversalGoalIncomplete": true
+}

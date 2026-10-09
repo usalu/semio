@@ -1242,6 +1242,52 @@
         "wakeOwned": false
       },
       "expected": "progress"
+    },
+    {
+      "id": "actual-initial-store-generation-zero",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "0"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "0"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      },
+      "expected": "progress"
     }
   ],
   "invalid": [
@@ -1423,6 +1469,186 @@
         "terminalIsEmpty": false,
         "wakeOwned": false
       }
+    },
+    {
+      "id": "operation-u64-overflow",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "18446744073709551616",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      }
+    },
+    {
+      "id": "generation-noncanonical-leading-zero",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "03"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      }
+    },
+    {
+      "id": "clock-u64-overflow",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "18446744073709551616",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      }
+    },
+    {
+      "id": "clock-negative",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "-1",
+          "deadlineUs": "20",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 2
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 8,
+          "retainedCapacityBytes": 16,
+          "releasedBytes": 32
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false
+      }
     }
   ],
   "runtimeReceiving": {
@@ -1445,5 +1671,522 @@
       "MeshJob"
     ],
     "noScalarMountedHooks": true
+  },
+  "policies": [
+    {
+      "id": "explicit-all-three-phases",
+      "value": {
+        "preparation": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "maintenance": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "close": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "explicit-empty-authority",
+      "value": {
+        "preparation": {
+          "maximumItems": 0,
+          "maximumCopyBytes": 0,
+          "maximumCapacityBytes": 0,
+          "maximumReleaseBytes": 0,
+          "maximumDepth": 0
+        },
+        "maintenance": {
+          "maximumItems": 0,
+          "maximumCopyBytes": 0,
+          "maximumCapacityBytes": 0,
+          "maximumReleaseBytes": 0,
+          "maximumDepth": 0
+        },
+        "close": {
+          "maximumItems": 0,
+          "maximumCopyBytes": 0,
+          "maximumCapacityBytes": 0,
+          "maximumReleaseBytes": 0,
+          "maximumDepth": 0
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "missing-close-phase",
+      "value": {
+        "preparation": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "maintenance": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "default-policy-forbidden",
+      "value": {
+        "preparation": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "maintenance": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "close": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        },
+        "default": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 16,
+          "maximumCapacityBytes": 32,
+          "maximumReleaseBytes": 64,
+          "maximumDepth": 3
+        }
+      },
+      "valid": false
+    }
+  ],
+  "nestedJobs": [
+    {
+      "id": "original-job-debits-once",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 8,
+          "maximumCapacityBytes": 16,
+          "maximumReleaseBytes": 32,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "100",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 0,
+          "capacityBytes": 0,
+          "releaseBytes": 0,
+          "depth": 0
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 4,
+          "retainedCapacityBytes": 8,
+          "releasedBytes": 16
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false,
+        "usedFuel": 1
+      },
+      "expected": "progress",
+      "expectedFuel": 0
+    },
+    {
+      "id": "missing-original-job-debit",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 8,
+          "maximumCapacityBytes": 16,
+          "maximumReleaseBytes": 32,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "100",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 0,
+          "capacityBytes": 0,
+          "releaseBytes": 0,
+          "depth": 0
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 4,
+          "retainedCapacityBytes": 8,
+          "releasedBytes": 16
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false,
+        "usedFuel": 0
+      },
+      "expected": "refused",
+      "expectedFuel": 1
+    },
+    {
+      "id": "retained-spare-original-fuel",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 8,
+          "maximumCapacityBytes": 16,
+          "maximumReleaseBytes": 32,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "100",
+          "fuel": 2
+        },
+        "demand": {
+          "copyBytes": 0,
+          "capacityBytes": 0,
+          "releaseBytes": 0,
+          "depth": 0
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 4,
+          "retainedCapacityBytes": 8,
+          "releasedBytes": 16
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false,
+        "usedFuel": 1
+      },
+      "expected": "progress",
+      "expectedFuel": 1
+    },
+    {
+      "id": "original-job-fuel-independent-of-items",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 8,
+          "maximumCapacityBytes": 16,
+          "maximumReleaseBytes": 32,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "100",
+          "fuel": 2
+        },
+        "demand": {
+          "copyBytes": 0,
+          "capacityBytes": 0,
+          "releaseBytes": 0,
+          "depth": 0
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 4,
+          "retainedCapacityBytes": 8,
+          "releasedBytes": 16
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false,
+        "usedFuel": 2
+      },
+      "expected": "progress",
+      "expectedFuel": 0
+    },
+    {
+      "id": "nested-copy-refusal",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 8,
+          "maximumCapacityBytes": 16,
+          "maximumReleaseBytes": 32,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "100",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 0,
+          "capacityBytes": 0,
+          "releaseBytes": 0,
+          "depth": 0
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 9,
+          "retainedCapacityBytes": 8,
+          "releasedBytes": 16
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false,
+        "usedFuel": 1
+      },
+      "expected": "refused",
+      "expectedFuel": 0
+    },
+    {
+      "id": "nested-capacity-refusal",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 8,
+          "maximumCapacityBytes": 16,
+          "maximumReleaseBytes": 32,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "100",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 0,
+          "capacityBytes": 0,
+          "releaseBytes": 0,
+          "depth": 0
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 4,
+          "retainedCapacityBytes": 17,
+          "releasedBytes": 16
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false,
+        "usedFuel": 1
+      },
+      "expected": "refused",
+      "expectedFuel": 0
+    },
+    {
+      "id": "nested-false-completion",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 8,
+          "maximumCapacityBytes": 16,
+          "maximumReleaseBytes": 32,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "100",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 0,
+          "capacityBytes": 0,
+          "releaseBytes": 0,
+          "depth": 0
+        },
+        "receipt": {
+          "copiedItems": 1,
+          "copiedBytes": 4,
+          "retainedCapacityBytes": 8,
+          "releasedBytes": 16
+        },
+        "result": "complete",
+        "terminalIsEmpty": false,
+        "wakeOwned": false,
+        "usedFuel": 1
+      },
+      "expected": "refused",
+      "expectedFuel": 0
+    },
+    {
+      "id": "explicit-empty-receipt",
+      "observation": {
+        "identity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "expectedIdentity": {
+          "instanceId": 7,
+          "operationId": "11",
+          "generation": "3"
+        },
+        "phase": "maintenance",
+        "grant": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 8,
+          "maximumCapacityBytes": 16,
+          "maximumReleaseBytes": 32,
+          "maximumDepth": 3
+        },
+        "schedule": {
+          "cancelled": false,
+          "clockAvailable": true,
+          "nowUs": "10",
+          "deadlineUs": "100",
+          "fuel": 1
+        },
+        "demand": {
+          "copyBytes": 0,
+          "capacityBytes": 0,
+          "releaseBytes": 0,
+          "depth": 0
+        },
+        "receipt": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "result": "progress",
+        "terminalIsEmpty": false,
+        "wakeOwned": false,
+        "usedFuel": 0
+      },
+      "expected": "progress",
+      "expectedFuel": 1
+    }
+  ],
+  "contextReceipt": {
+    "grant": {
+      "maximumItems": 3,
+      "maximumCopyBytes": 23,
+      "maximumCapacityBytes": 64,
+      "maximumReleaseBytes": 512,
+      "maximumDepth": 3
+    },
+    "source": "original source payload",
+    "fuel": 9,
+    "remainingFuel": 2,
+    "remaining": {
+      "maximumItems": 0,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 448,
+      "maximumDepth": 3
+    },
+    "childFuel": 5,
+    "actualChildDebitedOnce": true
   }
 }

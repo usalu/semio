@@ -70,7 +70,7 @@ fn reconstruct_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSn
 }
 
 impl ArtifactSqliteSnapshot for StlSnapshot {
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{(|| -> Result<(),ValueError>{control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;control.check_rows(self.triangles.len().checked_mul(4).and_then(|count|count.checked_add(1)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"STL native row count overflow"))?)?;Ok(())})()?;self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,"stdio.stl",crate::standards::v_ascii::subsets::any::io::binary::snapshot::native_pack::spec_producer(),|native|crate::standards::v_ascii::subsets::any::io::binary::snapshot::native_pack::record_controlled(self,native),control)}
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{(|| -> Result<(),ValueError>{control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;control.check_rows(self.triangles.len().checked_mul(4).and_then(|count|count.checked_add(1)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"STL native row count overflow"))?)?;Ok(())})()?;self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,"stdio.stl",crate::standards::v_ascii::subsets::any::io::binary::snapshot::native_pack::spec_producer(),|native|crate::standards::v_ascii::subsets::any::io::binary::snapshot::native_pack::record_controlled(self,native),control,native_owner)}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{self.preflight_sqlite_encoding(_encoding,control)}
 
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{( || -> Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
@@ -80,7 +80,7 @@ impl ArtifactSqliteSnapshot for StlSnapshot {
         if candidate.project_sqlite_database(control)?!=self.project_sqlite_database(control)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"STL document identity differs from its semantic projection"));}
         Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))
     })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let limits=control.limits();Self::sqlite_extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,"stdio.stl",crate::standards::v_ascii::subsets::any::io::binary::snapshot::native_pack::spec_producer(),|record,native|{Self::admit_sqlite_record(record,limits,native)?;crate::standards::v_ascii::subsets::any::io::binary::snapshot::native_pack::reconstruct_record_controlled(record,native,limits.max_rows)},control)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();Self::sqlite_extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,"stdio.stl",crate::standards::v_ascii::subsets::any::io::binary::snapshot::native_pack::spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {Self::admit_sqlite_record(record,limits,native)?;crate::standards::v_ascii::subsets::any::io::binary::snapshot::native_pack::reconstruct_record_controlled(record,native,limits.max_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
 
     fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {self.project_sqlite_database(control)}
@@ -91,4 +91,3 @@ impl ArtifactSqliteSnapshot for StlSnapshot {
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

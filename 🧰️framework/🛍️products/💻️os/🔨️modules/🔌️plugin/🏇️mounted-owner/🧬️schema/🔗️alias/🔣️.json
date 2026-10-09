@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "aliases",
+    "constructorHeap",
+    "denialHeap",
+    "terminalHeap",
+    "finalPhases",
+    "sharedPayloadClosed",
+    "sameSource",
+    "birthReleaseParity",
+    "constructorDepth",
+    "gateBacking",
+    "gateExclusive",
+    "poisonCustody"
+  ],
+  "properties": {
+    "aliases": {
+      "const": [
+        0,
+        1,
+        3
+      ]
+    },
+    "constructorHeap": {
+      "const": [
+        0,
+        0
+      ]
+    },
+    "denialHeap": {
+      "const": [
+        0,
+        0
+      ]
+    },
+    "terminalHeap": {
+      "const": [
+        0,
+        0
+      ]
+    },
+    "finalPhases": {
+      "const": [
+        "arc-backing",
+        "payload",
+        "box-shell"
+      ]
+    },
+    "sharedPayloadClosed": {
+      "const": false
+    },
+    "sameSource": {
+      "const": true
+    },
+    "birthReleaseParity": {
+      "const": true
+    },
+    "constructorDepth": {
+      "const": 1
+    },
+    "gateBacking": {
+      "const": 0
+    },
+    "gateExclusive": {
+      "const": true
+    },
+    "poisonCustody": {
+      "const": true
+    }
+  }
+}

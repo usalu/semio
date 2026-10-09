@@ -146,3 +146,9 @@ impl store::ArtifactPack for BitmapSnapshot {
     }
 }
 }
+
+/// 🫴️ Declares this owner’s actual controlled native record factories.
+impl store::ArtifactNativeSnapshot for crate::BitmapSnapshot {
+ fn decode_native_snapshot(payload:store::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::text::snapshot::BitmapSnapshotDsl::__dsl_spec_producer(),|record,native|{let maximum=native.maximum_bytes();crate::standards::v1::subsets::any::io::text::snapshot::construct_native_record(record,native,maximum)},control)}
+ fn encode_native_snapshot(&self,encoding:store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::text::snapshot::BitmapSnapshotDsl::__dsl_spec_producer(),|native|crate::standards::v1::subsets::any::io::text::snapshot::project_native_record(self,native),control)}
+}

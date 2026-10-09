@@ -24,15 +24,17 @@ fn page_case(row: &serde_json::Value) -> [Vec<u8>; 2] {
     [first_page, second.to_vec()]
 }
 
+fn physical_grant() -> semio_framework_value::RetainedCloneGrant {
+    let policy = fixture()["retirementGrant"].clone();
+    semio_framework_value::RetainedCloneGrant { maximum_items: policy["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: policy["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: policy["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: policy["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: policy["maximumDepth"].as_u64().unwrap() as usize }
+}
+
 fn close_owned_schema(cursor: &mut OwnedSchemaRecordCursor) {
+    let grant = physical_grant();
     for _ in 0..1_000 {
-        match cursor.close_step(1) {
-            SnapshotRetirementStep::Pending { .. } | SnapshotRetirementStep::Blocked => {}
-            SnapshotRetirementStep::Complete => {
-                assert!(cursor.terminal_is_empty());
-                return;
-            }
-        }
+        let step = cursor.close_step(grant).expect("funded schema page close");
+        assert!(step.progress().fits(grant));
+        if cursor.terminal_is_empty() { return; }
     }
     panic!("owned schema cursor did not close its admitted pages")
 }
@@ -41,13 +43,15 @@ fn drive_owned_schema_nested(cursor: &mut OwnedSchemaRecordCursor, nested: &mut 
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     for _ in 0..100_000 {
+        let mut receipt = semio_framework_value::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(1),
             semio_framework_job::Generation(1),
-            semio_framework_job::StepBudget::new(fuel, u64::MAX),
+            semio_framework_job::StepBudget::new(fuel, u64::MAX, physical_grant()),
             cancel.clone(),
             semio_framework_job::default_now_us,
             &mut preview_sequence,
+            &mut receipt,
         );
         match cursor.step(&mut context) {
             OwnedSchemaRecordStep::Pending | OwnedSchemaRecordStep::FieldToken { field_id: 2, .. } => {}
@@ -126,8 +130,9 @@ fn owned_schema_record_cancellation_fixture_retires_every_owned_page() {
         let cancel = semio_framework_job::root_cancel_token();
         cancel.cancel_now();
         let mut preview_sequence = 0;
+        let mut receipt = semio_framework_value::RetainedCloneProgress::default();
         let mut context =
-            semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, &mut preview_sequence);
+            semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, physical_grant()), cancel, semio_framework_job::default_now_us, &mut preview_sequence, &mut receipt);
         let result = cursor.step(&mut context);
         close_owned_schema(&mut cursor);
         assert_eq!(result, OwnedSchemaRecordStep::Cancelled, "{}", row["name"]);

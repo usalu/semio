@@ -1,0 +1,13 @@
+# Socket Neutral Law Audit
+
+Read-only current corpus/test review. All relative fixture/schema/shared SQLite imports resolve to existing original files. ../🟦️.ts resolves to intended renderer/sqlite Source owner and is currently absent, consistent with Root's original before run7218; no implementation or Source success inferred. Owning wgpu TypeScript package SocketSnapshotSqliteScript79 resolves the same test from ../../renderer/sqlite/tests, Source runs Bun then strict TypeScript, Native selects actual renderer crateName/lib with native_socket_sqlite_snapshot_ and nocapture. This is the original renderer route, not OS Kernel test-native.
+
+Neutral six cases correctly use UTF8 bytes: empty0/value8, probe5/13, λ🙂6/14, A-NUL-B3/11, raw nonJSON13/21, private+supplementary7/15. Large unit6×24576=147456, semantic147464. Independent Bun SQLite asserts exact id/text, physical table types and integrity, edits genuine original text and reimports; raw text and embedded NUL remain meaningful.
+
+Current cancellation predicate event.completed>0 is insufficient: it may abort a row-complete checkpoint1/1 rather than an interior147456-byte copy. Root's proposed requirement0<completed<total with large total and fixture cancelThreshold32768 fixes that scope. Assert the relevant exact phase, total>=large UTF8 length and interior threshold; retain bounded byte-copy observation separately from overall row progress. Large case currently omitted from exact/one-short semantic limits loop; adding it binds large value147464 and UTF8 byte accounting under both directions. Fixture.invalidUtf8 arrays are currently unused by Source tests; ensure original Binary native law actually consumes each, not just unpaired JS surrogate rejection. Additional schema mutation tests would expose incorrect scalar bytes but implementation must measure bytes independently.
+
+Malformed six single-entity cases bind missing/multiple/wrongrowid/wrongid/nulltext/extracell refusal. These are direct Source semantic owner tests; they do not exercise actual barecodec Text/Binary envelopes or registered Kernel metadata. Root's actual Native law must retain that separate scope. Shared canceled String ordinary Drop remains outside five-currency custody qualification as reported earlier.
+
+Guest identity provenance remains actual compiled component/package hash + plugin/schema/dialect from MCP shared_plugin_runtime/shared_compiled_component, independent expected pack hash and original guest codec_sqlite_schema; manual guest constructor cannot honestly name host Snapshot TypeId. No blanket identity assignment.
+
+No tests executed or production edits; short report path below256.

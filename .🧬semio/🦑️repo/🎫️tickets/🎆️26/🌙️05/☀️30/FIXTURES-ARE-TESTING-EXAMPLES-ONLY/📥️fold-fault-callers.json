@@ -1,0 +1,39 @@
+{
+  "actions": [
+    {
+      "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\udce1\ufe0freplication/\ud83d\udd17\ufe0fcausal/\ud83d\udd00\ufe0ftransition/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+      "before": "0a6bd1e68e51aee9d15c0e1abc7b57e9bf02436969aced1c98a71f08b14d0a30",
+      "after": "77de3214366e48854245798199cfda2a2797a0a4ba577174e14a6771c3232200",
+      "blocks": [
+        {
+          "before": "c678e9286d25576358d428473754d40d05822f4bbcf1120cf75b2174f4a7f19f",
+          "after": "9cb3b35000d847459954d305e7c6232cd8fc4b2d2c5d89bad11aeb2a39104f67"
+        },
+        {
+          "before": "2f97953a910ccf4d65474857f5ae91713c0a447f1c48e7570c713ae6a4c76529",
+          "after": "1022bf75d3d415ab17ad902a9e9595d946dfaed98d3294d788fa043c82f21783"
+        },
+        {
+          "before": "5eb7f803f4d6697d1a3c23d454caacf7843563294e357f22407e8668c477c39f",
+          "after": "8467a053ab12e2ecf65c9eaa4510d0cda5d971d23ddcee9bd3ba1ff9dab0b0a6"
+        },
+        {
+          "before": "c3601644da65b194b22470ac2196faecdb90949a049f267c8076a0ba97478604",
+          "after": "da69717be811177301ea16552060d277044d658979d33f55d0f05785c20e6c81"
+        }
+      ]
+    },
+    {
+      "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83d\udce1\ufe0fspr/\ud83d\udcdc\ufe0fhistory/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+      "before": "79d43001db9f5213d00a1540732654f1f801a16026f7feb8e7c46973120f0cbd",
+      "after": "257f966f77088ea6ec9c3fe297e356900fe8ba72432314dd8d2d8e36a0bb7a49",
+      "blocks": [
+        {
+          "before": "29ecaf67c56f414a5a838c7a9f5e4de090e9bb9c843c8098336461ebf4fb3ea3",
+          "after": "7d478e003856165487baac4a799bcd7d8c0362b8513af6943a0aec2906468284"
+        }
+      ]
+    }
+  ],
+  "change": "borrow retained original errors in interactive results; explicit cold handoff in semantic tests; strengthen actual physical allocator law with owned 37-byte refusal and one-short release identity"
+}

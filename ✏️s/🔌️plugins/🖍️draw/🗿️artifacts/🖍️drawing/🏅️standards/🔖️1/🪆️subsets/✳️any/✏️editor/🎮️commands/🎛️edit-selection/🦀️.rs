@@ -16,7 +16,7 @@ pub struct EditSelection {
     pub ids: Vec<String>,
 }
 
-pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str) -> Result<Vec<DrawingMutation>, Fault> {
+pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str,admission:&semio_framework_plugin::AppOperationContext,control:&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Vec<DrawingMutation>, Fault> {
     if operation=="ungroup" {return ungroup::plan(document,ids).map(|(mutations,_)|mutations);}
     let selected = selected_drawing_layers(document, ids);
     if selected.is_empty() { return Err(Fault::from("Select at least one layer")); }
@@ -40,29 +40,35 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str) -> Resu
         }
         "delete" => operations.extend(selected.iter().map(|layer| crate::mutations::delete_layer(layer_base(layer).id.clone()))),
         "duplicate" => {
-            let mut working = document.clone();
+            crate::standards::v1::subsets::any::io::text::identity::creation::validate_operation(admission).map_err(|error|Fault::from(error.to_string()))?;
             for layer in &selected {
                 let mut ordinal = 1usize;
-                let duplicate = loop {
-                    let suffix = format!(" copy {ordinal}");
-                    let candidate = crate::schema::clone_drawing_layer_node(layer, &suffix);
-                    if find_drawing_layer(&working, &layer_base(&candidate).id).is_none() { break candidate; }
-                    ordinal += 1;
+                let identities = loop {
+                    control.checkpoint().map_err(|error|Fault::from(error.to_string()))?;
+                    let suffix = format!("{}:{}:{}:{} copy {ordinal}",admission.authoring_seed,admission.app_instance_id,admission.operation_id,admission.generation);
+                    let identities=crate::standards::v1::subsets::any::io::text::identity::clone::admit_clone_identities(layer,&suffix,control).map_err(|error|Fault::from(error.to_string()))?;
+                    let mut collision=false;
+                    for identity in &identities {
+                        control.checkpoint().map_err(|error|Fault::from(error.to_string()))?;
+                        if find_drawing_layer(document,&identity.target).is_some()||operations.iter().any(|operation|matches!(operation,DrawingMutation::DuplicateLayer(previous)if previous.identities.iter().any(|prior|prior.target==identity.target))){collision=true;break;}
+                    }
+                    if !collision {break identities;}
+                    ordinal=ordinal.checked_add(1).ok_or_else(||Fault::from("Drawing duplicate ordinal overflow"))?;
                 };
-                let location = find_drawing_layer_location(&working, &layer_base(layer).id).ok_or_else(|| Fault::from("Layer no longer exists"))?;
-                let mutation = crate::mutations::create_layer(parent.clone(), Some(location.index + 1), duplicate);
-                crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut working, &mutation).map_err(|error| Fault::from(error.to_string()))?;
+                let mutation=crate::mutations::duplicate_layer(layer_base(layer).id.clone(),identities);
                 operations.push(mutation);
             }
         }
         "group" => {
-            let mut group = crate::schema::create_drawing_group_layer("Group");
-            let mut material=format!("{}:",document.id);
-            for (index,layer) in selected.iter().enumerate() {
-                if index>0 {material.push('/');}
-                layer_base(layer).id.write_to(&mut material).map_err(|_|Fault::from("Cannot write group identity"))?;
-            }
-            layer_base_mut(&mut group).id = crate::standards::v1::subsets::any::schema::create_drawing_id("group", material.as_bytes()).into();
+            crate::standards::v1::subsets::any::io::text::identity::creation::validate_operation(admission).map_err(|error|Fault::from(error.to_string()))?;
+            let mut facts=control.allocate_vec(selected.len()+3).map_err(|error|Fault::from(error.to_string()))?;
+            facts.push(control.copy_text(&document.id.to_string_owner()).map_err(|error|Fault::from(error.to_string()))?);
+            facts.push(control.copy_text(&admission.parent_document_id).map_err(|error|Fault::from(error.to_string()))?);
+            facts.push(control.copy_text(&admission.authoring_seed).map_err(|error|Fault::from(error.to_string()))?);
+            for layer in &selected{facts.push(control.copy_text(&layer_base(layer).id.to_string_owner()).map_err(|error|Fault::from(error.to_string()))?);}
+            let mut parts=control.allocate_vec(facts.len()).map_err(|error|Fault::from(error.to_string()))?;parts.extend(facts.iter().map(|fact|fact.as_bytes()));
+            let identity=crate::standards::v1::subsets::any::io::text::identity::publication::admit_identity(crate::schema::identity::DrawingIdentityKind::Group,&parts,control).map_err(|error|Fault::from(error.to_string()))?;
+            let mut group=crate::schema::create_drawing_group_layer(identity,"Group");
             let group_id = layer_base(&group).id.clone();
             if find_drawing_layer(document, &group_id).is_some() { return Err(Fault::from("This group already exists")); }
             operations.push(crate::mutations::create_layer(parent, Some(locations[0].index), group));
@@ -120,14 +126,15 @@ fn plan_arrangement(document:&DrawingSnapshot,selected:&[&DrawingLayerNode],oper
 }
 
 pub fn handle(payload: &EditSelection, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
-    let ids = if payload.ids.is_empty() { &session.interaction.ids } else { &payload.ids };
+    let ids = if payload.ids.is_empty() { session.interaction.ids.clone() } else { payload.ids.clone() };
     if payload.operation=="ungroup" {
-        let (mutations,selection)=ungroup::plan(doc.snapshot,ids)?;
+        let (mutations,selection)=ungroup::plan(doc.snapshot,&ids)?;
         let mut emit=Emit::mutations(mutations);
         emit.effects.push(crate::editor::drawing::commands::canvas_pointer_down::interaction_select_effect(&selection,"replace"));
         return Ok(emit);
     }
-    let mutations=plan(doc.snapshot,ids,&payload.operation)?;
+    let admission=doc.operation()?;
+    let mutations=session.with_identity_control(|control|plan(doc.snapshot,&ids,&payload.operation,admission,control))?;
     Ok(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) })
 }
 

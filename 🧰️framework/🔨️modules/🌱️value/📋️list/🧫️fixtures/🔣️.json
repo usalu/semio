@@ -28,7 +28,12 @@
   },
   "ordered": {
     "count": 600,
-    "sum": 179700
+    "sum": 179700,
+    "emptyTailRelease": {
+      "elementBytes": 8,
+      "earlierLiveItems": 512,
+      "tailItems": 88
+    }
   },
   "capacity": {
     "maximum": 600,

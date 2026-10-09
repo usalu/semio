@@ -1,0 +1,15 @@
+{
+  "actions": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "4751d6b8f5a5b8340ab3c9120e76af9176b96a92b133d74d7ee08a3a86a21151",
+      "afterSha256": "246481b497587f8569e93e2ab9ae360a4b6fdc179a4f615cd3e2751fd790579d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧪️tests/🟦️.ts",
+      "beforeSha256": "65c686ca1352398ba54d3087f7391a4ac7386dfc936d61d6ffcbf6ceef98a973",
+      "afterSha256": "e763b2420f7906540b68d465f1264a173a62a617667bc44f01ea88983740c5d5"
+    }
+  ],
+  "scope": "Three root-owned corpus inventory branches read original source; boundary oracle includes independent TypeScript throw-line grammar diagnostics. No production parser change in this action."
+}

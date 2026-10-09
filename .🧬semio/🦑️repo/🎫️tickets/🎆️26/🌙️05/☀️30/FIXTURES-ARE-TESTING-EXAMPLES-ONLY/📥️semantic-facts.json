@@ -1,0 +1,115 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "f9c9eff1c05c4e0a4a1317b6711094fe985989f8d027b0ce01c33b532c62b3b6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🟦️.ts",
+      "sha256": "0500e54f15f2881a164bae454196e40213b358c6b80579b019987167e7fa2581"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "sha256": "d079567f793678d0eacae23712c381a5962d63e4c151096c42db9080396c4900"
+    }
+  ],
+  "portableCases": [
+    {
+      "id": "fixed-operation-expectation",
+      "schemaFacts": [
+        "closed object",
+        "fixed input/action or schedules",
+        "fixed post-observations"
+      ],
+      "readerFacts": [
+        "whole envelope admission",
+        "actual trial execution compares output with fixed expected member"
+      ],
+      "expected": "trial"
+    },
+    {
+      "id": "domain-snapshot-whole",
+      "schemaFacts": [
+        "domain properties and optional preconditions"
+      ],
+      "readerFacts": [
+        "whole Snapshot value admission",
+        "genuine runtime materialization/SQLite roundtrip"
+      ],
+      "expected": "domain"
+    },
+    {
+      "id": "same-shaped-produced-policy",
+      "schemaFacts": [
+        "fixed protocol",
+        "resource limits",
+        "fixed outcome vocabulary"
+      ],
+      "readerFacts": [
+        "runtime parser consumes published policy as control",
+        "actual output events produced/received"
+      ],
+      "expected": "domain"
+    },
+    {
+      "id": "unjoined-fixed-policy",
+      "schemaFacts": [
+        "closed object",
+        "fixed protocol and limits"
+      ],
+      "readerFacts": [
+        "whole test admission only",
+        "unavailable runtime reader candidates"
+      ],
+      "expected": "ambiguous"
+    },
+    {
+      "id": "selected-grant-definition",
+      "schemaFacts": [
+        "reusable grant individual definition",
+        "separate trial wrapper referencing it"
+      ],
+      "readerFacts": [
+        "projected grant admission at genuine owner",
+        "whole wrapper test-law admission"
+      ],
+      "expected": "domain definition retained; trial wrapper refused"
+    },
+    {
+      "id": "dynamic-trial-helper",
+      "schemaFacts": [
+        "potential expected/input envelope"
+      ],
+      "readerFacts": [
+        "unresolved computed helper",
+        "no proved outcome pairing"
+      ],
+      "expected": "ambiguous"
+    },
+    {
+      "id": "negative-parser-specimen",
+      "schemaFacts": [
+        "inline malformed/inert schema source as data"
+      ],
+      "readerFacts": [
+        "tests parser rejection of schema value",
+        "no corpus grammar admitted"
+      ],
+      "expected": "specimen retained"
+    },
+    {
+      "id": "generic-report",
+      "schemaFacts": [
+        "unconstrained expected/actual values",
+        "measured booleans/errors"
+      ],
+      "readerFacts": [
+        "real producer returns observations",
+        "runtime consumer reads observations"
+      ],
+      "expected": "domain"
+    }
+  ]
+}

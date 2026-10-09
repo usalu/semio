@@ -1,0 +1,38 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+    "sha256": "9f39a68a155c9389fd3758cbde8d054c37eccc53ab2376ac8ada25ef8f5b687b",
+    "characters": 81,
+    "authorship": "narrow action blocks only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs",
+    "sha256": "1f2e5649d22f52f44b21086e9bbbbbacdf8a195a7af878788f8d489bcc1ffc3d",
+    "characters": 78,
+    "authorship": "narrow action blocks only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+    "sha256": "e4d4a9eba69ac564d8e90a0825f07b11ccf59c24187c9af41d8d5d1b609571ed",
+    "characters": 69,
+    "authorship": "narrow action blocks only"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "f8c1623d3495616dadfe8b3cce9df9e94c5506534efff1f2fc188287ec8dfa07",
+    "characters": 84,
+    "authorship": "narrow action blocks only"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+    "sha256": "74017abd2f687ab3c4ac2d010224e9fb5dea30cf2521aa6c2736a50958cac068",
+    "characters": 129,
+    "authorship": "narrow action blocks only"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "sha256": "aefe5fb94bca711061703757fcb206ca219fee3f2884465b399f6f2dfa50c2fc",
+    "characters": 128,
+    "authorship": "narrow action blocks only"
+  }
+]

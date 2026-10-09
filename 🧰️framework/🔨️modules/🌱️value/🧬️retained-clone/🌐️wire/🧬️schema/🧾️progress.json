@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Retained Clone Progress",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "copiedItems",
+    "copiedBytes",
+    "retainedCapacityBytes",
+    "releasedBytes"
+  ],
+  "properties": {
+    "copiedItems": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "copiedBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "retainedCapacityBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "releasedBytes": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

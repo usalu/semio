@@ -14,7 +14,7 @@ use crate::retained::{FlowOwner, FlowRetirement};
 
 // #region 🔖️ArtifactVcs
 use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
-use crate::os_store::{ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactStore, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, DocumentStoreOwners, SnapshotRetirementFactory, SnapshotRetirementStep};
+use crate::os_store::{ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactStore, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, DocumentStoreOwners, SnapshotRetirementFactory};
 
 
 
@@ -215,7 +215,9 @@ const FLOW_STORE_COLD_CLOSE_PAGE_BYTES: usize = 4_096;
 /// uninterrupted cold pass (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn retire_flow_store_cold(mut store: FlowStore) {
     for _ in 0..FLOW_STORE_COLD_CLOSE_STEPS {
-        if store.close_owned_store_step(1, FLOW_STORE_COLD_CLOSE_PAGE_BYTES).expect("cold flow store disposal") == crate::os_store::SnapshotRetirementStep::Complete {
+        let demand=store.close_owned_demands(FLOW_STORE_COLD_CLOSE_PAGE_BYTES).expect("cold flow store original demands");
+        let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:FLOW_STORE_COLD_CLOSE_PAGE_BYTES,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+        if matches!(store.close_owned_store_step(grant).expect("cold flow store disposal"),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             assert!(store.close_owned_store_terminal_is_empty(), "a flow store disposer that reports Complete owes its exact terminal-empty witness");
             return;
         }

@@ -1,0 +1,11 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs",
+  "beforeSHA": "cf426954ea322cf917418eff4b1d26038fbc72c6a498895298b0a46648a8771b",
+  "recordedAfterSHA": "94a6c7b9729d391dfacf513dab6267d375ba821229526353dda33c3b59eca95f",
+  "logicalActions": [
+    "remove unused invalid Value-root RetainedCloneStep import; no alias or payload behavior change"
+  ],
+  "actualCompilerRed": "72358 Nx1/3m9s Cargo101 one E0432 Services, Kernel not reached",
+  "sourceCopiesAdded": false,
+  "nativeExecuted": false
+}

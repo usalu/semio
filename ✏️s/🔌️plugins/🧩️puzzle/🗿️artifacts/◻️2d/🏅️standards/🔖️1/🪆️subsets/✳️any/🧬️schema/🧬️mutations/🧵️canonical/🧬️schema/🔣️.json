@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "copyCapacityLimit",
+    "turnLimit",
+    "pauses",
+    "cases",
+    "scalar",
+    "scalarExpected"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "copyCapacityLimit": {
+      "const": 4096
+    },
+    "turnLimit": {
+      "const": 100000
+    },
+    "pauses": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 36,
+      "maxItems": 36,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "path",
+          "tag"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tag": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "scalar": {
+      "type": "object",
+      "required": [
+        "mutation",
+        "id",
+        "newX",
+        "newY"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mutation": {
+          "const": "moveNode"
+        },
+        "id": {
+          "type": "string"
+        },
+        "newX": {
+          "type": "number"
+        },
+        "newY": {
+          "type": "number"
+        }
+      }
+    },
+    "scalarExpected": {
+      "type": "string"
+    }
+  }
+}

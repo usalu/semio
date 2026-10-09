@@ -3,17 +3,34 @@ use super::{ArtifactPreparedOperationCursor,ArtifactPreparedOperationSource,Eras
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
 use crate::os_vcs::io::binary::entity_identity::NativeIdentityPreimage;
 
+#[path="📑️rows/🦀️.rs"]
+mod rows;
+pub(super) use rows::OperationWireRows;
+
 pub(super) struct OperationIdentityCursor{cursor:ArtifactPreparedOperationCursor,terminal:bool}
 impl OperationIdentityCursor{
     pub(super) fn new()->Self{Self{cursor:ArtifactPreparedOperationCursor::default(),terminal:false}}
+    pub(super) fn encode_into(&mut self,source:ArtifactPreparedOperationSource<'_>,output:&mut Vec<u8>,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
+        control.begin_stage(0)?;
+        let mut span=[0;64];
+        loop{
+            control.checkpoint()?;
+            let capacity=self.cursor.next_capacity_byte_demand()?;control.charge(capacity)?;
+            let step=self.cursor.advance(source,&mut span,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:ARTIFACT_CANONICAL_JSON_DEPTH}).map_err(|error|error.reason)?;
+            control.advance(step.processed_items.checked_add(step.copied_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"operation wire source work overflow"))?)?;
+            control.append_bytes(output,&span[..step.written_bytes])?;
+            if step.complete{return Ok(());}
+            if step.processed_items==0&&step.written_bytes==0&&step.retained_capacity_bytes==0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"operation wire source exhausted its declared progress"));}
+        }
+    }
     pub(super) fn commit(&mut self,source:ArtifactPreparedOperationSource<'_>,stamp:(u64,u64,u64),control:&mut NativeEncodeControl<'_>)->Result<(String,[u8;32]),ValueError>{
         let mut identity=NativeIdentityPreimage::new("mutation",control)?;let mut payload=semio_framework_hash::Hasher::new();let mut output=[0;64];
         loop{
             control.checkpoint()?;
             let capacity=self.cursor.next_capacity_byte_demand()?;control.charge(capacity)?;
             let step=self.cursor.advance(source,&mut output,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:ARTIFACT_CANONICAL_JSON_DEPTH}).map_err(|error|error.reason)?;
-            control.advance(step.processed_items)?;
-            identity.write(&output[..step.written_bytes],control)?;payload.update(&output[..step.written_bytes]);
+            control.advance(step.processed_items.checked_add(step.copied_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"operation identity source work overflow"))?)?;
+            identity.write(&output[..step.written_bytes],control)?;control.advance(step.written_bytes)?;payload.update(&output[..step.written_bytes]);
             if step.complete{break;}
             if step.processed_items==0&&step.written_bytes==0&&step.retained_capacity_bytes==0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"operation identity source exhausted its declared progress"));}
         }
@@ -21,6 +38,7 @@ impl OperationIdentityCursor{
         let id=identity.finish(control)?;control.begin_stage(1)?;control.advance(1)?;Ok((id,*payload.finalize().as_bytes()))
     }
 }
+
 impl ErasedSnapshotRetirement for OperationIdentityCursor{
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let step=self.cursor.close(grant).map_err(|error|error.reason)?;self.terminal=step.complete;let progress=RetainedCloneProgress{copied_items:step.processed_items,copied_bytes:step.copied_bytes,retained_capacity_bytes:step.retained_capacity_bytes,released_bytes:step.released_bytes};Ok(if step.complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}

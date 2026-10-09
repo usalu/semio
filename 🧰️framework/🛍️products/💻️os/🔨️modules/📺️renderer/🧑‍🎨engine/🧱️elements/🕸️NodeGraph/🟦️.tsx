@@ -6,6 +6,9 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import {decodeDagHoverJson,decodeDagSelectionJson,type DagTextDecodeControl} from "../../../../♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts";
+import type {DagWireTypeRefusal,DagSelectionDomains} from "../../../../♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🟦️.ts";
+import {NativeDecodeControl} from "../../../../../../../🔨️modules/🌱️value/🛬️decode/🟦️.ts";
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { type WasmCanvasSession, EASED_SURFACE_TRAILING_WINDOW_MS, WasmCanvas, createDemandFrameScheduler } from "@semio-tech/canvas-react-renderer";
 import { STYLING_METRICS, currentStylingAppearanceName, resolveColorHex, serializeCanvasThemeJson, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
@@ -138,16 +141,10 @@ export function nodeGraphPickChannel(target: Pick<CanvasPickTarget, "domain" | "
   return { nodeId: target.id.slice(0, boundary), portId: target.id.slice(boundary + 1) };
 }
 
-/** 🔌️ Decodes a `hoveredChannelJson()`/`hoveredChannelJson:interaction` `DagChannelRef` payload
- * (`{widgetId, port, direction}`, or `"null"`) into the `"{nodeId}@{portId}"` pick-id halves. */
-function parseDagChannelRefJson(json: string): { readonly nodeId: string; readonly portId: string } | null {
-  try {
-    const parsed = JSON.parse(json) as { readonly widgetId?: unknown; readonly port?: unknown } | null;
-    if (!parsed || typeof parsed.widgetId !== "string" || typeof parsed.port !== "string") return null;
-    return { nodeId: parsed.widgetId, portId: parsed.port };
-  } catch {
-    return null;
-  }
+/** 🎛️ Admits physical graph facts under the request's live cancellation and bounded publication policy. */
+function nodeGraphInputDecodeControl(alive:()=>boolean,progress:()=>void):DagTextDecodeControl{
+  const deadline=performance.now()+100;const cancelled=()=>!alive()||performance.now()>=deadline;
+  return {syntax:{maximumBytes:65536,maximumNodes:4096,maximumDepth:16,chunk:256,cancelled,progress,yield:()=>new Promise<void>(resolve=>setTimeout(resolve,0))},ownership:new NativeDecodeControl(256*1024,()=>!cancelled())};
 }
 
 /** 🔤️ The value schemas a port declares, as the comma-joined `valueType` the scene carries them in.
@@ -176,33 +173,6 @@ export function nodeGraphConnectionIsValid(records: readonly NodeGraphNodeRecord
   const sourcePort = sourceNode?.outputs.find((port) => portHandleId(port) === connection.sourceHandle);
   const targetPort = targetNode?.inputs.find((port) => portHandleId(port) === connection.targetHandle);
   return portValueTypesCompatible(portValueTypes(sourcePort), portValueTypes(targetPort));
-}
-
-/** 🚫️ The port pair a live wire drag is hovering that the declared port types forbid, as the board
- * publishes it alongside the hovered channel. */
-export type DagWireTypeRefusal = {
-  readonly source: string;
-  readonly sourceTypes: readonly string[];
-  readonly target: string;
-  readonly targetTypes: readonly string[];
-};
-
-/** 🚫️ Decodes the `refusal` the board rides on `hoveredChannelJson()` — `null` whenever the drag is
- * over open canvas or over a port it may legally land on. */
-export function parseDagWireTypeRefusalJson(json: string): DagWireTypeRefusal | null {
-  try {
-    const parsed = JSON.parse(json) as { readonly refusal?: unknown } | null;
-    const refusal = parsed?.refusal as Partial<DagWireTypeRefusal> | undefined;
-    if (!refusal || typeof refusal.source !== "string" || typeof refusal.target !== "string") return null;
-    return {
-      source: refusal.source,
-      sourceTypes: Array.isArray(refusal.sourceTypes) ? refusal.sourceTypes.filter((entry): entry is string => typeof entry === "string") : [],
-      target: refusal.target,
-      targetTypes: Array.isArray(refusal.targetTypes) ? refusal.targetTypes.filter((entry): entry is string => typeof entry === "string") : [],
-    };
-  } catch {
-    return null;
-  }
 }
 
 /** 🏷️ The localized noun for each declared port type, so a refusal reads in the user's own language
@@ -943,7 +913,7 @@ function WasmGraphSurface({
       selectionPreviewMethod: () => "rectangle",
       selectedNodeIdsJson: () => "[]",
       hoveredNodeId: () => null,
-      hoveredChannelJson: () => "{}",
+      hoveredChannelJson: () => '{"channel":null,"refusal":null}',
       syncInteraction: () => {},
       viewport: () => scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT,
       pickTargetsAtScreenJson: () => "[]",
@@ -2718,7 +2688,7 @@ function syncFlowSessionAppCatalogue(session: FlowWasmSession, catalogue: AppCat
 function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: NodeGraphScene, catalogue: AppCatalogue, skipFixture = false): void {
   if (scene.operators?.length) syncFlowOperatorInfos(session, catalogue, scene);
   if (!skipFixture && scene.hostSnapshotJson) sendFlowPayloadOnce(session, "synchronizeSnapshotJson", scene.hostSnapshotJson, (json) => session.synchronizeSnapshotJson(json));
-  if (scene.selection) observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify(scene.selection)));
+  if (scene.selection) observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify({nodes:scene.selection,edges:[],handles:[]})));
   applyNodeGraphHoverFromScene(session, scene.hover);
   if (scene.previewOffJson) observeFlowTask(session, "setPreviewOff", session.setPreviewOff(scene.previewOffJson));
   if (scene.lodJson) {
@@ -3154,7 +3124,7 @@ export function FlowGraphCanvasHost({
       readObservedFlowTask(session, "selectionPreviewCrossing", session.selectionPreviewCrossing()),
       readObservedFlowTask(session, "selectionPreviewMethod", session.selectionPreviewMethod()),
       readObservedFlowTask(session, "hoveredChannelJson:overlay", session.hoveredChannelJson()),
-    ]).then(([labelValue, selectedValue, preselectValue, dimmedValue, hoveredValue, sliderValue, boundsValue, pointsValue, crossingValue, methodValue, channelValue]) => {
+    ]).then(async ([labelValue, selectedValue, preselectValue, dimmedValue, hoveredValue, sliderValue, boundsValue, pointsValue, crossingValue, methodValue, channelValue]) => {
       if (request !== overlayRequestRef.current || sessionRef.current !== session || labelCanvasRef.current !== labelCanvas) return;
       const labelJson = flowJsonText(labelValue);
       setLabelStateJson((prev) => (prev === labelJson ? prev : labelJson));
@@ -3178,7 +3148,9 @@ export function FlowGraphCanvasHost({
       setSelectionBounds((prev) => (sameOverlayValue(prev, nextBounds) ? prev : nextBounds));
       const nextMarquee = computeDagMarqueeOverlay(flowJsonText(pointsValue), flowBoolean(crossingValue), typeof methodValue === "string" ? methodValue : undefined);
       setMarquee((prev) => (sameOverlayValue(prev, nextMarquee) ? prev : nextMarquee));
-      const nextRefusal = parseDagWireTypeRefusalJson(flowJsonText(channelValue));
+      const hover=await decodeDagHoverJson(flowJsonText(channelValue),nodeGraphInputDecodeControl(()=>request===overlayRequestRef.current&&sessionRef.current===session&&labelCanvasRef.current===labelCanvas,()=>schedulerRef.current?.invalidate()));
+      if(request!==overlayRequestRef.current||sessionRef.current!==session||labelCanvasRef.current!==labelCanvas)return;
+      const nextRefusal=hover.refusal;
       setWireRefusal((prev) => (sameOverlayValue(prev, nextRefusal) ? prev : nextRefusal));
     })
       .catch(() => {})
@@ -3297,6 +3269,8 @@ export function FlowGraphCanvasHost({
   /** 🧾️ What this surface last told the plugin about selection and hover — see
    * {@link createNodeGraphInteractionLedger}. */
   const interactionLedger = useMemo(() => createNodeGraphInteractionLedger(), []);
+  const hoverRequestRef=useRef(0);
+  const contextMenuRequestRef=useRef(0);
 
   const handleGesturePointerUp = useCallback(() => {
     endGesture("gesture");
@@ -3311,16 +3285,20 @@ export function FlowGraphCanvasHost({
   const emitInteractionState = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
+    const request=++hoverRequestRef.current;
     void Promise.all([
       readObservedFlowTask(session, "selectionDomainsJson:interaction", session.selectionDomainsJson()),
       readObservedFlowTask(session, "hoveredWidgetId:interaction", session.hoveredWidgetId()),
       readObservedFlowTask(session, "hoveredChannelJson:interaction", session.hoveredChannelJson()),
-    ]).then(([domainsValue, hoveredValue, channelValue]) => {
-      const domains = parseSelectionDomainsFromSession(flowJsonText(domainsValue));
+    ]).then(async ([domainsValue, hoveredValue, channelValue]) => {
+      const admission=nodeGraphInputDecodeControl(()=>sessionRef.current===session&&request===hoverRequestRef.current,()=>schedulerRef.current?.invalidate());
+      const domains=await decodeDagSelectionJson(flowJsonText(domainsValue),admission);
       const selection = { nodeIds: domains.nodes, edgeIds: domains.edges, handleIds: domains.handles };
-      const selectionDue = interactionLedger.publishSelection(selection);
       const hovered = typeof hoveredValue === "string" ? hoveredValue : undefined;
-      const portId = parseDagChannelRefJson(flowJsonText(channelValue))?.portId;
+      const hover=await decodeDagHoverJson(flowJsonText(channelValue),admission);
+      if(sessionRef.current!==session||request!==hoverRequestRef.current)return;
+      const portId=hover.channel?.port;
+      const selectionDue=interactionLedger.publishSelection(selection);
       const hoverDue = interactionLedger.publishHover({ hoveredId: hovered, portId });
       if (selectionDue) publishNodeGraphSelection(dispatch, sceneRef.current.interactionDomain, selection);
       if (hoverDue) publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered, portId);
@@ -3340,7 +3318,7 @@ export function FlowGraphCanvasHost({
       select: (nodeIds) => {
         const session = sessionRef.current;
         if (!session) return;
-        observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify(nodeIds)));
+        observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify({nodes:nodeIds,edges:[],handles:[]})));
         emitInteractionState();
       },
     };
@@ -3541,6 +3519,7 @@ export function FlowGraphCanvasHost({
     onHoverFocus: (focus) => {
       const session = sessionRef.current;
       if (!session) return;
+      const request=++hoverRequestRef.current;
       const target = focus.target;
       const channel = nodeGraphPickChannel(target);
       if (!target) {
@@ -3553,9 +3532,11 @@ export function FlowGraphCanvasHost({
       void Promise.all([
         readObservedFlowTask(session, "hoveredWidgetId:pointer", session.hoveredWidgetId()),
         readObservedFlowTask(session, "hoveredChannelJson:pointer", session.hoveredChannelJson()),
-      ]).then(([hoveredValue, channelValue]) => {
+      ]).then(async ([hoveredValue, channelValue]) => {
         const hoveredId = typeof hoveredValue === "string" ? hoveredValue : undefined;
-        const portId = parseDagChannelRefJson(flowJsonText(channelValue))?.portId;
+        const hover=await decodeDagHoverJson(flowJsonText(channelValue),nodeGraphInputDecodeControl(()=>sessionRef.current===session&&request===hoverRequestRef.current,()=>schedulerRef.current?.invalidate()));
+        if(sessionRef.current!==session||request!==hoverRequestRef.current)return;
+        const portId=hover.channel?.port;
         if (interactionLedger.publishHover({ hoveredId, portId })) publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hoveredId, portId);
       }).catch(() => {});
       schedulerRef.current?.invalidate();
@@ -3759,17 +3740,18 @@ export function FlowGraphCanvasHost({
         if (!editable || !requestContextMenu) return;
         event.preventDefault();
         event.stopPropagation();
+        const request=++contextMenuRequestRef.current;
         void (async () => {
           const session = sessionRef.current;
           const container = containerRef.current;
           let widgetId: string | undefined;
           let hits: NonNullable<PluginContextMenuSurfaceTarget["hits"]> = [];
-          let domains = { nodes: [] as string[], edges: [] as string[], handles: [] as string[] };
+          let domains:DagSelectionDomains={nodes:[],edges:[],handles:[]};
           if (session) {
             try {
-              domains = parseSelectionDomainsFromSession(flowJsonText(await readFlowTask(session.selectionDomainsJson())));
+              domains=await decodeDagSelectionJson(flowJsonText(await readFlowTask(session.selectionDomainsJson())),nodeGraphInputDecodeControl(()=>sessionRef.current===session&&containerRef.current===container&&request===contextMenuRequestRef.current,()=>schedulerRef.current?.invalidate()));
             } catch {
-              domains = { nodes: [], edges: [], handles: [] };
+              return;
             }
           }
           if (session && container) {
@@ -3788,6 +3770,7 @@ export function FlowGraphCanvasHost({
             const hovered = session ? await readFlowTask(session.hoveredWidgetId()).catch(() => undefined) : undefined;
             widgetId = typeof hovered === "string" ? hovered : undefined;
           }
+          if(sessionRef.current!==session||containerRef.current!==container||request!==contextMenuRequestRef.current)return;
           if (widgetId && !domains.nodes.includes(widgetId)) {
             domains = { nodes: [widgetId], edges: [], handles: [] };
             if (session) {
@@ -3814,6 +3797,7 @@ export function FlowGraphCanvasHost({
             (specs) => mapContextMenuSpecs(specs, buildFlowMenuDispatch(widgetId, event.clientX, event.clientY), flowMenuKeysByActionId),
             shellContextMenuFallback,
           );
+          if(sessionRef.current!==session||containerRef.current!==container||request!==contextMenuRequestRef.current)return;
           setContextMenu({ x: event.clientX, y: event.clientY, widgetId, ...menu });
           paintOverlays();
         })();

@@ -1,0 +1,108 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "beforeSha256": "896deb482c96e50efe7822d8ff249f2a383abdfb4357c88e25512db94e70427d",
+      "afterSha256": "dfbaf5746492efc810f1eb11ab1168e2296112055bb95ddafb9cc5a99299b601",
+      "action": "updated",
+      "scope": "Exact whole-corpus imports/validators/mirror mutants only; genuine domain validators and independent behavior retained."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "dd07bcf1fda588e0857d38954cdd5bf5385667eb99d9f33c605dd55a31099a51",
+      "afterSha256": "fc63560cccdc2f28e1333f6c5738f4558b3091557f9599e86a34b42b9a64d161",
+      "action": "updated",
+      "scope": "Exact whole-corpus imports/validators/mirror mutants only; genuine domain validators and independent behavior retained."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "f21a1e18ad490614b347980f8b5091d045162345700ff1c94c7d4c76184d04c5",
+      "afterSha256": "3df1dd7f78f5a61d45767bc263bf799ea95228f7bd2a61f24dcec4299033a1fc",
+      "action": "updated",
+      "scope": "Exact whole-corpus imports/validators/mirror mutants only; genuine domain validators and independent behavior retained."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
+      "beforeSha256": "bca7da500defe5c662a50ca0d5a58cc486f21a41f2c3be333296a3a65b4c589a",
+      "afterSha256": "dbd529088a9e16745ac88ed8ea61ac5032d439edb7c19d2da45024fde4df6672",
+      "action": "updated",
+      "scope": "Exact whole-corpus imports/validators/mirror mutants only; genuine domain validators and independent behavior retained."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
+      "beforeSha256": "2fd1115b822b9cd4df945e9148073cdd55e7e491ec61377097144fa0b2545fd8",
+      "afterSha256": "599bf7b3a2d0f7c64a22efa37a2b81cdbe354b8e9a01867d58823bec2e2a73d6",
+      "action": "updated",
+      "scope": "Exact whole-corpus imports/validators/mirror mutants only; genuine domain validators and independent behavior retained."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧪️tests/🟦️.test.ts",
+      "beforeSha256": "619750748714917c4de2368a2c5641091aa3e6d39e9625e5f87f00b5260cc436",
+      "afterSha256": "83fb8dfbcc5ad46b173bd64cec35a3936ed644a4e1b186e1b2045bfc6dd5b317",
+      "action": "updated",
+      "scope": "Exact whole-corpus imports/validators/mirror mutants only; genuine domain validators and independent behavior retained."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
+      "beforeSha256": "664b3a9e90a7881da32bf96c17924a326977c49ebc7139868998a91727e3933e",
+      "afterSha256": "d221b95e9d860fda65bdd6f5e60f551f8083a0e250a5fd89e6480894d97f9aa0",
+      "action": "updated",
+      "scope": "Exact whole-corpus imports/validators/mirror mutants only; genuine domain validators and independent behavior retained."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
+      "beforeSha256": "578f903b7acf0f91de17623a1e3235e354117e7fbc7eea36a4086f95ac05e25f",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
+      "beforeSha256": "ee984d6e0bb78b2c7a8ad4dc8b35ba1bda2d68c39fd644ecb0a47b12aa967049",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
+      "beforeSha256": "df600f4952c95d2a2f871a3ce76c004650d4c81481a41f2ebe04c6c7a3e7c8f3",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
+      "beforeSha256": "f42acab51d798bc7696eca83b0c935aded1e0a623333cb482d5043256d3606fa",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
+      "beforeSha256": "6a2aa01eb1befa6f75e6767663df97b642d337c3b71aa0a85f1b85c4010aeac1",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
+      "beforeSha256": "7064816b538d7af3dab3e31a48d06c1e0c6f35c496e6c6f960c0ea08422534cf",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
+      "beforeSha256": "5958112bcfc25d87dff7fd0ba2da96ef96255b4139fc55d25878890f8476786c",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+      "beforeSha256": "10810a4899994a391fc24e27293de68fd3e8138f63d74c403b7a70aafcfff91c",
+      "afterSha256": null,
+      "action": "removed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/📏️live-physical-demand/🧬️schema/🔣️.json",
+      "beforeSha256": "d6f778b6507376df531a51bc646ba2729044c12d1fa63944181479af5478b0f6",
+      "afterSha256": null,
+      "action": "removed"
+    }
+  ],
+  "qualification": "Previously observed Plugin live-law body already absent in peer Source; Root does not author its disappearance. No Source copies."
+}

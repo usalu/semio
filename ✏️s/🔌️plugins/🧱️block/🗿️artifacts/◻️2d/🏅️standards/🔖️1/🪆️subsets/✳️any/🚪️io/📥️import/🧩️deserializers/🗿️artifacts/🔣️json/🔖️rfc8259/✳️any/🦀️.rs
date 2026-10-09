@@ -27,7 +27,7 @@ impl Deserializer<Block2dSnapshot> for JsonIntoBlock2d {
             _ => Confidence::None,
         }
     }
-    async fn deserialize(payload: &IoPayload) -> IoResult<Block2dSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<Block2dSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "json→block2d: expected a text json payload".to_string())));
         };

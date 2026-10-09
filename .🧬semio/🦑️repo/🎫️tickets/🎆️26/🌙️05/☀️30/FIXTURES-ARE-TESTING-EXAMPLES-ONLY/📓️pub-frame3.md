@@ -1,0 +1,7 @@
+# Current Frame And Draft Trial Retirement
+
+Root full29013/current7 is genuine boundary RED. Fresh JSON/consumer inspection shows relocated Frame caller/cases/terminal/expected whole-trial authority and recreated UI draft-wire maximum/copy/cancel/source/refusal/callerGrant policy authority; neither has a production reader. The existing native draft law reads only its plain examples. The registered correct resumed facet produced actual scoped RED94851 Nx1/126ms at the new physical Frame guard.
+
+The two JSON authorities and only their whole-wrapper Ajv imports/admissions/missing-field mutations were removed. Every current plain Frame and draft example byte is unchanged. Independent SQLite receipt verdicts, actual FrameBuildJob, StoreSync identity, actual DraftChangesJsonCursor original-grant/receipt checks, native source and engine backing laws remain. The existing private route now executes its original Frame laws before the unrelated ChildEmit refusal. No production Rust, budget, executable registration or source copy changed.
+
+Actual31737 Nx1/541ms reaches the original Frame six laws:5pass/1fail49assertions48ms. SQLite and all actual draft/identity/backing checks pass; the genuine phase/aggregate full-grant receiver failure remains and requires production integration. This is qualified source evidence, not whole-facet GREEN or native closure. pf-red.log accidentally selected the existing current-corpus route and is not repair proof; pf-red2.log and pf-source.log are the correct actual receipts.

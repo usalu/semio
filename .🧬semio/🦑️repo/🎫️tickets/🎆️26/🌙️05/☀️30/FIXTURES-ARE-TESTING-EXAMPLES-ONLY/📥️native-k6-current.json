@@ -1,0 +1,1958 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "code": "E0425",
+    "message": "cannot find type `NativeDecodeControl` in this scope",
+    "compilerLine": 112,
+    "currentContext": [
+      "impl ArtifactSqliteSnapshot for DecodedBuffers {",
+      "    const SQLITE_SCHEMA: &'static str = include_str!(\"../🧬️schema/🗄️.sql\");",
+      "    fn decode_sqlite_snapshot_native(payload: &crate::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> {"
+    ],
+    "currentSha256": "6396bc019ac96a60f33f95556718abee17e21b6b148ee6e8e69a54b373c73491"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 575,
+    "currentContext": [
+      "   let input=payload(&source,encoding);",
+      "   let retained=SpaceHistorySnapshot::decode_sqlite_snapshot_native(&input,&mut SqliteSnapshotControl::new(&mut |_|true,defaults), &mut semio_framework_value::NativeDecodeControl::new(1<<30,&mut |event|{assert!(event.owned_bytes<=1<<30&&(event.total==0||event.completed<=event.total));true})).unwrap();assert_eq!(retained,source);retained.retire_sqlite_snapshot();",
+      "   let short=SqliteDatabaseLimits{max_columns:7-1,..defaults};"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 577,
+    "currentContext": [
+      "   let short=SqliteDatabaseLimits{max_columns:7-1,..defaults};",
+      "   assert!(SpaceHistorySnapshot::decode_sqlite_snapshot_native(&input,&mut SqliteSnapshotControl::new(&mut |_|true,short), &mut semio_framework_value::NativeDecodeControl::new(1<<30,&mut |event|{assert!(event.owned_bytes<=1<<30&&(event.total==0||event.completed<=event.total));true})).is_err(),\"{} borrowed complete native columns must refuse before typed materialization\",sample[\"id\"]);",
+      "   for maximum in[bytes-1,bytes]{"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0599",
+    "message": "no associated function or constant named `decode_sqlite_snapshot_native` found for struct `os_store::component::SpaceHistorySnapshot` in the current scope",
+    "compilerLine": 613,
+    "currentContext": [
+      "  let mut native=semio_framework_value::NativeDecodeControl::new(1<<30,&mut observe);native.charge(7).unwrap();armed.set(true);",
+      "  let error=SpaceHistorySnapshot::decode_sqlite_snapshot_native(&input,&mut sql,&mut native).unwrap_err();assert_eq!(error.kind.as_str(),contract[\"cancellation\"][\"expectedKind\"].as_str().unwrap());let debit=native.owned_bytes()-7;assert_eq!(native.maximum_bytes(),1<<30);assert_eq!(debit,limits.max_allocation_bytes-sql.allocation_remaining_bytes());assert_eq!(debit,limits.max_value_bytes-sql.reconstruction_remaining_bytes().unwrap());drop(native);drop(observe);assert!(reached);",
+      "  let mut sql_progress=|_|true;let mut sql=SqliteSnapshotControl::new(&mut sql_progress,limits);let armed=std::cell::Cell::new(false);let mut reached=false;let mut observe=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{if armed.get()&&(!interior||(event.completed>=minimum&&event.completed<event.total)){reached=true;false}else{true}};"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0599",
+    "message": "no method named `encode_sqlite_snapshot_native` found for struct `os_store::component::SpaceHistorySnapshot` in the current scope",
+    "compilerLine": 616,
+    "currentContext": [
+      "  let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut observe);native.charge(7).unwrap();armed.set(true);",
+      "  let error=source.encode_sqlite_snapshot_native(encoding,&mut sql,&mut store::NativeSnapshotEncodeOwner::new(&mut native,semio_framework_value::RetainedCloneGrant{maximum_items:256,maximum_copy_bytes:65536,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:4096})).unwrap_err();assert_eq!(error.kind.as_str(),contract[\"cancellation\"][\"expectedKind\"].as_str().unwrap());assert_eq!(native.maximum_bytes(),1<<30);assert_eq!(native.owned_bytes()-7,limits.max_allocation_bytes-sql.allocation_remaining_bytes());drop(native);drop(observe);assert!(reached);",
+      "  println!(\"[DEBUG] SpaceHistory {encoding:?} original native owner interior={interior} canceled and retained complete cumulative receipt\");"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 5 arguments but 4 arguments were supplied",
+    "compilerLine": 42,
+    "currentContext": [
+      "    ORDINARY_DECODER_CALLS.with(|count| count.set(0));",
+      "    CONTROLLED_DECODER_CALLS.with(|count| count.set(0));",
+      "    let outcome = (DecodedBuffers::sqlite_codec().export)(\"fixture.buffers/v1\", &dialect, &crate::io_schema::IoPayload::Binary(bytes.clone()), &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();"
+    ],
+    "currentSha256": "6396bc019ac96a60f33f95556718abee17e21b6b148ee6e8e69a54b373c73491"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 5 arguments but 4 arguments were supplied",
+    "compilerLine": 47,
+    "currentContext": [
+      "    CONTROLLED_DECODER_CALLS.with(|count| assert_eq!(count.get() as u64, case[\"controlledCalls\"].as_u64().unwrap()));",
+      "    let mut reached = false;",
+      "    let result = (DecodedBuffers::sqlite_codec().export)("
+    ],
+    "currentSha256": "6396bc019ac96a60f33f95556718abee17e21b6b148ee6e8e69a54b373c73491"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "code": "E0277",
+    "message": "the trait bound `DecodedBuffers: semio_framework_value::retirement::RetireOwned` is not satisfied",
+    "compilerLine": 114,
+    "currentContext": [
+      "    fn decode_sqlite_snapshot_native(payload: &crate::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> {",
+      "        CONTROLLED_DECODER_CALLS.with(|count| count.set(count.get() + 1));",
+      "        decode_sqlite_snapshot_record_native("
+    ],
+    "currentSha256": "6396bc019ac96a60f33f95556718abee17e21b6b148ee6e8e69a54b373c73491"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 5 arguments but 4 arguments were supplied",
+    "compilerLine": 186,
+    "currentContext": [
+      "        limits.max_allocation_bytes = maximum;",
+      "        COMPLETED_DECODERS.with(|count| count.set(0));",
+      "        let result = (DecodedBuffers::sqlite_codec().export)(\"fixture.buffers/v1\", &dialect, &crate::io_schema::IoPayload::Binary(bytes.clone()), &mut SqliteSnapshotControl::new(&mut |_| true, limits));"
+    ],
+    "currentSha256": "6396bc019ac96a60f33f95556718abee17e21b6b148ee6e8e69a54b373c73491"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 5 arguments but 4 arguments were supplied",
+    "compilerLine": 191,
+    "currentContext": [
+      "        COMPLETED_DECODERS.with(|count| assert_eq!(count.get(), usize::from(decoded), \"{}\", case[\"id\"]));",
+      "        COMPLETED_DECODERS.with(|count| count.set(0));",
+      "        let result = (DecodedBuffers::sqlite_codec().export)(\"fixture.buffers/v1\", &dialect, &crate::io_schema::IoPayload::Binary(bytes), &mut SqliteSnapshotControl::new(&mut |event| event.phase != SqliteSnapshotPhase::DecodeNative, limits));"
+    ],
+    "currentSha256": "6396bc019ac96a60f33f95556718abee17e21b6b148ee6e8e69a54b373c73491"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 61,
+    "currentContext": [
+      "                semio_framework_job::Generation(1),",
+      "                semio_framework_job::StepBudget::new(256, u64::MAX),",
+      "                cancellation.clone(),"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 58,
+    "currentContext": [
+      "        for _ in 0..100_000 {",
+      "            let mut context = semio_framework_job::StepContext::new(",
+      "                semio_framework_job::OperationId(1),"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0277",
+    "message": "the trait bound `os_store::component::SpaceHistorySnapshot: serde::Deserialize<'de>` is not satisfied",
+    "compilerLine": 176,
+    "currentContext": [
+      "    let store::io::IoPayload::Text(text) = output else { panic!(\"declared text carrier\") };",
+      "    assert_eq!(serde_json::from_str::<SpaceHistorySnapshot>(&text).unwrap(), source);",
+      "    assert_eq!(observed.maximum_bytes(), 1 << 30);"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 431,
+    "currentContext": [
+      "        let mut native=semio_framework_value::NativeDecodeControl::new(1<<30,&mut native_progress);",
+      "        let Err(error) = <SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut control,&mut native) else { panic!(\"zero physical allowance must refuse before native construction\") };",
+      "        assert_eq!(error.kind.as_str(), contract[\"zeroPhysical\"][\"expectedKind\"].as_str().unwrap());"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 441,
+    "currentContext": [
+      "        let mut native=semio_framework_value::NativeDecodeControl::new(1<<30,&mut native_progress);",
+      "        let first = <SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut control,&mut native).unwrap();",
+      "        assert_eq!(first, source);"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 452,
+    "currentContext": [
+      "        let mut native=semio_framework_value::NativeDecodeControl::new(1<<30,&mut native_progress);",
+      "            let retained = <SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut control,&mut native).unwrap();",
+      "            assert_eq!(retained, source);"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 455,
+    "currentContext": [
+      "            assert_eq!(charged(&control, limits), owned);",
+      "            let Err(error) = <SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut control,&mut native) else { panic!(\"second retained native input must not reset either caller ledger\") };",
+      "            assert_eq!(error.kind.as_str(), ratio[\"expectedKind\"].as_str().unwrap());"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 465,
+    "currentContext": [
+      "        let mut native=semio_framework_value::NativeDecodeControl::new(1<<30,&mut native_progress);",
+      "        let Err(error) = <SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut control,&mut native) else { panic!(\"native census must refuse after parser ownership\") };",
+      "        assert_eq!(error.kind.as_str(), contract[\"rowRefusal\"][\"expectedKind\"].as_str().unwrap());"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 483,
+    "currentContext": [
+      "        let mut native=semio_framework_value::NativeDecodeControl::new(1<<30,&mut native_progress);",
+      "        let Err(error) = <SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut control,&mut native) else { panic!(\"known interior native frontier must cancel\") };",
+      "        assert_eq!(error.kind.as_str(), contract[\"cancellation\"][\"expectedKind\"].as_str().unwrap());"
+    ],
+    "currentSha256": "f9763b634a3d09ff2c2966605af581d778435c7560108eadce714480ebe5fbcf"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 6 arguments but 5 arguments were supplied",
+    "compilerLine": 137,
+    "currentContext": [
+      "        ENCODER_CALLS.with(|count| count.set(0));",
+      "        let result = (EstimatedEncoding::sqlite_codec().import)(\"fixture.expansion/v1\", &dialect, database.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();",
+      "        let actual = match result.value {"
+    ],
+    "currentSha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 6 arguments but 5 arguments were supplied",
+    "compilerLine": 146,
+    "currentContext": [
+      "        short.max_file_bytes -= 1;",
+      "        assert!((EstimatedEncoding::sqlite_codec().import)(\"fixture.expansion/v1\", &dialect, database.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, short)).is_err());",
+      "    }"
+    ],
+    "currentSha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 6 arguments but 5 arguments were supplied",
+    "compilerLine": 184,
+    "currentContext": [
+      "            let mut callback = |event: crate::sqlite_snapshot::SqliteSnapshotProgress| !cancel || event.phase != SqliteSnapshotPhase::EncodeNative;",
+      "            let result = (codec.import)(\"fixture.expansion/v1\", &dialect, database.clone(), encoding, &mut SqliteSnapshotControl::new(&mut callback, limits));",
+      "            let encoded = case[\"encoded\"].as_bool().unwrap();"
+    ],
+    "currentSha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 6 arguments but 5 arguments were supplied",
+    "compilerLine": 234,
+    "currentContext": [
+      "    };",
+      "    let result = (GuardedEncoding::sqlite_codec().import)(\"fixture.expansion/v1\", &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut callback, limits));",
+      "    assert_eq!(result.is_err(), case[\"expectedCanceled\"].as_bool().unwrap(), \"{encoding:?} encoding must stop during real output ownership\");"
+    ],
+    "currentSha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 6 arguments but 5 arguments were supplied",
+    "compilerLine": 261,
+    "currentContext": [
+      "    for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {",
+      "        let output = super::encode_sqlite_snapshot_record_native(",
+      "            encoding,"
+    ],
+    "currentSha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "code": "E0277",
+    "message": "the trait bound `ControlledOutputFields: semio_framework_value::retirement::RetireOwned` is not satisfied",
+    "compilerLine": 269,
+    "currentContext": [
+      "        .unwrap();",
+      "        let decoded = super::decode_sqlite_snapshot_record_native(",
+      "            &output,"
+    ],
+    "currentSha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 6 arguments but 5 arguments were supplied",
+    "compilerLine": 269,
+    "currentContext": [
+      "        .unwrap();",
+      "        let decoded = super::decode_sqlite_snapshot_record_native(",
+      "            &output,"
+    ],
+    "currentSha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 6 arguments but 5 arguments were supplied",
+    "compilerLine": 285,
+    "currentContext": [
+      "        assert_eq!(",
+      "            super::encode_sqlite_snapshot_record_native(",
+      "                encoding,"
+    ],
+    "currentSha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 6 arguments but 5 arguments were supplied",
+    "compilerLine": 297,
+    "currentContext": [
+      "        assert!(",
+      "            super::encode_sqlite_snapshot_record_native(",
+      "                encoding,"
+    ],
+    "currentSha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 6 arguments but 5 arguments were supplied",
+    "compilerLine": 316,
+    "currentContext": [
+      "        assert!(",
+      "            super::encode_sqlite_snapshot_record_native(",
+      "                encoding,"
+    ],
+    "currentSha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 6 arguments but 5 arguments were supplied",
+    "compilerLine": 329,
+    "currentContext": [
+      "        assert!(",
+      "            super::encode_sqlite_snapshot_record_native(",
+      "                encoding,"
+    ],
+    "currentSha256": "b2f33d20b0bd86140302d6176f3ed036b197488c0d596bddfbfeee9dca1a518e"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 65,
+    "currentContext": [
+      "        next_clock,",
+      "        actor: actor.clone(),",
+      "        group_id: None,"
+    ],
+    "currentSha256": "4ab9f3b00231040cad624f2b38c713c16a6d347aa0e39cc7f4bb73df3b7e8ba3"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 74,
+    "currentContext": [
+      "        id: edit_id.clone(),",
+      "        actor: Some(actor.clone()),",
+      "        forwards: vec![format!(\"{role}:forward\")],"
+    ],
+    "currentSha256": "4ab9f3b00231040cad624f2b38c713c16a6d347aa0e39cc7f4bb73df3b7e8ba3"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 81,
+    "currentContext": [
+      "            base_version: generation,",
+      "            author_id: Some(crate::os_spr::ActorId(actor)),",
+      "            timestamp: next_clock,"
+    ],
+    "currentSha256": "4ab9f3b00231040cad624f2b38c713c16a6d347aa0e39cc7f4bb73df3b7e8ba3"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 146,
+    "currentContext": [
+      "        next_clock,",
+      "        actor: actor.clone(),",
+      "        group_id: None,"
+    ],
+    "currentSha256": "4ab9f3b00231040cad624f2b38c713c16a6d347aa0e39cc7f4bb73df3b7e8ba3"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 155,
+    "currentContext": [
+      "        id: edit_id.clone(),",
+      "        actor: Some(actor.clone()),",
+      "        forwards: vec![DemoMutation::SetN(SetN { n: next })],"
+    ],
+    "currentSha256": "4ab9f3b00231040cad624f2b38c713c16a6d347aa0e39cc7f4bb73df3b7e8ba3"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 162,
+    "currentContext": [
+      "            base_version: store.generation,",
+      "            author_id: Some(crate::os_spr::ActorId(actor)),",
+      "            timestamp: next_clock,"
+    ],
+    "currentSha256": "4ab9f3b00231040cad624f2b38c713c16a6d347aa0e39cc7f4bb73df3b7e8ba3"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 402,
+    "currentContext": [
+      "        store.content_revision_now(),",
+      "        format!(\"map-owner-{ordinal}\"),",
+      "        DemoMutation::SetN(SetN { n: next }),"
+    ],
+    "currentSha256": "4ab9f3b00231040cad624f2b38c713c16a6d347aa0e39cc7f4bb73df3b7e8ba3"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 880,
+    "currentContext": [
+      "            assert_eq!([read.parent.n, read.drawing.n, read.value.n], [Some(0), Some(0), Some(0)]);",
+      "            assert_eq!(parent.local_actor_id().0, fixture()[\"openedActor\"].as_str().expect(\"declared opened group actor\"));",
+      "            assert!(drawing.invalidate_after_replay().is_err());"
+    ],
+    "currentSha256": "4ab9f3b00231040cad624f2b38c713c16a6d347aa0e39cc7f4bb73df3b7e8ba3"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 140,
+    "currentContext": [
+      "    for extent in fixture[\"runtimeAllocationBytes\"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {",
+      "        let mut runtime = ArtifactStoreInitializationRuntime::new(\"physical-hydration\", \"unit/v1\", Arc::new(()), [7; 32], crate::os_spr::ActorId(String::new()));",
+      "        *runtime.close_active = Some(Box::new(WholeAllocation { owner: Some(vec![42; extent]) }));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 145,
+    "currentContext": [
+      "        let mut sequence = 0;",
+      "        let mut cx = StepContext::new(OperationId(807), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "        let (result, allocated, released) = crate::test_allocation::observe_backing(|| drive_hydration_runtime(&mut runtime, &factory, &mut cx, release_grant(extent)));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 145,
+    "currentContext": [
+      "        let mut sequence = 0;",
+      "        let mut cx = StepContext::new(OperationId(807), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "        let (result, allocated, released) = crate::test_allocation::observe_backing(|| drive_hydration_runtime(&mut runtime, &factory, &mut cx, release_grant(extent)));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 168,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let mut cx = StepContext::new(OperationId(806), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "    let (result, allocated, released) = crate::test_allocation::observe_backing(|| drive_hydration_retirement(&mut active, &mut cx, release_grant(fixture[\"maximumAdmissionBytes\"].as_u64().unwrap() as usize)));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 168,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let mut cx = StepContext::new(OperationId(806), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "    let (result, allocated, released) = crate::test_allocation::observe_backing(|| drive_hydration_retirement(&mut active, &mut cx, release_grant(fixture[\"maximumAdmissionBytes\"].as_u64().unwrap() as usize)));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 199,
+    "currentContext": [
+      "    let extent = fixture[\"refusedAllocationBytes\"].as_u64().unwrap() as usize;",
+      "    let mut runtime = ArtifactStoreInitializationRuntime::new(\"refused-hydration\", \"unit/v1\", Arc::new(()), [7; 32], crate::os_spr::ActorId(String::new()));",
+      "    *runtime.close_active = Some(Box::new(WholeAllocation { owner: Some(vec![42; extent]) }));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 203,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let mut cx = StepContext::new(OperationId(808), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "    let (result, allocated, released) = crate::test_allocation::observe_backing(|| drive_hydration_runtime(&mut runtime, &factory, &mut cx, release_grant(fixture[\"maximumAdmissionBytes\"].as_u64().unwrap() as usize)));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 203,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let mut cx = StepContext::new(OperationId(808), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "    let (result, allocated, released) = crate::test_allocation::observe_backing(|| drive_hydration_runtime(&mut runtime, &factory, &mut cx, release_grant(fixture[\"maximumAdmissionBytes\"].as_u64().unwrap() as usize)));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 235,
+    "currentContext": [
+      "        let mut sequence = 0;",
+      "        let mut cx = StepContext::new(OperationId(803), Generation(1), semio_framework_job::StepBudget::new(fuel, deadline), cancel, || Some(1), &mut sequence);",
+      "        assert!(drive_hydration_retirement(&mut active, &mut cx, RetainedCloneGrant { maximum_items, ..release_grant(maximum_bytes) }).expect(\"a normal blocked owner remains pending\"));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 235,
+    "currentContext": [
+      "        let mut sequence = 0;",
+      "        let mut cx = StepContext::new(OperationId(803), Generation(1), semio_framework_job::StepBudget::new(fuel, deadline), cancel, || Some(1), &mut sequence);",
+      "        assert!(drive_hydration_retirement(&mut active, &mut cx, RetainedCloneGrant { maximum_items, ..release_grant(maximum_bytes) }).expect(\"a normal blocked owner remains pending\"));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 263,
+    "currentContext": [
+      "    let mut owner = RetainedPersistedDocumentHydration::<Snapshot, Mutation> {",
+      "        actor: ManuallyDrop::new(crate::os_spr::ActorId(String::with_capacity(extent))),",
+      "        pack: ManuallyDrop::new(None), initial: ManuallyDrop::new(None), history: ManuallyDrop::new(None),"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0599",
+    "message": "no method named `capacity` found for struct `SharedUtf8` in the current scope",
+    "compilerLine": 279,
+    "currentContext": [
+      "    assert_eq!(owner.actor.0.len(), 0);",
+      "    assert_eq!(owner.actor.0.capacity(), extent);",
+      "    assert!(!owner.terminal_is_empty());"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 186,
+    "currentContext": [
+      "    for _ in 0..10000 {",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        match verifier.step(&mut cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 186,
+    "currentContext": [
+      "    for _ in 0..10000 {",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        match verifier.step(&mut cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 190,
+    "currentContext": [
+      "            MemberHistoryInputStep::Ready => {",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                return verifier.take_ready(&mut cx).unwrap().unwrap();"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 190,
+    "currentContext": [
+      "            MemberHistoryInputStep::Ready => {",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                return verifier.take_ready(&mut cx).unwrap().unwrap();"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 94,
+    "currentContext": [
+      "    let cancel = root_cancel_token();",
+      "    let mut zero = StepContext::new(OperationId(11), Generation(13), StepBudget::new(0, 99), cancel.clone(), || Some(1), &mut sequence);",
+      "    let zero_step = cursor.step(source, &mut zero);"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 94,
+    "currentContext": [
+      "    let cancel = root_cancel_token();",
+      "    let mut zero = StepContext::new(OperationId(11), Generation(13), StepBudget::new(0, 99), cancel.clone(), || Some(1), &mut sequence);",
+      "    let zero_step = cursor.step(source, &mut zero);"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 105,
+    "currentContext": [
+      "        let before = cursor.progress().steps;",
+      "        let mut cx = StepContext::new(OperationId(11), Generation(13), StepBudget::new(fuel, 99), cancel.clone(), || Some(1), &mut sequence);",
+      "        let step = cursor.step(source, &mut cx);"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 105,
+    "currentContext": [
+      "        let before = cursor.progress().steps;",
+      "        let mut cx = StepContext::new(OperationId(11), Generation(13), StepBudget::new(fuel, 99), cancel.clone(), || Some(1), &mut sequence);",
+      "        let step = cursor.step(source, &mut cx);"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 128,
+    "currentContext": [
+      "        let cancel = root_cancel_token();",
+      "        let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99), cancel.clone(), || Some(1), &mut sequence);",
+      "        assert!(matches!(cursor.step(&source, &mut first), OwnedDocumentClosureStep::Pending(_)));"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 128,
+    "currentContext": [
+      "        let cancel = root_cancel_token();",
+      "        let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99), cancel.clone(), || Some(1), &mut sequence);",
+      "        assert!(matches!(cursor.step(&source, &mut first), OwnedDocumentClosureStep::Pending(_)));"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 132,
+    "currentContext": [
+      "        source.members = chain(row[\"afterMembers\"].as_u64().unwrap() as usize).members;",
+      "        let mut next = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99), cancel, || Some(1), &mut sequence);",
+      "        assert_eq!(cursor.step(&source, &mut next), OwnedDocumentClosureStep::Rejected(OwnedDocumentClosureDiagnostic::Stale));"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 132,
+    "currentContext": [
+      "        source.members = chain(row[\"afterMembers\"].as_u64().unwrap() as usize).members;",
+      "        let mut next = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99), cancel, || Some(1), &mut sequence);",
+      "        assert_eq!(cursor.step(&source, &mut next), OwnedDocumentClosureStep::Rejected(OwnedDocumentClosureDiagnostic::Stale));"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 224,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    let mut owner = match MemberFactorySelection::<M>::begin(input, &cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 224,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    let mut owner = match MemberFactorySelection::<M>::begin(input, &cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 235,
+    "currentContext": [
+      "    };",
+      "    let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    assert!(matches!(owner.step(&mut zero), MemberFactorySelectionStep::Pending(_)));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 235,
+    "currentContext": [
+      "    };",
+      "    let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    assert!(matches!(owner.step(&mut zero), MemberFactorySelectionStep::Pending(_)));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0599",
+    "message": "no method named `capacity` found for struct `SharedUtf8` in the current scope",
+    "compilerLine": 295,
+    "currentContext": [
+      "    assert_eq!(released, 0);",
+      "    assert_eq!(owner.actor.0.capacity(), 0);",
+      "    assert!(owner.active.is_some());"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 241,
+    "currentContext": [
+      "    for _ in 0..10000 {",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        let before = owner.completed;"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 241,
+    "currentContext": [
+      "    for _ in 0..10000 {",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        let before = owner.completed;"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 259,
+    "currentContext": [
+      "    assert!(terminal);",
+      "    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    let (selected, retired) = if error.is_none() {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 259,
+    "currentContext": [
+      "    assert!(terminal);",
+      "    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    let (selected, retired) = if error.is_none() {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 178,
+    "currentContext": [
+      "        let cancel = root_cancel_token();",
+      "        let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(2, 99), cancel.clone(), || Some(1), &mut sequence);",
+      "        assert!(matches!(cursor.step(&source, &mut first), OwnedDocumentClosureStep::Pending(_)));"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 178,
+    "currentContext": [
+      "        let cancel = root_cancel_token();",
+      "        let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(2, 99), cancel.clone(), || Some(1), &mut sequence);",
+      "        assert!(matches!(cursor.step(&source, &mut first), OwnedDocumentClosureStep::Pending(_)));"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 186,
+    "currentContext": [
+      "        let clock: fn() -> Option<u64> = if now == 100 { || Some(100) } else { || Some(1) };",
+      "        let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(64, 999), cancel, clock, &mut sequence);",
+      "        assert_eq!(cursor.step(&source, &mut cx), OwnedDocumentClosureStep::Rejected(reason));"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 186,
+    "currentContext": [
+      "        let clock: fn() -> Option<u64> = if now == 100 { || Some(100) } else { || Some(1) };",
+      "        let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(64, 999), cancel, clock, &mut sequence);",
+      "        assert_eq!(cursor.step(&source, &mut cx), OwnedDocumentClosureStep::Rejected(reason));"
+    ],
+    "currentSha256": "282ce370838781c3365b7fa3660fcb01493a5ac11e837de06955fcf290c4056f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 356,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    let mut owner = MemberFactorySelection::<SemioFixture>::begin(input, &cx).unwrap_or_else(|_| panic!(\"closed factory admission\"));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 356,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    let mut owner = MemberFactorySelection::<SemioFixture>::begin(input, &cx).unwrap_or_else(|_| panic!(\"closed factory admission\"));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 359,
+    "currentContext": [
+      "    for _ in 0..10000 {",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        match owner.step(&mut cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 359,
+    "currentContext": [
+      "    for _ in 0..10000 {",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        match owner.step(&mut cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 363,
+    "currentContext": [
+      "            MemberFactorySelectionStep::Ready => {",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                return owner.take_ready(&mut cx).unwrap().unwrap();"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 363,
+    "currentContext": [
+      "            MemberFactorySelectionStep::Ready => {",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                return owner.take_ready(&mut cx).unwrap().unwrap();"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 384,
+    "currentContext": [
+      "                cancel.cancel_now();",
+      "                let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), cancel, || Some(1), &mut sequence);",
+      "                let mut rejected = match MemberFactorySelection::<SemioFixture>::begin(input, &cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 384,
+    "currentContext": [
+      "                cancel.cancel_now();",
+      "                let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), cancel, || Some(1), &mut sequence);",
+      "                let mut rejected = match MemberFactorySelection::<SemioFixture>::begin(input, &cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 397,
+    "currentContext": [
+      "            let mut sequence = 0;",
+      "            let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            let mut owner = MemberFactorySelection::<SemioFixture>::begin(input, &cx).unwrap_or_else(|_| panic!(\"fixture factory admission\"));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 397,
+    "currentContext": [
+      "            let mut sequence = 0;",
+      "            let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            let mut owner = MemberFactorySelection::<SemioFixture>::begin(input, &cx).unwrap_or_else(|_| panic!(\"fixture factory admission\"));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 402,
+    "currentContext": [
+      "                for _ in 0..10000 {",
+      "                    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                    assert!(!matches!(owner.step(&mut cx), MemberFactorySelectionStep::Rejected(_)));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 402,
+    "currentContext": [
+      "                for _ in 0..10000 {",
+      "                    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                    assert!(!matches!(owner.step(&mut cx), MemberFactorySelectionStep::Rejected(_)));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 409,
+    "currentContext": [
+      "            }",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            if at == \"selected-unpublished\" {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 409,
+    "currentContext": [
+      "            }",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            if at == \"selected-unpublished\" {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 425,
+    "currentContext": [
+      "            };",
+      "            let mut cx = StepContext::new(OperationId(if event == \"operation\" { 8 } else { 7 }), Generation(if event == \"generation\" { 12 } else { 11 }), StepBudget::new(7, 999), cancel, clock, &mut sequence);",
+      "            let before = owner.completed;"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 425,
+    "currentContext": [
+      "            };",
+      "            let mut cx = StepContext::new(OperationId(if event == \"operation\" { 8 } else { 7 }), Generation(if event == \"generation\" { 12 } else { 11 }), StepBudget::new(7, 999), cancel, clock, &mut sequence);",
+      "            let before = owner.completed;"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 444,
+    "currentContext": [
+      "            let mut retry_sequence = 0;",
+      "            let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);",
+      "            let retired = if let Some(witness) = witness.as_mut() {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 444,
+    "currentContext": [
+      "            let mut retry_sequence = 0;",
+      "            let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);",
+      "            let retired = if let Some(witness) = witness.as_mut() {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 463,
+    "currentContext": [
+      "            let mut sequence = 0;",
+      "            let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            assert!(selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut zero).unwrap().is_none());"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 463,
+    "currentContext": [
+      "            let mut sequence = 0;",
+      "            let mut zero = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            assert!(selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut zero).unwrap().is_none());"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 466,
+    "currentContext": [
+      "            assert!(!selected.terminal_is_empty());",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            let mut owner = selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut cx).unwrap().unwrap();"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 466,
+    "currentContext": [
+      "            assert!(!selected.terminal_is_empty());",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            let mut owner = selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut cx).unwrap().unwrap();"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 473,
+    "currentContext": [
+      "            for _ in 0..20000 {",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                match owner.step(&mut cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 473,
+    "currentContext": [
+      "            for _ in 0..20000 {",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                match owner.step(&mut cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 488,
+    "currentContext": [
+      "            assert!(terminal);",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            let (handoffs, retired) = if error.is_none() {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 488,
+    "currentContext": [
+      "            assert!(terminal);",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            let (handoffs, retired) = if error.is_none() {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 515,
+    "currentContext": [
+      "            if at == \"ready\" {",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                dictionary = selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut cx).unwrap();"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 515,
+    "currentContext": [
+      "            if at == \"ready\" {",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                dictionary = selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut cx).unwrap();"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 519,
+    "currentContext": [
+      "                for _ in 0..20000 {",
+      "                    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                    match dictionary.as_mut().unwrap().step(&mut cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 519,
+    "currentContext": [
+      "                for _ in 0..20000 {",
+      "                    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                    match dictionary.as_mut().unwrap().step(&mut cx) {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 535,
+    "currentContext": [
+      "            }",
+      "            let mut cx = StepContext::new(OperationId(if event == \"operation\" { 8 } else { 7 }), Generation(if event == \"generation\" { 12 } else { 11 }), StepBudget::new(7, 999), cancel, || Some(1), &mut sequence);",
+      "            let retired = if let Some(dictionary) = dictionary.as_mut() {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 535,
+    "currentContext": [
+      "            }",
+      "            let mut cx = StepContext::new(OperationId(if event == \"operation\" { 8 } else { 7 }), Generation(if event == \"generation\" { 12 } else { 11 }), StepBudget::new(7, 999), cancel, || Some(1), &mut sequence);",
+      "            let retired = if let Some(dictionary) = dictionary.as_mut() {"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 540,
+    "currentContext": [
+      "                let mut retry_sequence = 0;",
+      "                let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);",
+      "                assert!(matches!(dictionary.step(&mut retry), MemberHistoryDictionaryStep::Rejected(error) if Some(error) == expected_error(row)));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 540,
+    "currentContext": [
+      "                let mut retry_sequence = 0;",
+      "                let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);",
+      "                assert!(matches!(dictionary.step(&mut retry), MemberHistoryDictionaryStep::Rejected(error) if Some(error) == expected_error(row)));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 551,
+    "currentContext": [
+      "                let mut retry_sequence = 0;",
+      "                let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);",
+      "                assert!(matches!(selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut retry), Err(error) if Some(error) == expected_error(row)));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 551,
+    "currentContext": [
+      "                let mut retry_sequence = 0;",
+      "                let mut retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);",
+      "                assert!(matches!(selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), &mut retry), Err(error) if Some(error) == expected_error(row)));"
+    ],
+    "currentSha256": "05fab9a0c120ab9255350a02c03b836d1a1c29cc585ca194225aaa9b4638f767"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 84,
+    "currentContext": [
+      "    for _ in 0..20_000 {",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(fuel, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        let copied = owner.copied;"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 84,
+    "currentContext": [
+      "    for _ in 0..20_000 {",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(fuel, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        let copied = owner.copied;"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 106,
+    "currentContext": [
+      "            let mut sequence = 0;",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            assert!(matches!(owner.step(&mut cx), MemberHistoryInputStep::Pending(_)));"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 106,
+    "currentContext": [
+      "            let mut sequence = 0;",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            assert!(matches!(owner.step(&mut cx), MemberHistoryInputStep::Pending(_)));"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 110,
+    "currentContext": [
+      "            assert!(owner.take_ready(&mut cx).unwrap().is_none());",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 1), root_cancel_token(), || Some(1), &mut sequence);",
+      "            assert!(matches!(owner.step(&mut cx), MemberHistoryInputStep::Pending(_)));"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 110,
+    "currentContext": [
+      "            assert!(owner.take_ready(&mut cx).unwrap().is_none());",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 1), root_cancel_token(), || Some(1), &mut sequence);",
+      "            assert!(matches!(owner.step(&mut cx), MemberHistoryInputStep::Pending(_)));"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 117,
+    "currentContext": [
+      "                assert_eq!(result, MemberHistoryInputStep::Ready);",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                assert!(owner.take_ready(&mut cx).unwrap().is_none());"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 117,
+    "currentContext": [
+      "                assert_eq!(result, MemberHistoryInputStep::Ready);",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                assert!(owner.take_ready(&mut cx).unwrap().is_none());"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 120,
+    "currentContext": [
+      "                assert_eq!(owner.retained_input_bytes(), bytes.len() + 2);",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 1), root_cancel_token(), || Some(1), &mut sequence);",
+      "                assert!(owner.take_ready(&mut cx).unwrap().is_none());"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 120,
+    "currentContext": [
+      "                assert_eq!(owner.retained_input_bytes(), bytes.len() + 2);",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 1), root_cancel_token(), || Some(1), &mut sequence);",
+      "                assert!(owner.take_ready(&mut cx).unwrap().is_none());"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 123,
+    "currentContext": [
+      "                assert_eq!(owner.retained_input_bytes(), bytes.len() + 2);",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                let mut witness = owner.take_ready(&mut cx).unwrap().expect(\"single ready owner\");"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 123,
+    "currentContext": [
+      "                assert_eq!(owner.retained_input_bytes(), bytes.len() + 2);",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                let mut witness = owner.take_ready(&mut cx).unwrap().expect(\"single ready owner\");"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 154,
+    "currentContext": [
+      "        if at == \"pending-byte\" {",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(2, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            assert!(matches!(owner.step(&mut cx), MemberHistoryInputStep::Pending(_)));"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 154,
+    "currentContext": [
+      "        if at == \"pending-byte\" {",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(2, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            assert!(matches!(owner.step(&mut cx), MemberHistoryInputStep::Pending(_)));"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 161,
+    "currentContext": [
+      "        let mut witness = if at == \"witness\" {",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            owner.take_ready(&mut cx).unwrap()"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 161,
+    "currentContext": [
+      "        let mut witness = if at == \"witness\" {",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            owner.take_ready(&mut cx).unwrap()"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 169,
+    "currentContext": [
+      "        if event == \"none\" {",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), cancel, || Some(1), &mut sequence);",
+      "            let mut witness = owner.take_ready(&mut cx).unwrap().expect(\"positive exact-one handoff\");"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 169,
+    "currentContext": [
+      "        if event == \"none\" {",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), cancel, || Some(1), &mut sequence);",
+      "            let mut witness = owner.take_ready(&mut cx).unwrap().expect(\"positive exact-one handoff\");"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 193,
+    "currentContext": [
+      "        };",
+      "        let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(7, 999), cancel, clock, &mut sequence);",
+      "        let mut output = [204; 4];"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 193,
+    "currentContext": [
+      "        };",
+      "        let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(7, 999), cancel, clock, &mut sequence);",
+      "        let mut output = [204; 4];"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 203,
+    "currentContext": [
+      "        assert_eq!(output, [204; 4]);",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        if let Some(witness) = witness.as_mut() {"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 203,
+    "currentContext": [
+      "        assert_eq!(output, [204; 4]);",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        if let Some(witness) = witness.as_mut() {"
+    ],
+    "currentSha256": "401034d7145541721b7ab503b3139c235bf902c4e4dbfeeb119e16f97567582d"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0599",
+    "message": "no method named `capacity` found for struct `SharedUtf8` in the current scope",
+    "compilerLine": 59,
+    "currentContext": [
+      "    let owner = request.owner.as_ref().map_or(0, |value| value.parent.artifact_id.capacity() + value.parent.dialect.artifact_kind.capacity() + value.parent.dialect.standard.capacity() + value.parent.dialect.subset.capacity() + value.slot.capacity() + value.child_id.capacity());",
+      "    request.actor.0.capacity() + expected + owner",
+      "}"
+    ],
+    "currentSha256": "5ba65ee357849ebaf5748ffe3f2ba6364c294ed7959d17ede498cab2015705e7"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0308",
+    "message": "mismatched types",
+    "compilerLine": 272,
+    "currentContext": [
+      "        actor.push_str(row[\"text\"].as_str().unwrap());",
+      "        request.actor.0 = actor;",
+      "        assert_eq!(request.actor.0.capacity(), capacity);"
+    ],
+    "currentSha256": "5ba65ee357849ebaf5748ffe3f2ba6364c294ed7959d17ede498cab2015705e7"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0599",
+    "message": "no method named `capacity` found for struct `SharedUtf8` in the current scope",
+    "compilerLine": 273,
+    "currentContext": [
+      "        request.actor.0 = actor;",
+      "        assert_eq!(request.actor.0.capacity(), capacity);",
+      "        while request.pages.is_some() {"
+    ],
+    "currentSha256": "5ba65ee357849ebaf5748ffe3f2ba6364c294ed7959d17ede498cab2015705e7"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0599",
+    "message": "no method named `capacity` found for struct `SharedUtf8` in the current scope",
+    "compilerLine": 297,
+    "currentContext": [
+      "        assert_eq!((events.requested_bytes, events.released_bytes), (0, capacity));",
+      "        assert_eq!(request.actor.0.capacity(), 0);",
+      "        retire_request(&mut request);"
+    ],
+    "currentSha256": "5ba65ee357849ebaf5748ffe3f2ba6364c294ed7959d17ede498cab2015705e7"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 129,
+    "currentContext": [
+      "    for _ in 0..10000 {",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        match owner.step(&mut cx) {"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 129,
+    "currentContext": [
+      "    for _ in 0..10000 {",
+      "        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "        match owner.step(&mut cx) {"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 133,
+    "currentContext": [
+      "            MemberHistoryInputStep::Ready => {",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                let input = owner.take_ready(&mut cx).unwrap().unwrap();"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 133,
+    "currentContext": [
+      "            MemberHistoryInputStep::Ready => {",
+      "                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "                let input = owner.take_ready(&mut cx).unwrap().unwrap();"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 153,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    MemberHistoryDictionaryOwner::begin(input, \"stdio.semio.flow\", limits, &cx).unwrap_or_else(|_| panic!(\"dictionary input admission\"))"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 153,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    MemberHistoryDictionaryOwner::begin(input, \"stdio.semio.flow\", limits, &cx).unwrap_or_else(|_| panic!(\"dictionary input admission\"))"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 193,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    let before = owner.scanner.as_ref().map_or(owner.end, RetainedSprVerification::consumed);"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 193,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "    let before = owner.scanner.as_ref().map_or(owner.end, RetainedSprVerification::consumed);"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 249,
+    "currentContext": [
+      "            let mut sequence = 0;",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            let retired = if error.is_none() {"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 249,
+    "currentContext": [
+      "            let mut sequence = 0;",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            let retired = if error.is_none() {"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 298,
+    "currentContext": [
+      "            let mut sequence = 0;",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            let mut witness = if at == \"witness\" { owner.take_ready(&mut cx).unwrap() } else { None };"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 298,
+    "currentContext": [
+      "            let mut sequence = 0;",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);",
+      "            let mut witness = if at == \"witness\" { owner.take_ready(&mut cx).unwrap() } else { None };"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 312,
+    "currentContext": [
+      "            };",
+      "            let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(7, 999), cancel, clock, &mut sequence);",
+      "            if let Some(witness) = witness.as_mut() {"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 312,
+    "currentContext": [
+      "            };",
+      "            let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(7, 999), cancel, clock, &mut sequence);",
+      "            if let Some(witness) = witness.as_mut() {"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 317,
+    "currentContext": [
+      "                let mut retry_sequence = 0;",
+      "                let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);",
+      "                assert_eq!(witness.check_step_authority(&retry).err(), expected_error(row));"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 317,
+    "currentContext": [
+      "                let mut retry_sequence = 0;",
+      "                let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999), root_cancel_token(), || Some(1), &mut retry_sequence);",
+      "                assert_eq!(witness.check_step_authority(&retry).err(), expected_error(row));"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 352,
+    "currentContext": [
+      "                        cancel.cancel_now();",
+      "                        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), cancel, || Some(1), &mut sequence);",
+      "                        if let MemberHistoryDictionaryStep::Rejected(found) = owner.step(&mut cx) {"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 352,
+    "currentContext": [
+      "                        cancel.cancel_now();",
+      "                        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999), cancel, || Some(1), &mut sequence);",
+      "                        if let MemberHistoryDictionaryStep::Rejected(found) = owner.step(&mut cx) {"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 403,
+    "currentContext": [
+      "            cancel.cancel_now();",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999), cancel, || Some(1), &mut sequence);",
+      "            assert!(matches!(owner.step(&mut cx), MemberHistoryDictionaryStep::Rejected(MemberOpenDiagnostic::Cancelled)));"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 403,
+    "currentContext": [
+      "            cancel.cancel_now();",
+      "            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999), cancel, || Some(1), &mut sequence);",
+      "            assert!(matches!(owner.step(&mut cx), MemberHistoryDictionaryStep::Rejected(MemberOpenDiagnostic::Cancelled)));"
+    ],
+    "currentSha256": "e5b22ce151bbe31e3eaafad5056cb850d887a1dce94ebaada3892e72779cd553"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 41,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let mut cx = StepContext::new(OperationId(811), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "    let (step, allocated, released) = crate::test_allocation::observe_backing(|| hydration.step_store(&mut cx, wide_grant()));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 41,
+    "currentContext": [
+      "    let mut sequence = 0;",
+      "    let mut cx = StepContext::new(OperationId(811), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "    let (step, allocated, released) = crate::test_allocation::observe_backing(|| hydration.step_store(&mut cx, wide_grant()));"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 103,
+    "currentContext": [
+      "        let mut sequence = 0;",
+      "        let mut cx = StepContext::new(OperationId(805), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "        let (pending, allocated, released) = crate::test_allocation::observe_backing(|| drive_hydration_retirement(&mut active, &mut cx, release_grant(extent)).unwrap());"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 103,
+    "currentContext": [
+      "        let mut sequence = 0;",
+      "        let mut cx = StepContext::new(OperationId(805), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "        let (pending, allocated, released) = crate::test_allocation::observe_backing(|| drive_hydration_retirement(&mut active, &mut cx, release_grant(extent)).unwrap());"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 3 arguments but 2 arguments were supplied",
+    "compilerLine": 110,
+    "currentContext": [
+      "        let frame = std::mem::size_of_val(active.as_ref().unwrap().as_ref());",
+      "        let mut cx = StepContext::new(OperationId(805), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "        let (_, allocated, released) = crate::test_allocation::observe_backing(|| drive_hydration_retirement(&mut active, &mut cx, release_grant(frame)).unwrap());"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "code": "E0061",
+    "message": "this function takes 7 arguments but 6 arguments were supplied",
+    "compilerLine": 110,
+    "currentContext": [
+      "        let frame = std::mem::size_of_val(active.as_ref().unwrap().as_ref());",
+      "        let mut cx = StepContext::new(OperationId(805), Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);",
+      "        let (_, allocated, released) = crate::test_allocation::observe_backing(|| drive_hydration_retirement(&mut active, &mut cx, release_grant(frame)).unwrap());"
+    ],
+    "currentSha256": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720"
+  }
+]

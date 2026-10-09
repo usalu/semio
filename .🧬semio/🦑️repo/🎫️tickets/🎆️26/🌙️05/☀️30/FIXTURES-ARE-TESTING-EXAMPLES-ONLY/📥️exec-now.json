@@ -1,0 +1,42 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "4887208362913560393a1074a46f2093df8ca02fa2a095a5b19143086cc30dec",
+      "codepoints": 112,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "2f7133f23b91ed4db8b412ef0849e6fe3e2131f48ea3c80550116b663014ba5f",
+      "codepoints": 109,
+      "utf16": 118
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📋️project.json",
+      "sha256": "7170406bc0cd01f93be87b3b58be6b36d40459091cf1f4da4ab4ce1c2fe7d572",
+      "codepoints": 121,
+      "utf16": 129
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📜️script.ts",
+      "sha256": "01a2fbdf609f6bd0fc30a9a51a969e1acf2bc3fc3049dbb9b2abc7bc9740430d",
+      "codepoints": 118,
+      "utf16": 126
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "981c60ab467d3ca270aa4b10925e13426211a7416795276000998c0bfb494d40",
+      "codepoints": 113,
+      "utf16": 121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "a489166e43f7b9bb683a89c990f1e449a444abe31fc248c5180ec67c04b467b2",
+      "codepoints": 110,
+      "utf16": 118
+    }
+  ]
+}

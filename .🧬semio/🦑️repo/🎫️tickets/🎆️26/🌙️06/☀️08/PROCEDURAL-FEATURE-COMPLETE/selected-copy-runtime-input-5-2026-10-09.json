@@ -1,0 +1,11 @@
+{
+  "session": 37433,
+  "outcome": "native runtime fixture setup refusal before custody assertions",
+  "nativePassed": 0,
+  "nativeFailed": 1,
+  "filtered": 66,
+  "failure": "native turn capacity exceeds address space from uncontrolled fixture FromValue",
+  "fixScope": "only original cold test source uses actual NativeDecodeControl with explicit16MiB policy and borrowed guarded DSL source",
+  "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/📑️copy/🦀️.rs",
+  "sha256AfterFix": "3ffe81517fc68fed520fce61e7e439ddbb6ce44bff6de8077e3403a6714d0685"
+}

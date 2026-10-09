@@ -1,0 +1,72 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🔣️.json",
+      "beforeSha256": null,
+      "currentSha256": "2de0af73668999fd43ac7b85a5fb4efeec9d3f38d222cf91a6304f8da741427d",
+      "scope": "First-party original schema-read provenance facts/index; six produced DTOs,47 plain binding examples, strict TypeScript/Ajv and11 actual VM effect oracles, defining asynchronous discovery adapter and original script/Nx/live+seed routes. Shared hashes observe full files, not exclusive authorship or production proof."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🟦️.ts",
+      "beforeSha256": null,
+      "currentSha256": "76f46c4da5361fb9344dbbbb7c94b0dcdc0d1d4081155be6ab9e65974745faa5",
+      "scope": "First-party original schema-read provenance facts/index; six produced DTOs,47 plain binding examples, strict TypeScript/Ajv and11 actual VM effect oracles, defining asynchronous discovery adapter and original script/Nx/live+seed routes. Shared hashes observe full files, not exclusive authorship or production proof."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
+      "beforeSha256": null,
+      "currentSha256": "228fdbc72c2c5c64aede9c29c68b19fea88231203c9721d65aacd983ff5f838d",
+      "scope": "First-party original schema-read provenance facts/index; six produced DTOs,47 plain binding examples, strict TypeScript/Ajv and11 actual VM effect oracles, defining asynchronous discovery adapter and original script/Nx/live+seed routes. Shared hashes observe full files, not exclusive authorship or production proof."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts",
+      "beforeSha256": null,
+      "currentSha256": "d269dd0f1ed955b68a62eda16f06d72381c3e11927215ad196b4587fdb76867b",
+      "scope": "First-party original schema-read provenance facts/index; six produced DTOs,47 plain binding examples, strict TypeScript/Ajv and11 actual VM effect oracles, defining asynchronous discovery adapter and original script/Nx/live+seed routes. Shared hashes observe full files, not exclusive authorship or production proof."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "beforeSha256": null,
+      "currentSha256": "c0c60020d37999a75d4d49fbb969a4716d993ab43e5036b031679ceb9b374698",
+      "scope": "First-party original schema-read provenance facts/index; six produced DTOs,47 plain binding examples, strict TypeScript/Ajv and11 actual VM effect oracles, defining asynchronous discovery adapter and original script/Nx/live+seed routes. Shared hashes observe full files, not exclusive authorship or production proof."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "beforeSha256": "ca0051b96eac6694fe65c33e9a4aa4e4dde24414421631944e875f01ee2b3860",
+      "currentSha256": "d64c6ec73a121486af383a9834166854f5f2cda57a9b7a10c9c64f1b0a76d5a8",
+      "scope": "First-party original schema-read provenance facts/index; six produced DTOs,47 plain binding examples, strict TypeScript/Ajv and11 actual VM effect oracles, defining asynchronous discovery adapter and original script/Nx/live+seed routes. Shared hashes observe full files, not exclusive authorship or production proof."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "beforeSha256": "a6fff98405fdb3414a6fc60927f9e6b338de066bcecf84c5bfad3ba4a1efb98b",
+      "currentSha256": "0e84b6cbcc1e820b8dbe6a45235e0556c59250817d12d26d33cfd0ae58ae07e1",
+      "scope": "First-party original schema-read provenance facts/index; six produced DTOs,47 plain binding examples, strict TypeScript/Ajv and11 actual VM effect oracles, defining asynchronous discovery adapter and original script/Nx/live+seed routes. Shared hashes observe full files, not exclusive authorship or production proof."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "beforeSha256": "d11edac8a501cc90b5e31ef970f31d01f277612fe6f156a1c3891a52d18b9b44",
+      "currentSha256": "cef118f35284abbfe0c2308d71f3431ab03c4f8bda909c76f32227d1545022d5",
+      "scope": "First-party original schema-read provenance facts/index; six produced DTOs,47 plain binding examples, strict TypeScript/Ajv and11 actual VM effect oracles, defining asynchronous discovery adapter and original script/Nx/live+seed routes. Shared hashes observe full files, not exclusive authorship or production proof."
+    },
+    {
+      "path": ".vscode/launch.json",
+      "beforeSha256": "ee896129f849fc043f11f4b3c37a999ba3f98ee5f54b2e3e738d27f06c576491",
+      "currentSha256": "aaef5b27227f4e501b6be2acf771a9accdcfa4c56f051fd54463f762c3768abe",
+      "scope": "First-party original schema-read provenance facts/index; six produced DTOs,47 plain binding examples, strict TypeScript/Ajv and11 actual VM effect oracles, defining asynchronous discovery adapter and original script/Nx/live+seed routes. Shared hashes observe full files, not exclusive authorship or production proof."
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSha256": "63a84a56368809572101f379ee56edfe72d46f25600aaa505d7c5fd887083184",
+      "currentSha256": "fc1cc6d76e6c213354aeb9f40413ceb3c2f5009be427db334193a20a353f3ea9",
+      "scope": "First-party original schema-read provenance facts/index; six produced DTOs,47 plain binding examples, strict TypeScript/Ajv and11 actual VM effect oracles, defining asynchronous discovery adapter and original script/Nx/live+seed routes. Shared hashes observe full files, not exclusive authorship or production proof."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "beforeSha256": "fcb58e212315c9f23a59a381d4bc021de578ff07dcb5f582171fc5fffa7f4033",
+      "currentSha256": "f9c9eff1c05c4e0a4a1317b6711094fe985989f8d027b0ce01c33b532c62b3b6",
+      "scope": "First-party original schema-read provenance facts/index; six produced DTOs,47 plain binding examples, strict TypeScript/Ajv and11 actual VM effect oracles, defining asynchronous discovery adapter and original script/Nx/live+seed routes. Shared hashes observe full files, not exclusive authorship or production proof."
+    }
+  ],
+  "sourceCopies": false,
+  "qualification": "Endpoint hashes describe shared current files. Only named logical actions are Root-authored; surrounding peer changes are not adopted."
+}

@@ -7,7 +7,7 @@ fn close_packet_step(packet: &mut PreparedRenderPacket) -> bool {
         Close::Complete { progress } => { assert!(progress.fits(grant)); assert!(packet.retirement_is_empty()); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
-        Close::Refused(kind) => panic!("original packet refused admitted close: {kind:?}"),
+        Close::Refused { kind, progress } => panic!("original packet refused admitted close: {kind:?}, progress: {progress:?}"),
     }
 }
 fn close_abandoned_packet_step() -> bool {
@@ -17,7 +17,7 @@ fn close_abandoned_packet_step() -> bool {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
-        Close::Refused(kind) => panic!("original abandoned packet refused admitted close: {kind:?}"),
+        Close::Refused { kind, progress } => panic!("original abandoned packet refused admitted close: {kind:?}, progress: {progress:?}"),
     }
 }
 fn close_abandoned_mailbox_step() -> bool {
@@ -27,7 +27,7 @@ fn close_abandoned_mailbox_step() -> bool {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
-        Close::Refused(kind) => panic!("original abandoned mailbox refused admitted close: {kind:?}"),
+        Close::Refused { kind, progress } => panic!("original abandoned mailbox refused admitted close: {kind:?}, progress: {progress:?}"),
     }
 }
 
@@ -40,7 +40,7 @@ fn close_job_step(job: &mut PreparedRenderJob) -> bool {
         Close::Complete { progress } => { assert!(progress.fits(grant)); assert!(job.terminal_is_empty()); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
-        Close::Refused(kind) => panic!("original prepared owner refused admitted close: {kind:?}"),
+        Close::Refused { kind, progress } => panic!("original prepared owner refused admitted close: {kind:?}, progress: {progress:?}"),
     }
 }
 fn close_abandoned_job_step() -> bool {
@@ -50,7 +50,7 @@ fn close_abandoned_job_step() -> bool {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
-        Close::Refused(kind) => panic!("original abandoned owner refused admitted close: {kind:?}"),
+        Close::Refused { kind, progress } => panic!("original abandoned owner refused admitted close: {kind:?}, progress: {progress:?}"),
     }
 }
 
@@ -61,7 +61,7 @@ fn close_abandoned_input_step() -> bool {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
-        Close::Refused(kind) => panic!("original abandoned input refused admitted close: {kind:?}"),
+        Close::Refused { kind, progress } => panic!("original abandoned input refused admitted close: {kind:?}, progress: {progress:?}"),
     }
 }
 
@@ -72,7 +72,7 @@ fn close_abandoned_atlas_step() -> bool {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
-        Close::Refused(kind) => panic!("original abandoned atlas refused admitted close: {kind:?}"),
+        Close::Refused { kind, progress } => panic!("original abandoned atlas refused admitted close: {kind:?}, progress: {progress:?}"),
     }
 }
 
@@ -165,7 +165,8 @@ fn now_ms() -> Option<u64> {
 fn drive_preparation_until_terminal(job: &mut PreparedRenderJob) -> StepOutcome {
     let mut preview = 0;
     for _ in 0..4_096 {
-        let outcome = drive_step(job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
+        let (outcome,original_retained_receipt) = drive_step(job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+        assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
         if !matches!(outcome, StepOutcome::Yield) {
             return outcome;
         }
@@ -478,7 +479,8 @@ fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
     let mut job = PreparedRenderJob::new(input, 1);
     let mut preview = 0;
     for expected in [PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES, 0] {
-        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(11), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
+        let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(11), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+        assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
         assert!(matches!(outcome, StepOutcome::Yield));
         assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().retained_source.len(), expected);
     }
@@ -653,7 +655,8 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     assert!(input.try_push_raster_producer(unbound).is_ok());
     let mut job = PreparedRenderJob::new(input, 1);
     let mut preview = 0;
-    let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(4, u64::MAX), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(4, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+    assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(matches!(outcome, StepOutcome::Fault(_)));
     assert_eq!(job.fault(), Some("raster producer generation is stale"));
     while !close_job_step(&mut job) {}
@@ -663,7 +666,8 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     assert!(input.try_push_raster_producer(bound).is_ok());
     let mut job = PreparedRenderJob::new(input, 1);
-    let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(4, u64::MAX), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(4, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+    assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(matches!(outcome, StepOutcome::Yield));
     assert_eq!(job.fault(), None);
     while !close_job_step(&mut job) {}
@@ -723,13 +727,17 @@ fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
     let mut job = PreparedRenderJob::new(input, 1);
     let mut preview = 0;
 
-    let zero = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(0, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (zero,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(0, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+
+    assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(matches!(zero, StepOutcome::Yield));
     let retained = job.input.as_ref().unwrap().raster_producers.get(0).unwrap();
     assert_eq!(retained.source.as_ptr(), source_pointer);
     assert!(retained.pages.as_ref().unwrap().slots.is_empty());
 
-    let expired = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 1), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (expired,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 1,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+
+    assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(matches!(expired, StepOutcome::Yield));
     let retained = job.input.as_ref().unwrap().raster_producers.get(0).unwrap();
     assert_eq!(retained.source.as_ptr(), source_pointer);
@@ -779,7 +787,8 @@ fn receiver_survives_worker_ownership_of_the_job() {
         let mut job = job;
         let mut preview = 0;
         loop {
-            let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
+            let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+            assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
             if outcome.is_terminal() {
                 assert!(matches!(outcome, StepOutcome::Complete(_)));
                 break;
@@ -803,7 +812,8 @@ fn preparation_yields_at_the_configured_item_budget() {
     let input = PreparedRenderInput::new(7, 3, draw, None, 0.0);
     let mut job = PreparedRenderJob::new(input, 1);
     let mut preview = 0;
-    let first = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (first,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+    assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(matches!(first, StepOutcome::Yield));
     drop(job);
     drain_abandoned_preparations();
@@ -829,7 +839,8 @@ fn preparation_rejects_a_stale_generation_before_publication() {
     let _guard = prepared_process_guard();
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 2, DrawList::default(), None, 0.0), 8);
     let mut preview = 0;
-    let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
+    let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+    assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(matches!(outcome, StepOutcome::Fault(_)));
     assert!(job.take_packet().is_none());
     drop(job);
@@ -842,7 +853,8 @@ async fn preparation_observes_cancellation_without_replacing_a_packet() {
     cancel.cancel().await;
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0), 8);
     let mut preview = 0;
-    let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), cancel, now_ms, &mut preview, &mut None);
+    let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, now_ms, &mut preview, &mut None);
+    assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(matches!(outcome, StepOutcome::Cancelled));
     assert!(job.take_packet().is_none());
     drop(job);
@@ -1087,7 +1099,8 @@ fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
     let mut preview = 0;
     let mut steps = 0;
     loop {
-        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(41), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
+        let (outcome,original_retained_receipt) = drive_step(&mut job, "ui-wgpu.prepare", OperationId(41), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, &mut None);
+        assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
         steps += 1;
         if outcome.is_terminal() {
             assert!(matches!(outcome, StepOutcome::Complete(_)));

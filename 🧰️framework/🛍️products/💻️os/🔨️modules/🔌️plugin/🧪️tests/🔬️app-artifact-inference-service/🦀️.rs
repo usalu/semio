@@ -2,7 +2,7 @@ mod artifact_inference_service_tests {
     use super::*;
 
     fn echo(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
-        Ok(ArtifactInferenceExecution { canonical_payload: request.canonical_payload.to_vec(), diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
+        Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload: request.canonical_payload.to_vec(), diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
     }
 
     fn reject(_request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
@@ -36,7 +36,7 @@ mod artifact_inference_service_tests {
         reverse.register(alpha).unwrap();
         assert_eq!(forward.metadata(), reverse.metadata());
         let budget = WireArtifactInferenceBudget { allocation_bytes: 16, work_units: 1, recursion_depth: 1 };
-        let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, cancellation_id: "test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: b"pack", dependencies: &[] };
+        let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 }, cancellation_id: "test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: b"pack", dependencies: &[] };
         assert_eq!(forward.infer("s.test.alpha", "s.test.alpha.inference", &request).unwrap().canonical_payload, b"pack");
     }
 
@@ -74,7 +74,7 @@ mod artifact_inference_service_tests {
         let identity = metadata("s.test.context", "s.test.context.inference").await;
         let service = ArtifactInferenceService::new_contextual(identity, contextual_echo);
         let budget = WireArtifactInferenceBudget { allocation_bytes: 16, work_units: 1, recursion_depth: 1 };
-        let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, cancellation_id: "context", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: b"pack", dependencies: &[] };
+        let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 }, cancellation_id: "context", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: b"pack", dependencies: &[] };
         assert_eq!(service.infer(&request).err().unwrap().code, "artifact-inference.context-required");
         assert_eq!(service.infer_with_context(&request, &b"pack".to_vec()).unwrap().canonical_payload, echo(&request).unwrap().canonical_payload);
         assert_eq!(service.executable_identity(), ArtifactInferenceService::new_contextual(identity, contextual_echo).executable_identity());
@@ -99,7 +99,7 @@ mod artifact_inference_service_tests {
         let pack = <NoConfig as ArtifactPack>::encode_pack(&child);
         let budgets = WireArtifactInferenceBudget { allocation_bytes: 1 << 20, work_units: 8, recursion_depth: 4 };
         let dependencies = vec![(key.clone(), pack)];
-        let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budgets, cancellation_id: "child-dependency", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: &[], dependencies: &dependencies };
+        let request = ArtifactInferenceExecutionRequest { policy: &[], budgets: &budgets, retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 }, cancellation_id: "child-dependency", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: &[], dependencies: &dependencies };
         assert_eq!(inference_child::<NoConfig>(&request, "content", "flow-content-sha256-00ff").expect("the owned child decodes"), child);
         assert_eq!(inference_child::<NoConfig>(&request, "content", "absent").map_err(|error| error.code).unwrap_err(), "artifact-inference.child-missing");
     }

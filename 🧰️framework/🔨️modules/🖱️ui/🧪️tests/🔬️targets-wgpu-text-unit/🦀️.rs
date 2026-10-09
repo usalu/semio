@@ -219,6 +219,21 @@ fn the_layout_kerning_source_is_the_atlas_kerning() {
     assert_eq!(FontAtlas::builtin().kerning_for(super::TextFace::Sans, 'f', 'o', 11.2), 0.0, "the bitmap fallback never kerns");
 }
 
+#[test]
+fn original_borrowed_font_pair_reader_matches_swash_and_keeps_every_native_source_and_heap_receipt(){
+    let observe=|body:&mut dyn FnMut()|semio_framework_trace::observe_heap_allocations_on_this_thread(body).1;
+    let heap=observe(&mut||drop(vec![0u8;37]));assert_eq!((heap.requested_bytes,heap.released_bytes),(37,37));
+    let(original,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(super::PairKerning::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut original=original;
+    let source=super::ANTA_LATIN.as_ptr();let mono=super::SHARE_TECH_MONO_LATIN.as_ptr();let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔤️text-advances/🔣️.json")).unwrap();let mut oracle=super::ShapeContext::new();let mut pairs=0;
+    for row in fixture["rows"].as_array().unwrap(){
+        let face=if row["face"].as_str().unwrap_or("sans")=="mono"{super::TextFace::Mono}else{super::TextFace::Sans};let font=super::SwashFontRef::from_index(super::authored_face_bytes(face),0).unwrap();let units=f32::from(font.metrics(&[]).units_per_em);let metrics=font.glyph_metrics(&[]);let text=row["text"].as_str().unwrap();let mut previous=None;
+        for right in text.chars(){if let Some(left)=previous{let expected=if super::is_zero_width_format_char(left)||super::is_zero_width_format_char(right)||font.charmap().map(left)==0||font.charmap().map(right)==0{0.0}else{let mut bytes=[0u8;8];let len=left.encode_utf8(&mut bytes).len();let end=len+right.encode_utf8(&mut bytes[len..]).len();let mut shaper=oracle.builder(font).features(&[("liga",0),("clig",0),("calt",0)]).build();shaper.add_str(std::str::from_utf8(&bytes[..end]).unwrap());let(mut shaped,mut nominal,mut glyphs)=(0.0,0.0,0);shaper.shape_with(|cluster|for glyph in cluster.glyphs{shaped+=glyph.advance;nominal+=metrics.advance_width(glyph.id);glyphs+=1});if glyphs==2{(shaped-nominal)/units}else{0.0}};
+            let(actual,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.em(face,left,right));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!((actual-expected).abs()<0.000001,"original {face:?} {left:?}+{right:?}: {actual} vs independent Swash {expected}");assert_eq!(original.sans.unwrap().data.as_ptr(),source);assert_eq!(original.mono.unwrap().data.as_ptr(),mono);pairs+=1;
+        }previous=Some(right);}
+    }
+    assert!(pairs>1000);assert!(original.terminal_is_empty());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] actual original borrowed font pair reader pairs={pairs} independentSwash outputs exact original static Sans/Mono pointers construction/work/terminal0heap no opaque per-job shaping cache; fixed4096 Worker/semantic handoff unproven");
+}
+
 /// 🤝️ LAW (WG11 T7b): pair kerning is ONE rule for measure, wrap and caret — a run measures as its advances plus each adjacent
 /// pair's kerning, the per-scalar pen walk (`pen_advance`) lands every caret where `pen_at` puts it (a caret after a kerned pair
 /// includes the pair, as Chromium's does) and ends at the measured width, and a box exactly as wide as the kerned run holds it on
@@ -625,3 +640,43 @@ fn the_retained_painter_breaks_where_the_measure_says() {
     assert_eq!(expected.len(), 3, "this box holds the paragraph in three lines");
 }
 //#endregion ✂️LineBreakTests
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn actual_font_pair_queries_match_swash_without_retaining_native_cache_storage() {
+    use crate::wgpu::host::physical_job_close_tests::measured;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔤️text-advances/🔣️.json")).unwrap();
+    let (mut original, births, frees) = measured(super::PairKerning::default);
+    assert_eq!((births, frees), (0, 0));
+    let sans = original.sans.unwrap().data.as_ptr();
+    let mono = original.mono.unwrap().data.as_ptr();
+    let mut oracle = swash::shape::ShapeContext::new();
+    let mut checked = 0;
+    for row in fixture["rows"].as_array().unwrap() {
+        let face = match row["face"].as_str().unwrap() { "sans" => super::TextFace::Sans, "mono" => super::TextFace::Mono, value => panic!("unknown original face: {value}") };
+        let font = swash::FontRef::from_index(super::authored_face_bytes(face), 0).unwrap();
+        let metrics = font.glyph_metrics(&[]);
+        let units = f32::from(font.metrics(&[]).units_per_em);
+        let chars: Vec<char> = row["text"].as_str().unwrap().chars().collect();
+        for pair in chars.windows(2) {
+            let left = pair[0]; let right = pair[1];
+            let mut bytes = [0; 8];
+            let first = left.encode_utf8(&mut bytes).len();
+            let length = first + right.encode_utf8(&mut bytes[first..]).len();
+            let mut shaper = oracle.builder(font).features(&[("liga", 0), ("clig", 0), ("calt", 0)]).build();
+            shaper.add_str(std::str::from_utf8(&bytes[..length]).unwrap());
+            let (mut shaped, mut nominal, mut glyphs) = (0.0, 0.0, 0);
+            shaper.shape_with(|cluster| { for glyph in cluster.glyphs { shaped += glyph.advance; nominal += metrics.advance_width(glyph.id); glyphs += 1; } });
+            let expected = if glyphs == 2 { (shaped - nominal) / units } else { 0.0 };
+            let (actual, births, frees) = measured(|| original.em(face, left, right));
+            assert!((actual - expected).abs() < 0.00001, "original pair {face:?} {left:?}/{right:?}: actual={actual} oracle={expected}");
+            assert_eq!((births, frees), (0, 0), "borrowed pair {face:?} {left:?}/{right:?} retained opaque cache storage");
+            assert_eq!(original.sans.unwrap().data.as_ptr(), sans);
+            assert_eq!(original.mono.unwrap().data.as_ptr(), mono);
+            checked += 1;
+        }
+    }
+    let (_, births, frees) = measured(|| drop(original));
+    assert_eq!((births, frees), (0, 0));
+    println!("[DEBUG] actual original borrowed font pairs={checked} independentSwash=true queryBirths=0 queryFrees=0 terminalDrop=0 originalStaticPointers=true");
+}

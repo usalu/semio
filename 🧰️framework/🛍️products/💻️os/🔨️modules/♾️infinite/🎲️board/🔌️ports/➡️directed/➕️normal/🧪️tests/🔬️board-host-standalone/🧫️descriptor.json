@@ -1,0 +1,21 @@
+{
+  "schema": "board.fillDescriptorRetirement",
+  "denied": [
+    "itemsZero",
+    "releaseSubexact",
+    "depthZero"
+  ],
+  "accepted": {
+    "copiedItems": 1,
+    "birthBytes": 0,
+    "releaseMatchesOriginal": true,
+    "terminal": true
+  },
+  "contextGrant": {
+    "items": 256,
+    "copyBytes": 32768,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 128
+  }
+}

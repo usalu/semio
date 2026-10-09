@@ -1,0 +1,729 @@
+{
+  "ownership": false,
+  "executed": false,
+  "reportHash": "6b6bcf5b1cde09ccc8da8fade750932fafc5db141e7e2a42283f24390586532c",
+  "reportCount": 11442,
+  "readRows": [
+    {
+      "reader": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/💾️persistence/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 0,
+      "callStart": 716,
+      "callEnd": 759,
+      "resolution": "projected",
+      "schema": {
+        "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🔣️.json",
+        "hash": "0a9ac088eb1bc15b1fcc1ae0ef86c96c75d2ec3fbd1283ea3d79faacefd3c318",
+        "selector": [],
+        "start": 0,
+        "end": 20320
+      },
+      "value": {
+        "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/💾️persistence/🔣️.json",
+        "hash": "1af2a1cc464927be2488faa1f1a3e06b58dd0599407af33b261388a7c8fdc466",
+        "selector": [
+          "definition"
+        ],
+        "start": 0,
+        "end": 1690
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/💾️persistence/🟦️.ts",
+          "expectedHash": "5389648470dc7f3badf1206dc2051fe56bb455a85168726d6889dceef4e56694",
+          "actualHash": "5389648470dc7f3badf1206dc2051fe56bb455a85168726d6889dceef4e56694",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🔣️.json",
+          "expectedHash": "0a9ac088eb1bc15b1fcc1ae0ef86c96c75d2ec3fbd1283ea3d79faacefd3c318",
+          "actualHash": "0a9ac088eb1bc15b1fcc1ae0ef86c96c75d2ec3fbd1283ea3d79faacefd3c318",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/💾️persistence/🔣️.json",
+          "expectedHash": "1af2a1cc464927be2488faa1f1a3e06b58dd0599407af33b261388a7c8fdc466",
+          "actualHash": "1af2a1cc464927be2488faa1f1a3e06b58dd0599407af33b261388a7c8fdc466",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/💾️persistence/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 0,
+      "callStart": 783,
+      "callEnd": 813,
+      "resolution": "whole",
+      "schema": {
+        "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🔣️.json",
+        "hash": "0a9ac088eb1bc15b1fcc1ae0ef86c96c75d2ec3fbd1283ea3d79faacefd3c318",
+        "selector": [],
+        "start": 0,
+        "end": 20320
+      },
+      "value": {
+        "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🌱️blank/🔣️.json",
+        "hash": "b4bcc9afea670bab65bf4ff9ef72c1bcae572d7664891c0b0c351b70248f8126",
+        "selector": [],
+        "start": 0,
+        "end": 72
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/💾️persistence/🟦️.ts",
+          "expectedHash": "5389648470dc7f3badf1206dc2051fe56bb455a85168726d6889dceef4e56694",
+          "actualHash": "5389648470dc7f3badf1206dc2051fe56bb455a85168726d6889dceef4e56694",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🔣️.json",
+          "expectedHash": "0a9ac088eb1bc15b1fcc1ae0ef86c96c75d2ec3fbd1283ea3d79faacefd3c318",
+          "actualHash": "0a9ac088eb1bc15b1fcc1ae0ef86c96c75d2ec3fbd1283ea3d79faacefd3c318",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🌱️blank/🔣️.json",
+          "expectedHash": "b4bcc9afea670bab65bf4ff9ef72c1bcae572d7664891c0b0c351b70248f8126",
+          "actualHash": "b4bcc9afea670bab65bf4ff9ef72c1bcae572d7664891c0b0c351b70248f8126",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/💾️persistence/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 0,
+      "callStart": 926,
+      "callEnd": 953,
+      "resolution": "projected",
+      "schema": {
+        "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🔣️.json",
+        "hash": "efb597313330223ae42765c0e72a4ddd7409b669e4dd03eaf626fe4a76c0d818",
+        "selector": [],
+        "start": 0,
+        "end": 3755
+      },
+      "value": {
+        "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/💾️persistence/🔣️.json",
+        "hash": "1af2a1cc464927be2488faa1f1a3e06b58dd0599407af33b261388a7c8fdc466",
+        "selector": [
+          "responses",
+          "*"
+        ],
+        "start": 0,
+        "end": 1690
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/💾️persistence/🟦️.ts",
+          "expectedHash": "5389648470dc7f3badf1206dc2051fe56bb455a85168726d6889dceef4e56694",
+          "actualHash": "5389648470dc7f3badf1206dc2051fe56bb455a85168726d6889dceef4e56694",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🔣️.json",
+          "expectedHash": "efb597313330223ae42765c0e72a4ddd7409b669e4dd03eaf626fe4a76c0d818",
+          "actualHash": "efb597313330223ae42765c0e72a4ddd7409b669e4dd03eaf626fe4a76c0d818",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/💾️persistence/🔣️.json",
+          "expectedHash": "1af2a1cc464927be2488faa1f1a3e06b58dd0599407af33b261388a7c8fdc466",
+          "actualHash": "1af2a1cc464927be2488faa1f1a3e06b58dd0599407af33b261388a7c8fdc466",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🔬️geometry-lifetime/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 2,
+      "callStart": 460,
+      "callEnd": 480,
+      "resolution": "projected",
+      "schema": {
+        "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧬️schema/🔣️.json",
+        "hash": "75542a9496475abae91782874c31288d88220e6fb6fa9216d6e1864d92bf76a1",
+        "selector": [
+          "$defs",
+          "GeometryImportSource"
+        ],
+        "start": 0,
+        "end": 1041
+      },
+      "value": {
+        "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧫️fixtures/🌐️geometry-lifetime/🔣️.json",
+        "hash": "5818931ffd3088866237145ffca29a24c6d520f7de4c703be84c3660e239638e",
+        "selector": [
+          "imports",
+          "*"
+        ],
+        "start": 0,
+        "end": 1228
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🔬️geometry-lifetime/🟦️.ts",
+          "expectedHash": "d78778dbca7080732633d8d5cd7069301c093bb5b5f25917a13b106b8c188a32",
+          "actualHash": "d78778dbca7080732633d8d5cd7069301c093bb5b5f25917a13b106b8c188a32",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧬️schema/🔣️.json",
+          "expectedHash": "75542a9496475abae91782874c31288d88220e6fb6fa9216d6e1864d92bf76a1",
+          "actualHash": "75542a9496475abae91782874c31288d88220e6fb6fa9216d6e1864d92bf76a1",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧫️fixtures/🌐️geometry-lifetime/🔣️.json",
+          "expectedHash": "5818931ffd3088866237145ffca29a24c6d520f7de4c703be84c3660e239638e",
+          "actualHash": "5818931ffd3088866237145ffca29a24c6d520f7de4c703be84c3660e239638e",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🔬️geometry-lifetime/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 2,
+      "callStart": 764,
+      "callEnd": 783,
+      "resolution": "projected",
+      "schema": {
+        "path": null,
+        "hash": "d78778dbca7080732633d8d5cd7069301c093bb5b5f25917a13b106b8c188a32",
+        "selector": [],
+        "start": 672,
+        "end": 717
+      },
+      "value": {
+        "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧫️fixtures/🌐️geometry-lifetime/🔣️.json",
+        "hash": "5818931ffd3088866237145ffca29a24c6d520f7de4c703be84c3660e239638e",
+        "selector": [
+          "handles",
+          "*",
+          "value"
+        ],
+        "start": 0,
+        "end": 1228
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🔬️geometry-lifetime/🟦️.ts",
+          "expectedHash": "d78778dbca7080732633d8d5cd7069301c093bb5b5f25917a13b106b8c188a32",
+          "actualHash": "d78778dbca7080732633d8d5cd7069301c093bb5b5f25917a13b106b8c188a32",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": null,
+          "expectedHash": "d78778dbca7080732633d8d5cd7069301c093bb5b5f25917a13b106b8c188a32",
+          "actualHash": "d78778dbca7080732633d8d5cd7069301c093bb5b5f25917a13b106b8c188a32",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧫️fixtures/🌐️geometry-lifetime/🔣️.json",
+          "expectedHash": "5818931ffd3088866237145ffca29a24c6d520f7de4c703be84c3660e239638e",
+          "actualHash": "5818931ffd3088866237145ffca29a24c6d520f7de4c703be84c3660e239638e",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 2,
+      "callStart": 1115,
+      "callEnd": 1125,
+      "resolution": "whole",
+      "schema": {
+        "path": null,
+        "hash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+        "selector": [],
+        "start": 955,
+        "end": 1065
+      },
+      "value": {
+        "path": null,
+        "hash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+        "selector": [],
+        "start": 1122,
+        "end": 1124
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts",
+          "expectedHash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+          "actualHash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": null,
+          "expectedHash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+          "actualHash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": null,
+          "expectedHash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+          "actualHash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 2,
+      "callStart": 2133,
+      "callEnd": 2235,
+      "resolution": "whole",
+      "schema": {
+        "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+        "hash": "752574a296cfe53b279764a1b1c49a808fe56553627ca8cd66ca7a9fe9ec6c19",
+        "selector": [],
+        "start": 0,
+        "end": 25191
+      },
+      "value": {
+        "path": null,
+        "hash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+        "selector": [],
+        "start": 2140,
+        "end": 2234
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts",
+          "expectedHash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+          "actualHash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+          "expectedHash": "752574a296cfe53b279764a1b1c49a808fe56553627ca8cd66ca7a9fe9ec6c19",
+          "actualHash": "752574a296cfe53b279764a1b1c49a808fe56553627ca8cd66ca7a9fe9ec6c19",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": null,
+          "expectedHash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+          "actualHash": "e8343e93f8c460ad4eddda651d9d08a28063ff05ccee8aafc9dc023afd4399a8",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️document/🧪️tests/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 0,
+      "callStart": 890,
+      "callEnd": 905,
+      "resolution": "projected",
+      "schema": {
+        "path": null,
+        "hash": "6d720cc0bfbd251ce7a0dbbf1d144107baf9cf9c8204b717b24d691bf27465d9",
+        "selector": [
+          "$defs",
+          "RasterLayerNode"
+        ],
+        "start": 755,
+        "end": 790
+      },
+      "value": {
+        "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️document/🧫️fixtures/🔣️.json",
+        "hash": "9b7bd30a281695e8532e3d8912d1c5846527c96292d00d2ea36277be102e9882",
+        "selector": [
+          "layers",
+          "*"
+        ],
+        "start": 0,
+        "end": 2702
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️document/🧪️tests/🟦️.ts",
+          "expectedHash": "6d720cc0bfbd251ce7a0dbbf1d144107baf9cf9c8204b717b24d691bf27465d9",
+          "actualHash": "6d720cc0bfbd251ce7a0dbbf1d144107baf9cf9c8204b717b24d691bf27465d9",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": null,
+          "expectedHash": "6d720cc0bfbd251ce7a0dbbf1d144107baf9cf9c8204b717b24d691bf27465d9",
+          "actualHash": "6d720cc0bfbd251ce7a0dbbf1d144107baf9cf9c8204b717b24d691bf27465d9",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️document/🧫️fixtures/🔣️.json",
+          "expectedHash": "9b7bd30a281695e8532e3d8912d1c5846527c96292d00d2ea36277be102e9882",
+          "actualHash": "9b7bd30a281695e8532e3d8912d1c5846527c96292d00d2ea36277be102e9882",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧪️tests/🧬️canonical-storage/🟦️.test.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 1,
+      "callStart": 526,
+      "callEnd": 549,
+      "resolution": "projected",
+      "schema": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🔣️.json",
+        "hash": "72119c67c3602b01027d0966d1162449d94f4913b3dc68dfc858f7426a4a871b",
+        "selector": [],
+        "start": 0,
+        "end": 15099
+      },
+      "value": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧫️fixtures/🧬️owned-native-samples/🔣️.json",
+        "hash": "b86da81eb8145d3a8a6af15808094f6109fb92d2306f267e80dd6f040da49503",
+        "selector": [
+          "cases",
+          "*",
+          "snapshot"
+        ],
+        "start": 0,
+        "end": 8199
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧪️tests/🧬️canonical-storage/🟦️.test.ts",
+          "expectedHash": "432728e21085d1395b9b16bdbd4be02d8e417b49dfce135b55f293fa21a27d36",
+          "actualHash": "432728e21085d1395b9b16bdbd4be02d8e417b49dfce135b55f293fa21a27d36",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🔣️.json",
+          "expectedHash": "72119c67c3602b01027d0966d1162449d94f4913b3dc68dfc858f7426a4a871b",
+          "actualHash": "72119c67c3602b01027d0966d1162449d94f4913b3dc68dfc858f7426a4a871b",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧫️fixtures/🧬️owned-native-samples/🔣️.json",
+          "expectedHash": "b86da81eb8145d3a8a6af15808094f6109fb92d2306f267e80dd6f040da49503",
+          "actualHash": "b86da81eb8145d3a8a6af15808094f6109fb92d2306f267e80dd6f040da49503",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧪️tests/📜️definition/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 0,
+      "callStart": 694,
+      "callEnd": 710,
+      "resolution": "whole",
+      "schema": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧬️schema/🔣️.json",
+        "hash": "8b0dac41c89e3fa0d65477c72b8767ed3d438e738f469b49fb76c4e7d40f74c9",
+        "selector": [],
+        "start": 0,
+        "end": 1084
+      },
+      "value": {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📜️artifact-definition.json",
+        "hash": "1387a37c9fead6ba3166306a1c5eb83745b90ab30d5d2ab3b7b1efbdb190249c",
+        "selector": [],
+        "start": 0,
+        "end": 22484
+      },
+      "classification": "genuine artifact definition; dynamic mutation origin requires unresolved qualification",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧪️tests/📜️definition/🟦️.ts",
+          "expectedHash": "06797838f445a8cc265fe15e4b178918028d1eef50c1d09ba8f21603ff3a4b77",
+          "actualHash": "06797838f445a8cc265fe15e4b178918028d1eef50c1d09ba8f21603ff3a4b77",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧬️schema/🔣️.json",
+          "expectedHash": "8b0dac41c89e3fa0d65477c72b8767ed3d438e738f469b49fb76c4e7d40f74c9",
+          "actualHash": "8b0dac41c89e3fa0d65477c72b8767ed3d438e738f469b49fb76c4e7d40f74c9",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📜️artifact-definition.json",
+          "expectedHash": "1387a37c9fead6ba3166306a1c5eb83745b90ab30d5d2ab3b7b1efbdb190249c",
+          "actualHash": "1387a37c9fead6ba3166306a1c5eb83745b90ab30d5d2ab3b7b1efbdb190249c",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 0,
+      "callStart": 352,
+      "callEnd": 399,
+      "resolution": "whole",
+      "schema": {
+        "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
+        "hash": "e0028ec9305e5da09e031cbe7e311144cf467bbec5ded59e8d5c7b7c39a3eeb1",
+        "selector": [],
+        "start": 0,
+        "end": 873
+      },
+      "value": {
+        "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧫️fixtures/🔣️.json",
+        "hash": "be5fd4ba0f2b6421317a4b3ec8426c67d8921497b7e73122dd3eb8b437a77666",
+        "selector": [],
+        "start": 0,
+        "end": 601
+      },
+      "classification": "confirmed complete trial authority",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+          "expectedHash": "41d9a2b27023e22efd3221be015b96376d6a366847ca582c366f145ea258baeb",
+          "actualHash": "41d9a2b27023e22efd3221be015b96376d6a366847ca582c366f145ea258baeb",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
+          "expectedHash": "e0028ec9305e5da09e031cbe7e311144cf467bbec5ded59e8d5c7b7c39a3eeb1",
+          "actualHash": "e0028ec9305e5da09e031cbe7e311144cf467bbec5ded59e8d5c7b7c39a3eeb1",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧫️fixtures/🔣️.json",
+          "expectedHash": "be5fd4ba0f2b6421317a4b3ec8426c67d8921497b7e73122dd3eb8b437a77666",
+          "actualHash": "be5fd4ba0f2b6421317a4b3ec8426c67d8921497b7e73122dd3eb8b437a77666",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "🧰️framework/🔨️modules/🖼️canvas/🧪️tests/🧱️ownership/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 3,
+      "callStart": 1833,
+      "callEnd": 1882,
+      "resolution": "whole",
+      "schema": {
+        "path": "🧰️framework/🔨️modules/🖼️canvas/🧬️schema/🎬️draw-list/🔣️.json",
+        "hash": "dd776f07d8a1473e7d58811c37a277ff37c0fd9df490f6bd25d59b7a1cbb37f5",
+        "selector": [],
+        "start": 0,
+        "end": 5677
+      },
+      "value": {
+        "path": null,
+        "hash": "9b60ac48bee23824a25c6d0fece4d2f9c7ae5ea720e7308447c62b85989a615a",
+        "selector": [],
+        "start": 1842,
+        "end": 1881
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "🧰️framework/🔨️modules/🖼️canvas/🧪️tests/🧱️ownership/🟦️.ts",
+          "expectedHash": "9b60ac48bee23824a25c6d0fece4d2f9c7ae5ea720e7308447c62b85989a615a",
+          "actualHash": "9b60ac48bee23824a25c6d0fece4d2f9c7ae5ea720e7308447c62b85989a615a",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "🧰️framework/🔨️modules/🖼️canvas/🧬️schema/🎬️draw-list/🔣️.json",
+          "expectedHash": "dd776f07d8a1473e7d58811c37a277ff37c0fd9df490f6bd25d59b7a1cbb37f5",
+          "actualHash": "dd776f07d8a1473e7d58811c37a277ff37c0fd9df490f6bd25d59b7a1cbb37f5",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": null,
+          "expectedHash": "9b60ac48bee23824a25c6d0fece4d2f9c7ae5ea720e7308447c62b85989a615a",
+          "actualHash": "9b60ac48bee23824a25c6d0fece4d2f9c7ae5ea720e7308447c62b85989a615a",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "🧰️framework/🔨️modules/🖼️canvas/🧪️tests/🧱️ownership/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 3,
+      "callStart": 2174,
+      "callEnd": 2189,
+      "resolution": "projected",
+      "schema": {
+        "path": "🧰️framework/🔨️modules/🖼️canvas/🧬️schema/🎬️draw-list/🔣️.json",
+        "hash": "dd776f07d8a1473e7d58811c37a277ff37c0fd9df490f6bd25d59b7a1cbb37f5",
+        "selector": [],
+        "start": 0,
+        "end": 5677
+      },
+      "value": {
+        "path": null,
+        "hash": "9b60ac48bee23824a25c6d0fece4d2f9c7ae5ea720e7308447c62b85989a615a",
+        "selector": [
+          "*"
+        ],
+        "start": 1916,
+        "end": 2166
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "🧰️framework/🔨️modules/🖼️canvas/🧪️tests/🧱️ownership/🟦️.ts",
+          "expectedHash": "9b60ac48bee23824a25c6d0fece4d2f9c7ae5ea720e7308447c62b85989a615a",
+          "actualHash": "9b60ac48bee23824a25c6d0fece4d2f9c7ae5ea720e7308447c62b85989a615a",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "🧰️framework/🔨️modules/🖼️canvas/🧬️schema/🎬️draw-list/🔣️.json",
+          "expectedHash": "dd776f07d8a1473e7d58811c37a277ff37c0fd9df490f6bd25d59b7a1cbb37f5",
+          "actualHash": "dd776f07d8a1473e7d58811c37a277ff37c0fd9df490f6bd25d59b7a1cbb37f5",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": null,
+          "expectedHash": "9b60ac48bee23824a25c6d0fece4d2f9c7ae5ea720e7308447c62b85989a615a",
+          "actualHash": "9b60ac48bee23824a25c6d0fece4d2f9c7ae5ea720e7308447c62b85989a615a",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 1,
+      "callStart": 415,
+      "callEnd": 432,
+      "resolution": "whole",
+      "schema": {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+        "hash": "ee2ccbe8513ad9e7ba0f2644d0f02f31af09a3a8d3e1f827310821a57105b7d5",
+        "selector": [],
+        "start": 0,
+        "end": 1026
+      },
+      "value": {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+        "hash": "032fb7c1ee75e599681b4dbb1f673977c4613774d1b779e83eab93b24ef3e238",
+        "selector": [],
+        "start": 0,
+        "end": 431
+      },
+      "classification": "confirmed complete trial authority",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+          "expectedHash": "061bde56c3cdf7287742727fe065247bad1f2436223610c4d4951cb883d4ce0d",
+          "actualHash": "061bde56c3cdf7287742727fe065247bad1f2436223610c4d4951cb883d4ce0d",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+          "expectedHash": "ee2ccbe8513ad9e7ba0f2644d0f02f31af09a3a8d3e1f827310821a57105b7d5",
+          "actualHash": "ee2ccbe8513ad9e7ba0f2644d0f02f31af09a3a8d3e1f827310821a57105b7d5",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+          "expectedHash": "032fb7c1ee75e599681b4dbb1f673977c4613774d1b779e83eab93b24ef3e238",
+          "actualHash": "032fb7c1ee75e599681b4dbb1f673977c4613774d1b779e83eab93b24ef3e238",
+          "match": true
+        }
+      ]
+    },
+    {
+      "reader": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🧪️tests/🎬️transport-reservation/🟦️.ts",
+      "completeSyntax": true,
+      "unresolvedCount": 0,
+      "callStart": 682,
+      "callEnd": 704,
+      "resolution": "projected",
+      "schema": {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🧬️contract/🔣️.json",
+        "hash": "5e72932e4c0f20290866f27e110ef155cafd48034125964f4dbf3493bfd657f4",
+        "selector": [],
+        "start": 0,
+        "end": 6452
+      },
+      "value": {
+        "path": "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎬️media-transport-reservation/🔣️.json",
+        "hash": "8f3cd48c52fefbd5d6f62964149835cc5a741941981e3ffd48faddcfd3f0e00e",
+        "selector": [
+          "cases",
+          "*",
+          "props"
+        ],
+        "start": 0,
+        "end": 22395
+      },
+      "classification": "genuine individual domain / grammar value",
+      "hashJoins": [
+        {
+          "kind": "reader",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🧪️tests/🎬️transport-reservation/🟦️.ts",
+          "expectedHash": "ada9555470d0eb68400deae86cac0ef139f94f3dacef7cd00a8a8801dfe329f9",
+          "actualHash": "ada9555470d0eb68400deae86cac0ef139f94f3dacef7cd00a8a8801dfe329f9",
+          "match": true
+        },
+        {
+          "kind": "schema",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🧬️contract/🔣️.json",
+          "expectedHash": "5e72932e4c0f20290866f27e110ef155cafd48034125964f4dbf3493bfd657f4",
+          "actualHash": "5e72932e4c0f20290866f27e110ef155cafd48034125964f4dbf3493bfd657f4",
+          "match": true
+        },
+        {
+          "kind": "value",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎬️media-transport-reservation/🔣️.json",
+          "expectedHash": "8f3cd48c52fefbd5d6f62964149835cc5a741941981e3ffd48faddcfd3f0e00e",
+          "actualHash": "8f3cd48c52fefbd5d6f62964149835cc5a741941981e3ffd48faddcfd3f0e00e",
+          "match": true
+        }
+      ]
+    }
+  ]
+}

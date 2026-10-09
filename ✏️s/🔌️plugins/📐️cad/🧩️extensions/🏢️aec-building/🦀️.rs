@@ -111,7 +111,7 @@ fn bundle() -> ExtensionBundle {
     ::semio_framework_async::poll::resolve_ready(bundle.contributes(building_storey_contribution()))
 }
 
-semio_framework_plugin::extension_exports!(bundle);
+semio_framework_plugin::extension_exports!({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }, bundle);
 //#endregion 🔖️Manifest
 
 //#region 🔖️Composite
@@ -159,7 +159,7 @@ fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<
     let snapshot = <CadSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.snapshot-decode", error.to_string()))?;
     let summary = BuildingStructureSummary { building_model_present: snapshot.building_model.is_some(), storey_count: snapshot.nodes.iter().filter(|node| node.kind == "building-storey").count() as u32 };
     let canonical_payload = pack_rt::encode_wire_value(&ToValue::to_value(&summary));
-    Ok(ArtifactInferenceExecution { canonical_payload, diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
+    Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload, diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
 }
 
 /// 🗂️ The single `ArtifactContribution` this extension registers onto cad's `s.cad.cad` artifact —

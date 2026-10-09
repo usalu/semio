@@ -4,6 +4,12 @@ use crate::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, Snaps
 use crate::retained_clone::RetainedCloneGrant;
 use std::{marker::PhantomData, mem::ManuallyDrop, sync::Arc};
 
+#[path="📋️original-vector/🦀️.rs"]
+pub mod original_vector;
+
+#[path="⚖️result/🦀️.rs"]
+mod original_result;
+
 pub trait RetireOwned: Send + 'static {
     fn retirement(self) -> Box<dyn RetirementCursor>;
     fn retirement_birth_bytes(&self) -> Option<usize> { None }
@@ -75,7 +81,7 @@ impl<T: Copy + Send + 'static> RetirementCursor for Leaf<T> {
         self.value.is_none() && self.remaining == 0
     }
     fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(usize::from(self.remaining != 0))}
-    fn next_close_byte_demand(&self) -> Option<usize> { Some(usize::from(self.remaining != 0)) }
+    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
     fn terminal_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
 }
@@ -142,7 +148,7 @@ impl RetirementCursor for Bytes {
     }
     fn terminal_is_empty(&self) -> bool { self.1 }
     fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(usize::from(!self.0.is_empty()))}
-    fn next_close_byte_demand(&self) -> Option<usize> { Some(if self.0.is_empty(){self.0.capacity()}else{1}) }
+    fn next_close_byte_demand(&self) -> Option<usize> { Some(if self.0.is_empty(){self.0.capacity()}else{0}) }
     fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
     fn terminal_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
 }
@@ -212,6 +218,7 @@ impl<T: RetireOwned> RetireOwned for Vec<T> {
 
 struct DequeCollection<T: RetireOwned>(ManuallyDrop<std::collections::VecDeque<T>>);
 impl<T: RetireOwned> RetirementCursor for DequeCollection<T> {
+    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         self.0.pop_front().map_or(RetirementStep::Complete, |value| RetirementStep::Child(value.retirement()))
@@ -280,12 +287,14 @@ impl<T: RetireOwned + Ord> RetireOwned for std::collections::BTreeSet<T> {
 }
 impl<T: RetireOwned + Ord> RetireOwned for std::collections::BinaryHeap<T> {
     fn retirement(self)->Box<dyn RetirementCursor> {self.into_vec().retirement()}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<Collection<T>>())}
+    fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
 }
 impl<T: RetireOwned> RetireOwned for std::cmp::Reverse<T> {
     fn retirement(self)->Box<dyn RetirementCursor> {self.0.retirement()}
-}
-impl<A: RetireOwned,B: RetireOwned,C: RetireOwned,D: RetireOwned> RetireOwned for (A,B,C,D) {
-    fn retirement(self)->Box<dyn RetirementCursor> {artifact_retirement_sequence![self.0,self.1,self.2,self.3]}
+    fn retirement_birth_bytes(&self)->Option<usize> {self.0.retirement_birth_bytes()}
+    fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
+    fn retirement_element_copy_bytes()->usize {T::retirement_element_copy_bytes()}
 }
 
 struct OrderedMap<K: RetireOwned + Ord, V: RetireOwned>(ManuallyDrop<std::collections::BTreeMap<K, V>>);
@@ -351,20 +360,20 @@ impl<T: RetireOwned> RetireOwned for Box<T> {
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<BoxedOwner<T>>()) }
     fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() }
 }
-impl<T: RetireOwned, U: RetireOwned> RetireOwned for (T, U) {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        sequence(vec![deferred(self.0), deferred(self.1)])
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> { sequence_birth_bytes(&[deferred_birth_bytes::<T>(), deferred_birth_bytes::<U>()]) }
-    fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() && U::controlled_retirement_supported() }
+macro_rules! retire_tuple {
+    ($($type:ident:$index:tt),+) => {
+        impl<$($type:RetireOwned),+> RetireOwned for ($($type,)+) {
+            fn retirement(self)->Box<dyn RetirementCursor> {sequence(vec![$(deferred(self.$index)),+])}
+            fn retirement_birth_bytes(&self)->Option<usize> {sequence_birth_bytes(&[$(deferred_birth_bytes::<$type>()),+])}
+            fn controlled_retirement_supported()->bool {true$(&&$type::controlled_retirement_supported())+}
+        }
+    };
 }
-impl<T: RetireOwned, U: RetireOwned, V: RetireOwned> RetireOwned for (T, U, V) {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        sequence(vec![deferred(self.0), deferred(self.1), deferred(self.2)])
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> { sequence_birth_bytes(&[deferred_birth_bytes::<T>(), deferred_birth_bytes::<U>(), deferred_birth_bytes::<V>()]) }
-    fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() && U::controlled_retirement_supported() && V::controlled_retirement_supported() }
-}
+retire_tuple!(A:0,B:1);
+retire_tuple!(A:0,B:1,C:2);
+retire_tuple!(A:0,B:1,C:2,D:3);
+retire_tuple!(A:0,B:1,C:2,D:3,E:4);
+
 impl<T: Copy + Send + 'static, const N: usize> RetireOwned for [T; N] {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         leaf(self)
@@ -383,6 +392,7 @@ impl RetirementCursor for Sequence {
         self.0.is_empty()
     }
     fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
+    fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
     fn terminal_release_bytes(&self) -> Option<usize> { size_of::<Self>().checked_add(self.0.capacity().checked_mul(size_of::<Box<dyn RetirementCursor>>())?) }
 }
 impl Drop for Sequence {
@@ -405,6 +415,7 @@ impl<T: RetireOwned> RetirementCursor for Deferred<T> {
         self.0.is_none()
     }
     fn next_birth_bytes(&self, _: usize) -> Option<usize> { self.0.as_ref().map_or(Some(0), RetireOwned::retirement_birth_bytes) }
+    fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
     fn terminal_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
 }
 impl<T: RetireOwned> Drop for Deferred<T> {
@@ -525,7 +536,6 @@ impl<T:RetireOwned+Sync> SnapshotRetirementFactory<T> for SharedValueRetirementF
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-
 #[path="📦️allocation-return/🦀️.rs"]
 pub mod allocation_return;
 

@@ -1,0 +1,20 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "968068c2f7f4b35bb3f99961135bc7b6e3e234a1ccb7aa93fbfc33915206f5d3",
+    "afterSha256": "e0788954ecba76cc9e1da2d1a227a012592fd156478176311dc52b3e0df34ca9",
+    "logicalActions": [
+      {
+        "action": "bind original observer to canonical EntityIdentityAuthority default Observer; unchanged ceilings/cancellation/constructor",
+        "count": 0
+      },
+      {
+        "action": "observe cumulative bytes through original live control before original pause receipt transfer; no scalar accessor/reset",
+        "count": 62
+      }
+    ],
+    "sourceCopies": false,
+    "currentObserverSha256": "3728f82e611ab55a28109fc1b70e4bf788d943d9e02f82509fe31c3f628737ef",
+    "observerQualification": "Current whole-file observation only; peer changes not adopted or source freeze claimed."
+  }
+]

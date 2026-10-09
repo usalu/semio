@@ -40,6 +40,46 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-type-ownership"
       }
+    },
+    "test-output-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-output-source"
+      }
+    },
+    "test-evaluation-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-evaluation-source"
+      }
+    },
+    "test-input-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-input-source"
+      }
+    },
+    "test-topology-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-topology-source"
+      }
     }
   }
 }

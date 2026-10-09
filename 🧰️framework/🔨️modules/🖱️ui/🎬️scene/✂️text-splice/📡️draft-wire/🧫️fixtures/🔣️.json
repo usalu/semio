@@ -16,5 +16,12 @@
     9
   ],
   "source": "originalTextSpliceDraftJson",
-  "refusal": "retainAcceptedPrefixAndOriginalSource"
+  "refusal": "retainAcceptedPrefixAndOriginalSource",
+  "callerGrant": {
+    "maximumItems": 64,
+    "maximumCopyBytes": 32768,
+    "maximumCapacityBytes": 32768,
+    "maximumReleaseBytes": 32768,
+    "maximumDepth": 64
+  }
 }

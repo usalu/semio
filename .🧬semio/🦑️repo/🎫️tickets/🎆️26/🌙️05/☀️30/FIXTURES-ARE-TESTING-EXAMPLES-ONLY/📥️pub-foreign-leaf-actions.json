@@ -1,0 +1,159 @@
+{
+  "before": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "1b1b92955e48802c77c0a6d9c289f56915efc17b17fcf433074036dfc93ed461"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+      "sha256": "066e84d36e0ecd71db88a0606e212bd251f5ab414a783818ac8726c5ad7a5e98"
+    }
+  ],
+  "sourceCopies": false,
+  "scope": "genuine borrowed ForeignStep copy owner; original cold interfaces unchanged until consumer integration",
+  "red": {
+    "session": 8504,
+    "exitCode": 1,
+    "duration": "5.0s",
+    "log": "🗑️generated/pub-foreign-red.log",
+    "failure": "genuine paid foreign output owner is missing",
+    "oracle": "real ForeignStep JSON/UTF8 payloads admitted before source owner assertion; no Cargo"
+  },
+  "currentActions": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧬️schema/🔣️.json",
+      "afterSha256": "199f1e7d3fd9de612155664c1b8b40d355d8476f44d882edf6b4a4517be8269f",
+      "action": "genuine existing ForeignStep/ForeignTarget payload projection authority; sparse optional dialect and unknown-key semantics preserved"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧫️fixtures/🔣️.json",
+      "afterSha256": "e876ffc21bd242546160197b8928bd64aa093164dfd001b31b1aaaa8f5476114",
+      "action": "plain Unicode/empty actual payload examples and immutable independent caller grant"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts",
+      "afterSha256": "332935a656ab8c34d8f6cd2932f1aecfe28ecfdc17111c4ab044890d9b038ead",
+      "action": "independent Ajv/JSON/Buffer/TextEncoder payload law plus genuine missing-owner RED"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "afterSha256": "cb646595beb2aeabc2a00deef501d3e74a6c82144013ebbe87a1794e97b3f0df",
+      "action": "reuse existing test-source import for new genuine owner law; executable command unchanged"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧬️schema/🟦️.ts",
+      "action": "first-party borrowed payload admission with genuine sparse dialect/octet rules and original object identity; no external runtime dependency",
+      "afterSha256": "5a35a2d2464dde9e1314d2feec1026172e8c947c956e0380561c9613f4e90f2e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🦀️.rs",
+      "action": "genuine borrowed foreign output/retirement owner with independent supplied grants and actual exact backing receipts",
+      "afterSha256": "6ede1c8f9e7fc0588c9ec56a4b2239a908544cf69cbf9a94979144df6738dad5",
+      "beforeQualification": "fresh absent guard for new leaf/test; mutation module initial whole preimage plus exact unique foreign-region logical guard, not an immediate whole-file prewrite capture"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🦀️.rs",
+      "action": "actual native System/Serde/original-pointer immutable-policy/cancel48-cuts law",
+      "afterSha256": "622b134fa6a14cf6cf7cbe18eeeb3d2a20d4d08302395f237b4ad93a42387b5e",
+      "beforeQualification": "fresh absent guard for new leaf/test; mutation module initial whole preimage plus exact unique foreign-region logical guard, not an immediate whole-file prewrite capture"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+      "action": "only actual new foreign owner module and explicit canonical public exports",
+      "afterSha256": "f638a3ca07794e319b755d7a3a1ed85ea1a55bb95a510f364c5a4530fa2427f6",
+      "beforeQualification": "fresh absent guard for new leaf/test; mutation module initial whole preimage plus exact unique foreign-region logical guard, not an immediate whole-file prewrite capture"
+    }
+  ],
+  "parserReceipt": {
+    "session": 95293,
+    "exitCode": 1,
+    "duration": "1.8s",
+    "log": "🗑️generated/pub-foreign-parser.log",
+    "domainDebug": "real parser/Ajv/JSON/Buffer/TextEncoder comparisons reached positive before missing Rust owner guard",
+    "qualification": "whole original Source remains RED; no Rust/type/native/System receipt claim"
+  },
+  "sparseReceipts": [
+    {
+      "session": 4506,
+      "exitCode": 1,
+      "log": "🗑️generated/pub-foreign-sparse-red.log",
+      "qualification": "ENOSPC own graph then no cached graph; no tests reached"
+    },
+    {
+      "session": 78350,
+      "exitCode": 1,
+      "duration": "1.1s",
+      "log": "🗑️generated/pub-foreign-sparse-red2.log",
+      "failure": "Ajv refuses sparse input, firstparty parser did not throw"
+    },
+    {
+      "session": 4984,
+      "exitCode": 1,
+      "duration": "1.9s",
+      "log": "🗑️generated/pub-foreign-sparse-fixed.log",
+      "domainResult": "sparse refusal plus original identity/real field comparisons reach DEBUG; whole route remains RED at missing native owner"
+    }
+  ],
+  "sourceGreen": {
+    "session": 48683,
+    "exitCode": 0,
+    "duration": "2.0s",
+    "log": "🗑️generated/pub-foreign-leaf-source.log",
+    "oracle": "first-party payload/independent Ajv/JSON/Buffer/TextEncoder plus two original Rust grammars"
+  },
+  "nativeReceipt": {
+    "session": 64741,
+    "exitCode": 0,
+    "nxDuration": "29.9s",
+    "testProfileDuration": "25.61s",
+    "passed": 1,
+    "skipped": 327,
+    "named": "original_foreign_output_preserves_immutable_policy_and_every_cancelled_backing",
+    "ownedRoot": 3275,
+    "ownedRootAbsent": true,
+    "log": "🗑️generated/pub-foreign-native.log",
+    "sources": [
+      {
+        "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧬️schema/🔣️.json",
+        "sha256": "199f1e7d3fd9de612155664c1b8b40d355d8476f44d882edf6b4a4517be8269f",
+        "matchesBefore": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧫️fixtures/🔣️.json",
+        "sha256": "e876ffc21bd242546160197b8928bd64aa093164dfd001b31b1aaaa8f5476114",
+        "matchesBefore": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts",
+        "sha256": "332935a656ab8c34d8f6cd2932f1aecfe28ecfdc17111c4ab044890d9b038ead",
+        "matchesBefore": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+        "sha256": "cb646595beb2aeabc2a00deef501d3e74a6c82144013ebbe87a1794e97b3f0df",
+        "matchesBefore": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧬️schema/🟦️.ts",
+        "sha256": "5a35a2d2464dde9e1314d2feec1026172e8c947c956e0380561c9613f4e90f2e",
+        "matchesBefore": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+        "sha256": "f638a3ca07794e319b755d7a3a1ed85ea1a55bb95a510f364c5a4530fa2427f6",
+        "matchesBefore": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🦀️.rs",
+        "sha256": "6ede1c8f9e7fc0588c9ec56a4b2239a908544cf69cbf9a94979144df6738dad5",
+        "matchesBefore": true
+      },
+      {
+        "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🦀️.rs",
+        "sha256": "622b134fa6a14cf6cf7cbe18eeeb3d2a20d4d08302395f237b4ad93a42387b5e",
+        "matchesBefore": true
+      }
+    ],
+    "qualification": "only executed native foreign leaf law; full borrowed dispatch/prepared publication/mounted7801 not solved"
+  }
+}

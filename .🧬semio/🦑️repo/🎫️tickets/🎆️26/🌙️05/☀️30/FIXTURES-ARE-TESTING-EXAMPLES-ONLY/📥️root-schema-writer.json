@@ -1,0 +1,21 @@
+{
+  "owned": false,
+  "provenRecreationWriter": null,
+  "observations": [
+    {
+      "path": "📜️script.ts",
+      "sha256": "953194226790749673069f04a000449066091ed54bf5a1330dd7df006bfd481b",
+      "owned": false
+    },
+    {
+      "path": "📋️project.json",
+      "sha256": "28dc133c4b9d356944ab22edc3a76651e429b4aae6918d6fed6679b57d806e25",
+      "owned": false
+    },
+    {
+      "ticketRelativePath": "📥️isolated-verification/📜️script.ts",
+      "sha256": "03e73825d013692cce7b02c585bcd830af7fbd8540a987e9bc5dcf5b21c2e7bb",
+      "owned": false
+    }
+  ]
+}

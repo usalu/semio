@@ -4,6 +4,59 @@ use serde_json::Value;
 
 const FIXTURE: &str = include_str!("../../🧫️fixtures/📏️world3d-modelling/🔣️.json");
 
+#[test]
+fn original_scalar_field_retirement_keeps_every_native_owner_and_physical_receipt() {
+    use semio_framework_value::{retirement::controlled::ControlledRetirement,RetainedCloneGrant};
+    let law:Value=serde_json::from_str(include_str!("../../🧫️fixtures/♻️scalar-field/🔣️.json")).unwrap();
+    let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();
+    use crate::math::tests::observe_retirement_allocations as observe;
+    for row in fixture()["valid"].as_array().unwrap().iter().filter(|row|row["def"]=="scalarField") {
+        let (source,heap)=observe(||serde_json::from_value::<World3dScalarField>(row["normalized"].clone()).unwrap());
+        assert!(json_eq(&serde_json::to_value(&source).unwrap(),&row["normalized"]));
+        let pointers=(source.mesh_id.as_ptr(),source.values.as_ptr(),source.legend.title.en.as_ptr(),source.legend.title.de.as_ptr(),source.legend.unit.as_ref().map(|unit|unit.as_ptr()));
+        let (owner,handoff)=observe(||ControlledRetirement::new(source));
+        assert_eq!(handoff,(0,0));
+        let mut owner=owner.unwrap_or_else(|_|panic!("scalar field must declare original controlled retirement"));
+        let original=owner.original().unwrap();
+        assert_eq!((original.mesh_id.as_ptr(),original.values.as_ptr(),original.legend.title.en.as_ptr(),original.legend.title.de.as_ptr(),original.legend.unit.as_ref().map(|unit|unit.as_ptr())),pointers);
+        let (mut births,mut releases)=heap;
+        for _ in 0..law["maximumTurns"].as_u64().unwrap() {
+            if owner.terminal_is_empty(){break;}
+            let (denied,physical)=observe(||owner.step(RetainedCloneGrant::default()).unwrap());
+            assert_eq!(denied.progress(),Default::default());assert_eq!(physical,(0,0));
+            let (step,physical)=observe(||owner.step(grant).unwrap());let progress=step.progress();
+            assert!(progress.fits(grant));assert_eq!(physical,(progress.retained_capacity_bytes,progress.released_bytes));
+            births+=physical.0;releases+=physical.1;
+        }
+        assert!(owner.terminal_is_empty());assert_eq!(births,releases);
+        assert_eq!(observe(||drop(owner)).1,(0,0));
+        eprintln!("[DEBUG] original scalar field case={} same original pointers independentSerde=true every physical receipt exact terminalDrop0 birth={births} release={releases}",row["name"]);
+    }
+}
+
+#[test]
+fn original_projection_record_retirement_uses_exact_scalar_owner_receipts() {
+    use semio_framework_value::{retirement::controlled::ControlledRetirement,RetainedCloneGrant};
+    use semio_framework_ui_viewport::{Viewport3dProjectionSpec,Viewport3dProjectionFramePolicy};
+    use crate::math::tests::observe_retirement_allocations as observe;
+    let law:Value=serde_json::from_str(include_str!("../../🧫️fixtures/♻️scalar-field/🔣️.json")).unwrap();
+    let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();
+    for row in law["projections"].as_array().unwrap() {
+        let original:(Viewport3dProjectionSpec,Viewport3dProjectionFramePolicy)=serde_json::from_value(row.clone()).unwrap();
+        assert!(json_eq(&serde_json::to_value(original).unwrap(),row));
+        let (owner,handoff)=observe(||ControlledRetirement::new(original));assert_eq!(handoff,(0,0));
+        let mut owner=owner.unwrap_or_else(|_|panic!("original scalar projection leaves declare exact retirement"));
+        assert_eq!(owner.original(),Some(&original));let(mut births,mut releases)=(0,0);
+        for _ in 0..law["maximumTurns"].as_u64().unwrap() {
+            if owner.terminal_is_empty(){break;}
+            let (denied,physical)=observe(||owner.step(RetainedCloneGrant::default()).unwrap());assert_eq!(denied.progress(),Default::default());assert_eq!(physical,(0,0));
+            let (step,physical)=observe(||owner.step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(physical,(receipt.retained_capacity_bytes,receipt.released_bytes));births+=physical.0;releases+=physical.1;
+        }
+        assert!(owner.terminal_is_empty());assert_eq!(births,releases);assert_eq!(observe(||drop(owner)).1,(0,0));
+        eprintln!("[DEBUG] original projection Copy record independentSerde=true handoff0 denied0 every actual receipt exact terminalDrop0 births={births} released={releases}");
+    }
+}
+
 fn fixture() -> Value {
     serde_json::from_str(FIXTURE).expect("modelling fixture parses")
 }

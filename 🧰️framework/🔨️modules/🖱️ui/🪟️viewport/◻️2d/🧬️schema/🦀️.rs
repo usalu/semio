@@ -68,6 +68,12 @@ impl ToValue for Viewport2d {
     }
 }
 
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for Viewport2d {
+    fn canonical_tree_node(&self)->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,ValueError>{self.validate()?;Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(3))}
+    fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree,ValueError>{match ordinal{0=>Ok(&self.x),1=>Ok(&self.y),2=>Ok(&self.zoom),_=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"viewport canonical child ordinal is absent"))}}
+    fn canonical_tree_key(&self,ordinal:usize)->Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>,ValueError>{["x","y","zoom"].get(ordinal).map(|key|(*key).into()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"viewport canonical key ordinal is absent"))}
+}
+
 impl FromValue for Viewport2d {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let mut entries = crate::fields(value, &["x", "y", "zoom"])?;

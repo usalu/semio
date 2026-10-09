@@ -1,5 +1,5 @@
 //! ⏱️ One admitted operation ledger remains owned across bounded step contexts.
-use super::{JobPayloadOperationLedger, StepContext, StepBudget, CancelToken, ClockStride, OperationId, Generation, InteractiveJobCloseStep,RetainedCloneGrant,RetainedCloneProgress,ValueError};
+use super::{JobPayloadOperationLedger, StepContext, StepBudget, CancelToken, ClockStride, OperationId, Generation, InteractiveJobCloseStep,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
 use std::{mem::ManuallyDrop, sync::Arc};
 
 pub struct StepContextOwner {
@@ -12,15 +12,17 @@ impl StepContextOwner {
         std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<JobPayloadOperationLedger>()).expect("operation ledger layout").0.pad_to_align().size()
     }
 
-    pub fn new(operation: OperationId, generation: Generation, maximum_items: usize, maximum_bytes: usize) -> Option<Self> {
-        if maximum_items == 0 || maximum_bytes < Self::birth_bytes() { return None; }
-        Some(Self { ledger: ManuallyDrop::new(Some(Arc::new(JobPayloadOperationLedger::new(operation, generation)))), closing: false })
+    pub fn new(operation:OperationId,generation:Generation,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{
+        if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"context ledger birth requires one admitted item"));}
+        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"context ledger birth requires original depth"));}
+        if grant.maximum_capacity_bytes<Self::birth_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"context ledger birth exceeds original capacity"));}
+        Ok((Self{ledger:ManuallyDrop::new(Some(Arc::new(JobPayloadOperationLedger::new(operation,generation)))),closing:false},RetainedCloneProgress{copied_items:1,retained_capacity_bytes:Self::birth_bytes(),..Default::default()}))
     }
 
-    pub fn context<'a>(&self, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64) -> Option<StepContext<'a>> {
+    pub fn context<'a>(&self, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64,retained_progress:&'a mut RetainedCloneProgress) -> Option<StepContext<'a>> {
         if self.closing { return None; }
         let ledger = self.ledger.as_ref()?;
-        Some(StepContext::with_payload_ledger(ledger.operation, ledger.generation, budget, cancel, now_us, ClockStride::new(), preview_sequence, Arc::clone(ledger)))
+        Some(StepContext::with_payload_ledger(ledger.operation, ledger.generation, budget, cancel, now_us, ClockStride::new(), preview_sequence, Arc::clone(ledger),retained_progress))
     }
 
     pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}

@@ -131,6 +131,7 @@ pub struct InferCommand {
     pub generation: u64,
     pub cancellation_id: String,
     pub work_units: u64,
+    pub retained: semio_framework_value::retained_clone::RetainedCloneGrant,
     pub canonical_payload: Vec<u8>,
     /// 🔗️ The artifact this inference is being run ON, and its canonical pair. An inference over an
     /// artifact is not expressible as a hand-typed payload — nobody types 4 096 bitmap cells into a

@@ -16,7 +16,7 @@ pub fn grow<T>(values:&mut Vec<T>,phase:SqliteSnapshotPhase,control:&mut SqliteS
 }
 /// 🧵 Copies exact UTF8 bytes with interior progress and cumulative admission.
 pub fn copy_text(value:&str,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<String>{
- control.allocation_stage(phase,|remaining,progress|{let mut callback=|p:NativeEncodeProgress|progress(p.completed,p.total);let mut child=NativeEncodeControl::new(remaining,&mut callback);let result=child.copy_text(value);(result,child.owned_bytes())})?
+ control.allocation_stage(phase,|remaining,progress,allocation|{let mut callback=|p:NativeEncodeProgress|progress(p.completed,p.total);let mut child_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut child=NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut child_allocation);let result=child.copy_text(value);(result,child.owned_bytes())})?
 }
 fn page_buffer(page_size:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<u8>>{let mut page=reserve(page_size,control)?;page.resize(page_size,0);Ok(page)}
 fn visited_page_bits(page_count:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<u8>>{let count=sum(page_count,7)?/8;let mut visited=reserve(count,control)?;let mut completed=0;while completed<count{let end=completed.saturating_add(65536).min(count);visited.resize(end,0);completed=end;control.checkpoint(SqliteSnapshotPhase::ReadPages,completed,count)?;}Ok(visited)}
@@ -49,8 +49,8 @@ fn encode_record<'v>(columns:usize,get:impl Fn(usize)->ValueRef<'v>,maximum_valu
 fn read_varint(bytes:&[u8],offset:&mut usize)->Result<u64>{let mut value=0;for index in 0..9{let byte=*bytes.get(*offset).ok_or_else(||invalid("SQLite truncated varint"))?;*offset=sum(*offset,1)?;if index==8{return Ok((value<<8)|u64::from(byte))}value=(value<<7)|u64::from(byte&127);if byte&128==0{return Ok(value)}}Err(invalid("SQLite invalid varint"))}
 fn field_length(code:u64)->Result<usize>{usize::try_from(match code{0|8|9=>0,1..=4=>code,5=>6,6|7=>8,10|11=>return Err(invalid("SQLite reserved serial")),_ =>(code-12)/2}).map_err(|_|overflow("SQLite record field overflow"))}
 fn decode_record(bytes:&[u8],maximum_columns:usize,maximum_value_bytes:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteValue>>{
- control.allocation_stage(SqliteSnapshotPhase::ReadPages,|remaining,progress|{
-  let mut callback=|event:NativeDecodeProgress|progress(event.completed,event.total);let mut native=NativeDecodeControl::new(remaining,&mut callback);
+ control.allocation_stage(SqliteSnapshotPhase::ReadPages,|remaining,progress,allocation|{
+  let mut callback=|event:NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
   let result=(||->Result<Vec<SqliteValue>>{
    native.begin_stage(bytes.len())?;let mut cursor=0;let header=usize::try_from(read_varint(bytes,&mut cursor)?).map_err(|_|overflow("SQLite header length"))?;if header<cursor||header>bytes.len(){return Err(invalid("SQLite record header boundary"))}let start=cursor;let mut count=0usize;
    while cursor<header{read_varint(&bytes[..header],&mut cursor)?;count=sum(count,1)?;if count>maximum_columns{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"SQLite record columns exceed limit"))}native.step()?;}
@@ -65,8 +65,8 @@ fn decode_record(bytes:&[u8],maximum_columns:usize,maximum_value_bytes:usize,con
 }
 
 fn lex(sql:&str,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<Token>>{
- control.allocation_stage(phase,|remaining,progress|{
-  let mut callback=|event:NativeDecodeProgress|progress(event.completed,event.total);let mut native=NativeDecodeControl::new(remaining,&mut callback);
+ control.allocation_stage(phase,|remaining,progress,allocation|{
+  let mut callback=|event:NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
   let result=(||->Result<Vec<Token>>{
    let bytes=sql.as_bytes();let mut at=0usize;let mut tokens=Vec::new();native.begin_stage(bytes.len())?;
    while at<bytes.len(){

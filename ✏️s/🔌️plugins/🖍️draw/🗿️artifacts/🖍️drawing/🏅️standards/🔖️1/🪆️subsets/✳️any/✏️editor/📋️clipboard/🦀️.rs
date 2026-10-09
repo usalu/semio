@@ -121,10 +121,10 @@ pub fn cut(document:&DrawingSnapshot,ids:&[String])->Result<Vec<DrawingMutation>
     for node in crate::schema::flatten_drawing_layers(&document.layers) {if !removed.contains(&layer_base(node).id.to_string_owner()) {if let DrawingLayerNode::Boolean(boolean)=node {if boolean.children.iter().any(|id|removed.contains(&id.to_string_owner())){return Err(invalid("A Boolean outside the selection still uses these layers / Ein Boolean außerhalb der Auswahl verwendet diese Ebenen"));}}}}
     Ok(selected.iter().map(|id|crate::mutations::delete_layer(id.as_str().into())).collect())
 }
-pub fn paste(document:&DrawingSnapshot,mut packet:DrawingClipboard,placement:&PastePlacement,parent_id:Option<&str>)->Result<(Vec<DrawingMutation>,Vec<String>),ClipboardError> {
-    plan_paste(document,&mut packet,placement,parent_id)
+pub fn paste(document:&DrawingSnapshot,mut packet:DrawingClipboard,placement:&PastePlacement,parent_id:Option<&str>,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(Vec<DrawingMutation>,Vec<String>),ClipboardError> {
+    plan_paste(document,&mut packet,placement,parent_id,control)
 }
-fn plan_paste(document:&DrawingSnapshot,packet:&mut DrawingClipboard,placement:&PastePlacement,parent_id:Option<&str>)->Result<(Vec<DrawingMutation>,Vec<String>),ClipboardError> {
+fn plan_paste(document:&DrawingSnapshot,packet:&mut DrawingClipboard,placement:&PastePlacement,parent_id:Option<&str>,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(Vec<DrawingMutation>,Vec<String>),ClipboardError> {
     validate(&packet)?;
     let destination=if let Some(parent)=parent_id {
         let Some(DrawingLayerNode::Group(_))=find_drawing_layer(document,parent) else {return Err(invalid("Paste destination must be a group"));};
@@ -134,10 +134,12 @@ fn plan_paste(document:&DrawingSnapshot,packet:&mut DrawingClipboard,placement:&
     let inverse=invert(destination)?;
     let occupied=crate::schema::flatten_drawing_layers(&document.layers).into_iter().map(|node|layer_base(node).id.to_string_owner()).collect::<BTreeSet<_>>();
     let source_ids=layer_ids(&packet.roots);
-    let identity_map=(0usize..).find_map(|ordinal| {
-        let mapping=source_ids.iter().map(|id|(id.clone(),crate::schema::create_drawing_id("layer",format!("{}:{id}:paste:{ordinal}",document.id).as_bytes()))).collect::<BTreeMap<_,_>>();
-        (mapping.values().all(|id|!occupied.contains(id)) && mapping.values().collect::<BTreeSet<_>>().len()==mapping.len()).then_some(mapping)
-    }).ok_or_else(||invalid("Unable to assign clipboard identities"))?;
+    let mut ordinal=0usize;
+    let identity_map=loop{
+        let mapping=source_ids.iter().map(|id|paste_identity(crate::schema::identity::DrawingIdentityKind::Layer,&document.id,id,ordinal,control).map(|target|(id.clone(),target))).collect::<Result<BTreeMap<_,_>,_>>()?;
+        if mapping.values().all(|id|!occupied.contains(id))&&mapping.values().collect::<BTreeSet<_>>().len()==mapping.len(){break mapping;}
+        ordinal=ordinal.checked_add(1).ok_or_else(||invalid("Unable to assign clipboard identities"))?;
+    };
     let mut mutations=Vec::new();let mut asset_map=BTreeMap::new();let mut asset_ids=document.assets.iter().map(|(id,_)|id.to_string_owner()).collect::<BTreeSet<_>>();
     let mut bounds=None::<[f64;4]>;
     if !matches!(placement.anchor,PasteAnchor::Original){for node in &packet.roots {if let Some((x,y,w,h))=crate::schema::drawing_layer_world_bounds(node) {bounds=Some(match bounds {None=>[x,y,x+w,y+h],Some([left,top,right,bottom])=>[left.min(x),top.min(y),right.max(x+w),bottom.max(y+h)]});}}}
@@ -147,7 +149,7 @@ fn plan_paste(document:&DrawingSnapshot,packet:&mut DrawingClipboard,placement:&
     if !offset.iter().all(|n|n.is_finite()){return Err(invalid("Paste placement must be finite"));}
     for (id,asset) in std::mem::take(&mut packet.assets) {
         let mapped={
-            let mapped=(0usize..).map(|ordinal|crate::schema::create_drawing_id("asset",format!("{}:{id}:paste:{ordinal}",document.id).as_bytes())).find(|id|!asset_ids.contains(id)).ok_or_else(||invalid("Unable to assign image identity"))?;
+            let mut ordinal=0usize;let mapped=loop{let target=paste_identity(crate::schema::identity::DrawingIdentityKind::ImageAsset,&document.id,&id,ordinal,control)?;if !asset_ids.contains(&target){break target;}ordinal=ordinal.checked_add(1).ok_or_else(||invalid("Unable to assign image identity"))?;};
             asset_ids.insert(mapped.clone());mutations.push(crate::mutations::import_image_asset(mapped.clone(),asset));mapped
         };asset_map.insert(id,mapped);
     }
@@ -178,3 +180,8 @@ fn invert(matrix:[f64;6])->Result<[f64;6],ClipboardError>{
 #[cfg(test)]
 #[path="🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+fn paste_identity(kind:crate::schema::identity::DrawingIdentityKind,document:&semio_framework_value::paged::PagedUtf8<{usize::MAX}>,source:&str,ordinal:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<String,ClipboardError>{
+ let mut material=[0u8;4096];let mut output=[0u8;76];
+ let text=crate::standards::v1::subsets::any::io::text::identity::paste::prepare_paste_identity(kind,document,source,ordinal,&mut material,&mut output,control).map_err(|error|invalid(&error.to_string()))?;control.copy_text(text).map_err(|error|invalid(&error.to_string()))
+}

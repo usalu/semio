@@ -49,6 +49,11 @@ impl std::fmt::Display for SyncError {
 impl std::error::Error for SyncError {}
 //#endregion 🔖️Errors
 
+fn actor_identity_admission_admits(grant:semio_framework_value::RetainedCloneGrant)->bool{let demand=semio_framework_value::SharedUtf8::admission_demand();grant.maximum_items>=1&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_depth>=demand.depth}
+fn actor_identity_batch_admits(count:usize,grant:semio_framework_value::RetainedCloneGrant)->bool{let demand=semio_framework_value::SharedUtf8::lease_demand();count<=grant.maximum_items&&count.checked_mul(demand.copy_bytes).is_some_and(|bytes|bytes<=grant.maximum_copy_bytes)&&grant.maximum_depth>=demand.depth}
+fn add_actor_identity_progress(total:&mut semio_framework_value::RetainedCloneProgress,receipt:semio_framework_value::RetainedCloneProgress){total.copied_items=total.copied_items.checked_add(receipt.copied_items).expect("original identity item conservation overflow");total.copied_bytes=total.copied_bytes.checked_add(receipt.copied_bytes).expect("original identity copy conservation overflow");total.retained_capacity_bytes=total.retained_capacity_bytes.checked_add(receipt.retained_capacity_bytes).expect("original identity capacity conservation overflow");total.released_bytes=total.released_bytes.checked_add(receipt.released_bytes).expect("original identity release conservation overflow");}
+fn wire_envelopes_with_original_actor(envelopes:&[MutationEnvelope],actor:&semio_framework_value::SharedUtf8,grant:semio_framework_value::RetainedCloneGrant)->Result<(Vec<MutationEnvelope>,semio_framework_value::RetainedCloneProgress),ValueError>{if !actor_identity_batch_admits(envelopes.len(),grant){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original socket identity batch exceeds caller lease authority"));}let mut total=semio_framework_value::RetainedCloneProgress::default();let mut rows=Vec::with_capacity(envelopes.len());for original in envelopes{let(actor,receipt)=actor.admit_clone(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:grant.maximum_copy_bytes-total.copied_bytes,..grant})?;add_actor_identity_progress(&mut total,receipt);rows.push(MutationEnvelope{mutation_id:original.mutation_id.clone(),document_id:original.document_id.clone(),actor:ActorId(actor),dependencies:original.dependencies.clone(),observed:original.observed.clone(),target:original.target.clone(),diff:original.diff.clone(),inverse:original.inverse.clone(),timestamp:original.timestamp,transaction:original.transaction.clone(),verb:original.verb.clone(),line:original.line.clone()});}Ok((rows,total))}
+
 //#region 🔖️EnvelopeSerde
 /// 🧵️ JSON worker seam: `MutationEnvelope` vectors as `encode_envelopes` bytes (not struct JSON).
 mod envelope_serde {
@@ -182,6 +187,7 @@ pub struct ArtifactActorConfig {
     pub watch_external: bool,
     /// 🖋️ The authoring actor id used for semio_hub `Hello`/presence and operation origin filtering.
     pub actor: String,
+    pub actor_identity_grant: semio_framework_value::RetainedCloneGrant,
 }
 
 /// 🗝️ Exact process-local identity for one open artifact actor. Hub documents are keyed by
@@ -666,7 +672,7 @@ pub enum ArtifactEvent {
     /// 👻️ A peer published an ephemeral preview blob (`crate::os_spr::wire::ServerFrame::Preview`)
     /// on the uncredited, loss-tolerant preview lane — the counterpart of
     /// {@link ArtifactActorMsg::PublishPreview}.
-    Preview { actor: String, key: String, seq: u64, payload: Vec<u8> },
+    Preview { actor: semio_framework_value::SharedUtf8, key: String, seq: u64, payload: Vec<u8> },
     /// 📮️ The semio_hub's terminal disposition for one outbound `Commands` batch
     /// (`crate::os_spr::wire::ServerFrame::Ack`'s `Applied` stage) — accepted as-is, transformed against
     /// concurrent history (the transformed envelope is already delivered as a
@@ -877,6 +883,7 @@ pub mod backbone_worker_wire {
             #[value(default, skip_serializing_if = "Option::is_none")]
             watch_external: Option<bool>,
             actor: String,
+            actor_identity_grant: semio_framework_value::RetainedCloneGrant,
         },
         Close {
             document_id: String,
@@ -900,10 +907,10 @@ pub mod backbone_worker_wire {
 
     impl BackboneWorkerRequest {
         pub async fn actor_config(&self) -> Option<ArtifactActorConfig> {
-            let Self::Open { document_id, schema, bindings, watch_external, actor, .. } = self else {
+            let Self::Open { document_id, schema, bindings, watch_external, actor, actor_identity_grant, .. } = self else {
                 return None;
             };
-            Some(ArtifactActorConfig { document_id: document_id.clone(), schema: schema.clone(), bindings: bindings.clone(), watch_external: watch_external.unwrap_or(true), actor: actor.clone() })
+            Some(ArtifactActorConfig { document_id: document_id.clone(), schema: schema.clone(), bindings: bindings.clone(), watch_external: watch_external.unwrap_or(true), actor: actor.clone(), actor_identity_grant: *actor_identity_grant })
         }
     }
 
@@ -981,11 +988,11 @@ async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, Str
 /// 📜️ Every event an spr byte log persists, as the causal envelopes a store ingests: each
 /// edit's operations in log order, then every history transition — a persisted document IS its
 /// genesis pack plus exactly these events.
-async fn spr_events(spr: &[u8], document_id: &str, schema: &str) -> Result<Vec<MutationEnvelope>, String> {
+async fn spr_events(spr: &[u8], document_id: &str, schema: &str, actor_identity_grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<MutationEnvelope>, String> {
     let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
     let mut events = Vec::new();
     for edit in &log.edits {
-        events.extend(envelopes_from_history_edit(edit, document_id, schema).await?);
+        events.extend(envelopes_from_history_edit(edit, document_id, schema, actor_identity_grant).await?);
     }
     events.extend(log.transitions.iter().map(|transition| transition.to_envelope(document_id)));
     Ok(events)
@@ -996,14 +1003,18 @@ async fn spr_events(spr: &[u8], document_id: &str, schema: &str) -> Result<Vec<M
 /// `HistoryEdit` decoded off the spr bytes, so an appended external edit can flow through the
 /// store's causal DAG (`ingest_remote` → `edit_from_operation_envelope`). A binary-less op payload
 /// is a hard error — `.spr` is binary-only since B1, so every real op has one.
-async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &str, schema: &str) -> Result<Vec<MutationEnvelope>, String> {
+async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &str, schema: &str, actor_identity_grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<MutationEnvelope>, String> {
+    if !actor_identity_batch_admits(edit.ops.len(),actor_identity_grant){return Err("original history identity batch exceeds caller lease authority".into());}
+    for index in 0..edit.ops.len(){if edit.meta.as_ref().and_then(|metas|metas.get(index)).and_then(|meta|meta.author_id.as_ref()).or(edit.actor.as_ref()).is_none(){return Err(format!("edit {} op {index} has no authentic actor identity",edit.id));}}
     let op_ids = op_ids_of(edit).await;
+    let mut identity_copied=0;
     let mut envelopes = Vec::with_capacity(edit.ops.len());
     for (index, op) in edit.ops.iter().enumerate() {
         let payload = op.binary.clone().ok_or_else(|| format!("edit {} op {index} has no binary payload", edit.id))?;
         let meta = edit.meta.as_ref().and_then(|metas| metas.get(index));
         let dependencies = meta.map(|m| m.dependencies.iter().cloned().map(MutationId).collect()).unwrap_or_default();
-        let actor = meta.and_then(|m| m.author_id.clone()).or_else(|| edit.actor.clone()).unwrap_or_else(|| "unknown".to_string());
+        let original_actor=meta.and_then(|meta|meta.author_id.as_ref()).or(edit.actor.as_ref()).expect("original actor presence validated before envelope birth");
+        let(actor,receipt)=original_actor.admit_clone(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:actor_identity_grant.maximum_copy_bytes-identity_copied,..actor_identity_grant}).map_err(ValueError::into_message)?;identity_copied+=receipt.copied_bytes;
         let timestamp = match meta.and_then(|meta| meta.hlt) {
             Some((actor, physical_ms, logical)) => crate::os_spr::HybridLogicalTimestamp { actor, physical_ms: u64::try_from(physical_ms).map_err(|_| format!("edit {} op {index} has a negative hybrid-clock physical time", edit.id))?, logical },
             None => crate::os_spr::HybridLogicalTimestamp::new(0, 0),
@@ -1649,8 +1660,8 @@ where
 
     /// 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
-    pub async fn receive(&mut self, envelope: MutationEnvelope) -> Result<(), SyncError> {
-        self.store.dispatch(crate::os_store::ArtifactCommand::IngestRemote { envelope }).await.map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
+    pub async fn receive(&mut self, envelope: MutationEnvelope, identity: &mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), SyncError> {
+        self.store.dispatch(crate::os_store::ArtifactCommand::IngestRemote { envelope }, identity).await.map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
     pub async fn reconcile_branch(&mut self, _alternative_name: &str, _message: Option<String>, _authors: Vec<vcs::Author>) -> Result<String, SyncError> {
@@ -2081,8 +2092,9 @@ mod native_actor {
     type WsRead = futures::stream::SplitStream<WsStream>;
     struct ConnectedDocumentSocket {
         stream: WsStream,
-        socket_actor: String,
+        socket_actor: semio_framework_value::SharedUtf8,
         authority: crate::os_directory::client::DocumentSocketAuthorityV1,
+        identity_progress: semio_framework_value::RetainedCloneProgress,
     }
 
     struct ArtifactReadinessWake(Arc<dyn Fn() + Send + Sync>);
@@ -2239,6 +2251,8 @@ mod native_actor {
         document_id: String,
         schema: String,
         actor: String,
+        actor_identity_grant: semio_framework_value::RetainedCloneGrant,
+        actor_identity_progress: semio_framework_value::RetainedCloneProgress,
         remote: ChannelBackboneRemote,
         events: broadcast::Sender<ArtifactEvent>,
         cmd_rx: ArtifactMailboxReceiver,
@@ -2252,7 +2266,7 @@ mod native_actor {
         document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
         operation_cancel: semio_framework_async::CancelToken,
         hub_surface: Option<String>,
-        socket_actor: Option<String>,
+        socket_actor: Option<semio_framework_value::SharedUtf8>,
         socket_actor_confirmed: bool,
         /// 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) —
         /// `None` until the hub sends it (or for a folder-only document, which never connects to a
@@ -2359,6 +2373,8 @@ mod native_actor {
                 document_id: config.document_id,
                 schema: config.schema,
                 actor: config.actor,
+                actor_identity_grant: config.actor_identity_grant,
+                actor_identity_progress: Default::default(),
                 remote,
                 events,
                 cmd_rx,
@@ -2898,7 +2914,7 @@ mod native_actor {
             let new_ids: HashSet<String> = file_ids.difference(&self.known_op_ids).cloned().collect();
 
             if lost.is_empty() && !new_ids.is_empty() {
-                let Ok(events) = spr_events(&spr, &self.document_id, &self.schema).await else { return };
+                let Ok(events) = spr_events(&spr, &self.document_id, &self.schema,self.actor_identity_grant).await else { return };
                 let mut appended: Vec<MutationEnvelope> = events.into_iter().filter(|event| new_ids.contains(&event.mutation_id.0)).collect();
                 for envelope in &mut appended {
                     if envelope.timestamp == crate::os_spr::HybridLogicalTimestamp::new(0, 0) {
@@ -3045,6 +3061,8 @@ mod native_actor {
             };
             let expectation = crate::os_directory::client::DocumentSocketExpectationV1 { artifact_schema: schema, pack_schema_hash, requested_surface_id: surface, lease: self.document_execution_target_lease.clone() };
             let client_instance_id = format!("native-document-{:016x}", self.hlc_seed);
+            let actor_identity_grant=self.actor_identity_grant;
+            if !actor_identity_admission_admits(actor_identity_grant){self.schedule_reconnect().await;return;}
             let operation_cancel = self.operation_cancel.child_now();
             let pool = self.pool.clone();
             self.set_remote_state(RemoteState::Connecting).await;
@@ -3084,14 +3102,15 @@ mod native_actor {
                     let _ = stream.close(None).await;
                     return Err(DocumentConnectFailure::Short);
                 }
-                let socket_actor = std::mem::take(&mut socket.actor_id);
-                Ok(ConnectedDocumentSocket { stream, socket_actor, authority })
+                let(socket_actor,identity_progress)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original pre-admitted socket actor invariant: {error}"));
+                Ok(ConnectedDocumentSocket { stream, socket_actor, authority,identity_progress })
             }));
         }
 
         async fn finish_connect_hub(&mut self, connection: Result<ConnectedDocumentSocket, DocumentConnectFailure>) {
             match connection {
-                Ok(ConnectedDocumentSocket { mut stream, socket_actor, authority }) => {
+                Ok(ConnectedDocumentSocket { mut stream, socket_actor, authority,identity_progress }) => {
+                    add_actor_identity_progress(&mut self.actor_identity_progress,identity_progress);
                     let local_schema_hash = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await;
                     let now = now_ms().await;
                     if self.operation_cancel.is_cancelled_now()
@@ -3247,7 +3266,7 @@ mod native_actor {
             if let Some(folder) = self.folder.as_ref() {
                 folder.write_archive(&archive_bytes).await.map_err(|error| format!("artifact bootstrap persistence failed: {error}"))?;
             }
-            let events = spr_events(&pair.spr, &self.document_id, &self.schema).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
+            let events = spr_events(&pair.spr, &self.document_id, &self.schema,self.actor_identity_grant).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
             let pushed = match self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await {
                 Ok(()) if !events.is_empty() => self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&events) }).await,
                 result => result,
@@ -3321,7 +3340,7 @@ mod native_actor {
 
         #[cfg(test)]
         pub(super) fn install_test_socket_actor(&mut self, actor: &str) {
-            self.socket_actor = Some(actor.into());
+            let(original,receipt)=semio_framework_value::SharedUtf8::admit(actor.to_owned(),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original fixture actor admission: {error}"));add_actor_identity_progress(&mut self.actor_identity_progress,receipt);self.socket_actor = Some(original);
             self.socket_actor_confirmed = false;
         }
 
@@ -3330,7 +3349,7 @@ mod native_actor {
             let (stream, _) = tokio_tungstenite::connect_async(url).await.expect("test socket connects");
             let (write, read) = stream.split();
             self.semio_hub = Some(HubConn { write, read });
-            self.socket_actor = Some(actor.into());
+            let(original,receipt)=semio_framework_value::SharedUtf8::admit(actor.to_owned(),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original fixture actor admission: {error}"));add_actor_identity_progress(&mut self.actor_identity_progress,receipt);self.socket_actor = Some(original);
             self.socket_actor_confirmed = false;
             self.session_color = None;
             self.send_client_frame(
@@ -3349,7 +3368,7 @@ mod native_actor {
 
         #[cfg(test)]
         pub(super) fn socket_epoch_test_state(&self) -> (Option<String>, bool, usize, Vec<String>) {
-            (self.socket_actor.clone(), self.socket_actor_confirmed, self.pending_batches.len(), self.outbox.iter().map(|envelope| envelope.actor.0.clone()).collect())
+            (self.socket_actor.as_ref().map(|actor|actor.as_str().to_owned()), self.socket_actor_confirmed, self.pending_batches.len(), self.outbox.iter().map(|envelope| envelope.actor.0.as_str().to_owned()).collect())
         }
 
         #[cfg(test)]
@@ -3615,7 +3634,7 @@ mod native_actor {
                 return;
             }
             note_authored_envelopes(&mut self.applied_op_ids, envelopes);
-            let Some(socket_actor) = self.socket_actor.clone() else {
+            let Some(socket_actor) = self.socket_actor.as_ref() else {
                 self.queue_outbox(envelopes.iter().cloned());
                 return;
             };
@@ -3625,7 +3644,8 @@ mod native_actor {
             }
             let batch_id = self.next_batch_id;
             self.next_batch_id = self.next_batch_id.wrapping_add(1);
-            let wire_envelopes: Vec<MutationEnvelope> = envelopes.iter().map(|envelope| MutationEnvelope { actor: ActorId(socket_actor.clone()), ..envelope.clone() }).collect();
+            let(wire_envelopes,identity_receipt)=match wire_envelopes_with_original_actor(envelopes,socket_actor,self.actor_identity_grant){Ok(result)=>result,Err(_)=>{self.queue_outbox(envelopes.iter().cloned());return;}};
+            add_actor_identity_progress(&mut self.actor_identity_progress,identity_receipt);
             self.pending_batches.insert(batch_id, envelopes.to_vec());
             self.send_client_frame(ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
             self.emit_status_if_changed().await;
@@ -4468,6 +4488,8 @@ mod wasm_actor {
     }
 
     struct WasmActor {
+        actor_identity_grant: semio_framework_value::RetainedCloneGrant,
+        actor_identity_progress: semio_framework_value::RetainedCloneProgress,
         document_id: String,
         schema: String,
         remote: ChannelBackboneRemote,
@@ -4482,7 +4504,7 @@ mod wasm_actor {
         operation_cancel: semio_framework_async::CancelToken,
         socket: Option<Box<dyn DocumentSocket>>,
         hello: Option<ClientFrame>,
-        socket_actor: Option<String>,
+        socket_actor: Option<semio_framework_value::SharedUtf8>,
         socket_actor_confirmed: bool,
         /// 🎨️ See the native actor's matching field — same role, browser side.
         session_color: Option<u8>,
@@ -4552,6 +4574,7 @@ mod wasm_actor {
             };
             let space_id = self.hub_space_id.clone().unwrap_or_default();
             let expectation = document_socket_expectation(&self.schema, pack_schema_hash, self.hub_surface.as_deref(), self.document_execution_target_lease.as_ref());
+            if !actor_identity_admission_admits(self.actor_identity_grant){self.schedule_reconnect();return;}
             let client_instance_id = format!("browser-document-{hlc_seed:016x}");
             self.set_remote_state(RemoteState::Connecting);
             let ctx = semio_framework_async::OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 1, deadline_ms: None, cancel: self.operation_cancel.child_now(), capability: None };
@@ -4593,7 +4616,9 @@ mod wasm_actor {
                 return;
             };
             self.socket = Some(dialed);
-            self.socket_actor = Some(std::mem::take(&mut socket.actor_id));
+            let(original_actor,receipt)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original pre-admitted browser actor invariant: {error}"));
+            add_actor_identity_progress(&mut self.actor_identity_progress,receipt);
+            self.socket_actor = Some(original_actor);
             self.socket_actor_confirmed = false;
             self.hub_surface = Some(authority.surface.surface_id.clone());
             self.hello = Some(document_socket_hello(&self.schema, pack_schema_hash, self.resume_token.clone(), self.server_frontier.clone()));
@@ -4720,7 +4745,7 @@ mod wasm_actor {
                 return;
             }
             note_authored_envelopes(&mut self.applied_op_ids, envelopes);
-            let Some(socket_actor) = self.socket_actor.clone() else {
+            let Some(socket_actor) = self.socket_actor.as_ref() else {
                 self.queue_outbox(envelopes.iter().cloned());
                 return;
             };
@@ -4729,7 +4754,8 @@ mod wasm_actor {
                 return;
             }
             let max_frame = self.socket.as_ref().map_or(usize::MAX, |socket| socket.max_frame_bytes());
-            let wire_envelopes: Vec<MutationEnvelope> = envelopes.iter().map(|envelope| MutationEnvelope { actor: ActorId(socket_actor.clone()), ..envelope.clone() }).collect();
+            let(wire_envelopes,identity_receipt)=match wire_envelopes_with_original_actor(envelopes,socket_actor,self.actor_identity_grant){Ok(result)=>result,Err(_)=>{self.queue_outbox(envelopes.iter().cloned());return;}};
+            add_actor_identity_progress(&mut self.actor_identity_progress,identity_receipt);
             let plan = commands_frames_within(max_frame, self.next_batch_id, envelopes.to_vec(), wire_envelopes).await;
             for frame in plan.frames {
                 self.next_batch_id = frame.batch_id.wrapping_add(1);
@@ -4959,7 +4985,7 @@ mod wasm_actor {
                 }
                 codec.print_mirror(&pair.pack, &pair.spr).await.map_err(|error| format!("artifact bootstrap decode failed: {error}"))?;
             }
-            let events = spr_events(&pair.spr, &self.document_id, &self.schema).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
+            let events = spr_events(&pair.spr, &self.document_id, &self.schema,self.actor_identity_grant).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
             self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
             if !events.is_empty() {
                 self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&events) }).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
@@ -5219,6 +5245,8 @@ mod wasm_actor {
             }
         }
         let mut actor = WasmActor {
+            actor_identity_grant: config.actor_identity_grant,
+            actor_identity_progress: Default::default(),
             document_id: config.document_id,
             schema: config.schema,
             remote,

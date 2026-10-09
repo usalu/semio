@@ -428,3 +428,29 @@ fn ready_child_parent_return_keeps_nested_owner_backing_until_paid_parent_releas
     let mut released=0;for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){match parent.close_step(items,parent_bytes){AllocationReturnStep::Complete=>break,AllocationReturnStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items);assert!(released_bytes<=parent_bytes);released+=released_bytes;}}}assert!(parent.terminal_is_empty());assert_eq!(parent.retained_bytes(),0);assert_eq!(released,expected);
     eprintln!("[DEBUG] actual nested owner UTF8 allocation joins every child field and Vec backing in persistent parent; no physical child4-byte release, exact paid parent4096 terminal");
 }
+
+#[test]
+fn child_emit_original_full_grant_preserves_denied_pointers_and_system_release_receipts() {
+    use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
+    let fixture:Value=serde_json::from_str(include_str!("../../../🧵️retained-command/🧫️fixtures/🧩️child-prepublication-close.json")).unwrap();
+    let policy=&fixture["closeGrant"];let axis=|name:&str|policy[name].as_u64().unwrap() as usize;
+    let grant=RetainedCloneGrant{maximum_items:axis("maximumItems"),maximum_copy_bytes:axis("maximumCopyBytes"),maximum_capacity_bytes:axis("maximumCapacityBytes"),maximum_release_bytes:axis("maximumReleaseBytes"),maximum_depth:axis("maximumDepth")};
+    for row in fixture["children"].as_array().unwrap(){
+        let(mut child,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::app::ChildEmit{genesis:None,owner:row["id"].as_str().unwrap().into(),slot:row["slot"].as_str().unwrap().into(),child_id:row["childId"].as_str().unwrap().into(),ops:vec![row["value"].as_str().unwrap().as_bytes().to_vec()],op_schema:semio_framework::kernel::SchemaId("child.current".into()),labels:vec![crate::LocalizedLabel::data(row["value"].as_str().unwrap().to_owned())]});
+        let owner=child.owner.as_ptr();let operations=child.ops.as_ptr();let first=child.ops[0].as_ptr();
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||child.close_one(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());
+        assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!((child.owner.as_ptr(),child.ops.as_ptr(),child.ops[0].as_ptr()),(owner,operations,first));
+        let mut released=0;
+        for _ in 0..1024{
+            if child.terminal_is_empty(){break;}
+            let demand=child.retirement_demands().unwrap();assert!(demand.release_bytes<=grant.maximum_release_bytes);assert!(demand.depth<=grant.maximum_depth);
+            if demand.release_bytes!=0{
+                let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||child.close_one(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant}).unwrap());
+                assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+            }
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||child.close_one(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));released+=progress.released_bytes;
+        }
+        assert!(child.terminal_is_empty());assert_eq!(released,birth.requested_bytes);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(child));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        println!("[DEBUG] original child full-grant denied pointers retained, independent caller policy fixed, System release={released}, terminalDrop0");
+    }
+}

@@ -840,6 +840,14 @@ pub fn expand_dsl_document(input: TokenStream) -> TokenStream {
         impl #name {
             pub const __DSL_ENVELOPE_ID: &'static str = #envelope_id;
             pub const __DSL_EXTENSION: &'static str = #suffix;
+            /// 🏭️ Forwards the actual DslRecord controlled metadata factories.
+            pub fn __artifact_record_spec_producer() -> ::semio_framework_os_kernel::os_store::RecordSpecProducer {
+                Self::__dsl_spec_producer()
+            }
+            /// 🫳️ Binds the same DslRecord authored static declaration.
+            pub fn __artifact_borrowed_record_spec_producer() -> ::semio_framework_os_kernel::os_store::BorrowedRecordSpecProducer {
+                ::semio_framework_os_kernel::os_store::BorrowedRecordSpecProducer::of::<Self>()
+            }
         }
     }.into()
 }
@@ -1022,7 +1030,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
     let mut label_arms = Vec::new();
     let mut target_arms = Vec::new();
     let mut may_emit_foreign_steps_arms = Vec::new();
-    let mut foreign_steps_arms = Vec::new();
+    let mut foreign_source_arms = Vec::new();
     let mut input_schema_arms = Vec::new();
     let mut inverse_rows_arms = Vec::new();
     let mut payload_value_arms = Vec::new();
@@ -1063,7 +1071,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
         label_arms.push(quote! { Self::#variant_ident(payload) => #kind::label(payload) });
         target_arms.push(quote! { Self::#variant_ident(payload) => #kind::target(payload) });
         may_emit_foreign_steps_arms.push(quote! { Self::#variant_ident(payload) => #kind::may_emit_foreign_steps(payload) });
-        foreign_steps_arms.push(quote! { Self::#variant_ident(payload) => #kind::foreign_steps(payload, base) });
+        foreign_source_arms.push(quote! { Self::#variant_ident(payload) => #kind::foreign_step_source(payload, base, index) });
         input_schema_arms.push(quote! { Self::#variant_ident(payload) => #leaf::input_schema(payload) });
         inverse_rows_arms.push(quote! { Self::#variant_ident(payload) => #leaf::inverse_rows(payload) });
         payload_value_arms.push(quote! { Self::#variant_ident(payload) => #leaf::input_value(payload) });
@@ -1150,9 +1158,9 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#may_emit_foreign_steps_arms),* }
             }
-            fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
+            fn foreign_step_source<'a>(&'a self, base: &'a #snapshot_ty, index: usize) -> Result<Option<::semio_framework_os_kernel::ForeignStepSource<'a>>, ::semio_framework_value::ValueError> {
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
-                match self { #(#foreign_steps_arms),* }
+                match self { #(#foreign_source_arms),* }
             }
             fn inverse_rows(&self) -> usize {
                 match self { #(#inverse_rows_arms),* }
@@ -1351,10 +1359,10 @@ fn expand_composite_mutation(input: &DeriveInput) -> syn::Result<proc_macro2::To
                 ::semio_framework_os_kernel::CompositeMutationKind::target(self)
             }
             fn may_emit_foreign_steps(&self) -> bool {
-                true
+                ::semio_framework_os_kernel::CompositeMutationKind::may_emit_foreign_steps(self)
             }
-            fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
-                ::semio_framework_os_kernel::plan_foreign_steps(self, base)
+            fn foreign_step_source<'a>(&'a self, base: &'a #snapshot_ty, index: usize) -> Result<Option<::semio_framework_os_kernel::ForeignStepSource<'a>>, ::semio_framework_value::ValueError> {
+                ::semio_framework_os_kernel::CompositeMutationKind::foreign_step_source(self, base, index)
             }
         }
     };

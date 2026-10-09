@@ -4,26 +4,16 @@ use crate::{
     default_drawing_trace_params, default_drawing_transform,  DrawingAttributes, DrawingBooleanBody, DrawingEllipse, DrawingGroupBody, DrawingImageBody, DrawingLayerBase, DrawingLine, DrawingMutation, DrawingPathBody, DrawingPolygon,
     DrawingRect, DrawingShapeBody, DrawingSnapshot, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
-use std::collections::hash_map::DefaultHasher;
 use std::collections::BTreeMap;
-use std::hash::{Hash, Hasher};
-
-pub(crate) fn drawing_id_hex(material: &[u8]) -> String {
-    let mut hasher = DefaultHasher::new();
-    material.hash(&mut hasher);
-    format!("{:016x}", hasher.finish())
-}
-
-/// 🪪️ Derives a content-addressed document identity without a process-wide counter.
-pub fn create_drawing_id(prefix: &str, material: &[u8]) -> String {
-    format!("{prefix}-{}", drawing_id_hex(material))
-}
+#[path="🪪️identity/🦀️.rs"]
+pub mod identity;
+use identity::{DrawingIdentity,DrawingIdentityAssignment};
 
 /// 🖍️ Constructs an authored path layer from decoded domain segments.
-pub fn create_drawing_path_layer(name: &str, segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>) -> DrawingLayerNode {
+pub fn create_drawing_path_layer(identity: DrawingIdentity, name: &str, segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>) -> DrawingLayerNode {
     DrawingLayerNode::Path(DrawingPathBody {
         base: DrawingLayerBase {
-            id: create_drawing_id("path", name.as_bytes()).into(),
+            id: identity.into_key(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -42,7 +32,7 @@ pub fn default_drawing_document(id: &str, title: Option<&str>) -> DrawingSnapsho
         schema: DRAWING_DOCUMENT_SCHEMA.into(),
         id: id.into(),
         title: title.map(Into::into),
-        layers: vec![create_drawing_path_layer("Layer 1", Default::default())].into(),
+        layers: vec![create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit(("initial-layer").to_string().into()).expect("nonempty authored identity"), "Layer 1", Default::default())].into(),
         assets: Default::default(),
         artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }),
     }
@@ -236,17 +226,17 @@ pub struct DrawingCanvasLayerRecord {
 
 
 
-pub fn default_layer_base(name: &str) -> DrawingLayerBase {
-    DrawingLayerBase { id: create_drawing_id("layer", name.as_bytes()).into(), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() }
+pub fn default_layer_base(identity: DrawingIdentity, name: &str) -> DrawingLayerBase {
+    DrawingLayerBase { id: identity.into_key(), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() }
 }
 
 
 
-pub fn create_drawing_group_layer(name: &str) -> DrawingLayerNode {
+pub fn create_drawing_group_layer(identity: DrawingIdentity, name: &str) -> DrawingLayerNode {
     DrawingLayerNode::Group(DrawingGroupBody {
         isolation:false,
         base: DrawingLayerBase {
-            id: create_drawing_id("group", name.as_bytes()).into(),
+            id: identity.into_key(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -259,10 +249,10 @@ pub fn create_drawing_group_layer(name: &str) -> DrawingLayerNode {
     })
 }
 
-pub fn create_drawing_boolean_layer(name: &str, operation: &str, children: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>) -> DrawingLayerNode {
+pub fn create_drawing_boolean_layer(identity: DrawingIdentity, name: &str, operation: &str, children: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>) -> DrawingLayerNode {
     DrawingLayerNode::Boolean(DrawingBooleanBody {
         base: DrawingLayerBase {
-            id: create_drawing_id("boolean", name.as_bytes()).into(),
+            id: identity.into_key(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -276,10 +266,10 @@ pub fn create_drawing_boolean_layer(name: &str, operation: &str, children: semio
     })
 }
 
-pub fn create_drawing_trace_layer(name: &str, source_key: &str) -> DrawingLayerNode {
+pub fn create_drawing_trace_layer(identity: DrawingIdentity, name: &str, source_key: &str) -> DrawingLayerNode {
     DrawingLayerNode::Trace(DrawingTraceBody {
         base: DrawingLayerBase {
-            id: create_drawing_id("trace", name.as_bytes()).into(),
+            id: identity.into_key(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -293,10 +283,10 @@ pub fn create_drawing_trace_layer(name: &str, source_key: &str) -> DrawingLayerN
     })
 }
 
-pub fn create_drawing_shape_layer_rect(name: &str) -> DrawingLayerNode {
+pub fn create_drawing_shape_layer_rect(identity: DrawingIdentity, name: &str) -> DrawingLayerNode {
     DrawingLayerNode::Shape(DrawingShapeBody {
         base: DrawingLayerBase {
-            id: create_drawing_id("shape", name.as_bytes()).into(),
+            id: identity.into_key(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -314,10 +304,10 @@ pub fn create_drawing_shape_layer_rect(name: &str) -> DrawingLayerNode {
     })
 }
 
-pub fn create_drawing_text_layer(name: &str) -> DrawingLayerNode {
+pub fn create_drawing_text_layer(identity: DrawingIdentity, name: &str) -> DrawingLayerNode {
     DrawingLayerNode::Text(DrawingTextBody {
         base: DrawingLayerBase {
-            id: create_drawing_id("text", name.as_bytes()).into(),
+            id: identity.into_key(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -333,10 +323,10 @@ pub fn create_drawing_text_layer(name: &str) -> DrawingLayerNode {
     })
 }
 
-pub fn create_drawing_image_layer(name: &str, image_key: &str) -> DrawingLayerNode {
+pub fn create_drawing_image_layer(identity: DrawingIdentity, name: &str, image_key: &str) -> DrawingLayerNode {
     DrawingLayerNode::Image(DrawingImageBody {
         base: DrawingLayerBase {
-            id: create_drawing_id("image", name.as_bytes()).into(),
+            id: identity.into_key(),
             name: name.into(),
             visible: true,
             locked: false,
@@ -666,27 +656,21 @@ pub fn canvas_layer_records(doc: &DrawingSnapshot) -> Vec<DrawingCanvasLayerReco
         .collect()
 }
 
-pub fn clone_drawing_layer_node(node: &DrawingLayerNode, name_suffix: &str) -> DrawingLayerNode {
-    fn identify(node: &mut DrawingLayerNode, suffix: &str, ids: &mut BTreeMap<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, semio_framework_value::paged::PagedUtf8<{usize::MAX}>>) {
-        let base = layer_base_mut(node);
-        let old = base.id.clone();
-        base.id = create_drawing_id("layer", format!("{old}{suffix}").as_bytes()).into();
-        ids.insert(old, base.id.clone());
-        if let DrawingLayerNode::Group(group) = node { for child in &mut group.children { identify(child, suffix, ids); } }
+pub fn clone_drawing_layer_node(node: &DrawingLayerNode, name_suffix: &str, identities: &semio_framework_value::list::PagedList<DrawingIdentityAssignment,{usize::MAX}>) -> Result<DrawingLayerNode,semio_framework_value::ValueError> {
+    fn identify(node: &mut DrawingLayerNode, identities: &semio_framework_value::list::PagedList<DrawingIdentityAssignment,{usize::MAX}>, ids: &mut BTreeMap<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, semio_framework_value::paged::PagedUtf8<{usize::MAX}>>) -> Result<(),semio_framework_value::ValueError> {
+        let base=layer_base_mut(node);let old=base.id.clone();
+        let mut matches=identities.iter().filter(|assignment|assignment.source==old);
+        let assignment=matches.next().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Drawing clone identity missing"))?;
+        if matches.next().is_some()||assignment.target.is_empty()||assignment.target==old||ids.contains_key(&old)||ids.values().any(|target|*target==assignment.target){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Drawing clone identity repeated or invalid"));}
+        base.id=assignment.target.clone();ids.insert(old,base.id.clone());
+        if let DrawingLayerNode::Group(group)=node{for child in &mut group.children{identify(child,identities,ids)?;}}Ok(())
     }
-    fn references(node: &mut DrawingLayerNode, ids: &BTreeMap<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, semio_framework_value::paged::PagedUtf8<{usize::MAX}>>) {
-        match node {
-            DrawingLayerNode::Boolean(boolean) => { for child in &mut boolean.children { if let Some(id) = ids.get(child) { *child = id.clone(); } } }
-            DrawingLayerNode::Group(group) => { for child in &mut group.children { references(child, ids); } }
-            _ => {}
-        }
+    fn references(node:&mut DrawingLayerNode,ids:&BTreeMap<semio_framework_value::paged::PagedUtf8<{usize::MAX}>,semio_framework_value::paged::PagedUtf8<{usize::MAX}>>){
+        match node{DrawingLayerNode::Boolean(boolean)=>{for child in &mut boolean.children{if let Some(id)=ids.get(child){*child=id.clone();}}},DrawingLayerNode::Group(group)=>{for child in &mut group.children{references(child,ids);}},_=>{}}
     }
-    let mut cloned = node.clone();
-    let mut ids = BTreeMap::new();
-    identify(&mut cloned, name_suffix, &mut ids);
-    layer_base_mut(&mut cloned).name.push_str(name_suffix);
-    references(&mut cloned, &ids);
-    cloned
+    let mut cloned=node.clone();let mut ids=BTreeMap::new();identify(&mut cloned,identities,&mut ids)?;
+    if identities.len()!=ids.len()||ids.values().any(|target|ids.contains_key(target)){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Drawing clone identity census differs"));}
+    layer_base_mut(&mut cloned).name.push_str(name_suffix);references(&mut cloned,&ids);Ok(cloned)
 }
 
 pub fn layer_base_mut(layer: &mut DrawingLayerNode) -> &mut DrawingLayerBase {
@@ -804,12 +788,12 @@ pub fn find_drawing_layer_location(doc: &DrawingSnapshot, target_id: &(impl semi
     search(&doc.layers, None, target_id)
 }
 
-pub fn create_layer_by_kind(kind: &str) -> DrawingLayerNode {
+pub fn create_layer_by_kind(identity: DrawingIdentity, kind: &str) -> DrawingLayerNode {
     if let Some(shape_kind) = kind.strip_prefix("shape:") {
         return match shape_kind {
-            "rect" => create_drawing_shape_layer_rect("Rectangle"),
+            "rect" => create_drawing_shape_layer_rect(identity, "Rectangle"),
             "ellipse" => DrawingLayerNode::Shape(DrawingShapeBody {
-                base: default_layer_base("Ellipse"),
+                base: default_layer_base(identity, "Ellipse"),
                 shape_kind: "ellipse".into(),
                 rect: None,
                 ellipse: Some(DrawingEllipse { cx: 0.0, cy: 0.0, rx: 64.0, ry: 48.0 }),
@@ -817,9 +801,9 @@ pub fn create_layer_by_kind(kind: &str) -> DrawingLayerNode {
                 line: None,
                 polygon: None,
             }),
-            "line" => DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base("Line"), shape_kind: "line".into(), rect: None, ellipse: None, circle: None, line: Some(DrawingLine { x1: 0.0, y1: 0.0, x2: 128.0, y2: 0.0 }), polygon: None }),
+            "line" => DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base(identity, "Line"), shape_kind: "line".into(), rect: None, ellipse: None, circle: None, line: Some(DrawingLine { x1: 0.0, y1: 0.0, x2: 128.0, y2: 0.0 }), polygon: None }),
             "polygon" => DrawingLayerNode::Shape(DrawingShapeBody {
-                base: default_layer_base("Polygon"),
+                base: default_layer_base(identity, "Polygon"),
                 shape_kind: "polygon".into(),
                 rect: None,
                 ellipse: None,
@@ -827,17 +811,17 @@ pub fn create_layer_by_kind(kind: &str) -> DrawingLayerNode {
                 line: None,
                 polygon: Some(DrawingPolygon { points: vec![[0.0, 0.0], [64.0, 0.0], [32.0, 48.0]].into() }),
             }),
-            _ => create_drawing_shape_layer_rect("Shape"),
+            _ => create_drawing_shape_layer_rect(identity, "Shape"),
         };
     }
     match kind {
-        "path" => create_drawing_path_layer("Path", Vec::new().into()),
-        "text" => create_drawing_text_layer("Text"),
-        "image" => create_drawing_image_layer("Image", "image-source"),
-        "group" => create_drawing_group_layer("Group"),
-        "boolean" => create_drawing_boolean_layer("Boolean", "union", Vec::new().into()),
-        "trace" => create_drawing_trace_layer("Trace", "trace-source"),
-        _ => create_drawing_path_layer("Path", Vec::new().into()),
+        "path" => create_drawing_path_layer(identity, "Path", Vec::new().into()),
+        "text" => create_drawing_text_layer(identity, "Text"),
+        "image" => create_drawing_image_layer(identity, "Image", "image-source"),
+        "group" => create_drawing_group_layer(identity, "Group"),
+        "boolean" => create_drawing_boolean_layer(identity, "Boolean", "union", Vec::new().into()),
+        "trace" => create_drawing_trace_layer(identity, "Trace", "trace-source"),
+        _ => create_drawing_path_layer(identity, "Path", Vec::new().into()),
     }
 }
 

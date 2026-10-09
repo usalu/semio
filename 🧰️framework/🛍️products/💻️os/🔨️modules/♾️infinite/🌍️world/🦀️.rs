@@ -1977,6 +1977,7 @@ pub struct World3dState {
     /// publishing only plain-JSON `meshes_json`/`instances_json` the same typed snapshot a
     /// snapshot-native producer hands over.
     scene_bridge: Option<World3dSceneBridgeCursor>,
+    scene_bridge_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<World3dSceneBridgeCursor>>,
     scene_bridge_lease: Option<World3dSnapshotLease>,
     scene_bridge_retired: Option<(World3dSnapshotLease, bool)>,
     scene_bridge_generation: u64,
@@ -2308,6 +2309,7 @@ impl World3dState {
             interaction_objects: WorldInteractionObjectRegistry::default(),
             snapshot_lease: None,
             scene_bridge: None,
+            scene_bridge_close: None,
             scene_bridge_lease: None,
             scene_bridge_retired: None,
             scene_bridge_generation: 0,
@@ -2563,9 +2565,9 @@ impl World3dDynamicRetirement {
         Self { phase: 0, blocked: None }
     }
 
-    fn step(&mut self, state: &mut World3dState) -> bool {
+    fn step(&mut self, state: &mut World3dState, context:&mut semio_framework_job::StepContext<'_>) -> bool {
         self.blocked = None;
-        if step_world3d_scene_bridge_close(state) {
+        if step_world3d_scene_bridge_close(state,context) {
             return false;
         }
         if state.dynamic_mesh_close.is_none() {
@@ -2732,7 +2734,7 @@ pub fn step_world3d_dynamic_retirement(state: &mut World3dState, context: &mut s
     let Some(mut retirement) = state.dynamic_retirement.take() else {
         return true;
     };
-    let complete = retirement.step(state);
+    let complete = retirement.step(state,context);
     context.consume_fuel(1);
     if complete && retirement.terminal_is_empty() {
         return true;
@@ -2744,6 +2746,7 @@ pub fn step_world3d_dynamic_retirement(state: &mut World3dState, context: &mut s
 pub fn world3d_dynamic_retirement_terminal_is_empty(state: &World3dState) -> bool {
     state.dynamic_retirement.is_none()
         && state.scene_bridge.is_none()
+        && state.scene_bridge_close.is_none()
         && state.scene_bridge_lease.is_none()
         && state.scene_bridge_retired.is_none()
         && state.dynamic_blocked_owner.is_none()
@@ -12400,6 +12403,7 @@ fn world3d_standard_material_for_mesh(state: &World3dState, mesh_key: &str, envi
 ///   it through `meshDataFromKind`, this one through [`WorldPlaceholderKind::resolve`].
 #[derive(Clone, Debug, semio_framework_value_derive::FromValue)]
 #[value(rename_all="camelCase")]
+#[derive(semio_framework_value_derive::RetireOwned)]
 struct World3dSceneMeshEntry {
     id:String,
     #[value(default)]
@@ -12425,6 +12429,7 @@ impl World3dSceneMeshEntry {
 /// 🧬️ The exact analytic source in the original instance wire.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
+#[derive(semio_framework_value_derive::RetireOwned)]
 struct World3dSceneComponentSource {
     handle: String,
     revision: String,
@@ -12434,6 +12439,7 @@ struct World3dSceneComponentSource {
 /// channel-qualified instance id every pick/hover observation is addressed by.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value_derive::RetireOwned)]
 struct World3dSceneInstanceEntry {
     #[serde(default)]
     component_source: Option<World3dSceneComponentSource>,
@@ -12482,6 +12488,7 @@ struct World3dSceneInstanceEntry {
 /// 🎥️ `World3dScene.camera_json` — the window's own camera measure, authored host-side.
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value_derive::RetireOwned)]
 struct World3dSceneCameraRecord {
     #[serde(default)]
     position: Option<[f64; 3]>,
@@ -13017,15 +13024,19 @@ fn world3d_scene_digest(parts: &[&str]) -> u64 {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value_derive::RetireOwned)]
 enum World3dSceneBridgePhase {
     Parse,
+    ScalarAttributes,
     Meshes,
     Pages,
+    Close,
 }
 
 /// 🌉️ One in-flight `meshes_json`/`instances_json` → `World3dSnapshotLease` build. Parsing, mesh
 /// publication and page admission are three separately budgeted phases so a large preview never
 /// blocks a frame.
+#[derive(semio_framework_value_derive::RetireOwned)]
 struct World3dSceneBridgeCursor {
     digest: u64,
     camera_digest: u64,
@@ -13038,6 +13049,8 @@ struct World3dSceneBridgeCursor {
     instances: Vec<World3dSceneInstanceEntry>,
     camera: Option<World3dSceneCameraRecord>,
     mesh_cursor: usize,
+    scalar_mesh_cursor:usize,
+    scalar_slot_cursor:usize,
     retiring_mesh: bool,
     mesh_digest:Option<WorldMeshDigestCursor>,
     scalar_field: Option<ui_wgpu::wgpu::World3dScalarField>,
@@ -13074,7 +13087,7 @@ fn stage_world3d_scene_bridge(state: &mut World3dState, world: &ui_wgpu::wgpu::W
     if state.scene_bridge_digest == Some(digest) || state.scene_bridge.as_ref().is_some_and(|cursor| cursor.digest == digest) {
         return;
     }
-    if state.scene_bridge.is_some() {
+    if state.scene_bridge.is_some() || state.scene_bridge_close.is_some() {
         return;
     }
     state.scene_bridge = Some(World3dSceneBridgeCursor {
@@ -13089,6 +13102,8 @@ fn stage_world3d_scene_bridge(state: &mut World3dState, world: &ui_wgpu::wgpu::W
         instances: Vec::new(),
         camera: None,
         mesh_cursor: 0,
+        scalar_mesh_cursor:0,
+        scalar_slot_cursor:0,
         retiring_mesh: false,
         mesh_digest:None,
         scalar_field: world.scalar_field.clone(),
@@ -13098,8 +13113,23 @@ fn stage_world3d_scene_bridge(state: &mut World3dState, world: &ui_wgpu::wgpu::W
 /// ♻️ Drains one superseded bridge lease, or the whole staged build, one authority step at a time.
 /// Returns `true` when it did work — the retirement ladder polls it before anything else so a
 /// world that is being torn down never leaves a snapshot slot reserved.
-fn step_world3d_scene_bridge_close(state: &mut World3dState) -> bool {
-    if state.scene_bridge.take().is_some() {
+fn step_world3d_scene_bridge_close(state: &mut World3dState,context:&mut semio_framework_job::StepContext<'_>) -> bool {
+    if let Some(owner)=state.scene_bridge_close.as_mut(){
+        let result=owner.step(context.retained_grant());
+        let progress=match result{Ok(step)=>step.progress(),Err(_)=>owner.step_progress()};
+        context.consume_retained(progress).expect("original scene cursor retirement fits original remaining grant");
+        if owner.terminal_is_empty(){state.scene_bridge_close=None;}
+        return true;
+    }
+    if state.scene_bridge.is_some(){
+        let grant=context.retained_grant();
+        let bytes=std::mem::size_of::<World3dSceneBridgeCursor>();
+        if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return true;}
+        let original=state.scene_bridge.take().unwrap();
+        match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){
+            Ok(owner)=>{state.scene_bridge_close=Some(owner);context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}).expect("original scene cursor handoff fits admitted typed move");},
+            Err((_,original))=>state.scene_bridge=Some(original),
+        }
         return true;
     }
     let Some((lease, begun)) = state.scene_bridge_retired else {
@@ -13122,7 +13152,7 @@ fn step_world3d_scene_bridge_close(state: &mut World3dState) -> bool {
 }
 
 /// 🌉️ One budgeted turn of the mesh-wire → snapshot bridge. Drives the staged payload through
-/// parse → per-mesh `mesh3d_*` publication → snapshot page admission, then hands the sealed lease to
+/// parse → retained attribute candidates → per-mesh publication → snapshot page admission, then hands the sealed lease to
 /// [`sync_world3d_state`], which feeds it to the very same apply ladder a typed producer's own
 /// snapshot rides.
 ///
@@ -13134,7 +13164,12 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
         return World3dSceneBridgeStep::Pending;
     }
     if state.scene_bridge_retired.is_some() && state.snapshot_apply.is_none() && state.scene_bridge_lease == state.snapshot_lease {
-        step_world3d_scene_bridge_close(state);
+        step_world3d_scene_bridge_close(state,context);
+        context.consume_fuel(1);
+        return World3dSceneBridgeStep::Pending;
+    }
+    if state.scene_bridge_close.is_some()||state.scene_bridge.as_ref().is_some_and(|cursor|matches!(cursor.phase,World3dSceneBridgePhase::Close)){
+        step_world3d_scene_bridge_close(state,context);
         context.consume_fuel(1);
         return World3dSceneBridgeStep::Pending;
     }
@@ -13146,7 +13181,7 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
         World3dSceneBridgePhase::Parse => {
             if cursor.instances_json.len() > WORLD_INTERACTION_TOPOLOGY_BYTE_CAPACITY {
                 state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
-                return World3dSceneBridgeStep::Fault;
+                cursor.phase=World3dSceneBridgePhase::Close;state.scene_bridge=Some(cursor);return World3dSceneBridgeStep::Fault;
             }
             cursor.meshes = semio_framework_pack_json::from_json_str::<Vec<World3dSceneMeshEntry>>(&cursor.meshes_json,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default();
             cursor.instances = serde_json::from_str::<Vec<World3dSceneInstanceEntry>>(&cursor.instances_json).unwrap_or_default();
@@ -13176,28 +13211,33 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
                     mesh.data.compute_normals();
                 }
             }
-            state.scalar_field_status = match cursor.scalar_field.as_ref() {
-                None => World3dScalarFieldStatus::None,
-                Some(field) => match cursor.meshes.iter_mut().find(|mesh| mesh.id == field.mesh_id) {
-                    Some(mesh) => {
-                        if world3d_apply_scalar_field(&mut mesh.data, field) {
-                            World3dScalarFieldStatus::Applied
-                        } else {
-                            World3dScalarFieldStatus::Mismatch
-                        }
-                    }
-                    None => World3dScalarFieldStatus::Missing,
-                },
-            };
             if !world3d_scene_instance_interactions_are_bounded(&cursor.instances) {
                 state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
-                return World3dSceneBridgeStep::Fault;
+                cursor.phase=World3dSceneBridgePhase::Close;state.scene_bridge=Some(cursor);return World3dSceneBridgeStep::Fault;
             }
             cursor.instances.retain(|instance| cursor.meshes.iter().any(|mesh| mesh.id == instance.mesh_id));
-            cursor.phase = World3dSceneBridgePhase::Meshes;
+            state.scalar_field_status=if cursor.scalar_field.is_some(){World3dScalarFieldStatus::Missing}else{World3dScalarFieldStatus::None};
+            cursor.phase = World3dSceneBridgePhase::ScalarAttributes;
             state.scene_bridge = Some(cursor);
             World3dSceneBridgeStep::Pending
         }
+        World3dSceneBridgePhase::ScalarAttributes=>{
+            let Some(field)=cursor.scalar_field.as_ref()else{cursor.phase=World3dSceneBridgePhase::Meshes;state.scene_bridge=Some(cursor);return World3dSceneBridgeStep::Pending};
+            let Some(mesh)=cursor.meshes.get_mut(cursor.scalar_mesh_cursor)else{cursor.phase=World3dSceneBridgePhase::Meshes;state.scene_bridge=Some(cursor);return World3dSceneBridgeStep::Pending};
+            if mesh.id!=field.mesh_id{cursor.scalar_mesh_cursor+=1;state.scene_bridge=Some(cursor);return World3dSceneBridgeStep::Pending;}
+            if !world3d_scalar_field_fits(&mesh.data,field){state.scalar_field_status=World3dScalarFieldStatus::Mismatch;cursor.phase=World3dSceneBridgePhase::Meshes;state.scene_bridge=Some(cursor);return World3dSceneBridgeStep::Pending;}
+            if cursor.scalar_slot_cursor<mesh.data.attributes.slot_count(){
+                let result=mesh.data.attributes.retire_slot_if(cursor.scalar_slot_cursor,|_,attribute|attribute.semantic!=semio_framework::MeshAttributeSemantic::Color,context.retained_grant());
+                match result{Ok(progress)=>{context.consume_retained(progress).expect("original attribute move fits supplied caller grant");if progress.copied_items!=0{cursor.scalar_slot_cursor+=1;}},Err(_)=>{state.snapshot_fault=Some(World3dSnapshotFault::Capacity);cursor.phase=World3dSceneBridgePhase::Close;state.scene_bridge=Some(cursor);return World3dSceneBridgeStep::Fault;}}
+                state.scene_bridge=Some(cursor);return World3dSceneBridgeStep::Pending;
+            }
+            world3d_apply_scalar_field_colors(&mut mesh.data,field);
+            state.scalar_field_status=World3dScalarFieldStatus::Applied;
+            cursor.phase=World3dSceneBridgePhase::Meshes;
+            state.scene_bridge=Some(cursor);
+            World3dSceneBridgeStep::Pending
+        }
+        World3dSceneBridgePhase::Close=>unreachable!("original scene cursor close is drained before advancing"),
         World3dSceneBridgePhase::Meshes => {
             if state.dynamic_mesh_close.is_some() || state.dynamic_blocked_mesh.is_some() {
                 step_world3d_mesh_close(state);
@@ -13223,7 +13263,7 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
                 return World3dSceneBridgeStep::Pending;
             }
             let hashing=cursor.mesh_digest.get_or_insert_with(WorldMeshDigestCursor::default);
-            let digest=match hashing.step(&entry.data){Ok(Some(digest))=>digest,Ok(None)=>{state.scene_bridge=Some(cursor);return World3dSceneBridgeStep::Pending},Err(_)=>{state.snapshot_fault=Some(World3dSnapshotFault::Capacity);return World3dSceneBridgeStep::Fault}};
+            let digest=match hashing.step(&entry.data){Ok(Some(digest))=>digest,Ok(None)=>{state.scene_bridge=Some(cursor);return World3dSceneBridgeStep::Pending},Err(_)=>{state.snapshot_fault=Some(World3dSnapshotFault::Capacity);cursor.phase=World3dSceneBridgePhase::Close;state.scene_bridge=Some(cursor);return World3dSceneBridgeStep::Fault}};
             if state.scene_mesh_digests.get(&entry.id) == Some(&digest) && state.meshes.contains_key(&entry.id) {
                 cursor.mesh_cursor += 1;
                 cursor.retiring_mesh = false;
@@ -13252,7 +13292,8 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
                 }
                 Err(_) => {
                     state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
-                    World3dSceneBridgeStep::Fault
+                    cursor.phase=World3dSceneBridgePhase::Close;state.scene_bridge=Some(cursor);
+                World3dSceneBridgeStep::Fault
                 }
             }
         }
@@ -13261,6 +13302,7 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
             if cursor.camera_changed {
                 state.scene_camera_digest = Some(cursor.camera_digest);
             }
+            cursor.phase=World3dSceneBridgePhase::Close;state.scene_bridge=Some(cursor);
             World3dSceneBridgeStep::Complete
         }
         World3dSceneBridgePhase::Pages => match publish_world3d_scene_bridge_snapshot(state, &cursor) {
@@ -13272,10 +13314,12 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
                 if cursor.camera_changed {
                     state.scene_camera_digest = Some(cursor.camera_digest);
                 }
-                World3dSceneBridgeStep::Complete
+                cursor.phase=World3dSceneBridgePhase::Close;state.scene_bridge=Some(cursor);
+            World3dSceneBridgeStep::Complete
             }
             Err(fault) => {
                 state.snapshot_fault = Some(fault);
+                cursor.phase=World3dSceneBridgePhase::Close;state.scene_bridge=Some(cursor);
                 World3dSceneBridgeStep::Fault
             }
         },
@@ -13284,6 +13328,7 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
 
 /// 🔏️ Content digest of one mesh's buffers — what decides whether an already-published mesh key
 /// can be reused rather than rewritten through the authority ladder.
+#[derive(semio_framework_value_derive::RetireOwned)]
 struct WorldMeshDigestCursor {phase:usize,item:usize,hash:u64,metadata:semio_framework::mesh_io::text::MeshMetadataCursor,text:String}
 impl Default for WorldMeshDigestCursor {fn default()->Self{Self{phase:0,item:0,hash:0xcbf2_9ce4_8422_2325,metadata:Default::default(),text:String::from("{")}}}
 impl WorldMeshDigestCursor {
@@ -13599,21 +13644,20 @@ fn srgb_byte_to_linear(byte: u8) -> f32 {
     if value <= 0.04045 { value / 12.92 } else { ((value + 0.055) / 1.055).powf(2.4) }
 }
 
-/// 🌡️ Paints a scalar field into an inline mesh's colours, the native twin of `world3dMeshDataWithScalarField`
-/// (`🌐️World3dHost/📏️modelling`): a vertex field becomes the canonical linear per-vertex RGBA, a face field a constant
-/// per-triangle colour attribute. Returns `false`, leaving the mesh untouched, when the value count does not fit.
-fn world3d_apply_scalar_field(data: &mut WorldMeshBuffers, field: &ui_wgpu::wgpu::World3dScalarField) -> bool {
+/// 🌡️ Validates the original field cardinality before any mesh attribute is displaced.
+fn world3d_scalar_field_fits(data: &WorldMeshBuffers, field: &ui_wgpu::wgpu::World3dScalarField) -> bool {
     use ui_wgpu::wgpu::World3dScalarDomain;
     let expected = match field.domain {
         World3dScalarDomain::Vertex => data.vertex_count(),
         World3dScalarDomain::Face => data.indices.len() / 3,
     };
-    if field.values.len() != expected {
-        return false;
-    }
+    field.values.len()==expected
+}
+
+fn world3d_apply_scalar_field_colors(data:&mut WorldMeshBuffers,field:&ui_wgpu::wgpu::World3dScalarField){
+    use ui_wgpu::wgpu::World3dScalarDomain;
     let bytes = field.color_bytes();
     let linear: Vec<[f32; 4]> = bytes.chunks_exact(3).map(|rgb| [srgb_byte_to_linear(rgb[0]), srgb_byte_to_linear(rgb[1]), srgb_byte_to_linear(rgb[2]), 1.0]).collect();
-    data.attributes.retain(|_, attribute| attribute.semantic != semio_framework::MeshAttributeSemantic::Color);
     match field.domain {
         World3dScalarDomain::Vertex => data.colors = linear.into_iter().flatten().collect(),
         World3dScalarDomain::Face => {
@@ -13625,7 +13669,6 @@ fn world3d_apply_scalar_field(data: &mut WorldMeshBuffers, field: &ui_wgpu::wgpu
             );
         }
     }
-    true
 }
 
 /// 🖼️ Applies the scene's vortex/attraction/target-volume/reference JSON lanes — the same payloads

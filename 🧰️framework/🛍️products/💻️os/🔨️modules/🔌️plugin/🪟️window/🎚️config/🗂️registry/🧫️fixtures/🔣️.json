@@ -1,0 +1,15 @@
+{
+  "kind": "original-paged-window-registry",
+  "addresses": ["window/😀", "window/", "window/λ", "window/a"],
+  "ordered": ["window/a", "window/λ", "window/", "window/😀"],
+  "maximumPageBytes": 4096,
+  "copies": 257,
+  "addressRepeat": 17,
+  "owningCopies": 2,
+  "sourceReservation": [{"copyBytes": 65536, "capacityGranted": false, "reserved": false, "copiedBytes": 0}, {"copyBytes": 0, "capacityGranted": true, "reserved": true, "copiedBytes": 0}],
+  "rootMetadata": {"owner": "test.retainedloadcameraconfig", "fields": ["viewport", "eye"], "ownedProducer": true, "schemaLessProducer": false, "getterAllocationBytes": 0, "getterReleaseBytes": 0, "maximumCapacityBytes": 65536},
+  "refusals": ["items", "copy", "capacity", "release", "depth"],
+  "refusedAllocationBytes": 0,
+  "refusedReleaseBytes": 0,
+  "terminalDropBytes": 0
+}

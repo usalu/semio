@@ -78,7 +78,7 @@ impl protocol::OpBinary for RemodelingReportWindowConfigMutation { fn encode_op(
 pub struct RemodelingReportWindowConfigOwner;
 impl semio_framework_plugin::WindowConfigOwner for RemodelingReportWindowConfigOwner {
     const WINDOW_KIND_ID: &'static str = super::REMODELING_PLAY_WINDOW_REPORT; const SCHEMA: &'static str = "remodeling.reportwindowconfig"; const MAXIMUM_PUBLICATION_BYTES: usize = 65_536; type State = RemodelingReportWindowConfig; type Mutation = RemodelingReportWindowConfigMutation;
-    fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
+    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
 }

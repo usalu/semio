@@ -6,7 +6,7 @@ fn shape_coordinates_shared_fixtures_and_rejection_atomicity() {
     for row in rows.as_array().unwrap() {
         let kind=row["kind"].as_str().unwrap();let field=ShapeCoordinateField::parse(row["field"].as_str().unwrap()).unwrap();
         assert_eq!(field.as_str(),row["field"].as_str().unwrap());
-        let crate::DrawingLayerNode::Shape(template)=crate::schema::create_drawing_shape_layer_rect("Test") else {unreachable!()};
+        let crate::DrawingLayerNode::Shape(template)=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Test")).to_string().into()).expect("nonempty authored identity"), "Test") else {unreachable!()};
         let mut shape=DrawingShapeBody {base:template.base,shape_kind:kind.into(),rect:None,ellipse:None,circle:None,line:None,polygon:None};
         match kind {"rect"=>shape.rect=Some(serde_json::from_value(row["before"].clone()).unwrap()),"ellipse"=>shape.ellipse=Some(serde_json::from_value(row["before"].clone()).unwrap()),"circle"=>shape.circle=Some(serde_json::from_value(row["before"].clone()).unwrap()),"line"=>shape.line=Some(serde_json::from_value(row["before"].clone()).unwrap()),"polygon"=>shape.polygon=Some(serde_json::from_value(row["before"].clone()).unwrap()),_=>unreachable!()}
         let before=shape.clone();let index=row["index"].as_u64().map(|value|value as usize);let value=row["value"].as_f64().unwrap();

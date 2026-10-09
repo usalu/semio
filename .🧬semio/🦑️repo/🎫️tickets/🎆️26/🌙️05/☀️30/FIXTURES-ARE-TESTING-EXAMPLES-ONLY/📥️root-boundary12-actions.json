@@ -1,0 +1,58 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧪️tests/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "1e4463330a47b4241a8db0c60bf6db92f2796ddeb624bc8891473f3343ddc075",
+    "afterSha256": "696ad9d299063afdf373531575059574418341d0bd9b667faf0dd18830d61c85",
+    "qualification": "Original reader preserves domain/third-party behavior and admits only actual domain payloads or controls"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧬️schema/🔣️.json",
+    "action": "remove",
+    "beforeSha256": "184957a233304989d1fedde24e2aa74b4e0680fb0ce392a91b8c75b0053251e9",
+    "afterSha256": null,
+    "qualification": "Whole test corpus contract retired; no domain authority moved/copied/renamed"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "330f316b858f4e1384739799ce45e50bee09c8b395bc16370cb8ca6e907d54d5",
+    "afterSha256": "10b34849a391f16acc1e06c11f895c05660e2b9d5998c52950f9519df644e18d",
+    "qualification": "Original reader preserves domain/third-party behavior and admits only actual domain payloads or controls"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt/🔣️.json",
+    "action": "remove",
+    "beforeSha256": "f481833ea4af382f37303b07ee9d0a4a469ce6632b94f7b000d8cfbe917df0a9",
+    "afterSha256": null,
+    "qualification": "Whole test corpus contract retired; no domain authority moved/copied/renamed"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "02d58d3759c0ee46045f2b0f6961c4c5e0e714c650dcf85873dfb30cf2e8b3b0",
+    "afterSha256": "fa6feb9421b9eca9f407cd597c447021044880cd046c9268d2f10163a959d122",
+    "qualification": "Original reader preserves domain/third-party behavior and admits only actual domain payloads or controls"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+    "action": "remove",
+    "beforeSha256": "6e403a8b93cc6eec4327b7221e72d75c157cfeee8067c1f3d0abc3249602540d",
+    "afterSha256": null,
+    "qualification": "Whole test corpus contract retired; no domain authority moved/copied/renamed"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "753f2da5a214deae4fdb83ae95285c81f6d8fe886cee92ea8aaa8248994b94e7",
+    "afterSha256": "78db2ae52aec41b589bfc68f5ccf06909705fafbbb14ec6fe1f1bead6ea0274f",
+    "qualification": "Original reader preserves domain/third-party behavior and admits only actual domain payloads or controls"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
+    "action": "remove",
+    "beforeSha256": "c30c62bd0a34bd1173b941cfbf8d3f2fc7fa5b34a46d8a5db0a3e06df54c8fa9",
+    "afterSha256": null,
+    "qualification": "Whole test corpus contract retired; no domain authority moved/copied/renamed"
+  }
+]

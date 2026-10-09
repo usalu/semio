@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "beforeSha256": "d079567f793678d0eacae23712c381a5962d63e4c151096c42db9080396c4900",
+      "afterSha256": "f27174bd56d32253d785977cf579186573e9aa9493b27d43a8806f32aad57d01",
+      "action": "Retain possible original document/validator aliases through unknown member selection; capture receiver/key once before call arguments and recognize known computed validator method names."
+    }
+  ]
+}

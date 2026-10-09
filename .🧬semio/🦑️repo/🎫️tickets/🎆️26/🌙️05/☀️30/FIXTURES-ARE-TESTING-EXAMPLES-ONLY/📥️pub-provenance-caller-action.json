@@ -1,0 +1,12 @@
+{
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+  "action": "updated",
+  "logicalScope": "cargoStreamingStatus final observation/publication signal lifetime only",
+  "beforeSha256": "fdc59cbaa311e1093c8ffc2193816521c036ad2bf789df89f8fe6ec81efb63c9",
+  "afterSha256": "caa3a58e32cce6e75beb81330d3a79393fb9d1b38af6f3a41e594c067ad6c769",
+  "beforeBlockSha256": "ab0608499b6f425a7eb5de855c85294dd042c80935fc79ebb64089a541f3aa2a",
+  "afterBlockSha256": "249f0e6c2de49479e771f417a703cb40ce696c272aed0b9112799da086651d75",
+  "peerPhysicalAuthorityObservedNotAuthored": true,
+  "restPreserved": true,
+  "sourceCopies": false
+}

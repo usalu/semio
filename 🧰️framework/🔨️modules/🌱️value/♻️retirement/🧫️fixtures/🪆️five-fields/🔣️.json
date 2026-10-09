@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "fields": [
+    "mesh groß 😀",
+    [
+      0.0,
+      1.5,
+      2.0
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ],
+    [
+      0,
+      1,
+      2
+    ],
+    [
+      0.25,
+      0.75
+    ]
+  ],
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 32,
+    "maximumCapacityBytes": 8192,
+    "maximumReleaseBytes": 8192,
+    "maximumDepth": 128
+  },
+  "maximumTurns": 1000,
+  "deniedEffectBytes": 0,
+  "terminalDropBytes": 0
+}

@@ -1,0 +1,27 @@
+{
+  "owned": false,
+  "execution": false,
+  "finding": "finish mem::take(order) installs allocating HistoryPageStack::default in residual, violating empty output handback precondition",
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "053640192426604421c1fd147fd130f673099386877825347a3b2aace38035f5",
+      "owned": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs",
+      "sha256": "8025340ae08887941fc6e15b6e7893f6d0a82b1960e0a4ad13570fc9513d585c",
+      "owned": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🛑️cancel/🦀️.rs",
+      "sha256": "b6c7039398664d1c883dc5d68e20e9f4c7cef8c9614eda9a283c61532fa2575f",
+      "owned": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+      "sha256": "8e674cdd88836e85d32aff3ca7a52fb7534db49ccba866891331d7d40d0a6467",
+      "owned": false
+    }
+  ]
+}

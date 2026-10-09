@@ -1,0 +1,24 @@
+{
+  "ownership": false,
+  "sourceCopies": false,
+  "badNamedInputs": [
+    {
+      "name": "@semio-tech/framework-plugin-web",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript",
+      "key": "test-lifecycle",
+      "valueType": "dict",
+      "value": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "inputs": [
+          "default"
+        ],
+        "options": {
+          "command": "bun ./📜️script.ts test lifecycle"
+        }
+      }
+    }
+  ],
+  "graphSha256": "6b6b5378d0382148d5557bb5b61f4fc330bc8bd0bf678d32873014e71a4e6319",
+  "pluginSourceTargetPresent": false
+}

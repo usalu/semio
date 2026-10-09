@@ -29,7 +29,7 @@ struct ShippedPackage {
 
 /// 🛂️ Describes one assembled bundle through the runtime path its component's `describe` export takes.
 fn describe<PA: PluginApp>(bundle: Result<Plugin<PA>, PluginAssemblyError>) -> PackageDescriptor {
-    let runtime = PluginRuntime::<PA>::new();
+    let runtime = PluginRuntime::<PA>::new({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let bundle = bundle.unwrap_or_else(|error| panic!("[DEBUG] outward component assembly rejected: {error:?}"));
     install_plugin_bundle_result(&runtime, Ok(bundle));
     let bytes = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));

@@ -1,12 +1,13 @@
 //! 🫴️ One explicitly installed caller slot retains returned decoder ownership until physical drain.
 use crate::{ErasedSnapshotRetirement,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
 use std::mem::ManuallyDrop;
+static RECIPIENT_IDS:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(1);
 
 /// 🪑️ Stack-resident recipient capacity is admitted before a decoder can create partial owners.
-pub struct NativeDecodeRetirementRecipient{pub(super) owner:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,pub(super) reserved:bool}
+pub struct NativeDecodeRetirementRecipient{pub(super) owner:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,pub(super) reserved:bool,pub(super) identity:u64}
 impl NativeDecodeRetirementRecipient{
     /// 🈳️ Creates the single empty caller-owned return slot without heap allocation.
-    pub fn new()->Self{Self{owner:ManuallyDrop::new(None),reserved:false}}
+    pub fn new()->Self{let identity=RECIPIENT_IDS.fetch_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|identity|identity.checked_add(1)).expect("native recipient identity space exhausted");Self{owner:ManuallyDrop::new(None),reserved:false,identity}}
     /// 👓️ Reports retained ownership without borrowing or transferring the actual owner.
     pub fn has_owner(&self)->bool{self.owner.is_some()}
 }

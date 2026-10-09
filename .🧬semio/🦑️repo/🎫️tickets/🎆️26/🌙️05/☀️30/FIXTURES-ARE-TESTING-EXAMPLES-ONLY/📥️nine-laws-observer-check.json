@@ -1,0 +1,40 @@
+{
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🎟️lifecycle-grant/🔣️.json",
+      "unchanged": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧫️fixtures/📐️bounds/🔣️.json",
+      "unchanged": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧫️fixtures/🧹️path/🔣️.json",
+      "unchanged": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧫️fixtures/🧹️image/🔣️.json",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔃️ordering/🔣️.json",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧫️fixtures/🔣️.json",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧫️fixtures/🔣️.json",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/📏️live-physical-demand/🔣️.json",
+      "unchanged": true
+    }
+  ]
+}

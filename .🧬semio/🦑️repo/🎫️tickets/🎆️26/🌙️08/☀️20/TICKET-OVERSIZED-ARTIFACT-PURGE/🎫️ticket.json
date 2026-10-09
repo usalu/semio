@@ -1,7 +1,7 @@
 {
   "title": "Ticket Oversized Artifact Purge",
-  "status": "open",
-  "summary": "Enforced ticket-folder artifact limits (files \u003e5 MiB, folders \u003e10 MiB): automatic purge on ticket_close via FinishTicket, new ticket purge-artifacts CLI for bulk cleanup, and one-time purge of 3463 ticket folders (9295 oversized files down to 0).",
+  "status": "closed",
+  "summary": "Deleted 260 git-tracked ticket files larger than 5 MiB (10808363963 bytes) from FIXTURES-ARE-TESTING-EXAMPLES-ONLY and CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT. A rescan found zero tracked ticket files still on disk above 5 MiB. The full deletion record is tracked-oversize-deletion.md.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2770"
   },

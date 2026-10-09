@@ -1,0 +1,67 @@
+{
+  "contract": "framework.plugin.mounted-actor-capture",
+  "maximumTextBytes": 256,
+  "phases": [
+    "borrowed-original",
+    "paid-capture",
+    "publication-transfer",
+    "original-cancellation"
+  ],
+  "currencies": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "grantSource": "mounted-owner-preparation-policy",
+  "constructorMustYieldReceipt": true,
+  "undergrantHeapBytes": 0,
+  "cases": [
+    {
+      "id": "ascii",
+      "text": "actor-fixture"
+    },
+    {
+      "id": "de",
+      "text": "Prüfer"
+    },
+    {
+      "id": "maximum",
+      "repeat": "x",
+      "bytes": 256
+    }
+  ],
+  "nativeGrant": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "sqlVector": {
+    "textBytes": 12,
+    "headerCopyBytes": 32,
+    "arcFrameBytes": 40,
+    "receipt": [
+      1,
+      44,
+      52,
+      0
+    ],
+    "originalGrant": [
+      2,
+      128,
+      128,
+      128,
+      4
+    ],
+    "remaining": [
+      1,
+      84,
+      76,
+      128,
+      4
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+    "before": "fca261daed8c490fc5a9101152a8f0a0db1ea53dcf61eba9c0a80dbd9f932ea9",
+    "after": "e54ec56e666193825630e752ea874c6df7173b6c6505b86d66def7140769c56c"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+    "before": "0153fa4ee81333381cc8768afcfa12d813ff20812f057b6fc201e099f399e38e",
+    "after": "74017abd2f687ab3c4ac2d010224e9fb5dea30cf2521aa6c2736a50958cac068"
+  }
+]

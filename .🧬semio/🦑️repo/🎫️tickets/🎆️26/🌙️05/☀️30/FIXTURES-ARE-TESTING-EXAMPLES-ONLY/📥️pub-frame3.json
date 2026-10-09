@@ -1,0 +1,46 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♻️frame-close/🔣️.json",
+      "beforeSHA": "6f8d3be25d91f60541bc2654c71881e0866069cb57c1dc211cf19fb1855160de",
+      "action": "remove exclusive whole-trial authority",
+      "recordedAfterSHA": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+      "beforeSHA": "d77e85d5aa0a7a566a03d14f19d6f86e1ae182d67b8e47b0d3797bbdfcb8ce2b",
+      "action": "remove exclusive whole-trial authority",
+      "recordedAfterSHA": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "beforeSHA": "b3ef62c5ac5a63fcaed2851c649cebe1dee8cebee00b404cf8ccc50d08d10cf6",
+      "action": "remove only whole Frame and UI draft policy Ajv admissions and schema-only missing-field mutations",
+      "recordedAfterSHA": "06785568493e60cdd6e8c08b91f48ea82a258545bf8b34161c44eaa532e0421e"
+    }
+  ],
+  "plain": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/♻️frame-close/🔣️.json",
+      "beforeSHA": "56c4a1515716f7a99458531a2ef5dee2b3eb08401226a12a0a9230dc046f49b9",
+      "afterSHA": "56c4a1515716f7a99458531a2ef5dee2b3eb08401226a12a0a9230dc046f49b9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json",
+      "beforeSHA": "ade2fca3a45be774dc960c801cf0b610df33fac1a12f9f0eb14a09e005409d7d",
+      "afterSHA": "ade2fca3a45be774dc960c801cf0b610df33fac1a12f9f0eb14a09e005409d7d"
+    }
+  ],
+  "privateGuard": {
+    "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+    "beforeSHA": "a1791b77fdbf34afe5eb6cfab9b24704b2c5184b03e7e0466dbbd3b40d8ca19d",
+    "recordedAfterSHA": "177d8e8378c59de8310976d0c01888d6a8d1ae5a1179bf339e198d0cb17df2a1",
+    "intermediateSHA": "dbf3208093772ea4b43b28e3a892c836836e4ee83c8ea2b2258a3870954be76b",
+    "action": "add relocated Frame guard and execute original Frame laws before unrelated ChildEmit failure"
+  },
+  "sourceCopiesAdded": false,
+  "boundaryRed": "Root 29013 Nx1 current7 two whole-trial authorities; draft-wire recreated and original existing guard includes it",
+  "scopedRed": "pf-red2.log actual Nx1/126ms at new Frame authority guard",
+  "routeQualification": "pf-red.log selected root-current-corpus-tests instead of root-resumed; 40+2 existing laws are not credit for this repair",
+  "actualSource": "31737 Nx1/541ms; original Frame5pass1fail49assertions48ms; actual phase/aggregate full-grant chain failure retained"
+}

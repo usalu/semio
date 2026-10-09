@@ -1,0 +1,37 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
+    "action": "update",
+    "beforeSha256": "dfe629bec7e6fc3df53e7f8d312c08005e30d1b82a98b77d9736f825bf117f0b",
+    "afterSha256": "a2ec937477b67e217dc1d09d2165943f6b0ed4b624aaef8a36ec80d8452fc91e",
+    "qualification": "Genuine production NxCachePolicy owns the closed semantic collection/admission contract; no testing example schema"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+    "action": "update",
+    "beforeSha256": "aa0a3c89c335caecd68d907504413a08e29f1647e852b7c5b78aa317958114c6",
+    "afterSha256": "81d9edfdc70f071e6215b922b652e75286616ac5f8b429bb7f8fae6d629ee360",
+    "qualification": "Canonical production policy defines four exact collections, module-name exception and admitted core/custom manifest patterns"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+    "action": "update",
+    "beforeSha256": "259f383591cd190c03a928ec470d40796806c3cfe02ac3a6c53fec0b4c9ef352",
+    "afterSha256": "baf20df1e55d3013a7a340e8838ae8b02af36cff56d310316f1b3691f283a127",
+    "qualification": "Inference and production hashing consume genuine canonical cache policy authority rather than separate collection constants"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+    "action": "update",
+    "beforeSha256": "0a50f74af2bbcd4757aac1a9de8472ef3ae3be86e3c8a910d3feaba347f2fb90",
+    "afterSha256": "de5103407a7c451307e5b958b990b742fcd3619803e765caf0ef8e68fd58f2c7",
+    "qualification": "Dependency-free async current-owner publisher with physical guards, progress, cancellation, exact manifest exceptions, stale-section replacement and current byte guard runs inside every canonical NxScript.run before provisioning/spawn"
+  },
+  {
+    "path": ".nxignore",
+    "action": "update",
+    "beforeSha256": "e69deb121e72bb6487b559fb922100c54cb7a7fb8e4d7c7967d6f8dbdacb52ad",
+    "afterSha256": "db85134d407467819bbcdd7dce6491db848bd4d675c58d30c590a689294c452b",
+    "qualification": "Handcraft canonical initial declared four-collection core/custom manifest masks; publisher derives only exact real module manifest exceptions, preserving all unrelated existing rules"
+  }
+]

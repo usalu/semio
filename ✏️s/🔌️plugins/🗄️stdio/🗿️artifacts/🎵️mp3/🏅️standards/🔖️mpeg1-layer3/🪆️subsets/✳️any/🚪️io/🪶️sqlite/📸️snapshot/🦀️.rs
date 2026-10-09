@@ -58,11 +58,11 @@ fn read_content(row:&SqliteRow,values:Option<&Vec<&SqliteRow>>,bytes:Option<&Vec
 }
 
 impl ArtifactSqliteSnapshot for Mp3Snapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let limits=control.limits();semantic::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{semantic::borrowed(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)},control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();semantic::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {semantic::borrowed(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   semantic::typed(self,SqliteSnapshotPhase::EncodeNative,control)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
 
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::typed(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut bound=NativeEncodingBound::file_only(control)?;bound.add(16384)?;bound.repeated(self.schema.len(),24)?;if let Some(tag)=&self.id3v2{bound.add(2048)?;for frame in &tag.frames{bound.add(1024)?;bound.repeated(frame.id.len(),24)?;for cell in content_cells(&frame.content){if let Cell::Text(text)=cell{bound.repeated(text.len(),24)?;}}match &frame.content{Id3Content::Text{values}|Id3Content::UserText{values,..}=>for value in values{bound.add(128)?;bound.repeated(value.len(),24)?;},Id3Content::Opaque{bytes}=>bound.repeated(bytes.len(),16)?,Id3Content::Picture{payload,..}=>bound.repeated(payload.len(),16)?,_=>{}}}}if let Some(tag)=&self.id3v1{bound.add(512)?;for text in [&tag.title,&tag.artist,&tag.album,&tag.year,&tag.comment]{bound.repeated(text.len(),24)?;}}for frame in &self.frames{bound.add(4096)?;bound.repeated(frame.payload.len(),16)?;}bound.finish()}
@@ -79,4 +79,3 @@ impl ArtifactSqliteSnapshot for Mp3Snapshot{
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

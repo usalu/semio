@@ -150,6 +150,14 @@
     "🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes": {
       "name": "@semio-tech/framework-mesh-attributes-ownership",
     },
+    "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust": {
+      "name": "@semio-tech/framework-mesh-engine-rs",
+      "version": "0.1.0",
+    },
+    "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/compiler-syntax-ecma-ts",
+      "version": "0.0.0",
+    },
     "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript": {
       "name": "@semio-tech/compiler-syntax-rust-ts",
       "version": "0.0.0",
@@ -1689,6 +1697,8 @@
 
     "@semio-tech/canvas-react-renderer": ["@semio-tech/canvas-react-renderer@workspace:🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript"],
 
+    "@semio-tech/compiler-syntax-ecma-ts": ["@semio-tech/compiler-syntax-ecma-ts@workspace:🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/📦️packages/🟦️typescript"],
+
     "@semio-tech/compiler-syntax-rust-ts": ["@semio-tech/compiler-syntax-rust-ts@workspace:🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript"],
 
     "@semio-tech/compute-ownership-runner": ["@semio-tech/compute-ownership-runner@workspace:🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution"],
@@ -1734,6 +1744,8 @@
     "@semio-tech/framework-kernel": ["@semio-tech/framework-kernel@workspace:🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-mesh-attributes-ownership": ["@semio-tech/framework-mesh-attributes-ownership@workspace:🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes"],
+
+    "@semio-tech/framework-mesh-engine-rs": ["@semio-tech/framework-mesh-engine-rs@workspace:🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust"],
 
     "@semio-tech/framework-os": ["@semio-tech/framework-os@workspace:🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript"],
 

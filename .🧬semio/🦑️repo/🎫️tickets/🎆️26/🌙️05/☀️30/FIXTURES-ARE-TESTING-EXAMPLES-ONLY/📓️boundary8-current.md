@@ -1,0 +1,3 @@
+# Current Original Boundary and Catalog Verification
+
+Actual original full fixture boundary8203 terminated Nx1 in2m4s:4704 modules,3755 scopes,7 corpus-schema findings. Actual schema verify74916 terminated Nx1 in2m5s:stale catalog plus10 missing Rust entry formats and3 unknown scopes. Regeneration success from the earlier epoch does not satisfy this current verification. Decode/IO, Frame, Flow/Geometry/Infinite and genuine Validator specimen-versus-corpus distinctions are allocated to their defining owners. No writer was established by the bounded read-only audit. Source/cache quiet does not establish a current global success.

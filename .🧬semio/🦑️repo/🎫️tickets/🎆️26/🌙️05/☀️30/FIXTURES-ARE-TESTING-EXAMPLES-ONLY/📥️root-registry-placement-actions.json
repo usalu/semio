@@ -1,0 +1,53 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🟦️.ts",
+    "beforeSha256": "b9e10ecd867bf2fe21c4ac3b95f7bd8022cf297effb9b4a0b59ed1410e8d11aa",
+    "afterSha256": null,
+    "action": "Remove own newly-created misplaced processing owner from reserved schema facet directory."
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🧪️tests/🟦️.ts",
+    "beforeSha256": "cb292977ea3c3abcdd18a36f73a5627baf1fa97e82bf8fb4e082100523e5395a",
+    "afterSha256": null,
+    "action": "Remove own newly-created misplaced processing owner from reserved schema facet directory."
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🧫️fixtures/🔣️.json",
+    "beforeSha256": "0a549522fc8771af54249e77b5c9b5bf9b7073e5fca0b1b494ba3a8c399af6de",
+    "afterSha256": null,
+    "action": "Remove own newly-created misplaced processing owner from reserved schema facet directory."
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🟦️.ts",
+    "beforeSha256": null,
+    "beforeQualification": "Fresh absence before moving own new owner to canonical discovery domain.",
+    "afterSha256": "2745ea92ed674e0a0352f73f1ab8acd56894242bf65628ebeb43bd2322886ebc",
+    "action": "Canonical production schema registry discovery owner/laws/examples."
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🧪️tests/🟦️.ts",
+    "beforeSha256": null,
+    "beforeQualification": "Fresh absence before moving own new owner to canonical discovery domain.",
+    "afterSha256": "9bdb2b86fc7f498865c402e4d410e20bd5fa07f503ed3a12af7c7fa6d7d4343e",
+    "action": "Canonical production schema registry discovery owner/laws/examples."
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🧫️fixtures/🔣️.json",
+    "beforeSha256": null,
+    "beforeQualification": "Fresh absence before moving own new owner to canonical discovery domain.",
+    "afterSha256": "0a549522fc8771af54249e77b5c9b5bf9b7073e5fca0b1b494ba3a8c399af6de",
+    "action": "Canonical production schema registry discovery owner/laws/examples."
+  },
+  {
+    "path": "📜️script.ts",
+    "beforeSha256": "426ec9ab5d751ab9db1499098d8c6a93842fb1f601ab832cd7d940d2bc3ec092",
+    "afterSha256": "250eb624e2f8effd5ea911ad71dd398f3fcc4dfd186ed5cc3622099474f6a370",
+    "action": "Point original router/harness at actual canonical discovery owner."
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+    "beforeSha256": "c60d33207b84ad014014491f668ca3fee589cd911d25843abe466433956cf401",
+    "afterSha256": "0be94d9a55996153cfbb4ab87c0cf3480d7a3bb5238c5cd1857f8bf2e356b764",
+    "action": "Point original router/harness at actual canonical discovery owner."
+  }
+]

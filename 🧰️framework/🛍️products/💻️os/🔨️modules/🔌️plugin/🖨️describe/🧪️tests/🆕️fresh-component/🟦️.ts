@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash,randomBytes } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync, cpSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
 import { acquireCargoBuildLeaseV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
@@ -7,6 +7,7 @@ import { readStableBuildFile } from "../../../../../../🦑️repo/🔨️module
 import { semanticOwnedInputFileSnapshot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, freshWasmArtifactSize } from "../../🏗️component-build/🟦️.ts";
 import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1 } from "../../🧾️source-epoch/🟦️.ts";
+import {parseFreshProcessPolicyV1,type FreshProcessControlV1} from "../../🏭️fresh-component/🎛️control/🟦️.ts";
 import { captureFreshComponentInputs, freshRun, freshStage, stageFreshComponentInputs } from "../../🏭️fresh-component/🟦️.ts";
 
 export function createFreshComponentTests() {
@@ -355,14 +356,18 @@ export function createFreshComponentTests() {
     const fixture: FreshProcessFixtureV1 = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const artifactRoot = testArtifactRoot(repoRoot);
     assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));
-    const evidence = mkdtempSync(join(artifactRoot, "fresh-process-laws-"));
+    const evidence = mkdtempSync(join(artifactRoot, "f-"));
+    const {default:Ajv}=await import("ajv"),processFixture=(await import("../../🏭️fresh-component/🎛️control/🧫️fixtures/🔣️.json")).default,processSchema=(await import("../../🏭️fresh-component/🎛️control/🧬️schema/🔣️.json")).default,entrySchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧬️schema/🔣️.json")).default,storageSchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧬️schema/🔣️.json")).default,admit=new Ajv({strict:true}).addSchema(entrySchema).addSchema(storageSchema).compile(processSchema);assert.equal(admit(processFixture.policy),true);assert.deepEqual(parseFreshProcessPolicyV1(processFixture.policy),processFixture.policy);for(const field of processFixture.required){const invalid={...processFixture.policy};delete invalid[field];assert.equal(admit(invalid),false);assert.throws(()=>parseFreshProcessPolicyV1(invalid));}
+    const requiredRoot=join(evidence,"missing-process-owner");mkdirSync(requiredRoot);const startedOwner=performance.now();await assert.rejects(freshRun(process.execPath,["-e","process.stdout.write('[DEBUG] unauthorized owner executed')"],repoRoot,{...process.env},{diagnosticsRoot:requiredRoot,cancelled:()=>false,remainingMs:()=>Math.floor(5000-(performance.now()-startedOwner)),checkpoint:()=>{}} as unknown as FreshProcessControlV1,"missing-process-owner",0,1),/Fresh process policy required/);assert.deepEqual(readdirSync(requiredRoot),[]);
+    const processPolicy=parseFreshProcessPolicyV1({...processFixture.policy,storage:{version:1,directory:artifactRoot}});
     for (const row of fixture.cases) {
       const root = join(evidence, row.name);
       mkdirSync(root);
       const started = Date.now(),
         checkpoints: number[] = [];
       const deadline = started + (row.mode === "timeout" ? 150 : 10_000);
-      const control: FreshBuildControlV1 = {
+      const control: FreshProcessControlV1 = {
+        process:processPolicy,
         diagnosticsRoot: root,
         cancelled: () => row.mode === "pre-cancel" || (row.mode === "cancel" && Date.now() - started >= 150),
         remainingMs: () => deadline - Date.now(),
@@ -425,35 +430,35 @@ export function createFreshComponentTests() {
       const root = join(evidence, row.name); mkdirSync(root);
       writeFileSync(join(root, "Cargo.toml"), `[workspace]\n[package]\nname=${JSON.stringify(fixture.cargoProvenance.name)}\nversion="0.0.0"\nedition="2021"\n`);
       const buildDirectory = join(root, "compiler");
-      const options = { directory: repoCacheDirectory(root, "agents", "resource-leases"), buildDirectory, args: ["build"], signal: new AbortController().signal };
+      const options = { directory:processPolicy.storage.directory, buildDirectory, args: ["build"], signal: new AbortController().signal };
       const holder = await acquireCargoBuildLeaseV1(options);
       const started = Date.now(), deadline = started + (row.mode === "timeout" ? 150 : 10_000);
-      const stages: string[] = [];
+      const stages: string[] = [];let refusal:unknown;
       try {
         await assert.rejects(freshRun("cargo", ["build", "--manifest-path", join(root, "Cargo.toml")], root,
           { ...process.env, CARGO_BUILD_BUILD_DIR: buildDirectory },
-          { diagnosticsRoot: root, cancelled: () => row.mode === "cancel" && Date.now() - started >= 150, remainingMs: () => deadline - Date.now(), checkpoint: stage => { stages.push(stage); } }, row.name, 0, 1));
+          { process:processPolicy,diagnosticsRoot: root, cancelled: () => row.mode === "cancel" && Date.now() - started >= 150, remainingMs: () => deadline - Date.now(), checkpoint: stage => { stages.push(stage); } }, row.name, 0, 1),error=>{refusal=error;return true;});
         assert(Date.now() - started < 2000, row.name + " bounded queue retirement");
-        assert(stages.includes("wait-build-lease"));
+        assert(stages.includes("wait-build-lease"),row.name+" requires the actual held compiler queue; refusal="+String(refusal));
         const traces = readdirSync(root).filter(name => name.startsWith("fresh-process-")); assert.equal(traces.length, 1);
         assert.deepEqual(readdirSync(join(root, traces[0]!)), [], "cancelled queue must not spawn Cargo");
       } finally { holder.release(); }
       const successor = await acquireCargoBuildLeaseV1(options); successor.release();
     }
-    const ownership=fixture.cargoOwnership, ownerRoot=join(evidence,"actual-selected-package-owner");mkdirSync(ownerRoot);
+    const ownership=fixture.cargoOwnership, ownerRoot=join(evidence,"o");mkdirSync(ownerRoot);
     const ownerRows=[{directory:"root-package",name:ownership.rootName,workspace:"."},{directory:"nested/package",name:ownership.nestedName,workspace:"nested"}];
     for(const row of ownerRows){const path=join(ownerRoot,row.directory);mkdirSync(path,{recursive:true});writeFileSync(join(path,"Cargo.toml"),`[package]\nname=${JSON.stringify(row.name)}\nversion="0.0.0"\nedition="2021"\n[[bin]]\nname=${JSON.stringify(row.name)}\npath="main.rs"\n`);writeFileSync(join(path,"main.rs"),ownership.source);}
     writeFileSync(join(ownerRoot,"Cargo.toml"),'[workspace]\nresolver="2"\nmembers=["root-package"]\nexclude=["nested"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests=["nested/Cargo.toml"]\nmember-manifests=["root-package/Cargo.toml"]\nexclude-patterns=["nested"]\n');
     writeFileSync(join(ownerRoot,"nested/Cargo.toml"),'[workspace]\nresolver="2"\nmembers=["package"]\n[workspace.metadata.semio.repository]\nschema-version=1\nmember-manifests=["package/Cargo.toml"]\nexclude-patterns=[]\n');
-    const ownerCompiler=join(ownerRoot,"compiler"),ownerTarget=join(ownerRoot,"target"),ownerEnv={...process.env,CARGO_TARGET_DIR:ownerTarget,CARGO_BUILD_BUILD_DIR:ownerCompiler},ownerControl={cancelled:()=>false,remainingMs:()=>60_000,checkpoint:()=>{}};
+    const ownerCompiler=join(ownerRoot,"c"),ownerTarget=join(ownerRoot,"t"),ownerEnv={...process.env,CARGO_TARGET_DIR:ownerTarget,CARGO_BUILD_BUILD_DIR:ownerCompiler},ownerStarted=performance.now(),ownerSignal=new AbortController(),ownerProgress:string[]=[],ownerControl={process:processPolicy,cancelled:()=>ownerSignal.signal.aborted,remainingMs:()=>Math.floor(60_000-(performance.now()-ownerStarted)),checkpoint:(stage:string)=>{ownerProgress.push(stage);}};
     const ownerManifest=join(ownerRoot,"nested/package/Cargo.toml"), ownerLock=join(ownerRoot,"nested/Cargo.lock"), ownerArgs=[...ownership.consumerArguments,"-p",ownership.nestedName];
     const unprepared=Bun.spawnSync(["cargo",...ownership.consumerArguments,"--manifest-path",ownerManifest],{cwd:ownerRoot,env:ownerEnv});assert.notEqual(unprepared.exitCode,0,"independent locked/offline Cargo must refuse a missing owner lock");assert(!existsSync(ownerLock),"refusal must not publish the lock");
     const {acquireQueuedResourceLease}=await import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts");
-    const preparationDirectory=join(ownerRoot,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"),preparationResource=`cargo-preparation:${ownerRoot}`,preparationQueue=join(preparationDirectory,createHash("sha256").update(preparationResource).digest("hex")+".queue");
+    const preparationDirectory=processPolicy.storage.directory,preparationResource=`cargo-preparation:${ownerRoot}`,preparationQueue=join(preparationDirectory,createHash("sha256").update(preparationResource).digest("hex")+".queue");
     for(const row of fixture.queuedPreparationCases){
       const root=join(evidence,row.name);mkdirSync(root);let observedAt:number|undefined,progress=0;
-      const holder=await acquireQueuedResourceLease({directory:preparationDirectory,resource:preparationResource,mode:"exclusive",owner:"neutral-preparation-holder",signal:new AbortController().signal});
-      const started=Date.now(),control:FreshBuildControlV1={diagnosticsRoot:root,cancelled:()=>row.mode==="cancel"&&observedAt!==undefined&&Date.now()-observedAt>=150,remainingMs:()=>(row.mode==="timeout"?2000:10000)-(Date.now()-started),checkpoint(stage){if(stage==="prepare-cargo"){progress++;if(readdirSync(preparationQueue).length>1)observedAt??=Date.now();}}};
+      const holder=await acquireQueuedResourceLease({directory:preparationDirectory,resource:preparationResource,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:new AbortController().signal});
+      const started=Date.now(),control:FreshProcessControlV1={process:processPolicy,diagnosticsRoot:root,cancelled:()=>row.mode==="cancel"&&observedAt!==undefined&&Date.now()-observedAt>=150,remainingMs:()=>(row.mode==="timeout"?2000:10000)-(Date.now()-started),checkpoint(stage){if(stage==="prepare-cargo"){progress++;if(readdirSync(preparationQueue).length>1)observedAt??=Date.now();}}};
       try{
         await assert.rejects(freshRun("cargo",ownerArgs,ownerRoot,ownerEnv,control,row.name,0,1),/preparation (cancelled|timeout)/);
         assert(observedAt!==undefined,"actual selected preparation child must enter the held preparation queue");assert(progress>1,"progress must continue during actual preparation wait");assert(Date.now()-started<5000,"preparation cancellation must retire within its own control");
@@ -461,7 +466,7 @@ export function createFreshComponentTests() {
         const waiters=readdirSync(preparationQueue).map(name=>Number(name.split("-")[1])).filter(pid=>pid!==process.pid);assert(waiters.length>0,"controlled capture must observe its queued child ownership");for(const pid of waiters)assert.throws(()=>process.kill(pid,0),"owned preparation child must be retired");
         writeFileSync(join(root,"controlled-preparation-observation.json"),JSON.stringify({mode:row.mode,elapsedMs:Date.now()-started,progress,retiredChildPids:waiters,reason:outcome.reason})+"\n");
       }finally{holder.release();}
-      const successor=await acquireQueuedResourceLease({directory:preparationDirectory,resource:preparationResource,mode:"exclusive",owner:"neutral-preparation-successor",signal:new AbortController().signal});successor.release();assert.deepEqual(readdirSync(preparationQueue),[],"canonical successor must clear only retired tickets in the owned miniature queue");
+      const successor=await acquireQueuedResourceLease({directory:preparationDirectory,resource:preparationResource,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:new AbortController().signal});successor.release();assert.deepEqual(readdirSync(preparationQueue),[],"canonical successor must clear only retired tickets in the owned miniature queue");
     }
     console.log("fresh-component-preparation-control: actual-controlled-cancellation=1 actual-controlled-deadline=1 live-progress=2 retired-child-checks=2 zero-owned-queue-successors=2 evidence="+ownerRoot);
     const ownerInvocation=await freshRun("cargo",ownerArgs,ownerRoot,ownerEnv,ownerControl,"selected-nested-owner",0,1);
@@ -473,17 +478,18 @@ export function createFreshComponentTests() {
     const repeated=await freshRun("cargo",ownerArgs,ownerRoot,ownerEnv,ownerControl,"selected-current-owner",0,1);assert(repeated&&repeated!==ownerInvocation,"each fresh current consumer must retain a distinct invocation");assert(existsSync(ownerLock),"second consumer must freshly synchronize its removed lock");
     const repeatedObserved=JSON.parse(readFileSync(repeated!,"utf8"));assert.deepEqual(repeatedObserved.args,ownerObserved.args);assert.equal(await Bun.$`${join(ownerTarget,"debug",ownership.nestedName+(process.platform==="win32"?".exe":""))}`.text(),ownership.currentStdout);
     const currentSourceSha=Buffer.from(await crypto.subtle.digest("SHA-256",Buffer.from(ownership.currentSource))).toString("hex");assert(repeatedObserved.units.some((unit:any)=>unit.inputs.some((input:any)=>input.path===join(ownerRoot,"nested/package/main.rs")&&input.sha256===currentSourceSha)),"current actual compiler input must bind changed source bytes");
-    await assert.rejects(freshRun("cargo",["build","-p",ownership.missingName],ownerRoot,ownerEnv,ownerControl,"missing-owner",0,1),/Unknown current repository Cargo package/);
-    await assert.rejects(freshRun("cargo",["build","-p",ownership.rootName,"-p",ownership.nestedName],ownerRoot,ownerEnv,ownerControl,"cross-workspace-owner",0,1),/different workspaces/);
+    await assert.rejects(freshRun("cargo",["build","-p",ownership.missingName],ownerRoot,ownerEnv,ownerControl,"missing-owner",0,1),/Unknown current Cargo package in the explicit manifest scope/);
+    await assert.rejects(freshRun("cargo",["build","-p",ownership.rootName,"-p",ownership.nestedName],ownerRoot,ownerEnv,ownerControl,"cross-workspace-owner",0,1),/different physical workspaces/);
     console.log("fresh-component-package-ownership: actual-Cargo=2 missing-lock-refusal=1 fresh-lock-pairs=2 current-source-SHA=1 metadata-oracle=1 unknown-refusal=1 cross-workspace-refusal=1 evidence="+ownerRoot);
     const neutral=fixture.cargoProvenance;
-    const cargoRoot = join(evidence, "actual-cargo-provenance"); mkdirSync(cargoRoot);
+    const cargoRoot = join(evidence, "p"); mkdirSync(cargoRoot);
     const manifest = join(cargoRoot, "Cargo.toml");
-    writeFileSync(manifest, `[workspace]\n[package]\nname=${JSON.stringify(neutral.name)}\nversion="0.0.0"\nedition="2021"\n[[bin]]\nname=${JSON.stringify(neutral.name)}\npath="main.rs"\n`);
-    writeFileSync(join(cargoRoot,"main.rs"), neutral.source);writeFileSync(join(cargoRoot,"build.rs"),neutral.buildSource);
-    const compiler = join(cargoRoot,"compiler"), target = join(cargoRoot,"target");
-    const invocation = await freshRun("cargo",["build","--manifest-path",manifest],cargoRoot,{...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:compiler},{cancelled:()=>false,remainingMs:()=>60_000,checkpoint:()=>{}},"neutral-build",0,1);
-    assert(invocation, "actual fresh Cargo must retain completed producer observation without diagnostic opt-in");
+    writeFileSync(manifest, `[workspace]\n[package]\nname=${JSON.stringify(neutral.name)}\nversion="0.0.0"\nedition="2021"\nbuild="b.rs"\n[[bin]]\nname=${JSON.stringify(neutral.name)}\npath="main.rs"\n`);
+    writeFileSync(join(cargoRoot,"main.rs"), neutral.source);writeFileSync(join(cargoRoot,"b.rs"),neutral.buildSource);
+    const compiler = artifactRoot, target = join(cargoRoot,"t");
+    const nativeStarted=performance.now(),nativeSignal=new AbortController(),nativeProgress:string[]=[];
+    const invocation = await freshRun("cargo",["build","--manifest-path",manifest],cargoRoot,{...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:compiler},{process:processPolicy,cancelled:()=>nativeSignal.signal.aborted,remainingMs:()=>Math.floor(60_000-(performance.now()-nativeStarted)),checkpoint:stage=>{nativeProgress.push(stage);}},"neutral-build",0,1);
+    assert(invocation, "actual fresh Cargo must retain completed producer observation without diagnostic opt-in");assert(nativeProgress.includes("compiler-provenance"));assert(ownerProgress.includes("compiler-provenance"));
     const observed = JSON.parse(readFileSync(invocation!,"utf8"));
     assert.equal(observed.status,0); assert.equal(observed.command,"cargo");
     assert.deepEqual(observed.args,["build","--manifest-path",manifest,"--message-format=json"]);
@@ -496,9 +502,9 @@ export function createFreshComponentTests() {
     assert.equal(await crypto.subtle.digest("SHA-256",readFileSync(binary)).then(bytes=>Buffer.from(bytes).toString("hex")),observed.units.find((unit:any)=>unit.message.target.kind.includes("bin")).artifacts.find((row:any)=>row.path===binary).sha256);
     const {retainTrustedCargoInvocationV1}=await import(join(repoRoot,"🌎️hub/🏗️bootstrap/🧾️provenance/🟦️.ts"));
     const staged=join(cargoRoot,"staged"+ (process.platform==="win32"?".exe":""));cpSync(binary,staged,{errorOnExist:true,force:false});
-    const observationStarted=Date.now(),observationControl={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>false,remainingMs:()=>60_000-(Date.now()-observationStarted),onProgress:()=>{}};
+    const observationStarted=Date.now(),observationSignal=new AbortController(),observationProgress:unknown[]=[],observationControl={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>observationSignal.signal.aborted,remainingMs:()=>60_000-(Date.now()-observationStarted),onProgress:(row:unknown)=>{observationProgress.push(row);}};
     const finalReceipt=join(cargoRoot,"final-invocation.json");await retainTrustedCargoInvocationV1(invocation!,finalReceipt,new Map([[binary,staged]]),observationControl);
-    const transferred=JSON.parse(readFileSync(finalReceipt,"utf8"));
+    const transferred=JSON.parse(readFileSync(finalReceipt,"utf8"));assert(observationProgress.length>0);
     assert.deepEqual(transferred.units.map((unit:any)=>unit.message),observed.units.map((unit:any)=>unit.message));
     for(const key of ["args","invocationInputs","buildScripts","buildResources","compilerResources"])assert.deepEqual(transferred[key],observed[key]);
     assert.deepEqual(transferred.units.map((unit:any)=>[unit.depInfo,unit.inputs]),observed.units.map((unit:any)=>[unit.depInfo,unit.inputs]));

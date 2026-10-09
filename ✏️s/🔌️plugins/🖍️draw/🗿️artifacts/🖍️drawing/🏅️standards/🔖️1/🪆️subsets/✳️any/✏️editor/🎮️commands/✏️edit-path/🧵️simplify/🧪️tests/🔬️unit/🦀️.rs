@@ -17,7 +17,7 @@ fn retained_path_simplification_shared_cases() {
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧬️schema/🧮️geometry/✏️editing/🧫️fixtures/🎛️algorithms/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap().iter().filter(|case|case["operation"]["kind"]=="simplify"&&case["error"]!=true) {
         let source:Vec<crate::PathSegment>=serde_json::from_value(case["before"].clone()).unwrap();
-        let layer=crate::schema::create_drawing_path_layer("Simplify",source.into());let id=crate::schema::layer_base(&layer).id.clone();
+        let layer=crate::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Simplify")).to_string().into()).expect("nonempty authored identity"), "Simplify",source.into());let id=crate::schema::layer_base(&layer).id.clone();
         let snapshot=DrawingSnapshot {layers:vec![layer].into(),..Default::default()};let saved=snapshot.clone();
         let command=DrawingCommand::EditPath(edit_path::EditPath {layer_id:id,edit:Box::new(serde_json::from_value(case["operation"].clone()).unwrap())});
         let config=NoConfig {};let history=semio_framework_plugin::HistoryView::empty();let interaction=protocol::InteractionState::default();let hover=semio_framework_plugin::app::InteractionHoverState::new();

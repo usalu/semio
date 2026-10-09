@@ -1,0 +1,52 @@
+{
+  "version": "original-host-wake-authority.v1",
+  "policy": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 65536,
+    "release": 262144,
+    "depth": 64
+  },
+  "phases": [
+    "original-issuer",
+    "receipt-held",
+    "receipt-collected",
+    "session-registration",
+    "terminal-retirement"
+  ],
+  "foreign": "UnsupportedOwner",
+  "missing": "Retained",
+  "receipts": [
+    {
+      "copiedItems": 1,
+      "copiedBytes": 120,
+      "retainedCapacityBytes": 112,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 16,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    }
+  ],
+  "locales": [
+    "en",
+    "de"
+  ],
+  "driver": {
+    "epochs": [
+      70,
+      71,
+      72
+    ],
+    "returnBeforeRenewal": true,
+    "reuse": "InvalidValue",
+    "zeroReceipt": "ReturnOriginalGrant"
+  },
+  "closeCustody": {
+    "checkoutPerOriginalTurn": true,
+    "collectBeforeSuccessor": true,
+    "wholeHeaderRequiresOriginalGrant": true
+  }
+}

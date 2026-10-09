@@ -169,7 +169,7 @@ fn home_retained_reduce(
     // directory row they need from the projection this job captured at dispatch — a page folded meanwhile publishes a new
     // root and never mixes into it.
     match command {
-        HomeCommand::CreateStudio(payload) => create_studio::handle_with_identity(payload, &doc, &cfg, identity),
+        HomeCommand::CreateStudio(_) => Err(Fault::from("s.home.create-studio.effect-authority-required")),
         HomeCommand::RenameSpace(payload) => rename_space::handle_with_row(payload, &doc, &cfg, row(&payload.space_id)),
         HomeCommand::ShareSpace(payload) => share_space::handle_with_row(payload, &doc, &cfg, row(&payload.space_id)),
         HomeCommand::DeleteVirtualFileSystemNode(payload) => delete_virtual_file_system_node::handle_with_row(payload, &doc, &cfg, row(delete_virtual_file_system_node::local_studio_id(&payload.node_id))),
@@ -226,6 +226,70 @@ impl ArtifactOwnedToolJobFactory for HomeRetainedCommandJobFactory {
     const DOCUMENT_SCHEMA: &'static str = crate::S_HOME_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = HOME_RETAINED_PUBLICATION_CONTRACTS;
 }
+/// 🏙️ App-owned creation work borrows the mounted lease and returns its same receipt for publication.
+pub struct HomeCreateStudioWork {
+    completion: Option<semio_framework_plugin::ArtifactToolCompletion<EditorApp<HomeApp>>>,
+    retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin::ArtifactToolCompletion<EditorApp<HomeApp>>>>,
+    validated: bool,
+    completed: bool,
+    closing: bool,
+}
+
+impl HomeCreateStudioWork {
+    fn new(completion: semio_framework_plugin::ArtifactToolCompletion<EditorApp<HomeApp>>) -> Self {
+        Self { completion: Some(completion), retirement: None, validated: false, completed: false, closing: false }
+    }
+
+    fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if self.completion.is_some() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
+        let Some(owner) = self.retirement.as_ref() else { return Ok(Default::default()) };
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(0)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? })
+    }
+}
+
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<HomeApp>> for HomeCreateStudioWork {
+    fn tool_id(&self) -> &'static str { "createStudio" }
+    fn extent(&self, command: &HomeCommand, snapshot: &SHomeSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>) -> Option<usize> { matches!(command, HomeCommand::CreateStudio(_)).then(|| home_retained_extent(command, snapshot, interaction)).flatten() }
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault> {
+        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.completed || self.closing || cx.is_cancelled() { return Err(Fault::from("s.home.create-studio.effect-not-live")); }
+        let HomeCommand::CreateStudio(payload) = input.command else { return Err(Fault::from("s.home.create-studio.effect-command-mismatch")) };
+        let session = require_session_identity(input.context.and_then(|context| context.view_state.as_ref()))?;
+        if !self.validated {
+            if self.extent(input.command, input.snapshot, input.interaction, input.context).is_none() { return Err(Fault::from("s.home.create-studio.effect-extent")); }
+            self.validated = true;
+            return Ok(ArtifactCommandWorkStep::Progress { stage: "space-home.creation.validated", preview: r#"{"en":"Studio checked, creating it","de":"Studio geprüft, wird erstellt"}"#.as_bytes() });
+        }
+        let completion = self.completion.as_ref().ok_or_else(|| Fault::from("s.home.create-studio.effect-authority-required"))?;
+        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let cfg = ConfigView { snapshot: input.config, window: None };
+        let emit = completion.with_authoring_identity(|identity| create_studio::handle_with_identity(payload, &doc, &cfg, session, identity))?;
+        self.completed = true;
+        Ok(ArtifactCommandWorkStep::Complete(emit))
+    }
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> { *target.first_mut().ok_or_else(|| Fault::from("s.home.create-studio.effect-checkpoint-capacity"))? = u8::from(self.validated); Ok(1) }
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> { self.validated = match checkpoint { [] | [0] => false, [1] => true, _ => return Err(Fault::from("s.home.create-studio.effect-checkpoint-invalid")) }; Ok(()) }
+    fn begin_close(&mut self) { self.closing = true; }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(std::mem::size_of::<Self>()) }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.completion.is_none() && self.retirement.is_none() }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.depth) }
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep;
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        self.closing = true;
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return InteractiveJobCloseStep::Blocked; }
+        if let Some(completion) = self.completion.take() {
+            match semio_framework_value::retirement::controlled::ControlledRetirement::new(completion) { Ok(owner) => self.retirement = Some(owner), Err((error, original)) => { self.completion = Some(original); return InteractiveJobCloseStep::Refused(error.kind); } }
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } };
+        }
+        let Some(owner) = self.retirement.as_mut() else { return InteractiveJobCloseStep::Complete { progress: Default::default() } };
+        match owner.close_step(grant) { Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress }, Ok(RetainedCloneStep::Complete(progress)) => { self.retirement = None; InteractiveJobCloseStep::Complete { progress } }, Err(error) => InteractiveJobCloseStep::Refused(error.kind) }
+    }
+}
+
 //#region 💾️CatalogWork
 /// 💾️ The IO-owning retained work of the four Home commands that write the local studio catalog (`importSpace`,
 /// `bindSpaceFile`, `persistLocally`, and the host's `applyLocalCatalogDocument` re-hydration) — their IO never runs inside a `handle`. Stage `validate` reads only (identity, payload, target);
@@ -456,6 +520,7 @@ impl ArtifactEditor for HomeApp {
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> = match request.command.as_ref() {
+            HomeCommand::CreateStudio(_) => Box::new(HomeCreateStudioWork::new(request.completion.clone())),
             HomeCommand::ApplyDirectoryEventPage(_) => Box::new(apply_directory_event_page::HomeDirectoryPageWork::<EditorApp<Self>>::new(tool_id, home_directory_page_json)),
             HomeCommand::ImportSpace(_) | HomeCommand::BindSpaceFile(_) | HomeCommand::PersistLocally(_) | HomeCommand::ApplyLocalCatalogDocument(_) => Box::new(HomeCatalogWork::new(tool_id)),
             _ => Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, home_retained_reduce, home_retained_extent)),
@@ -578,7 +643,7 @@ impl ArtifactEditor for HomeApp {
     ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::SHomeMutation, HomeConfigMutation, Self::DraftMutation>, Fault> {
         let identity = require_session_identity(view_state)?;
         match command {
-            HomeCommand::CreateStudio(payload) => create_studio::handle_with_identity(payload, doc, cfg, identity),
+            HomeCommand::CreateStudio(_) => Err(Fault::from("s.home.create-studio.effect-authority-required")),
             _ => command.dispatch(doc, cfg),
         }
     }

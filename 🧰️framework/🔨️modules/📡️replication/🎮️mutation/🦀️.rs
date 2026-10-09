@@ -274,12 +274,9 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
     fn inverse_rows(&self) -> usize {
         1
     }
-    /// 🌐️ Foreign steps this operation additionally dispatches to OTHER artifacts — empty
-    /// for every ordinary single-artifact operation. Defaults to `Vec::new().await` so no existing
-    /// `impl Mutation` breaks; only a composite mutation's delegating `MutationKind::foreign_steps`
-    /// (see `🔖️Composite` below, `plan_foreign_steps`) ever returns anything here.
-    fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
-        Vec::new()
+    /// 🌐️ Borrows one original foreign output; discovery never constructs a plan or payload.
+    fn foreign_step_source<'a>(&'a self, _base: &'a P, _index: usize) -> Result<Option<ForeignStepSource<'a>>, semio_framework_value::ValueError> {
+        Ok(None)
     }
     /// 🧬️ Per [`Self::DESCRIPTORS`] row, that leaf's payload JSON Schema (`MutationLeaf::PAYLOAD_SCHEMA`) — the static
     /// roster of editable inputs a plugin publishes without an operation at hand. `#[derive(Mutations)]` fills it; a
@@ -1412,104 +1409,9 @@ impl<D> MutationOutcome<D> {
 
 
 //#region 🔖️Foreign
-/// 🌉️ A mutation step aimed at an artifact OTHER than the one being mutated. Cross-boundary
-/// identity travels as plain strings, never `semio_framework::*`/`io::*` types — see the
-/// dependency-edge law at `.🧬semio/🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
-/// §0.
-#[derive(Clone, Debug, PartialEq)]
-pub struct ForeignTarget {
-    pub artifact_id: String,
-    pub artifact_kind: String,
-    pub dialect: Option<String>,
-}
-
-/// 🌉️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp`/`ids`/`UndoPolicy`
-/// (this crate sits below `os-kernel`). Mirrors `#[serde(rename_all = "camelCase")]` field naming
-/// and the `dialect` sparse-emission by hand.
-impl crate::value::ToValue for ForeignTarget {
-    fn to_value(&self) -> crate::value::DslValue {
-        let mut entries = vec![
-            ("artifactId".to_string(), crate::value::ToValue::to_value(&self.artifact_id)),
-            ("artifactKind".to_string(), crate::value::ToValue::to_value(&self.artifact_kind)),
-        ];
-        if self.dialect.is_some() {
-            entries.push(("dialect".to_string(), crate::value::ToValue::to_value(&self.dialect)));
-        }
-        crate::value::DslValue::object(entries)
-    }
-}
-impl crate::value::FromValue for ForeignTarget {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for ForeignTarget, found {value:?}")));
-        };
-        let mut artifact_id = None;
-        let mut artifact_kind = None;
-        let mut dialect = None;
-        for (key, entry) in fields {
-            match key.as_str() {
-                "artifactId" => artifact_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("artifactId"))?),
-                "artifactKind" => artifact_kind = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("artifactKind"))?),
-                "dialect" => dialect = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("dialect"))?,
-                _ => {}
-            }
-        }
-        Ok(ForeignTarget {
-            artifact_id: artifact_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignTarget missing artifactId"))?,
-            artifact_kind: artifact_kind.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignTarget missing artifactKind"))?,
-            dialect,
-        })
-    }
-}
-
-/// 🪜️ One foreign hop of a [`Planner`]'s plan: the target artifact, the mutation/contributed
-/// id it dispatches, its already-encoded payload, and a human label.
-#[derive(Clone, Debug, PartialEq)]
-pub struct ForeignStep {
-    pub target: ForeignTarget,
-    pub mutation_id: crate::ids::SchemaId,
-    pub payload: Vec<u8>,
-    pub label: String,
-}
-
-/// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin above
-/// documents.
-impl crate::value::ToValue for ForeignStep {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object(vec![
-            ("target".to_string(), crate::value::ToValue::to_value(&self.target)),
-            ("mutationId".to_string(), crate::value::ToValue::to_value(&self.mutation_id)),
-            ("payload".to_string(), crate::value::ToValue::to_value(&self.payload)),
-            ("label".to_string(), crate::value::ToValue::to_value(&self.label)),
-        ])
-    }
-}
-impl crate::value::FromValue for ForeignStep {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for ForeignStep, found {value:?}")));
-        };
-        let mut target = None;
-        let mut mutation_id = None;
-        let mut payload = None;
-        let mut label = None;
-        for (key, entry) in fields {
-            match key.as_str() {
-                "target" => target = Some(<ForeignTarget as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?),
-                "mutationId" => mutation_id = Some(<crate::ids::SchemaId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("mutationId"))?),
-                "payload" => payload = Some(<Vec<u8> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
-                "label" => label = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("label"))?),
-                _ => {}
-            }
-        }
-        Ok(ForeignStep {
-            target: target.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignStep missing target"))?,
-            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignStep missing mutationId"))?,
-            payload: payload.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignStep missing payload"))?,
-            label: label.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignStep missing label"))?,
-        })
-    }
-}
+#[path = "🌐️foreign/🦀️.rs"]
+mod foreign_output;
+pub use foreign_output::{ForeignTarget,ForeignStep,ForeignStepSource,ForeignStepCopy,ForeignStepRetirement,ForeignStepsOwner};
 //#endregion 🔖️Foreign
 
 //#region 🔖️Meta
@@ -1709,7 +1611,7 @@ impl crate::value::FromValue for MutationMeta {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Edit<Op> {
     pub id: String,
-    pub actor: Option<String>,
+    pub actor: Option<semio_framework_value::SharedUtf8>,
     /// 🌿️ Authored branch identity; explicit null identifies trunk or unknown provenance.
     pub line: Option<String>,
     pub forwards: Vec<Op>,
@@ -1775,7 +1677,7 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
                     if line.is_some() { return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit repeats line")); }
                     line = Some(<Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("line"))?);
                 }
-                "actor" => actor = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("actor"))?,
+                "actor" => actor = <Option<semio_framework_value::SharedUtf8> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("actor"))?,
                 "forwards" => forwards = Some(<Vec<Op> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("forwards"))?),
                 "inverse" => inverse = Some(<crate::value::list::PagedList<Op, {usize::MAX}> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("inverse"))?),
                 "mutationMeta" => mutation_meta = <Vec<MutationMeta> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("mutationMeta"))?,
@@ -1800,6 +1702,9 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
         })
     }
 }
+
+#[path="🧾️transaction/🎟️admission/🦀️.rs"]
+pub mod transaction_admission;
 
 #[cfg(test)]
 #[path = "🧪️tests/🧪️transaction-ref/🦀️.rs"]
@@ -1900,3 +1805,8 @@ mod apply_error_retirement;
 #[path="🧳️prepared/🦀️.rs"]
 mod prepared;
 pub use prepared::{ArtifactReplayPrepared,retirement as prepared_retirement};
+
+#[path="🧵️canonical/🦀️.rs"]
+mod canonical_fields;
+pub use canonical_fields::{ArtifactCanonicalEditSealCursor,ArtifactCanonicalEditIdentityCursor};
+pub use canonical_fields::{ArtifactCanonicalEditAuthority,ArtifactCanonicalEditAuthorityCursor};

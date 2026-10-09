@@ -147,7 +147,7 @@ fn declared_inferences_for_workspace_is_plugin_unavailable_for_an_empty_catalog(
 #[tokio::test]
 async fn declared_inferences_for_artifact_is_empty_for_an_open_probe() {
     let workspace = open_workspace(neutral_only_catalog());
-    workspace.ensure_probe_artifact("probe-inf", serde_json::json!({ "n": 1 })).await.expect("seed");
+    workspace.ensure_probe_artifact("probe-inf", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let (schema, declared) = declared_inferences_for_artifact(&workspace, "probe-inf").expect("probe schema resolves");
     assert_eq!(schema, PROBE_SCHEMA);
     assert!(declared.is_empty(), "no plugin declares an inference against this crate's own probe schema");
@@ -163,7 +163,7 @@ fn declared_inferences_for_artifact_is_retryable_plugin_unavailable_for_an_unkno
 #[tokio::test]
 async fn inference_get_on_an_open_probe_names_the_missing_service_not_found() {
     let workspace = open_workspace(neutral_only_catalog());
-    workspace.ensure_probe_artifact("probe-get", serde_json::json!({ "n": 1 })).await.expect("seed");
+    workspace.ensure_probe_artifact("probe-get", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let mut registry = InMemoryToolRegistry::new();
     register_inference_tools(&mut registry, Some(workspace));
     let result = registry.call("inference_get", serde_json::json!({ "artifactId": "probe-get", "inferenceSchema": "test.neutral.wfc3d.solve" })).expect("registered tool");
@@ -245,7 +245,7 @@ fn bare_tier_inference_index_read_is_retryable_plugin_unavailable() {
 #[tokio::test]
 async fn bound_tier_inference_index_read_lists_the_real_declared_roster() {
     let workspace = open_workspace(neutral_only_catalog());
-    workspace.ensure_probe_artifact("probe-idx", serde_json::json!({ "n": 1 })).await.expect("seed");
+    workspace.ensure_probe_artifact("probe-idx", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let result = read_inference_resource("semio://artifact/probe-idx/inference", Some(&workspace)).expect("ours");
     let contents = result.expect("bound workspace resolves");
     let body: serde_json::Value = serde_json::from_str(contents[0].text.as_ref().unwrap()).unwrap();
@@ -261,7 +261,7 @@ fn bare_tier_inference_resources_list_is_empty() {
 #[tokio::test]
 async fn bound_tier_inference_resources_list_names_every_known_artifact() {
     let workspace = open_workspace(neutral_only_catalog());
-    workspace.ensure_probe_artifact("probe-list", serde_json::json!({ "n": 1 })).await.expect("seed");
+    workspace.ensure_probe_artifact("probe-list", serde_json::json!({ "n": 1 }).into()).await.expect("seed");
     let resources = inference_resources(Some(&workspace));
     assert!(resources.iter().any(|resource| resource.uri == "semio://artifact/probe-list/inference"));
 }

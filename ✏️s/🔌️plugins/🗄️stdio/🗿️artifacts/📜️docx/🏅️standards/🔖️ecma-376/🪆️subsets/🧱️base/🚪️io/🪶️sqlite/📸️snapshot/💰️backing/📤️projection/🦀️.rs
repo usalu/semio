@@ -42,9 +42,9 @@ fn integer(value: usize) -> Result<i64, ValueError> {
 
 fn materialize_package(snapshot: &DocxSnapshot, control: &mut SqliteSnapshotControl<'_>) -> Result<semio_s_artifact_stdio_zip::opc::OpcPackage, ValueError> {
     control
-        .allocation_stage(SqliteSnapshotPhase::ProjectSnapshot, |remaining, progress| {
+        .allocation_stage(SqliteSnapshotPhase::ProjectSnapshot, |remaining, progress,allocation|{
             let mut callback = |event: NativeEncodeProgress| progress(event.completed, event.total);
-            let mut native = NativeEncodeControl::new(remaining, &mut callback);
+            let mut native_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
             let result = snapshot.opc.materialize_package(&mut native);
             let owned = native.owned_bytes();
             (result, owned)
@@ -59,9 +59,9 @@ pub(crate) fn project(snapshot: &DocxSnapshot, control: &mut SqliteSnapshotContr
         if position % 256 == 0 {
             control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, position, snapshot.xml_parts.len())?;
         }
-        let document = control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot, |remaining, progress| {
+        let document = control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot, |remaining, progress,allocation|{
             let mut callback = |event: NativeEncodeProgress| progress(event.completed, event.total);
-            let mut native = NativeEncodeControl::new(remaining, &mut callback);
+            let mut native_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
             let result = match native.allocate_vec::<XmlNode>(part.document.nodes.len()) {
                 Ok(retirement) => part.materialize_document(&mut native).map(|document| MaterializedDocument { document: Some(document), retirement }),
                 Err(error) => Err(error),

@@ -1,0 +1,5 @@
+# Original Result Native Acceptance
+
+Actual registered full Value all-targets command session6514/PID17840 exited0:260 passed,0 failed,0 ignored,0 filtered,5.80s. The launched test-first intent did not produce a new missing Result compiler receipt: shared source installed canonical retirement::original_result during the run. The actual executed law original_result_variants_preserve_native_payload_and_all_axis_receipts passed. Current source retains original Ok/Err payload in ManuallyDrop, returns real independent five-axis step receipts, and proves direct source pointer, giant body, every demanded axis denial, exact birth/release and terminal zero Drop. Its production schema validates actual oneOf Ok/Err string objects; the plain fixture grants and repeats remain. This is current native acceptance, not evidence that this lane implemented the shared producer.
+
+Exact log: 🗑️generated/vf/result-original-red1.log. The misleading intended-red filename is preserved as historical input; its actual outcome is GREEN260.

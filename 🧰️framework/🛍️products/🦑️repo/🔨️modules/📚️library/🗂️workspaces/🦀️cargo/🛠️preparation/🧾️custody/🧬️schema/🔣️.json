@@ -47,7 +47,9 @@
         "sources",
         "inputs",
         "outputs",
-        "resolutions"
+        "resolutions",
+        "sourceRoot",
+        "resolverInputs"
       ],
       "properties": {
         "version": {
@@ -94,6 +96,16 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/CargoPreparationResolutionV1"
+          }
+        },
+        "sourceRoot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resolverInputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CargoPreparationInputV1"
           }
         }
       }

@@ -528,7 +528,14 @@
             "fuel": 1,
             "nowMilliseconds": 1,
             "deadlineMilliseconds": 8,
-            "interrupted": false
+            "interrupted": false,
+            "retained": {
+              "maximumItems": 1,
+              "maximumCopyBytes": 4096,
+              "maximumCapacityBytes": 4294967295,
+              "maximumReleaseBytes": 4294967295,
+              "maximumDepth": 4096
+            }
           }
         },
         "expectedHandle": {
@@ -571,7 +578,14 @@
             "fuel": 0,
             "nowMilliseconds": 1,
             "deadlineMilliseconds": 8,
-            "interrupted": false
+            "interrupted": false,
+            "retained": {
+              "maximumItems": 1,
+              "maximumCopyBytes": 4096,
+              "maximumCapacityBytes": 4294967295,
+              "maximumReleaseBytes": 4294967295,
+              "maximumDepth": 4096
+            }
           }
         },
         "expectedHandle": {
@@ -614,7 +628,14 @@
             "fuel": 1,
             "nowMilliseconds": 8,
             "deadlineMilliseconds": 8,
-            "interrupted": false
+            "interrupted": false,
+            "retained": {
+              "maximumItems": 1,
+              "maximumCopyBytes": 4096,
+              "maximumCapacityBytes": 4294967295,
+              "maximumReleaseBytes": 4294967295,
+              "maximumDepth": 4096
+            }
           }
         },
         "expectedHandle": {
@@ -657,7 +678,14 @@
             "fuel": 1,
             "nowMilliseconds": 1,
             "deadlineMilliseconds": 10,
-            "interrupted": false
+            "interrupted": false,
+            "retained": {
+              "maximumItems": 1,
+              "maximumCopyBytes": 4096,
+              "maximumCapacityBytes": 4294967295,
+              "maximumReleaseBytes": 4294967295,
+              "maximumDepth": 4096
+            }
           }
         },
         "expectedHandle": {
@@ -700,7 +728,14 @@
             "fuel": 1,
             "nowMilliseconds": 1,
             "deadlineMilliseconds": 8,
-            "interrupted": true
+            "interrupted": true,
+            "retained": {
+              "maximumItems": 1,
+              "maximumCopyBytes": 4096,
+              "maximumCapacityBytes": 4294967295,
+              "maximumReleaseBytes": 4294967295,
+              "maximumDepth": 4096
+            }
           }
         },
         "expectedHandle": {

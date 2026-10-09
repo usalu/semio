@@ -246,8 +246,9 @@
           "required": [
             "kind",
             "path",
-            "output",
-            "operation"
+            "operation",
+            "bytes",
+            "sha256"
           ],
           "properties": {
             "kind": {
@@ -255,14 +256,20 @@
             },
             "path": {
               "type": "string",
-              "minLength": 1
-            },
-            "output": {
-              "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 256
             },
             "operation": {
               "$ref": "#/$defs/RuntimeCompilerResourceOperationV1"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
             }
           }
         },
@@ -288,40 +295,6 @@
           }
         }
       ]
-    },
-    "RuntimeCargoBuildResourceSnapshotV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "input",
-        "sha256",
-        "outputSha256"
-      ],
-      "properties": {
-        "input": {
-          "$ref": "#/$defs/RuntimeBuildResourceObservationV1"
-        },
-        "sha256": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "pattern": "^[0-9a-f]{64}$"
-        },
-        "outputSha256": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "pattern": "^[0-9a-f]{64}$"
-        },
-        "observedEntries": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/RuntimeCompilerResourceEntryV1"
-          }
-        }
-      }
     },
     "RuntimeCargoBuildResourcesV1": {
       "type": "object",
@@ -362,7 +335,7 @@
         "resources": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/RuntimeCargoBuildResourceSnapshotV1"
+            "$ref": "#/$defs/RuntimeCargoBuildResourceWitnessV1"
           }
         }
       }
@@ -714,10 +687,10 @@
       "required": [
         "kind",
         "path",
-        "output",
         "callsite",
         "operation",
-        "snapshotOperation"
+        "bytes",
+        "sha256"
       ],
       "properties": {
         "kind": {
@@ -725,11 +698,8 @@
         },
         "path": {
           "type": "string",
-          "minLength": 1
-        },
-        "output": {
-          "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 256
         },
         "callsite": {
           "type": "object",
@@ -752,8 +722,14 @@
         "operation": {
           "$ref": "#/$defs/RuntimeCompilerResourceOperationV1"
         },
-        "snapshotOperation": {
-          "$ref": "#/$defs/RuntimeCompilerResourceOperationV1"
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
         }
       }
     },
@@ -1361,8 +1337,7 @@
             "additionalProperties": false,
             "required": [
               "input",
-              "sha256",
-              "outputSha256"
+              "sha256"
             ],
             "properties": {
               "input": {
@@ -1375,12 +1350,22 @@
                 ],
                 "pattern": "^[0-9a-f]{64}$"
               },
-              "outputSha256": {
+              "bytes": {
                 "type": [
-                  "string",
+                  "integer",
                   "null"
                 ],
-                "pattern": "^[0-9a-f]{64}$"
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "sourceExact": {
+                "type": "boolean"
+              },
+              "schemaErrors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               },
               "observedEntries": {
                 "type": "array",
@@ -1388,7 +1373,325 @@
                   "$ref": "#/$defs/RuntimeCompilerResourceEntryV1"
                 }
               }
+            },
+            "if": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "read"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              },
+              "required": [
+                "input"
+              ]
+            },
+            "then": {
+              "required": [
+                "bytes",
+                "sourceExact",
+                "schemaErrors"
+              ],
+              "not": {
+                "required": [
+                  "outputSha256"
+                ],
+                "properties": {
+                  "outputSha256": {}
+                }
+              },
+              "properties": {
+                "bytes": {},
+                "sourceExact": {},
+                "schemaErrors": {}
+              }
+            },
+            "else": {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "const": "copy"
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ]
+                  }
+                },
+                "required": [
+                  "input"
+                ]
+              },
+              "then": {
+                "required": [
+                  "outputSha256"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "bytes"
+                      ],
+                      "properties": {
+                        "bytes": {}
+                      }
+                    },
+                    {
+                      "required": [
+                        "sourceExact"
+                      ],
+                      "properties": {
+                        "sourceExact": {}
+                      }
+                    },
+                    {
+                      "required": [
+                        "schemaErrors"
+                      ],
+                      "properties": {
+                        "schemaErrors": {}
+                      }
+                    }
+                  ]
+                },
+                "properties": {
+                  "outputSha256": {}
+                }
+              },
+              "else": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "outputSha256"
+                      ],
+                      "properties": {
+                        "outputSha256": {}
+                      }
+                    },
+                    {
+                      "required": [
+                        "bytes"
+                      ],
+                      "properties": {
+                        "bytes": {}
+                      }
+                    },
+                    {
+                      "required": [
+                        "sourceExact"
+                      ],
+                      "properties": {
+                        "sourceExact": {}
+                      }
+                    },
+                    {
+                      "required": [
+                        "schemaErrors"
+                      ],
+                      "properties": {
+                        "schemaErrors": {}
+                      }
+                    }
+                  ]
+                }
+              }
             }
+          }
+        }
+      }
+    },
+    "RuntimeCargoBuildResourceWitnessV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "sha256"
+      ],
+      "properties": {
+        "input": {
+          "$ref": "#/$defs/RuntimeBuildResourceObservationV1"
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "sourceExact": {
+          "type": "boolean"
+        },
+        "schemaErrors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outputSha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "observedEntries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCompilerResourceEntryV1"
+          }
+        }
+      },
+      "if": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "read"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        "required": [
+          "input"
+        ]
+      },
+      "then": {
+        "required": [
+          "bytes",
+          "sourceExact",
+          "schemaErrors"
+        ],
+        "not": {
+          "required": [
+            "outputSha256"
+          ],
+          "properties": {
+            "outputSha256": {}
+          }
+        },
+        "properties": {
+          "bytes": {},
+          "sourceExact": {},
+          "schemaErrors": {}
+        }
+      },
+      "else": {
+        "if": {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "copy"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "input"
+          ]
+        },
+        "then": {
+          "required": [
+            "outputSha256"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "bytes"
+                ],
+                "properties": {
+                  "bytes": {}
+                }
+              },
+              {
+                "required": [
+                  "sourceExact"
+                ],
+                "properties": {
+                  "sourceExact": {}
+                }
+              },
+              {
+                "required": [
+                  "schemaErrors"
+                ],
+                "properties": {
+                  "schemaErrors": {}
+                }
+              }
+            ]
+          },
+          "properties": {
+            "outputSha256": {}
+          }
+        },
+        "else": {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "outputSha256"
+                ],
+                "properties": {
+                  "outputSha256": {}
+                }
+              },
+              {
+                "required": [
+                  "bytes"
+                ],
+                "properties": {
+                  "bytes": {}
+                }
+              },
+              {
+                "required": [
+                  "sourceExact"
+                ],
+                "properties": {
+                  "sourceExact": {}
+                }
+              },
+              {
+                "required": [
+                  "schemaErrors"
+                ],
+                "properties": {
+                  "schemaErrors": {}
+                }
+              }
+            ]
           }
         }
       }

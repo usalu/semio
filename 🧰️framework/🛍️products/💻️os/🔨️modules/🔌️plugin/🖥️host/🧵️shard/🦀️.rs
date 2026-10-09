@@ -31,6 +31,9 @@ pub mod executor;
 #[path = "🔁️lifecycle/🦀️.rs"]
 mod lifecycle;
 use lifecycle::AdmittedAuthority;
+#[path="🪪️identity/🦀️.rs"]
+pub mod identity;
+pub use identity::{OriginalShardIdentity,OriginalShardIdentityIssuer,ShardIdentityPolicy,native_identity_issuer};
 pub use lifecycle::{ShardActorAllocation, ShardRegistrationReason, ShardRegistrationRejected};
 
 use super::{GuestInstance, GuestRuntime, GuestRuntimes, JobBudget, JobStep, PluginHostError, TurnFault};
@@ -399,6 +402,8 @@ impl ShardOutcome {
 /// P1) — never shared across shards, since [`super::GuestRuntime`] instances are `Send + Sync` but a
 /// [`GuestInstance`] is pinned to whichever shard activated it (`ShardTable`'s own pinning rule).
 pub struct ShardLoop {
+    identity_issuer:OriginalShardIdentityIssuer,
+    identities:HashMap<ShardActorAllocation,OriginalShardIdentity>,
     runtime: Arc<GuestRuntimes>,
     transport: ShardTransports,
     instances: HashMap<u64, GuestInstance>,
@@ -985,8 +990,10 @@ fn defer_completion(
 //#endregion 🚦DeferredOwnerRing
 
 impl ShardLoop {
-    pub async fn new(runtime: Arc<GuestRuntimes>, transport: ShardTransports) -> Self {
+    pub async fn new(runtime: Arc<GuestRuntimes>, transport: ShardTransports, identity_issuer:OriginalShardIdentityIssuer) -> Self {
         Self {
+            identity_issuer,
+            identities:HashMap::new(),
             runtime,
             transport,
             instances: HashMap::new(),
@@ -1307,7 +1314,7 @@ impl ShardLoop {
             }
             ReplaySeedPhase::Checkpoint => {
                 let checkpoint = match self.instances.get_mut(&actor) {
-                    Some(instance) => match self.runtime.checkpoint(instance).await {
+                    Some(instance) => match self.identities.get_mut(self.allocations.get(&actor).expect("registered actor allocation")).expect("registered actor owns original identity").checkpoint(&self.runtime,instance).await {
                         Ok(checkpoint) => checkpoint,
                         Err(fault) => return Err(self.fail_replay_seed(index, "checkpoint", format!("ShardLoop::replay: checkpoint failed for actor {actor}: {fault}"))),
                     },
@@ -1467,7 +1474,7 @@ impl ShardLoop {
                 let checkpoint = self.replay_seeds[index].as_ref().expect("restore seed").materialized_checkpoint.as_ref().expect("materialized checkpoint");
                 match self.instances.get_mut(&actor) {
                     Some(instance) => {
-                        if let Err(fault) = self.runtime.restore(instance, checkpoint).await {
+                        if let Err(fault) = self.identities.get_mut(self.allocations.get(&actor).expect("registered actor allocation")).expect("registered actor owns original identity").restore(&self.runtime,instance,checkpoint).await {
                             return Err(self.fail_replay_seed(index, "restore", format!("ShardLoop::replay: restore failed for actor {actor}: {fault}")));
                         }
                     }
@@ -1809,7 +1816,7 @@ impl ShardLoop {
                     let step_outcome = match step {
                         JobStep::Running { progress: Some(preview) } => JobStepOutcome::PreviewReady { preview },
                         JobStep::Running { progress: None } => JobStepOutcome::Yield,
-                        JobStep::Done { output } => match if replayable { self.runtime.checkpoint(instance).await } else { Ok(Vec::new()) } {
+                        JobStep::Done { output } => match if replayable { self.identities.get_mut(self.allocations.get(&actor_id).expect("registered actor allocation")).expect("registered actor owns original identity").checkpoint(&self.runtime,instance).await } else { Ok(Vec::new()) } {
                             Ok(state) => {
                                 self.close_replay_job(actor_id, job, ReplaySeedCloseReason::Completed);
                                 defer_completion(
@@ -1943,7 +1950,7 @@ impl ShardLoop {
         };
         let turn_outcome = {
             let _watchdog = Watchdog::start("plugin-host.shard.execute_turn", OperationId(actor_id), Generation(0), watchdog_stage);
-            self.runtime.execute_turn(instance, events, turn_budget.await).await
+            self.identities.get_mut(self.allocations.get(&actor_id).expect("registered actor allocation")).expect("registered actor owns original identity").execute_turn(&self.runtime,instance,events,turn_budget.await).await
         };
         let outcome = match turn_outcome {
             Ok(mut result) => {
@@ -2208,7 +2215,7 @@ impl ShardLoop {
         }
         let outcome = match self.instances.get_mut(&actor_id) {
             None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend for actor {actor_id} which is not registered on this shard") },
-            Some(instance) => match self.runtime.checkpoint(instance).await {
+            Some(instance) => match self.identities.get_mut(self.allocations.get(&actor_id).expect("registered actor allocation")).expect("registered actor owns original identity").checkpoint(&self.runtime,instance).await {
                 Ok(state) => ShardOutcome::Checkpoint { actor: actor_id, operation, checkpoint: JobCheckpoint { state, applied_progress } },
                 Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend checkpoint failed for actor {actor_id}: {error}") },
             },
@@ -2222,7 +2229,7 @@ impl ShardLoop {
         }
         let outcome = match self.instances.get_mut(&actor_id) {
             None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume for actor {actor_id} which is not registered on this shard") },
-            Some(instance) => match self.runtime.restore(instance, &checkpoint.state).await {
+            Some(instance) => match self.identities.get_mut(self.allocations.get(&actor_id).expect("registered actor allocation")).expect("registered actor owns original identity").restore(&self.runtime,instance,&checkpoint.state).await {
                 Ok(()) => ShardOutcome::Resumed { actor: actor_id, operation },
                 Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume restore failed for actor {actor_id}: {error}") },
             },
@@ -2554,7 +2561,7 @@ impl GuestRuntime for RecordingRuntime {
         Ok(GuestInstance { actor, state: GuestInstanceState::Mock(super::MockInstanceState::default()) })
     }
     async fn drop_instance(&self, _inst: GuestInstance) {}
-    async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+    async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         *self.last_turn_budget.lock().expect("lock") = Some(budget);
         Ok(TurnResult {
             ui_patches: semio_framework::kernel::UiTurnPatches::default(),
@@ -2579,10 +2586,10 @@ impl GuestRuntime for RecordingRuntime {
     async fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> Result<(), TurnFault> {
         Ok(())
     }
-    async fn checkpoint(&self, _inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+    async fn checkpoint(&self, _inst: &mut GuestInstance, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
         Ok(vec![])
     }
-    async fn restore(&self, _inst: &mut GuestInstance, _state: &[u8]) -> Result<(), PluginHostError> {
+    async fn restore(&self, _inst: &mut GuestInstance, _state: &[u8], _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError> {
         Ok(())
     }
 }
@@ -2601,3 +2608,9 @@ fn fixture_instance_close_event() -> Event {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+pub fn test_identity_issuer()->OriginalShardIdentityIssuer{
+ let policy:ShardIdentityPolicy=serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../⚡️effects/🧫️fixtures/🔣️.json")).unwrap()["identityPolicy"].clone()).unwrap();
+ Box::new(move |_|OriginalShardIdentity::issue(policy,Box::new(|_|true),Box::new(move |request|{if request.bytes>policy.grant.maximum_capacity_bytes||policy.grant.maximum_items==0||policy.grant.maximum_depth==0{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original fixture refuses native shard allocation"))}else{Ok(())}})))
+}

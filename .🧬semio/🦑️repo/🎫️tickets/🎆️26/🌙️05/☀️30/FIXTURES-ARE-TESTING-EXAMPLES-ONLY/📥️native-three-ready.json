@@ -1,0 +1,47 @@
+{
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+      "sha256": "c9a3cddb43d07d56d80e18ad2b2f95f278fde32971a7e338b4728fbaf356bb12",
+      "role": "observer; authorship only exact narrow actions"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "0de6307df72191002a29342e2529b257a3477a1756318d67bfc80f82d35f4709",
+      "role": "observer; authorship only exact narrow actions"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛬️native-decoding/🦀️.rs",
+      "sha256": "72df8f0c515b4776ccd765e80f048675bccc1b0d279975a116141bdd7b7d90e2",
+      "role": "observer; authorship only exact narrow actions"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+      "sha256": "ef019c4782a2d7f41e227bc1a1493989034f5d53d24a3bfefdde49999c47f2b5",
+      "role": "observer; authorship only exact narrow actions"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "47c53a660360cf7787cc66111f0496dfaa68a09f31f1f76976fd97ef1de9a374",
+      "role": "observer; authorship only exact narrow actions"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧫️fixtures/🔣️.json",
+      "sha256": "f9a83cfe5422a4199b5d0c85a852d123650397b228c31c33eac889b1e84d48a1",
+      "role": "observer; authorship only exact narrow actions"
+    }
+  ],
+  "sourceSession": 87777,
+  "sourceExitCode": 0,
+  "sourceLaws": 5,
+  "sourceAssertions": 172,
+  "extraOriginalDepthAssertions": 612,
+  "nativeQualification": "Existing17 actual14PASS3FAIL; new four-law repair epoch native UNRUN",
+  "selectedNextLaws": [
+    "member_open_request_original_identity_capacity_is_indivisible_even_when_empty",
+    "current_box_retirement_preserves_denied_owner_and_exact_physical_shell",
+    "sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection",
+    "sqlite_snapshot_binding_moves_original_octet_allocations_with_exact_structural_receipt"
+  ],
+  "policy": "Original copy65536/items4096/capacity1MiB/release1MiB/depth64 unchanged; native/profile/default budgets unchanged"
+}

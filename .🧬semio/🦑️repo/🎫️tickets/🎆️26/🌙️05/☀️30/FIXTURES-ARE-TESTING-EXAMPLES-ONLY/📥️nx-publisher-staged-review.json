@@ -1,0 +1,18 @@
+{
+  "owned": false,
+  "implementationPresent": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+      "sha256": "24f58c294afb2b3b33431b1e066470c4b7601189a18c92dcffdf9944dd0be1c9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "sha256": "0a50f74af2bbcd4757aac1a9de8472ef3ae3be86e3c8a910d3feaba347f2fb90"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+      "sha256": "aa0a3c89c335caecd68d907504413a08e29f1647e852b7c5b78aa317958114c6"
+    }
+  ]
+}

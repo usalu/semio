@@ -498,6 +498,11 @@ pub struct BodyValidationJob {
     same_midpoints: Vec<f64>,
 }
 
+semio_framework_value::artifact_retire_leaf!(BodyValidationPhase);
+semio_framework_value::artifact_retire_struct!(ShellVolumeUnit {solid,shell,outer,faces,total});
+semio_framework_value::artifact_retire_struct!(FaceCoedgeCursor {face_slot,face,loop_slot,start,next,visited});
+semio_framework_value::artifact_retire_struct!(BodyValidationJob {phase,issues,shells,shell_cursor,shell_face_cursor,edges,edge_cursor,faces,face_cursor,units_done,units_total,planning_stage,planning_slot,planning_solid,planning_shell,planning_face,live_coedges,loop_slot,loop_id,ring,ring_next,ring_probe,valence_edge_slot,valence_edge,valence_coedge_slot,valence_uses,pcurve_slot,tolerance_stage,tolerance_edge_cursor,tolerance_vertex,tolerance_faces,same_faces,same_pair,same_stage,same_cursor,same_pass,same_samples,same_midpoints});
+
 impl BodyValidationJob {
     /// 🧊 Admits an empty original frontier; topology is borrowed only inside funded steps.
     pub fn new(_body: &Body) -> Self {

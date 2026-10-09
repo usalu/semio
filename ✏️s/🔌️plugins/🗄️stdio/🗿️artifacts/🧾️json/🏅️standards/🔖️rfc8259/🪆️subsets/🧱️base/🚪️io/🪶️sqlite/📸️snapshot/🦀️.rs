@@ -32,7 +32,7 @@ fn measure(snapshot: &JsonSnapshot, control: &mut SqliteSnapshotControl<'_>) -> 
 
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 impl ArtifactSqliteSnapshot for JsonSnapshot {
-    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::encode(self,encoding,control)}
+    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::encode(self,encoding,control,native_owner)}
     fn retire_sqlite_snapshot(self) { crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::retire(self); }
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
         crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::preflight(self, control)
@@ -46,8 +46,8 @@ impl ArtifactSqliteSnapshot for JsonSnapshot {
         Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
-    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
-        crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::decode(payload,control)
+    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
+        crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::decode(payload,control,native_control)
     }
 
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");

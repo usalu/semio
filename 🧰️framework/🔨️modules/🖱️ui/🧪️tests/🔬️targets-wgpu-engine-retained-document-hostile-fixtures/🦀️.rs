@@ -31,22 +31,23 @@ fn lease(generation: u64, nodes: &[(u64, &[u64])]) -> ui_contract::UiDocumentLea
     builder.finish().expect("hostile lease")
 }
 
-fn step(generation: u64, preview: &mut u64) -> StepContext<'_> {
+fn step<'a>(generation: u64, preview: &'a mut u64,retained_progress:&'a mut semio_framework_job::RetainedCloneProgress) -> StepContext<'a> {
     let now = semio_framework_job::default_now_us();
     StepContext::new(
         semio_framework_job::OperationId(generation),
         semio_framework_job::Generation(generation),
-        now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, 100000)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
+        now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, 100000,ui_contract::UI_WORKER_RETIREMENT_POLICY)).unwrap_or(semio_framework_job::StepBudget::new(0, 0,ui_contract::UI_WORKER_RETIREMENT_POLICY)),
         semio_framework_job::CancelToken::root_now(),
         semio_framework_job::default_now_us,
         preview,
+        retained_progress,
     )
 }
 
-fn cancelled_step(generation: u64, preview: &mut u64) -> StepContext<'_> {
+fn cancelled_step<'a>(generation: u64, preview: &'a mut u64,retained_progress:&'a mut semio_framework_job::RetainedCloneProgress) -> StepContext<'a> {
     let cancel = semio_framework_job::CancelToken::root_now();
     cancel.cancel_now();
-    StepContext::new(semio_framework_job::OperationId(generation), semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, preview)
+    StepContext::new(semio_framework_job::OperationId(generation), semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, semio_framework_job::default_now_us, preview,retained_progress)
 }
 
 #[test]
@@ -65,10 +66,13 @@ fn max_plus_one_stale_aba_interrupted_close_nested_depth_lost_handle_device_drop
     let first = lease(101, &[(1, &[])]);
     let header = first.header().expect("first header");
     let mut preview = 0;
-    ui.begin_document("window", header, &mut step(101, &mut preview)).expect("first begin");
-    ui.apply_document_page("window", first.read_node_page(0).expect("first read").expect("first page"), &mut step(101, &mut preview)).expect("first apply");
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+    ui.begin_document("window", header, &mut step(101, &mut preview,&mut actual_retained_progress)).expect("first begin");
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+    ui.apply_document_page("window", first.read_node_page(0).expect("first read").expect("first page"), &mut step(101, &mut preview,&mut actual_retained_progress)).expect("first apply");
     loop {
-        match ui.finish_document("window", 101, &mut step(101, &mut preview)) {
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        match ui.finish_document("window", 101, &mut step(101, &mut preview,&mut actual_retained_progress)) {
             Ok(()) => break,
             Err(UiDocumentIngressFault::ValidationPending) => {}
             Err(fault) => panic!("first publish failed: {fault:?}"),
@@ -77,17 +81,22 @@ fn max_plus_one_stale_aba_interrupted_close_nested_depth_lost_handle_device_drop
     assert_eq!(ui.windows.get("window").and_then(|window| window.tree.document()).map(UiDocumentTree::generation), Some(101));
 
     let aba = lease(100, &[(1, &[])]);
-    let aba_rejected = ui.begin_document("window", aba.header().expect("aba header"), &mut step(100, &mut preview));
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+    let aba_rejected = ui.begin_document("window", aba.header().expect("aba header"), &mut step(100, &mut preview,&mut actual_retained_progress));
     assert!(matches!(aba_rejected, Err((UiDocumentIngressFault::StaleGeneration, _))));
     let cancelled = lease(104, &[(1, &[])]);
-    let cancelled_rejected = ui.begin_document("window", cancelled.header().expect("cancelled header"), &mut cancelled_step(104, &mut preview));
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+    let cancelled_rejected = ui.begin_document("window", cancelled.header().expect("cancelled header"), &mut cancelled_step(104, &mut preview,&mut actual_retained_progress));
     assert!(matches!(cancelled_rejected, Err((UiDocumentIngressFault::Cancelled, _))));
 
     let nested = lease(102, &[(1, &[2]), (2, &[3]), (3, &[])]);
-    ui.begin_document("window", nested.header().expect("nested header"), &mut step(102, &mut preview)).expect("nested begin");
-    ui.apply_document_page("window", nested.read_node_page(0).expect("nested read").expect("nested page"), &mut step(102, &mut preview)).expect("nested first page");
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+    ui.begin_document("window", nested.header().expect("nested header"), &mut step(102, &mut preview,&mut actual_retained_progress)).expect("nested begin");
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+    ui.apply_document_page("window", nested.read_node_page(0).expect("nested read").expect("nested page"), &mut step(102, &mut preview,&mut actual_retained_progress)).expect("nested first page");
     let stale = lease(103, &[(1, &[])]);
-    let interrupted = ui.begin_document("window", stale.header().expect("stale header"), &mut step(103, &mut preview));
+    let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+    let interrupted = ui.begin_document("window", stale.header().expect("stale header"), &mut step(103, &mut preview,&mut actual_retained_progress));
     assert!(matches!(interrupted, Err((UiDocumentIngressFault::InterruptedClose, _))));
     assert_eq!(ui.windows.get("window").and_then(|window| window.tree.document()).map(UiDocumentTree::generation), Some(101));
     drop(aba);

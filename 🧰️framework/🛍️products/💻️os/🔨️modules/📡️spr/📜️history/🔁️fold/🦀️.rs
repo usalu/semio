@@ -25,7 +25,7 @@ impl HistoryLog {
                 None => protocol::HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
             };
             let id = control.track(protocol::copy_history_text(&edit.id, control).await?).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
-            let actor = control.track(match &edit.actor { Some(actor) => Some(protocol::copy_history_text(actor, control).await?), None => None }).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
+            let actor = control.track(match &edit.actor { Some(actor) => Some(control.lease_actor(actor).await), None => None }).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
             let line = control.track(match &edit.line { Some(line) => Some(protocol::copy_history_text(line, control).await?), None => None }).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
             let mut mutations = control.track(Vec::with_capacity(edit.ops.len())).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
             for index in 0..edit.ops.len() {
@@ -53,7 +53,7 @@ impl HistoryLog {
             if !shape.admits(decoded.kind()) { return Err(ProtocolError::Malformed { what: "history fold", offset: 0, detail: "transition is refused by the history shape".into() }); }
             let mutation_id = control.track(protocol::MutationId(protocol::copy_history_text(&source.id, control).await?)).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
             let document_id = control.track(protocol::ArtifactId(protocol::copy_history_text(&self.doc_id, control).await?)).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
-            let actor = control.track(protocol::ActorId(protocol::copy_history_text(&source.actor, control).await?)).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
+            let actor=control.track(protocol::ActorId(control.lease_actor(&source.actor).await)).unwrap_or_else(|_|unreachable!("history actor shared ownership")).await;
             let mut dependencies = control.track(Vec::with_capacity(source.dependencies.len())).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
             for dependency in &source.dependencies { dependencies.push(protocol::MutationId(protocol::copy_history_text(dependency, control).await?)); }
             let observed = control.track(match &source.observed { Some(observed) => Some(protocol::MutationId(protocol::copy_history_text(observed, control).await?)), None => None }).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
@@ -76,7 +76,7 @@ impl HistoryLog {
             let identity = control.track(protocol::ConflictId(protocol::copy_history_text(&source.id, control).await?)).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
             let status = match source.status { 0 => protocol::ConflictStatus::Open, 1 => protocol::ConflictStatus::Accepted, 2 => protocol::ConflictStatus::Discarded, _ => return Err(ProtocolError::Malformed { what: "history fold", offset: 0, detail: "unknown conflict status".into() }) };
             let mut actors = control.track(Vec::with_capacity(source.actors.len())).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
-            for actor in &source.actors { actors.push(protocol::ActorId(protocol::copy_history_text(actor, control).await?)); }
+            for actor in &source.actors {actors.push(protocol::ActorId(control.lease_actor(actor).await));}
             let mut messages = control.track(Vec::with_capacity(source.messages.len())).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
             for source in &source.messages {
                 let level = semio_framework_diagnostic::Severity::from_u8(source.level).ok_or_else(|| ProtocolError::Malformed { what: "history fold", offset: 0, detail: "unknown conflict severity".into() })?;

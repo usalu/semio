@@ -8,6 +8,17 @@ export function testWireRetirementFixture():void{
  const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  assert.equal(new Set(fixture.cases.map((row:{id:string})=>row.id)).size,5);
  const wire=Buffer.alloc(8);wire.writeBigUInt64LE(42n);assert.equal(wire.toString("hex"),fixture.shortClose.wireHex);
+ const original=Buffer.from(fixture.completedInput.wireHex,"hex"),capacity=fixture.completedInput.capacityBytes;
+ const pending={phase:"copy",original:original.toString("hex"),capacity};
+ const completed=applyPatch(structuredClone(pending),[{op:"replace",path:"/phase",value:"complete"}],true).newDocument;
+ assert.equal(completed.original,pending.original);assert.equal(completed.capacity,capacity);assert.equal(fixture.completedInput.retainedAfterCompletion,true);
+ const native=readFileSync(new URL("../../../🧪️tests/🔬️unit/🦀️.rs",import.meta.url),"utf8");
+ const stepGrant=native.slice(native.indexOf("fn fixture_step_grant()"),native.indexOf("fn fixture_close_grant("));
+ for(const[field,value]of Object.entries(fixture.stepGrant))assert.ok(stepGrant.includes(`${field}:${value}`),`original fixture authority ${field}`);
+ assert.equal((native.match(/&mut retained_progress\)/g)??[]).length,4);
+ const immediate=native.slice(native.indexOf("impl InteractiveJob for ImmediateJob"),native.indexOf("struct EchoFactory"));
+ const step=immediate.slice(0,immediate.indexOf("fn begin_close"));
+ assert.ok(!step.includes("self.output = None;"),"completion retains original input until granted close");
  for(const row of fixture.cases){assert.ok(row.admitted<=row.declared);if(row.sealed)assert.equal(row.admitted,row.declared);
   const source=Buffer.from(Array.from({length:row.admitted},(_,index)=>index%251)),digest=createHash("sha256").update(source).digest("hex");
   for(const wordBytes of fixture.wordBytes){const capacity=Math.ceil(row.declared/fixture.pageBytes),physical=capacity*(fixture.pageBytes+wordBytes),backing=Buffer.alloc(physical);assert.equal(backing.byteLength,physical);

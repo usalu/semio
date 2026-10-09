@@ -90,9 +90,9 @@ fn drawing_envelope_wire() -> Vec<u8> {
     use store::ArtifactPack;
 
     let mut snapshot = default_drawing_document("drawing-retained-load", None);
-    let mut group = crate::schema::create_drawing_group_layer("Nested");
+    let mut group = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Nested")).to_string().into()).expect("nonempty authored identity"), "Nested");
     if let DrawingLayerNode::Group(value) = &mut group {
-        value.children.push(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Path", vec![crate::PathSegment::Move { to: [1.0, 2.0] }, crate::PathSegment::Line { to: [3.0, 4.0] }].into()));
+        value.children.push(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), "Path", vec![crate::PathSegment::Move { to: [1.0, 2.0] }, crate::PathSegment::Line { to: [3.0, 4.0] }].into()));
     }
     let retained_target = match &group {
         DrawingLayerNode::Group(value) => layer_id(&value.children[0]).to_string(),
@@ -180,7 +180,7 @@ async fn drawing_live_envelope_submit_recursive_clone_swap_displaced_store_and_e
     assert_eq!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready, "valid retained Drawing load refusal: {:?}", app.artifact_store_replacement_refusal(handle));
     assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
     let projection = app.snapshot().expect("Drawing retained mutation publication");
-    let renamed = crate::schema::find_drawing_layer(&projection, &crate::standards::v1::subsets::any::schema::create_drawing_id("path", b"Path")).expect("retained Drawing target");
+    let renamed = crate::schema::find_drawing_layer(&projection, "Path").expect("retained Drawing target");
     assert_eq!(crate::schema::layer_base(renamed).name, "Retained Path");
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("first Drawing acknowledgement"));
     assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate Drawing acknowledgement"));
@@ -626,7 +626,7 @@ async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
     for cancelled in [true, false] {
         let (mut app, mut meta) = inline_selection_app().await;
         meta.view_state.as_mut().unwrap().active_utility_id = Some("selectDirect".into());
-        let mut layer = crate::schema::create_drawing_shape_layer_rect("Drag target");
+        let mut layer = crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Drag target")).to_string().into()).expect("nonempty authored identity"), "Drag target");
         crate::schema::layer_base_mut(&mut layer).attributes.fill=Some(crate::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});
         let id = layer_id(&layer).to_string();
         let snapshot = DrawingSnapshot { id: "direct-drag".into(), layers: vec![layer].into(), ..Default::default() };
@@ -947,7 +947,7 @@ async fn path_join_conversion_position_and_translation_each_undo_as_one_edit() {
         let mut app=drawing_app().await;
         let before=vec![crate::PathSegment::Move { to:[0.0,0.0] },crate::PathSegment::Line { to:[10.0,0.0] },crate::PathSegment::Move { to:[20.0,0.0] },crate::PathSegment::Line { to:[30.0,0.0] }];
         let after=edit_path(&before,&edit).unwrap();
-        let layer=crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Editable",before.clone().into());
+        let layer=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Editable")).to_string().into()).expect("nonempty authored identity"), "Editable",before.clone().into());
         let id=layer_id(&layer).to_string();
         let snapshot=DrawingSnapshot { id:"path-history".into(),layers:vec![layer].into(),..Default::default() };
         load_drawing_fixture(&mut app,&snapshot);
@@ -963,7 +963,7 @@ async fn path_join_conversion_position_and_translation_each_undo_as_one_edit() {
 #[semio_framework_async_macros::async_test]
 async fn shape_conversion_restores_the_primitive_with_one_undo() {
     let mut app=drawing_app().await;
-    let layer=crate::schema::create_drawing_shape_layer_rect("Convert me");
+    let layer=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Convert me")).to_string().into()).expect("nonempty authored identity"), "Convert me");
     let id=layer_id(&layer).to_string();
     let before=DrawingSnapshot { id:"conversion-history".into(),layers:vec![layer].into(),..Default::default() };
     load_drawing_fixture(&mut app,&before);
@@ -1074,7 +1074,7 @@ async fn armed_canvas_utilities_retire_gestures_after_document_actions() {
         let utility = row["utility"].as_str().unwrap();
         let (mut app, mut meta) = inline_selection_app().await;
         meta.view_state.as_mut().unwrap().active_utility_id = Some(utility.into());
-        let mut layer = crate::schema::create_drawing_shape_layer_rect("Source");
+        let mut layer = crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Source")).to_string().into()).expect("nonempty authored identity"), "Source");
         crate::schema::layer_base_mut(&mut layer).id = "source".into();
         crate::schema::layer_base_mut(&mut layer).attributes.fill = Some(crate::FillStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] });
         let before = DrawingSnapshot { id: "action-interruption".into(), layers: vec![layer].into(), ..Default::default() };
@@ -1194,7 +1194,7 @@ async fn drawing_window_status_tracks_live_selection_in_both_explicit_locales() 
             for row in law["cases"].as_array().unwrap() {
                 let (mut app,mut meta)=inline_selection_app().await;
                 let view=meta.view_state.as_mut().unwrap();view.locale=locale;view.terminology=terminology;
-                let layers=(0..row["layers"].as_u64().unwrap()).map(|index|{let mut layer=crate::schema::create_drawing_shape_layer_rect("Status");crate::schema::layer_base_mut(&mut layer).id=format!("layer-{index}").into();layer}).collect::<Vec<_>>();
+                let layers=(0..row["layers"].as_u64().unwrap()).map(|index|{let mut layer=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Status")).to_string().into()).expect("nonempty authored identity"), "Status");crate::schema::layer_base_mut(&mut layer).id=format!("layer-{index}").into();layer}).collect::<Vec<_>>();
                 let snapshot=DrawingSnapshot{id:"selection-status".into(),layers:layers.into_iter().collect(),..Default::default()};load_drawing_fixture(&mut app,&snapshot);
                 for (step,selection) in row["selections"].as_array().unwrap().iter().enumerate() {
                     let targets=selection.as_array().unwrap().iter().map(|index|serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":format!("layer-{}",index.as_u64().unwrap())})).collect::<Vec<_>>();
@@ -1226,7 +1226,7 @@ async fn drawing_io_declares_vector_out_and_export_media_covers_both_ports() {
     assert_one_artifact_publication(&receipt);
     let projection = app.snapshot().expect("projection");
     let history = semio_framework_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&projection, &history);
+    let doc = ArtifactView::with_operation(&projection, &history,crate::editor::drawing::identity_test::operation());
     let vector = DrawingPlayApp::export_media("vector:out", &doc).expect("vector:out");
     let MediaPayload::Structured { schema, json } = vector.payload else { panic!("expected structured svg payload") };
     assert_eq!(schema, "2d.drawing");
@@ -1256,7 +1256,7 @@ fn tool_base(document: &DrawingSnapshot) -> canvas_pointer_down::DrawingToolBase
 /// transaction of one `create-layer` under `<appId>#shapeRect`, labelled from the leaf in English and German.
 #[semio_framework_async_macros::async_test]
 async fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
-    let mut session = DrawingSession::new("shapeRect", "preview-seed");
+    let mut session = crate::editor::drawing::identity_test::session("shapeRect", "preview-seed");
     let document = default_drawing_document("empty", None);
     let down = session.press(pointer("shapeRect", [10.0, 10.0])).expect("press");
     assert!(down.artifact_mutations.is_empty() && down.transaction.is_none(), "pointer-down opens no document operation");
@@ -1287,7 +1287,7 @@ async fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
 
 #[semio_framework_async_macros::async_test]
 async fn gesture_preview_is_a_pure_read_never_mutating_the_tool_context() {
-    let mut session = DrawingSession::new("shapeRect", "");
+    let mut session = crate::editor::drawing::identity_test::session("shapeRect", "");
     session.press(pointer("shapeRect", [1.0, 2.0])).expect("press");
     let context_before = session.tool.context().clone();
     let _ = session.preview();
@@ -1299,7 +1299,7 @@ async fn gesture_preview_is_a_pure_read_never_mutating_the_tool_context() {
 #[semio_framework_async_macros::async_test]
 async fn two_gestures_are_two_transactions_and_a_cancel_is_zero_trace() {
     let document = default_drawing_document("empty", None);
-    let mut session = DrawingSession::new("shapeRect", "two-gestures");
+    let mut session = crate::editor::drawing::identity_test::session("shapeRect", "two-gestures");
     let mut transactions = Vec::new();
     for (start, end) in [([0.0, 0.0], [20.0, 10.0]), ([30.0, 30.0], [60.0, 50.0])] {
         session.press(pointer("shapeRect", start)).expect("press");
@@ -1318,7 +1318,7 @@ async fn two_gestures_are_two_transactions_and_a_cancel_is_zero_trace() {
 
 //#region 🧵️BatchedSamplesAndCancel
 fn session_with(utility: &str) -> (DrawingSession, DrawingSnapshot, NoConfig, semio_framework_plugin::HistoryView) {
-    (DrawingSession::new(utility, ""), default_drawing_document("empty", None), NoConfig::default(), semio_framework_plugin::HistoryView::empty())
+    (crate::editor::drawing::identity_test::session(utility, ""), default_drawing_document("empty", None), NoConfig::default(), semio_framework_plugin::HistoryView::empty())
 }
 
 /// 🧵️ LAW (design L4 / §2 D): a batch of four samples leaves the shape drag exactly where four
@@ -1328,7 +1328,7 @@ async fn a_batched_move_drives_the_gesture_to_its_last_sample() {
     let path = [[420.0, 320.0], [480.0, 300.0], [520.0, 380.0], [460.0, 360.0]];
     let run = |batched: bool| {
         let (mut session, document, config, history) = session_with("shapeRect");
-        let view = ArtifactView::new(&document, &history);
+        let view = ArtifactView::with_operation(&document, &history,crate::editor::drawing::identity_test::operation());
         let cfg = ConfigView { snapshot: &config, window: None };
         session.press(pointer("shapeRect", [0.0, 0.0])).expect("press");
         if batched {
@@ -1356,7 +1356,7 @@ async fn a_batched_move_drives_the_gesture_to_its_last_sample() {
 async fn a_cancelled_release_commits_nothing_and_leaves_the_gesture_idle() {
     for utility in ["shapeRect", "selectMarquee"] {
         let (mut session, document, config, history) = session_with(utility);
-        let view = ArtifactView::new(&document, &history);
+        let view = ArtifactView::with_operation(&document, &history,crate::editor::drawing::identity_test::operation());
         let cfg = ConfigView { snapshot: &config, window: None };
         session.press(pointer(utility, [0.0, 0.0])).expect("press");
         canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 600.0, y: 500.0, width: 800.0, height: 600.0, samples: Vec::new() }, &view, &cfg, &mut session).expect("move");
@@ -1368,7 +1368,7 @@ async fn a_cancelled_release_commits_nothing_and_leaves_the_gesture_idle() {
         assert!(session.point_query.is_none(), "{utility}: no marquee/pick query is retained");
     }
     let (mut session, document, config, history) = session_with("selectDirect");
-    let view = ArtifactView::new(&document, &history);
+    let view = ArtifactView::with_operation(&document, &history,crate::editor::drawing::identity_test::operation());
     let cfg = ConfigView { snapshot: &config, window: None };
     let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { alt: false, x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: true }, &view, &cfg, &mut session).expect("cancel");
     assert!(emit.effects.is_empty() && emit.artifact_mutations.is_empty(), "an idle cancel never falls back to a pick");
@@ -1597,7 +1597,7 @@ async fn set_active_example_resolves_the_registered_catalogue() {
     let doc = default_drawing_document("example-probe", None);
     let history = semio_framework_plugin::HistoryView::empty();
     let config = NoConfig::default();
-    let view = ArtifactView::new(&doc, &history);
+    let view = ArtifactView::with_operation(&doc, &history,crate::editor::drawing::identity_test::operation());
     let cfg = ConfigView { snapshot: &config, window: None };
     let mut session = DrawingSession::default();
     for source in examples {
@@ -1615,14 +1615,14 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
     for cancelled in [true,false] {
         let (mut app,mut meta)=inline_selection_app().await;
         meta.view_state.as_mut().unwrap().active_utility_id=Some("selectDirect".into());
-        let mut child=crate::schema::create_drawing_shape_layer_rect("Child");
+        let mut child=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Child")).to_string().into()).expect("nonempty authored identity"), "Child");
         crate::schema::layer_base_mut(&mut child).id="child".into();
         crate::schema::layer_base_mut(&mut child).attributes.fill=Some(crate::FillStyle::Solid {color:[1.0,0.0,0.0,1.0]});
-        let mut group=crate::schema::create_drawing_group_layer("Group");
+        let mut group=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
         crate::schema::layer_base_mut(&mut group).id="group".into();
         crate::schema::layer_base_mut(&mut group).transform.scale_x=2.0;
         if let DrawingLayerNode::Group(body)=&mut group { body.children.push(child); }
-        let mut other=crate::schema::create_drawing_shape_layer_rect("Other");
+        let mut other=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Other")).to_string().into()).expect("nonempty authored identity"), "Other");
         crate::schema::layer_base_mut(&mut other).id="other".into();
         crate::schema::layer_base_mut(&mut other).attributes.fill=Some(crate::FillStyle::Solid {color:[0.0,0.0,1.0,1.0]});
         crate::schema::layer_base_mut(&mut other).transform.x=400.0;
@@ -1690,7 +1690,7 @@ async fn created_layers_are_painted_and_selected_for_immediate_editing() {
 
 #[test]
 fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_navigation() {
-    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Off origin",vec![crate::PathSegment::Move { to: [-20.0,-30.0] },crate::PathSegment::Line { to: [80.0,70.0] }].into());
+    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Off origin")).to_string().into()).expect("nonempty authored identity"), "Off origin",vec![crate::PathSegment::Move { to: [-20.0,-30.0] },crate::PathSegment::Line { to: [80.0,70.0] }].into());
     let mut document = crate::DrawingSnapshot { layers: vec![layer].into(),artboard: None,..Default::default() };
     let mut config = canvas_window::config::DrawingCanvasWindowConfig::default();
     let preview = DrawingGesturePreview::default();
@@ -1721,8 +1721,8 @@ fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_naviga
 async fn text_content_and_size_each_undo_as_one_selection_edit() {
     for (field, value) in [("textContent", "Grüße 🌍\n123"), ("textSize", "36")] {
         let mut app = drawing_app().await;
-        let mut first = crate::schema::create_drawing_text_layer("First");
-        let mut second = crate::schema::create_drawing_text_layer("Second");
+        let mut first = crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
+        let mut second = crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
         crate::schema::layer_base_mut(&mut first).id = "first".into();
         crate::schema::layer_base_mut(&mut second).id = "second".into();
         let DrawingLayerNode::Text(text) = &mut second else { unreachable!() };
@@ -1742,8 +1742,8 @@ async fn text_content_and_size_each_undo_as_one_selection_edit() {
 #[semio_framework_async_macros::async_test]
 async fn select_all_discovers_unvisited_layers_and_prunes_deleted_selection() {
     let (mut app, meta) = inline_selection_app().await;
-    let first = crate::schema::create_drawing_shape_layer_rect("First");
-    let second = crate::schema::create_drawing_text_layer("Second");
+    let first = crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
+    let second = crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
     let ids = vec![layer_id(&first).to_string(), layer_id(&second).to_string()];
     let snapshot = DrawingSnapshot { id: "select-all-topology".into(), layers: vec![first, second].into(), ..Default::default() };
     load_drawing_fixture(&mut app, &snapshot);
@@ -1767,9 +1767,9 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
         for (cancelled,shift,alt) in [(false,false,false),(true,false,false),(false,true,true),(true,true,true)] {
             let (mut app,mut meta)=inline_selection_app().await;
             meta.view_state.as_mut().unwrap().active_utility_id=Some("selectDirect".into());
-            let mut child=crate::schema::create_drawing_shape_layer_rect("Transform target");
+            let mut child=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Transform target")).to_string().into()).expect("nonempty authored identity"), "Transform target");
             crate::schema::layer_base_mut(&mut child).id="child".into();
-            let mut parent=crate::schema::create_drawing_group_layer("Affine parent");
+            let mut parent=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Affine parent")).to_string().into()).expect("nonempty authored identity"), "Affine parent");
             crate::schema::layer_base_mut(&mut parent).transform=crate::DrawingTransform {x:20.0,y:30.0,scale_x:2.0,scale_y:3.0,rotation:0.3,shear:0.5};
             let DrawingLayerNode::Group(group)=&mut parent else {unreachable!()};
             group.children.push(child);
@@ -1820,7 +1820,7 @@ async fn node_drag_previews_without_mutation_and_commits_one_undoable_edit() {
         let (mut app,mut meta)=inline_selection_app().await;
         meta.view_state.as_mut().unwrap().active_utility_id=Some("editNodes".into());
         let source=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Cubic {ctrl1:[10.0,20.0],ctrl2:[30.0,20.0],to:[40.0,0.0]}];
-        let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Curve",source.clone().into());
+        let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve",source.clone().into());
         crate::schema::layer_base_mut(&mut path).id="curve".into();
         crate::schema::layer_base_mut(&mut path).transform.scale_x=2.0;
         let before=DrawingSnapshot {id:"node-drag".into(),layers:vec![path].into(),..Default::default()};
@@ -1866,7 +1866,7 @@ async fn point_click_persists_and_local_position_rebinds_but_topology_edit_prune
     use crate::schema::geometry::editing::{PathEdit,PathPoint,PathAxis};
     let (mut app,mut meta)=inline_selection_app().await;
     meta.view_state.as_mut().unwrap().active_utility_id=Some("editNodes".into());
-    let mut layer=crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Line",vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]}].into());
+    let mut layer=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Line")).to_string().into()).expect("nonempty authored identity"), "Line",vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]}].into());
     crate::schema::layer_base_mut(&mut layer).id="path".into();
     let before=DrawingSnapshot {id:"point-selection".into(),layers:vec![layer].into(),..Default::default()};
     load_drawing_fixture(&mut app,&before);
@@ -1897,7 +1897,7 @@ async fn every_keyboard_nudge_moves_document_axes_and_undoes_once() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎮️commands/🕹️nudge-selection/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture.as_array().unwrap() {
         let (mut app,meta)=inline_selection_app().await;
-        let mut layer=crate::schema::create_layer_by_kind("shape:rect");
+        let mut layer=crate::schema::create_layer_by_kind(crate::schema::identity::DrawingIdentity::admit((("shape:rect")).to_string().into()).expect("nonempty authored identity"), "shape:rect");
         crate::schema::layer_base_mut(&mut layer).id="shape".into();
         let before=DrawingSnapshot {id:"nudge".into(),layers:vec![layer].into(),..Default::default()};
         load_drawing_fixture(&mut app,&before);
@@ -1925,9 +1925,9 @@ async fn node_keyboard_nudges_rebind_selection_and_use_parent_axes() {
     let (mut app,mut meta)=inline_selection_app().await;
     meta.view_state.as_mut().unwrap().active_utility_id=Some("editNodes".into());
     let source=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Cubic {ctrl1:[2.0,0.0],ctrl2:[8.0,0.0],to:[10.0,0.0]}];
-    let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Curve",source.clone().into());
+    let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve",source.clone().into());
     crate::schema::layer_base_mut(&mut path).id="path".into();
-    let mut group=crate::schema::create_layer_by_kind("group");
+    let mut group=crate::schema::create_layer_by_kind(crate::schema::identity::DrawingIdentity::admit((("group")).to_string().into()).expect("nonempty authored identity"), "group");
     if let DrawingLayerNode::Group(group)=&mut group {
         group.base.id="group".into();group.base.transform.rotation=std::f64::consts::FRAC_PI_2;group.base.transform.scale_x=2.0;group.base.transform.scale_y=4.0;group.base.transform.x=100.0;group.base.transform.y=200.0;group.children=vec![path].into();
     }
@@ -1964,9 +1964,9 @@ async fn modified_node_picks_and_combined_drag_preserve_layers_and_one_history_e
         let (mut app,mut meta)=inline_selection_app().await;
         meta.view_state.as_mut().unwrap().active_utility_id=Some("editNodes".into());
         let segments=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]}];
-        let mut first=crate::standards::v1::subsets::any::schema::create_drawing_path_layer("First",segments.clone().into());
+        let mut first=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First",segments.clone().into());
         crate::schema::layer_base_mut(&mut first).id="first".into();
-        let mut second=crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Second",segments.into());
+        let mut second=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second",segments.into());
         let base=crate::schema::layer_base_mut(&mut second);base.id="second".into();base.transform.x=40.0;base.transform.scale_x=2.0;base.transform.scale_y=2.0;
         let before=DrawingSnapshot {id:"multi-node-drag".into(),layers:vec![first,second].into(),..Default::default()};
         load_drawing_fixture(&mut app,&before);
@@ -2024,14 +2024,14 @@ async fn fill_rule_selection_edit_undoes_as_one_history_entry() {
 #[semio_framework_async_macros::async_test]
 async fn alignment_across_groups_undoes_as_one_history_entry() {
     let mut app=drawing_app().await;
-    let mut first=crate::schema::create_drawing_shape_layer_rect("First");
+    let mut first=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
     crate::schema::layer_base_mut(&mut first).id="first".into();
-    let mut second=crate::schema::create_drawing_shape_layer_rect("Second");
+    let mut second=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
     let base=crate::schema::layer_base_mut(&mut second);base.id="second".into();base.transform.x=20.0;base.transform.y=20.0;
-    let mut group=crate::schema::create_drawing_group_layer("Group");
+    let mut group=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
     let DrawingLayerNode::Group(body)=&mut group else {unreachable!()};
     body.base.id="group".into();body.base.transform.scale_x=2.0;body.base.transform.scale_y=3.0;body.children=vec![first,second].into();
-    let mut third=crate::schema::create_drawing_shape_layer_rect("Third");
+    let mut third=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Third")).to_string().into()).expect("nonempty authored identity"), "Third");
     let base=crate::schema::layer_base_mut(&mut third);base.id="third".into();base.transform.x=-20.0;
     let before=DrawingSnapshot {id:"alignment-history".into(),layers:vec![group,third].into(),..Default::default()};
     let mut after=before.clone();
@@ -2046,7 +2046,7 @@ async fn layer_stack_steps_undo_as_one_history_entry() {
     for (operation,order) in [("bringForward",["a","d","b","c"]),("sendBackward",["b","c","a","d"])] {
         let mut app=drawing_app().await;
         let layers=["a","b","c","d"].into_iter().map(|id| {
-            let mut layer=crate::schema::create_drawing_shape_layer_rect(id);
+            let mut layer=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id);
             crate::schema::layer_base_mut(&mut layer).id=id.into();layer
         }).collect::<Vec<_>>();
         let before=DrawingSnapshot {id:"stack-history".into(),layers:layers.into_iter().collect(),..Default::default()};
@@ -2059,11 +2059,11 @@ async fn layer_stack_steps_undo_as_one_history_entry() {
 #[semio_framework_async_macros::async_test]
 async fn ungroup_selects_promoted_children_and_undoes_as_one_history_entry() {
     let (mut app,meta)=inline_selection_app().await;
-    let mut first=crate::schema::create_drawing_shape_layer_rect("First");
+    let mut first=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
     let base=crate::schema::layer_base_mut(&mut first);base.id="first".into();base.transform.x=2.0;
-    let mut second=crate::schema::create_drawing_shape_layer_rect("Second");
+    let mut second=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
     crate::schema::layer_base_mut(&mut second).id="second".into();
-    let mut group=crate::schema::create_drawing_group_layer("Group");
+    let mut group=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
     let DrawingLayerNode::Group(body)=&mut group else {unreachable!()};
     body.base.id="group".into();body.base.transform.x=5.0;body.children=vec![first.clone(),second.clone()].into();
     let before=DrawingSnapshot {id:"ungroup-history".into(),layers:vec![group].into(),..Default::default()};
@@ -2093,7 +2093,7 @@ async fn deleting_selected_nodes_commits_once_clears_points_and_undoes_exactly()
     let (mut app,mut meta)=inline_selection_app().await;
     meta.view_state.as_mut().unwrap().active_utility_id=Some("editNodes".into());
     let segments=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]},crate::PathSegment::Line {to:[10.0,10.0]}];
-    let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Path",segments.clone().into());
+    let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), "Path",segments.clone().into());
     crate::schema::layer_base_mut(&mut path).id="path".into();
     let before=DrawingSnapshot {id:"node-delete-history".into(),layers:vec![path].into(),..Default::default()};
     load_drawing_fixture(&mut app,&before);
@@ -2124,7 +2124,7 @@ async fn node_marquee_preserves_layers_and_supports_merge_and_cancellation() {
         let segments=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]},crate::PathSegment::Line {to:[10.0,10.0]}];
         let geometry=interaction::points::geometry_id(&segments).unwrap();
         let point=|index|interaction::points::point_id("path",&geometry,index,crate::schema::geometry::editing::PathPoint::Anchor).unwrap();
-        let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Path",segments.into());crate::schema::layer_base_mut(&mut path).id="path".into();
+        let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), "Path",segments.into());crate::schema::layer_base_mut(&mut path).id="path".into();
         let before=DrawingSnapshot {id:"node-marquee".into(),layers:vec![path].into(),..Default::default()};load_drawing_fixture(&mut app,&before);
         settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
         for (domain,granularity,ids) in [(DRAWING_INTERACTION_DOMAIN,DRAWING_INTERACTION_GRANULARITY,vec!["path".into()]),(DRAWING_POINT_DOMAIN,DRAWING_POINT_GRANULARITY,initial.iter().copied().map(point).collect())] {
@@ -2143,13 +2143,13 @@ async fn node_marquee_preserves_layers_and_supports_merge_and_cancellation() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn mounted_vector_editor_closes_its_registered_read_without_a_live_maintenance_tick(){let mut app=drawing_app().await;let layer=crate::schema::create_drawing_shape_layer_rect("Registered geometry");let snapshot=DrawingSnapshot{id:"mounted-read-close".into(),layers:vec![layer].into(),..Default::default()};load_drawing_fixture(&mut app,&snapshot);let view=ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native);let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,&view).await.unwrap());let records:serde_json::Value=serde_json::from_str(&scene.layers_json).unwrap();assert!(records.as_array().unwrap().iter().any(|record|record["id"].as_str().is_some_and(|id|layer_id(&snapshot.layers[0]).eq_str(id))));semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);assert!(app.close_terminal_is_empty());eprintln!("[DEBUG] Actual registered Drawing app returned and acknowledged its mounted source read and closed without relying on a live maintenance tick");}
+async fn mounted_vector_editor_closes_its_registered_read_without_a_live_maintenance_tick(){let mut app=drawing_app().await;let layer=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Registered geometry")).to_string().into()).expect("nonempty authored identity"), "Registered geometry");let snapshot=DrawingSnapshot{id:"mounted-read-close".into(),layers:vec![layer].into(),..Default::default()};load_drawing_fixture(&mut app,&snapshot);let view=ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native);let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,&view).await.unwrap());let records:serde_json::Value=serde_json::from_str(&scene.layers_json).unwrap();assert!(records.as_array().unwrap().iter().any(|record|record["id"].as_str().is_some_and(|id|layer_id(&snapshot.layers[0]).eq_str(id))));semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);assert!(app.close_terminal_is_empty());eprintln!("[DEBUG] Actual registered Drawing app returned and acknowledged its mounted source read and closed without relying on a live maintenance tick");}
 
 #[semio_framework_async_macros::async_test]
 async fn registered_pointer_yields_while_real_scene_job_is_pending_and_then_selects_once(){
     use semio_framework_plugin::reactor::jobs::{start_job,step_job,cancel_job,JobBudget,JobStep};
     let(mut app,mut meta)=inline_selection_app().await;meta.view_state.as_mut().unwrap().active_utility_id=Some("selectDirect".into());
-    let mut layer=crate::schema::create_drawing_shape_layer_rect("Pending paint");crate::schema::layer_base_mut(&mut layer).attributes.fill=Some(crate::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});let selected=layer_id(&layer).to_string();
+    let mut layer=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Pending paint")).to_string().into()).expect("nonempty authored identity"), "Pending paint");crate::schema::layer_base_mut(&mut layer).attributes.fill=Some(crate::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});let selected=layer_id(&layer).to_string();
     let before=DrawingSnapshot{id:"pending-pointer".into(),layers:vec![layer].into(),..Default::default()};load_drawing_fixture(&mut app,&before);
     let mut geometry=None;for effect in app.pending_effects(meta.view_state.as_ref()).await{match effect{Effect::CancelJob{job}=>cancel_job(job).await,Effect::SpawnJob{job,kind,input,..}if kind=="semio.draw.mounted-vector"=>{assert!(geometry.replace(job).is_none());start_job(job,&kind,&input).await;},_=>{}}}let geometry=geometry.unwrap();
     assert!(matches!(step_job(geometry,JobBudget{fuel:1,deadline_ms:8}).await,JobStep::Running(_)));

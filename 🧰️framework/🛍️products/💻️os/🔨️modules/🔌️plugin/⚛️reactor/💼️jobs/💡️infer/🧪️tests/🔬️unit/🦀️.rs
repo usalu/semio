@@ -19,7 +19,7 @@ const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceService
 };
 
 fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, crate::app::ArtifactInferenceExecutionError> {
-    Ok(ArtifactInferenceExecution { canonical_payload: request.canonical_payload.to_vec(), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
+    Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload: request.canonical_payload.to_vec(), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
 }
 
 /// 🪪️ Every fixture request carries its OWN `cancellation_id`: the in-flight inference registry is
@@ -40,6 +40,7 @@ fn request_bytes(cancellation_id: &str) -> Vec<u8> {
         source_dialect: "s.jobtest.widget.standard.v1.dialect.canonical".into(),
         policy: Vec::new(),
         budgets: WireArtifactInferenceBudget { allocation_bytes: 1 << 20, work_units: 1000, recursion_depth: 4 },
+        retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 },
         cancellation_id: cancellation_id.to_string(),
         previous_state: None,
         requested_cache_mode: WireArtifactInferenceCacheMode::Cold,
@@ -178,13 +179,14 @@ fn an_interactive_result_forwards_the_jobs_resume_state_and_claims_no_fidelity_i
     let request = decode_request(&request_bytes("jobtest-cancel-encode")).expect("the fixture request decodes");
     let decoded = |bytes: Vec<u8>| -> crate::app::WireArtifactInferenceResult { semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the result decodes") };
 
-    let resumable = decoded(encode_result(request.clone(), vec![1, 2, 3], Some(vec![4, 5])).expect("encodes"));
+    let resumable = decoded(encode_result(request.clone(), vec![1, 2, 3], Some(vec![4, 5]),RetainedCloneProgress{copied_items:7,copied_bytes:23,retained_capacity_bytes:0,released_bytes:65536}).expect("encodes"));
     assert_eq!((resumable.canonical_payload, resumable.previous_state, resumable.complete), (vec![1, 2, 3], Some(vec![4, 5]), true));
     assert_eq!((resumable.validity.as_str(), resumable.quality.as_str()), ("valid", "unreported"));
     assert!(resumable.diagnostics.is_empty());
+    assert_eq!(resumable.retirement_progress,RetainedCloneProgress{copied_items:7,copied_bytes:23,retained_capacity_bytes:0,released_bytes:65536});
 
     let mut resumed = request;
     resumed.previous_state = Some(vec![9, 9]);
-    let stateless = decoded(encode_result(resumed, vec![1], None).expect("encodes"));
+    let stateless = decoded(encode_result(resumed, vec![1], None,RetainedCloneProgress::default()).expect("encodes"));
     assert_eq!(stateless.previous_state, None, "the request's own previous state is not the job's resume state");
 }

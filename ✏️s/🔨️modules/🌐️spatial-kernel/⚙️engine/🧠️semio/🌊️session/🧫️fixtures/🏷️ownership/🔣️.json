@@ -50,6 +50,16 @@
         "retired_analytic_mesh_metadata_obeys_exact_byte_grants",
         "original_session_capture_keeps_same_allocation_until_full_typed_grants"
       ]
+    },
+    {
+      "source": "♻️retention/🦀️.rs",
+      "target": {
+        "kind": "lib",
+        "name": "semio_s_spatial_kernel_semio_session"
+      },
+      "laws": [
+        "original_session_retention_transfers_incoming_keys_and_closes_removed_rows"
+      ]
     }
   ]
 }

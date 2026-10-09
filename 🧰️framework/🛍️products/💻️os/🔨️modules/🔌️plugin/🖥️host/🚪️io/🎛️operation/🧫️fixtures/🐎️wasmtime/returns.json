@@ -1,0 +1,85 @@
+{
+  "pair": {
+    "pack": [
+      1,
+      2,
+      3
+    ],
+    "spr": [
+      4,
+      5
+    ],
+    "expectedBytes": [
+      3,
+      2
+    ]
+  },
+  "sqlite": {
+    "bytes": [
+      9,
+      8,
+      7
+    ],
+    "diagnostics": [
+      6,
+      5
+    ],
+    "expectedBytes": [
+      3,
+      2
+    ]
+  },
+  "turn": {
+    "presence": [
+      1,
+      2
+    ],
+    "status": [
+      3
+    ],
+    "ingress": [
+      4,
+      5,
+      6
+    ],
+    "expectedBytes": [
+      2,
+      1,
+      3
+    ]
+  },
+  "reservation": {
+    "prior": 7,
+    "guest": 3,
+    "return": 11,
+    "ceiling": 64,
+    "expected": 21
+  },
+  "receivingRefusals": [
+    {
+      "stage": "occupied",
+      "code": 4,
+      "messageStorage": "borrowed"
+    },
+    {
+      "stage": "unfinished",
+      "code": 4,
+      "messageStorage": "borrowed"
+    }
+  ],
+  "sqlitePending": {
+    "refusal": 0,
+    "ticket": 17,
+    "ownedBytes": 31,
+    "nativePending": true,
+    "outputPending": false,
+    "terminal": false,
+    "demands": {
+      "items": 1,
+      "copyBytes": 2,
+      "capacityBytes": 3,
+      "releaseBytes": 5,
+      "depth": 7
+    }
+  }
+}

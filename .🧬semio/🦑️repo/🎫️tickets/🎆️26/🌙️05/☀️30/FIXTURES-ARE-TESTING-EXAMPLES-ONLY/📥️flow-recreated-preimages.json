@@ -1,0 +1,12 @@
+{
+  "observed": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "sha256": "5f5f4939cbde5bac4f6194c5f9049b08eae948d21d78eb5a851d87a3c2000256"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "sha256": "6799409c96a39f505a024920eb6996d871efa22581bc84532d7ec934ea40bfb2"
+    }
+  ]
+}

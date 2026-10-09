@@ -109,6 +109,10 @@ impl<V> OrderedMap<V> {
     pub fn first_key_value(&self) -> Option<(&String, &V)> { self.iter().next() }
     /// 📍️ Borrows one ranked entry with at most MAX_AVL_HEIGHT metadata visits; charge one retained item.
     pub fn entry_at_rank(&self, index: usize) -> Option<(&String, &V)> { at(&self.root, index).map(|entry| (&*entry.key, &*entry.value)) }
+    /// 🔗️ Retains the same two immutable entry allocations after one bounded ranked metadata visit.
+    pub fn entry_shared_at_rank(&self,index:usize)->Option<(SharedOwner<String>,SharedOwner<V>)>{at(&self.root,index).map(|entry|(entry.key.clone(),entry.value.clone()))}
+    /// 📎️ Retains only the exact immutable value after one bounded ranked metadata visit.
+    pub fn value_shared_at_rank(&self,index:usize)->Option<SharedOwner<V>>{at(&self.root,index).map(|entry|entry.value.clone())}
     /// 🧊️ Cold synchronous lookup; retained callers must use begin_lookup to account comparison bytes.
     pub fn get(&self, key: &str) -> Option<&V> {
         let mut root: &Root<V> = &self.root;

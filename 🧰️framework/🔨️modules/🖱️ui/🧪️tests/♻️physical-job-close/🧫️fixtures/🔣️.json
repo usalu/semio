@@ -32,5 +32,25 @@
       "byteLength": 65536,
       "pageBytes": 16384
     }
-  }
+  },
+  "refusalReceipts": [
+    {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 7,
+      "retainedCapacityBytes": 31,
+      "releasedBytes": 13
+    },
+    {
+      "copiedItems": 5,
+      "copiedBytes": 67,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 257
+    }
+  ]
 }

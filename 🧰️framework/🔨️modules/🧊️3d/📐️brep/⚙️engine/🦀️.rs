@@ -449,9 +449,17 @@ pub struct Brep {
     body: Body,
     live: semio_framework_mesh_engine::HistoryFoldIndex<String, Entity>,
     pending_mutations: usize,
+    live_revision:u64,
 }
 
-semio_framework_value::artifact_retire_struct!(Brep {body,live,pending_mutations});
+semio_framework_value::artifact_retire_struct!(Brep {body,live,pending_mutations,live_revision});
+
+#[path="♻️retention/🦀️.rs"]
+mod retention;
+pub use retention::BrepRetentionJob;
+#[cfg(test)]
+#[path="🧪️tests/♻️retention/🦀️.rs"]
+mod retention_tests;
 
 /// ⏱️ A retained resumable boolean plus the operation recorder its whole run accumulates into —
 /// the recorder must outlive every step, which is why the job owns it rather than borrowing the
@@ -523,7 +531,7 @@ impl Brep {
     /// 🏗️ Empty native kernel session.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new() -> Self {
-        Self { body: Body::new(), live: semio_framework_mesh_engine::HistoryFoldIndex::new(), pending_mutations: 0 }
+        Self { body: Body::new(), live: semio_framework_mesh_engine::HistoryFoldIndex::new(), pending_mutations: 0,live_revision:0 }
     }
 }
 
@@ -659,6 +667,7 @@ impl Brep {
         let payload = format!("{kind:?}:{}", label.0);
         let handle = GeometryHandle(semio_framework_hash::hash_bytes(payload.as_bytes()));
         self.live.insert(handle.as_str().to_string(), entity);
+        self.advance_live_revision();
         handle
     }
 
@@ -732,10 +741,10 @@ impl Brep {
     fn compact_unreachable(&mut self) {
         if self.pending_mutations>0 {return;}
         let body = &self.body;
-        for slot in 0..self.live.slot_count() {drop(self.live.extract_slot_if(slot,|_,entity|label_of_entity(body,entity).is_some()));}
+        let mut changed=false;for slot in 0..self.live.slot_count() {if let Some(original)=self.live.extract_slot_if(slot,|_,entity|label_of_entity(body,entity).is_some()){drop(original);changed=true;}}if changed{self.advance_live_revision();}
         let roots = self.live_roots();
         let keep = self.body.reachable_from(&roots);
-        self.body.compact(&keep);
+        self.body.compact(keep);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -819,6 +828,10 @@ fn entity_tag(e: &Entity) -> String {
 // #region 🔖️SyncApi
 
 impl Brep {
+    fn advance_live_revision(&mut self){self.live_revision=self.live_revision.checked_add(1).expect("original live registry revision overflow");}
+    fn retention_source_revision(&self)->(u64,u64){(self.live_revision,self.body.labels.next())}
+    /// 👀️ Borrows the original live registry without constructing a handle owner.
+    pub fn contains_live_handle(&self,handle:&str)->bool{self.live.get(handle).is_some()}
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn box_prim_sync(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
@@ -1445,20 +1458,18 @@ impl Brep {
         self.register_import_entity(solid)
     }
     fn register_import_entity(&mut self,entity:EntityRef)->Result<GeometryHandle,BrepError> {match entity {EntityRef::Solid(solid)=>Ok(self.register_solid(solid)),EntityRef::Shell(shell)=>Ok(self.register_shell(shell)),_=>Err(BrepError::InvalidInput("mesh import requires shell or solid".into()))}}
-    /// 📦 Advances the canonical mesh-I/O mutation and publishes only its completed solid.
-    pub fn step_mesh_import_sync(&mut self, cursor: &mut MeshImportCursor, budget: usize) -> Result<Option<GeometryHandle>,BrepError> {
-        self.close_mesh_import_sync(cursor,budget,4096)
+    /// 📦 Advances original production work and publishes its completed original entity.
+    pub fn step_mesh_import_sync(&mut self,cursor:&mut MeshImportCursor,budget:usize)->Result<Option<GeometryHandle>,BrepError> {
+        if budget>0 && !cursor.active && !cursor.retirement_complete() {cursor.active=true;self.pending_mutations+=1;}
+        let result=cursor.step(&mut self.body,budget).map_err(|error|map_err(&error));
+        if cursor.cleanup_complete() && cursor.active {cursor.active=false;self.pending_mutations=self.pending_mutations.checked_sub(1).expect("owned import mutation");}
+        match result? {MeshImportStep::Done(entity)=>self.register_import_entity(entity).map(Some),_=>Ok(None)}
     }
-    /// 🎟️ Advances import or rollback with exact byte credit before publishing its handle.
-    pub fn close_mesh_import_sync(&mut self,cursor:&mut crate::brep::engine::mesh_io::MeshImportCursor,budget:usize,bytes:usize)->Result<Option<GeometryHandle>,BrepError> {
-        if budget>0 && bytes>0 && !cursor.active && !cursor.retirement_complete() {cursor.active=true;self.pending_mutations+=1;}
-        let result=cursor.close_step(&mut self.body,budget,bytes).map_err(|error|map_err(&error));
-        if matches!(&result,Ok(MeshImportStep::Done(_))|Ok(MeshImportStep::Cancelled)|Err(_)) && cursor.active {cursor.active=false;self.pending_mutations=self.pending_mutations.checked_sub(1).expect("owned import mutation");}
-        match result? {
-            MeshImportStep::Done(EntityRef::Solid(solid))=>Ok(Some(self.register_solid(solid))),
-            MeshImportStep::Done(EntityRef::Shell(shell))=>Ok(Some(self.register_shell(shell))),
-            _=>Ok(None),
-        }
+    /// 🎟️ Forwards every original cleanup currency and its physical receipt without publishing.
+    pub fn close_mesh_import_sync(&mut self,cursor:&mut MeshImportCursor,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError> {
+        let step=cursor.close_step(&mut self.body,grant)?;
+        if cursor.cleanup_complete() && cursor.active {cursor.active=false;self.pending_mutations=self.pending_mutations.checked_sub(1).expect("owned import mutation");}
+        Ok(step)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_mesh_sync(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::io::MeshExporter) -> Result<Vec<u8>, BrepError> {
@@ -1596,6 +1607,7 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn dispose_sync(&mut self, shape: &GeometryHandle) -> usize {
         let removed = self.live.remove(shape.as_str()).is_some();
+        if removed{self.advance_live_revision();}
         if removed {
             self.compact_unreachable();
         }
@@ -2059,7 +2071,7 @@ impl BrepKernel for Brep {
     /// [`Brep::compact_unreachable`].
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn retain(&mut self, live: &std::collections::HashSet<String>) {
-        for slot in 0..self.live.slot_count() {drop(self.live.extract_slot_if(slot,|key,_|live.contains(key)));}
+        let mut changed=false;for slot in 0..self.live.slot_count() {if let Some(original)=self.live.extract_slot_if(slot,|key,_|live.contains(key)){drop(original);changed=true;}}if changed{self.advance_live_revision();}
         self.compact_unreachable();
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

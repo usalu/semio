@@ -1,0 +1,66 @@
+{
+  "utc": "2026-10-09T14:26:40.726780+00:00",
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧬️schema/🔣️.json",
+      "sha256": "199f1e7d3fd9de612155664c1b8b40d355d8476f44d882edf6b4a4517be8269f",
+      "pathCharacters": 101
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧫️fixtures/🔣️.json",
+      "sha256": "e876ffc21bd242546160197b8928bd64aa093164dfd001b31b1aaaa8f5476114",
+      "pathCharacters": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts",
+      "sha256": "332935a656ab8c34d8f6cd2932f1aecfe28ecfdc17111c4ab044890d9b038ead",
+      "pathCharacters": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "cb646595beb2aeabc2a00deef501d3e74a6c82144013ebbe87a1794e97b3f0df",
+      "pathCharacters": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧬️schema/🟦️.ts",
+      "sha256": "5a35a2d2464dde9e1314d2feec1026172e8c947c956e0380561c9613f4e90f2e",
+      "pathCharacters": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs",
+      "sha256": "f638a3ca07794e319b755d7a3a1ed85ea1a55bb95a510f364c5a4530fa2427f6",
+      "pathCharacters": 80
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🦀️.rs",
+      "sha256": "6ede1c8f9e7fc0588c9ec56a4b2239a908544cf69cbf9a94979144df6738dad5",
+      "pathCharacters": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🦀️.rs",
+      "sha256": "622b134fa6a14cf6cf7cbe18eeeb3d2a20d4d08302395f237b4ad93a42387b5e",
+      "pathCharacters": 98
+    }
+  ],
+  "inheritedPolicyOverrideNames": [],
+  "argv": [
+    "bun",
+    "node_modules/nx/dist/bin/nx.js",
+    "run",
+    "@semio-tech/framework-replication-rs:test",
+    "--skip-nx-cache",
+    "--outputStyle=static",
+    "--",
+    "--lib",
+    "-E",
+    "test(original_foreign_output_preserves_immutable_policy_and_every_cancelled_backing)",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--success-output",
+    "immediate"
+  ],
+  "profile": "original default",
+  "sourceCopies": false
+}

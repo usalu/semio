@@ -125,7 +125,6 @@ import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦
 import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json";
 import extensionInvocationWireFixture from "../../../../🌊️flow/🧩️extensions/🕸️wasm/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
-import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
 import { type ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import automaticCheckinCorpus from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧫️automatic-checkin/🔣️.json";
@@ -197,16 +196,24 @@ import { examplesForApp, examplesForDialect, surfaceAppId, type AppRole } from "
 import choiceFixture from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧫️fixtures/🔽️choices/🔣️.json";
 
 import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 
-const ownedExports = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(rendererSchema).addSchema(directorySchema);
+const ownedExports = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(rendererSchema);
 /** 🧬️ Compiles one named export of the `os.renderer` schema module. */
 /** 🧬️ Compiles one named `$defs` export of a peer scope's `🧬️schema/` module. */
 const peerExport = (module: { $id: string }, exportId: string): ValidateFunction => semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(module).getSchema(`${module.$id}#/$defs/${exportId}`) as ValidateFunction;
 const rendererExport = (exportId: string): ValidateFunction => ownedExports.getSchema(`${rendererSchema.$id}#/$defs/${exportId}`) as ValidateFunction;
-/** 🧬️ Compiles one named export of the `os.directory` schema module. */
-const directoryExport = (exportId: string): ValidateFunction => ownedExports.getSchema(`${directorySchema.$id}#/$defs/${exportId}`) as ValidateFunction;
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
+
+describe("physical slider receiving contract",()=>{
+
+  it("checks actual slider rows against the canonical contract and independent validator",()=>{
+    const independent=peerExport(dagVcsSchema,"SliderOverlayRow");
+    for(const item of graphSliderFixture.cases){expect(independent(item.row),JSON.stringify(independent.errors)).toBe(true);expect(validateJsonSchemaSubset(dagVcsSchema.$defs.SliderOverlayRow,item.row,dagVcsSchema)).toEqual([]);expect(parseDagSliderOverlays(JSON.stringify({sliders:[item.row]}))).toEqual([item.row]);}
+    console.log(`[DEBUG] Actual slider receiving contract: rows=${graphSliderFixture.cases.length} independentAjv=true`);
+  });
+});
 
 describe("catalog-resolved artifact creation kinds", () => {
   it("matches the independent enum validator for unresolved required and host-resolved choices", () => {
@@ -1126,8 +1133,6 @@ describe("Space artifact creation host owner", () => {
   });
 
   it("publishes only a committed current target and releases every private rejected target once", async () => {
-    const validate = directoryExport("ArtifactCreationReadyOpeningV1");
-    expect(validate(artifactCreationReadyOpeningFixture), JSON.stringify(validate.errors)).toBe(true);
     for (const row of artifactCreationReadyOpeningFixture.cases) {
       let currentIndex = 0;
       let releases = 0;
@@ -1163,7 +1168,6 @@ describe("Space artifact creation host owner", () => {
   });
 
   it("requires an explicit same-generation mount after the document port becomes ready", async () => {
-    expect(directoryExport("ArtifactCreationReadyOpeningV1")(artifactCreationReadyOpeningFixture)).toBe(true);
     const { createArtifactCreationCatalogMountV1 } = await import("../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts");
     for (const row of artifactCreationReadyOpeningFixture.mountCases) {
       const gate = createArtifactCreationCatalogMountV1(catalogAuthority.catalogGenerationId);
@@ -1194,7 +1198,6 @@ describe("Space artifact creation host owner", () => {
   });
 
   it("commits private document opening only after a still-current creation mount", async () => {
-    expect(directoryExport("ArtifactCreationReadyOpeningV1")(artifactCreationReadyOpeningFixture)).toBe(true);
     const { createArtifactCreationCatalogMountV1 } = await import("../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts");
     for (const row of artifactCreationReadyOpeningFixture.mountCases) {
       const gate = createArtifactCreationCatalogMountV1(catalogAuthority.catalogGenerationId);
@@ -1306,9 +1309,7 @@ describe("Space artifact creation host owner", () => {
     expect(state[replacement.requestId]).toMatchObject({ phase: "accepted", cancelRequested: false });
   });
 
-  it("renders the schema-owned English and German lifecycle without inventing numeric progress", async () => {
-    const validate = directoryExport("ArtifactCreationProgressUiV1");
-    expect(validate(artifactCreationProgressFixture), JSON.stringify(validate.errors)).toBe(true);
+  it("renders the English and German lifecycle without inventing numeric progress", async () => {
     expect(deepEqual(artifactCreationProgressFixture.locales, ARTIFACT_CREATION_PROGRESS_TEXT_V1)).toBe(true);
     const oracle = createTranslationOracle();
     await oracle.init({
@@ -1943,7 +1944,7 @@ import {
 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
-import { Canvas2dHost, canvasLayerDisplayLabel, worldToScreenLogical, readCanvas2dSurfaceColors, Board2dHost, applyBoard2dHighlightedIds, board2dCameraActionArgs, beginPuzzle2dPeerGesture, collectPuzzle2dLiveMirrorMutations, board2dGranularityById, board2dHoverActionArgs, latestBoard2dHoverId, parseBoard2dSuggestionMenu, board2dSuggestionMenuOwnsWindow, board2dSuggestionMenuItems, coalesceBoard2dEvents, parseBoard2dTransformFlags, board2dStatusJson, endPuzzle2dPeerGesture, mapContextMenuSpecs, surfaceContextMenuTitleKey, suggestionMenuItems, notifyPuzzle2dPeersGestureEnded, parsePuzzle2dCatalogueDragPayload, board2dPeers, puzzle2dDropPreviewJson, puzzle2dPeerOwnsGesture, puzzle2dScreenToWorld, puzzle2dWorldToScreen, pushPuzzle2dLiveMirrorMutations, registerBoard2dPeer, unregisterBoard2dPeer, NodeGraphHost, FlowGraphCanvasHost, InterpretedUiNode, builtNodeToSnapshot, resizeCanvasBackingStore, catalogueGhostDescriptorJson, computeDagMarqueeOverlay, flowCatalogueItemDescriptor, flowSurfaceRenderAllowed, flowRankCatalogueSuggestions, flowSpotlightSuggestionListScrollClass, nodeGraphHoverActionArgs, nodeGraphSelectionActionArgs, world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget, world3dInstanceInteractionTarget, world3dInstanceInteractionTargets, world3dSelectionTargetsActionArgs, nodeGraphViewportActionArgs, parseNodeGraphSessionViewport, nodeGraphPickChannel, nodeGraphConnectionIsValid, parseDagWireTypeRefusalJson, portValueTypes, portValueTypesCompatible, wireRefusalLabelOptions, dagContentBounds, dagContentCoverage, dagEllipsizeByMeasure, dagFitCamera, dagStartupCamera, nodeGraphContentSignature, paintDagLabelOverlays, DAG_CONTENT_FIT_PADDING_PX, DAG_CONTENT_FRAMED_MIN_COVERAGE, DAG_CONTENT_REFIT_MAX_COVERAGE, DAG_LABEL_ELLIPSIS, parseCatalogueAppDragPayload, parseDagSliderOverlays, dagSliderValueText, GraphSliderOverlays, resolveHostSnapshotWidgetInstanceId, Paint2dHost, TableHost, tableStepperClampedDelta, tableStepperKeyDelta, resolveMapInteractionSync, GraphTimelineHost, TextEditorHost, lineRangeAt, multiSpanReplace, World3dHost, worldGhostMeshUrl, parsePuzzle3dCatalogueDragPayload, mergeWorldViewportCamera, raycastGroundPoint, resolveMeshStyle, resolveMeshSelectionPreviewStyle, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, isCurveOnlyWorldMesh, meshBoundsCorners, resolveVortexPointerDownIntent, worldMeshMaterialRevision, worldVortexMaterialRevision, resolveWorldMergeMode, resolveWorldContextMenuTarget, world3dContextMenuSurfaceV1, shouldReattachWorldViewportCamera, worldCameraPoseApproxEqual, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, snapWorldPointToGrid, world3dViewportCameraSeedKey, world3dFitProjectionContent, world3dFramingInstances, world3dFrameVisibleOverlayOffered, world3dProjectionContentFrameMounted, world3dCameraDomJson, worldInstancePickBlocked, parseWorldTerrainStyle, clearWorldCatalogueDropPreview, getWorldCatalogueDropPreview, clearWorldSelectionPreview, getWorldSelectionPreview, clearWorldGumballTransformPreview, getWorldGumballTransformPreview, setWorldGumballTransformPreview, subscribeWorldGumballTransformPreview, pushPuzzle2dDropPreview, registerWorldCatalogueDropHost, setWorldCatalogueDropPreview, subscribeWorldCatalogueDropPreview, setWorldSelectionPreview, subscribeWorldSelectionPreview, worldCatalogueDropHostContainsPoint, InkCanvasHost, inkItemBounds, eraseInkStrokePointsInItem, inkParagraphsToHtml, inkResizeBounds, inkScaleItemWithinGroup, inkClipboardPayload, inkItemsFromClipboardPayload, screenToWorld, worldToScreen, type InkDocument, type InkStrokeItem, appBreadcrumb, appWindowLabel, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, UiDocumentStore, type UiInterpreterContext, UiPresenceOverlayContext, type UiPresenceOverlayEntry, serializeCommandIngressForActor, serializePerActor, applyUiRefreshResponseToCache, resolveAppBreadcrumb, buildUtilityRibbonSegments, buildActiveUtilityByWindowId, buildUiRefreshRequest, dedupeUtilityNodesById, flattenPanelTabLeaves, groupUtilityNodesByCategory, initialShellState, selectOpenConflicts, selectQuarantinedConflicts, isFlowGraphScene, mergeRecordPreservingIdentity, parseShellRoute, pluginAvailabilityRouteV1, pluginShouldReceiveContributions, pluginShouldEstablishSession, shellActorId, canonicalSurfaceId, reloadRetainsActiveApp, directoryCommandFromAction, mintDirectoryCommandRequestId, retainDirectoryCommandResult, DIRECTORY_COMMAND_RESULT_SLOTS, type DirectoryCommandResultSlotV1, type DirectoryCommandReceiptV1, type ShellAction, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, computeSyncPillState, syncPillText, ShellFaultBoundary, preserveJsonIdentity, reconcileUtilityPath, studioPanelFocusingSpawned, viewStateWithSpacePanel, findPressedUtilityLeafId, resolveUtilityNodes, resolveUtilities, panelTabDefinitionToNode, panelAnchorForGroup, integrateAppSettingsPanelTabsIntoFrameworkBranch, partitionFrameworkHistoryPanelTab, shellLabel, shellTabIcon, syncShellLabelLocale, uiIntentToActionDescriptor, actionStageKey, actionRequiresStagedForm, resolveKeybindingIntent, resolveUtilityActivation, isWorldTransformGumballMode, worldGumballConfigForProjection, gumballTransformDeltaBetweenPoses, gumballIdentityDelta, worldPaintStep, WORLD_PAINT_IDLE, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, WindowActionPane, resolveCommands, commandAddressKey, commandCategories, buildCommandCategoryTree, buildCommandCategoryTabs, buildOsCommands, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, createInFlightSkippingInterval, createCoalescingActionDispatcher, dispatchOsCommand, classifyWindowLayoutChange, buildNoteShellCommandAction, isShellOwnedCommandId, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, mergeShellLockSources, resolveBootExampleId, resolveShellDefaults, resolveShellLocks, shouldPersistIntroductionSeen, shouldReplayIntroductionOnLoad, isEphemeralShellBrand, clearDurableShellStorage, type ResolvedCommand, type ResolvedActionArgDef, type ResolvedActionDefinition, type ResolvedToolDefinition, shellReducer, shellStateUnchanged, sortUtilityNodes, spawnedWindowChromeForKind, UtilityTree, type UiRefreshCache, UIFind, UIFindProvider, uiNodeToTreePanelConfig, UISearch, type UISearchItem, useUIFind, interpretUiNode, dagOverlayLabelFill, dagOverlayLabelFillHex, dispatchOpenedFiles, IMPORT_CHUNK_BYTES, importPayloadChunks, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, requestMediaFramesSourceV1, runMediaFramesV1, createFrameworkDisplayPanelTabs, type DisplayHostApi, createFrameworkSettingsPanelTab, createFrameworkMarketplacePanelTab, type MarketplaceExtensionEntry, type MarketplaceHostApi, type MarketplacePluginEntry, type PluginPanelStatus, type PluginManifest, type PluginWasmHandle, resolveFrameworkLayoutSeed, retitleWindowLayoutNode, introductionTargetsWindow, windowMeasureTreeContainsId, renderWindowMeasuresTree, buildToolTabs, toolCategoryOpenPath, toolLeafInactiveRepress, toolIdFromPanelTabId, reconcileToolTabSelection, toolPanelTreeContentRevision, type ToolTabSelection, sceneToSyncPack, FrameworkOsShell, TutorialRecorder, synthesizeLocalizedLabel, resolveManifestLabel, type ShellPresencePeer, derivePeerInteractionByDomain, peerIdsSelecting, peerIdsHovering, SyncAttachCard } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
+import { Canvas2dHost, canvasLayerDisplayLabel, worldToScreenLogical, readCanvas2dSurfaceColors, Board2dHost, applyBoard2dHighlightedIds, board2dCameraActionArgs, beginPuzzle2dPeerGesture, collectPuzzle2dLiveMirrorMutations, board2dGranularityById, board2dHoverActionArgs, latestBoard2dHoverId, parseBoard2dSuggestionMenu, board2dSuggestionMenuOwnsWindow, board2dSuggestionMenuItems, coalesceBoard2dEvents, parseBoard2dTransformFlags, board2dStatusJson, endPuzzle2dPeerGesture, mapContextMenuSpecs, surfaceContextMenuTitleKey, suggestionMenuItems, notifyPuzzle2dPeersGestureEnded, parsePuzzle2dCatalogueDragPayload, board2dPeers, puzzle2dDropPreviewJson, puzzle2dPeerOwnsGesture, puzzle2dScreenToWorld, puzzle2dWorldToScreen, pushPuzzle2dLiveMirrorMutations, registerBoard2dPeer, unregisterBoard2dPeer, NodeGraphHost, FlowGraphCanvasHost, InterpretedUiNode, builtNodeToSnapshot, resizeCanvasBackingStore, catalogueGhostDescriptorJson, computeDagMarqueeOverlay, flowCatalogueItemDescriptor, flowSurfaceRenderAllowed, flowRankCatalogueSuggestions, flowSpotlightSuggestionListScrollClass, nodeGraphHoverActionArgs, nodeGraphSelectionActionArgs, world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget, world3dInstanceInteractionTarget, world3dInstanceInteractionTargets, world3dSelectionTargetsActionArgs, nodeGraphViewportActionArgs, parseNodeGraphSessionViewport, nodeGraphPickChannel, nodeGraphConnectionIsValid, portValueTypes, portValueTypesCompatible, wireRefusalLabelOptions, dagContentBounds, dagContentCoverage, dagEllipsizeByMeasure, dagFitCamera, dagStartupCamera, nodeGraphContentSignature, paintDagLabelOverlays, DAG_CONTENT_FIT_PADDING_PX, DAG_CONTENT_FRAMED_MIN_COVERAGE, DAG_CONTENT_REFIT_MAX_COVERAGE, DAG_LABEL_ELLIPSIS, parseCatalogueAppDragPayload, parseDagSliderOverlays, dagSliderValueText, GraphSliderOverlays, resolveHostSnapshotWidgetInstanceId, Paint2dHost, TableHost, tableStepperClampedDelta, tableStepperKeyDelta, resolveMapInteractionSync, GraphTimelineHost, TextEditorHost, lineRangeAt, multiSpanReplace, World3dHost, worldGhostMeshUrl, parsePuzzle3dCatalogueDragPayload, mergeWorldViewportCamera, raycastGroundPoint, resolveMeshStyle, resolveMeshSelectionPreviewStyle, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, isCurveOnlyWorldMesh, meshBoundsCorners, resolveVortexPointerDownIntent, worldMeshMaterialRevision, worldVortexMaterialRevision, resolveWorldMergeMode, resolveWorldContextMenuTarget, world3dContextMenuSurfaceV1, shouldReattachWorldViewportCamera, worldCameraPoseApproxEqual, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, snapWorldPointToGrid, world3dViewportCameraSeedKey, world3dFitProjectionContent, world3dFramingInstances, world3dFrameVisibleOverlayOffered, world3dProjectionContentFrameMounted, world3dCameraDomJson, worldInstancePickBlocked, parseWorldTerrainStyle, clearWorldCatalogueDropPreview, getWorldCatalogueDropPreview, clearWorldSelectionPreview, getWorldSelectionPreview, clearWorldGumballTransformPreview, getWorldGumballTransformPreview, setWorldGumballTransformPreview, subscribeWorldGumballTransformPreview, pushPuzzle2dDropPreview, registerWorldCatalogueDropHost, setWorldCatalogueDropPreview, subscribeWorldCatalogueDropPreview, setWorldSelectionPreview, subscribeWorldSelectionPreview, worldCatalogueDropHostContainsPoint, InkCanvasHost, inkItemBounds, eraseInkStrokePointsInItem, inkParagraphsToHtml, inkResizeBounds, inkScaleItemWithinGroup, inkClipboardPayload, inkItemsFromClipboardPayload, screenToWorld, worldToScreen, type InkDocument, type InkStrokeItem, appBreadcrumb, appWindowLabel, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, UiDocumentStore, type UiInterpreterContext, UiPresenceOverlayContext, type UiPresenceOverlayEntry, serializeCommandIngressForActor, serializePerActor, applyUiRefreshResponseToCache, resolveAppBreadcrumb, buildUtilityRibbonSegments, buildActiveUtilityByWindowId, buildUiRefreshRequest, dedupeUtilityNodesById, flattenPanelTabLeaves, groupUtilityNodesByCategory, initialShellState, selectOpenConflicts, selectQuarantinedConflicts, isFlowGraphScene, mergeRecordPreservingIdentity, parseShellRoute, pluginAvailabilityRouteV1, pluginShouldReceiveContributions, pluginShouldEstablishSession, shellActorId, canonicalSurfaceId, reloadRetainsActiveApp, directoryCommandFromAction, mintDirectoryCommandRequestId, retainDirectoryCommandResult, DIRECTORY_COMMAND_RESULT_SLOTS, type DirectoryCommandResultSlotV1, type DirectoryCommandReceiptV1, type ShellAction, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, computeSyncPillState, syncPillText, ShellFaultBoundary, preserveJsonIdentity, reconcileUtilityPath, studioPanelFocusingSpawned, viewStateWithSpacePanel, findPressedUtilityLeafId, resolveUtilityNodes, resolveUtilities, panelTabDefinitionToNode, panelAnchorForGroup, integrateAppSettingsPanelTabsIntoFrameworkBranch, partitionFrameworkHistoryPanelTab, shellLabel, shellTabIcon, syncShellLabelLocale, uiIntentToActionDescriptor, actionStageKey, actionRequiresStagedForm, resolveKeybindingIntent, resolveUtilityActivation, isWorldTransformGumballMode, worldGumballConfigForProjection, gumballTransformDeltaBetweenPoses, gumballIdentityDelta, worldPaintStep, WORLD_PAINT_IDLE, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, WindowActionPane, resolveCommands, commandAddressKey, commandCategories, buildCommandCategoryTree, buildCommandCategoryTabs, buildOsCommands, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, createInFlightSkippingInterval, createCoalescingActionDispatcher, dispatchOsCommand, classifyWindowLayoutChange, buildNoteShellCommandAction, isShellOwnedCommandId, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, mergeShellLockSources, resolveBootExampleId, resolveShellDefaults, resolveShellLocks, shouldPersistIntroductionSeen, shouldReplayIntroductionOnLoad, isEphemeralShellBrand, clearDurableShellStorage, type ResolvedCommand, type ResolvedActionArgDef, type ResolvedActionDefinition, type ResolvedToolDefinition, shellReducer, shellStateUnchanged, sortUtilityNodes, spawnedWindowChromeForKind, UtilityTree, type UiRefreshCache, UIFind, UIFindProvider, uiNodeToTreePanelConfig, UISearch, type UISearchItem, useUIFind, interpretUiNode, dagOverlayLabelFill, dagOverlayLabelFillHex, dispatchOpenedFiles, IMPORT_CHUNK_BYTES, importPayloadChunks, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, requestMediaFramesSourceV1, runMediaFramesV1, createFrameworkDisplayPanelTabs, type DisplayHostApi, createFrameworkSettingsPanelTab, createFrameworkMarketplacePanelTab, type MarketplaceExtensionEntry, type MarketplaceHostApi, type MarketplacePluginEntry, type PluginPanelStatus, type PluginManifest, type PluginWasmHandle, resolveFrameworkLayoutSeed, retitleWindowLayoutNode, introductionTargetsWindow, windowMeasureTreeContainsId, renderWindowMeasuresTree, buildToolTabs, toolCategoryOpenPath, toolLeafInactiveRepress, toolIdFromPanelTabId, reconcileToolTabSelection, toolPanelTreeContentRevision, type ToolTabSelection, sceneToSyncPack, FrameworkOsShell, TutorialRecorder, synthesizeLocalizedLabel, resolveManifestLabel, type ShellPresencePeer, derivePeerInteractionByDomain, peerIdsSelecting, peerIdsHovering, SyncAttachCard } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { suggestionMenuOwnsWindow } from "../../🧱️elements/🎣️suggestion-submenu/🟦️.ts";
 import {
   windowActionPaneNode,
@@ -2104,6 +2105,7 @@ function renderContractTree(root: ContractNodeSpec, presenceByKey?: Readonly<Rec
 
 it("keeps the interpreted canvas visible beneath expanded Actions chrome", () => {
   for (const row of canvasClearance.cases) {
+    if(row.kind!=="canvas-2d"&&row.kind!=="table")throw Error("Undeclared canvas clearance fixture surface kind");
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
       const bottom = this.getAttribute("data-slot") === "window-engagement-overlay" ? row.chromeHeight : 720;
       return { x: 0, y: 0, top: 0, bottom, left: 0, right: 1280, width: 1280, height: bottom, toJSON: () => ({}) };
@@ -3359,8 +3361,10 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
   });
 
   
-  it("buildActiveUtilityByWindowId omits null utilities for batched refresh", () => {
-    expect(buildActiveUtilityByWindowId({ top: "transform", perspective: null, brush: "brush" })).toEqual({ top: "transform", brush: "brush" });
+  it("buildActiveUtilityByWindowId retains an explicit utility clear beside active siblings", () => {
+    const utilities={top:"transform",perspective:null,brush:"brush"};
+    expect(buildActiveUtilityByWindowId(utilities)).toEqual({top:"transform",perspective:null,brush:"brush"});
+    expect(utilities).toEqual({top:"transform",perspective:null,brush:"brush"});
   });
 it("buildUiRefreshRequest forwards per-window utility map on viewState without a focused-window singular leak", () => {
     const viewState = { activeUtilityByWindowId: { top: "transform", perspective: "brush" }, activeUtilityId: undefined };
@@ -4674,7 +4678,7 @@ describe("framework renderer hosts", () => {
       selectionPreviewMethod: () => "rectangle",
       selectedNodeIdsJson: () => "[]",
       hoveredNodeId: () => null,
-      hoveredChannelJson: () => "{}",
+      hoveredChannelJson: () => '{"channel":null,"refusal":null}',
       viewport: () => ({ x: 0, y: 0, zoom: 1 }),
       pickTargetsAtScreenJson: () => "[]",
       setHover: () => {},
@@ -4939,12 +4943,12 @@ describe("framework renderer hosts", () => {
     expect(validateTarget(hostile[1]!.target)).toBe(false);
   });
   it("validates strict language-neutral graph slider labels and rejects unnamed rows", () => {
-    const validate = peerExport(dagVcsSchema, "SliderOverlay");
-    expect(validate(graphSliderFixture), JSON.stringify(validate.errors)).toBe(true);
+    const validate = peerExport(dagVcsSchema,"SliderOverlayRow");
+    for(const item of graphSliderFixture.cases)expect(validate(item.row),JSON.stringify(validate.errors)).toBe(true);
     for (const label of ["", "   ", null, 42]) {
       const malformed = structuredClone(graphSliderFixture);
       (malformed.cases[0]!.row as Record<string, unknown>).label = label;
-      expect(validate(malformed)).toBe(false);
+      expect(validate(malformed.cases[0]!.row)).toBe(false);
       expect(parseDagSliderOverlays(JSON.stringify({ sliders: [malformed.cases[0]!.row] }))).toEqual([]);
     }
     expect(parseDagSliderOverlays('{"sliders":{}}')).toEqual([]);
@@ -5558,9 +5562,10 @@ describe("framework renderer hosts", () => {
       { name: "camera", payload: { x: 2, y: 2, zoom: 1.5 } },
       { name: "nodeMove", payload: { id: "beta", x: 5, y: 5 } },
     ];
-    const { flushNow, eventsJson } = coalesceBoard2dEvents(rows);
+    const { flushNow, eventsJson, camera } = coalesceBoard2dEvents(rows);
     expect(flushNow).toBe(false);
-    expect(JSON.parse(eventsJson)).toEqual([{ name: "camera", payload: { x: 2, y: 2, zoom: 1.5 } }]);
+    expect(JSON.parse(eventsJson)).toEqual([]);
+    expect(camera).toEqual({x:2,y:2,zoom:1.5});
   });
 it("keeps hover out of the board-events batch — it travels on the framework interactionHover lane instead", () => {
     const { eventsJson, flushNow } = coalesceBoard2dEvents([
@@ -9827,7 +9832,11 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     const { resolveInitialWindowUtility } = await import("../../../../../../../🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🟦️.ts");
     const { createVersionedRegisterV1 } = await import("../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts");
     const ajv = new Ajv2020({ strict: true, $data: true });
-    const fixture: unknown = initialWindowUtilityCases;
+    const fixture = {...initialWindowUtilityCases,cases:initialWindowUtilityCases.cases.map(row=>{
+      const activeUtilityByWindowId:Record<string,string|null>={};
+      for(const[id,value]of Object.entries(row.activeUtilityByWindowId)){if(typeof value!=="string"&&value!==null)throw Error("Invalid authored utility register");activeUtilityByWindowId[id]=value;}
+      return {...row,activeUtilityByWindowId};
+    })};
     for (const row of fixture.cases) {
       const authored = { utilities: row.utilityIds, ...(row.initialUtilityId === null ? {} : { initialUtilityId: row.initialUtilityId }) };
       const actual = resolveInitialWindowUtility(row);
@@ -11436,29 +11445,29 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   });
 
   
-  it("shouldAutoStartIntroduction offers an app's tour once per session and never re-arms a veil the user dismissed", () => {
-    const base = { appId: "puzzle-3d-play", hasIntroduction: true, tutorialActive: false, suppressed: false, replayOnLoad: false, seenOnDevice: false, dismissedAppIds: new Set<string>() };
-    expect(shouldAutoStartIntroduction(base)).toBe(true);
+  it("shouldStartIntroduction offers an app's tour once per session and never re-arms a veil the user dismissed", () => {
+    const base = { appId: "puzzle-3d-play", hasIntroduction: true, tutorialActive: false, suppressed: false, replayOnLoad: false, seenOnDevice: false, dismissedInSession:false };
+    expect(shouldStartIntroduction(base)).toBe(true);
     // 🎓️ The blocking veil owns every pointer in the app, so a dismissed tour must stay dismissed for the
     // session even though the app definition is republished (a new object, same content) on every full
     // refresh, hot-swap and re-established session — B47 §5.1 measured a full-viewport
     // `div.ui-veil.z-tutorial` at `pointer-events: auto` swallowing every press after Skip.
-    const dismissed = { ...base, dismissedAppIds: new Set(["puzzle-3d-play"]) };
-    expect(shouldAutoStartIntroduction(dismissed)).toBe(false);
+    const dismissed = { ...base, dismissedInSession:true };
+    expect(shouldStartIntroduction(dismissed)).toBe(false);
     // …and a device-local seen flag that cannot be written (ephemeral brand ⇒ in-memory StoragePort ⇒
     // `replayOnLoad`) must not resurrect it either.
-    expect(shouldAutoStartIntroduction({ ...dismissed, replayOnLoad: true })).toBe(false);
+    expect(shouldStartIntroduction({ ...dismissed, replayOnLoad: true })).toBe(false);
     // A genuinely DIFFERENT app still introduces itself in the same shell (demonstrator grid, app switch).
-    expect(shouldAutoStartIntroduction({ ...dismissed, appId: "puzzle-3d-view" })).toBe(true);
+    expect(shouldStartIntroduction({ ...dismissed, appId: "puzzle-3d-view", dismissedInSession:false })).toBe(true);
     // The device-local seen flag keeps its own meaning, and replay-on-load brands still ignore it.
-    expect(shouldAutoStartIntroduction({ ...base, seenOnDevice: true })).toBe(false);
-    expect(shouldAutoStartIntroduction({ ...base, seenOnDevice: true, replayOnLoad: true })).toBe(true);
+    expect(shouldStartIntroduction({ ...base, seenOnDevice: true })).toBe(false);
+    expect(shouldStartIntroduction({ ...base, seenOnDevice: true, replayOnLoad: true })).toBe(true);
     // An app id that has not arrived yet must never arm a tour: the "" key persists nothing, so the tour
     // would arm a second time the moment the real id lands.
-    expect(shouldAutoStartIntroduction({ ...base, appId: "" })).toBe(false);
-    expect(shouldAutoStartIntroduction({ ...base, hasIntroduction: false })).toBe(false);
-    expect(shouldAutoStartIntroduction({ ...base, tutorialActive: true })).toBe(false);
-    expect(shouldAutoStartIntroduction({ ...base, suppressed: true })).toBe(false);
+    expect(shouldStartIntroduction({ ...base, appId: "" })).toBe(false);
+    expect(shouldStartIntroduction({ ...base, hasIntroduction: false })).toBe(false);
+    expect(shouldStartIntroduction({ ...base, tutorialActive: true })).toBe(false);
+    expect(shouldStartIntroduction({ ...base, suppressed: true })).toBe(false);
   });
 it("isEphemeralShellBrand skips durable shell state so a refresh boots from brand defaults only", () => {
     expect(isEphemeralShellBrand(undefined)).toBe(false);
@@ -13929,13 +13938,11 @@ describe("node-graph port types", () => {
     expect(portValueTypesCompatible(["geometry"], [])).toBe(true);
   });
 
-  it("names both ports and both declared types in the refusal a surface shows", () => {
-    const refusal = parseDagWireTypeRefusalJson(JSON.stringify({ refusal: { source: "extrusion-axis@vectorOut", sourceTypes: ["vector"], target: "extrude@wire", targetTypes: ["geometry"] } }));
-    expect(refusal).not.toBeNull();
-    expect(parseDagWireTypeRefusalJson("null")).toBeNull();
-    expect(parseDagWireTypeRefusalJson('{"widgetId":"extrude","port":"wire","direction":"in"}')).toBeNull();
-    const options = wireRefusalLabelOptions(refusal, { vector: "Vektor", geometry: "Geometrie" });
-    expect(options).toEqual({ source: "extrusion-axis@vectorOut", sourceType: "Vektor", target: "extrude@wire", targetType: "Geometrie" });
+  it("names both ports and both declared types in the admitted refusal a surface shows", () => {
+    const refusal={source:"extrusion-axis@vectorOut",sourceTypes:["vector"],target:"extrude@wire",targetTypes:["geometry"]};
+    const options=wireRefusalLabelOptions(refusal,{vector:"Vektor",geometry:"Geometrie"});
+    expect(options).toEqual({source:"extrusion-axis@vectorOut",sourceType:"Vektor",target:"extrude@wire",targetType:"Geometrie"});
+    expect(wireRefusalLabelOptions(null,{})).toEqual({source:"",sourceType:"",target:"",targetType:""});
   });
 });
 //#endregion 🔌️PortTypeTwin

@@ -327,5 +327,14 @@
         "capture"
       ]
     }
-  ]
+  ],
+  "provenanceRelay": {
+    "args": ["check", "--manifest-path", "Cargo.toml", "-p", "selected", "--locked", "--message-format=json"],
+    "source": "pub fn original() -> u8 { 7 }\n",
+    "cases": [
+      {"id": "original-bytes", "status": 0, "cancelDuringRead": false, "published": true},
+      {"id": "compiler-refused", "status": 101, "cancelDuringRead": false, "published": true},
+      {"id": "physical-read-cancelled", "status": 0, "cancelDuringRead": true, "published": false}
+    ]
+  }
 }

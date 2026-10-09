@@ -1,0 +1,25 @@
+{
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "sha256": "b5e081fdcf0077058db4dbdac9580396df26b87a335b109d0aa45f9c7783d29a",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs",
+      "sha256": "9afa065b97f82a6edc359530b9f6396449ee4b3de6d2a0e2cc2006a1e6b5fb0e",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+      "sha256": "bd75cee3057621a2b04100438c273daf29d51de6f1f26cad217ca726e1160fbc",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
+      "sha256": "d5f3268630637db1d81930bac9ff5911ecdad7d9d594855bbda0c21b0efc4f94",
+      "authored": false
+    }
+  ]
+}

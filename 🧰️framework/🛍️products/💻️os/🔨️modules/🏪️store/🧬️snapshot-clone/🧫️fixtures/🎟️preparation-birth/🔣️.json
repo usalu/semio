@@ -39,5 +39,9 @@
     "originalRequestRetained": true,
     "copiedBytes": 0,
     "releasedBytes": 0
+  },
+  "preflight": {
+    "afterRefusalCalls": 0,
+    "afterBirthCalls": 1
   }
 }

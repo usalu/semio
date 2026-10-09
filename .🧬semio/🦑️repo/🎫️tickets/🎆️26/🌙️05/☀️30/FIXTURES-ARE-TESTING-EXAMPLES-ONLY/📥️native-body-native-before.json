@@ -1,0 +1,65 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+      "sha256": "e01deb1911e0debe1515bc56920bf3e172731ac90e0fed953fbc59ff25dad44f",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs",
+      "sha256": "3ee99e16f43b5c6af0aa04e94241784bf1f9f6c3492cd7c483e258d28f915ba9",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🪆️receiving/🔣️.json",
+      "sha256": "4334312f31766785a3a0b72304db33c2be718d6c7b3ba237c47fb1778a71269b",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+      "sha256": "ca0e18ddd77f14d5c2bd7c103e7410e9ad0a64fc269d3ffc6f0ef662acd7590e",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "24d17f507c4c3e3839f1aa7289f0aed1dcb79a27acf543c402f23b20ef17a167",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "37a8d9880c42b9012f4a3a5e209bba1b87cd16b3b0d065d96f8670194a0c9edd",
+      "role": "whole-file observer; only logical blocks in linked action ledgers authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "28649679f2d4ab784521da3dad0ebdec8e3e665629400e2dff51c2b86b05db94"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+      "sha256": "0d9ef8669aba75a59c3a7cc6625032e5c804a10125deadaf7ded2ad7e6fe93bd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "8e529bda73ec6fdb0f67edb7b5375ee375742c5527ff125c3b419bac58f8e48e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "713285c5e6d3580e6e923926a4f306e10e45df26d3a8e0077e1e492548a9bf60"
+    }
+  ],
+  "scope": "finite direct observer refs; not claimed transitive closure",
+  "selectedNativeLaws": [
+    "native_snapshot_body_octets_keep_actual_cancelled_backing_and_cumulative_authority",
+    "field_close_failure_preserves_real_receipts_through_the_original_decode_job",
+    "member_open_request_original_identity_capacity_is_indivisible_even_when_empty",
+    "current_catalog_sources_admit_original_allocations_then_fund_each_ticket",
+    "current_member_source_constructor_is_not_invoked_under_denied_axes",
+    "current_box_retirement_preserves_denied_owner_and_exact_physical_shell",
+    "current_typed_option_birth_retains_exact_original_and_paid_shell",
+    "sqlite_snapshot_erased_export_dispatches_only_the_declared_controlled_native_owner",
+    "sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection",
+    "sqlite_snapshot_native_decoding_admits_inline_empty_collection_storage"
+  ],
+  "inheritedOverrideKeys": [],
+  "originalPolicy": "registered Kernel test-native --lib --features sync,ureq; long default budgets; no artificial limit"
+}

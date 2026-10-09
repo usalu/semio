@@ -1,0 +1,10 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "action": "update",
+    "beforeSha256": "4150a1e675de9f18b70549653896ce8511697ff72261df797cd73ffc685b20d1",
+    "afterSha256": "68d8e3336f3575e860d8f20fb97c56dc596ce412a1ebf812cc9b16f39429a798",
+    "qualification": "Two actual original Presence native test callers honor existing production cancel-alias handback and actual retirement Option/Arc custody; fixed supplied five-axis grant, reader barriers, refusals and physical System assertions retained",
+    "observedAtUtc": "2026-10-09T14:36:38.651675+00:00"
+  }
+]

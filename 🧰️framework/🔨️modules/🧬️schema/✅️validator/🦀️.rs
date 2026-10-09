@@ -1,10 +1,44 @@
 use crate::SchemaError;
 use semio_framework_pack_json::{parse as parse_json, Number, Object, Value};
 use semio_framework_value::DslValue;
-use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+
+#[derive(Clone, semio_framework_value::RetireOwned)]
+struct SchemaIndex<V> {
+    entries: Vec<(String, V)>,
+}
+
+impl<V> Default for SchemaIndex<V> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<V> SchemaIndex<V> {
+    fn new() -> Self {
+        Self { entries: Vec::new() }
+    }
+
+    fn get(&self, key: &str) -> Option<&V> {
+        self.entries.binary_search_by(|(name, _)| name.as_str().cmp(key)).ok().map(|index| &self.entries[index].1)
+    }
+
+    fn contains_key(&self, key: &str) -> bool {
+        self.get(key).is_some()
+    }
+
+    fn insert(&mut self, key: String, value: V) -> Option<V> {
+        match self.entries.binary_search_by(|(name, _)| name.as_str().cmp(key.as_str())) {
+            Ok(index) => Some(std::mem::replace(&mut self.entries[index].1, value)),
+            Err(index) => {
+                self.entries.insert(index, (key, value));
+                None
+            }
+        }
+    }
+}
 
 //#region 🎛️Control
 
@@ -105,12 +139,12 @@ struct Traversal<'a> {
     control: &'a ValidationControl,
     visited_nodes: usize,
     active: Vec<(usize, usize)>,
-    patterns: HashMap<String, PatternMatcher>,
+    patterns: SchemaIndex<PatternMatcher>,
 }
 
 impl<'a> Traversal<'a> {
     fn new(control: &'a ValidationControl) -> Self {
-        Self { control, visited_nodes: 0, active: Vec::new(), patterns: HashMap::new() }
+        Self { control, visited_nodes: 0, active: Vec::new(), patterns: SchemaIndex::new() }
     }
 
     fn visit(&mut self) -> Result<(), SchemaError> {
@@ -151,11 +185,11 @@ pub const JSON_SCHEMA_DRAFT_07_DIALECT: &str = "http://json-schema.org/draft-07/
 
 /// 📋️ Owned draft-07 structural validator: no external crate, `$ref` resolved inside the compiled
 /// document and across sibling documents by their `$id`.
-#[derive(Clone)]
+#[derive(Clone, semio_framework_value::RetireOwned)]
 pub struct OwnedJsonSchemaValidator {
     schema: Value,
-    documents: HashMap<String, Value>,
-    patterns: HashMap<String, PatternMatcher>,
+    documents: SchemaIndex<Value>,
+    patterns: SchemaIndex<PatternMatcher>,
 }
 
 impl OwnedJsonSchemaValidator {
@@ -179,7 +213,7 @@ impl OwnedJsonSchemaValidator {
         let schema = parse_json(schema_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SchemaError::Validation(format!("invalid schema JSON: {error}")))?;
         let documents = index_documents(documents)?;
         let mut traversal = Traversal::new(control);
-        validate_schema_node(Scope { base: &schema, documents: &documents, patterns: &HashMap::new() }, &schema, "$", &mut traversal)?;
+        validate_schema_node(Scope { base: &schema, documents: &documents, patterns: &SchemaIndex::new() }, &schema, "$", &mut traversal)?;
         let progress = traversal.progress();
         Ok((Self { schema, documents, patterns: std::mem::take(&mut traversal.patterns) }, progress))
     }
@@ -187,9 +221,9 @@ impl OwnedJsonSchemaValidator {
     /// 🧱 Compiles an owned JSON schema representation without serializing the catalog input.
     pub fn compile_value(schema: &Value) -> Result<Self, SchemaError> {
         let control = ValidationControl::default();
-        let documents = HashMap::new();
+        let documents = SchemaIndex::new();
         let mut traversal = Traversal::new(&control);
-        validate_schema_node(Scope { base: schema, documents: &documents, patterns: &HashMap::new() }, schema, "$", &mut traversal)?;
+        validate_schema_node(Scope { base: schema, documents: &documents, patterns: &SchemaIndex::new() }, schema, "$", &mut traversal)?;
         Ok(Self { schema: schema.clone(), documents, patterns: std::mem::take(&mut traversal.patterns) })
     }
 
@@ -280,13 +314,13 @@ impl OwnedJsonSchemaValidator {
     pub fn compile_intrinsic_with_documents_and_control(schema: &DslValue, documents: &[DslValue], control: &ValidationControl) -> Result<(Self, ValidationProgress), SchemaError> {
         let mut traversal = Traversal::new(control);
         let schema = intrinsic_json(schema, &mut traversal, 0)?;
-        let mut indexed = HashMap::new();
+        let mut indexed = SchemaIndex::new();
         for document in documents {
             let id = document.get("$id").and_then(DslValue::as_str).ok_or_else(||SchemaError::Validation("owned schema document requires an id".into()))?;
             if indexed.contains_key(id) { return Err(SchemaError::Validation(format!("duplicate owned schema id {id}"))); }
             indexed.insert(id.to_string(), intrinsic_json(document, &mut traversal, 0)?);
         }
-        validate_schema_node(Scope { base:&schema, documents:&indexed, patterns:&HashMap::new() },&schema,"$",&mut traversal)?;
+        validate_schema_node(Scope { base:&schema, documents:&indexed, patterns:&SchemaIndex::new() },&schema,"$",&mut traversal)?;
         let progress = traversal.progress();
         Ok((Self { schema, documents:indexed, patterns:std::mem::take(&mut traversal.patterns) }, progress))
     }
@@ -354,12 +388,12 @@ impl StructuralValidation for OwnedJsonSchemaValidator {
 #[derive(Clone, Copy)]
 struct Scope<'a> {
     base: &'a Value,
-    documents: &'a HashMap<String, Value>,
-    patterns: &'a HashMap<String, PatternMatcher>,
+    documents: &'a SchemaIndex<Value>,
+    patterns: &'a SchemaIndex<PatternMatcher>,
 }
 
-fn index_documents(documents: &[&str]) -> Result<HashMap<String, Value>, SchemaError> {
-    let mut indexed = HashMap::new();
+fn index_documents(documents: &[&str]) -> Result<SchemaIndex<Value>, SchemaError> {
+    let mut indexed = SchemaIndex::new();
     for body in documents {
         let document = parse_json(body, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SchemaError::Validation(format!("invalid sibling schema JSON: {error}")))?;
         let id = document.get("$id").and_then(Value::as_str).ok_or_else(|| SchemaError::Validation("sibling schema document requires an `$id`".to_string()))?.to_string();
@@ -1381,12 +1415,12 @@ fn is_uri(value: &str) -> bool {
 /// and no `\d`/`\w`/`\s` shorthand, exposes an `async` per-byte `step`, and would invert the layering
 /// by making the boundary schema module depend on the sampling crate.
 /// See <https://262.ecma-international.org/#sec-patterns>.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct PatternMatcher {
     node: PatternNode,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 enum PatternNode {
     Empty,
     Literal(char),
@@ -1400,7 +1434,7 @@ enum PatternNode {
     Look { negated: bool, node: Box<PatternNode> },
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 struct Repeat {
     node: PatternNode,
     min: usize,
@@ -1408,7 +1442,7 @@ struct Repeat {
     greedy: bool,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, semio_framework_value::RetireOwned)]
 enum ClassItem {
     Literal(char),
     Range(char, char),

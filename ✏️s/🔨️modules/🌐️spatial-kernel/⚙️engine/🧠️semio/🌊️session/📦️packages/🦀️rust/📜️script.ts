@@ -11,7 +11,7 @@ class SourceScript extends BundleScript { async run(): Promise<void> { sessionLa
 class CheckScript extends BundleScript { async run(args: string[]): Promise<void> { await runCargo(["check", "-p", "semio-s-spatial-kernel-semio-session", ...args], this.repoRoot); } }
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const selected=args[0]==="component-retirement" ? "retired_analytic_mesh_metadata_obeys_exact_byte_grants" : args[0]==="physical-custody" ? "original_session_capture_keeps_same_allocation_until_full_typed_grants" : undefined;
+    const selected=args[0]==="retained-work" ? "original_session_retention_transfers_incoming_keys_and_closes_removed_rows" : args[0]==="component-retirement" ? "retired_analytic_mesh_metadata_obeys_exact_byte_grants" : args[0]==="physical-custody" ? "original_session_capture_keeps_same_allocation_until_full_typed_grants" : undefined;
     const groups=sessionLaws().flatMap((group:any)=>selected ? group.laws.includes(selected) ? [{...group,laws:[selected]}] : [] : [group]);
     await runRepositoryExactCargoLaws({cwd:this.repoRoot,cargoArgs:selected?args.slice(1):args,buildBudgetMs:buildBudgetMs(),lawBudgetMs:600_000,groups});
   }

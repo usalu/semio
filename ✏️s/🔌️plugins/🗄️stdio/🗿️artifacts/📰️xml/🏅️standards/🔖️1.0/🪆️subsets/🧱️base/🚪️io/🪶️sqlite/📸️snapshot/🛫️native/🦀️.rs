@@ -67,7 +67,7 @@ impl Writer<'_, '_, '_> {
 }
 enum Action<'a> { Node(&'a XmlNode), Literal(&'static [u8]) }
 
-pub(crate) fn encode(snapshot: &XmlSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<IoPayload, ValueError> {
+pub(crate) fn encode(snapshot: &XmlSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<IoPayload, ValueError> {
     let limits = control.limits(); control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 0)?;
     let mut callback = |event: pack::value::native_encoding::NativeEncodeProgress| control.checkpoint(SqliteSnapshotPhase::EncodeNative, event.completed, event.total).is_ok();
     let mut native = NativeEncodeControl::new(limits.max_value_bytes, &mut callback); native.begin_stage(0)?;

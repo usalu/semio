@@ -1,0 +1,16 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🚦️ownership/🧬️schema/🔣️.json",
+      "beforeSha256": "7519a5b360b25ef635f6b6537feb02104254d6b9d5dba6e814751931993be1fc",
+      "afterSha256": null,
+      "action": "Remove anonymous fixed whole mesh owner trial schema; original plain/native physical ownership laws remain."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
+      "beforeSha256": "d221b95e9d860fda65bdd6f5e60f551f8083a0e250a5fd89e6480894d97f9aa0",
+      "afterSha256": "3a64f151cb60efad9f65ff46a74c913d0eb26ec9a059101da2c1e7de0e1c8739",
+      "action": "Remove only mesh corpus admission/mirror mutants and unused Ajv import; genuine draft/runtime behavior preserved."
+    }
+  ]
+}

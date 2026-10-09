@@ -1,0 +1,49 @@
+{
+  "query": {
+    "Ok": {
+      "ticket": 9,
+      "owned_bytes": 128,
+      "refusal": 0,
+      "native_pending": true,
+      "output_pending": false,
+      "terminal": false,
+      "demands": {
+        "items": 1,
+        "copy_bytes": 64,
+        "capacity_bytes": 256,
+        "release_bytes": 32,
+        "depth": 4
+      }
+    }
+  },
+  "close": {
+    "Ok": {
+      "retirement": {
+        "ticket": 9,
+        "owned_bytes": 128,
+        "refusal": 0,
+        "native_pending": true,
+        "output_pending": false,
+        "terminal": false,
+        "demands": {
+          "items": 1,
+          "copy_bytes": 64,
+          "capacity_bytes": 256,
+          "release_bytes": 32,
+          "depth": 4
+        }
+      },
+      "progress": {
+        "copied_items": 1,
+        "copied_bytes": 32,
+        "retained_capacity_bytes": 64,
+        "released_bytes": 16
+      },
+      "refusal": 0
+    }
+  },
+  "duplicate": "{\"Ok\":{\"ticket\":9,\"ticket\":10}}",
+  "overflow": "{\"Ok\":{\"ticket\":18446744073709551616}}",
+  "deniedCapacityBytes": 0,
+  "deniedReleaseBytes": 0
+}

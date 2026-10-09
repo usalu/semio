@@ -63,9 +63,9 @@ pub(crate) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapsho
     }
     let schema = reconstruct_text(control, root.text(1)?)?;
     let package = reconstruct_opc_package(database, OPC, control)?;
-    let opc = control.allocation_stage(PHASE, |remaining, progress| {
+    let opc = control.allocation_stage(PHASE, |remaining, progress,allocation|{
         let mut callback = |event: semio_framework_value::native_decoding::NativeDecodeProgress| progress(event.completed, event.total);
-        let mut native = semio_framework_value::NativeDecodeControl::new(remaining, &mut callback);
+        let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
         let result = RetainedOpcPackage::try_from_package_controlled(package, &mut native);
         (result, native.owned_bytes())
     })??;
@@ -82,17 +82,17 @@ pub(crate) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapsho
         let document = &mut documents.0[index];
         let path = std::mem::take(&mut document.schema);
         let source = std::mem::take(&mut document.doc);
-        let part = control.allocation_stage(PHASE, |remaining, progress| {
+        let part = control.allocation_stage(PHASE, |remaining, progress,allocation|{
             let mut callback = |event: NativeDecodeProgress| progress(event.completed, event.total);
-            let mut native = NativeDecodeControl::new(remaining, &mut callback);
+            let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
             let result = DocxXmlPart::try_from_document_controlled(path, content_type, source, &mut native);
             (result, native.owned_bytes())
         })??;
         parts.0.push(part);
     }
-    let xml_parts = control.allocation_stage(PHASE, |remaining, progress| {
+    let xml_parts = control.allocation_stage(PHASE, |remaining, progress,allocation|{
         let mut callback = |event: NativeDecodeProgress| progress(event.completed, event.total);
-        let mut native = NativeDecodeControl::new(remaining, &mut callback);
+        let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
         let result = docx_xml_parts_from_iter_controlled(std::mem::take(&mut parts.0), &mut native);
         (result, native.owned_bytes())
     })??;

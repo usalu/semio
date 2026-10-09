@@ -1,0 +1,53 @@
+{
+  "actors": [
+    "actor",
+    "🧑🏽‍💻\u0000é中\"\\"
+  ],
+  "repeats": [
+    1,
+    8192
+  ],
+  "sequence": 4,
+  "clock": [
+    1,
+    42,
+    2
+  ],
+  "grant": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 4096,
+    "release": 262144,
+    "depth": 4096
+  },
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    17,
+    257
+  ],
+  "baseAppliedEditCount": 3,
+  "line": "original-line:🌿",
+  "group": "original-group:🐚",
+  "forward": true,
+  "inverse": [
+    false,
+    true,
+    false
+  ],
+  "inverseCapacity": 17,
+  "maximumTurns": 1048576,
+  "terminalDropBytes": 0
+}

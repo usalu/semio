@@ -13,6 +13,12 @@ test("neutral retained text ownership keeps payload work separate from complete 
   expect(Buffer.byteLength(body)).toBeGreaterThan(f.retained.retirementBytes);
   expect(f.retained.maximumRetirementDepth).toBeGreaterThan(1);
   expect(f.retained.sourceReleases).toBe(1);
+  expect(f.retained.nativeMaximum).toBe(1_000_000);
+  expect(f.retained.callerGrant).toEqual({maximumItems:65536,maximumCopyBytes:65536,maximumCapacityBytes:16777216,maximumReleaseBytes:16777216,maximumDepth:64});
+  expect(bytes.length-Buffer.byteLength(`semio ${f.id}.dsl v${f.version}\n`)).toBe(f.retained.payloadBytes);
+  expect(Math.ceil(f.retained.payloadBytes/f.retained.retirementBytes)).toBe(f.retained.minimumPayloadRetirementTurns);
+  expect(f.retained.undergrantItems).toBeLessThan(f.retained.minimumPayloadRetirementTurns);
+  for(const header of f.retained.structuralCopy){expect(header.optionalTextHeaderBytes).toBe(3*header.nativeWordBytes);expect(header.optionalTextHeaderBytes).toBeGreaterThan(f.retained.retirementBytes);expect(header.optionalTextHeaderBytes).toBeLessThan(f.retained.callerGrant.maximumCopyBytes);}
 });
 
 test("native envelopes admit exact identity without owning their payload",async()=>{const f=envelopeFixture;

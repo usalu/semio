@@ -610,6 +610,11 @@ pub struct World3dScalarField {
     pub legend: World3dScalarLegend,
 }
 
+semio_framework_value::artifact_retire_leaf!(World3dScalarDomain,World3dColorRamp,World3dScalarRange);
+semio_framework_value::artifact_retire_struct!(World3dText{en,de});
+semio_framework_value::artifact_retire_struct!(World3dScalarLegend{title,unit,ticks});
+semio_framework_value::artifact_retire_struct!(World3dScalarField{mesh_id,domain,values,ramp,range,legend});
+
 impl World3dScalarField {
     pub fn new(mesh_id: impl Into<String>, domain: World3dScalarDomain, values: Vec<Option<f64>>, ramp: World3dColorRamp, range: World3dScalarRange, legend_title: World3dText) -> Self {
         Self { mesh_id: mesh_id.into(), domain, values, ramp, range, legend: World3dScalarLegend { title: legend_title, unit: None, ticks: WORLD3D_LEGEND_TICKS_DEFAULT } }

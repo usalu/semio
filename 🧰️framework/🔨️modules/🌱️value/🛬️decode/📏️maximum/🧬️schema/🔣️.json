@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/value/native-scope-maximum/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "initialBytes",
+    "firstTurnCapacityBytes",
+    "scopeMaximumBytes",
+    "nextTurnCapacityBytes",
+    "cases",
+    "restoredMaximumBytes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.value.native-scope-maximum.v1"
+    },
+    "initialBytes": {
+      "const": 7
+    },
+    "firstTurnCapacityBytes": {
+      "const": 100
+    },
+    "scopeMaximumBytes": {
+      "const": 10
+    },
+    "nextTurnCapacityBytes": {
+      "const": 16
+    },
+    "restoredMaximumBytes": {
+      "const": 100
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "outcome",
+          "ownedBytes"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "repeat",
+              "nested",
+              "refuse",
+              "cancel",
+              "unwind"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "limit",
+              "complete",
+              "canceled",
+              "unwind"
+            ]
+          },
+          "ownedBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      }
+    }
+  }
+}
+

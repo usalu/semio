@@ -31,8 +31,9 @@ export interface FlowWasmExports {
   readonly memory: WebAssembly.Memory;
   flow_bridge_allocate(length: number): number;
   flow_bridge_release(pointer: number, length: number): void;
-  flow_bridge_send(pointer: number, length: number, credit: number, now: bigint, deadline: bigint): number;
-  flow_bridge_poll(pointer: number, capacity: number, credit: number, now: bigint, deadline: bigint): number;
+  flow_bridge_send(pointer: number, length: number, credit: number, maximumItems: number, maximumCopyBytes: number, maximumCapacityBytes: number, maximumReleaseBytes: number, maximumDepth: number, now: bigint, deadline: bigint): number;
+  flow_bridge_poll(pointer: number, capacity: number, credit: number, maximumItems: number, maximumCopyBytes: number, maximumCapacityBytes: number, maximumReleaseBytes: number, maximumDepth: number, now: bigint, deadline: bigint): number;
+  flow_bridge_step_progress(axis: number): bigint;
   flow_bridge_begin_close(): void;
   flow_bridge_terminal_is_empty(): number;
 }
@@ -45,8 +46,10 @@ ${["document", "interaction", "editing", "surface", "drawing"].map((group, index
   return `  readonly ${group}: { ${groupNames.map((name) => { const fields = contract.arguments[name]; return `${name}(${fields.length ? `args${fields.every((field) => field.type === "optional-utf8") ? "?" : ""}: ${record(fields)}` : ""}): FlowTask<unknown>`; }).join("; ")} };`;
 }).join("\n")}
 }
-export interface FlowBrowserOptions { readonly source: unknown; readonly bindings?: unknown; readonly imports?: WebAssembly.Imports; readonly instantiate?: typeof WebAssembly.instantiate; readonly schedule?: (callback: () => void) => void; readonly now?: () => number; readonly maximumInFlight?: number; }
-export interface FlowBrowserRuntime { openSession(): FlowSession; close(): Promise<void>; terminalIsEmpty(): boolean; }
+export interface FlowRetainedProgress { readonly copiedItems:number; readonly copiedBytes:number; readonly retainedCapacityBytes:number; readonly releasedBytes:number; }
+export interface FlowRetainedGrant { readonly maximumItems:number; readonly maximumCopyBytes:number; readonly maximumCapacityBytes:number; readonly maximumReleaseBytes:number; readonly maximumDepth:number; }
+export interface FlowBrowserOptions { readonly source: unknown; readonly bindings?: unknown; readonly imports?: WebAssembly.Imports; readonly instantiate?: typeof WebAssembly.instantiate; readonly schedule?: (callback: () => void) => void; readonly now?: () => number; readonly maximumInFlight?: number; readonly retainedGrant?: FlowRetainedGrant; }
+export interface FlowBrowserRuntime { openSession(): FlowSession; close(): Promise<void>; terminalIsEmpty(): boolean; stepProgress(): FlowRetainedProgress; }
 export declare function createFlowBrowserRuntime(options: FlowBrowserOptions): Promise<FlowBrowserRuntime>;
 export declare class FlowSession {
   private constructor();

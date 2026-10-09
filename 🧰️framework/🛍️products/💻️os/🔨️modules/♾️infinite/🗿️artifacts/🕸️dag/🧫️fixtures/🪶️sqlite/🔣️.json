@@ -3,6 +3,7 @@
   "literal": "!@/\u0000引用😀",
   "documentSchema": "dag.host_snapshot",
   "nativeEnvelope": "dag.dag",
+  "retirement": {"items":1,"copyBytes":[1,7,4096],"birthRefusals":["zeroItems","shortCapacity","zeroDepth"],"conservation":"originalBackingPlusAdmittedBirthsEqualsPhysicalRelease","sharedAliases":"retainUntilUnique","mutations":14},
   "ownership": {
     "authority": "actualPersistedDagSnapshot",
     "backing": "cumulativeOwnedBacking",

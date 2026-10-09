@@ -1,0 +1,8 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddfe\ufe0fdocument/\ud83d\udcdc\ufe0fhistory/\ud83d\udca7\ufe0fhydration/\ud83e\udd80\ufe0f.rs",
+  "before": "2849f61d1dc7c0fddfa2c8c5304eb42fd29a6dd0b3defe82857686468219a1cb",
+  "after": "f3c19a98978538f6a7fc4d86d2bdb16367cfccf8bd6d55944e2c51306125cea5",
+  "blockBefore": "d9604c20cc4c8037145422d1d982e555ec8812be87b0dbf8b5a0ced39d4fb399",
+  "blockAfter": "baabd6c3e48d51802354aec86c878739c4c49e31ae6ff4c4cce8dacd3c1cfb58",
+  "change": "Phase::RetirePack admits exact original Vec under supplied full grant; no source copy; physical receipts still pending outer advancement API"
+}

@@ -1,4 +1,5 @@
-import {randomUUID,createHash} from "node:crypto";
+import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "./📦️storage/🟦️.ts";
+import {randomBytes,createHash} from "node:crypto";
 import {mkdirSync,readFileSync,rmSync,lstatSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {join,resolve} from "node:path";
@@ -9,8 +10,8 @@ import {cargoPreparationInputV1,assertCargoPreparationObservationCurrentV1} from
 export type CargoDependencyPairRunnerV1=(args:string[],cwd:string,signal:AbortSignal)=>Promise<void>;
 const sha=(path:string):string=>{const info=lstatSync(path);if(info.isSymbolicLink()||!info.isFile())throw Error("Preparation source must be a physical file");return createHash("sha256").update(readFileSync(path)).digest("hex");};
 /** 🔗️ Prepares once, then owns unchanged Cargo update and locked fetch under one current exclusive custody. */
-export async function withPreparedCargoDependencyPairV1(root:string,manifest:string,signal:AbortSignal,runner:CargoDependencyPairRunnerV1,sourcePaths:readonly string[]=[],packages:readonly string[]=[]):Promise<void> {
- signal.throwIfAborted();parseCargoPreparationSelectionV1({manifest,packages});const directory=join(root,".🧬semio/🦑️repo/⚡️cache/cargo-preparation",randomUUID()),lease=await acquireQueuedResourceLease({directory:join(root,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"),resource:`cargo-preparation:${root}`,mode:"exclusive",owner:randomUUID(),signal,onWait:()=>console.log(`[cargo-preparation] waiting for ${manifest}`)});
+export async function withPreparedCargoDependencyPairV1(storage:CargoPreparationStorageV1,root:string,manifest:string,signal:AbortSignal,runner:CargoDependencyPairRunnerV1,sourcePaths:readonly string[]=[],packages:readonly string[]=[]):Promise<void> {
+ signal.throwIfAborted();parseCargoPreparationStorageV1(storage);parseCargoPreparationSelectionV1({manifest,packages});const directory=join(storage.directory,randomBytes(16).toString("base64url")),lease=await acquireQueuedResourceLease({directory:storage.directory,resource:`cargo-preparation:${root}`,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal,onWait:()=>console.log(`[cargo-preparation] waiting for ${manifest}`)});
  try {
  mkdirSync(directory,{recursive:true});const scope=cargoWorkspaceForManifest(root,manifest),sources=[...new Set([fileURLToPath(import.meta.url),fileURLToPath(new URL("../🟦️.ts",import.meta.url)),fileURLToPath(new URL("./📜️script.ts",import.meta.url)),fileURLToPath(new URL("./🧾️custody/🟦️.ts",import.meta.url)),fileURLToPath(new URL("./🧾️custody/🧬️schema/🔣️.json",import.meta.url)),fileURLToPath(new URL("../🧬️schema/🏃️invocation/🔣️.json",import.meta.url)),fileURLToPath(new URL("../🧬️schema/🛠️preparation/🔣️.json",import.meta.url)),...sourcePaths])].map(path=>({path,sha256:sha(path)}));
  const prepared=prepareCargoOwners(root,scope,packages,directory);publishCargoWorkspaceMembership(root,cargoWorkspaceForManifest(root,scope.manifest),"write");

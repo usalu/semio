@@ -1,0 +1,30 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🧪️tests/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "40ee694b1f0c35b2f186fd29581d338094ece80852aaa190eec4176de222a40e",
+    "afterSha256": "1e4463330a47b4241a8db0c60bf6db92f2796ddeb624bc8891473f3343ddc075",
+    "qualification": "Original source-law absence guard, implementation pending"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "66129fc632f4189df309f1dbcae3673035a0101ff7409a145814d8f67fcebf8b",
+    "afterSha256": "330f316b858f4e1384739799ce45e50bee09c8b395bc16370cb8ca6e907d54d5",
+    "qualification": "Original source-law absence guard, implementation pending"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "6ebda456dab0a38f305fa206382ff35440be593b35a8946c4d02a7c314a35372",
+    "afterSha256": "02d58d3759c0ee46045f2b0f6961c4c5e0e714c650dcf85873dfb30cf2e8b3b0",
+    "qualification": "Original source-law absence guard, implementation pending"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "49cb1a24836b5a31dcbe36a761320fd31d953f98a0f97ae3d13916586f3a6be1",
+    "afterSha256": "753f2da5a214deae4fdb83ae95285c81f6d8fe886cee92ea8aaa8248994b94e7",
+    "qualification": "Original source-law absence guard, implementation pending"
+  }
+]

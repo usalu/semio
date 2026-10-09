@@ -39,5 +39,21 @@
     "commit-transfer-unwind",
     "exact-one-session-detach-request"
   ],
-  "scope": "Initial real Store refusal laws only; pending rows are not mounted or executed coverage."
+  "scope": "Initial real Store refusal laws only; pending rows are not mounted or executed coverage.",
+  "cleanup": {
+    "backbone": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 17,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 64
+    },
+    "store": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 512,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 64
+    }
+  }
 }

@@ -10,14 +10,17 @@ use std::sync::Arc;
 pub const ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES: usize = 256;
 
 /// 🏭️ Shares replacement lifecycle while domains supply constant-work admission and transfer.
-pub struct ArtifactEphemeralTransferPreparationFactory<P, M> {
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+pub struct ArtifactEphemeralTransferPreparationFactory<P: Send + Sync + 'static, M: Send + 'static> {
     preflight: fn(&M) -> Result<ArtifactStoreOneItemFootprint, String>,
     transfer: fn(M) -> P,
+    #[factory_child]
     state_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
+    #[factory_child]
     mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,
 }
 
-impl<P, M> ArtifactEphemeralTransferPreparationFactory<P, M> {
+impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralTransferPreparationFactory<P, M> {
     /// 🧩️ Transfer must move admitted ownership without cloning, traversing or discarding payload.
     pub fn new(
         preflight: fn(&M) -> Result<ArtifactStoreOneItemFootprint, String>,
@@ -49,18 +52,21 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPrepar
     }
 }
 
-struct TransferTask<P, M> {
-    transfer: fn(M) -> P,
+pub(super) struct TransferTask<P, M> {
+    pub(super) transfer: fn(M) -> P,
 }
 
 impl<P, M> super::ArtifactEphemeralPreparationTask<P, M> for TransferTask<P, M> {
     fn advance(&mut self, _: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant) -> Result<super::ArtifactEphemeralPreparationTaskStep<P>, String> {
-        if grant.maximum_items == 0 {
+        let capacity=semio_framework_value::shared_retirement_allocation_bytes::<P>();
+        let copy=size_of::<P>()+size_of::<M>();
+        if !grant.permits_one() || grant.maximum_capacity_bytes < capacity || grant.maximum_copy_bytes < copy {
             return Ok(super::ArtifactEphemeralPreparationTaskStep::Blocked);
         }
         let Some(mutation) = mutation.take() else { return Ok(super::ArtifactEphemeralPreparationTaskStep::Blocked) };
-        let root = (self.transfer)(mutation);
-        Ok(super::ArtifactEphemeralPreparationTaskStep::Prepared { root, checkpoint: ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, ..Default::default() } })
+        let root = Arc::new((self.transfer)(mutation));
+        let ownership=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes: capacity,released_bytes:0};
+        Ok(super::ArtifactEphemeralPreparationTaskStep::Prepared { root, checkpoint: ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1,completed_bytes:copy as u64, ..Default::default() },ownership })
     }
     fn begin_close(&mut self) {}
  }

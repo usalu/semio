@@ -3,6 +3,20 @@ import Ajv from "ajv";
 import stableStringify from "fast-json-stable-stringify";
 import "../../../♻️retirement/📋️queue/🧪️tests/🟦️.ts";
 
+test("original ordered mixed receipt keeps independent copy, retained capacity and release",async()=>{
+  const fixture=await Bun.file(new URL("../🧫️fixtures/📦️full-receipt/🔣️.json",import.meta.url)).json();
+  const source=Buffer.alloc(fixture.sourceCapacityBytes);source[0]=fixture.payloadByte;
+  const replacement=Buffer.alloc(fixture.replacementCapacityBytes);source.copy(replacement,0,0,1);
+  const independent={copiedItems:1,copiedBytes:1,retainedCapacityBytes:replacement.byteLength,releasedBytes:source.byteLength};
+  expect(replacement[0]).toBe(fixture.payloadByte);
+  expect(stableStringify(independent)).toBe(stableStringify(fixture.expected.mixedProgress));
+  const demand={copyBytes:1,capacityBytes:replacement.byteLength,releaseBytes:source.byteLength,depth:1+1};
+  expect(stableStringify(demand)).toBe(stableStringify(fixture.expectedMixedDemand));
+  expect(stableStringify(fixture.deque.source)).toBe(fixture.deque.canonicalSource);
+  for(const text of fixture.deque.source)expect(Buffer.byteLength(text)).toBeLessThan(fixture.deque.payloadCapacity);
+  console.log("[DEBUG] original ordered mixed receipt independentBufferCopy=true independentDemand=true");
+});
+
 type Corpus={cases:{id:string,key:string,keyCapacity:number,value:string,valueCapacity:number}[],grants:number[],expected:{terminalOwners:number,stepBirthBytes:number,reportedReleaseEqualsAllocator:boolean,actualReleaseFitsGrant:boolean,sourcePayloadPointerPreserved:boolean}};
 const fixture:Corpus=await Bun.file(new URL("../🧫️fixtures/🔣️.json",import.meta.url)).json();
 const schema=await Bun.file(new URL("../🧬️schema/🔣️.json",import.meta.url)).json();

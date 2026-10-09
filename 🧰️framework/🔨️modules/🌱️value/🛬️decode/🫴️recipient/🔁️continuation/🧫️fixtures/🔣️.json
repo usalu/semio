@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "custody": "originalRecipient",
+  "replacement": "refuseWithoutConsuming",
+  "initialBytes": 9,
+  "text": "λ🙂λ🙂",
+  "textBytes": 12,
+  "maximumNativeBytes": 1048576,
+  "maximumTurns": 4096,
+  "closeGrant": {
+    "maximumItems": 16,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 128
+  },
+  "deniedGrant": {
+    "maximumItems": 0,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 0
+  }
+}

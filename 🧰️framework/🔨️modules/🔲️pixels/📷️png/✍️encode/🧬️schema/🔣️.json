@@ -23,54 +23,6 @@
     }
   },
   "definitions": {
-    "admissionFixture": {
-      "type": "object",
-      "properties": {
-        "height": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "maximumBytes": {
-          "type": "integer",
-          "minimum": 8
-        },
-        "pixels": {
-          "type": "array",
-          "items": {
-            "minimum": 0,
-            "type": "integer",
-            "maximum": 255
-          }
-        },
-        "width": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "expectedRefusal": {
-          "const": true
-        },
-        "sourceAuthorities": {
-          "uniqueItems": true,
-          "minItems": 2,
-          "maxItems": 2,
-          "type": "array",
-          "items": {
-            "enum": [
-              "owned",
-              "shared"
-            ]
-          }
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "width",
-        "height",
-        "pixels",
-        "maximumBytes",
-        "expectedRefusal",
-        "sourceAuthorities"
-      ]
-    }
+    
   }
 }

@@ -1,0 +1,1 @@
+{"schema":{"type":"string","pattern":"^(a|[b-d]){1,4}$"},"valid":["a","bc","abcd"],"invalid":["","ee","abcde"],"ownerTypes":["OwnedJsonSchemaValidator","SchemaIndex","PatternMatcher","PatternNode","Repeat","ClassItem"],"denials":["items","capacity","depth"],"cleanup":{"items":1,"copy":8192,"capacity":65536,"release":65536,"depth":128}}

@@ -44,7 +44,7 @@ pub struct Block5dIntoZip;
 impl Serializer<Block5dSnapshot> for Block5dIntoZip {
     const INTO: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Block5dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &Block5dSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let bytes = encode_zip(&archive_of(from)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("block5d→zip: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }

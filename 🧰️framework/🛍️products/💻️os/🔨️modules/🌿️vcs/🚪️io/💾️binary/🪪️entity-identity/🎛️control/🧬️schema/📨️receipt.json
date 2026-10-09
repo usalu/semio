@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Operation Scalar Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximum",
+    "owned",
+    "finished",
+    "reserved_return",
+    "phase_start_owned",
+    "phase_start_reserved_return",
+    "received_output",
+    "received_input",
+    "received_retirement"
+  ],
+  "properties": {
+    "maximum": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "owned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "finished": {
+      "type": "boolean"
+    },
+    "reserved_return": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "phase_start_owned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "phase_start_reserved_return": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "received_output": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "received_input": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "received_retirement": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "$comment": "unbegun receipt has no guest or return ownership; guest owned does not exceed original phase maximum; reserved return never precedes phase-start reservation; phase-start owned plus guest owned plus new return reservation plus received output plus received input plus actual host retirement frame admission equals original caller owned; phase-start owned plus phase maximum equals original caller maximum"
+}

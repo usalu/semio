@@ -1,0 +1,44 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\udce1\ufe0freplication/\ud83d\udd17\ufe0fcausal/\ud83d\udd00\ufe0ftransition/\ud83d\udd01\ufe0ffold/\ud83e\udd80\ufe0f.rs",
+  "before": "55edc534e7b55748f7ee6fc0d0a66665a1ae9c60baf83498c915ac9bb718bb15",
+  "after": "c96c910a1b3db4e3e2a5e0e73dd987a6b813bfa70e0cbbe53275e1e0b90eb50f",
+  "blocks": [
+    {
+      "before": "62066ffd13d065015ada6bf26b1e1dc0ad08b7a8c427144e0ae86eb8e9a9bead",
+      "after": "ab09ec71c7c4ade9a8ba724d297f7c2ecea531e5d52e04f05545c33774664a2c"
+    },
+    {
+      "before": "f544c5f99cff591ab9d2d2f65435aad79a25cd4a0c6fd5e8e7bc36c4ccc7aa88",
+      "after": "d537e6984f1f76c0fe58a73698e65bd3a7294289f69c39ac725c432407ae8318"
+    },
+    {
+      "before": "572621a156d5f36806331427d2b1dcc2ef27fdb88a465f6560a454b54264f622",
+      "after": "210d5151fa083dfc39e323758b8b666a5ae103922687b7a6ae282323b05e423a"
+    },
+    {
+      "before": "75d875507146b9f66fed20aa33585e461daca495ff2def7d65ac861667580b89",
+      "after": "c29825bf12753e534ee7e86ed3e8755533c39b1703171d85c10c81fddcd17313"
+    },
+    {
+      "before": "e8b64af85e16297ab8650ab18e8c4cbede608fb6caa8b103e9f550aaadb1a821",
+      "after": "61d7bfec56ff6c14c97f6a7b31fbb984c5ea91b7b1dd71904292d6f6528ccf95"
+    },
+    {
+      "before": "be328fbd4a47e291566975a17a020497ead25737bbcb8cd0177033807d711275",
+      "after": "748ae8a3712b45d331a1d55bf4ac4a2162fefba1f828ddf7c8687d6580dc23d6"
+    },
+    {
+      "before": "ed4ffa60df4d220675300820e111652bac7b21b709c336276f00be1b3d67d303",
+      "after": "fe0199e3f8c229834c82b97b94625d8804117aadaa04a94f91519abf0342a06c"
+    },
+    {
+      "before": "c01d8c90f06fde4b55501cc99b5ab893995f4e4fe29b87a914f27d48f215d887",
+      "after": "9028a2567080c6fff0ba5bfb0dfa4f9dd1f886acd874d3cff480fb295f5e0618"
+    },
+    {
+      "before": "adb53855ad25f7049826600ebcbc0716459ce27c22c8157a2d039381dcabb259",
+      "after": "c1af6571c5dfe5fc535c159db25f380744f783e0d4f4507cf18081541a61b4a3"
+    }
+  ],
+  "change": "retain original rejected error; borrowed/cold handoff; post-control full-grant physical error close; checked exhaustive known error quote; opaque transport remains typed original-retaining refusal"
+}

@@ -1,0 +1,5 @@
+# Peer Publication Original Authority
+
+Current Store begin/prune/adopt/release-created/commit APIs have no original physical grant or native allocation authority. Canonical neutral publication fixture and actual native receiving law now require explicit independent grant, same original NativeSnapshotDecodeOwner, actor pointer preservation across every prebirth refusal, typed presence custody, exact allocation/release receipts, real produced peer comparison through independent Serde JSON, and admitted full close. Producer signatures are intentionally unchanged until genuine native compiler RED; no acceptance claimed. Existing PresenceRetirementPeer production schema remains the produced/request peer contract, and the plain fixture is not a corpus envelope schema.
+
+The final commit creates Arc<PresencePeersRoot<P>> and therefore receives the same original NativeSnapshotDecodeOwner as adoption. Begin/prune/release-created expose their actual inline transfer and alias progress; no fresh cap or demand-derived grant. Flow owns Plugin receiving.

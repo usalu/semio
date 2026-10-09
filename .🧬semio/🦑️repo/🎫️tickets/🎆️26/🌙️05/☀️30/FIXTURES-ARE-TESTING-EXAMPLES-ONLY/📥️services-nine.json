@@ -1,0 +1,38 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs",
+      "beforeSHA": "ac4c330db854fc9a222fe5fc4a0c9a3a433c53098737297401e3689af9a5747c",
+      "recordedAfterSHA": "cf426954ea322cf917418eff4b1d26038fbc72c6a498895298b0a46648a8771b",
+      "logicalActions": [
+        "genuine payload/writer full Demand frontier and exact supplied child grant/depth",
+        "actual child progress/refusal preserved before outer completion",
+        "fixed original1item16KiBcopy/release capacity0depth3 callback; no self-price",
+        "failed writer retains exact original writer and error on refusal"
+      ],
+      "currentObservedSHA": "cf426954ea322cf917418eff4b1d26038fbc72c6a498895298b0a46648a8771b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️.rs",
+      "beforeSHA": "93d88d6e51ddcb4b4d1ce8e9db112b45c02a5e96407a9db74c0f837aaf890239",
+      "recordedAfterSHA": "212cb3bea6a0dcc1586b0c3225bf68f8d53f829ea4581de9f8f7de4dee914232",
+      "logicalActions": [
+        "canonical full-grant outcome-slot payload then separate paid header release",
+        "original retained outcome stays on typed refusal/error; original callback cleanup continues",
+        "resume only after actual canonical empty slot"
+      ],
+      "currentObservedSHA": "212cb3bea6a0dcc1586b0c3225bf68f8d53f829ea4581de9f8f7de4dee914232"
+    }
+  ],
+  "sourceCopiesAdded": false,
+  "actualCompilerRed": "generated/k-native.log session27371 located9 current Services only",
+  "physicalLayoutComplete": false,
+  "executedProof": {
+    "sourceRedSession": 89703,
+    "sourceGreenSession": 16842,
+    "sourceGreenResult": "Nx0/9.6s24laws615assertions",
+    "sourceGreenLog": "🗑️generated/services-green.log",
+    "nativeExecuted": false
+  },
+  "capturedAt": "2026-10-09T05:43:22.404509+00:00"
+}

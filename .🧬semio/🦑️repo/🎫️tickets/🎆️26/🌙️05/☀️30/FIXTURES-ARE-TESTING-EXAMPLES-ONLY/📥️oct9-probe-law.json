@@ -1,0 +1,9 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+  "beforeSHA": "fd3d9074e97191cd4f6c2d9cedd39df22ffbcc24ec952d153ac0708e7372ffce",
+  "recordedAfterSHA": "8b61ee377bacc1d51d353867e4aed898bba076a7d13b73488add4b671eca86a2",
+  "logicalActions": [
+    "nested probe actual wrapper birth and original counter closure regression"
+  ],
+  "sourceCopiesAdded": false
+}

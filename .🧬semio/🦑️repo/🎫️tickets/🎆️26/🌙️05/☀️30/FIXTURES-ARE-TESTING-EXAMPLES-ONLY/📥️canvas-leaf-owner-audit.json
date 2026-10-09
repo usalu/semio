@@ -1,0 +1,49 @@
+{
+  "executed": false,
+  "authored": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "authored": false,
+      "sha256": "b5e081fdcf0077058db4dbdac9580396df26b87a335b109d0aa45f9c7783d29a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🧪️tests/🔬️renderer-opaque-scene-retirement/🦀️.rs",
+      "authored": false,
+      "sha256": "c9dbcef48519c89d5cfd80bdd9c6bf128694bfc2bc55c853e9c1f27308d83d50"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🧪️tests/🔬️renderer-color-stroke-raster/🦀️.rs",
+      "authored": false,
+      "sha256": "8f0c54b5e1379c26e6b4d027f221a8e3bfc2caf1c2697c041a5cb3950a9d690e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📜️script.ts",
+      "authored": false,
+      "sha256": "da036872c4e7641dadfd4b75cbbdf4a8434271fe1f0725a5d16ec23b78aa10c1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📋️project.json",
+      "authored": false,
+      "sha256": "063b7b543233cdaed7ebf0500e99730d347571c323173af0c78f051f76a30c65"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🦀️.rs",
+      "authored": false,
+      "sha256": "c2b0983cb9119bbd1581830061b8965062762993674a1cd222c0e4ec0db47f97"
+    }
+  ],
+  "route": "semio-framework-canvas:test",
+  "foundRetireOwned": [
+    "RasterImage",
+    "Value Arc<T:RetireOwned+Sync>"
+  ],
+  "notFoundInCanvas": [
+    "Stroke",
+    "RecordedShape",
+    "Paint",
+    "SceneCommand",
+    "Scene"
+  ],
+  "backend": "host/browser-gated vello::Scene; no current typed retirement implementation identified"
+}

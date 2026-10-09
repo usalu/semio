@@ -1,0 +1,10 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+  "beforeSHA": "a36e15365ae75463b5a3bb97a6c79014b1a1750ad9de54695a5db56767a89315",
+  "recordedAfterSHA": "fd3d9074e97191cd4f6c2d9cedd39df22ffbcc24ec952d153ac0708e7372ffce",
+  "logicalActions": [
+    "reader close fixed policy regression",
+    "empty retained inverse backing physical release regression"
+  ],
+  "sourceCopiesAdded": false
+}

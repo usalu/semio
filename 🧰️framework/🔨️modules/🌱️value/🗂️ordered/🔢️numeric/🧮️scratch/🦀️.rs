@@ -2,6 +2,12 @@
 use crate::list::{PagedList,PagedListError};
 use crate::retirement::{RetireOwned,RetirementCursor};
 use std::cmp::Ordering;
+#[path="🧵️insert/🦀️.rs"]
+mod retained_insert;
+pub use retained_insert::NumericInsertCursor;
+#[path="🧺️set/🦀️.rs"]
+mod set;
+pub use set::{NumericSet,NumericSetIter};
 
 struct Node<K,V>{key:K,value:Option<V>,generation:u64,count_generation:u64,count:usize,height:u8,left:Option<usize>,right:Option<usize>,parent:Option<usize>}
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for Node<K,V>{
@@ -28,6 +34,7 @@ impl<K:Copy+Ord,V> NumericIndex<K,V>{
  pub fn len(&self)->usize{self.count(self.root)}
  pub fn is_empty(&self)->bool{self.len()==0}
  pub fn stored_keys(&self)->usize{self.nodes.len()}
+ pub fn entry_at_rank(&self,mut rank:usize)->Option<(&K,&V)>{let mut current=self.root;while let Some(index)=current{let node=self.node(index);let left=self.count(node.left);if rank<left{current=node.left;continue}rank-=left;if node.generation==self.generation{if let Some(value)=node.value.as_ref(){if rank==0{return Some((&node.key,value))}rank-=1;}}current=node.right;}None}
  pub fn get(&self,key:&K)->Option<&V>{let n=self.node(self.find(key)?);if n.generation==self.generation{n.value.as_ref()}else{None}}
  pub fn get_mut(&mut self,key:&K)->Option<&mut V>{let index=self.find(key)?;let generation=self.generation;let n=self.node_mut(index);if n.generation==generation{n.value.as_mut()}else{None}}
  pub fn contains_key(&self,key:&K)->bool{self.get(key).is_some()}
@@ -42,7 +49,12 @@ impl<K:Copy+Ord,V> NumericIndex<K,V>{
  pub fn remove(&mut self,key:&K)->Option<V>{let index=self.find(key)?;if self.node(index).generation!=self.generation{return None}let value=self.node_mut(index).value.take();self.repair(Some(index));value}
  pub fn pop_first(&mut self)->Option<(K,V)>{let mut current=self.root?;if self.count(Some(current))==0{return None}loop{let n=self.node(current);if self.count(n.left)>0{current=n.left.unwrap();continue}if n.generation==self.generation&&n.value.is_some(){let key=n.key;return self.remove(&key).map(|value|(key,value))}current=n.right.unwrap();}}
 }
-impl<K:Copy+Ord,V:Copy> NumericIndex<K,V>{pub fn reset(&mut self){self.generation=self.generation.checked_add(1).expect("numeric scratch generation exhausted");}}
+impl<K:Copy+Ord,V:Copy> NumericIndex<K,V>{
+ pub fn reset(&mut self){self.generation=self.generation.checked_add(1).expect("numeric scratch generation exhausted");}
+ pub fn terminal_is_empty(&self)->bool{self.nodes.terminal_is_empty()}
+ pub fn next_close_release_byte_demand(&self)->Result<usize,PagedListError>{if self.nodes.is_empty(){self.nodes.next_release_allocation_bytes()}else{Ok(0)}}
+ pub fn close_copy_step(&mut self,maximum_items:usize,maximum_release_bytes:usize)->Result<crate::list::PagedListProgress,PagedListError>{if maximum_items==0{return Ok(crate::list::PagedListProgress::default())}self.root=None;if self.nodes.pop().is_some(){return Ok(crate::list::PagedListProgress{progressed:true,..Default::default()})}self.nodes.release_empty_page(maximum_release_bytes)}
+}
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for NumericIndex<K,V>{
  fn retirement(self)->Box<dyn RetirementCursor>{crate::retirement::sequence(vec![crate::retirement::deferred(self.nodes),crate::retirement::deferred(self.root),crate::retirement::deferred(self.generation)])}
  fn retirement_birth_bytes(&self)->Option<usize>{crate::retirement::sequence_birth_bytes(&[crate::retirement::deferred_birth_bytes_for(&self.nodes),crate::retirement::deferred_birth_bytes_for(&self.root),crate::retirement::deferred_birth_bytes_for(&self.generation)])}

@@ -1,0 +1,15 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
+      "beforeSha256": "5ecd8398af7b55eff9058506195de34299b04c27a5eadde492a162c65f6dec81",
+      "afterSha256": null,
+      "action": "Retire fresh whole receiving Source/frontier test-envelope schema, now including draftHome; actual original full boundary17998 rejected it. Preserve current neutral input and native/source readers."
+    }
+  ],
+  "unchangedPlainInputObserver": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🔣️.json",
+    "sha256": "dc97d705898cab1a14161386bbc67e557d638ded0a94d2c6b039fdbbac2e39db",
+    "ownership": false
+  }
+}

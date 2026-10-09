@@ -42,6 +42,10 @@ use std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError, RwLock};
 use std::task::{Context, Poll, Waker};
 
+#[cfg(not(target_arch="wasm32"))]
+#[path="🔔️wake/🧵️thread/🦀️.rs"]
+pub mod original_thread_wake;
+
 //#region 🌐️BrowserFutureBridge
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[path = "⏱️clock/🦀️.rs"]
@@ -238,11 +242,19 @@ impl CancelState {
     }
 }
 
+#[path="🛑️cancel/🚦️waiters/🦀️.rs"]
+mod cancel_waiters;
+use cancel_waiters::CancelWaiters;
+
 struct CancelNode {
     local: AtomicU8,
     parent: Option<CancelToken>,
-    waiters: Mutex<Vec<(u64, Waker)>>,
+    waiters:CancelWaiters,
 }
+
+#[path="🛑️cancel/♻️retirement/🦀️.rs"]
+mod cancellation_retirement;
+pub use cancellation_retirement::{CancelTokenRetirement,CancelTokenRetirementError,CancelTokenRetirementBlocked};
 
 static NEXT_CANCEL_WAITER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
@@ -262,7 +274,7 @@ impl CancelToken {
 
     /// 🌱️ Creates a live root from synchronous scheduler/bootstrap code.
     pub fn root_now() -> CancelToken {
-        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: None, waiters: Mutex::new(Vec::new()) }))
+        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: None, waiters:CancelWaiters::new() }))
     }
 
     /// 👶️ A descendant token: its effective state is never less severe than `self`'s.
@@ -272,7 +284,7 @@ impl CancelToken {
 
     /// 👶️ Creates a cancellable descendant from a synchronous finite turn.
     pub fn child_now(&self) -> CancelToken {
-        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: Some(self.clone()), waiters: Mutex::new(Vec::new()) }))
+        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: Some(self.clone()), waiters:CancelWaiters::new() }))
     }
 
     /// ⏸️ Enter the suspend state — a no-op once `Cancelled` (terminal, never downgraded).
@@ -294,7 +306,7 @@ impl CancelToken {
     /// 🛑️ Cancels from a synchronous scheduler turn or `Drop` boundary without needing an executor.
     pub fn cancel_now(&self) {
         self.0.local.store(2, Ordering::SeqCst);
-        let waiters = std::mem::take(&mut *self.0.waiters.lock().unwrap_or_else(PoisonError::into_inner));
+        let waiters = std::mem::take(&mut *self.0.waiters.lock());
         for (_, waker) in waiters {
             waker.wake();
         }
@@ -375,7 +387,7 @@ impl Future for Cancelled {
         }
         let id = self.id;
         self.for_each_node(|node| {
-            let mut waiters = node.waiters.lock().unwrap_or_else(PoisonError::into_inner);
+            let mut waiters = node.waiters.lock();
             match waiters.iter_mut().find(|(waiter, _)| *waiter == id) {
                 Some((_, waker)) => waker.clone_from(cx.waker()),
                 None => waiters.push((id, cx.waker().clone())),
@@ -391,7 +403,7 @@ impl Drop for Cancelled {
             return;
         }
         let id = self.id;
-        self.for_each_node(|node| node.waiters.lock().unwrap_or_else(PoisonError::into_inner).retain(|(waiter, _)| *waiter != id));
+        self.for_each_node(|node| node.waiters.lock().retain(|(waiter, _)| *waiter != id));
     }
 }
 
@@ -574,18 +586,9 @@ pub fn block_on<F: Future>(fut: F) -> F::Output {
 
     #[cfg(not(target_arch = "wasm32"))]
     {
-        struct ThreadWaker(std::thread::Thread);
-        impl std::task::Wake for ThreadWaker {
-            fn wake(self: Arc<Self>) {
-                self.0.unpark();
-            }
-            fn wake_by_ref(self: &Arc<Self>) {
-                self.0.unpark();
-            }
-        }
-        let waker = Waker::from(Arc::new(ThreadWaker(std::thread::current())));
-        let mut cx = Context::from_waker(&waker);
         loop {
+            let waker=original_thread_wake::original_thread_waker();
+            let mut cx=Context::from_waker(&waker);
             match fut.as_mut().poll(&mut cx) {
                 Poll::Ready(value) => return value,
                 Poll::Pending => std::thread::park(),
@@ -2877,3 +2880,7 @@ pub mod publication;
 #[cfg(test)]
 #[path = "🔐️publication/🧪️tests/🦀️.rs"]
 mod publication_tests;
+
+#[cfg(test)]
+#[global_allocator]
+static ASYNC_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

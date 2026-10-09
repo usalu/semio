@@ -57,7 +57,7 @@ impl ObjSourceCursor {
 /// 🔎️ Parses bounded indexed polygon source without reconstructing geometry.
 pub fn parse_polygon_mesh_source(text:&str)->Result<PolygonMeshSource,String> {
     let mut preparation=PolygonSourcePreparation::new();
-    loop {let grant=preparation.cold_grant(4096,4096)?;if let Some(source)=preparation.step(text,grant)?.source{return Ok(source);}}
+    loop {let grant=preparation.cold_grant(text,4096,4096)?;if let Some(source)=preparation.step(text,grant)?.source{return Ok(source);}}
 }
 
 /// 🎛️ Keeps projection work and retirement currencies independent.
@@ -75,6 +75,10 @@ fn admit_source_retirement<T:pack::value::retirement::RetireOwned>(slot:&mut Opt
     match pack::value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{*slot=Some(owner);Ok(progress)},Err((error,original))=>{*value=Some(original);Err(error.to_string())}}
 }
 
+fn mesh_source_decode_admission(control:&pack::value::NativeDecodeControl<'_>,demand:pack::value::RetirementDemand)->Result<(),String>{
+ if control.owned_bytes().checked_add(demand.capacity_bytes).is_none_or(|bytes|bytes>256*1024*1024){return Err("mesh native source exceeds cumulative allocation limit".into())}Ok(())
+}
+
 /// 🧵️ Captures, projects, and admits the existing polygon payload under retained work grants.
 pub struct PolygonSourcePreparation {
     parser:Option<json::JsonParseCursor>,projection:Option<json::JsonValueProjection>,decoding:Option<pack::value::native_decoding::NativeDecodeContinuation>,stage:u8,
@@ -90,9 +94,16 @@ impl PolygonSourcePreparation {
     /// 📍️ Exposes the current existing source preparation phase.
     pub fn phase(&self)->&'static str {match self.stage {0=>"mesh-source-parse",1..=7=>"mesh-source-project",_=>"mesh-source-admit"}}
     /// 📏️ Computes exact closure demands for explicit cold IO callers.
-    pub fn cold_grant(&self,maximum_units:usize,maximum_projection_bytes:usize)->Result<PolygonSourceGrant,String>{
+    pub fn cold_grant(&self,text:&str,maximum_units:usize,maximum_projection_bytes:usize)->Result<PolygonSourceGrant,String>{
         use pack::value::{retained_clone::RetainedCloneGrant,retirement::owned_retirement_birth_bytes};
-        let demand=match &self.retirement{Some(owner)=>pack::value::factory_ticket_demands(owner,0).map_err(|error|error.to_string())?,None=>pack::value::RetirementDemand{capacity_bytes:if self.stage==1&&self.parser.is_some(){owned_retirement_birth_bytes::<json::JsonParseCursor>()}else if self.stage==2&&self.projection.is_some(){owned_retirement_birth_bytes::<json::JsonValueProjection>()}else if self.stage==10&&!self.garbage.is_empty(){owned_retirement_birth_bytes::<Vec<pack::value::DslValue>>()}else{0},depth:1,..Default::default()}};
+        let demand=match &self.retirement{
+            Some(owner)=>pack::value::factory_ticket_demands(owner,0).map_err(|error|error.to_string())?,
+            None if self.stage==1&&self.parser.is_some()=>pack::value::RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<json::JsonParseCursor>(),depth:1,..Default::default()},
+            None if self.stage==2&&self.projection.is_some()=>pack::value::RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<json::JsonValueProjection>(),depth:1,..Default::default()},
+            None if self.stage==0=>self.parser.as_ref().ok_or("mesh parser lost its original owner")?.normal_step_demands(text).map_err(|error|error.to_string())?,
+            None if self.stage==1=>self.projection.as_ref().ok_or("mesh projection lost its original owner")?.normal_step_demands().map_err(|error|error.to_string())?,
+            None=>pack::value::RetirementDemand{capacity_bytes:if self.stage==10&&!self.garbage.is_empty(){owned_retirement_birth_bytes::<Vec<pack::value::DslValue>>()}else{0},depth:1,..Default::default()},
+        };
         Ok(PolygonSourceGrant{maximum_units,maximum_projection_bytes,retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)}})
     }
     /// ⏱️ Advances projection work or one independently admitted closure turn.
@@ -108,8 +119,8 @@ impl PolygonSourcePreparation {
         if maximum_bytes==0{return Ok(waiting(Default::default()));}
         for _ in 0..grant.maximum_units {
             match self.stage {
-                0=>{let mut accepted=|_|true;let mut control=match self.decoding.take(){Some(receipt)=>pack::value::NativeDecodeControl::resume(receipt,&mut accepted),None=>Ok(pack::value::NativeDecodeControl::new(256*1024*1024,&mut accepted))}.map_err(|error|error.to_string())?;let parsed=self.parser.as_mut().unwrap().step(text,1,&mut control);self.decoding=Some(control.pause().map_err(|error|error.to_string())?);if let Some(value)=parsed.map_err(|error|error.to_string())? {self.projection=Some(json::JsonValueProjection::new(value));self.stage=1;return Ok(waiting(Default::default()));}},
-                1=>{let mut accepted=|_|true;let mut control=pack::value::NativeDecodeControl::resume(self.decoding.take().unwrap(),&mut accepted).map_err(|error|error.to_string())?;let projected=self.projection.as_mut().unwrap().step(1,maximum_bytes,&mut control);self.decoding=Some(control.pause().map_err(|error|error.to_string())?);if let Some(value)=projected.map_err(|error|error.to_string())? {self.raw=Some(value);self.stage=2;return Ok(waiting(Default::default()));}},
+                0=>{let mut accepted=|_|true;let mut control=match self.decoding.take(){Some(receipt)=>pack::value::NativeDecodeControl::resume(receipt,&mut accepted),None=>Ok(pack::value::NativeDecodeControl::new_retained(&mut accepted))}.map_err(|error|error.to_string())?;let parser=self.parser.as_mut().unwrap();let parsed=(||{mesh_source_decode_admission(&control,parser.normal_step_demands(text).map_err(|error|error.to_string())?)?;parser.step(text,1,&mut control,grant.retirement).map_err(|error|error.to_string())})();let progress=parser.normal_step_progress();self.decoding=Some(control.pause().map_err(|error|error.to_string())?);if let Some(value)=parsed? {self.projection=Some(json::JsonValueProjection::new(value));self.stage=1;}if !progress.fits(grant.retirement){return Err("mesh original parser/projection receipt exceeds caller grant".into());}return Ok(waiting(progress));},
+                1=>{let mut accepted=|_|true;let mut control=pack::value::NativeDecodeControl::resume(self.decoding.take().unwrap(),&mut accepted).map_err(|error|error.to_string())?;let projection=self.projection.as_mut().unwrap();let projected=(||{mesh_source_decode_admission(&control,projection.normal_step_demands().map_err(|error|error.to_string())?)?;projection.step(1,maximum_bytes,&mut control,grant.retirement).map_err(|error|error.to_string())})();let progress=projection.normal_step_progress();self.decoding=Some(control.pause().map_err(|error|error.to_string())?);if let Some(value)=projected? {self.raw=Some(value);self.stage=2;}if !progress.fits(grant.retirement){return Err("mesh original parser/projection receipt exceeds caller grant".into());}return Ok(waiting(progress));},
                 2=>self.admit_root()?,
                 3=>{if let Some(value)=self.vertices.next() {self.raw=Some(value);let values=self.raw.as_ref().unwrap().as_array().filter(|values|values.len()==3).ok_or("vertex must have three coordinates")?;let mut point=[0.0;3];for axis in 0..3 {point[axis]=values[axis].as_f64().filter(|number|number.is_finite() && number.abs()<=f32::MAX as f64).ok_or("coordinate must be finite")? as f32;}self.source.vertices.push(point);self.seen.push(0);self.garbage.push(self.raw.take().unwrap());}else {self.stage=4;}},
                 4=>self.project_face()?,

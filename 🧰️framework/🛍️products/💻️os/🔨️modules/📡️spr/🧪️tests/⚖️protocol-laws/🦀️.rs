@@ -140,7 +140,7 @@ async fn push_transition(rng: &mut SplitMix64, clock: &mut u64, adversarial: boo
     let hlt = (rng.next_range(4).await, *clock, rng.next_range(2).await);
     let id = next_ident(rng, "transition", transitions.len(), adversarial).await;
     let dependencies = transitions.last().map(|prior| vec![prior.id.clone()]).unwrap_or_default();
-    transitions.push(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, observed: None, payload: crate::os_spr::encode_history_transition(&transition) });
+    transitions.push(crate::os_spr::HistoryTransitionRecord { id, actor:actor.into(), hlt, dependencies, observed: None, payload: crate::os_spr::encode_history_transition(&transition) });
 }
 
 /// 🎞️ Deterministic seeded `crate::os_spr::HistoryLog` fabricator.
@@ -174,7 +174,7 @@ impl HistoryLogGen {
             for _ in 0..op_count {
                 ops.push(crate::os_spr::OpPayload { text: Some(next_text(&mut rng, profile.adversarial).await), binary: None });
             }
-            edits.push(crate::os_spr::HistoryEdit { line: None, id, actor, started_at, finished_at, verb: None, ops, inverse: Vec::new(), meta: None, lane: None });
+            edits.push(crate::os_spr::HistoryEdit { line: None, id, actor:actor.map(Into::into), started_at, finished_at, verb: None, ops, inverse: Vec::new(), meta: None, lane: None });
         }
 
         let mut transitions: Vec<crate::os_spr::HistoryTransitionRecord> = Vec::new();
@@ -254,7 +254,7 @@ impl OpDagGen {
             envelopes.push(crate::os_spr::MutationEnvelope {
                 mutation_id: crate::os_spr::MutationId(format!("op-{i}")),
                 document_id: crate::os_spr::ArtifactId("doc-1".to_string()),
-                actor: crate::os_spr::ActorId(format!("actor-{}", rng.next_range(4).await)),
+                actor: crate::os_spr::ActorId(format!("actor-{}", rng.next_range(4).await).into()),
                 dependencies,
                 observed: None,
                 target: Vec::new(),

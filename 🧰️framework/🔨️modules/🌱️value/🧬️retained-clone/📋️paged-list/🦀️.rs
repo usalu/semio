@@ -56,9 +56,11 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T,
 
     fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(if !self.released && !self.owner.is_empty() && !std::mem::needs_drop::<T>() { size_of::<T>() } else { 0 })}
 
+    fn allows_admitted_narrow_work(&self)->bool { !self.released&&!self.owner.is_empty()&&!std::mem::needs_drop::<T>()&&self.owner.get(self.owner.len()-1).is_some_and(|value|value.retirement_birth_bytes().is_some_and(|bytes|bytes!=0)) }
+
     fn next_close_byte_demand(&self) -> Option<usize> {
         if self.released || !self.owner.is_empty() || self.owner.terminal_is_empty() {
-            None
+            Some(0)
         } else {
             self.owner.next_release_allocation_bytes().ok()
         }

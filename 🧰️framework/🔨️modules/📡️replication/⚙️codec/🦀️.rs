@@ -493,6 +493,13 @@ pub struct DeflateRetainedCursor {
 
 #[cfg(feature = "deflate")]
 impl DeflateRetainedCursor {
+    /// 📏️ Borrows the current retained decoder's independent physical close currencies.
+    pub fn retirement_demands(&self) -> semio_framework_value::RetirementDemand {
+        use semio_framework_value::RetirementDemand;
+        if self.closed { return Default::default(); }
+        if self.pending.is_some() { return RetirementDemand { copy_bytes: std::mem::size_of::<u8>(), depth: 1, ..Default::default() }; }
+        self.inflater.as_ref().map_or(RetirementDemand { depth: 1, ..Default::default() }, |owner| if owner.retained_terminal_is_empty() { RetirementDemand { copy_bytes: std::mem::size_of::<semio_framework_deflate::Inflater>(), depth: 1, ..Default::default() } } else { owner.retained_retirement_demands() })
+    }
     pub fn try_new(expected: u64, limit: u64, maximum_allocation_bytes: usize) -> Result<Self, PackRefusal> {
         if expected > limit {
             return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,limit:"retained deflate raw length exceeds limit"});

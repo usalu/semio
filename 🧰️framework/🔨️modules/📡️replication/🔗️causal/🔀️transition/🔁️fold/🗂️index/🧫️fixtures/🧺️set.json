@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "keys": [
+    "β",
+    "mesh",
+    "texture",
+    "mesh"
+  ],
+  "expected": [
+    "mesh",
+    "texture",
+    "β"
+  ],
+  "taken": [
+    "mesh",
+    "texture",
+    "β"
+  ],
+  "handoffCapacityBytes": 0,
+  "handoffReleaseBytes": 0,
+  "maximumReleaseBytes": 8,
+  "copyBytes": [
+    1,
+    3,
+    64
+  ],
+  "clearedKeys": [
+    "mesh",
+    "old-b"
+  ],
+  "clearCapacityBytes": 0,
+  "clearReleaseBytes": 0,
+  "reusedKey": "mesh",
+  "detachedSlotPreservesLiveGeneration": true
+}

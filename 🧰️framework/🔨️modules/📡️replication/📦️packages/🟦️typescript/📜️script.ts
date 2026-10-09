@@ -18,6 +18,13 @@ class IndexEntryTestScript extends BundleScript {
   async run():Promise<void>{await import("../../🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🌱️entry/🟦️.ts");}
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-index-entry",IndexEntryTestScript);
+/** 🧺️ Runs the original generic set custody neutral oracle. */
+class IndexSetTestScript extends BundleScript {
+  async run():Promise<void>{await import("../../🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧺️set.ts");}
+}
+
+/** 🎟️ Exercises independently authored original index insertion references. */
+class IndexInsertionTestScript extends BundleScript{async run():Promise<void>{const {testHistoryIndexInsertion}=await import("../../🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🎟️insertion/🟦️.ts");testHistoryIndexInsertion();}}
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-index-entry",IndexEntryTestScript).register("test-index-insertion",IndexInsertionTestScript).register("test-index-set",IndexSetTestScript);
 
 await runScriptMain(router, { defaultCommand: "test" });

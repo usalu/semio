@@ -12,6 +12,24 @@ use semio_framework_artifact_infinite_dag::DagPreviewContent;
 use semio_framework_artifact_flow_flow::FlowEnvelope;
 use std::sync::{Mutex, OnceLock};
 
+const FIXTURE_SESSION_GRANT:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096};
+fn prepare_fixture_window(session:&mut FlowEvalSession){
+    for _ in 0..1000{let step=session.prepare_window_tick_latch("preview-1",FIXTURE_SESSION_GRANT).unwrap();if matches!(step,RetainedCloneStep::Complete(_)){return}}
+    panic!("original fixture window preparation stalled");
+}
+fn drain_fixture_cancellation(session:&mut FlowEvalSession){
+    for _ in 0..1_000_000{if session.preview_cancellation_terminal_is_empty(){return}session.preview_cancellation_step(FIXTURE_SESSION_GRANT).unwrap();}
+    panic!("original fixture cancellation stalled");
+}
+fn capture_fixture_baseline(session:&mut FlowEvalSession,host:&FlowHost){
+    session.capture_baseline_from(host,FIXTURE_SESSION_GRANT).unwrap();
+    if !session.baseline_capture_terminal_is_empty(){
+        assert!(session.geometry_port.is_none());session.begin_retain_preview_meshes(Vec::new()).unwrap();
+        for _ in 0..1_000_000{if session.preview_retention_terminal_is_empty(){return}session.retain_preview_meshes_step(FIXTURE_SESSION_GRANT).unwrap();}
+        panic!("original empty fixture membership stalled");
+    }
+}
+
 const NUMBER_OPS: &[&str] = &["core.number"];
 
 
@@ -23,6 +41,7 @@ fn cold_preview_phases_preserve_original_status_and_cancellation() {
         let envelope = serde_json::to_string(row).unwrap();
         let independent: serde_json::Value = serde_json::from_str(&envelope).unwrap();
         let mut session = FlowEvalSession::new();
+    prepare_fixture_window(&mut session);
         assert!(session.note_pending_tessellate(7, "cold-preview".into()));
         let outcome = session.resolve_preview_tessellate(7, &envelope);
         let status = session.preview_tessellate_status();
@@ -46,6 +65,49 @@ fn tree_from_dag_builds_neurons_and_synapses() {
     assert_eq!(tree.neurons.len(), 2);
     assert_eq!(tree.synapses.len(), 1);
 }
+
+#[derive(Clone,Copy)]
+enum FixtureOperatorFamily { Math, Merge, Extension }
+struct FixtureOperator {kind:&'static str,family:FixtureOperatorFamily}
+thread_local! {static FIXTURE_DISPATCH_OBSERVER:std::cell::RefCell<(Option<std::sync::Arc<std::sync::atomic::AtomicUsize>>,Option<std::sync::Arc<Mutex<Vec<String>>>>)>=const {std::cell::RefCell::new((None,None))};}
+struct FixtureDispatchObservation;
+impl FixtureDispatchObservation {
+    fn counter(counter:std::sync::Arc<std::sync::atomic::AtomicUsize>)->Self {FIXTURE_DISPATCH_OBSERVER.with(|observer|observer.borrow_mut().0=Some(counter));Self}
+    fn calls(calls:std::sync::Arc<Mutex<Vec<String>>>)->Self {FIXTURE_DISPATCH_OBSERVER.with(|observer|observer.borrow_mut().1=Some(calls));Self}
+}
+impl Drop for FixtureDispatchObservation {fn drop(&mut self){FIXTURE_DISPATCH_OBSERVER.with(|observer|*observer.borrow_mut()=(None,None));}}
+impl neural::Operator for FixtureOperator {
+    fn evaluate(&self,input:&Dictionary)->Result<Dictionary,EvalError> {
+        FIXTURE_DISPATCH_OBSERVER.with(|observer|{let observer=observer.borrow();if let Some(counter)=&observer.0{counter.fetch_add(1,std::sync::atomic::Ordering::Relaxed);}if let Some(calls)=&observer.1{calls.lock().unwrap().push(self.kind.into());}});
+        match self.family {FixtureOperatorFamily::Math=>test_math_bridge(self.kind,input),FixtureOperatorFamily::Merge=>test_dictionary_merge_bridge(self.kind,input),FixtureOperatorFamily::Extension=>test_extension_bridge(self.kind,input)}
+    }
+}
+struct FixtureRegistryHost {host:Option<FlowHost>,retirement:neural::RegistryRetirement,observation:Option<FixtureDispatchObservation>}
+impl FixtureRegistryHost {
+    fn new(host:FlowHost,family:FixtureOperatorFamily)->Self {
+        let mut registry=neural::Registry::new();
+        for kind in ["core.number","core.text","core.image","core.variable","math.add","math.passThrough","dictionary.merge","plugin.left","plugin.right"] {
+            registry.register_operator(NeuronKindInfo{id:kind.into(),..Default::default()},vec![neural::OperatorImpl{schemas:vec![],operator:Box::new(FixtureOperator{kind,family})}],&[]);
+        }
+        let (registry,retirement)=neural::SharedRegistry::new(registry);
+        let infos=host.kind_infos.clone();
+        let mut host=host.with_operator_registry(registry);host.set_neuron_kind_info_map(infos);
+        Self{host:Some(host),retirement,observation:None}
+    }
+    fn retire_cold(mut self){self.close();}
+    fn close(&mut self){
+        if let Some(host)=self.host.take(){host.retire_cold();}
+        for _ in 0..1_000_000 {
+            if self.retirement.terminal_is_empty(){return;}
+            let copy=64;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.retirement.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:self.retirement.next_release_byte_demand().unwrap(),maximum_depth:self.retirement.next_depth_demand().unwrap()};
+            self.retirement.close_step(grant).unwrap();
+        }
+        panic!("original fixture registry did not close");
+    }
+}
+impl std::ops::Deref for FixtureRegistryHost {type Target=FlowHost;fn deref(&self)->&FlowHost{self.host.as_ref().unwrap()}}
+impl std::ops::DerefMut for FixtureRegistryHost {fn deref_mut(&mut self)->&mut FlowHost{self.host.as_mut().unwrap()}}
+impl Drop for FixtureRegistryHost {fn drop(&mut self){self.close();}}
 
 fn test_math_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
     if kind == "core.number" {
@@ -166,9 +228,9 @@ fn host_with_test_fixture() -> FlowHost {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn host_with_test_bridge() -> FlowHost {
+fn host_with_test_bridge() -> FixtureRegistryHost {
     let mut host = host_with_test_fixture();
-    host.set_eval_bridge_fn(Box::new(test_math_bridge));
+    let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Math);
     host.evaluate_internal();
     host
 }
@@ -226,10 +288,8 @@ fn evaluate_skips_unchanged_tree_after_move_widget() {
     let calls = Arc::new(AtomicUsize::new(0));
     let calls_for_bridge = calls.clone();
     let mut host = FlowHost::default();
-    host.set_eval_bridge_fn(Box::new(move |kind, input| {
-        calls_for_bridge.fetch_add(1, Ordering::Relaxed);
-        test_math_bridge(kind, input)
-    }));
+    let _dispatch_observation=FixtureDispatchObservation::counter(calls_for_bridge);
+    let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Math);
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
     host.evaluate_internal();
     let baseline = calls.load(Ordering::Relaxed);
@@ -271,7 +331,7 @@ fn apply_eval_outputs_json_establishes_baseline_for_dirty_probe() {
     let host = host_with_test_bridge();
     let eval_json = host.last_eval_json.clone();
     let mut fresh = FlowHost::default();
-    fresh.set_eval_bridge_fn(Box::new(test_math_bridge));
+    let mut fresh=FixtureRegistryHost::new(fresh,FixtureOperatorFamily::Math);
     fresh.set_neuron_kind_infos_json(&test_kind_infos_json());
     fresh.apply_eval_outputs_json(&eval_json);
     fresh.set_slider_value("slider", 4.0);
@@ -304,14 +364,15 @@ fn apply_eval_outputs_json_skips_baseline_when_outputs_stale_for_seeds() {
 #[cfg(not(target_arch = "wasm32"))]
 fn flow_eval_session_retains_baseline_across_ephemeral_hosts() {
     let mut session = FlowEvalSession::new();
+    prepare_fixture_window(&mut session);
     let mut host = host_with_test_bridge();
-    session.capture_baseline_from(&host);
+    capture_fixture_baseline(&mut session,&host);
     host.set_slider_value("slider", 8.0);
     let mut replay = FlowHost::default();
-    replay.set_eval_bridge_fn(Box::new(test_math_bridge));
+    let mut replay=FixtureRegistryHost::new(replay,FixtureOperatorFamily::Math);
     replay.set_neuron_kind_infos_json(&test_kind_infos_json());
     replay.replace_host_snapshot(host.host_snapshot.clone());
-    session.install_baseline_into(&mut replay);
+    session.install_baseline_into(&mut replay,FIXTURE_SESSION_GRANT).unwrap();
     let pending = replay.pending_eval_widget_ids();
     assert!(pending.contains(&"add".to_string()));
     assert!(!pending.contains(&"slider".to_string()));
@@ -375,7 +436,8 @@ fn evaluate_step_budget_one_converges_over_multiple_calls() {
 fn flow_eval_session_sync_and_tick_state_machine() {
     let (mut host, _pass_id) = host_with_two_node_chain();
     let mut session = FlowEvalSession::new();
-    session.capture_baseline_from(&host);
+    prepare_fixture_window(&mut session);
+    capture_fixture_baseline(&mut session,&host);
     assert!(!session.pending());
     assert!(!session.sync(&host));
     assert!(!session.pending());
@@ -413,7 +475,8 @@ fn flow_eval_session_sync_and_tick_state_machine() {
 fn the_chain_ledger_is_live_at_a_hop_boundary_and_its_census_only_grows() {
     let (mut host, _pass_id) = host_with_two_node_chain();
     let mut session = FlowEvalSession::new();
-    session.capture_baseline_from(&host);
+    prepare_fixture_window(&mut session);
+    capture_fixture_baseline(&mut session,&host);
     let settled = session.preview_chain_status();
     assert!(!settled.working && settled.in_flight == 0, "a quiesced session owes nothing");
     assert!((settled.ratio() - 1.0).abs() < 1e-9, "a quiesced session is complete, not at zero");
@@ -426,10 +489,10 @@ fn the_chain_ledger_is_live_at_a_hop_boundary_and_its_census_only_grows() {
 
     // ⏳️ THE HOP BOUNDARY: the window is waiting on an extension answer, so nothing is armed and no
     // finer ledger holds a row. Only the latch knows, and the chain ledger is what reads it.
-    session.arm_window_tick("preview-1");
-    session.begin_window_tick("preview-1");
-    session.note_window_extensions_in_flight("preview-1", 1);
-    session.note_window_tick_outcome("preview-1", true);
+    session.arm_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap().0;
+    session.begin_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap();
+    session.note_window_extensions_in_flight("preview-1", 1,FIXTURE_SESSION_GRANT).unwrap();
+    session.note_window_tick_outcome("preview-1", true,FIXTURE_SESSION_GRANT).unwrap();
     let parked = session.preview_chain_status();
     assert!(!session.window_tick_is_armed("preview-1"), "a parked window is owed, never armed — the state that made every ledger read idle");
     assert_eq!(session.preview_tessellate_status().in_flight, 0, "the tessellation ledger is empty at a hop boundary");
@@ -441,8 +504,8 @@ fn the_chain_ledger_is_live_at_a_hop_boundary_and_its_census_only_grows() {
     while session.tick(&mut host, None) {
         ratios.push(session.preview_chain_status().ratio());
     }
-    session.settle_window_extension("preview-1");
-    session.note_window_tick_outcome("preview-1", false);
+    session.settle_window_extension("preview-1",FIXTURE_SESSION_GRANT).unwrap().0;
+    session.note_window_tick_outcome("preview-1", false,FIXTURE_SESSION_GRANT).unwrap();
     ratios.push(session.preview_chain_status().ratio());
     for pair in ratios.windows(2) {
         assert!(pair[1] >= pair[0] - 1e-9, "the census ratio went backwards: {ratios:?}");
@@ -473,6 +536,7 @@ fn the_chain_ledger_is_live_at_a_hop_boundary_and_its_census_only_grows() {
 fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generation_moves() {
     let host = FlowHost::default();
     let mut session = FlowEvalSession::new();
+    prepare_fixture_window(&mut session);
     let generation = session.flow_extension_generation();
     assert_eq!(generation, crate::flow_extension_registry_generation(), "a fresh session is current with the registry it will evaluate against");
     let cached = Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(42.0)));
@@ -480,17 +544,17 @@ fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generatio
     assert!(session.sync(&host), "the default demo graph has pending nodes, so a chain is armed");
     assert!(session.pending());
 
-    assert!(!session.invalidate_for_flow_extension_registry(generation), "an unmoved generation invalidates nothing");
+    assert!(!session.invalidate_for_flow_extension_registry(generation,FIXTURE_SESSION_GRANT).unwrap().0, "an unmoved generation invalidates nothing");
     assert!(session.pending(), "and therefore releases nothing");
     assert!(session.neural_cache().contains(17));
 
-    assert!(session.invalidate_for_flow_extension_registry(generation + 1), "a moved generation invalidates");
+    assert!(session.invalidate_for_flow_extension_registry(generation + 1,FIXTURE_SESSION_GRANT).unwrap().0, "a moved generation invalidates");
     assert_eq!(session.flow_extension_generation(), generation + 1);
     assert_eq!(session.status_json(), "{}", "the per-node status computed against the old registry is released");
     assert!(session.eval_json().is_empty(), "the published evaluation is released");
     assert!(!session.pending(), "a released session admits a new chain rather than waiting on the one that gave up");
     assert!(!session.neural_cache().contains(17), "every node output computed against the old registry is evicted");
-    assert!(!session.invalidate_for_flow_extension_registry(generation + 1), "the same generation twice invalidates once");
+    assert!(!session.invalidate_for_flow_extension_registry(generation + 1,FIXTURE_SESSION_GRANT).unwrap().0, "the same generation twice invalidates once");
 
     session.begin_close();
     for _ in 0..1_000_000 {
@@ -509,7 +573,7 @@ fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generatio
 #[cfg(not(target_arch = "wasm32"))]
 fn replay_host_of(host: &FlowHost) -> FlowHost {
     let mut replay = FlowHost::default();
-    replay.set_eval_bridge_fn(Box::new(test_math_bridge));
+    let mut replay=FixtureRegistryHost::new(replay,FixtureOperatorFamily::Math);
     replay.set_neuron_kind_infos_json(&test_kind_infos_json());
     replay.replace_host_snapshot(host.host_snapshot.clone());
     replay
@@ -530,14 +594,15 @@ fn replay_host_of(host: &FlowHost) -> FlowHost {
 fn an_invalidated_session_hands_an_ephemeral_host_a_re_dispatching_baseline() {
     let host = host_with_test_bridge();
     let mut session = FlowEvalSession::new();
-    session.capture_baseline_from(&host);
+    prepare_fixture_window(&mut session);
+    capture_fixture_baseline(&mut session,&host);
     let mut settled = replay_host_of(&host);
-    session.install_baseline_into(&mut settled);
+    session.install_baseline_into(&mut settled,FIXTURE_SESSION_GRANT).unwrap();
     assert!(settled.pending_eval_widget_ids().is_empty(), "control: an unchanged tree under an unchanged registry owes no dispatch");
     let generation = session.flow_extension_generation();
-    assert!(session.invalidate_for_flow_extension_registry(generation + 1), "a moved generation invalidates");
+    assert!(session.invalidate_for_flow_extension_registry(generation + 1,FIXTURE_SESSION_GRANT).unwrap().0, "a moved generation invalidates");
     let mut rearmed = replay_host_of(&host);
-    session.install_baseline_into(&mut rearmed);
+    session.install_baseline_into(&mut rearmed,FIXTURE_SESSION_GRANT).unwrap();
     assert_eq!(rearmed.eval_baseline_registry_generation(), generation + 1, "the baseline carries the generation it was computed against");
     assert!(!rearmed.pending_eval_widget_ids().is_empty(), "after a registry-generation invalidation the SAME tree must be re-dispatched");
     session.begin_close();
@@ -554,13 +619,11 @@ fn an_invalidated_session_hands_an_ephemeral_host_a_re_dispatching_baseline() {
 /// 🧵️ One ephemeral host of the shared fixture, with its OWN neural cache and a bridge that
 /// counts every dispatch — the shape `flow_host_with_session` rebuilds per tick.
 #[cfg(not(target_arch = "wasm32"))]
-fn counting_replay_host_of(host: &FlowHost, dispatches: &std::sync::Arc<std::sync::atomic::AtomicUsize>) -> FlowHost {
+fn counting_replay_host_of(host: &FlowHost, dispatches: &std::sync::Arc<std::sync::atomic::AtomicUsize>) -> FixtureRegistryHost {
     let counter = dispatches.clone();
     let mut replay = FlowHost::default();
-    replay.set_eval_bridge_fn(Box::new(move |kind: &str, input: &Dictionary| {
-        counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        test_math_bridge(kind, input)
-    }));
+    let mut replay=FixtureRegistryHost::new(replay,FixtureOperatorFamily::Math);
+    replay.observation=Some(FixtureDispatchObservation::counter(counter));
     replay.set_neuron_kind_infos_json(&test_kind_infos_json());
     replay.replace_host_snapshot(host.host_snapshot.clone());
     replay
@@ -612,7 +675,7 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
 
     crate::uninstall_flow_extension(bump["extensionId"].as_str().unwrap()).expect("the law leaves the process-wide registry as it found it");
     for _ in 0..100_000 {
-        if crate::retire_flow_extension_registries_step(1, 64) == Ok(neural::ValueRetirementStep::Complete) { break; }
+        if matches!(crate::test_flow_registry_retirement_step(1,64),Ok(neural::RetainedCloneStep::Complete(_))) { break; }
     }
     settled.retire_cold();
     rearmed.retire_cold();
@@ -679,10 +742,8 @@ fn evaluate_runs_after_tree_change() {
     let calls = Arc::new(AtomicUsize::new(0));
     let calls_for_bridge = calls.clone();
     let mut host = FlowHost::default();
-    host.set_eval_bridge_fn(Box::new(move |kind, input| {
-        calls_for_bridge.fetch_add(1, Ordering::Relaxed);
-        test_math_bridge(kind, input)
-    }));
+    let _dispatch_observation=FixtureDispatchObservation::counter(calls_for_bridge);
+    let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Math);
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
     host.evaluate_internal();
     let baseline = calls.load(Ordering::Relaxed);
@@ -707,10 +768,8 @@ fn dirty_propagation_only_dispatches_affected_branch() {
     let calls: Arc<StdMutex<Vec<String>>> = Arc::new(StdMutex::new(Vec::new()));
     let calls_for_bridge = calls.clone();
     let mut host = FlowHost::default();
-    host.set_eval_bridge_fn(Box::new(move |kind, input| {
-        calls_for_bridge.lock().unwrap().push(kind.to_string());
-        test_math_bridge(kind, input)
-    }));
+    let _dispatch_observation=FixtureDispatchObservation::calls(calls_for_bridge);
+    let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Math);
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
     let slider_b_id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":1.0}"#, 400.0, 0.0).unwrap();
     let pass_id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 600.0, 0.0).unwrap();
@@ -735,10 +794,8 @@ fn neural_cache_persists_across_evaluations() {
     let calls = Arc::new(AtomicUsize::new(0));
     let calls_for_bridge = calls.clone();
     let mut host = FlowHost::default();
-    host.set_eval_bridge_fn(Box::new(move |kind, input| {
-        calls_for_bridge.fetch_add(1, Ordering::Relaxed);
-        test_math_bridge(kind, input)
-    }));
+    let _dispatch_observation=FixtureDispatchObservation::counter(calls_for_bridge);
+    let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Math);
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
     host.evaluate_internal();
     let baseline = calls.load(Ordering::Relaxed);
@@ -771,7 +828,7 @@ fn apply_eval_outputs_json_preserves_state_on_global_error() {
     let good = host.last_eval_json.clone();
     host.apply_eval_outputs_json(r#"{"error":"missing input: geometry"}"#);
     assert_eq!(host.last_eval_json, good);
-    assert!(!host.outputs.is_empty());
+    assert!(host.current_channels.as_ref().is_some_and(|channels|!channels.outputs.is_empty()));
     host.retire_cold();
 }
 
@@ -1887,7 +1944,7 @@ fn variadic_merge_evaluates_port_routed_inputs() {
         ],
         layout: crate::OrderedMap::new(),
     });
-    host.set_eval_bridge_fn(Box::new(test_dictionary_merge_bridge));
+    let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Merge);
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "dictionary.merge".into(),
         extension: "dictionary".into(),
@@ -1901,7 +1958,7 @@ fn variadic_merge_evaluates_port_routed_inputs() {
         ..Default::default()
     }]));
     host.previous_snapshot = None;
-    std::mem::take(&mut host.outputs).retire_cold();
+    if let Some(channels)=host.current_channels.take(){neural::ColdOwner::new(channels);}
     host.evaluate_internal();
     let preview = host
         .host_snapshot
@@ -2231,8 +2288,8 @@ fn ghost_widget_paint_scene_smoke() {
 #[test]
 fn selection_and_preview_state_round_trip() {
     let mut host = FlowHost::default();
-    host.set_selection_json(r#"["slider","add"]"#);
-    let selected: Vec<String> = serde_json::from_str(&host.selected_widget_ids_json()).unwrap();
+    host.set_selection(&["slider".into(), "add".into()]);
+    let selected=host.selected_widget_ids();
     assert_eq!(selected, vec!["slider", "add"]);
     host.set_hover(Some("add"));
     assert_eq!(host.hovered_widget_id().as_deref(), Some("add"));
@@ -2249,12 +2306,12 @@ fn channel_hover_and_selection_round_trip_at_detail_lod() {
     host.dag.set_automatic_lod(false);
     host.dag.set_forced_draw_lod_label("detail");
     host.set_hover_channel(Some("add"), Some("a"));
-    let hovered: dag::DagChannelRef = semio_framework_pack_json::from_json_str(&host.hovered_channel_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let hovered=host.hover_facts().channel.unwrap();
     assert_eq!(hovered.widget_id, "add");
     assert_eq!(hovered.port, "a");
-    assert_eq!(hovered.direction, "in");
-    host.set_selected_channels_json(r#"[{"widgetId":"add","port":"a","direction":"in"}]"#);
-    let selected: Vec<dag::DagChannelRef> = semio_framework_pack_json::from_json_str(&host.selected_channels_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(hovered.direction, dag::DagChannelDirection::In);
+    host.set_selected_channels(&[dag::DagChannelRef { widget_id: "add".into(), port: "a".into(), direction: dag::DagChannelDirection::In }]);
+    let selected = host.selected_channels();
     assert_eq!(selected.len(), 1);
     assert_eq!(selected[0].widget_id, "add");
     assert_eq!(selected[0].port, "a");
@@ -2469,7 +2526,7 @@ fn delete_selection_removes_selected_edge_from_host_snapshot() {
 fn delete_selection_removes_edge_selected_by_synapse_id_domain() {
     let mut host = host_with_test_fixture();
     let before = host.host_snapshot.synapses.len();
-    host.dag.set_selection_domains_json(r#"{"nodes":[],"edges":["s1"],"handles":[]}"#);
+    host.dag.set_selection_domains(&DagSelectionDomains { edges: vec!["s1".into()], ..Default::default() });
     assert!(host.has_selection(), "synapse id s1 must map into engine edge selection");
     host.delete_selection().unwrap();
     assert!(host.host_snapshot.synapses.len() < before);
@@ -2658,7 +2715,7 @@ fn cluster_ports_from_contract() {
         synapses: vec![],
     };
     let widget = Widget::Cluster { id: "cluster".into(), name: "Add cluster".into(), tree: inner, flow: FlowGui::default() };
-    let (inputs, outputs, _, _) = widget_io_ports(&widget, &[], &HashMap::new());
+    let (inputs, outputs, _, _) = widget_io_ports(&widget, &[], &HistoryFoldIndex::new());
     assert_eq!(inputs.len(), 1);
     assert_eq!(outputs.len(), 1);
     assert_eq!(inputs[0].id, "a");
@@ -2811,9 +2868,9 @@ fn test_extension_kind_infos_json() -> String {
 /// 🌊️ The default fixture plus two INDEPENDENT contributed nodes hanging off `add` — the flow-host
 /// shape of one topological wave.
 #[cfg(not(target_arch = "wasm32"))]
-fn host_with_two_extension_siblings() -> FlowHost {
+fn host_with_two_extension_siblings() -> FixtureRegistryHost {
     let mut host = FlowHost::default();
-    host.set_eval_bridge_fn(Box::new(test_extension_bridge));
+    let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Extension);
     host.set_neuron_kind_infos_json(&test_extension_kind_infos_json());
     let left = host.add_widget(r#"{"kind":"neuron","id":"left","neuronKind":"plugin.left","params":{},"input_ports":[],"preview":false}"#, 240.0, 0.0).unwrap();
     let right = host.add_widget(r#"{"kind":"neuron","id":"right","neuronKind":"plugin.right","params":{},"input_ports":[],"preview":false}"#, 240.0, 80.0).unwrap();
@@ -2889,19 +2946,21 @@ fn a_coalesced_tick_parks_a_whole_wave_and_paints_every_member_computing() {
 #[test]
 fn cancelling_a_coalesced_wave_retires_every_parked_answer_and_late_settles_arm_nothing() {
     let mut session = FlowEvalSession::new();
-    session.arm_window_tick("preview-1");
-    session.begin_window_tick("preview-1");
-    session.note_window_extensions_in_flight("preview-1", 3);
-    session.note_window_tick_outcome("preview-1", true);
+    prepare_fixture_window(&mut session);
+    session.arm_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap().0;
+    session.begin_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap();
+    session.note_window_extensions_in_flight("preview-1", 3,FIXTURE_SESSION_GRANT).unwrap();
+    session.note_window_tick_outcome("preview-1", true,FIXTURE_SESSION_GRANT).unwrap();
     assert_eq!(session.window_extensions_in_flight("preview-1"), 3, "a three-wide wave is three answers outstanding");
     assert!(session.preview_chain_status().working, "a parked wave is live work");
 
-    let retired = session.cancel_preview_evaluation("preview-1");
+    let retired = session.cancel_preview_evaluation("preview-1",FIXTURE_SESSION_GRANT).unwrap().0;
+    drain_fixture_cancellation(&mut session);
     assert_eq!(session.window_extensions_in_flight("preview-1"), 0, "one gesture retires the WHOLE wave, not one answer of it");
     assert!(session.preview_cancelled(), "the surface may publish the cancelled banner");
     assert!(!session.preview_chain_status().working, "a cancelled chain owes nothing");
 
-    let rearms = (0..3).filter(|_| session.settle_window_extension("preview-1")).count();
+    let rearms = (0..3).filter(|_| session.settle_window_extension("preview-1",FIXTURE_SESSION_GRANT).unwrap().0).count();
     assert_eq!(rearms, 0, "every answer still crossing when the cancel landed arms nothing");
     assert!(!session.window_tick_is_armed("preview-1"), "a cancelled window stays unarmed");
     eprintln!("wave cancel: retiredTessellations={retired} rearms={rearms}");
@@ -2918,27 +2977,28 @@ fn cancelling_a_coalesced_wave_retires_every_parked_answer_and_late_settles_arm_
 #[test]
 fn an_inline_continuation_is_admitted_exactly_where_the_run_job_would_have_dispatched_a_hop() {
     let mut session = FlowEvalSession::new();
+    prepare_fixture_window(&mut session);
     assert!(session.inline_continuation_admitted("preview-1", None, None), "a window that never ticked owes its first hop, so a fold may run it");
 
-    session.arm_window_tick("preview-1");
+    session.arm_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap().0;
     assert!(!session.inline_continuation_admitted("preview-1", None, None), "a hop is already armed — a fold must not run a second one");
 
-    session.begin_window_tick("preview-1");
-    session.note_window_extensions_in_flight("preview-1", 2);
-    session.note_window_tick_outcome("preview-1", true);
+    session.begin_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap();
+    session.note_window_extensions_in_flight("preview-1", 2,FIXTURE_SESSION_GRANT).unwrap();
+    session.note_window_tick_outcome("preview-1", true,FIXTURE_SESSION_GRANT).unwrap();
     assert!(!session.inline_continuation_admitted("preview-1", None, None), "the FIRST answer of a two-wide wave leaves a sibling in flight — a fold must not run the next wave yet");
 
-    assert!(!session.settle_window_extension("preview-1"), "the first settle of a fan-out arms nothing");
+    assert!(!session.settle_window_extension("preview-1",FIXTURE_SESSION_GRANT).unwrap().0, "the first settle of a fan-out arms nothing");
     assert!(!session.inline_continuation_admitted("preview-1", None, None), "one answer is still outstanding");
-    assert!(!session.settle_window_extension("preview-1"), "no source had asked for a re-arm while the wave was crossing");
+    assert!(!session.settle_window_extension("preview-1",FIXTURE_SESSION_GRANT).unwrap().0, "no source had asked for a re-arm while the wave was crossing");
     assert!(session.inline_continuation_admitted("preview-1", None, None), "the LAST answer of a wave holds a window that owes a hop nothing is chasing — exactly the run job's Dispatch branch");
 
-    let armed = session.arm_window_tick("preview-1");
+    let armed = session.arm_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap().0;
     assert!(armed, "the continuation CLAIMS the hop it takes over");
     assert!(!session.inline_continuation_admitted("preview-1", None, None), "a claimed hop is not offered twice");
 
-    session.begin_window_tick("preview-1");
-    session.note_window_tick_outcome("preview-1", false);
+    session.begin_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap();
+    session.note_window_tick_outcome("preview-1", false,FIXTURE_SESSION_GRANT).unwrap();
     assert!(!session.inline_continuation_admitted("preview-1", None, None), "a finished window owes nothing to continue");
     session.retire_cold();
 }
@@ -2952,15 +3012,17 @@ fn an_inline_continuation_is_admitted_exactly_where_the_run_job_would_have_dispa
 #[test]
 fn a_cancelled_chain_is_never_continued_inline_by_an_answer_that_was_already_crossing() {
     let mut session = FlowEvalSession::new();
-    session.arm_window_tick("preview-1");
-    session.begin_window_tick("preview-1");
-    session.note_window_extensions_in_flight("preview-1", 2);
-    session.note_window_tick_outcome("preview-1", true);
+    prepare_fixture_window(&mut session);
+    session.arm_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap().0;
+    session.begin_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap();
+    session.note_window_extensions_in_flight("preview-1", 2,FIXTURE_SESSION_GRANT).unwrap();
+    session.note_window_tick_outcome("preview-1", true,FIXTURE_SESSION_GRANT).unwrap();
 
-    session.cancel_preview_evaluation("preview-1");
+    session.cancel_preview_evaluation("preview-1",FIXTURE_SESSION_GRANT).unwrap().0;
+    drain_fixture_cancellation(&mut session);
     assert!(session.preview_cancelled(), "the gesture landed");
     for _ in 0..2 {
-        session.settle_window_extension("preview-1");
+        session.settle_window_extension("preview-1",FIXTURE_SESSION_GRANT).unwrap().0;
         assert!(!session.inline_continuation_admitted("preview-1", None, None), "an answer that was already crossing may not continue a cancelled chain");
     }
     assert!(!session.window_tick_is_armed("preview-1"), "and it armed nothing either");

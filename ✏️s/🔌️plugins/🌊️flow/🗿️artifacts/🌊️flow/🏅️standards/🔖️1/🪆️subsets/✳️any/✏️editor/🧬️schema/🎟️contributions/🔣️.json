@@ -1,0 +1,212 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "schema",
+    "ownerFields",
+    "axes",
+    "cases",
+    "aliasCustody",
+    "instanceOwnerFields",
+    "aliasPolicies"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "flow.contributions-retirement-receiver.v1"
+    },
+    "ownerFields": {
+      "const": [
+        "instance_owner",
+        "instance_retirement",
+        "completed",
+        "closing"
+      ]
+    },
+    "axes": {
+      "const": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "grant",
+          "initial",
+          "progress",
+          "recorded",
+          "remaining",
+          "ready",
+          "failed"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "progress",
+              "complete",
+              "refused"
+            ]
+          },
+          "grant": {
+            "$ref": "#/definitions/Grant"
+          },
+          "initial": {
+            "$ref": "#/definitions/Progress"
+          },
+          "progress": {
+            "$ref": "#/definitions/Progress"
+          },
+          "recorded": {
+            "$ref": "#/definitions/Progress"
+          },
+          "remaining": {
+            "$ref": "#/definitions/Grant"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "failed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "aliasCustody": {
+      "const": {
+        "sameOriginalHandle": true,
+        "nonfinalClosesSharedPayload": false,
+        "sourceTransferItems": 1,
+        "aliasesReachTerminalBeforeWork": true,
+        "initialTransfer": {
+          "copyBytes": 0,
+          "capacityBytes": 0,
+          "releaseBytes": 0,
+          "depth": 1
+        }
+      }
+    },
+    "instanceOwnerFields": {
+      "const": [
+        "eval_session",
+        "closing"
+      ]
+    },
+    "aliasPolicies": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/definitions/Grant"
+      },
+      "const": [
+        {
+          "maximumItems": 1,
+          "maximumCopyBytes": 1,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 1048576,
+          "maximumDepth": 512
+        },
+        {
+          "maximumItems": 1,
+          "maximumCopyBytes": 3,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 1048576,
+          "maximumDepth": 512
+        },
+        {
+          "maximumItems": 1,
+          "maximumCopyBytes": 64,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 1048576,
+          "maximumDepth": 512
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "Progress": {
+      "type": "object",
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "retainedCapacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "Grant": {
+      "type": "object",
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    }
+  }
+}

@@ -43,12 +43,12 @@ impl FlowFeature for MockFeature {
         Ok(())
     }
 
-    fn close_step(&mut self, _: AbiWorkBudget) -> Result<bool, FlowFailure> {
+    fn close_step(&mut self, _: AbiWorkBudget) -> Result<RetainedCloneStep, FlowFailure> {
         if self.payload.as_deref() == Some(&[8]) && !self.close_failed {
             self.close_failed = true;
             return Err(FlowFailure::new(AbiErrorCode::Busy, "retained close retry"));
         }
-        Ok(true)
+        Ok(RetainedCloneStep::Complete(Default::default()))
     }
 }
 
@@ -61,9 +61,11 @@ impl FlowDomain for MockDomain {
         self.close_calls += 1;
     }
 
-    fn close_step(&mut self, _: AbiWorkBudget) -> Result<bool, FlowFailure> {
+    fn next_close_demands(&self,_:usize)->Result<FlowVcsCloseDemands,FlowFailure>{Ok(Default::default())}
+
+    fn close_step(&mut self, _: AbiWorkBudget) -> Result<RetainedCloneStep, FlowFailure> {
         self.close_steps += 1;
-        Ok(self.close_calls == 1 && self.close_steps >= 3)
+        Ok(if self.close_calls == 1 && self.close_steps >= 3{RetainedCloneStep::Complete(Default::default())}else{RetainedCloneStep::Progress(Default::default())})
     }
 
     fn terminal_is_empty(&self) -> bool {

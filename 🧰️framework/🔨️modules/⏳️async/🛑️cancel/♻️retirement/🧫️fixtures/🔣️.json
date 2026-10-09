@@ -1,0 +1,35 @@
+{
+  "schema": "cancel-token-retirement.v1",
+  "policy": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 65536,
+    "release": 262144,
+    "depth": 64
+  },
+  "nodes": [
+    1,
+    3,
+    64
+  ],
+  "phases": [
+    "original-arc",
+    "empty-waiter-backing",
+    "node-parent-transfer"
+  ],
+  "retention": [
+    "shared-alias",
+    "weak-alias",
+    "registered-waiter"
+  ],
+  "terminalDrop": 0,
+  "metadata": "original-node-kept-until-separate-parent-transfer",
+  "denied": [
+    "items",
+    "copy",
+    "release",
+    "depth"
+  ],
+  "waiterGate": "original-inline-atomic-guard",
+  "gateContended": "blocked-original-retained"
+}

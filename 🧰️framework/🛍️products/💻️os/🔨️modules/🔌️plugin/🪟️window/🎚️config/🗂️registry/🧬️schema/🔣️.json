@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "addresses", "ordered", "maximumPageBytes", "copies", "addressRepeat", "owningCopies", "sourceReservation", "rootMetadata", "refusals", "refusedAllocationBytes", "refusedReleaseBytes", "terminalDropBytes"],
+  "properties": {
+    "kind": {"const": "original-paged-window-registry"},
+    "addresses": {"type": "array", "minItems": 4, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "ordered": {"type": "array", "minItems": 4, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "maximumPageBytes": {"const": 4096},
+    "copies": {"const": 257},
+    "addressRepeat": {"const": 17},
+    "owningCopies": {"const": 2},
+    "sourceReservation": {"const": [{"copyBytes": 65536, "capacityGranted": false, "reserved": false, "copiedBytes": 0}, {"copyBytes": 0, "capacityGranted": true, "reserved": true, "copiedBytes": 0}]},
+    "rootMetadata": {"const": {"owner": "test.retainedloadcameraconfig", "fields": ["viewport", "eye"], "ownedProducer": true, "schemaLessProducer": false, "getterAllocationBytes": 0, "getterReleaseBytes": 0, "maximumCapacityBytes": 65536}},
+    "refusals": {"const": ["items", "copy", "capacity", "release", "depth"]},
+    "refusedAllocationBytes": {"const": 0},
+    "refusedReleaseBytes": {"const": 0},
+    "terminalDropBytes": {"const": 0}
+  }
+}

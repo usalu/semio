@@ -1,0 +1,44 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "beforeSha256": "32dcd1ea0c971e6006760c9a9c1188d04745be33bc29bc829baf54e3f5893a39",
+  "afterSha256": "31f189be692edd7640a0a4ddb715280f93c46b59b3bd6ee9279ea86b74ba4433",
+  "actions": [
+    {
+      "logicalScope": "Demo original captured issuer factory fields and allocation-free close capabilities",
+      "beforeBlockSha256": "bd4e33d22d0d084a942efbeca217d51086079b6d31d9df8ad0e933119d9345ea",
+      "afterBlockSha256": "1de7e6ac61210c61a019cc5ca4f5dbdd76f93b105a6cb3c11aadc67450cb9848"
+    },
+    {
+      "logicalScope": "original immutable Demo factory source constructs genuine issuer owners during test setup",
+      "beforeBlockSha256": "c8ef05f5871e425f6ca8d7db06172a648420e3faed19ff79a540f11d176f0385",
+      "afterBlockSha256": "e2dc6422d49545ffa10f3e23f49e59ed91f307e9e502a63e18bb9b1616d62036"
+    },
+    {
+      "logicalScope": "Demo preparation retains candidate and exact source issuer aliases until controlled terminal",
+      "beforeBlockSha256": "249050656eeae32f8dec2c504c1ea66bd87d4811c4f43fa84fd6a4f9c262d1cc",
+      "afterBlockSha256": "d0c9237628256be94f0179e91b24933ab620bdc73fd8e2a105654f21e0c19cdd"
+    },
+    {
+      "logicalScope": "funded begin aliases only existing captured source issuers; no new issuer frames",
+      "beforeBlockSha256": "677f6b44080adbf02142d67cea8dcca71f61919c763a8c3768b20f6a9c6f6cc2",
+      "afterBlockSha256": "1cb0e627df6ec812adbce19b9576bb4e1ac565105c1d2a761b3e2c4be561dcca"
+    },
+    {
+      "logicalScope": "actual advance borrows retained original witness",
+      "beforeBlockSha256": "c4fa9f446ccb9349085cb8f237876442463eddaabf66a7b3637047c821d7c7c2",
+      "afterBlockSha256": "296cb98fb9d18e66f89a82c4d1fc0b19a53476b33fdca654c42ca696d52aa29a"
+    },
+    {
+      "logicalScope": "current full-grant cancellation original candidate/admitted issuers/registry restoration/physical terminal",
+      "beforeBlockSha256": "7a73ae2a010d4b14f9184e44597f9b0012061017313d88e37b113f762839fe25",
+      "afterBlockSha256": "53ad1dcb730ce77970b3a0cdafb25c03183c405ebf5b7dc232098926269a7804"
+    },
+    {
+      "logicalScope": "Demo preparation fallible four-frontier projection of actual retained owners",
+      "newBlockSha256": "12497f8cf746fcbacfe3dcc1d9ed7d4c136337dfaefc94429e0935660ed5573a"
+    }
+  ],
+  "copiedSource": false,
+  "nativeAssertions": "UNRUN",
+  "qualification": "existing Demo advance semantic allocations/progress remain a separate creation proof; current code does not assert full native closure"
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Failed Job Receipt Ingress",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "producerBytes",
+    "incomingCapacityBytes",
+    "remainingCapacityBytes",
+    "fuel",
+    "deadlineUs",
+    "externalRecipient",
+    "refusal",
+    "denialHeap"
+  ],
+  "properties": {
+    "operation": {
+      "const": 98145
+    },
+    "generation": {
+      "const": 17
+    },
+    "producerBytes": {
+      "const": 64
+    },
+    "incomingCapacityBytes": {
+      "const": 0
+    },
+    "remainingCapacityBytes": {
+      "const": 0
+    },
+    "fuel": {
+      "const": 7
+    },
+    "deadlineUs": {
+      "const": 1500
+    },
+    "externalRecipient": {
+      "const": "same-actual-receipt"
+    },
+    "refusal": {
+      "const": "invariantViolated"
+    },
+    "denialHeap": {
+      "const": [
+        0,
+        0
+      ]
+    }
+  }
+}

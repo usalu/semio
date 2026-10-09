@@ -182,7 +182,7 @@ test("Drawing decoded field close admits actual typed retirement births and rele
   console.log("[DEBUG] Drawing decoded native field close SQLite physical-backing ledger and RFC6902 single ownership move conserve spare/empty/full backing; native granted birth/release witness required");
 });
 
-test("Drawing duplicate identity streams original native IDs with the canonical suffix",()=>{
+test("Drawing duplicate identity consumes admitted native target keys",()=>{
   const owner=resolve(import.meta.dir,"../..");
   const law=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️native-owner/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
@@ -196,11 +196,12 @@ test("Drawing duplicate identity streams original native IDs with the canonical 
     }
   }finally{database.close();}
   const schema=readFileSync(resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"),"utf8");
-  expect(schema.includes('create_drawing_id("layer", format!("{old}{suffix}").as_bytes())')).toBe(true);
+  expect(schema.includes("base.id=assignment.target.clone()")).toBe(true);
+  expect(schema.includes("create_drawing_id")).toBe(false);
   expect(law.duplicateIdentity.nameSuffixOnlyOnRoot).toBe(true);expect(law.duplicateIdentity.internalReferencesRemapped).toBe(true);
   const source=readFileSync(join(owner,"📐️footprint/🦀️.rs"),"utf8");
   expect(source.includes("struct DrawingDuplicateIdentityCursor")).toBe(true);
-  console.log("[DEBUG] Drawing duplicate neutral Unicode/NUL/long ID+suffix material agrees with SQLite BLOB and RFC6902; native SipHash1-3 oracle separately verifies the digest");
+  console.log("[DEBUG] Drawing duplicate neutral Unicode/NUL/long ID+suffix material agrees with SQLite BLOB and RFC6902; physical IO neutral SHA256 witnesses separately verify commitments");
 });
 
 test("Drawing sparse path patches preserve native array ownership and semantic restoration",()=>{

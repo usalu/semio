@@ -1990,7 +1990,7 @@ export function parseSelectionDomainsFromSession(json: string): { readonly nodes
   return { nodes: [], edges: [], handles: [] };
 }
 
-export function selectionGroupsFromDomains(domains: { readonly nodes: string[]; readonly edges: string[]; readonly handles: string[] }): NonNullable<PluginContextMenuSurfaceTarget["selection"]> {
+export function selectionGroupsFromDomains(domains: { readonly nodes: readonly string[]; readonly edges: readonly string[]; readonly handles: readonly string[] }): NonNullable<PluginContextMenuSurfaceTarget["selection"]> {
   const groups: NonNullable<PluginContextMenuSurfaceTarget["selection"]>[number][] = [];
   if (domains.nodes.length > 0) groups.push({ domain: "node", ids: domains.nodes });
   if (domains.edges.length > 0) groups.push({ domain: "edge", ids: domains.edges });

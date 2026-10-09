@@ -670,7 +670,7 @@ impl JackSnapshotDecodeAuthority {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 }
 
@@ -683,7 +683,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot> for JackSnapsho
         cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path };
+        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
         if matches!(self.state, JackSnapshotDecodeState::AwaitToken) {
             if !terminal {
                 return Err(diagnostic("jack-envelope.snapshot-pack-must-be-scalar", token.start));
@@ -753,7 +753,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot> for JackSnapsho
         }
         let path = self.path;
         let retirement = self.retirement.as_mut().expect("Jack snapshot retirement remains retained");
-        match retirement.close_step(maximum_items.min(1), maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "jack-envelope.snapshot-retirement-fault", offset: 0, line: 0, column: 0, path })? {
+        match retirement.close_step(maximum_items.min(1), maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "jack-envelope.snapshot-retirement-fault", offset: 0, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })? {
             store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
                 drop(self.retirement.take());
                 self.state = JackSnapshotDecodeState::Complete;
@@ -800,7 +800,7 @@ impl JackMutationDecodeAuthority {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 }
 
@@ -817,7 +817,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation> for Jac
         cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path };
+        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
         if matches!(self.state, JackMutationDecodeState::AwaitToken) {
             if !terminal {
                 return Err(diagnostic("jack-envelope.mutation-pack-must-be-scalar", token.start));
@@ -875,7 +875,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation> for Jac
             return Ok(store::SnapshotRetirementStep::Complete);
         }
         let path = self.path;
-        store::artifact_retirement_box_close_step(&mut self.retirement, maximum_items.min(1), maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "jack-envelope.mutation-retirement-fault", offset: 0, line: 0, column: 0, path })
+        store::artifact_retirement_box_close_step(&mut self.retirement, maximum_items.min(1), maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "jack-envelope.mutation-retirement-fault", offset: 0, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -901,7 +901,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for JackRejectedConflictAuthori
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "jack-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: "jack-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {

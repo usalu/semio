@@ -16,9 +16,26 @@ pub struct PagedUtf8AppendCursor {
 }
 
 impl PagedUtf8AppendCursor {
+    /// 📏️ Reads the exact next native page, UTF8 scalar or original chunk transfer without changing custody.
+    pub fn next_advance_demand<const N:usize>(&self,source:&str,destination:&PagedUtf8<N>)->Result<crate::RetirementDemand,ValueError>{
+        let refusal=|message|ValueError::literal(ValueRefusalKind::InvariantViolated,message);
+        if self.closing{return Err(refusal("native UTF-8 append cursor is closing"));}
+        if self.source.is_some_and(|prior|prior!=(source.as_ptr()as usize,source.len())){return Err(refusal("native UTF-8 append source changed"));}
+        if self.destination.is_some_and(|(prior,bytes)|prior!=destination as*const PagedUtf8<N>as usize||bytes!=destination.byte_len){return Err(refusal("native UTF-8 append destination changed"));}
+        if self.source.is_none(){destination.byte_len.checked_add(source.len()).filter(|bytes|*bytes<=N).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native UTF-8 append exceeds its declared capacity"))?;}
+        let mut demand=crate::RetirementDemand{depth:1,..Default::default()};
+        if self.complete||self.position==source.len()&&self.pending.is_none(){return Ok(demand);}
+        if !destination.chunks.has_reserved_slot(){demand.capacity_bytes=destination.chunks.next_allocation_bytes()?;return Ok(demand);}
+        if self.pending.is_none(){let mut end=(self.position+PAGED_UTF8_CHUNK_BYTES).min(source.len());while !source.is_char_boundary(end){end-=1;}demand.capacity_bytes=end-self.position;}
+        else if self.position<self.end{demand.copy_bytes=source[self.position..self.end].chars().next().ok_or_else(||refusal("native UTF-8 append scalar is absent"))?.len_utf8();}
+        else{demand.copy_bytes=std::mem::size_of::<String>();}
+        Ok(demand)
+    }
     pub fn advance<const N: usize>(&mut self, source: &str, destination: &mut PagedUtf8<N>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "native UTF-8 append cursor is closing")); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
+        let demand=self.next_advance_demand(source,destination)?;
+        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let identity = (source.as_ptr() as usize, source.len());
         if self.source.is_some_and(|prior| prior != identity) { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "native UTF-8 append source changed")); }
         if self.source.is_none() { destination.byte_len.checked_add(source.len()).filter(|bytes| *bytes <= N).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native UTF-8 append exceeds its declared capacity"))?; }
@@ -109,3 +126,7 @@ impl ErasedSnapshotRetirement for PagedUtf8AppendCursor {
 impl Drop for PagedUtf8AppendCursor {
     fn drop(&mut self) { assert!((self.source.is_none() && self.destination.is_none() && self.pending.is_none() && self.controlled_close.is_empty()) || std::thread::panicking(), "native UTF-8 append cursor dropped before exact closure"); }
 }
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

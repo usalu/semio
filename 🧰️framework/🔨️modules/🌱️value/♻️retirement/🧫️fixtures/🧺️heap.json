@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "keys": [
+    "β",
+    "mesh",
+    "texture",
+    "mesh"
+  ],
+  "expected": [
+    "mesh",
+    "mesh",
+    "texture",
+    "β"
+  ],
+  "capacityBytes": 128,
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "maximumDeniedReleaseBytes": 8,
+  "handoffCapacityBytes": 0,
+  "handoffReleaseBytes": 0,
+  "sameBacking": true,
+  "sameKeyPointers": true,
+  "terminalDropBytes": 0
+}

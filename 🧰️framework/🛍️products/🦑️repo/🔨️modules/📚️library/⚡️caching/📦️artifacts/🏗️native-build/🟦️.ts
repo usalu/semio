@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
-import { prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { cargoDirectories } from "../../🦀️cargo/🟦️.ts";
 import { repoCacheDirectory } from "../../🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
@@ -27,6 +27,6 @@ export function repositoryCargoArtifactBuildPolicyV1(cwd: string, root = getWork
 /** 🦀️ Composes selected repository preparation with the neutral compiler capture port. */
 export async function buildRepositoryCargoArtifacts(manifest: string, args: string[] = [], root = getWorkspaceRoot(), options: CargoArtifactBuildOptionsV1 = {}): Promise<void> {
   const path = resolve(root, manifest);
-  prepareCargoWorkspaceInvocation(root, [options.command ?? "build", "--manifest-path", path,...args], root,options.environment??process.env);
+  prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(root),root,[options.command ?? "build", "--manifest-path", path,...args],root,options.environment??process.env);
   await buildCargoArtifacts(path, args, { ...repositoryCargoArtifactBuildPolicyV1(root, root), captureDirectory: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(process.env.SEMIO_TEST_ARTIFACT_DIR) : resolve(dirname(path), "dist") }, options);
 }

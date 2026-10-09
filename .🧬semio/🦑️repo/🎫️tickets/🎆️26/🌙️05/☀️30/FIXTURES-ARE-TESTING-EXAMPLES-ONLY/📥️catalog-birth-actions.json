@@ -1,0 +1,34 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🦀️.rs",
+    "beforeSha256": "42533a999fa0b2755a63dc0017677c77f08f7c3e82326645d12ce1c664a1a7e4",
+    "afterSha256": "34de4f1a74552a51f94ccf751912c609fe8b6515a7d8ab44d42ce7533a63566f",
+    "logicalBlocks": [
+      "67b6755dd853aa2019268a4fc4deacf32f7c18f63af6b43454e131b000ea711e"
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+    "beforeSha256": "d006aa711b6ee7a4ec5ea17901615cbccc653feb82dbbcc086bd145f89110e3a",
+    "afterSha256": "8d5b0324c365302f4d2cf9621be826e0c01c031c0b922b526647d36f4689a280",
+    "logicalBlocks": [
+      "d02ac1bd1f8732c4d0f0fad53345a10577b02c8f1b1c0d42f4cbd5c7fc11313b",
+      "8a79bb619533257ba25783cedf0e7dedab08b9674f2d557e3f410d8f41998ad5",
+      "08e205efbf11f17665ea6ace4507601607b6f374da6acb8f562ed971b1c34bac",
+      "7f21f3af11e12e85f9d5993d94f8f676df0048b62a3066f1c356711ea56dbee0",
+      "dc09280bfb85ad87b5b3adda3049201b483250ac805d2245667390599a4b06a3",
+      "02bab1d19add17f8f42f80d522d64e0d5cf51d81e82a76d48a5c9c193e8871fd",
+      "1e8a882e38928fd5af7e8e127d910583ee6151e5a2e77439a440b04432d26924",
+      "85de6b30b562a3ecba175e7a94079cedd76f5c5e631b808142769d75cf48689f",
+      "592da6dd78d15002ba5ecbce633fc019d782e6027bd7aca0e5d5acdef327c2c3"
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "a488be2b122b2655d08d1c4d735c1af468dc6f6a3261755f7de0bf274d4a0e71",
+    "afterSha256": "9baddd88e5f12d7e14889223ad7af52dc5e743b6d8c94362c60b661f7ae1cea7",
+    "logicalBlocks": [
+      "12090e4ad47dba6fb839e6eb8164f0b9f1150fc337cb3ed0fd44f649dc900288"
+    ]
+  }
+]

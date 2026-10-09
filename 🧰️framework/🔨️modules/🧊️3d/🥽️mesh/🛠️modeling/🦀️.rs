@@ -1,10 +1,14 @@
 //! 🛠️ Retained modeling work, measured in vertices, corners, and candidate transitions.
 
 use super::*;
+use protocol::value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
 use crate::brep::representation::vector::{Pnt3,Vec3 as GeometryVector};
 use crate::brep::representation::vector::matrix::{Affine3,Mat3};
 use std::cmp::{Ordering, Reverse};
-use std::collections::{BTreeMap, BTreeSet, BinaryHeap};
+use std::collections::BinaryHeap;
+use semio_framework_mesh_engine::HistoryFoldIndex;
+#[cfg(test)]
+use std::collections::BTreeSet;
 
 #[cfg(test)]
 #[path = "../🧪️tests/🔬️jobs/🦀️.rs"]
@@ -78,7 +82,7 @@ impl MeshModelingJob {
         loop {
             let value = self.progress();
             if !progress(value.units_done as f32 / value.units_total as f32) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
-            match self.step(256)? {
+            match self.step(256,RetainedCloneGrant {maximum_items:256,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut RetainedCloneProgress::default())? {
                 MeshModelingStep::Working(_) => {},
                 MeshModelingStep::Done(mesh) => {
                     if !progress(1.0) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
@@ -89,29 +93,34 @@ impl MeshModelingJob {
         }
     }
 
-    pub fn step(&mut self, budget: usize) -> MeshResult<MeshModelingStep> {
+    pub fn step(&mut self, budget: usize,grant:RetainedCloneGrant,tessellation_progress:&mut RetainedCloneProgress) -> MeshResult<MeshModelingStep> {
+        *tessellation_progress=Default::default();
+        if grant.maximum_items==0{return Ok(MeshModelingStep::Working(self.progress));}
         if self.retired { return Err(MeshKernelError::InvalidInput("modeling job already retired".into())); }
         if self.cancelled { return Ok(MeshModelingStep::Cancelled(self.progress)); }
-        for _ in 0..budget {
+        if let Some(demand)=self.tessellation_demands(grant.maximum_copy_bytes).map_err(MeshKernelError::Retained)? {if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original Modeling tessellation frontier exceeds admitted depth")));}}
+        for _ in 0..budget.min(grant.maximum_items) {
+            let retained_tessellation=matches!(&self.work,Work::Knife(work)if work.phase==4&&(work.tessellation.is_some()||work.tessellation_retirement.is_some()))||matches!(&self.work,Work::Subdivide(work)if work.phase==3&&(work.tessellation.is_some()||work.tessellation_retirement.is_some()));
             let next=self.progress.units_done.checked_add(1).ok_or_else(||MeshKernelError::InvalidInput("modeling progress overflow".into()))?;
             let result = match &mut self.work {
                 Work::Bevel(work) => work.advance(),
                 Work::Decimate(work) => work.advance(),
                 Work::Mirror(work) => work.advance(),
                 Work::Merge(work) => work.advance(),
-                Work::Subdivide(work) => work.advance(),
+                Work::Subdivide(work) => work.advance(grant,tessellation_progress),
                 Work::LoopCut(work) => work.advance(),
                 Work::Orient(work) => work.advance(),
                 Work::FillHoles(work) => work.advance(),
                 Work::Inflate(work) => work.advance(),
                 Work::Import(work) => work.advance(),
-                Work::Knife(work) => work.advance(),
+                Work::Knife(work) => work.advance(grant,tessellation_progress),
                 Work::Transform(work) => work.advance(),
             };
             let output = match result {
                 Ok(output) => output,
                 Err(error) => { self.retired = true; return Err(error); }
             };
+            if retained_tessellation&&*tessellation_progress==RetainedCloneProgress::default(){return Ok(MeshModelingStep::Working(self.progress));}
             self.progress.units_done = next;
             self.progress.phase = match &self.work {
                 Work::Bevel(work) => work.phase(),
@@ -136,9 +145,22 @@ impl MeshModelingJob {
                 return Ok(MeshModelingStep::Done(mesh));
             }
             self.progress.units_total = self.progress.units_total.max(self.progress.units_done.saturating_add(1));
+            if retained_tessellation{return Ok(MeshModelingStep::Working(self.progress));}
         }
         Ok(MeshModelingStep::Working(self.progress))
     }
+
+    /// 🪆️ Quotes the same original tessellation child or retained handback frontier.
+    pub fn tessellation_demands(&self,copy:usize)->Result<Option<protocol::value::RetirementDemand>,protocol::value::ValueError> {
+        let(child,retirement)=match &self.work {Work::Knife(work)if work.phase==4=>(&work.tessellation,&work.tessellation_retirement),Work::Subdivide(work)if work.phase==3=>(&work.tessellation,&work.tessellation_retirement),_=>return Ok(None)};
+        let mut demand=if let Some(owner)=retirement {protocol::value::RetirementDemand {copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?}}else if let Some(owner)=child {protocol::value::RetirementDemand {copy_bytes:owner.next_normal_copy_byte_demand()?,capacity_bytes:owner.next_normal_capacity_byte_demand(copy)?,release_bytes:owner.next_normal_release_byte_demand()?,depth:owner.next_normal_depth_demand()?}}else{return Ok(None)};
+        demand.depth=demand.depth.checked_add(2).ok_or_else(||protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original Modeling tessellation depth overflow"))?;Ok(Some(demand))
+    }
+}
+
+fn close_tessellation_handoff(owner:&mut Option<protocol::value::retirement::controlled::ControlledRetirement<MeshTessellationJob>>,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->MeshResult<bool> {
+    let Some(current)=owner.as_mut()else{return Ok(true)};let result=current.step(grant);*receipt=current.step_progress();result.map_err(MeshKernelError::Retained)?;
+    if current.terminal_is_empty(){owner.take();Ok(true)}else{Ok(false)}
 }
 
 impl HalfedgeMesh {
@@ -230,25 +252,25 @@ impl HalfedgeMesh {
     fn select_transform(mut job:MeshModelingJob,vertices:Vec<VertexId>,edges:Vec<EdgeId>,faces:Vec<FaceId>,pivot:Option<Vec3>,matrix:[[f64;3];3],normals:bool,normal_matrix:Option<[[f64;3];3]>)->MeshResult<MeshModelingJob> {
         if vertices.is_empty() && edges.is_empty() && faces.is_empty() {return Err(MeshKernelError::EmptySelection);}
         if pivot.is_some_and(|pivot|pivot.0.iter().any(|value|!value.is_finite())) {return Err(MeshKernelError::DegenerateOperation);}
-        let Work::Transform(work)=&mut job.work else {unreachable!()};work.selection=Some(TransformSelection {vertices,edges,faces,pivot,selected:BTreeSet::new(),sum:[0.0;3],mode:0,cursor:0,next:None,start:0});work.component_matrix=Some(matrix);if let Some(matrix)=normal_matrix {work.normal_matrix=matrix;}work.transform_attributes=normals;work.recompute=true;work.phase=9;job.progress.phase="transform-selection";Ok(job)
+        let Work::Transform(work)=&mut job.work else {unreachable!()};work.selection=Some(TransformSelection {vertices,edges,faces,pivot,selected:HistoryFoldSet::new(),sum:[0.0;3],mode:0,cursor:0,next:None,start:0});work.component_matrix=Some(matrix);if let Some(matrix)=normal_matrix {work.normal_matrix=matrix;}work.transform_attributes=normals;work.recompute=true;work.phase=9;job.progress.phase="transform-selection";Ok(job)
     }
     /// 📦 Moves the caller-owned source into the same retained modeling work.
     fn transform_job_owned(self,matrix:[[f32;3];3],offset:[f32;3],normal_matrix:[[f64;3];3],flip:bool,recompute:bool)->MeshResult<MeshModelingJob> {let source_vertices=self.vertex_count();let source_corners=self.halfedge_count();
-        Ok(MeshModelingJob {work:Work::Transform(Box::new(Transform {mesh:self,policy:PositionPolicy::Affine,matrix,offset,normal_matrix,flip,recompute,flat:Vec::new(),smooth:Vec::new(),hes:Vec::new(),normal:Normal::default(),face_normal:Vec3::ZERO,face:0,vertex:0,cursor:0,start:0,next:0,attribute_names:Vec::new(),attribute:0,selection:None,component_matrix:None,component_pivot:[0.0;3],transform_attributes:recompute,attribute_values:Vec::new(),attribute_indices:Vec::new(),attribute_samples:BTreeMap::new(),attribute_retired:Vec::new(),attribute_affected:None,attribute_corner:None,phase:0})),progress:MeshModelingProgress {units_done:0,units_total:source_corners.saturating_mul(8).saturating_add(source_vertices.saturating_mul(3)).saturating_add(1),phase:"transform-vertices"},cancelled:false,retired:false})
+        Ok(MeshModelingJob {work:Work::Transform(Box::new(Transform {mesh:self,policy:PositionPolicy::Affine,matrix,offset,normal_matrix,flip,recompute,flat:Vec::new(),smooth:Vec::new(),hes:Vec::new(),normal:Normal::default(),face_normal:Vec3::ZERO,face:0,vertex:0,cursor:0,start:0,next:0,attribute_names:Vec::new(),attribute:0,selection:None,component_matrix:None,component_pivot:[0.0;3],transform_attributes:recompute,attribute_values:Vec::new(),attribute_indices:Vec::new(),attribute_samples:HistoryFoldIndex::new(),attribute_retired:Vec::new(),attribute_affected:None,attribute_corner:None,phase:0})),progress:MeshModelingProgress {units_done:0,units_total:source_corners.saturating_mul(8).saturating_add(source_vertices.saturating_mul(3)).saturating_add(1),phase:"transform-vertices"},cancelled:false,retired:false})
     }
     /// 🔪 Retains projection tests, concave tessellation, clipping and neighboring corners.
     pub fn knife_cut_job(&self,face:FaceId,a:Vec3,b:Vec3)->MeshResult<MeshModelingJob> {self.clone().knife_cut_job_owned(face,a,b)}
     /// 📦 Moves the caller-owned source into the same retained modeling work.
     pub fn knife_cut_job_owned(self,face:FaceId,a:Vec3,b:Vec3)->MeshResult<MeshModelingJob> {let source_vertices=self.vertex_count();let source_corners=self.halfedge_count();
         self.face_boundary(face)?;if a.0.iter().chain(&b.0).any(|x|!x.is_finite()) {return Err(MeshKernelError::InvalidInput("knife points must be finite".into()));}
-        Ok(MeshModelingJob {work:Work::Knife(Box::new(Knife {snapshot:Snapshot::new(self),face:face.0 as usize,a:a.0.map(f64::from),b:b.0.map(f64::from),normal:(0.0,0.0,0.0),plane:(0.0,0.0,0.0),origin:(0.0,0.0,0.0),scale:0.0,tolerance:0.0,distances:Vec::new(),positive:false,negative:false,planar:true,convex:true,tessellation:None,transfer:None,pieces:Vec::new(),piece:0,piece_positive:false,piece_negative:false,sign:1.0,split:Vec::new(),intersections:HashMap::new(),soup:Soup::default(),corners:Vec::new(),cursor:0,source_face:0,corner:0,emitted_corners:0,build:None,vertex_sources:Vec::new(),source_faces:Vec::new(),attributes:None,phase:0})),progress:MeshModelingProgress {units_done:0,units_total:source_corners.saturating_mul(32).saturating_add(source_vertices).saturating_add(1),phase:"snapshot"},cancelled:false,retired:false})
+        Ok(MeshModelingJob {work:Work::Knife(Box::new(Knife {snapshot:Snapshot::new(self),face:face.0 as usize,a:a.0.map(f64::from),b:b.0.map(f64::from),normal:(0.0,0.0,0.0),plane:(0.0,0.0,0.0),origin:(0.0,0.0,0.0),scale:0.0,tolerance:0.0,distances:Vec::new(),positive:false,negative:false,planar:true,convex:true,tessellation:None,tessellation_retirement:None,transfer:None,pieces:Vec::new(),piece:0,piece_positive:false,piece_negative:false,sign:1.0,split:Vec::new(),intersections:HistoryFoldIndex::new(),soup:Soup::default(),corners:Vec::new(),cursor:0,source_face:0,corner:0,emitted_corners:0,build:None,vertex_sources:Vec::new(),source_faces:Vec::new(),attributes:None,phase:0})),progress:MeshModelingProgress {units_done:0,units_total:source_corners.saturating_mul(32).saturating_add(source_vertices).saturating_add(1),phase:"snapshot"},cancelled:false,retired:false})
     }
     /// 📥 Retains position welding, corner identities and indexed reconstruction.
     pub fn indexed_triangle_job(positions:Vec<f32>,indices:Vec<u32>,normals:Vec<f32>)->MeshResult<MeshModelingJob> {
         if !positions.len().is_multiple_of(3) || !indices.len().is_multiple_of(3) || !normals.is_empty() && normals.len()!=positions.len() {return Err(MeshKernelError::InvalidInput("invalid indexed triangulation buffers".into()));}
         if indices.len()/3>100_000 || positions.len().saturating_add(indices.len()).saturating_add(normals.len()).saturating_mul(4)>64_000_000 {return Err(MeshKernelError::InvalidInput("indexed triangulation exceeds mesh capacity".into()));}
         let total=positions.len().saturating_add(indices.len().saturating_mul(16)).saturating_add(1);
-        Ok(MeshModelingJob {work:Work::Import(Box::new(Import {polygon:None,primitive:None,primitive_faces:Vec::new(),midpoints:BTreeMap::new(),mids:Vec::new(),generation:0,face:0,part:0,positions,indices,normals,unique:HashMap::new(),remap:Vec::new(),soup:Soup::default(),corners:Vec::new(),corner_normals:Vec::new(),mesh:None,cursor:0,build:None,phase:0})),progress:MeshModelingProgress {units_done:0,units_total:total,phase:"mesh-import-vertices"},cancelled:false,retired:false})
+        Ok(MeshModelingJob {work:Work::Import(Box::new(Import {polygon:None,primitive:None,primitive_faces:Vec::new(),midpoints:HistoryFoldIndex::new(),mids:Vec::new(),generation:0,face:0,part:0,positions,indices,normals,unique:HistoryFoldIndex::new(),remap:Vec::new(),soup:Soup::default(),corners:Vec::new(),corner_normals:Vec::new(),mesh:None,cursor:0,build:None,phase:0})),progress:MeshModelingProgress {units_done:0,units_total:total,phase:"mesh-import-vertices"},cancelled:false,retired:false})
     }
     /// 📦 Retains reconstruction of an admitted typed polygon source without cloning its channels.
     pub fn polygon_source_job(source:semio_framework_mesh_engine::PolygonMeshSource)->MeshResult<MeshModelingJob> {let mut job=Self::indexed_triangle_job(Vec::new(),Vec::new(),Vec::new())?;let Work::Import(work)=&mut job.work else {unreachable!()};work.polygon=Some(source);work.phase=10;job.progress.phase=work.phase();Ok(job)}
@@ -278,14 +300,14 @@ impl HalfedgeMesh {
     /// 📦 Moves the caller-owned source into the same retained modeling work.
     fn inflate_job_owned(self,faces:&[FaceId],amount:f32,inset:bool)->MeshResult<MeshModelingJob> {let source_corners=self.halfedge_count();
         if faces.is_empty() {return Err(MeshKernelError::EmptySelection);}if !amount.is_finite() || amount==0.0 || inset && amount<0.0 {return Err(MeshKernelError::DegenerateOperation);}
-        let work=Inflate { snapshot:Snapshot::new(self),input:faces.to_vec(),selected:HashSet::new(),amount,inset,normals:BTreeMap::new(),boundary:HashMap::new(),edges:BTreeSet::new(),displaced:HashMap::new(),last_vertex:None,last_edge:None,soup:Soup::default(),borders:Vec::new(),inner:Vec::new(),corners:Vec::new(),cursor:0,face:0,corner:0,emitted_corners:0,build:None,vertex_sources:Vec::new(),source_faces:Vec::new(),border_faces:Vec::new(),attributes:None,phase:0 };
+        let work=Inflate { snapshot:Snapshot::new(self),input:faces.to_vec(),selected:HistoryFoldSet::new(),amount,inset,normals:HistoryFoldIndex::new(),boundary:HistoryFoldIndex::new(),edges:HistoryFoldSet::new(),displaced:HistoryFoldIndex::new(),last_vertex:None,last_edge:None,soup:Soup::default(),borders:Vec::new(),inner:Vec::new(),corners:Vec::new(),cursor:0,face:0,corner:0,emitted_corners:0,build:None,vertex_sources:Vec::new(),source_faces:Vec::new(),border_faces:Vec::new(),attributes:None,phase:0 };
         let phase=work.phase();Ok(MeshModelingJob {work:Work::Inflate(Box::new(work)),progress:MeshModelingProgress {units_done:0,units_total:source_corners.saturating_mul(32).saturating_add(1),phase},cancelled:false,retired:false})
     }
     /// 🧭 Retains incidence, component traversal, polygon reversal and reconstruction.
     pub fn orient_faces_job(&self)->MeshResult<MeshModelingJob> {self.clone().orient_faces_job_owned()}
     /// 📦 Moves the caller-owned source into the same retained modeling work.
     pub fn orient_faces_job_owned(self)->MeshResult<MeshModelingJob> {let source_corners=self.halfedge_count();
-        Ok(MeshModelingJob { work:Work::Orient(Box::new(Orient {input:None,flip_count:0,attributes:None,snapshot:Snapshot::new(self),edges:HashMap::new(),keys:Vec::new(),adjacency:Vec::new(),oriented:Vec::new(),flipped:Vec::new(),stack:Vec::new(),active:None,face:0,corner:0,cursor:0,neighbor:0,reversing:0,build:None,phase:0 })),progress:MeshModelingProgress { units_done:0,units_total:source_corners.saturating_mul(16).saturating_add(1),phase:"snapshot" },cancelled:false,retired:false })
+        Ok(MeshModelingJob { work:Work::Orient(Box::new(Orient {input:None,flip_count:0,attributes:None,snapshot:Snapshot::new(self),edges:HistoryFoldIndex::new(),keys:Vec::new(),adjacency:Vec::new(),oriented:Vec::new(),flipped:Vec::new(),stack:Vec::new(),active:None,face:0,corner:0,cursor:0,neighbor:0,reversing:0,build:None,phase:0 })),progress:MeshModelingProgress { units_done:0,units_total:source_corners.saturating_mul(16).saturating_add(1),phase:"snapshot" },cancelled:false,retired:false })
     }
     /// 🔄 Retains selected winding changes through existing orientation reconstruction.
     pub fn flip_faces_job(&self,faces:&[FaceId])->MeshResult<MeshModelingJob> {self.clone().flip_faces_job_owned(faces)}
@@ -295,7 +317,7 @@ impl HalfedgeMesh {
     pub fn fill_holes_job(&self)->MeshResult<MeshModelingJob> {self.clone().fill_holes_job_owned()}
     /// 📦 Moves the caller-owned source into the same retained modeling work.
     pub fn fill_holes_job_owned(self)->MeshResult<MeshModelingJob> {let source_corners=self.halfedge_count();
-        Ok(MeshModelingJob { work:Work::FillHoles(Box::new(FillHoles { snapshot:Snapshot::new(self),visited:HashSet::new(),vertices:Vec::new(),boundary_edges:Vec::new(),cap:Vec::new(),cap_faces:Vec::new(),corner_sources:Vec::new(),edge_sources:Vec::new(),face_sources:Vec::new(),attributes:None,cursor:0,start:0,probe:0,rotations:0,corner:0,corners:source_corners,filled:0,build:None,phase:0 })),progress:MeshModelingProgress { units_done:0,units_total:source_corners.saturating_mul(16).saturating_add(1),phase:"snapshot" },cancelled:false,retired:false })
+        Ok(MeshModelingJob { work:Work::FillHoles(Box::new(FillHoles { snapshot:Snapshot::new(self),visited:HistoryFoldSet::new(),vertices:Vec::new(),boundary_edges:Vec::new(),cap:Vec::new(),cap_faces:Vec::new(),corner_sources:Vec::new(),edge_sources:Vec::new(),face_sources:Vec::new(),attributes:None,cursor:0,start:0,probe:0,rotations:0,corner:0,corners:source_corners,filled:0,build:None,phase:0 })),progress:MeshModelingProgress { units_done:0,units_total:source_corners.saturating_mul(16).saturating_add(1),phase:"snapshot" },cancelled:false,retired:false })
     }
     /// ✂️ Retains strip propagation, exact expansion admission and grid construction.
     pub fn loop_cut_job(&self,edges:&[EdgeId],cuts:u32)->MeshResult<MeshModelingJob> {self.clone().loop_cut_job_owned(edges,cuts)}
@@ -303,7 +325,7 @@ impl HalfedgeMesh {
     pub fn loop_cut_job_owned(self,edges:&[EdgeId],cuts:u32)->MeshResult<MeshModelingJob> {let source_corners=self.halfedge_count();
         if edges.is_empty() { return Err(MeshKernelError::EmptySelection); }
         if !(1..=256).contains(&cuts) { return Err(MeshKernelError::InvalidInput("cuts must be in 1..=256".into())); }
-        Ok(MeshModelingJob { work:Work::LoopCut(Box::new(LoopCut { snapshot:Snapshot::new(self),edges:edges.to_vec(),cuts:cuts as usize,incidence:HashMap::new(),marked:BTreeSet::new(),pending:Vec::new(),cut_vertices:HashMap::new(),last_edge:None,cut_edge:None,cut_ids:Vec::new(),soup:Soup::default(),boundary:Vec::new(),grid:Vec::new(),face:0,corner:0,cursor:0,step:0,nx:1,ny:1,vertices:0,faces:0,corners:0,building_grid:true,build:None,vertex_sources:Vec::new(),source_faces:Vec::new(),attributes:None,phase:0 })),progress:MeshModelingProgress { units_done:0,units_total:source_corners.saturating_mul((cuts as usize+1).saturating_mul(32)).saturating_add(1),phase:"snapshot" },cancelled:false,retired:false })
+        Ok(MeshModelingJob { work:Work::LoopCut(Box::new(LoopCut { snapshot:Snapshot::new(self),edges:edges.to_vec(),cuts:cuts as usize,incidence:HistoryFoldIndex::new(),marked:HistoryFoldSet::new(),pending:Vec::new(),cut_vertices:HistoryFoldIndex::new(),last_edge:None,cut_edge:None,cut_ids:Vec::new(),soup:Soup::default(),boundary:Vec::new(),grid:Vec::new(),face:0,corner:0,cursor:0,step:0,nx:1,ny:1,vertices:0,faces:0,corners:0,building_grid:true,build:None,vertex_sources:Vec::new(),source_faces:Vec::new(),attributes:None,phase:0 })),progress:MeshModelingProgress { units_done:0,units_total:source_corners.saturating_mul((cuts as usize+1).saturating_mul(32)).saturating_add(1),phase:"snapshot" },cancelled:false,retired:false })
     }
     /// 🕸️ Retains face convexity, concave triangulation, centroid fans and reconstruction.
     pub fn subdivide_faces_job(&self, faces: &[FaceId])->MeshResult<MeshModelingJob> {self.clone().subdivide_faces_job_owned(faces)}
@@ -322,7 +344,7 @@ impl HalfedgeMesh {
     pub fn delete_faces_job_owned(self,faces:&[FaceId])->MeshResult<MeshModelingJob> {if faces.is_empty() {return Err(MeshKernelError::EmptySelection);}self.subdivision_job_owned(faces,false,true)}
     /// 📦 Moves the caller-owned source into the same retained modeling work.
     fn subdivision_job_owned(self,faces:&[FaceId],triangulate_only:bool,delete_selected:bool)->MeshResult<MeshModelingJob> {let source_vertices=self.vertex_count();let source_corners=self.halfedge_count();
-        Ok(MeshModelingJob { work: Work::Subdivide(Box::new(Subdivide { snapshot: Snapshot::new(self), input: faces.to_vec(),triangulate_only,delete_selected, selected: HashSet::new(), concave: HashSet::new(), convex: true, tessellation: None, transfer: None, soup: Soup::default(), corners: Vec::new(), center: Vec3::ZERO, center_id: 0, emitted_corners: 0, emitting: false, cursor: 0, face: 0, corner: 0, triangle: 0, build: None, vertex_sources:Vec::new(),source_faces:Vec::new(),attributes:None,phase: if triangulate_only {1}else {0} })), progress: MeshModelingProgress { units_done: 0, units_total: source_corners.saturating_mul(32).saturating_add(source_vertices.saturating_mul(2)).saturating_add(1), phase: if triangulate_only {"snapshot"}else {"subdivide-selection"} }, cancelled: false, retired: false })
+        Ok(MeshModelingJob { work: Work::Subdivide(Box::new(Subdivide { snapshot: Snapshot::new(self), input: faces.to_vec(),triangulate_only,delete_selected, selected: HistoryFoldSet::new(), concave: HistoryFoldSet::new(), convex: true, tessellation: None,tessellation_retirement:None, transfer: None, soup: Soup::default(), corners: Vec::new(), center: Vec3::ZERO, center_id: 0, emitted_corners: 0, emitting: false, cursor: 0, face: 0, corner: 0, triangle: 0, build: None, vertex_sources:Vec::new(),source_faces:Vec::new(),attributes:None,phase: if triangulate_only {1}else {0} })), progress: MeshModelingProgress { units_done: 0, units_total: source_corners.saturating_mul(32).saturating_add(source_vertices.saturating_mul(2)).saturating_add(1), phase: if triangulate_only {"snapshot"}else {"subdivide-selection"} }, cancelled: false, retired: false })
     }
     /// 🧲️ Retains vertex-distance pairs, root walks, polygon remapping and reconstruction.
     pub fn merge_vertices_job(&self, vertices: &[VertexId], mode: WeldMode, threshold: f32)->MeshResult<MeshModelingJob> {self.clone().merge_vertices_job_owned(vertices,mode,threshold)}
@@ -384,7 +406,7 @@ impl HalfedgeMesh {
 }
 
 struct TransformSelection {
-    vertices:Vec<VertexId>,edges:Vec<EdgeId>,faces:Vec<FaceId>,pivot:Option<Vec3>,selected:BTreeSet<usize>,sum:[f64;3],mode:u8,cursor:usize,next:Option<u32>,start:u32,
+    vertices:Vec<VertexId>,edges:Vec<EdgeId>,faces:Vec<FaceId>,pivot:Option<Vec3>,selected:HistoryFoldSet<usize>,sum:[f64;3],mode:u8,cursor:usize,next:Option<u32>,start:u32,
 }
 impl TransformSelection {
     fn add(&mut self,mesh:&HalfedgeMesh,id:usize)->MeshResult<()> {let point=mesh.vertices.get(id).ok_or(MeshKernelError::InvalidHandle)?.position;if self.selected.insert(id) {for axis in 0..3 {self.sum[axis]+=point[axis] as f64;}}Ok(())}
@@ -424,7 +446,7 @@ struct Transform {
     transform_attributes:bool,
     attribute_values:Vec<protocol::value::DslValue>,
     attribute_indices:Vec<u32>,
-    attribute_samples:BTreeMap<(u32,bool),u32>,
+    attribute_samples:HistoryFoldIndex<(u32,bool),u32>,
     attribute_retired:Vec<protocol::value::DslValue>,
     attribute_affected:Option<bool>,
     attribute_corner:Option<u32>,
@@ -512,6 +534,7 @@ struct Knife {
     planar:bool,
     convex:bool,
     tessellation:Option<MeshTessellationJob>,
+    tessellation_retirement:Option<protocol::value::retirement::controlled::ControlledRetirement<MeshTessellationJob>>,
     transfer:Option<MeshTransfer>,
     pieces:Vec<Vec<u32>>,
     piece:usize,
@@ -519,7 +542,7 @@ struct Knife {
     piece_negative:bool,
     sign:f64,
     split:Vec<Vec<u32>>,
-    intersections:HashMap<(u32,u32),u32>,
+    intersections:HistoryFoldIndex<(u32,u32),u32>,
     soup:Soup,
     corners:Vec<u32>,
     cursor:usize,
@@ -537,7 +560,8 @@ impl Knife {
     fn phase(&self)->&'static str {["snapshot","knife-scale","knife-distances","knife-projection","knife-triangulate","knife-pieces","knife-classify","knife-clip","knife-neighbors","knife-reconstruct","knife-source-vertices","knife-source-remap","knife-attributes"][self.phase as usize]}
     fn push_corner(&mut self,id:u32) {if self.corners.last()!=Some(&id) {self.corners.push(id);}}
     fn finish_piece(&mut self)->MeshResult<()> {if self.corners.first()==self.corners.last() {self.corners.pop();}if self.corners.len()<3 {return Err(MeshKernelError::InvalidInput("knife cut produces a degenerate piece".into()));}if self.snapshot.soup.faces.len().saturating_sub(1).saturating_add(self.split.len()).saturating_add(1)>100_000 {return Err(MeshKernelError::InvalidInput("knife cut exceeds mesh capacity".into()));}self.split.push(std::mem::take(&mut self.corners));Ok(())}
-    fn advance(&mut self)->MeshResult<Option<HalfedgeMesh>> {
+    fn advance(&mut self,grant:RetainedCloneGrant,tessellation_progress:&mut RetainedCloneProgress)->MeshResult<Option<HalfedgeMesh>> {
+        if self.tessellation_retirement.is_some(){if close_tessellation_handoff(&mut self.tessellation_retirement,grant,tessellation_progress)?{self.phase=5;}return Ok(None);}
         match self.phase {
             0=>{if self.snapshot.advance() {self.normal=Self::tuple(self.snapshot.soup.normals[self.face].0);let direction=sub3((self.b[0],self.b[1],self.b[2]),(self.a[0],self.a[1],self.a[2]));let plane=cross3(direction,self.normal);let length=length3(plane);if length==0.0 || length<=length3(direction)*1e-7 {return Err(MeshKernelError::InvalidInput("knife direction must project onto a nondegenerate face".into()));}self.plane=(plane.0/length,plane.1/length,plane.2/length);self.origin=Self::tuple(self.snapshot.soup.positions[self.snapshot.soup.faces[self.face][0] as usize]);self.cursor=0;self.phase=10;}}
             1=>{let face=&self.snapshot.soup.faces[self.face];let point=Self::tuple(self.snapshot.soup.positions[face[self.cursor] as usize]);self.scale=self.scale.max(length3(sub3(point,self.origin)));self.cursor+=1;if self.cursor==face.len() {self.tolerance=self.scale*1e-7;self.cursor=0;self.phase=2;}}
@@ -547,9 +571,9 @@ impl Knife {
             }
             3=>{
                 let face=&self.snapshot.soup.faces[self.face];let n=face.len();let point=|i:usize|Self::tuple(self.snapshot.soup.positions[face[i%n] as usize]);let distance=self.distances[face[self.cursor] as usize];self.positive|=distance>0.0;self.negative|=distance<0.0;self.planar&=dot3(sub3(point(self.cursor),self.origin),self.normal).abs()<=self.tolerance;self.convex&=dot3(cross3(sub3(point(self.cursor+1),point(self.cursor)),sub3(point(self.cursor+2),point(self.cursor+1))),self.normal)>=-self.scale*self.tolerance;self.cursor+=1;
-                if self.cursor==n {if !self.positive || !self.negative {return Err(MeshKernelError::InvalidInput("knife line must cross the face interior".into()));}if !self.planar || !self.convex {self.tessellation=Some(MeshTessellationJob::selected(std::mem::replace(&mut self.snapshot.source,HalfedgeMesh::empty()),HashSet::from([self.face as u32])));}self.cursor=0;self.phase=4;}
+                if self.cursor==n {if !self.positive || !self.negative {return Err(MeshKernelError::InvalidInput("knife line must cross the face interior".into()));}if !self.planar || !self.convex {self.tessellation=Some(MeshTessellationJob::selected(std::mem::replace(&mut self.snapshot.source,HalfedgeMesh::empty()),HistoryFoldSet::from([self.face as u32])));}self.cursor=0;self.phase=4;}
             }
-            4=>{if let Some(job)=&mut self.tessellation {if let MeshTessellationStep::Done(transfer)=job.step(1)? {self.transfer=Some(transfer);self.snapshot.source=self.tessellation.take().unwrap().into_source();self.phase=5;}}else {self.phase=5;}}
+            4=>{if let Some(job)=&mut self.tessellation {let result=job.step(grant);*tessellation_progress=job.normal_step_progress();if let MeshTessellationStep::Done(transfer)=result.map_err(MeshKernelError::Retained)?.0 {self.transfer=Some(transfer);let mut original=self.tessellation.take().unwrap();self.snapshot.source=original.take_source();self.tessellation_retirement=Some(protocol::value::retirement::controlled::ControlledRetirement::new(original).unwrap_or_else(|_|panic!("original tessellation handback requires typed retirement")));}}else {self.phase=5;}}
             5=>{
                 if let Some(transfer)=&self.transfer {if self.cursor==transfer.indices.len() {self.soup.positions=std::mem::take(&mut self.snapshot.soup.positions);self.cursor=0;self.phase=6;}else {self.pieces.push([0,1,2].map(|i|transfer.vertex_ids[transfer.indices[self.cursor+i] as usize]).to_vec());self.cursor+=3;}}
                 else {let face=&self.snapshot.soup.faces[self.face];if self.cursor==face.len() {self.pieces.push(std::mem::take(&mut self.corners));self.soup.positions=std::mem::take(&mut self.snapshot.soup.positions);self.cursor=0;self.phase=6;}else {self.corners.push(face[self.cursor]);self.cursor+=1;}}
@@ -590,7 +614,7 @@ struct Import {
     polygon:Option<semio_framework_mesh_engine::PolygonMeshSource>,
     primitive:Option<(u8,[f32;3],u32)>,
     primitive_faces:Vec<Vec<u32>>,
-    midpoints:BTreeMap<(u32,u32),u32>,
+    midpoints:HistoryFoldIndex<(u32,u32),u32>,
     mids:Vec<u32>,
     generation:u32,
     face:usize,
@@ -598,7 +622,7 @@ struct Import {
     positions:Vec<f32>,
     indices:Vec<u32>,
     normals:Vec<f32>,
-    unique:HashMap<[u32;3],u32>,
+    unique:HistoryFoldIndex<[u32;3],u32>,
     remap:Vec<u32>,
     soup:Soup,
     corners:Vec<u32>,
@@ -661,13 +685,13 @@ impl Import {
 struct Inflate {
     snapshot:Snapshot,
     input:Vec<FaceId>,
-    selected:HashSet<u32>,
+    selected:HistoryFoldSet<u32>,
     amount:f32,
     inset:bool,
-    normals:BTreeMap<u32,Vec3>,
-    boundary:HashMap<(u32,u32),(u32,u32,usize,u32)>,
-    edges:BTreeSet<(u32,u32)>,
-    displaced:HashMap<u32,u32>,
+    normals:HistoryFoldIndex<u32,Vec3>,
+    boundary:HistoryFoldIndex<(u32,u32),(u32,u32,usize,u32)>,
+    edges:HistoryFoldSet<(u32,u32)>,
+    displaced:HistoryFoldIndex<u32,u32>,
     last_vertex:Option<u32>,
     last_edge:Option<(u32,u32)>,
     soup:Soup,
@@ -700,7 +724,7 @@ impl Inflate {
                     let id=self.input[self.cursor].0 as usize;let face=&self.snapshot.soup.faces[id];let n=face.len();let normal=self.snapshot.soup.normals[id];
                     if self.inset {
                         self.admit_position()?;let face=&self.snapshot.soup.faces[id];let point=|i:usize|Vec3(self.soup.positions[face[i] as usize]);let previous=point((self.corner+n-1)%n);let current=point(self.corner);let next=point((self.corner+1)%n);let a=normal.cross(current.sub(previous).normalize());let b=normal.cross(next.sub(current).normalize());let denominator=1.0+a.dot(b);if denominator<=1e-6 {return Err(MeshKernelError::DegenerateOperation);}let offset=a.add(b).scale(self.amount/denominator);if offset.length()>=current.sub(previous).length().min(next.sub(current).length())*0.5 {return Err(MeshKernelError::InvalidInput("inset exceeds local edge clearance".into()));}let position=current.add(offset).0;if position.iter().any(|x|!x.is_finite()) {return Err(MeshKernelError::DegenerateOperation);}self.inner.push(self.soup.positions.len() as u32);self.soup.positions.push(position);self.vertex_sources.push(SourceVertex::Original(face[self.corner]));
-                    }else {let (a,b)=(face[self.corner],face[(self.corner+1)%n]);self.normals.entry(a).and_modify(|sum|*sum=sum.add(normal)).or_insert(normal);let edge=self.boundary.entry((a.min(b),a.max(b))).or_insert((a,b,0,id as u32));if edge.2==0 {self.edges.insert((a,b));}else {self.edges.remove(&(edge.0,edge.1));}edge.2+=1;}
+                    }else {let (a,b)=(face[self.corner],face[(self.corner+1)%n]);self.normals.entry(a).and_modify(|sum|*sum=sum.add(normal)).or_insert_with(||normal);let edge=self.boundary.entry((a.min(b),a.max(b))).or_insert_with(||(a,b,0,id as u32));if edge.2==0 {self.edges.insert((a,b));}else {self.edges.remove(&(edge.0,edge.1));}edge.2+=1;}
                     self.corner+=1;if self.corner==n {self.corner=0;if self.inset {self.phase=3;}else {self.cursor+=1;}}
                 }
             }
@@ -735,7 +759,7 @@ struct Orient {
     flip_count:usize,
     snapshot:Snapshot,
     attributes:Option<SourceAttributeRemap>,
-    edges:HashMap<(u32,u32),Vec<(usize,bool)>>,
+    edges:HistoryFoldIndex<(u32,u32),Vec<(usize,bool)>>,
     keys:Vec<(u32,u32)>,
     adjacency:Vec<Vec<(usize,bool)>>,
     oriented:Vec<bool>,
@@ -787,7 +811,7 @@ impl Orient {
 
 struct FillHoles {
     snapshot:Snapshot,
-    visited:HashSet<u32>,
+    visited:HistoryFoldSet<u32>,
     vertices:Vec<u32>,
     boundary_edges:Vec<u32>,
     cap:Vec<u32>,
@@ -837,10 +861,10 @@ struct LoopCut {
     snapshot:Snapshot,
     edges:Vec<EdgeId>,
     cuts:usize,
-    incidence:HashMap<(u32,u32),Vec<(usize,usize)>>,
-    marked:BTreeSet<(u32,u32)>,
+    incidence:HistoryFoldIndex<(u32,u32),Vec<(usize,usize)>>,
+    marked:HistoryFoldSet<(u32,u32)>,
     pending:Vec<(u32,u32)>,
-    cut_vertices:HashMap<(u32,u32),Vec<u32>>,
+    cut_vertices:HistoryFoldIndex<(u32,u32),Vec<u32>>,
     last_edge:Option<(u32,u32)>,
     cut_edge:Option<(u32,u32)>,
     cut_ids:Vec<u32>,
@@ -954,10 +978,11 @@ struct Subdivide {
     input: Vec<FaceId>,
     triangulate_only:bool,
     delete_selected:bool,
-    selected: HashSet<u32>,
-    concave: HashSet<u32>,
+    selected: HistoryFoldSet<u32>,
+    concave: HistoryFoldSet<u32>,
     convex: bool,
     tessellation: Option<MeshTessellationJob>,
+    tessellation_retirement:Option<protocol::value::retirement::controlled::ControlledRetirement<MeshTessellationJob>>,
     transfer: Option<MeshTransfer>,
     soup: Soup,
     corners: Vec<u32>,
@@ -983,7 +1008,8 @@ impl Subdivide {
         self.emitted_corners+=corners;Ok(())
     }
     fn next_face(&mut self) { self.face += 1; self.corner = 0; self.emitting = false; self.center = Vec3::ZERO; self.convex = true; }
-    fn advance(&mut self) -> MeshResult<Option<HalfedgeMesh>> {
+    fn advance(&mut self,grant:RetainedCloneGrant,tessellation_progress:&mut RetainedCloneProgress) -> MeshResult<Option<HalfedgeMesh>> {
+        if self.tessellation_retirement.is_some(){if close_tessellation_handoff(&mut self.tessellation_retirement,grant,tessellation_progress)?{self.soup.positions=std::mem::take(&mut self.snapshot.soup.positions);self.phase=4;}return Ok(None);}
         match self.phase {
             0 => {
                 if self.cursor==self.input.len() {if self.delete_selected && self.selected.len()==self.snapshot.source.face_count() {return Err(MeshKernelError::InvalidInput("deletion would leave an empty mesh".into()));}self.phase = 1;}
@@ -1005,7 +1031,7 @@ impl Subdivide {
             }
             3 => {
                 if let Some(tessellation) = &mut self.tessellation {
-                    if let MeshTessellationStep::Done(transfer) = tessellation.step(1)? { self.transfer = Some(transfer);self.snapshot.source=self.tessellation.take().unwrap().into_source(); self.soup.positions = std::mem::take(&mut self.snapshot.soup.positions); self.phase = 4; }
+                    let result=tessellation.step(grant);*tessellation_progress=tessellation.normal_step_progress();if let MeshTessellationStep::Done(transfer) = result.map_err(MeshKernelError::Retained)?.0 {self.transfer=Some(transfer);let mut original=self.tessellation.take().unwrap();self.snapshot.source=original.take_source();self.tessellation_retirement=Some(protocol::value::retirement::controlled::ControlledRetirement::new(original).unwrap_or_else(|_|panic!("original tessellation handback requires typed retirement")));}
                 } else { self.soup.positions = std::mem::take(&mut self.snapshot.soup.positions); self.phase = 4; }
             }
             4 => {
@@ -1045,11 +1071,11 @@ impl Subdivide {
 struct Coplanar {
     explicit:Option<Vec<EdgeId>>,
     vertex_input:Option<Vec<VertexId>>,
-    selected_vertices:BTreeSet<u32>,
+    selected_vertices:HistoryFoldSet<u32>,
     star_vertex:u32,
     star_incident:Vec<usize>,
-    star_edges:BTreeMap<(u32,u32),(usize,usize)>,
-    star_next:BTreeMap<u32,(u32,usize,usize)>,
+    star_edges:HistoryFoldIndex<(u32,u32),(usize,usize)>,
+    star_next:HistoryFoldIndex<u32,(u32,usize,usize)>,
     star_start:u32,
     star_probe:u32,
     star_contributors:Vec<u32>,
@@ -1057,7 +1083,7 @@ struct Coplanar {
     star_origin:Vec3,
 
     output_vertices:Vec<u32>,
-    source_corners:BTreeMap<(u32,u32),u32>,
+    source_corners:HistoryFoldIndex<(u32,u32),u32>,
     face_sources:Vec<Vec<u32>>,
     corner_sources:Vec<Vec<u32>>,
     edge_sources:Vec<Vec<u32>>,
@@ -1073,11 +1099,11 @@ struct Coplanar {
     endpoint:usize,
     keep:usize,
     remove:usize,
-    incidence:BTreeMap<(u32,u32),(usize,usize)>,
-    pending:BTreeSet<(u32,u32)>,
-    seen:BTreeSet<u32>,
-    neighbors:BTreeMap<u32,Option<(u32,u32)>>,
-    removable:BTreeSet<u32>,
+    incidence:HistoryFoldIndex<(u32,u32),(usize,usize)>,
+    pending:HistoryFoldSet<(u32,u32)>,
+    seen:HistoryFoldSet<u32>,
+    neighbors:HistoryFoldIndex<u32,Option<(u32,u32)>>,
+    removable:HistoryFoldSet<u32>,
     face:usize,
     cursor:usize,
     a:usize,
@@ -1098,7 +1124,7 @@ struct Coplanar {
     phase:u8,
 }
 impl Default for Coplanar {
-    fn default()->Self {Self {explicit:None,vertex_input:None,selected_vertices:BTreeSet::new(),star_vertex:0,star_incident:Vec::new(),star_edges:BTreeMap::new(),star_next:BTreeMap::new(),star_start:0,star_probe:0,star_contributors:Vec::new(),star_extent:0.0,star_origin:Vec3::ZERO,output_vertices:Vec::new(),source_corners:BTreeMap::new(),face_sources:Vec::new(),corner_sources:Vec::new(),edge_sources:Vec::new(),spliced_corners:Vec::new(),spliced_edges:Vec::new(),output_corners:Vec::new(),output_edges:Vec::new(),output_faces:Vec::new(),attributes:None,attribute_name:None,equality:None,preserve_corners:false,endpoint:0,keep:0,remove:0,incidence:BTreeMap::new(),pending:BTreeSet::new(),seen:BTreeSet::new(),neighbors:BTreeMap::new(),removable:BTreeSet::new(),face:0,cursor:0,a:0,b:0,ai:0,bi:0,side:0,normal:Normal::default(),na:Vec3::ZERO,min:Vec3::ZERO,max:Vec3::ZERO,tolerance:0.0,shared:0,corners:Vec::new(),soup:Soup::default(),build:None,merges:0,phase:0}}
+    fn default()->Self {Self {explicit:None,vertex_input:None,selected_vertices:HistoryFoldSet::new(),star_vertex:0,star_incident:Vec::new(),star_edges:HistoryFoldIndex::new(),star_next:HistoryFoldIndex::new(),star_start:0,star_probe:0,star_contributors:Vec::new(),star_extent:0.0,star_origin:Vec3::ZERO,output_vertices:Vec::new(),source_corners:HistoryFoldIndex::new(),face_sources:Vec::new(),corner_sources:Vec::new(),edge_sources:Vec::new(),spliced_corners:Vec::new(),spliced_edges:Vec::new(),output_corners:Vec::new(),output_edges:Vec::new(),output_faces:Vec::new(),attributes:None,attribute_name:None,equality:None,preserve_corners:false,endpoint:0,keep:0,remove:0,incidence:HistoryFoldIndex::new(),pending:HistoryFoldSet::new(),seen:HistoryFoldSet::new(),neighbors:HistoryFoldIndex::new(),removable:HistoryFoldSet::new(),face:0,cursor:0,a:0,b:0,ai:0,bi:0,side:0,normal:Normal::default(),na:Vec3::ZERO,min:Vec3::ZERO,max:Vec3::ZERO,tolerance:0.0,shared:0,corners:Vec::new(),soup:Soup::default(),build:None,merges:0,phase:0}}
 }
 impl Coplanar {
     fn phase(&self)->&'static str {match self.phase {0=>"snapshot",1=>"coplanar-incidence",2=>"coplanar-candidates",3|4=>"coplanar-normal",5=>"coplanar-distance",6=>"coplanar-shared-edges",7=>"coplanar-splice",8|9=>"coplanar-remove-edges",10=>"coplanar-insert-edges",11=>"coplanar-release-candidate",12=>"coplanar-cleanup-incidence",13=>"coplanar-cleanup-classify",14=>"coplanar-cleanup-corners",17|18=>"coplanar-source-corners",22=>"coplanar-channel-policy",23=>"dissolve-selection",24=>"dissolve-vertex-provenance",25=>"dissolve-face-metadata",26=>"dissolve-star-selection",27=>"dissolve-star-incidence",28=>"dissolve-star-normal",29=>"dissolve-star-plane",30=>"dissolve-star-boundary",31=>"dissolve-star-next",32=>"dissolve-star-loop",33=>"dissolve-star-release",34=>"dissolve-star-contributors",19=>"coplanar-face-contributors",20=>"coplanar-channel-boundary",21=>"coplanar-attributes",_=>"coplanar-reconstruct"}}
@@ -1138,7 +1164,7 @@ impl Coplanar {
             11=>{if self.seen.pop_first().is_none() {self.corners.clear();self.spliced_corners.clear();self.spliced_edges.clear();self.attribute_name=None;self.equality=None;self.phase=2;}},
             12=>{
                 if self.face==snapshot.soup.faces.len() {self.face=0;self.cursor=0;self.phase=13;}
-                else {let face=&snapshot.soup.faces[self.face];if face.is_empty() {self.face+=1;}else {let id=face[self.cursor];let pair=(face[(self.cursor+face.len()-1)%face.len()],face[(self.cursor+1)%face.len()]);self.neighbors.entry(id).and_modify(|value|{if *value!=Some(pair) {*value=None;}}).or_insert(Some(pair));self.cursor+=1;if self.cursor==face.len() {self.face+=1;self.cursor=0;}}}
+                else {let face=&snapshot.soup.faces[self.face];if face.is_empty() {self.face+=1;}else {let id=face[self.cursor];let pair=(face[(self.cursor+face.len()-1)%face.len()],face[(self.cursor+1)%face.len()]);self.neighbors.entry(id).and_modify(|value|{if *value!=Some(pair) {*value=None;}}).or_insert_with(||Some(pair));self.cursor+=1;if self.cursor==face.len() {self.face+=1;self.cursor=0;}}}
             },
             13=>{
                 if let Some((id,Some((prev,next))))=self.neighbors.pop_first() {if !self.preserve_corners && prev!=next && prev!=id && next!=id {let pos=|id:u32|Vec3(snapshot.soup.positions[id as usize]);let a=pos(id).sub(pos(prev));let b=pos(next).sub(pos(id));if a.length()>=1e-9 && b.length()>=1e-9 && a.normalize().dot(b.normalize())>1.0-1e-4 {self.removable.insert(id);}}}
@@ -1187,16 +1213,16 @@ impl Coplanar {
 }
 
 struct Merge {
-    snapshot:Snapshot,coplanar:Option<Coplanar>,input:Vec<VertexId>,selected:Vec<u32>,seen:HashSet<u32>,mode:WeldMode,threshold:f32,
-    roots:Vec<usize>,remap:Vec<u32>,soup:Soup,corners:Vec<u32>,unique:HashMap<u32,usize>,center:[f64;3],
+    snapshot:Snapshot,coplanar:Option<Coplanar>,input:Vec<VertexId>,selected:Vec<u32>,seen:HistoryFoldSet<u32>,mode:WeldMode,threshold:f32,
+    roots:Vec<usize>,remap:Vec<u32>,soup:Soup,corners:Vec<u32>,unique:HistoryFoldIndex<u32,usize>,center:[f64;3],
     cursor:usize,i:usize,j:usize,a:usize,b:usize,face:usize,corner:usize,build:Option<Build>,phase:u8,
-    quantized:bool,grid:BTreeMap<(i64,i64,i64),u32>,contributors:Vec<Vec<u32>>,source_corners:HashMap<(u32,u32),u32>,
+    quantized:bool,grid:HistoryFoldIndex<(i64,i64,i64),u32>,contributors:Vec<Vec<u32>>,source_corners:HistoryFoldIndex<(u32,u32),u32>,
     corner_origins:Vec<Option<u32>>,edge_origins:Vec<Option<u32>>,output_corners:Vec<Option<u32>>,output_edges:Vec<Option<u32>>,output_faces:Vec<u32>,attributes:Option<SourceAttributeRemap>,removed:usize,
 }
 
 impl Merge {
     fn new(source:HalfedgeMesh,coplanar:Option<Coplanar>,input:Vec<VertexId>,mode:WeldMode,threshold:f32,quantized:bool)->Self {
-        Self {snapshot:Snapshot::new(source),coplanar,input,selected:Vec::new(),seen:HashSet::new(),mode,threshold,roots:Vec::new(),remap:Vec::new(),soup:Soup::default(),corners:Vec::new(),unique:HashMap::new(),center:[0.0;3],cursor:0,i:1,j:0,a:0,b:0,face:0,corner:0,build:None,phase:if quantized {1}else {0},quantized,grid:BTreeMap::new(),contributors:Vec::new(),source_corners:HashMap::new(),corner_origins:Vec::new(),edge_origins:Vec::new(),output_corners:Vec::new(),output_edges:Vec::new(),output_faces:Vec::new(),attributes:None,removed:0}
+        Self {snapshot:Snapshot::new(source),coplanar,input,selected:Vec::new(),seen:HistoryFoldSet::new(),mode,threshold,roots:Vec::new(),remap:Vec::new(),soup:Soup::default(),corners:Vec::new(),unique:HistoryFoldIndex::new(),center:[0.0;3],cursor:0,i:1,j:0,a:0,b:0,face:0,corner:0,build:None,phase:if quantized {1}else {0},quantized,grid:HistoryFoldIndex::new(),contributors:Vec::new(),source_corners:HistoryFoldIndex::new(),corner_origins:Vec::new(),edge_origins:Vec::new(),output_corners:Vec::new(),output_edges:Vec::new(),output_faces:Vec::new(),attributes:None,removed:0}
     }
     fn phase(&self)->&'static str {if let Some(work)=&self.coplanar {return work.phase();}match self.phase {0=>"merge-selection",1=>"snapshot",2..=4=>"merge-pairs",5..=7=>"merge-remap",8..=10=>"merge-corners",11=>"merge-reconstruct",12=>"merge-source-corners",13=>"merge-contributors",14=>"weld-grid",15=>"merge-vertex-provenance",16=>"merge-face-metadata",_=>"merge-attributes"}}
     fn next_pair(&mut self) {self.j+=1;if self.j==self.i {self.i+=1;self.j=0;}self.phase=2;}
@@ -1333,11 +1359,11 @@ struct SourceAttributeRemap {
     corner_faces:Option<Vec<u32>>,
     generated_vertices:Option<Vec<SourceVertex>>,generated_faces:Option<Vec<Vec<u32>>>,corner_sources:Option<Vec<Option<u32>>>,edge_sources:Option<Vec<Option<u32>>>,edge_source_keys:Option<Vec<(u32,u32)>>,
     face_values_base:usize,
-    influence:Option<SourceVertex>,influence_face:u32,influence_vertex:u32,weight_cursor:usize,weight_next:u32,weight_start:u32,sum:[f64;16],width:usize,total:f64,best:Option<(u32,f64,u32)>,constant:Option<u32>,equality:Option<SourceValueEquality>,numeric_samples:BTreeMap<(u32,u32),u32>,
-    mesh:HalfedgeMesh,vertices:Option<Vec<u32>>,faces:Option<Vec<u32>>,mirrored_faces:Option<Vec<bool>>,normal_axis:Option<usize>,corners:HashMap<(u32,u32),u32>,name:Option<String>,indices:Vec<u32>,normal_values:Vec<protocol::value::DslValue>,normal_samples:BTreeMap<(u32,bool),u32>,cursor:usize,phase:u8,
+    influence:Option<SourceVertex>,influence_face:u32,influence_vertex:u32,weight_cursor:usize,weight_next:u32,weight_start:u32,sum:[f64;16],width:usize,total:f64,best:Option<(u32,f64,u32)>,constant:Option<u32>,equality:Option<SourceValueEquality>,numeric_samples:HistoryFoldIndex<(u32,u32),u32>,
+    mesh:HalfedgeMesh,vertices:Option<Vec<u32>>,faces:Option<Vec<u32>>,mirrored_faces:Option<Vec<bool>>,normal_axis:Option<usize>,corners:HistoryFoldIndex<(u32,u32),u32>,name:Option<String>,indices:Vec<u32>,normal_values:Vec<protocol::value::DslValue>,normal_samples:HistoryFoldIndex<(u32,bool),u32>,cursor:usize,phase:u8,
 }
 impl SourceAttributeRemap {
-    fn new(mesh:HalfedgeMesh,vertices:Option<Vec<u32>>,faces:Option<Vec<u32>>,mirrored_faces:Option<Vec<bool>>,normal_axis:Option<usize>)->Self {Self {vertex_contributors:None,corner_faces:None,generated_vertices:None,generated_faces:None,corner_sources:None,edge_sources:None,edge_source_keys:None,face_values_base:0,influence:None,influence_face:0,influence_vertex:0,weight_cursor:0,weight_next:0,weight_start:0,sum:[0.0;16],width:0,total:0.0,best:None,constant:None,equality:None,numeric_samples:BTreeMap::new(),mesh,vertices,faces,mirrored_faces,normal_axis,corners:HashMap::new(),name:None,indices:Vec::new(),normal_values:Vec::new(),normal_samples:BTreeMap::new(),cursor:0,phase:0}}
+    fn new(mesh:HalfedgeMesh,vertices:Option<Vec<u32>>,faces:Option<Vec<u32>>,mirrored_faces:Option<Vec<bool>>,normal_axis:Option<usize>)->Self {Self {vertex_contributors:None,corner_faces:None,generated_vertices:None,generated_faces:None,corner_sources:None,edge_sources:None,edge_source_keys:None,face_values_base:0,influence:None,influence_face:0,influence_vertex:0,weight_cursor:0,weight_next:0,weight_start:0,sum:[0.0;16],width:0,total:0.0,best:None,constant:None,equality:None,numeric_samples:HistoryFoldIndex::new(),mesh,vertices,faces,mirrored_faces,normal_axis,corners:HistoryFoldIndex::new(),name:None,indices:Vec::new(),normal_values:Vec::new(),normal_samples:HistoryFoldIndex::new(),cursor:0,phase:0}}
     fn advance(&mut self,source:&mut HalfedgeMesh)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             0=>{
@@ -1564,9 +1590,9 @@ struct Build {
     origin_vertices:Vec<u32>,
     soup: Soup,
     mesh: HalfedgeMesh,
-    used: HashSet<u32>,
-    remap: HashMap<u32, u32>,
-    edges: HashMap<(u32, u32), u32>,
+    used: HistoryFoldSet<u32>,
+    remap: HistoryFoldIndex<u32, u32>,
+    edges: HistoryFoldIndex<(u32, u32), u32>,
     face: usize,
     corner: usize,
     vertex: usize,
@@ -1580,7 +1606,7 @@ struct Build {
 
 impl Build {
     fn new(soup: Soup, closed: bool) -> Self {
-        Self { origin_vertices:Vec::new(),soup, mesh: HalfedgeMesh::empty(), used: HashSet::new(), remap: HashMap::new(), edges: HashMap::new(), face: 0, corner: 0, vertex: 0, start: 0, normal: Normal::default(), phase: 0, closed, retain_unreferenced: false, admitted_corners: 0 }
+        Self { origin_vertices:Vec::new(),soup, mesh: HalfedgeMesh::empty(), used: HistoryFoldSet::new(), remap: HistoryFoldIndex::new(), edges: HistoryFoldIndex::new(), face: 0, corner: 0, vertex: 0, start: 0, normal: Normal::default(), phase: 0, closed, retain_unreferenced: false, admitted_corners: 0 }
     }
     fn unreferenced(soup: Soup) -> Self { let mut build = Self::new(soup,false); build.retain_unreferenced = true; build }
 
@@ -1674,7 +1700,7 @@ struct Bevel {
     face: usize,
     vertex: usize,
     edge: usize,
-    selected: HashSet<u32>,
+    selected: HistoryFoldSet<u32>,
     planes: Vec<(Vec3, f32)>,
     profile: Option<Profile>,
     clip: Option<Clip>,
@@ -1701,7 +1727,7 @@ struct Profile {
 
 impl Bevel {
     fn new(source: HalfedgeMesh, edges: Vec<EdgeId>, amount: f32, segments: u32) -> Self {
-        Self {retain_channels:!source.attributes.is_empty() || !source.uv_seams.is_empty(),attributes:None,snapshot: Snapshot::new(source), edges, amount, segments, extent: 0.0, epsilon: 0.0, face: 0, vertex: 0, edge: 0, selected: HashSet::new(), planes: Vec::new(), profile: None, clip: None, build: None, phase: 0 }
+        Self {retain_channels:!source.attributes.is_empty() || !source.uv_seams.is_empty(),attributes:None,snapshot: Snapshot::new(source), edges, amount, segments, extent: 0.0, epsilon: 0.0, face: 0, vertex: 0, edge: 0, selected: HistoryFoldSet::new(), planes: Vec::new(), profile: None, clip: None, build: None, phase: 0 }
     }
 
     fn phase(&self) -> &'static str {
@@ -1823,8 +1849,8 @@ struct Clip {
     normal: Vec3,
     distance: f32,
     epsilon: f32,
-    intersections: HashMap<(u32, u32), u32>,
-    cap: BTreeSet<u32>,
+    intersections: HistoryFoldIndex<(u32, u32), u32>,
+    cap: HistoryFoldSet<u32>,
     cap_ids: Vec<u32>,
     clipped: Vec<Vec<u32>>,
     corners: Vec<u32>,
@@ -1836,7 +1862,7 @@ struct Clip {
     source_faces:Vec<u32>,
     corner_faces:Vec<u32>,
     face_weights:Vec<Vec<u32>>,
-    cap_owners:BTreeMap<u32,u32>,
+    cap_owners:HistoryFoldIndex<u32,u32>,
     cap_weights:Vec<u32>,
     source_vertices:usize,
     cursor:usize,
@@ -1845,7 +1871,7 @@ struct Clip {
 
 impl Clip {
     fn new(normal: Vec3, distance: f32, epsilon: f32) -> Self {
-        Self { normal, distance, epsilon, intersections: HashMap::new(), cap: BTreeSet::new(), cap_ids: Vec::new(), clipped: Vec::new(), corners: Vec::new(), sorted: BinaryHeap::new(), center: Vec3::ZERO, face: 0, corner: 0,vertex_sources:Vec::new(),source_faces:Vec::new(),corner_faces:Vec::new(),face_weights:Vec::new(),cap_owners:BTreeMap::new(),cap_weights:Vec::new(),source_vertices:0,cursor:0,phase:6 }
+        Self { normal, distance, epsilon, intersections: HistoryFoldIndex::new(), cap: HistoryFoldSet::new(), cap_ids: Vec::new(), clipped: Vec::new(), corners: Vec::new(), sorted: BinaryHeap::new(), center: Vec3::ZERO, face: 0, corner: 0,vertex_sources:Vec::new(),source_faces:Vec::new(),corner_faces:Vec::new(),face_weights:Vec::new(),cap_owners:HistoryFoldIndex::new(),cap_weights:Vec::new(),source_vertices:0,cursor:0,phase:6 }
     }
 
     fn advance(&mut self, soup: &mut Soup) -> MeshResult<bool> {
@@ -1861,7 +1887,7 @@ impl Clip {
                     let db = Vec3(soup.positions[b as usize]).dot(self.normal) - self.distance;
                     if da <= self.epsilon {
                         if self.corners.last() != Some(&a) { self.corners.push(a); }
-                        if da.abs()<=self.epsilon {self.cap.insert(a);self.cap_owners.entry(a).or_insert(self.face as u32);}
+                        if da.abs()<=self.epsilon {self.cap.insert(a);self.cap_owners.entry(a).or_insert_with(||self.face as u32);}
                     }
                     if (da > self.epsilon && db < -self.epsilon) || (da < -self.epsilon && db > self.epsilon) {
                         let id = *self.intersections.entry((a.min(b), a.max(b))).or_insert_with(|| {
@@ -1871,7 +1897,7 @@ impl Clip {
                             id
                         });
                         if self.corners.last() != Some(&id) { self.corners.push(id); }
-                        self.cap.insert(id);self.cap_owners.entry(id).or_insert(self.face as u32);
+                        self.cap.insert(id);self.cap_owners.entry(id).or_insert_with(||self.face as u32);
                     }
                     self.corner += 1;
                     if self.corner == face.len() {
@@ -1926,7 +1952,7 @@ struct Decimate {
     snapshot: Snapshot,
     target: usize,
     closed: bool,
-    edges: HashSet<(u32, u32)>,
+    edges: HistoryFoldSet<(u32, u32)>,
     ranked: BinaryHeap<Reverse<Ranked>>,
     candidate: Option<Candidate>,
     build: Option<Build>,
@@ -1941,7 +1967,7 @@ struct Decimate {
 
 impl Decimate {
     fn new(source: HalfedgeMesh, target: usize) -> Self {
-        Self { snapshot: Snapshot::new(source), target, closed: true, edges: HashSet::new(), ranked: BinaryHeap::new(), candidate: None, build: None, face: 0, corner: 0, source_faces:Vec::new(),edge_sources:Vec::new(),collapse:(0,0),attributes:None,phase: 0 }
+        Self { snapshot: Snapshot::new(source), target, closed: true, edges: HistoryFoldSet::new(), ranked: BinaryHeap::new(), candidate: None, build: None, face: 0, corner: 0, source_faces:Vec::new(),edge_sources:Vec::new(),collapse:(0,0),attributes:None,phase: 0 }
     }
 
     fn phase(&self) -> &'static str {
@@ -2008,10 +2034,10 @@ struct Candidate {
     corner_sources:Vec<(u32,u32)>,
     edge_sources:Vec<(u32,u32)>,
     face_sources:Vec<u32>,
-    seen: HashMap<u32, usize>,
+    seen: HistoryFoldIndex<u32, usize>,
     normal: Normal,
-    incidence: BTreeMap<(u32, u32), (usize, i32)>,
-    links: HashMap<u32, u32>,
+    incidence: HistoryFoldIndex<(u32, u32), (usize, i32)>,
+    links: HistoryFoldIndex<u32, u32>,
     face: usize,
     corner: usize,
     vertex: usize,
@@ -2022,7 +2048,7 @@ struct Candidate {
 
 impl Candidate {
     fn new(a: u32, b: u32) -> Self {
-        Self { a, b, soup: Soup::default(), corners: Vec::new(),corner_sources:Vec::new(),edge_sources:Vec::new(),face_sources:Vec::new(), seen: HashMap::new(), normal: Normal::default(), incidence: BTreeMap::new(), links: HashMap::new(), face: 0, corner: 0, vertex: 0, start: None, cursor: 0, phase: 0 }
+        Self { a, b, soup: Soup::default(), corners: Vec::new(),corner_sources:Vec::new(),edge_sources:Vec::new(),face_sources:Vec::new(), seen: HistoryFoldIndex::new(), normal: Normal::default(), incidence: HistoryFoldIndex::new(), links: HistoryFoldIndex::new(), face: 0, corner: 0, vertex: 0, start: None, cursor: 0, phase: 0 }
     }
 
     fn advance(&mut self, source: &Soup, closed: bool) -> MeshResult<CandidateStep> {
@@ -2118,8 +2144,8 @@ impl protocol::value::retirement::RetireOwned for Transform {
     fn controlled_retirement_supported()->bool {true}
 }
 impl protocol::value::retirement::RetireOwned for Knife {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.snapshot),protocol::value::retirement::deferred(self.distances),protocol::value::retirement::deferred(self.tessellation),protocol::value::retirement::deferred(self.transfer),protocol::value::retirement::deferred(self.pieces),protocol::value::retirement::deferred(self.split),protocol::value::retirement::deferred(self.intersections),protocol::value::retirement::deferred(self.soup),protocol::value::retirement::deferred(self.corners),protocol::value::retirement::deferred(self.build),protocol::value::retirement::deferred(self.vertex_sources),protocol::value::retirement::deferred(self.source_faces),protocol::value::retirement::deferred(self.attributes)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.snapshot),protocol::value::retirement::deferred_birth_bytes_for(&self.distances),protocol::value::retirement::deferred_birth_bytes_for(&self.tessellation),protocol::value::retirement::deferred_birth_bytes_for(&self.transfer),protocol::value::retirement::deferred_birth_bytes_for(&self.pieces),protocol::value::retirement::deferred_birth_bytes_for(&self.split),protocol::value::retirement::deferred_birth_bytes_for(&self.intersections),protocol::value::retirement::deferred_birth_bytes_for(&self.soup),protocol::value::retirement::deferred_birth_bytes_for(&self.corners),protocol::value::retirement::deferred_birth_bytes_for(&self.build),protocol::value::retirement::deferred_birth_bytes_for(&self.vertex_sources),protocol::value::retirement::deferred_birth_bytes_for(&self.source_faces),protocol::value::retirement::deferred_birth_bytes_for(&self.attributes)])}
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.snapshot),protocol::value::retirement::deferred(self.distances),protocol::value::retirement::deferred(self.tessellation),protocol::value::retirement::deferred(self.tessellation_retirement),protocol::value::retirement::deferred(self.transfer),protocol::value::retirement::deferred(self.pieces),protocol::value::retirement::deferred(self.split),protocol::value::retirement::deferred(self.intersections),protocol::value::retirement::deferred(self.soup),protocol::value::retirement::deferred(self.corners),protocol::value::retirement::deferred(self.build),protocol::value::retirement::deferred(self.vertex_sources),protocol::value::retirement::deferred(self.source_faces),protocol::value::retirement::deferred(self.attributes)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.snapshot),protocol::value::retirement::deferred_birth_bytes_for(&self.distances),protocol::value::retirement::deferred_birth_bytes_for(&self.tessellation),protocol::value::retirement::deferred_birth_bytes_for(&self.tessellation_retirement),protocol::value::retirement::deferred_birth_bytes_for(&self.transfer),protocol::value::retirement::deferred_birth_bytes_for(&self.pieces),protocol::value::retirement::deferred_birth_bytes_for(&self.split),protocol::value::retirement::deferred_birth_bytes_for(&self.intersections),protocol::value::retirement::deferred_birth_bytes_for(&self.soup),protocol::value::retirement::deferred_birth_bytes_for(&self.corners),protocol::value::retirement::deferred_birth_bytes_for(&self.build),protocol::value::retirement::deferred_birth_bytes_for(&self.vertex_sources),protocol::value::retirement::deferred_birth_bytes_for(&self.source_faces),protocol::value::retirement::deferred_birth_bytes_for(&self.attributes)])}
     fn controlled_retirement_supported()->bool {true}
 }
 impl protocol::value::retirement::RetireOwned for Import {
@@ -2153,8 +2179,8 @@ impl protocol::value::retirement::RetireOwned for Mirror {
     fn controlled_retirement_supported()->bool {true}
 }
 impl protocol::value::retirement::RetireOwned for Subdivide {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.snapshot),protocol::value::retirement::deferred(self.input),protocol::value::retirement::deferred(self.selected),protocol::value::retirement::deferred(self.concave),protocol::value::retirement::deferred(self.tessellation),protocol::value::retirement::deferred(self.transfer),protocol::value::retirement::deferred(self.soup),protocol::value::retirement::deferred(self.corners),protocol::value::retirement::deferred(self.build),protocol::value::retirement::deferred(self.vertex_sources),protocol::value::retirement::deferred(self.source_faces),protocol::value::retirement::deferred(self.attributes)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.snapshot),protocol::value::retirement::deferred_birth_bytes_for(&self.input),protocol::value::retirement::deferred_birth_bytes_for(&self.selected),protocol::value::retirement::deferred_birth_bytes_for(&self.concave),protocol::value::retirement::deferred_birth_bytes_for(&self.tessellation),protocol::value::retirement::deferred_birth_bytes_for(&self.transfer),protocol::value::retirement::deferred_birth_bytes_for(&self.soup),protocol::value::retirement::deferred_birth_bytes_for(&self.corners),protocol::value::retirement::deferred_birth_bytes_for(&self.build),protocol::value::retirement::deferred_birth_bytes_for(&self.vertex_sources),protocol::value::retirement::deferred_birth_bytes_for(&self.source_faces),protocol::value::retirement::deferred_birth_bytes_for(&self.attributes)])}
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.snapshot),protocol::value::retirement::deferred(self.input),protocol::value::retirement::deferred(self.selected),protocol::value::retirement::deferred(self.concave),protocol::value::retirement::deferred(self.tessellation),protocol::value::retirement::deferred(self.tessellation_retirement),protocol::value::retirement::deferred(self.transfer),protocol::value::retirement::deferred(self.soup),protocol::value::retirement::deferred(self.corners),protocol::value::retirement::deferred(self.build),protocol::value::retirement::deferred(self.vertex_sources),protocol::value::retirement::deferred(self.source_faces),protocol::value::retirement::deferred(self.attributes)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.snapshot),protocol::value::retirement::deferred_birth_bytes_for(&self.input),protocol::value::retirement::deferred_birth_bytes_for(&self.selected),protocol::value::retirement::deferred_birth_bytes_for(&self.concave),protocol::value::retirement::deferred_birth_bytes_for(&self.tessellation),protocol::value::retirement::deferred_birth_bytes_for(&self.tessellation_retirement),protocol::value::retirement::deferred_birth_bytes_for(&self.transfer),protocol::value::retirement::deferred_birth_bytes_for(&self.soup),protocol::value::retirement::deferred_birth_bytes_for(&self.corners),protocol::value::retirement::deferred_birth_bytes_for(&self.build),protocol::value::retirement::deferred_birth_bytes_for(&self.vertex_sources),protocol::value::retirement::deferred_birth_bytes_for(&self.source_faces),protocol::value::retirement::deferred_birth_bytes_for(&self.attributes)])}
     fn controlled_retirement_supported()->bool {true}
 }
 impl protocol::value::retirement::RetireOwned for Coplanar {

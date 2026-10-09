@@ -1,0 +1,12 @@
+{
+  "routes": [
+    "document",
+    "member",
+    "supersede"
+  ],
+  "authority": "same-caller",
+  "receipt": "same-original",
+  "commitWithoutAuthority": false,
+  "previewNeedsAuthority": false,
+  "newAuthority": false
+}

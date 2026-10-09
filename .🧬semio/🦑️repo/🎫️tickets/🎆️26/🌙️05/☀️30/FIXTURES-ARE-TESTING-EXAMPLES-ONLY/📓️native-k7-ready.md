@@ -1,0 +1,15 @@
+# Current Native K7 Consumer Cut
+
+Original Kernel k7 session29580 ended Nx1/Cargo101 with212 located errors and no native assertions. Its normalized native partition contains19 original diagnostics across SnapshotSQLite, DurableGroup, MemberOpen and Hydration tests. Fresh sources use genuine supplied native owners, current four-argument decode callback, funded SharedUtf8 admission and original physical backing observers. Hydration concurrent actor repairs and Snapshot earlier concurrent owner/parameter repairs are observer-only.
+
+Own narrow changes are recorded in action inputs listed by 📥️native-k7-ready.json. The semantic unit callback now preflights its actual Option<()> assignment against the body wallet and records that structural receipt after retaining the output. It creates no payload capacity. Original native control and cancellation recipient stay supplied. Member request law retains original String pointer/capacity through separately paid SharedUtf8 lease and backing release. Its positive policy is fixed plain1item/4096copy/0capacity/262144release/depth64. Original negative undergrants and System byte equality remain; this epoch native law is unrun.
+
+The two catalog constructor laws now use the existing independent physical test policy for positive admission and cleanup. Original one-below denial, callback count, pointer identity and System allocated/freed equality assertions remain. Their native assertions are unrun.
+
+Focused original-source renewal87970 ended Nx0/1.6s:7 selected laws,104 assertions, then unchanged independent structural-depth law612 assertions. It executed original Source, canonical per-grant Ajv, Buffer/TextEncoder/JSONPatch oracles and original two-second Rust grammar checks. Exact log 🗑️generated/native-k7-ready-source.log. Prior source REDs and mutation ledgers remain retained; none is compiler/runtime evidence.
+
+This finite cut is ready for next original Kernel diagnostic acquisition and can be held during it. No native producer is active in this lane. Existing scalar payload allowance in History test cleanup drivers, cold typed Pack decode admission and cumulative public body/whole-turn receipts remain separate outstanding work. Whole-file current hashes are observations, not authorship of concurrent edits.
+
+During Root k8 acquisition, Low observed6/7 hashes matching and one fresh MemberOpen unit Rust drift. A separate read-only current observer is retained in 📥️native-k8-observer-drift.json. The original ready observation remains historical; no Source restoration, adoption, or native credit follows.
+
+Root reports original k8 Kernel lib-test compilation finished with zero compiler errors and2187 warnings. Nextest then refused selection/reporting arguments because of command framing, so no native assertions ran. Root owns an immediate corrected-framing retry of the same29 tests; seven finite own Source blocks remain held. The compiler positive is qualified by the acquisition drift observer and an ENOSPC rust-objcopy warning, and does not establish runtime/physical closure.

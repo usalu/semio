@@ -1,0 +1,11 @@
+# Bootstrap Discovery Ordering
+
+Root package `nx` script routes Bun Nx to the permanent bootstrap script. For the ordinary main path334, publishBootstrapSources precedes ScriptRouter NxScript.run, provisioning/activation and actual Nx child spawn185. `bun run nx` uses that script; current launch commands `bun nx ...` use the repository alias. This is source routing evidence, not newly executed Bun command equivalence. Direct node Nx CLI bypasses publisher; importing/invoking NxScript.run also bypasses main-only publication. The installed-dashboard recognized native commands branch does not call publisher and launches native dashboard instead of Nx core discovery; its later internal acquisitions are outside this bounded proof.
+
+Canonical publisher should run inside the defining NxScript acquisition before each Nx core/watch child spawn, or prove all direct/imported callers covered. Main-only invocation is insufficient to claim universal core admission. Preserve declared lazy publisher schema and expensive scan cancellation/progress. No current .nxignore publisher exists yet at inspected cut.
+
+Installed Python plugin exports only createDependencies, not createNodes. There is no demonstrated independent pyproject.toml admission in that installed plugin. Proven core basenames are ordinary project.json and package.json; Library additionally sees emoji project/Cargo.toml/bun.lock/patch candidates. Mask only actual discovery inputs according to their ownership; do not guess Python node admission.
+
+Requested installed ignore oracle confirms four manifest-only collection masks plus exact genuine module project-file reinclusion: exact file admitted, nested true collection rejected, module beneath an earlier true collection still rejected when not reincluded, sibling package remains rejected. Generate exceptions only when canonical predicate permits the full ancestry, not merely immediate module parent. Escape literal gitignore metacharacters in exact paths and prove native walker parity; preserve user section and concurrent freshness before atomic publication. Current original census has no module exceptions.
+
+No Source writes, Source copies, core graph discovery, builds or runtime acquisitions executed. Only pure in-memory ignore checks ran. Hashes are observer-only.

@@ -105,7 +105,7 @@ pub fn execute_chart_inference_controlled(request: &semio_framework_plugin::Arti
     };
     let canonical_payload = protocol::pack_rt::encode_wire_value(&inference.to_value());
     if canonical_payload.len() as u64 > request.budgets.allocation_bytes { return Err(Error::new("print.chart.inference.allocation", "output exceeds allocation budget")); }
-    Ok(ArtifactInferenceExecution { canonical_payload, diagnostics: Vec::new(), validity: if inference.complete{"valid"}else{"invalid"}.into(), quality: "exact".into(), complete: inference.complete, actual_cache_mode: WireArtifactInferenceCacheMode::Cold })
+    Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload, diagnostics: Vec::new(), validity: if inference.complete{"valid"}else{"invalid"}.into(), quality: "exact".into(), complete: inference.complete, actual_cache_mode: WireArtifactInferenceCacheMode::Cold })
 }
 
 #[cfg(test)]

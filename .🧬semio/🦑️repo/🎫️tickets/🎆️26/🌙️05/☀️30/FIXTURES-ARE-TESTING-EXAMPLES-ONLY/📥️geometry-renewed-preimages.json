@@ -1,0 +1,16 @@
+{
+  "observed": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/♻️ownership/🔣️.json",
+      "sha256": "54a8f482fce0635a2fb4807925a03a83655a449e692e9d96f82eaa8014b5a5dc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/🎟️work.json",
+      "sha256": "9ef7f7c87dc609f601f189b06ddeff1aec9f18a1cc9e86f8a034b36241ac0bdd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+      "sha256": "c2760a0fd73eec2457bd6000c7ee7ec4daaea9d3ba3c38842f4bf47be8185f25"
+    }
+  ]
+}

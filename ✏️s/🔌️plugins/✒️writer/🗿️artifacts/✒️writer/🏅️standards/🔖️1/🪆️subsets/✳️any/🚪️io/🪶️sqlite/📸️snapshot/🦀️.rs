@@ -8,8 +8,8 @@ fn document_cells(value:&WriterSnapshot)->[Cell<'_>;5]{[Cell::Text(&value.schema
 fn child_cells(value:&WriterSnapshot)->[Cell<'_>;6]{let child=&value.document;[Cell::Integer(1),Cell::Text(&child.child_id),Cell::Text(&child.target.artifact_id),Cell::Text(&child.target.dialect.artifact_kind),Cell::Text(&child.target.dialect.standard),Cell::Text(&child.target.dialect.subset)]}
 
 impl ArtifactSqliteSnapshot for WriterSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{native::decode(payload,control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io::IoPayload,ValueError>{native::encode(self,encoding,control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,control,native_control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   let mut bound=NativeEncodingBound::new(control)?;bound.add(8192)?;

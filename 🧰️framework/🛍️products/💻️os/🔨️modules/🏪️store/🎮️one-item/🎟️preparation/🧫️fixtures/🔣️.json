@@ -1,0 +1,131 @@
+{
+  "transferCases": [
+    {"grant":{"items":1,"copy":256,"capacity":8192,"release":0,"depth":2},"accepted":true},
+    {"grant":{"items":0,"copy":256,"capacity":8192,"release":0,"depth":2},"accepted":false},
+    {"grant":{"items":1,"copy":0,"capacity":8192,"release":0,"depth":2},"accepted":false},
+    {"grant":{"items":1,"copy":256,"capacity":0,"release":0,"depth":2},"accepted":false},
+    {"grant":{"items":1,"copy":256,"capacity":8192,"release":0,"depth":0},"accepted":false},
+    {"grant":{"items":1,"copy":256,"capacity":8192,"release":0,"depth":1},"accepted":false}
+  ],
+  "cases": [
+    {
+      "grant": {
+        "items": 1,
+        "copy": 17,
+        "capacity": 8192,
+        "release": 16384,
+        "depth": 4
+      },
+      "receipt": {
+        "items": 1,
+        "copy": 17,
+        "capacity": 8192,
+        "release": 16384
+      },
+      "requiredDepth": 1,
+      "accepted": true
+    },
+    {
+      "grant": {
+        "items": 1,
+        "copy": 17,
+        "capacity": 8192,
+        "release": 16384,
+        "depth": 4
+      },
+      "receipt": {
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0
+      },
+      "requiredDepth": 1,
+      "accepted": true
+    },
+    {
+      "grant": {
+        "items": 1,
+        "copy": 17,
+        "capacity": 8192,
+        "release": 16384,
+        "depth": 4
+      },
+      "receipt": {
+        "items": 2,
+        "copy": 17,
+        "capacity": 8192,
+        "release": 16384
+      },
+      "requiredDepth": 1,
+      "accepted": false
+    },
+    {
+      "grant": {
+        "items": 1,
+        "copy": 17,
+        "capacity": 8192,
+        "release": 16384,
+        "depth": 4
+      },
+      "receipt": {
+        "items": 1,
+        "copy": 18,
+        "capacity": 8192,
+        "release": 16384
+      },
+      "requiredDepth": 1,
+      "accepted": false
+    },
+    {
+      "grant": {
+        "items": 1,
+        "copy": 17,
+        "capacity": 8192,
+        "release": 16384,
+        "depth": 4
+      },
+      "receipt": {
+        "items": 1,
+        "copy": 17,
+        "capacity": 8193,
+        "release": 16384
+      },
+      "requiredDepth": 1,
+      "accepted": false
+    },
+    {
+      "grant": {
+        "items": 1,
+        "copy": 17,
+        "capacity": 8192,
+        "release": 16384,
+        "depth": 4
+      },
+      "receipt": {
+        "items": 1,
+        "copy": 17,
+        "capacity": 8192,
+        "release": 16385
+      },
+      "requiredDepth": 1,
+      "accepted": false
+    },
+    {
+      "grant": {
+        "items": 1,
+        "copy": 17,
+        "capacity": 8192,
+        "release": 16384,
+        "depth": 0
+      },
+      "receipt": {
+        "items": 1,
+        "copy": 17,
+        "capacity": 8192,
+        "release": 16384
+      },
+      "requiredDepth": 1,
+      "accepted": false
+    }
+  ]
+}

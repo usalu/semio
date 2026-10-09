@@ -361,9 +361,10 @@ struct CopyState<R: Send + Sync + 'static, T: Copy> {
     result: Option<T>,
     retirement: Retirement,
     active_root_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
-    factory_close:Option<Box<dyn ErasedSnapshotRetirement>>,
+    factory_close:Option<Box<dyn semio_framework_value::retirement::factory::FactoryRetirementTicket>>,
     source: Option<Arc<R>>,
     root_retirement: Option<Arc<dyn SnapshotRetirementFactory<R>>>,
+    factory_source:Option<Arc<dyn semio_framework_value::FactoryRetirement>>,
     allocation: FlowCopyAllocationBudget,
     project: for<'a> fn(&'a R, usize) -> Option<&'a T>,
     index: usize,
@@ -378,7 +379,7 @@ struct CopyCursor<R: Send + Sync + 'static, T: Copy> { owned: ManuallyDrop<CopyS
 
 impl<R: Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
     fn new(source: Arc<R>, index: usize, project: for<'a> fn(&'a R, usize) -> Option<&'a T>, root_retirement: Arc<dyn SnapshotRetirementFactory<R>>, allocation: FlowCopyAllocationBudget) -> Self {
-        Self { owned: ManuallyDrop::new(CopyState { tasks: LinkedList::new(), result: None, retirement: Retirement::default(), active_root_retirement: None,factory_close:None, source: Some(source), root_retirement: Some(root_retirement), allocation, project, index, started: false, finished: false, failed: false, closing: false, stalled_steps: 0 }) }
+        Self { owned: ManuallyDrop::new(CopyState { tasks: LinkedList::new(), result: None, retirement: Retirement::default(), active_root_retirement: None,factory_close:None, source: Some(source), root_retirement: Some(root_retirement),factory_source:None, allocation, project, index, started: false, finished: false, failed: false, closing: false, stalled_steps: 0 }) }
     }
     fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Option<usize>, String> {
         let state = &mut *self.owned;
@@ -413,12 +414,13 @@ impl<R: Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
     fn begin_close(&mut self) { self.owned.closing = true; }
     fn terminal_is_empty(&self) -> bool {
         let state = &*self.owned;
-        state.closing && state.tasks.is_empty() && state.result.is_none() && state.retirement.terminal_is_empty() && state.active_root_retirement.is_none() && state.factory_close.is_none() && state.source.is_none() && state.root_retirement.is_none()
+        state.closing && state.tasks.is_empty() && state.result.is_none() && state.retirement.terminal_is_empty() && state.active_root_retirement.is_none() && state.factory_close.is_none() && state.source.is_none() && state.root_retirement.is_none() && state.factory_source.is_none()
     }
-    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){state.retirement.next_copy_byte_demand()}else{state.active_root_retirement.as_ref().or(state.factory_close.as_ref()).map_or(Ok(0),|owner|owner.next_copy_byte_demand())}}
-    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){return state.retirement.next_capacity_byte_demand(copy);}if let Some(owner)=state.active_root_retirement.as_ref().or(state.factory_close.as_ref()){return owner.next_capacity_byte_demand(copy);}Ok(if state.tasks.is_empty()&&state.result.is_none(){state.root_retirement.as_ref().map_or(0,|factory|state.source.as_ref().map_or_else(||factory.factory_retirement_birth_bytes(),|source|factory.retirement_birth_bytes(source)))}else{0})}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){state.retirement.next_release_byte_demand()}else{state.active_root_retirement.as_ref().or(state.factory_close.as_ref()).map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(size_of_val(owner.as_ref()))}else{owner.next_release_byte_demand()})}}
-    fn next_depth_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){state.retirement.next_depth_demand()}else{state.active_root_retirement.as_ref().or(state.factory_close.as_ref()).map_or(Ok(state.root_retirement.as_ref().filter(|_|state.tasks.is_empty()&&state.result.is_none()&&state.source.is_none()).map_or(usize::from(!self.terminal_is_empty()),|factory|factory.factory_retirement_depth_demand())),|owner|owner.next_depth_demand())}}
+    fn close_owner(&self)->Option<&dyn ErasedSnapshotRetirement>{self.owned.active_root_retirement.as_deref().or_else(||self.owned.factory_close.as_deref().map(|owner|owner as &dyn ErasedSnapshotRetirement))}
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){return state.retirement.next_copy_byte_demand()}if let Some(owner)=self.close_owner(){return owner.next_copy_byte_demand()}Ok(state.factory_source.as_ref().map_or(0,|factory|factory.factory_retirement_copy_byte_demand()))}
+    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){return state.retirement.next_capacity_byte_demand(copy);}if let Some(owner)=self.close_owner(){return owner.next_capacity_byte_demand(copy);}Ok(if state.tasks.is_empty()&&state.result.is_none(){if let Some(factory)=state.factory_source.as_ref(){factory.factory_retirement_birth_bytes()}else{state.root_retirement.as_ref().map_or(0,|factory|state.source.as_ref().map_or(0,|source|factory.retirement_birth_bytes(source)))}}else{0})}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){return state.retirement.next_release_byte_demand()}self.close_owner().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(size_of_val(owner))}else{owner.next_release_byte_demand()})}
+    fn next_depth_demand(&self)->Result<usize,ValueError> {let state=&*self.owned;if !state.retirement.terminal_is_empty(){return state.retirement.next_depth_demand()}self.close_owner().map_or(Ok(state.factory_source.as_ref().map_or(usize::from(!self.terminal_is_empty()),|factory|factory.factory_retirement_depth_demand())),|owner|owner.next_depth_demand())}
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
@@ -441,7 +443,8 @@ impl<R: Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
             if active.terminal_is_empty(){let bytes=size_of_val(active.as_ref());state.factory_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));}
             let step=active.close_step(grant)?;let terminal=active.terminal_is_empty();let step=account(&mut state.stalled_steps,grant,step,terminal,"selected Flow factory retirement")?;return Ok(if matches!(step,RetainedCloneStep::Complete(_)){RetainedCloneStep::Progress(step.progress())}else{step});
         }
-        else if let Some(factory)=state.root_retirement.take(){match factory.preborn_factory_retirement(grant){Ok((owner,progress))=>{state.factory_close=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow factory retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err((error,factory))=>{state.root_retirement=Some(factory);return Err(error);}}}
+        else if let Some(factory)=state.root_retirement.take(){state.factory_source=Some(factory);}
+        else if let Some(factory)=state.factory_source.take(){match factory.preborn_factory_retirement(grant){Ok((owner,progress))=>{state.factory_close=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow factory retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err(rejected)=>{state.factory_source=rejected.original;state.factory_close=rejected.ticket;return Err(rejected.error.with_retained_progress(rejected.progress));}}}
         else{return Ok(RetainedCloneStep::Complete(empty));}
         state.stalled_steps=0;
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}))

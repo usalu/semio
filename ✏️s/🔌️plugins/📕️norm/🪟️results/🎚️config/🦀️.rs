@@ -24,7 +24,7 @@ macro_rules! norm_results_window_config_owner {
             type State = $crate::results_window_config::NormResultsWindowConfig;
             type Mutation = $crate::results_window_config::NormResultsWindowConfigMutation;
 
-            fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> {
+            fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
                 semio_framework_plugin::bounded_window_config_store_owners::<Self>()
             }
 

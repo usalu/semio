@@ -2,7 +2,6 @@
 
 use semio_framework_value::paged::PagedUtf8;
 use crate::{DrawingImageAsset, DrawingLayerNode, DrawingSnapshot, FillStyle};
-use std::hash::Hasher;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(super) struct DrawingTextFootprint {
@@ -401,69 +400,19 @@ pub(super) struct DrawingDuplicateIdentityStep {
 }
 
 #[derive(Default)]
-pub(super) struct DrawingDuplicateIdentityCursor {
-    owners: Option<(usize, usize, usize)>,
-    hasher: Option<std::collections::hash_map::DefaultHasher>,
-    header: [u8; size_of::<usize>()],
-    chunk: usize,
-    offset: usize,
-    phase: u8,
-    output: [u8; 22],
-}
-
+pub(super) struct DrawingDuplicateIdentityCursor {owner:Option<usize>,chunk:usize,offset:usize,complete:bool,closed:bool}
 impl DrawingDuplicateIdentityCursor {
-    /// 🧷️ The caller retains both exact immutable input fields until completion or close.
-    pub(super) fn step<const N: usize>(&mut self, source: &PagedUtf8<N>, suffix: &str, maximum_items: usize, maximum_bytes: usize) -> Result<DrawingDuplicateIdentityStep, &'static str> {
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(DrawingDuplicateIdentityStep::default()); }
-        if self.phase == 6 { return Err("drawing-store.duplicate-identity-closed"); }
-        let owners = (source as *const _ as usize, suffix.as_ptr() as usize, suffix.len());
-        if self.owners.is_some_and(|held| held != owners) { return Err("drawing-store.duplicate-identity-owner-changed"); }
-        if self.phase == 0 {
-            self.owners = Some(owners);
-            self.header = source.len().checked_add(suffix.len()).ok_or("drawing-store.duplicate-identity-length-overflow")?.to_ne_bytes();
-            self.hasher = Some(std::collections::hash_map::DefaultHasher::new());
-            self.phase = 1;
-            return Ok(DrawingDuplicateIdentityStep::default());
-        }
-        if self.phase == 5 { return Ok(DrawingDuplicateIdentityStep { complete: true, observed_bytes: 0 }); }
-        if self.phase == 4 {
-            let hash = self.hasher.take().ok_or("drawing-store.duplicate-identity-hasher-missing")?.finish();
-            self.output[..6].copy_from_slice(b"layer-");
-            const HEX: &[u8; 16] = b"0123456789abcdef";
-            for index in 0..16 { self.output[6 + index] = HEX[((hash >> ((15 - index) * 4)) & 15) as usize]; }
-            self.phase = 5;
-            return Ok(DrawingDuplicateIdentityStep { complete: true, observed_bytes: 0 });
-        }
-        let bytes = match self.phase {
-            1 => &self.header[..],
-            2 => {
-                let Some(chunk) = source.retained_chunks().get(self.chunk) else { self.offset = 0; self.phase = 3; return Ok(DrawingDuplicateIdentityStep::default()); };
-                chunk.as_bytes()
-            }
-            3 => suffix.as_bytes(),
-            _ => return Err("drawing-store.duplicate-identity-phase"),
-        };
-        if self.offset == bytes.len() {
-            self.offset = 0;
-            if self.phase == 2 { self.chunk += 1; } else { self.phase += 1; }
-            return Ok(DrawingDuplicateIdentityStep::default());
-        }
-        let end = bytes.len().min(self.offset.saturating_add(maximum_bytes));
-        self.hasher.as_mut().ok_or("drawing-store.duplicate-identity-hasher-missing")?.write(&bytes[self.offset..end]);
-        let observed_bytes = end - self.offset;
-        self.offset = end;
-        Ok(DrawingDuplicateIdentityStep { complete: false, observed_bytes })
+    /// 🧷️ Reads an exact immutable admitted target field without hashing or spelling it.
+    pub(super) fn step<const N:usize>(&mut self,target:&PagedUtf8<N>,maximum_items:usize,maximum_bytes:usize)->Result<DrawingDuplicateIdentityStep,&'static str>{
+      if maximum_items==0||maximum_bytes==0{return Ok(Default::default());}if self.closed{return Err("drawing-store.duplicate-identity-closed");}
+      let owner=target as *const _ as usize;if self.owner.is_some_and(|held|held!=owner){return Err("drawing-store.duplicate-identity-owner-changed");}self.owner=Some(owner);
+      if self.complete{return Ok(DrawingDuplicateIdentityStep{complete:true,observed_bytes:0});}
+      let Some(chunk)=target.retained_chunks().get(self.chunk)else{self.complete=true;return Ok(DrawingDuplicateIdentityStep{complete:true,observed_bytes:0});};
+      let end=chunk.len().min(self.offset.saturating_add(maximum_bytes));let observed_bytes=end-self.offset;self.offset=end;if self.offset==chunk.len(){self.chunk+=1;self.offset=0;}Ok(DrawingDuplicateIdentityStep{complete:false,observed_bytes})
     }
-
-    pub(super) fn identity(&self) -> Option<&str> { (self.phase == 5).then(|| std::str::from_utf8(&self.output).expect("Drawing duplicate identity is fixed ASCII")) }
-
-    pub(super) fn close_step(&mut self, maximum_items: usize) -> bool {
-        if maximum_items == 0 { return self.terminal_is_empty(); }
-        self.owners = None; self.hasher = None; self.header = [0; size_of::<usize>()]; self.chunk = 0; self.offset = 0; self.output = [0; 22]; self.phase = 6;
-        true
-    }
-
-    pub(super) fn terminal_is_empty(&self) -> bool { self.owners.is_none() && self.hasher.is_none() && self.header == [0; size_of::<usize>()] && self.chunk == 0 && self.offset == 0 && self.output == [0; 22] }
+    pub(super) fn identity<'a,const N:usize>(&self,target:&'a PagedUtf8<N>)->Option<&'a PagedUtf8<N>>{(self.complete&&self.owner==Some(target as *const _ as usize)).then_some(target)}
+    pub(super) fn close_step(&mut self,maximum_items:usize)->bool{if maximum_items==0{return self.terminal_is_empty();}self.owner=None;self.chunk=0;self.offset=0;self.complete=false;self.closed=true;true}
+    pub(super) fn terminal_is_empty(&self)->bool{self.owner.is_none()&&self.chunk==0&&self.offset==0&&!self.complete}
 }
 
 #[cfg(test)]

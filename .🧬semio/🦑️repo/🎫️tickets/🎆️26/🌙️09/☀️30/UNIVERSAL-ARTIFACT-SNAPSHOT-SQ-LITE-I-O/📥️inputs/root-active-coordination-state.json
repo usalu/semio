@@ -555,7 +555,7 @@
       "runId": "752622b6-ba07-40a0-9a6d-afbbf2216ff2"
     }
   },
-  "recordedAt": "2026-10-08T18:41:18.242Z",
+  "recordedAt": "2026-10-09T11:54:46Z",
   "goalStatus": "active",
   "epw": {
     "source": {
@@ -2635,5 +2635,380 @@
     "field": "/nativeCodecs/9/protocolSourceSha256",
     "requires": "genuine current owning JPG Native receipt and selected guarded refresh",
     "report": "📓️semantic-independent-oct8-jpg-publication-source-digest-and-native-io-lineage.md"
+  },
+  "rootOct9BimCurrentSchema": {
+    "maps": 47,
+    "nativeFields": 49,
+    "tables": 93,
+    "maxColumns": 59,
+    "expectedRows": 3972,
+    "independentFloatShapeLaws": 1656,
+    "independentClosedBranchLaws": 906,
+    "ownedForeignKeys": 109,
+    "noBlobColumns": true,
+    "qualification": "Independent schema/role admission only; original Native pending"
+  },
+  "rootOct9BimSourceStrict": {
+    "session": 10022,
+    "pending": false,
+    "exitCode": 0,
+    "qualification": "Original strict package verification includes package script"
+  },
+  "rootOct9BimSourceRuntime": {
+    "session": 57260,
+    "pending": false,
+    "exitCode": 0,
+    "passed": 13,
+    "expects": 303,
+    "qualification": "Original package complete Source laws before final oracle strengthening"
+  },
+  "rootOct9BimPublicMissingBefore": {
+    "session": 66817,
+    "pending": false,
+    "exitCode": 1,
+    "hookHeld": true,
+    "qualification": "Compiler-only obsolete Playbook and shared Plugin216 errors; no BIM missing-capability runtime"
+  },
+  "rootOct9TimeTravelPrerequisite": {
+    "native": {
+      "session": 65805,
+      "exitCode": 0,
+      "passed": 1,
+      "skipped": 17
+    },
+    "source": {
+      "session": 93782,
+      "exitCode": 0,
+      "passed": 1,
+      "expects": 16
+    },
+    "qualification": "Scoped actual populated ReplayReport owner prerequisite only"
+  },
+  "rootCurrentUniversalGoalIncomplete": true,
+  "rootOct9BimOracleRuntime": {
+    "session": 7163,
+    "pending": false,
+    "exitCode": 0,
+    "passed": 1,
+    "filtered": 12,
+    "expects": 26,
+    "declaredFloatRoles": 184,
+    "populatedFloatRoles": 184,
+    "qualification": "Original Source-selected STDIO oracle/physical edit law; no Native or optional file-mode credit"
+  },
+  "rootOct9DagPrerequisite": {
+    "nativeSession": 50426,
+    "exitCode": 0,
+    "passed": 2,
+    "skipped": 69,
+    "ownerClosures": 51,
+    "sourceSession": 60970,
+    "sourcePassed": 8,
+    "sourceExpects": 170,
+    "qualification": "Original scoped physical ownership prerequisite; not universal public IO"
+  },
+  "rootOct9BimOracleFileMode": {
+    "session": 15239,
+    "pending": false,
+    "exitCode": 0,
+    "populatedWords": 4837,
+    "declaredFloatRoles": 184,
+    "populatedFloatRoles": 184,
+    "all47CollectionsRestored": true,
+    "qualification": "Original optional file-mode commands and independent SQLite; no Native public credit"
+  },
+  "rootOct9BimCountAuthority": {
+    "session": 53984,
+    "pending": false,
+    "exitCode": 0,
+    "changedPaths": 1,
+    "tables": 93,
+    "rows": 3972,
+    "qualification": "Retained independent witness digest only; counts unchanged"
+  },
+  "rootOct9BimOracleLaunch": {
+    "session": 76670,
+    "pending": false,
+    "exitCode": 130,
+    "seedOrders": [
+      206.1931,
+      206.1932
+    ],
+    "published": false,
+    "refusal": "/nativeCodecs/9/protocolSourceSha256"
+  },
+  "rootOct9GenerationPrerequisite": {
+    "sourceSession": 46061,
+    "sourceExitCode": 0,
+    "sourceChecks": 17,
+    "nativeSession": 96463,
+    "nativeExitCode": 0,
+    "nativePassed": 6,
+    "nativeSkipped": 8,
+    "ownerLaws": 4,
+    "qualification": "Original compiled per-root lease custody and physical conservation; no universal registered IO",
+    "after3": {
+      "session": 27533,
+      "pending": true,
+      "reason": "Added physical depth and work undergrant tests"
+    }
+  },
+  "rootOct9JpgPublication": {
+    "nativeBefore": {
+      "session": 39174,
+      "exitCode": 1,
+      "qualification": "Compiler-only Plugin283 errors; no JPG Nextest"
+    },
+    "independentOriginalOracle": {
+      "session": 86871,
+      "exitCode": 0,
+      "semanticTables": 6
+    },
+    "permanentRefresh": {
+      "session": 71785,
+      "pending": true,
+      "actualOuterAndInnerDispatchObserved": true
+    },
+    "guiSeedOrder": 900.05809481,
+    "published": false,
+    "manualDigestEdit": false
+  },
+  "rootOct9WindowPagedRegistry": {
+    "sourceSession": 51676,
+    "pending": true,
+    "nativeSelector": "window_config_paged_registry",
+    "guiSeedOrders": [
+      900.0366011,
+      900.0366012
+    ],
+    "wholeOwnerQualified": false
+  },
+  "rootSocketCurrent": {
+    "source": {
+      "session": 20397,
+      "exitCode": 0,
+      "laws": 4,
+      "expects": 126,
+      "strict": true,
+      "runtimeDebug": true
+    },
+    "native": {
+      "session": 67298,
+      "pending": true,
+      "beforeSession": 79646,
+      "beforeExitCode": 130,
+      "beforeAssertions": 0,
+      "beforeCompilerLeaseOnly": true
+    },
+    "productionDialect": "native.socket-grant.probe@1/*",
+    "nativeProviderMounted": true,
+    "publicTypedErasedLawsMounted": 4,
+    "wholePhysicalRetirementQualified": false
+  },
+  "rootGenerationLatest": {
+    "session": 34526,
+    "exitCode": 1,
+    "assertions": 0,
+    "compilerOnly": true,
+    "currentLawRequalificationRequired": true
+  },
+  "rootJpgPublicationLatest": {
+    "session": 71785,
+    "exitCode": 1,
+    "assertions": 0,
+    "compilerOnly": true,
+    "digestPublished": false
+  },
+  "rootFleetCurrent": {
+    "main": "gpt-6.1-sol/xhigh",
+    "execution": [
+      "native_owner_execution:gpt-6.1-sol/high",
+      "window_owner_execution:gpt-6.1-sol/high"
+    ],
+    "readOnly": "current_readonly_audit:gpt-6.1-sol/low",
+    "maximumConcurrent": 4
+  },
+  "rootUniversalComplete": false,
+  "rootSocketNativeCurrent": {
+    "previous": {
+      "session": 67298,
+      "exitCode": 1,
+      "assertions": 0,
+      "preparationSourceChanged": true
+    },
+    "latest": {
+      "session": 7471,
+      "exitCode": 1,
+      "assertions": 0,
+      "compilerOwner": "semio-framework-mesh-engine",
+      "compilerErrors": 2
+    }
+  },
+  "rootMeshNativePrerequisite": {
+    "actualOriginalGrantMounted": true,
+    "normalFrontierQuotedFromOriginalText": true,
+    "originalOwnerNativeSession": 69553,
+    "pending": true
+  },
+  "rootRequestedFleetConfiguration": {
+    "main": {
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "xhigh",
+      "observable": false
+    },
+    "high": [
+      "native_owner_execution",
+      "window_owner_execution"
+    ],
+    "low": [
+      "current_readonly_audit"
+    ],
+    "maxConcurrent": 4
+  },
+  "rootOct9MeshCurrent": {
+    "session": 69480,
+    "status": 0,
+    "tests": 1,
+    "skipped": 43,
+    "turns": 363,
+    "independent": "Serde",
+    "wholeOwnerQualified": false
+  },
+  "rootOct9SocketNativeCurrent": {
+    "session": 32673,
+    "pending": true,
+    "prior": {
+      "session": 78906,
+      "exitCode": 1,
+      "assertionsExecuted": 0,
+      "failure": "four intermediate Value receiving compiler errors, repaired before39947"
+    }
+  },
+  "universalComplete": false,
+  "rootOct9OriginalNativeReceiving": {
+    "session": 39947,
+    "exitCode": 0,
+    "laws": 2,
+    "passed": 2,
+    "skipped": 245,
+    "debugCases": 14,
+    "independentOracle": "Serde",
+    "scope": "original Value directional receiving bridge",
+    "guestRuntimeQualified": false
+  },
+  "rootOct9ViewportNative": {
+    "session": 37404,
+    "exitCode": 0,
+    "laws": 9,
+    "passed": 9,
+    "skipped": 0,
+    "scope": "original planar object canonical-tree prerequisite"
+  },
+  "rootOct9SurfaceNative": {
+    "session": 20987,
+    "exitCode": 0,
+    "laws": 7,
+    "passed": 7,
+    "skipped": 216,
+    "scope": "original Surface scene wire"
+  },
+  "rootOct9SocketSource": {
+    "session": 75440,
+    "exitCode": 0,
+    "laws": 6,
+    "expects": 169,
+    "strict": true,
+    "nativeIdentityQualified": false
+  },
+  "rootOct9ClipboardNativeCurrent": {
+    "session": 42231,
+    "pending": true,
+    "prior": {
+      "session": 77796,
+      "exitCode": 1,
+      "assertionsExecuted": 0,
+      "failure": "four intermediate Value receiving compiler errors, repaired before39947"
+    }
+  },
+  "rootOct9GuestOriginalGrant": {
+    "decodeOwnerMounted": true,
+    "encodeOwnerMounted": true,
+    "mcpForwarded": true,
+    "sameSqlControl": true,
+    "genericOriginalObserver": true,
+    "kernelDecodeOwnerLawExecuted": false,
+    "guestComponentRuntimeExecuted": false,
+    "guestDeniedRetirementQualified": false
+  },
+  "rootNextRequired": [
+    "complete native/public SQLite census",
+    "verify actual Kernel and Guest runtime",
+    "retain denied Guest operation ownership and original return receipts",
+    "publish authentic catalog package/factory/surface captures before normalization"
+  ],
+  "rootCatalogDeclarationsUpdatedUtc": "2026-10-09T12:53:35Z",
+  "rootCatalogDeclarationsSource": {
+    "session": 51442,
+    "exit": 0,
+    "passed": 7,
+    "failed": 0,
+    "expects": 218,
+    "strict": true,
+    "independentAjv": true,
+    "independentSqlite": true,
+    "actualDebug": true,
+    "compiledGuestExecuted": false
+  },
+  "rootCatalogDeclarationsNative": {
+    "socketSession": 62797,
+    "socketExit": 1,
+    "kernelErrors": 57,
+    "frameworkErrors": 1,
+    "hostedSession": 11628,
+    "hostedExit": 1,
+    "hostedPreparationCustodyChange": "coreprocess/native-build source changed concurrently",
+    "assertionsExecuted": 0
+  },
+  "rootNativeCatalogFactory": {
+    "sourceSession": 40458,
+    "sourceExit": 1,
+    "sourcePassed": 7,
+    "sourceFailed": 4,
+    "originalJpgDigestGuard": true,
+    "nativeSession": 6112,
+    "nativeExit": 1,
+    "nativePreparationCustodyChange": "discovery source changed concurrently",
+    "nativeAssertions": 0
+  },
+  "rootLatestNativeSocket": {
+    "priorSession": 32673,
+    "priorExit": 1,
+    "priorOriginalReplicationErrors": 2,
+    "currentSession": 62797,
+    "currentExit": 1,
+    "nativeAssertions": 0
+  },
+  "rootLatestNativeClipboard": {
+    "session": 42231,
+    "exit": 0,
+    "passed": 1,
+    "skipped": 83,
+    "actualDebug": true
+  },
+  "rootCatalogGuestUnknownCapabilityRetained": true,
+  "rootCatalogInventedDialect": false,
+  "rootCatalogFullAssemblyMounted": true,
+  "rootCatalogGuiSeedOnlyOrder": 408.781031,
+  "rootHistoryCallerGrantSource": {
+    "session": 25801,
+    "exit": 0,
+    "passed": 20,
+    "failed": 0,
+    "expects": 575,
+    "strict": true,
+    "actualDebug": true,
+    "independentAjv": true,
+    "independentSqlite": true,
+    "nativeExecuted": false
   }
 }

@@ -39,3 +39,6 @@ semio-framework-intrinsic-size = { path = "../../../📏️intrinsic-size/📦�
 wasm-bindgen = { workspace = true }
 js-sys = "0.3.83"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
+
+[dev-dependencies]
+semio-framework-trace = { workspace = true }

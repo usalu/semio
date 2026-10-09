@@ -1,0 +1,24 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+      "sha256": "8cdd1af7f49153e0e8201e13c10bcb392c5517d7b9e55138b230825ade616859"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts",
+      "sha256": "2c9e89b12abfc598ae029c443e06ff43f2e6646ddd46d0df30b568d110cbfde1"
+    },
+    {
+      "path": "📜️script.ts",
+      "sha256": "953194226790749673069f04a000449066091ed54bf5a1330dd7df006bfd481b"
+    }
+  ],
+  "portableCases": [
+    "production-default-never-reads-fixture",
+    "synthetic-unit-registration-not-in-production-dump",
+    "genuine-ten-export-three-format-join",
+    "missing-production-dump-refused",
+    "serializer-quoted-control-generator-json-parser-parity"
+  ]
+}

@@ -5,5 +5,9 @@
   "maximumItems": 1,
   "maximumDepth": 4096,
   "maximumTurns": 65536,
-  "unsupportedKind": "unsupportedOwner"
+  "unsupportedKind": "unsupportedOwner",
+  "unsupportedEffects": {
+    "bornBytes": 0,
+    "releasedBytes": 0
+  }
 }

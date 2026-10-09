@@ -59,25 +59,25 @@ impl store::ArtifactSqliteSnapshot for DagSnapshot {
         valid(value.get())?;
         Ok(value.take())
     }
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         admit(c, SqliteSnapshotPhase::DecodeNative)?;
         store::decode_sqlite_snapshot_record_native(
             payload,
             <Self as store::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
-            |record, native| {
+            |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
                 let value = Self::__dsl_from_record_controlled(record, native)?;
                 let guard = semio_framework_value::DecodedValue::new(value, <Self as semio_framework_value::FromValue>::retire_decoded);
                 guard.get().validate().map_err(|message|ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message))?;
                 Ok(guard.take())
-            },
+            })(); *snapshot_output = Some(constructed?); Ok(()) },
             c,
-        )
+        native_control)
     }
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>) -> Result<store::io_schema::IoPayload, ValueError> {
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         admit(c, SqliteSnapshotPhase::EncodeNative)?;
         valid(self)?;
-        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c)
+        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
     }
     fn retire_sqlite_snapshot(self) {
         <Self as semio_framework_value::FromValue>::retire_decoded(self)
@@ -95,4 +95,3 @@ impl store::ArtifactSqliteSnapshot for DagSnapshot {
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

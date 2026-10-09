@@ -26,3 +26,4 @@ semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }
+semio-framework-trace = { workspace = true }

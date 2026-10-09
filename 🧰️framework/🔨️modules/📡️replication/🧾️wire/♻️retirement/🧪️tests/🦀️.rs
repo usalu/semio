@@ -75,3 +75,28 @@ fn protocol_transport_cause_refuses_without_dropping_original_provider(){
  match original.as_ref().unwrap(){ProtocolError::Pack(PackError::TransportFailure(error))=>assert!(std::ptr::eq(source,error.source_error())),_=>panic!("original provider replaced")}
  println!("[DEBUG] foreign provider retains exact source identity on zero/unsupported protocol cleanup; no manufactured release or fallback");
 }
+
+#[test]
+fn protocol_borrowed_cause_closure_matches_original_owned_slot_without_hidden_release(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:65536,maximum_depth:1};
+ for row in law["cases"].as_array().unwrap(){
+  let mut borrowed=cause(row);let mut owned=Some(cause(row));
+  for turn in 0..128{
+   let (demand,heap)=observe_heap_allocations_on_this_thread(||protocol_cause_retirement_demand(&borrowed).unwrap());
+   assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(demand,protocol_error_retirement_demand(&owned).unwrap());
+   let before=borrowed.to_string();let before_json=serde_json::to_string(&before).unwrap();assert_eq!(serde_json::from_str::<String>(&before_json).unwrap(),before);
+   let (blocked,heap)=observe_heap_allocations_on_this_thread(||close_protocol_cause_one(&mut borrowed,RetainedCloneGrant{maximum_copy_bytes:0,..grant}).unwrap());
+   assert_eq!(blocked.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(borrowed.to_string(),before);
+   let (actual,heap)=observe_heap_allocations_on_this_thread(||close_protocol_cause_one(&mut borrowed,grant).unwrap());
+   let (expected,owned_heap)=observe_heap_allocations_on_this_thread(||close_protocol_error_one(&mut owned,grant).unwrap());
+   assert_eq!(actual,expected);assert!(actual.progress().fits(grant));
+   assert_eq!(heap.requested_bytes,actual.progress().retained_capacity_bytes);assert_eq!(heap.released_bytes,actual.progress().released_bytes);
+   assert_eq!((heap.requested_bytes,heap.released_bytes),(owned_heap.requested_bytes,owned_heap.released_bytes));
+   if matches!(actual,RetainedCloneStep::Complete(_)){assert!(owned.is_none());break;}
+   assert_eq!(borrowed.to_string(),owned.as_ref().unwrap().to_string());assert!(turn+1<128);
+  }
+  let (_,heap)=observe_heap_allocations_on_this_thread(||drop(borrowed));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+ }
+ println!("[DEBUG] original borrowed/owned Protocol cause paths match fixed independent policy, Serde text, zero-copy refusal and every actual System receipt");
+}

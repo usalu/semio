@@ -4,7 +4,7 @@ use crate::opening_config::{UiDriver,UiTheme,UserNamedLayout,UiPreferences};
 use semio_framework_value::{DslValue,FromValue,ToValue};
 
 fn schema(name:&str,generator:&mut schemars::gen::SchemaGenerator)->schemars::schema::Schema {
-    let text=include_str!("../../../../🧬️schema/🎨️ui-preferences/🔣️.json").replace("#/$defs/","#/definitions/OsConfigUi");
+    let text=include_str!("../../../🧬️schema/🎨️ui-preferences/🔣️.json").replace("#/$defs/","#/definitions/OsConfigUi");
     let mut root:serde_json::Value=serde_json::from_str(&text).expect("authored UI preference schema");
     let definitions=root.as_object_mut().expect("schema object").remove("$defs").expect("authored definitions");
     for(key,value)in definitions.as_object().expect("definition object"){

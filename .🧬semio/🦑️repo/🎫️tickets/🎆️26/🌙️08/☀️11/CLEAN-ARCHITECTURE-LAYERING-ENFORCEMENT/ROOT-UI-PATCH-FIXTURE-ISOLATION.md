@@ -1,0 +1,9 @@
+# UI Patch Fixture Isolation
+
+The full original General299 receiver entered in Native7 and physically closed8924 Nx/Bun1. Ten UiTurnPatch laws failed at initial patch or transport admission, before their retirement observations. The actual production arenas use nonblocking try_lock and retain the refused original owner. Parallel laws use the same static arenas, while several deliberately hold an arena for100ms to measure a concurrent worker. Their unconditionally uncontended setup assumptions conflict with one another.
+
+Root added one test-only Mutex lease to each of the nineteen actual laws in the UiTurnPatch test module. This isolates fixture setup and global poison recovery between laws. Each law retains its deliberate concurrent workers, original100ms wait observations, zero actor, exact refused owner, stale epoch, byte-grant, max-plus-one, transport handback and poison assertions. Production admission, arena capacities and allocation/retirement code were not changed. The isolation lease recovers only its own test harness mutex after a failed law so subsequent original failures remain observable; the production arena poison assertion and explicit recovery are unchanged.
+
+Metadata-only custody is `🗑️generated/root-ui-patch-isolation.json`, three in-place source/fixture hashes, maximum102UTF16. The complete original General299 receiver is required next; a filtered UiPatch success would not confer whole General acceptance. No runtime success is claimed yet. Native is holding the General successor until the ongoing canonical Cargo caller publication is coherent.
+
+The prior Root inline edit attempted an incorrect twenty-law count and produced no owned source change. The actual module has nineteen #[test] declarations and nineteen explicit fixture leases; the final change was applied directly. A slow generated-tree metadata search was stopped only in Root's own process79776, physically130, and establishes no runtime result.

@@ -1,7 +1,15 @@
 use super::*;
 
+static UI_TURN_PATCH_TEST_OWNER: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+/// 🧪️ Isolates the shared fixture arenas while each law retains its explicit concurrent workers.
+fn own_ui_turn_patch_test() -> std::sync::MutexGuard<'static, ()> {
+    UI_TURN_PATCH_TEST_OWNER.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 #[test]
 fn ui_turn_patch_owner_drop_hands_back_without_waiting_for_arena() {
+    let _test_owner = own_ui_turn_patch_test();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     let mut owner = UiTurnPatches::default();
     owner.try_push_ui_patch(patch(1)).unwrap();
@@ -27,6 +35,7 @@ fn ui_turn_patch_owner_drop_hands_back_without_waiting_for_arena() {
 
 #[test]
 fn ui_turn_patch_owner_normal_close_does_not_wait_for_arena() {
+    let _test_owner = own_ui_turn_patch_test();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     let (send, receive) = std::sync::mpsc::channel();
     let (waited, worker) = with_ui_turn_patch_retire_arena(|_| {
@@ -42,6 +51,7 @@ fn ui_turn_patch_owner_normal_close_does_not_wait_for_arena() {
 
 #[test]
 fn ui_turn_patch_owner_typed_descendants_preserve_exact_one_byte_grants() {
+    let _test_owner = own_ui_turn_patch_test();
     use semio_framework_ui_contract as ui;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     for grant in fixture["byteGrants"].as_array().unwrap() {
@@ -85,6 +95,7 @@ fn patch(revision: u64) -> UiPatch {
 /// law also pins the derivation and the contiguous extent the page may not exceed.
 #[test]
 fn ui_turn_patches_max_plus_one_returns_the_exact_patch_owner() {
+    let _test_owner = own_ui_turn_patch_test();
     assert_eq!(UI_TURN_PATCHES_MAXIMUM, semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / UI_TURN_PATCH_OWNER_BYTES);
     assert!(UI_TURN_PATCHES_MAXIMUM > 1 && size_of::<UiTurnPatches>() <= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES);
     let mut patches = UiTurnPatches::default();
@@ -101,6 +112,7 @@ fn ui_turn_patches_max_plus_one_returns_the_exact_patch_owner() {
 
 #[test]
 fn refused_turn_patch_transfer_restores_the_exact_retirement_owner() {
+    let _test_owner = own_ui_turn_patch_test();
     let mut patches = UiTurnPatches::default();
     patches.try_push_ui_patch(patch(1)).expect("one patch");
     assert!(matches!(patches.try_transfer_one(Err::<(), UiPatch>), UiTurnPatchTransfer::Refused));
@@ -112,6 +124,7 @@ fn refused_turn_patch_transfer_restores_the_exact_retirement_owner() {
 
 #[test]
 fn ui_turn_patches_fixed_serde_visitor_rejects_plus_one() {
+    let _test_owner = own_ui_turn_patch_test();
     let encoded = serde_json::to_vec(&(1..=UI_TURN_PATCHES_MAXIMUM as u64 + 1).map(patch).collect::<Vec<_>>()).expect("bounded fixture encoding");
     let error = serde_json::from_slice::<UiTurnPatches>(&encoded).expect_err("visitor maximum plus one");
     assert!(error.to_string().contains("turn patch page capacity exceeded"));
@@ -119,6 +132,7 @@ fn ui_turn_patches_fixed_serde_visitor_rejects_plus_one() {
 
 #[test]
 fn ui_turn_patches_close_retires_one_op_or_patch_owner_per_step() {
+    let _test_owner = own_ui_turn_patch_test();
     let mut owner = patch(1);
     owner.ops.try_push(UiPatchOp::SetRoot { id: semio_framework_ui_contract::UiNodeId(7) }).expect("one op");
     let mut patches = UiTurnPatches::default();
@@ -136,6 +150,7 @@ fn ui_turn_patches_close_retires_one_op_or_patch_owner_per_step() {
 
 #[test]
 fn ui_turn_patch_retirement_max_plus_one_refuses_before_owner_transfer() {
+    let _test_owner = own_ui_turn_patch_test();
     let mut arena = UiTurnPatchRetireArena::default();
     let mut keys = [None; UI_TURN_PATCH_RETIRE_SLOTS];
     for key in &mut keys {
@@ -150,6 +165,7 @@ fn ui_turn_patch_retirement_max_plus_one_refuses_before_owner_transfer() {
 
 #[test]
 fn ui_turn_patch_retirement_rejects_stale_epoch_release_and_closes_one_owner_per_step() {
+    let _test_owner = own_ui_turn_patch_test();
     let mut arena = UiTurnPatchRetireArena::default();
     let key = arena.reserve().expect("fixed retirement slot");
     let stale = UiTurnPatchRetireKey { epoch: key.epoch.checked_add(1).expect("fixture epoch"), ..key };
@@ -173,6 +189,7 @@ fn ui_turn_patch_retirement_rejects_stale_epoch_release_and_closes_one_owner_per
 
 #[test]
 fn ui_turn_patch_transport_round_trip_is_single_claim_and_preserves_populated_owner() {
+    let _test_owner = own_ui_turn_patch_test();
     let session = 70_001;
     let mut patch = patch(3);
     patch.ops.try_push(UiPatchOp::SetRoot { id: semio_framework_ui_contract::UiNodeId(9) }).expect("one populated op");
@@ -204,6 +221,7 @@ fn ui_turn_patch_transport_round_trip_is_single_claim_and_preserves_populated_ow
 /// (ticket 26/09/23 slice WG8, measured on block2d).
 #[test]
 fn ui_turn_patch_transport_admits_the_zero_actor_as_its_session() {
+    let _test_owner = own_ui_turn_patch_test();
     let mut owner = UiTurnPatches::default();
     owner.try_push_ui_patch(patch(4)).expect("one patch");
     let mut producer = UiTurnPatchTransportProducer::try_new(0, owner).expect("actor 0 owns a transport session");
@@ -221,6 +239,7 @@ fn ui_turn_patch_transport_admits_the_zero_actor_as_its_session() {
 
 #[test]
 fn ui_turn_patch_transport_producer_drop_hands_back_without_waiting_for_arena() {
+    let _test_owner = own_ui_turn_patch_test();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     let mut owner = UiTurnPatches::default();
     owner.try_push_ui_patch(patch(7)).unwrap();
@@ -248,6 +267,7 @@ fn ui_turn_patch_transport_producer_drop_hands_back_without_waiting_for_arena() 
 
 #[test]
 fn ui_turn_patch_transport_lease_drop_hands_back_without_waiting_for_arena() {
+    let _test_owner = own_ui_turn_patch_test();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     let mut owner = UiTurnPatches::default();
     owner.try_push_ui_patch(patch(8)).unwrap();
@@ -277,6 +297,7 @@ fn ui_turn_patch_transport_lease_drop_hands_back_without_waiting_for_arena() {
 
 #[test]
 fn ui_turn_patch_transport_normal_close_does_not_wait_for_arena() {
+    let _test_owner = own_ui_turn_patch_test();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     let (send, receive) = std::sync::mpsc::channel();
     let (waited, worker) = with_ui_turn_patch_transport_arena(|_| {
@@ -292,6 +313,7 @@ fn ui_turn_patch_transport_normal_close_does_not_wait_for_arena() {
 
 #[test]
 fn ui_turn_patch_transport_session_close_waits_for_exact_external_handback() {
+    let _test_owner = own_ui_turn_patch_test();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     let mut producer = UiTurnPatchTransportProducer::try_new(700_013, UiTurnPatches::default()).unwrap();
     let key = producer.key;
@@ -312,6 +334,7 @@ fn ui_turn_patch_transport_session_close_waits_for_exact_external_handback() {
 
 #[test]
 fn ui_turn_patch_transport_poison_retains_exact_owner_until_explicit_test_recovery() {
+    let _test_owner = own_ui_turn_patch_test();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     let mut producer = UiTurnPatchTransportProducer::try_new(700_015, UiTurnPatches::default()).unwrap();
     assert_eq!(producer.drive_one(700_015, false, false), UiTurnPatchTransportStep::Ready);
@@ -331,6 +354,7 @@ fn ui_turn_patch_transport_poison_retains_exact_owner_until_explicit_test_recove
 
 #[test]
 fn ui_turn_patch_transport_handback_reports_exact_typed_descendant_bytes() {
+    let _test_owner = own_ui_turn_patch_test();
     use semio_framework_ui_contract as ui;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     let surface = fixture["surface"].as_str().unwrap();
@@ -364,6 +388,7 @@ fn ui_turn_patch_transport_handback_reports_exact_typed_descendant_bytes() {
 
 #[test]
 fn ui_turn_patch_transport_rejects_truncated_stale_and_cancelled_tokens() {
+    let _test_owner = own_ui_turn_patch_test();
     assert!(UiTurnPatchTransportLease::try_from_token(&[0; UI_TURN_PATCH_TRANSPORT_TOKEN_BYTES - 1], 81).is_err());
     let mut producer = UiTurnPatchTransportProducer::try_new(81, UiTurnPatches::default()).expect("fixed transport admission");
     assert_eq!(producer.drive_one(82, false, false), UiTurnPatchTransportStep::Stale);
@@ -374,6 +399,7 @@ fn ui_turn_patch_transport_rejects_truncated_stale_and_cancelled_tokens() {
 
 #[test]
 fn ui_turn_patch_transport_max_plus_one_returns_exact_owner_and_session_close_is_incremental() {
+    let _test_owner = own_ui_turn_patch_test();
     let mut arena = UiTurnPatchTransportArena::default();
     for session in 1..=UI_TURN_PATCH_TRANSPORT_SLOTS {
         let key = arena.reserve(u64::try_from(session).expect("bounded session"), UiTurnPatches::default()).expect("fixed slot");

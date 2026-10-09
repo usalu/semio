@@ -116,7 +116,7 @@ mod dff_public_action_admission_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn public_action_and_command_entry_points_require_a_live_instance_before_decode() {
-        let runtime = PluginRuntime::<crate::app::NoPluginApp>::new();
+        let runtime = PluginRuntime::<crate::app::NoPluginApp>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let action = plugin_handle_action(&runtime, 1, &padded_action("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192), "{}").await.expect_err("an action without a live instance must reject before decoding");
         assert!(action.message.contains("unknown instance"));
         let command = plugin_handle_command(&runtime, 1, &padded_command("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192), "{}").await.expect_err("a command without a live instance must reject before decoding");

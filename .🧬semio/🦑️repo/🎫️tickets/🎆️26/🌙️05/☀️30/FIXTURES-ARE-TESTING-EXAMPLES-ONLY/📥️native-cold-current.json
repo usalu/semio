@@ -1,0 +1,25 @@
+{
+  "observed": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+      "sha256": "5fb7aa30fde04596ded00cd70ba67122f66e7c8203511a83c745ad92bf9f0f02"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+      "sha256": "7e4b2088a5607c1df7af63b9972ab1f057926abe0efe672542cd20eb29b64a5b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "5c731deca495f7e69bbd44fc6b3b49cc63874d4d11bae7b607da01973432d6e9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "1e1cdd9e2ea007b3c91ce68d8bc1003f7f721562889c1842ea772357891cc12a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "600da94b51e5a7a99cd86a475ebeb55b6124a5de1de91c5899f4c97029750dde"
+    }
+  ],
+  "role": "read-only original Source observations during k7; no author or compile claim"
+}

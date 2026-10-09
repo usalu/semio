@@ -1,9 +1,14 @@
 //! 🌳️ Directed acyclic port graph: rectangle IO nodes on infinite canvas.
 
 use std::cell::Cell;
-use std::collections::{BTreeSet, HashMap, HashSet, LinkedList};
+use std::collections::{BTreeSet, HashMap, HashSet};
+use crate::os_spr::causal::transition::{HistoryFoldIndex,HistoryFoldSet};
 
 use semio_framework_value::DslValue;
+use semio_framework_pack_json::Value;
+use semio_framework_value::numeric_scratch::{NumericIndex,NumericSet};
+#[path="🎛️input/🦀️.rs"]
+pub mod input_application;
 use semio_framework_artifact_infinite_dag::*;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -21,7 +26,7 @@ pub type DagBoardEngine = DirectedPortGraphEngine;
 
 //#region ⚠️ Errors
 /// 🚨️ Crate-local error for DAG snapshot parsing, layout, and host-state mutation.
-#[derive(Debug)]
+#[derive(Debug,semio_framework_value::RetireOwned)]
 pub enum DagError {
     SnapshotRootNotObject,
     SchemaMismatch,
@@ -1102,8 +1107,8 @@ const GRID_FACTOR_DEFAULT: f64 = ui_styling::metrics::board::GRID_FACTOR_DEFAULT
 //#endregion 🔖️Grid
 
 // #region 🔖️ChannelRef
-pub use crate::infinite::board::schema::dag_input::DagChannelRef;
-use crate::infinite::board::schema::dag_input::{DagSelectionDomains,DagNodeStatuses,DagNodeEvaluationStatus};
+pub use crate::infinite::board::schema::dag_input::{DagChannelRef,DagChannelDirection};
+use crate::infinite::board::schema::dag_input::{DagSelectionDomains,DagNodeStatuses,DagNodeEvaluationStatus,DagHoverFacts,DagWireTypeRefusal,DagScreenHit,DagScreenHitJson};
 // #endregion 🔖️ChannelRef
 
 // #region 🔖️NoteEdit
@@ -1202,251 +1207,14 @@ pub struct DagPointerPlan {
     drag: Option<DagDragOffset>,
 }
 
-pub const DAG_CURSOR_MAX_OUTPUT_BYTES: usize = 65_536;
-
-/// ⛽️ One cancellable semantic-unit grant for a retained DAG cursor.
-#[derive(Clone, Copy, Debug)]
-pub struct DagCursorGrant {
-    pub fuel: u8,
-    pub now_milliseconds: u64,
-    pub deadline_milliseconds: u64,
-    pub cancelled: bool,
-    pub interrupted: bool,
-}
-
-/// 🚧️ Fail-closed retained DAG cursor faults.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum DagCursorFault {
-    Cancelled,
-    Interrupted,
-    Deadline,
-    NoFuel,
-    Limit,
-    Sealed,
-}
-
-/// 📬️ A census, byte, progress, or terminal result from one DAG cursor grant.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum DagCursorStep {
-    Progress { completed: usize, total: usize },
-    Census { bytes: usize },
-    Byte(u8),
-    Complete,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum DagSelectedNodesJsonPhase {
-    CensusNode,
-    CensusText,
-    Open,
-    Seek,
-    Separator,
-    QuoteOpen,
-    Text,
-    Escape,
-    QuoteClose,
-    Close,
-    Complete,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum DagSelectedJsonKind {
-    Nodes,
-    Edges,
-}
-
-/// 🎯️ Exact-preflight JSON array encoder that inspects or emits at most one unit per grant.
-pub struct DagSelectedNodesJsonCursor {
-    kind: DagSelectedJsonKind,
-    phase: DagSelectedNodesJsonPhase,
-    node_cursor: usize,
-    text_cursor: usize,
-    selected_count: usize,
-    emitted_count: usize,
-    census_bytes: usize,
-    output_cursor: usize,
-    escape: [u8; 6],
-    escape_length: u8,
-    escape_cursor: u8,
-}
-
-impl Default for DagSelectedNodesJsonCursor {
-    fn default() -> Self {
-        Self {
-            kind: DagSelectedJsonKind::Nodes,
-            phase: DagSelectedNodesJsonPhase::CensusNode,
-            node_cursor: 0,
-            text_cursor: 0,
-            selected_count: 0,
-            emitted_count: 0,
-            census_bytes: 2,
-            output_cursor: 0,
-            escape: [0; 6],
-            escape_length: 0,
-            escape_cursor: 0,
-        }
+impl crate::infinite::board::schema::dag_input::DagSelectionSource for DagHost {
+    fn selection_candidate_count(&self,domain:crate::infinite::board::schema::dag_input::DagSelectionDomain)->usize {
+        match domain {crate::infinite::board::schema::dag_input::DagSelectionDomain::Nodes=>self.host_snapshot.nodes.len(),crate::infinite::board::schema::dag_input::DagSelectionDomain::Edges=>self.host_snapshot.edges.len()}
     }
-}
-
-impl DagSelectedNodesJsonCursor {
-    pub fn edges() -> Self {
-        Self { kind: DagSelectedJsonKind::Edges, ..Self::default() }
-    }
-
-    fn guard(grant: DagCursorGrant) -> Result<(), DagCursorFault> {
-        if grant.cancelled {
-            Err(DagCursorFault::Cancelled)
-        } else if grant.interrupted {
-            Err(DagCursorFault::Interrupted)
-        } else if grant.now_milliseconds >= grant.deadline_milliseconds {
-            Err(DagCursorFault::Deadline)
-        } else if grant.fuel == 0 {
-            Err(DagCursorFault::NoFuel)
-        } else {
-            Ok(())
-        }
-    }
-
-    fn selected(host: &DagHost, index: usize) -> bool {
-        let Ok(id) = u64::try_from(index.saturating_add(1)) else {
-            return false;
-        };
-        host.node_id_map.get(&id) == Some(&index) && host.engine.selection.node_ids.contains(&id)
-    }
-
-    fn count(&self, host: &DagHost) -> usize {
-        match self.kind {
-            DagSelectedJsonKind::Nodes => host.host_snapshot.nodes.len(),
-            DagSelectedJsonKind::Edges => host.host_snapshot.edges.len(),
-        }
-    }
-
-    fn item<'a>(&self, host: &'a DagHost, index: usize) -> Option<&'a str> {
-        match self.kind {
-            DagSelectedJsonKind::Nodes => Self::selected(host, index).then(|| host.host_snapshot.nodes.get(index).map(|node| node.id.as_str())).flatten(),
-            DagSelectedJsonKind::Edges => host.edge_engine_ids.get(index).and_then(|id| *id).filter(|id| host.engine.selection.edge_ids.contains(id)).and_then(|_| host.host_snapshot.edges.get(index).map(|edge| edge.id.as_str())),
-        }
-    }
-
-    fn escape(byte: u8) -> ([u8; 6], u8) {
-        const HEX: &[u8; 16] = b"0123456789abcdef";
-        match byte {
-            b'"' => ([b'\\', b'"', 0, 0, 0, 0], 2),
-            b'\\' => ([b'\\', b'\\', 0, 0, 0, 0], 2),
-            b'\x08' => ([b'\\', b'b', 0, 0, 0, 0], 2),
-            b'\x0c' => ([b'\\', b'f', 0, 0, 0, 0], 2),
-            b'\n' => ([b'\\', b'n', 0, 0, 0, 0], 2),
-            b'\r' => ([b'\\', b'r', 0, 0, 0, 0], 2),
-            b'\t' => ([b'\\', b't', 0, 0, 0, 0], 2),
-            0x00..=0x1f => ([b'\\', b'u', b'0', b'0', HEX[usize::from(byte >> 4)], HEX[usize::from(byte & 0x0f)]], 6),
-            _ => ([byte, 0, 0, 0, 0, 0], 1),
-        }
-    }
-
-    pub fn step(&mut self, host: &DagHost, grant: DagCursorGrant) -> Result<DagCursorStep, DagCursorFault> {
-        Self::guard(grant)?;
-        let count = self.count(host);
-        match self.phase {
-            DagSelectedNodesJsonPhase::CensusNode => {
-                if self.node_cursor == count {
-                    if self.census_bytes > DAG_CURSOR_MAX_OUTPUT_BYTES {
-                        return Err(DagCursorFault::Limit);
-                    }
-                    self.node_cursor = 0;
-                    self.text_cursor = 0;
-                    self.phase = DagSelectedNodesJsonPhase::Open;
-                    return Ok(DagCursorStep::Census { bytes: self.census_bytes });
-                }
-                if self.item(host, self.node_cursor).is_some() {
-                    self.census_bytes = self.census_bytes.checked_add(2 + usize::from(self.selected_count != 0)).ok_or(DagCursorFault::Limit)?;
-                    self.phase = DagSelectedNodesJsonPhase::CensusText;
-                } else {
-                    self.node_cursor += 1;
-                }
-                Ok(DagCursorStep::Progress { completed: self.node_cursor, total: count })
-            }
-            DagSelectedNodesJsonPhase::CensusText => {
-                let text = self.item(host, self.node_cursor).ok_or(DagCursorFault::Limit)?.as_bytes();
-                if self.text_cursor == text.len() {
-                    self.selected_count += 1;
-                    self.node_cursor += 1;
-                    self.text_cursor = 0;
-                    self.phase = DagSelectedNodesJsonPhase::CensusNode;
-                } else {
-                    self.census_bytes = self.census_bytes.checked_add(usize::from(Self::escape(text[self.text_cursor]).1)).ok_or(DagCursorFault::Limit)?;
-                    self.text_cursor += 1;
-                }
-                Ok(DagCursorStep::Progress { completed: self.node_cursor, total: count })
-            }
-            DagSelectedNodesJsonPhase::Open => {
-                self.phase = DagSelectedNodesJsonPhase::Seek;
-                self.output_cursor += 1;
-                Ok(DagCursorStep::Byte(b'['))
-            }
-            DagSelectedNodesJsonPhase::Seek => {
-                if self.node_cursor == count {
-                    self.phase = DagSelectedNodesJsonPhase::Close;
-                } else if self.item(host, self.node_cursor).is_some() {
-                    self.phase = if self.emitted_count == 0 { DagSelectedNodesJsonPhase::QuoteOpen } else { DagSelectedNodesJsonPhase::Separator };
-                } else {
-                    self.node_cursor += 1;
-                }
-                Ok(DagCursorStep::Progress { completed: self.node_cursor, total: count })
-            }
-            DagSelectedNodesJsonPhase::Separator => {
-                self.phase = DagSelectedNodesJsonPhase::QuoteOpen;
-                self.output_cursor += 1;
-                Ok(DagCursorStep::Byte(b','))
-            }
-            DagSelectedNodesJsonPhase::QuoteOpen => {
-                self.phase = DagSelectedNodesJsonPhase::Text;
-                self.output_cursor += 1;
-                Ok(DagCursorStep::Byte(b'"'))
-            }
-            DagSelectedNodesJsonPhase::Text => {
-                let text = self.item(host, self.node_cursor).ok_or(DagCursorFault::Limit)?.as_bytes();
-                if self.text_cursor == text.len() {
-                    self.phase = DagSelectedNodesJsonPhase::QuoteClose;
-                    return Ok(DagCursorStep::Progress { completed: self.output_cursor, total: self.census_bytes });
-                }
-                let (escape, length) = Self::escape(text[self.text_cursor]);
-                if length == 1 {
-                    self.text_cursor += 1;
-                    self.output_cursor += 1;
-                    Ok(DagCursorStep::Byte(escape[0]))
-                } else {
-                    self.escape = escape;
-                    self.escape_length = length;
-                    self.escape_cursor = 0;
-                    self.phase = DagSelectedNodesJsonPhase::Escape;
-                    Ok(DagCursorStep::Progress { completed: self.output_cursor, total: self.census_bytes })
-                }
-            }
-            DagSelectedNodesJsonPhase::Escape => {
-                let byte = self.escape[usize::from(self.escape_cursor)];
-                self.escape_cursor += 1;
-                self.output_cursor += 1;
-                if self.escape_cursor == self.escape_length {
-                    self.text_cursor += 1;
-                    self.phase = DagSelectedNodesJsonPhase::Text;
-                }
-                Ok(DagCursorStep::Byte(byte))
-            }
-            DagSelectedNodesJsonPhase::QuoteClose => {
-                self.emitted_count += 1;
-                self.node_cursor += 1;
-                self.text_cursor = 0;
-                self.phase = DagSelectedNodesJsonPhase::Seek;
-                self.output_cursor += 1;
-                Ok(DagCursorStep::Byte(b'"'))
-            }
-            DagSelectedNodesJsonPhase::Close => {
-                self.phase = DagSelectedNodesJsonPhase::Complete;
-                self.output_cursor += 1;
-                Ok(DagCursorStep::Byte(b']'))
-            }
-            DagSelectedNodesJsonPhase::Complete if self.output_cursor == self.census_bytes => Ok(DagCursorStep::Complete),
-            DagSelectedNodesJsonPhase::Complete => Err(DagCursorFault::Limit),
+    fn selection_candidate_id(&self,domain:crate::infinite::board::schema::dag_input::DagSelectionDomain,index:usize)->Option<&str>{
+        match domain {
+            crate::infinite::board::schema::dag_input::DagSelectionDomain::Nodes=>{let id=u64::try_from(index.checked_add(1)?).ok()?;(self.node_id_map.get(&id)==Some(&index)&&self.engine.selection.node_ids.contains(&id)).then(||self.host_snapshot.nodes.get(index).map(|node|node.id.as_str())).flatten()},
+            crate::infinite::board::schema::dag_input::DagSelectionDomain::Edges=>self.edge_engine_ids.get(index).and_then(|id|*id).filter(|id|self.engine.selection.edge_ids.contains(id)).and_then(|_|self.host_snapshot.edges.get(index).map(|edge|edge.id.as_str())),
         }
     }
 }
@@ -1524,16 +1292,16 @@ pub struct DagHost {
     dpr: f64,
     last_screen_x: f64,
     last_screen_y: f64,
-    node_id_map: HashMap<NodeId, usize>,
-    handle_key_map: HashMap<HandleId, String>,
-    handle_port_shape: HashMap<HandleId, PortShape>,
-    handle_port_visible: HashMap<HandleId, bool>,
-    edge_id_map: HashMap<EdgeId, String>,
+    node_id_map: HistoryFoldIndex<NodeId, usize>,
+    handle_key_map: HistoryFoldIndex<HandleId, String>,
+    handle_port_shape: HistoryFoldIndex<HandleId, PortShape>,
+    handle_port_visible: HistoryFoldIndex<HandleId, bool>,
+    edge_id_map: HistoryFoldIndex<EdgeId, String>,
     edge_engine_ids: Vec<Option<EdgeId>>,
-    edge_route_style: HashMap<EdgeId, EdgeRouteStyle>,
+    edge_route_style: HistoryFoldIndex<EdgeId, EdgeRouteStyle>,
     widget_drag: Option<usize>,
     pending_port_insert: Option<(DagPortSide, String, usize)>,
-    dimmed: HashSet<NodeId>,
+    dimmed: HistoryFoldSet<NodeId>,
     wheel_zoom_active: bool,
     wheel_zoom_render_lod: Option<DagDrawLod>,
     automatic_lod: bool,
@@ -1550,11 +1318,11 @@ pub struct DagHost {
     last_pointer_down_world: (f64, f64),
     last_pointer_down_node_id: Option<String>,
     computing_active: Option<NodeId>,
-    computing_stale: HashSet<NodeId>,
+    computing_stale: NumericSet<NodeId>,
     computing_active_anim_phase: Cell<f64>,
     computing_stale_anim_phase: Cell<f64>,
-    node_eval_status: HashMap<NodeId, DagNodeEvalStatusKind>,
-    unresolved_input_ports: HashSet<(NodeId, String)>,
+    node_eval_status: NumericIndex<NodeId, DagNodeEvalStatusKind>,
+    unresolved_input_ports: NumericSet<(NodeId,usize)>,
     editing_note: Option<NoteEditState>,
     caret_visible: bool,
     pan_anchor: Option<(f64, f64, f64, f64)>,
@@ -1744,923 +1512,9 @@ pub fn dag_drag_gesture_id(press: u64) -> String {
 /// gesture is refused ([`DagJournalRefusal`]) — the journal never drops a row.
 pub const DAG_GRAPH_EDIT_CAPACITY: usize = 256;
 
-/// 🧮️ One retained retirement turn; `credited_bytes` never exceeds the current grant,
-/// while `released_bytes` is the physical backing freed after enough credits were retained.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum DagRetirementStep {
-    Blocked,
-    Pending { released_items: usize, credited_bytes: usize, released_bytes: usize },
-    Complete,
-}
-
-enum DagRetirementOwner {
-    Text(String),
-    Bytes { value: Vec<u8>, remaining_backing_bytes: usize },
-    Dsl(DslValue),
-    DslValues { values: Vec<DslValue>, remaining_backing_bytes: usize },
-    DslEntries { values: Vec<(String, DslValue)>, remaining_backing_bytes: usize },
-    Property(PropertyValue),
-    Properties(PropertyBag),
-    PropertyValues { values: Vec<PropertyValue>, remaining_backing_bytes: usize },
-    Port(IoPortSpec),
-    Ports { values: Vec<IoPortSpec>, remaining_backing_bytes: usize },
-    Strings { values: Vec<String>, remaining_backing_bytes: usize },
-    Expanded(crate::DagExpandedPaths),
-    Preview(DagPreviewContent),
-    NodeKind(DagNodeKind),
-    SnapshotNode(DagNodeSpec),
-    SnapshotNodes { values: Vec<DagNodeSpec>, remaining_backing_bytes: usize },
-    SnapshotEdge(DagHostSnapshotEdge),
-    SnapshotEdges { values: Vec<DagHostSnapshotEdge>, remaining_backing_bytes: usize },
-    EngineNode(Node),
-    EngineHandle(Handle),
-    EngineSemantics(::graph::ElementSemantics),
-    EngineEvent(BoardEvent),
-    EngineEvents { values: Vec<BoardEvent>, remaining_backing_bytes: usize },
-    Ids { values: Vec<u64>, remaining_backing_bytes: usize },
-    OptionalIds { values: Vec<Option<u64>>, remaining_backing_bytes: usize },
-}
-
-fn dag_vec_backing_bytes<T>(values: &Vec<T>) -> usize {
-    values.capacity().saturating_mul(size_of::<T>())
-}
-
-struct DagPayloadRetirement {
-    owners: std::mem::ManuallyDrop<LinkedList<DagRetirementOwner>>,
-}
-
-impl Default for DagPayloadRetirement {
-    fn default() -> Self {
-        Self { owners: std::mem::ManuallyDrop::new(LinkedList::new()) }
-    }
-}
-
-impl DagPayloadRetirement {
-    fn push(&mut self, owner: DagRetirementOwner) {
-        self.owners.push_front(owner);
-    }
-
-    fn bytes(&mut self, value: Vec<u8>) {
-        let remaining_backing_bytes = value.capacity();
-        self.push(DagRetirementOwner::Bytes { value, remaining_backing_bytes });
-    }
-
-    fn text(&mut self, value: String) {
-        self.bytes(value.into_bytes());
-    }
-
-    fn dsl_values(&mut self, values: Vec<DslValue>) {
-        let remaining_backing_bytes = dag_vec_backing_bytes(&values);
-        self.push(DagRetirementOwner::DslValues { values, remaining_backing_bytes });
-    }
-
-    fn dsl_entries(&mut self, values: Vec<(String, DslValue)>) {
-        let remaining_backing_bytes = dag_vec_backing_bytes(&values);
-        self.push(DagRetirementOwner::DslEntries { values, remaining_backing_bytes });
-    }
-
-    fn property_values(&mut self, values: Vec<PropertyValue>) {
-        let remaining_backing_bytes = dag_vec_backing_bytes(&values);
-        self.push(DagRetirementOwner::PropertyValues { values, remaining_backing_bytes });
-    }
-
-    fn ports(&mut self, values: Vec<IoPortSpec>) {
-        let remaining_backing_bytes = dag_vec_backing_bytes(&values);
-        self.push(DagRetirementOwner::Ports { values, remaining_backing_bytes });
-    }
-
-    fn strings(&mut self, values: Vec<String>) {
-        let remaining_backing_bytes = dag_vec_backing_bytes(&values);
-        self.push(DagRetirementOwner::Strings { values, remaining_backing_bytes });
-    }
-
-    fn snapshot_nodes(&mut self, values: Vec<DagNodeSpec>) {
-        let remaining_backing_bytes = dag_vec_backing_bytes(&values);
-        self.push(DagRetirementOwner::SnapshotNodes { values, remaining_backing_bytes });
-    }
-
-    fn snapshot_edges(&mut self, values: Vec<DagHostSnapshotEdge>) {
-        let remaining_backing_bytes = dag_vec_backing_bytes(&values);
-        self.push(DagRetirementOwner::SnapshotEdges { values, remaining_backing_bytes });
-    }
-
-    fn ids(&mut self, values: Vec<u64>) {
-        let remaining_backing_bytes = dag_vec_backing_bytes(&values);
-        self.push(DagRetirementOwner::Ids { values, remaining_backing_bytes });
-    }
-
-    fn engine_events(&mut self, values: Vec<BoardEvent>) {
-        let remaining_backing_bytes = dag_vec_backing_bytes(&values);
-        self.push(DagRetirementOwner::EngineEvents { values, remaining_backing_bytes });
-    }
-
-    fn optional_ids(&mut self, values: Vec<Option<u64>>) {
-        let remaining_backing_bytes = dag_vec_backing_bytes(&values);
-        self.push(DagRetirementOwner::OptionalIds { values, remaining_backing_bytes });
-    }
-
-    fn credit_backing<T>(&mut self, values: Vec<T>, remaining_backing_bytes: usize, maximum_bytes: usize, restore: impl FnOnce(Vec<T>, usize) -> DagRetirementOwner) -> Result<(Vec<T>, usize), DagRetirementStep> {
-        let credited_bytes = maximum_bytes.min(remaining_backing_bytes);
-        let remaining_backing_bytes = remaining_backing_bytes - credited_bytes;
-        if remaining_backing_bytes != 0 {
-            self.push(restore(values, remaining_backing_bytes));
-            return Err(DagRetirementStep::Pending { released_items: 0, credited_bytes, released_bytes: 0 });
-        }
-        Ok((values, credited_bytes))
-    }
-
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> DagRetirementStep {
-        if self.owners.is_empty() {
-            return DagRetirementStep::Complete;
-        }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return DagRetirementStep::Blocked;
-        }
-        let owner = self.owners.pop_front().expect("nonempty DAG payload retirement");
-        match owner {
-            DagRetirementOwner::Text(value) => {
-                self.text(value);
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::Bytes { value, remaining_backing_bytes } => {
-                let credited_bytes = maximum_bytes.min(remaining_backing_bytes);
-                let remaining_backing_bytes = remaining_backing_bytes - credited_bytes;
-                if remaining_backing_bytes != 0 {
-                    self.push(DagRetirementOwner::Bytes { value, remaining_backing_bytes });
-                    return DagRetirementStep::Pending { released_items: 0, credited_bytes, released_bytes: 0 };
-                }
-                let released_bytes = value.capacity();
-                drop(value);
-                DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes }
-            }
-            DagRetirementOwner::Dsl(value) => {
-                match value {
-                    semio_framework_value::DslValue::String(value) => self.text(value),
-                    semio_framework_value::DslValue::Bytes(value) => self.bytes(value),
-                    semio_framework_value::DslValue::Array(values) => self.dsl_values(values),
-                    semio_framework_value::DslValue::Object(values) => self.dsl_entries(values),
-                    semio_framework_value::DslValue::Null | semio_framework_value::DslValue::Bool(_) | semio_framework_value::DslValue::Number(_) => {}
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::DslValues { values, remaining_backing_bytes } => {
-                let released_backing_bytes = dag_vec_backing_bytes(&values);
-                let (mut values, credited_bytes) = match self.credit_backing(values, remaining_backing_bytes, maximum_bytes, |values, remaining_backing_bytes| DagRetirementOwner::DslValues { values, remaining_backing_bytes }) {
-                    Ok(values) => values,
-                    Err(step) => return step,
-                };
-                let next = values.pop();
-                let released_backing = values.is_empty();
-                if !values.is_empty() {
-                    self.push(DagRetirementOwner::DslValues { values, remaining_backing_bytes: 0 });
-                }
-                if let Some(value) = next {
-                    self.push(DagRetirementOwner::Dsl(value));
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
-            }
-            DagRetirementOwner::DslEntries { values, remaining_backing_bytes } => {
-                let released_backing_bytes = dag_vec_backing_bytes(&values);
-                let (mut values, credited_bytes) = match self.credit_backing(values, remaining_backing_bytes, maximum_bytes, |values, remaining_backing_bytes| DagRetirementOwner::DslEntries { values, remaining_backing_bytes }) {
-                    Ok(values) => values,
-                    Err(step) => return step,
-                };
-                let next = values.pop();
-                let released_backing = values.is_empty();
-                if !values.is_empty() {
-                    self.push(DagRetirementOwner::DslEntries { values, remaining_backing_bytes: 0 });
-                }
-                if let Some((key, value)) = next {
-                    self.text(key);
-                    self.push(DagRetirementOwner::Dsl(value));
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
-            }
-            DagRetirementOwner::Property(value) => {
-                match value {
-                    PropertyValue::String(value) => self.text(value),
-                    PropertyValue::Array(values) => self.property_values(values),
-                    PropertyValue::Object(values) => self.push(DagRetirementOwner::Properties(values)),
-                    PropertyValue::Null | PropertyValue::Bool(_) | PropertyValue::Number(_) => {}
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::Properties(mut values) => {
-                if let Some((key, value)) = values.pop_last() {
-                    if !values.is_empty() {
-                        self.push(DagRetirementOwner::Properties(values));
-                    }
-                    self.text(key);
-                    self.push(DagRetirementOwner::Property(value));
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::PropertyValues { values, remaining_backing_bytes } => {
-                let released_backing_bytes = dag_vec_backing_bytes(&values);
-                let (mut values, credited_bytes) = match self.credit_backing(values, remaining_backing_bytes, maximum_bytes, |values, remaining_backing_bytes| DagRetirementOwner::PropertyValues { values, remaining_backing_bytes }) {
-                    Ok(values) => values,
-                    Err(step) => return step,
-                };
-                let next = values.pop();
-                let released_backing = values.is_empty();
-                if !values.is_empty() {
-                    self.push(DagRetirementOwner::PropertyValues { values, remaining_backing_bytes: 0 });
-                }
-                if let Some(value) = next {
-                    self.push(DagRetirementOwner::Property(value));
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
-            }
-            DagRetirementOwner::Port(value) => {
-                let IoPortSpec { id, label, code, abbreviation, full_name, value_type, default, value, connected: _, artifact_kind, cardinality, shape: _, visible: _, resolved: _ } = value;
-                self.text(id);
-                self.text(label);
-                self.text(code);
-                self.text(abbreviation);
-                self.text(full_name);
-                if let Some(value) = value_type {
-                    self.text(value);
-                }
-                if let Some(value) = default {
-                    self.push(DagRetirementOwner::Dsl(value));
-                }
-                if let Some(value) = value {
-                    self.push(DagRetirementOwner::Dsl(value));
-                }
-                if let Some(value) = artifact_kind {
-                    self.text(value);
-                }
-                self.text(cardinality);
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::Ports { values, remaining_backing_bytes } => {
-                let released_backing_bytes = dag_vec_backing_bytes(&values);
-                let (mut values, credited_bytes) = match self.credit_backing(values, remaining_backing_bytes, maximum_bytes, |values, remaining_backing_bytes| DagRetirementOwner::Ports { values, remaining_backing_bytes }) {
-                    Ok(values) => values,
-                    Err(step) => return step,
-                };
-                let next = values.pop();
-                let released_backing = values.is_empty();
-                if !values.is_empty() {
-                    self.push(DagRetirementOwner::Ports { values, remaining_backing_bytes: 0 });
-                }
-                if let Some(value) = next {
-                    self.push(DagRetirementOwner::Port(value));
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
-            }
-            DagRetirementOwner::Strings { values, remaining_backing_bytes } => {
-                let released_backing_bytes = dag_vec_backing_bytes(&values);
-                let (mut values, credited_bytes) = match self.credit_backing(values, remaining_backing_bytes, maximum_bytes, |values, remaining_backing_bytes| DagRetirementOwner::Strings { values, remaining_backing_bytes }) {
-                    Ok(values) => values,
-                    Err(step) => return step,
-                };
-                let next = values.pop();
-                let released_backing = values.is_empty();
-                if !values.is_empty() {
-                    self.push(DagRetirementOwner::Strings { values, remaining_backing_bytes: 0 });
-                }
-                if let Some(value) = next {
-                    self.text(value);
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
-            }
-            DagRetirementOwner::Expanded(mut values) => {
-                if let Some(value) = values.pop_last() {
-                    if !values.is_empty() {
-                        self.push(DagRetirementOwner::Expanded(values));
-                    }
-                    self.text(value);
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::Preview(value) => {
-                match value {
-                    DagPreviewContent::Empty => {}
-                    DagPreviewContent::Scalar { text } => self.text(text),
-                    DagPreviewContent::Image { src } => self.text(src),
-                    DagPreviewContent::Tree { json } => self.push(DagRetirementOwner::Dsl(json)),
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::NodeKind(value) => {
-                match value {
-                    DagNodeKind::Computation { inputs, outputs, variadic_inputs: _, variadic_outputs: _ } | DagNodeKind::Cluster { inputs, outputs } => {
-                        self.ports(inputs);
-                        self.ports(outputs);
-                    }
-                    DagNodeKind::Slider { min: _, max: _, step: _, value: _, output } => self.push(DagRetirementOwner::Port(output)),
-                    DagNodeKind::Select { options, selected: _, output } => {
-                        self.strings(options);
-                        self.push(DagRetirementOwner::Port(output));
-                    }
-                    DagNodeKind::Screen { media, input } => {
-                        if let Some(media) = media {
-                            self.text(media.src);
-                        }
-                        self.push(DagRetirementOwner::Port(input));
-                    }
-                    DagNodeKind::Note { text, output } => {
-                        self.text(text);
-                        self.push(DagRetirementOwner::Port(output));
-                    }
-                    DagNodeKind::Image { src, output } => {
-                        self.text(src);
-                        self.push(DagRetirementOwner::Port(output));
-                    }
-                    DagNodeKind::Preview { content, expanded, input } => {
-                        self.push(DagRetirementOwner::Preview(content));
-                        self.push(DagRetirementOwner::Expanded(expanded));
-                        self.push(DagRetirementOwner::Port(input));
-                    }
-                    DagNodeKind::Action { label, input } => {
-                        self.text(label);
-                        self.push(DagRetirementOwner::Port(input));
-                    }
-                    DagNodeKind::Export { label, format, input } => {
-                        self.text(label);
-                        self.text(format);
-                        self.push(DagRetirementOwner::Port(input));
-                    }
-                    DagNodeKind::AppInstance { instance_id, plugin_id, app_id, icon, inputs, outputs } => {
-                        self.text(instance_id);
-                        self.text(plugin_id);
-                        self.text(app_id);
-                        self.text(icon);
-                        self.ports(inputs);
-                        self.ports(outputs);
-                    }
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::SnapshotNode(value) => {
-                let DagNodeSpec { id, name, abbreviation, icon, x: _, y: _, width: _, height: _, operator_kind, properties, kind } = value;
-                self.text(id);
-                self.text(name);
-                self.text(abbreviation);
-                self.text(icon);
-                if let Some(value) = operator_kind {
-                    self.text(value);
-                }
-                self.push(DagRetirementOwner::Properties(properties));
-                self.push(DagRetirementOwner::NodeKind(kind));
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::SnapshotNodes { values, remaining_backing_bytes } => {
-                let released_backing_bytes = dag_vec_backing_bytes(&values);
-                let (mut values, credited_bytes) = match self.credit_backing(values, remaining_backing_bytes, maximum_bytes, |values, remaining_backing_bytes| DagRetirementOwner::SnapshotNodes { values, remaining_backing_bytes }) {
-                    Ok(values) => values,
-                    Err(step) => return step,
-                };
-                let next = values.pop();
-                let released_backing = values.is_empty();
-                if !values.is_empty() {
-                    self.push(DagRetirementOwner::SnapshotNodes { values, remaining_backing_bytes: 0 });
-                }
-                if let Some(value) = next {
-                    self.push(DagRetirementOwner::SnapshotNode(value));
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
-            }
-            DagRetirementOwner::SnapshotEdge(value) => {
-                let DagHostSnapshotEdge { id, source, target, route_style: _, properties } = value;
-                self.text(id);
-                self.text(source);
-                self.text(target);
-                self.push(DagRetirementOwner::Properties(properties));
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::SnapshotEdges { values, remaining_backing_bytes } => {
-                let released_backing_bytes = dag_vec_backing_bytes(&values);
-                let (mut values, credited_bytes) = match self.credit_backing(values, remaining_backing_bytes, maximum_bytes, |values, remaining_backing_bytes| DagRetirementOwner::SnapshotEdges { values, remaining_backing_bytes }) {
-                    Ok(values) => values,
-                    Err(step) => return step,
-                };
-                let next = values.pop();
-                let released_backing = values.is_empty();
-                if !values.is_empty() {
-                    self.push(DagRetirementOwner::SnapshotEdges { values, remaining_backing_bytes: 0 });
-                }
-                if let Some(value) = next {
-                    self.push(DagRetirementOwner::SnapshotEdge(value));
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
-            }
-            DagRetirementOwner::EngineNode(value) => {
-                let Node { id: _, center: _, radius: _, width: _, height: _, shape: _, draggable: _, kind, label, properties } = value;
-                if let Some(value) = kind {
-                    self.text(value);
-                }
-                if let Some(value) = label {
-                    self.text(value);
-                }
-                self.push(DagRetirementOwner::Properties(properties));
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::EngineHandle(value) => {
-                let Handle { angle: _, id: _, node_id: _, radius: _, role: _, kind, value_types, properties } = value;
-                if let Some(value) = kind {
-                    self.text(value);
-                }
-                for value in value_types {
-                    self.text(value);
-                }
-                self.push(DagRetirementOwner::Properties(properties));
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::EngineSemantics(value) => {
-                let ::graph::ElementSemantics { kind, properties } = value;
-                if let Some(value) = kind {
-                    self.text(value);
-                }
-                self.push(DagRetirementOwner::Properties(properties));
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::EngineEvent(value) => {
-                match value {
-                    BoardEvent::SelectionChanged { edge_ids, handle_ids, node_ids } => {
-                        self.ids(edge_ids);
-                        self.ids(handle_ids);
-                        self.ids(node_ids);
-                    }
-                    BoardEvent::PreselectChanged { edge_ids, handle_ids, node_ids, removed_edge_ids, removed_handle_ids, removed_node_ids } => {
-                        self.ids(edge_ids);
-                        self.ids(handle_ids);
-                        self.ids(node_ids);
-                        self.ids(removed_edge_ids);
-                        self.ids(removed_handle_ids);
-                        self.ids(removed_node_ids);
-                    }
-                    BoardEvent::HoverChanged { .. } | BoardEvent::NodeMoved { .. } | BoardEvent::EdgeConnected { .. } | BoardEvent::EdgeRemoved { .. } => {}
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
-            }
-            DagRetirementOwner::EngineEvents { values, remaining_backing_bytes } => {
-                let released_backing_bytes = dag_vec_backing_bytes(&values);
-                let (mut values, credited_bytes) = match self.credit_backing(values, remaining_backing_bytes, maximum_bytes, |values, remaining_backing_bytes| DagRetirementOwner::EngineEvents { values, remaining_backing_bytes }) {
-                    Ok(values) => values,
-                    Err(step) => return step,
-                };
-                let next = values.pop();
-                let released_backing = values.is_empty();
-                if !values.is_empty() {
-                    self.push(DagRetirementOwner::EngineEvents { values, remaining_backing_bytes: 0 });
-                }
-                if let Some(value) = next {
-                    self.push(DagRetirementOwner::EngineEvent(value));
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
-            }
-            DagRetirementOwner::Ids { values, remaining_backing_bytes } => {
-                let released_backing_bytes = dag_vec_backing_bytes(&values);
-                let (mut values, credited_bytes) = match self.credit_backing(values, remaining_backing_bytes, maximum_bytes, |values, remaining_backing_bytes| DagRetirementOwner::Ids { values, remaining_backing_bytes }) {
-                    Ok(values) => values,
-                    Err(step) => return step,
-                };
-                let _ = values.pop();
-                let released_backing = values.is_empty();
-                if !values.is_empty() {
-                    self.push(DagRetirementOwner::Ids { values, remaining_backing_bytes: 0 });
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
-            }
-            DagRetirementOwner::OptionalIds { values, remaining_backing_bytes } => {
-                let released_backing_bytes = dag_vec_backing_bytes(&values);
-                let (mut values, credited_bytes) = match self.credit_backing(values, remaining_backing_bytes, maximum_bytes, |values, remaining_backing_bytes| DagRetirementOwner::OptionalIds { values, remaining_backing_bytes }) {
-                    Ok(values) => values,
-                    Err(step) => return step,
-                };
-                let _ = values.pop();
-                let released_backing = values.is_empty();
-                if !values.is_empty() {
-                    self.push(DagRetirementOwner::OptionalIds { values, remaining_backing_bytes: 0 });
-                }
-                DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
-            }
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.owners.is_empty()
-    }
-}
-
-impl Drop for DagPayloadRetirement {
-    fn drop(&mut self) {
-        if !self.terminal_is_empty() {
-            if !std::thread::panicking() {
-                panic!("DAG payload retirement dropped with live owned payloads");
-            }
-            return;
-        }
-        unsafe { std::mem::ManuallyDrop::drop(&mut self.owners) };
-    }
-}
-
-fn retire_empty_hash_map_backing<K, V>(values: &mut HashMap<K, V>, credited: &mut usize, maximum_bytes: usize) -> Option<DagRetirementStep> {
-    if !values.is_empty() || values.capacity() == 0 {
-        return None;
-    }
-    let released_bytes = values.capacity().saturating_mul(size_of::<(K, V)>());
-    let remaining_bytes = released_bytes.saturating_sub(*credited);
-    let credited_bytes = maximum_bytes.min(remaining_bytes);
-    *credited = credited.saturating_add(credited_bytes);
-    if *credited != released_bytes {
-        return Some(DagRetirementStep::Pending { released_items: 0, credited_bytes, released_bytes: 0 });
-    }
-    drop(std::mem::take(values));
-    *credited = 0;
-    Some(DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes })
-}
-
-fn retire_empty_hash_set_backing<T>(values: &mut HashSet<T>, credited: &mut usize, maximum_bytes: usize) -> Option<DagRetirementStep> {
-    if !values.is_empty() || values.capacity() == 0 {
-        return None;
-    }
-    let released_bytes = values.capacity().saturating_mul(size_of::<T>());
-    let remaining_bytes = released_bytes.saturating_sub(*credited);
-    let credited_bytes = maximum_bytes.min(remaining_bytes);
-    *credited = credited.saturating_add(credited_bytes);
-    if *credited != released_bytes {
-        return Some(DagRetirementStep::Pending { released_items: 0, credited_bytes, released_bytes: 0 });
-    }
-    drop(std::mem::take(values));
-    *credited = 0;
-    Some(DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes })
-}
-
-#[doc(hidden)]
-pub struct DagHostRetirementState {
-    host_snapshot: DagHostSnapshot,
-    engine: DagBoardEngine,
-    node_id_map: HashMap<NodeId, usize>,
-    handle_key_map: HashMap<HandleId, String>,
-    handle_port_shape: HashMap<HandleId, PortShape>,
-    handle_port_visible: HashMap<HandleId, bool>,
-    edge_id_map: HashMap<EdgeId, String>,
-    edge_engine_ids: Vec<Option<EdgeId>>,
-    edge_route_style: HashMap<EdgeId, EdgeRouteStyle>,
-    pending_port_insert: Option<(DagPortSide, String, usize)>,
-    dimmed: HashSet<NodeId>,
-    icon_paint_cache: graph::IconPaintCache,
-    ghost_node: Option<DagNodeSpec>,
-    pending_cluster_explode: Option<String>,
-    pending_export_click: Option<String>,
-    pending_graph_edits: Vec<DagGraphEdit>,
-    pending_open_instance_id: Option<String>,
-    last_pointer_down_node_id: Option<String>,
-    computing_active: Option<NodeId>,
-    computing_stale: HashSet<NodeId>,
-    node_eval_status: HashMap<NodeId, DagNodeEvalStatusKind>,
-    unresolved_input_ports: HashSet<(NodeId, String)>,
-    editing_note: Option<NoteEditState>,
-    payload_retirement: DagPayloadRetirement,
-    backing_credited_bytes: usize,
-    released: bool,
-}
-
-/// 🧹️ Retained DAG host owner that releases one admitted graph item or bounded payload bytes per grant.
-pub struct DagHostRetirement {
-    state: std::mem::ManuallyDrop<DagHostRetirementState>,
-}
-
-impl std::ops::Deref for DagHostRetirement {
-    type Target = DagHostRetirementState;
-
-    fn deref(&self) -> &Self::Target {
-        &self.state
-    }
-}
-
-impl std::ops::DerefMut for DagHostRetirement {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.state
-    }
-}
-
-impl DagHostRetirement {
-    pub fn new(host: DagHost) -> Self {
-        let DagHost {
-            host_snapshot: snapshot,
-            engine,
-            canvas_theme: _,
-            width: _,
-            height: _,
-            dpr: _,
-            last_screen_x: _,
-            last_screen_y: _,
-            node_id_map,
-            handle_key_map,
-            handle_port_shape,
-            handle_port_visible,
-            edge_id_map,
-            edge_engine_ids,
-            edge_route_style,
-            widget_drag: _,
-            pending_port_insert,
-            dimmed,
-            wheel_zoom_active: _,
-            wheel_zoom_render_lod: _,
-            automatic_lod: _,
-            forced_draw_lod: _,
-            grid_visible: _,
-            grid_snap_enabled: _,
-            grid_factor: _,
-            icon_paint_cache,
-            ghost_node,
-            pending_cluster_explode,
-            pending_export_click,
-            pending_open_instance_id,
-            last_pointer_down_at_ms: _,
-            last_pointer_down_world: _,
-            last_pointer_down_node_id,
-            computing_active,
-            computing_stale,
-            computing_active_anim_phase: _,
-            computing_stale_anim_phase: _,
-            node_eval_status,
-            unresolved_input_ports,
-            editing_note,
-            caret_visible: _,
-            pan_anchor: _,
-            minimap_widget_visible: _,
-            minimap_widget_hovered: _,
-            minimap_widget_drag: _,
-            pending_graph_edits,
-            journal_refusal: _,
-        } = host;
-        Self {
-            state: std::mem::ManuallyDrop::new(DagHostRetirementState {
-                host_snapshot: snapshot,
-                engine,
-                node_id_map,
-                handle_key_map,
-                handle_port_shape,
-                handle_port_visible,
-                edge_id_map,
-                edge_engine_ids,
-                edge_route_style,
-                pending_port_insert,
-                dimmed,
-                icon_paint_cache,
-                ghost_node,
-                pending_cluster_explode,
-                pending_export_click,
-                pending_graph_edits,
-                pending_open_instance_id,
-                last_pointer_down_node_id,
-                computing_active,
-                computing_stale,
-                node_eval_status,
-                unresolved_input_ports,
-                editing_note,
-                payload_retirement: DagPayloadRetirement::default(),
-                backing_credited_bytes: 0,
-                released: false,
-            }),
-        }
-    }
-
-    fn credit_owner(&mut self, owner: DagRetirementOwner, maximum_items: usize, maximum_bytes: usize) -> DagRetirementStep {
-        self.payload_retirement.push(owner);
-        self.payload_retirement.close_step(maximum_items, maximum_bytes)
-    }
-
-    #[doc(hidden)]
-    pub fn retain_node_payload(&mut self, node: DagNodeSpec) {
-        assert!(!self.released, "DAG retirement cannot admit a payload after terminal release");
-        self.payload_retirement.push(DagRetirementOwner::SnapshotNode(node));
-    }
-
-    /// 🔗️ An undrained wire edit still owns its ids; retire them through the same string ladder
-    /// every other owned id goes through rather than dropping them in one unbounded free.
-    ///
-    /// 🧷️ Fixed forward for the wire-drag lane, which added this row while this retirement
-    /// ladder still named only two: a `Move` owns exactly its node id.
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> DagRetirementStep {
-        if self.released {
-            return DagRetirementStep::Complete;
-        }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return DagRetirementStep::Blocked;
-        }
-        if !self.payload_retirement.terminal_is_empty() {
-            return self.payload_retirement.close_step(maximum_items, maximum_bytes);
-        }
-        if let Some((_, value)) = self.engine.edge_semantics.pop_first() {
-            return self.credit_owner(DagRetirementOwner::EngineSemantics(value), maximum_items, maximum_bytes);
-        }
-        if self.engine.events.capacity() != 0 {
-            let values = std::mem::take(&mut self.engine.events);
-            self.payload_retirement.engine_events(values);
-            return self.payload_retirement.close_step(maximum_items, maximum_bytes);
-        }
-        if let Some((_, value)) = self.engine.handles.pop_first() {
-            return self.credit_owner(DagRetirementOwner::EngineHandle(value), maximum_items, maximum_bytes);
-        }
-        if let Some((_, value)) = self.engine.nodes.pop_first() {
-            return self.credit_owner(DagRetirementOwner::EngineNode(value), maximum_items, maximum_bytes);
-        }
-        if !self.engine.selection_options.method.is_empty() {
-            let value = std::mem::take(&mut self.engine.selection_options.method);
-            return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
-        }
-        if !self.engine.selection_options.mode.is_empty() {
-            let value = std::mem::take(&mut self.engine.selection_options.mode);
-            return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
-        }
-        if !self.engine.terminal_is_empty() {
-            let _ = self.engine.close_step();
-            return DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 };
-        }
-        match self.engine.close_backing_page(maximum_bytes) {
-            infinite::board::GraphEngineBackingRetirementStep::Blocked => return DagRetirementStep::Blocked,
-            infinite::board::GraphEngineBackingRetirementStep::Pending { credited_bytes, released_bytes } => {
-                return DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes };
-            }
-            infinite::board::GraphEngineBackingRetirementStep::Complete => {}
-        }
-        match self.icon_paint_cache.close_page(maximum_items, maximum_bytes) {
-            graph::IconPaintRetirementStep::Blocked => return DagRetirementStep::Blocked,
-            graph::IconPaintRetirementStep::Pending { released_items, credited_bytes, released_bytes } => {
-                return DagRetirementStep::Pending { released_items, credited_bytes, released_bytes };
-            }
-            graph::IconPaintRetirementStep::Complete => {}
-        }
-        if !self.host_snapshot.schema.is_empty() {
-            let value = std::mem::take(&mut self.host_snapshot.schema);
-            return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
-        }
-        if self.host_snapshot.nodes.capacity() != 0 {
-            let values = std::mem::take(&mut self.host_snapshot.nodes);
-            self.payload_retirement.snapshot_nodes(values);
-            return self.payload_retirement.close_step(maximum_items, maximum_bytes);
-        }
-        if self.host_snapshot.edges.capacity() != 0 {
-            let values = std::mem::take(&mut self.host_snapshot.edges);
-            self.payload_retirement.snapshot_edges(values);
-            return self.payload_retirement.close_step(maximum_items, maximum_bytes);
-        }
-        if self.edge_engine_ids.capacity() != 0 {
-            let values = std::mem::take(&mut self.edge_engine_ids);
-            self.payload_retirement.optional_ids(values);
-            return self.payload_retirement.close_step(maximum_items, maximum_bytes);
-        }
-        if let Some((_, value, _)) = self.pending_port_insert.take() {
-            return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
-        }
-        if let Some(value) = self.pending_cluster_explode.take() {
-            return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
-        }
-        if let Some(value) = self.pending_export_click.take() {
-            return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
-        }
-        if let Some(edit) = self.pending_graph_edits.pop() {
-            let values = match edit {
-                DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => vec![source_node_id, source_port_id, target_node_id, target_port_id],
-                DagGraphEdit::Disconnect { synapse_id } => vec![synapse_id],
-                DagGraphEdit::Move { gesture_id, mut node_ids, .. } => {
-                    node_ids.push(gesture_id);
-                    node_ids
-                }
-                DagGraphEdit::SetSlider { node_id, .. } | DagGraphEdit::InsertPort { node_id, .. } => vec![node_id],
-            };
-            let remaining_backing_bytes = dag_vec_backing_bytes(&values);
-            return self.credit_owner(DagRetirementOwner::Strings { values, remaining_backing_bytes }, maximum_items, maximum_bytes);
-        }
-        if let Some(value) = self.pending_open_instance_id.take() {
-            return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
-        }
-        if let Some(value) = self.last_pointer_down_node_id.take() {
-            return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
-        }
-        if let Some(value) = self.editing_note.take() {
-            return self.credit_owner(DagRetirementOwner::Text(value.node_id), maximum_items, maximum_bytes);
-        }
-        if let Some(key) = self.node_id_map.keys().next().copied() {
-            self.node_id_map.remove(&key);
-            return DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 };
-        }
-        if let Some(key) = self.handle_key_map.keys().next().copied() {
-            let value = self.handle_key_map.remove(&key).expect("DAG handle key remains present");
-            return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
-        }
-        if let Some(key) = self.handle_port_shape.keys().next().copied() {
-            self.handle_port_shape.remove(&key);
-            return DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 };
-        }
-        if let Some(key) = self.handle_port_visible.keys().next().copied() {
-            self.handle_port_visible.remove(&key);
-            return DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 };
-        }
-        if let Some(key) = self.edge_id_map.keys().next().copied() {
-            let value = self.edge_id_map.remove(&key).expect("DAG edge key remains present");
-            return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
-        }
-        if let Some(key) = self.edge_route_style.keys().next().copied() {
-            self.edge_route_style.remove(&key);
-            return DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 };
-        }
-        if let Some(key) = self.dimmed.iter().next().copied() {
-            self.dimmed.remove(&key);
-            return DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 };
-        }
-        if let Some(key) = self.computing_stale.iter().next().copied() {
-            self.computing_stale.remove(&key);
-            return DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 };
-        }
-        if let Some(key) = self.node_eval_status.keys().next().copied() {
-            self.node_eval_status.remove(&key);
-            return DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 };
-        }
-        if let Some((_, value)) = self.unresolved_input_ports.extract_if(|_| true).next() {
-            return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
-        }
-        if let Some(value) = self.ghost_node.take() {
-            return self.credit_owner(DagRetirementOwner::SnapshotNode(value), maximum_items, maximum_bytes);
-        }
-        if self.computing_active.take().is_some() {
-            return DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 };
-        }
-        let state = &mut *self.state;
-        if let Some(step) = retire_empty_hash_map_backing(&mut state.node_id_map, &mut state.backing_credited_bytes, maximum_bytes) {
-            return step;
-        }
-        if let Some(step) = retire_empty_hash_map_backing(&mut state.handle_key_map, &mut state.backing_credited_bytes, maximum_bytes) {
-            return step;
-        }
-        if let Some(step) = retire_empty_hash_map_backing(&mut state.handle_port_shape, &mut state.backing_credited_bytes, maximum_bytes) {
-            return step;
-        }
-        if let Some(step) = retire_empty_hash_map_backing(&mut state.handle_port_visible, &mut state.backing_credited_bytes, maximum_bytes) {
-            return step;
-        }
-        if let Some(step) = retire_empty_hash_map_backing(&mut state.edge_id_map, &mut state.backing_credited_bytes, maximum_bytes) {
-            return step;
-        }
-        if let Some(step) = retire_empty_hash_map_backing(&mut state.edge_route_style, &mut state.backing_credited_bytes, maximum_bytes) {
-            return step;
-        }
-        if let Some(step) = retire_empty_hash_set_backing(&mut state.dimmed, &mut state.backing_credited_bytes, maximum_bytes) {
-            return step;
-        }
-        if let Some(step) = retire_empty_hash_set_backing(&mut state.computing_stale, &mut state.backing_credited_bytes, maximum_bytes) {
-            return step;
-        }
-        if let Some(step) = retire_empty_hash_map_backing(&mut state.node_eval_status, &mut state.backing_credited_bytes, maximum_bytes) {
-            return step;
-        }
-        if let Some(step) = retire_empty_hash_set_backing(&mut state.unresolved_input_ports, &mut state.backing_credited_bytes, maximum_bytes) {
-            return step;
-        }
-        debug_assert_eq!(self.backing_credited_bytes, 0);
-        self.released = true;
-        DagRetirementStep::Complete
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.released
-            && self.engine.terminal_is_empty()
-            && self.host_snapshot.schema.is_empty()
-            && self.host_snapshot.nodes.is_empty()
-            && self.host_snapshot.edges.is_empty()
-            && self.node_id_map.is_empty()
-            && self.handle_key_map.is_empty()
-            && self.handle_port_shape.is_empty()
-            && self.handle_port_visible.is_empty()
-            && self.edge_id_map.is_empty()
-            && self.edge_engine_ids.is_empty()
-            && self.edge_route_style.is_empty()
-            && self.pending_port_insert.is_none()
-            && self.dimmed.is_empty()
-            && self.icon_paint_cache.terminal_is_empty()
-            && self.ghost_node.is_none()
-            && self.pending_cluster_explode.is_none()
-            && self.pending_export_click.is_none()
-            && self.pending_graph_edits.is_empty()
-            && self.pending_open_instance_id.is_none()
-            && self.last_pointer_down_node_id.is_none()
-            && self.computing_active.is_none()
-            && self.computing_stale.is_empty()
-            && self.node_eval_status.is_empty()
-            && self.unresolved_input_ports.is_empty()
-            && self.editing_note.is_none()
-            && self.payload_retirement.terminal_is_empty()
-            && self.backing_credited_bytes == 0
-    }
-}
-
-impl Drop for DagHostRetirement {
-    fn drop(&mut self) {
-        if !self.terminal_is_empty() {
-            if !std::thread::panicking() {
-                panic!("DagHostRetirement must reach terminal-empty before release");
-            }
-            return;
-        }
-        unsafe { std::mem::ManuallyDrop::drop(&mut self.state) };
-    }
-}
+#[path="🧹️retirement/🦀️.rs"]
+mod retirement;
+pub use retirement::DagHostRetirement;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum DagNodeEvalStatusKind {
@@ -2773,16 +1627,16 @@ impl DagHost {
             dpr: 1.0,
             last_screen_x: 0.0,
             last_screen_y: 0.0,
-            node_id_map: HashMap::new(),
-            handle_key_map: HashMap::new(),
-            handle_port_shape: HashMap::new(),
-            handle_port_visible: HashMap::new(),
-            edge_id_map: HashMap::new(),
+            node_id_map: HistoryFoldIndex::new(),
+            handle_key_map: HistoryFoldIndex::new(),
+            handle_port_shape: HistoryFoldIndex::new(),
+            handle_port_visible: HistoryFoldIndex::new(),
+            edge_id_map: HistoryFoldIndex::new(),
             edge_engine_ids: Vec::new(),
-            edge_route_style: HashMap::new(),
+            edge_route_style: HistoryFoldIndex::new(),
             widget_drag: None,
             pending_port_insert: None,
-            dimmed: HashSet::new(),
+            dimmed: HistoryFoldSet::new(),
             wheel_zoom_active: false,
             wheel_zoom_render_lod: None,
             automatic_lod: true,
@@ -2799,11 +1653,11 @@ impl DagHost {
             last_pointer_down_world: (0.0, 0.0),
             last_pointer_down_node_id: None,
             computing_active: None,
-            computing_stale: HashSet::new(),
+            computing_stale: NumericSet::new(),
             computing_active_anim_phase: Cell::new(0.0),
             computing_stale_anim_phase: Cell::new(0.0),
-            node_eval_status: HashMap::new(),
-            unresolved_input_ports: HashSet::new(),
+            node_eval_status: NumericIndex::new(),
+            unresolved_input_ports: NumericSet::new(),
             editing_note: None,
             caret_visible: true,
             pan_anchor: None,
@@ -3191,22 +2045,19 @@ impl DagHost {
         None
     }
 
-    fn decode_channel_ref(&self, target: u64) -> Option<DagChannelRef> {
+    fn channel_view(&self, target:u64)->Option<crate::infinite::board::schema::dag_input::output::DagChannelView<'_>> {
         if self.node_id_map.contains_key(&target) {
             return None;
         }
         let key = self.handle_key_map.get(&target)?;
-        let (node_id, port_id) = key.split_once('@')?;
-        let node = self.host_snapshot.nodes.iter().find(|entry| entry.id == node_id)?;
-        let direction = if node.inputs().iter().any(|port| port.id == port_id) {
-            "in"
-        } else if node.outputs().iter().any(|port| port.id == port_id) {
-            "out"
-        } else {
-            return None;
-        };
-        Some(DagChannelRef { widget_id: node_id.to_string(), port: port_id.to_string(), direction: direction.to_string() })
+        let handle=self.engine.handles.get(&target)?;
+        let node=self.host_snapshot.nodes.get(*self.node_id_map.get(&handle.node_id)?)?;
+        let port=key.get(node.id.len().checked_add(1)?..)?;
+        let direction=match handle.role{HandleRole::Target=>DagChannelDirection::In,HandleRole::Source=>DagChannelDirection::Out,_=>return None};
+        Some(crate::infinite::board::schema::dag_input::output::DagChannelView {widget_id:&node.id,port,direction})
     }
+
+    fn decode_channel_ref(&self,target:u64)->Option<DagChannelRef>{self.channel_view(target).map(|value|DagChannelRef{widget_id:value.widget_id.to_owned(),port:value.port.to_owned(),direction:value.direction})}
 
     /// 🔌️ Hovered snapshot channel when the pointer is over a port row or handle.
     pub fn hovered_channel(&self) -> Option<DagChannelRef> {
@@ -3219,47 +2070,16 @@ impl DagHost {
         self.engine.selection.handle_ids.iter().filter_map(|&handle_id| self.decode_channel_ref(handle_id)).collect()
     }
 
-    /// 🔌️ Selected snapshot channels as JSON.
-
-
-    /// 🚫️ The refusal a live wire drag is hovering, as JSON, or `null` — the port pair the declared
-    /// port types forbid, with both declared type lists so a surface can name them in the user's own
-    /// language. Structural refusals (role, cycle, self-node) are NOT reported: a hint can only help
-    /// with the one a user can act on.
-    ///
-    /// @see `🧫️fixtures/🔌️port-types/🔣️.json` — the law both node-graph renderers answer
-    pub fn wire_type_refusal_json(&self) -> String {
-        let Some((source_hid, target_hid)) = self.engine.wire_drag_type_refusal() else {
-            return "null".into();
-        };
-        let (Some(source_key), Some(target_key)) = (self.handle_key_map.get(&source_hid), self.handle_key_map.get(&target_hid)) else {
-            return "null".into();
-        };
-        let types = |handle_id: u64| self.engine.handles.get(&handle_id).map(|handle| handle.value_types.clone()).unwrap_or_default();
-        format!(
-            "{{\"source\":{},\"sourceTypes\":{},\"target\":{},\"targetTypes\":{}}}",
-            semio_framework_pack_json::to_json_string(source_key),
-            semio_framework_pack_json::to_json_string(&types(source_hid)),
-            semio_framework_pack_json::to_json_string(target_key),
-            semio_framework_pack_json::to_json_string(&types(target_hid))
-        )
+    /// 🚫️ Projects a live wire refusal with both declared semantic value type lists.
+    pub fn wire_type_refusal(&self)->Option<DagWireTypeRefusal>{
+        let (source_hid,target_hid)=self.engine.wire_drag_type_refusal()?;
+        let source=self.handle_key_map.get(&source_hid)?.clone();let target=self.handle_key_map.get(&target_hid)?.clone();
+        let types=|id|self.engine.handles.get(&id).map(|handle|handle.value_types.clone()).unwrap_or_default();
+        Some(DagWireTypeRefusal{source,source_types:types(source_hid),target,target_types:types(target_hid)})
     }
 
-    /// 🔌️ Hovered snapshot channel as JSON, or `null` — carrying the live wire drag's type refusal
-    /// alongside it when there is one, so one poll answers both "what is under the pointer" and "why
-    /// will it not take this wire".
-    pub fn hovered_channel_json(&self) -> String {
-        let refusal = self.wire_type_refusal_json();
-        match (self.hovered_channel(), refusal.as_str()) {
-            (None, "null") => "null".into(),
-            (None, _) => format!("{{\"refusal\":{refusal}}}"),
-            (Some(channel), "null") => semio_framework_pack_json::to_json_string(&channel),
-            (Some(channel), _) => {
-                let encoded = semio_framework_pack_json::to_json_string(&channel);
-                format!("{}{}{}", &encoded[..encoded.len().saturating_sub(1)], format_args!(",\"refusal\":{refusal}"), "}")
-            }
-        }
-    }
+    /// 🖱️ Projects channel hover and live wire refusal from one accepted graph state.
+    pub fn hover_facts(&self)->DagHoverFacts{DagHoverFacts{channel:self.hovered_channel(),refusal:self.wire_type_refusal()}}
 
     /// 🗺️ Every node and port this graph paints, each with the SCREEN geometry
     /// [`Self::entity_screen_json`] publishes for it — one census of where everything IS, for a
@@ -3993,7 +2813,7 @@ impl DagHost {
     pub fn clear_computing(&mut self) {
         self.computing_active = None;
         self.computing_stale.clear();
-        self.node_eval_status.clear();
+        self.node_eval_status.reset();
         self.unresolved_input_ports.clear();
     }
 
@@ -4001,16 +2821,16 @@ impl DagHost {
     pub fn set_node_statuses(&mut self,statuses:&DagNodeStatuses) {
         self.computing_active=None;
         self.computing_stale.clear();
-        self.node_eval_status.clear();
+        self.node_eval_status.reset();
         self.unresolved_input_ports.clear();
         for (widget_id,status)in statuses {
             let Some(nid)=self.node_id_for_widget_id(widget_id)else{continue};
             let kind=match status {
-                DagNodeEvaluationStatus::Computing=>{self.computing_active=Some(nid);DagNodeEvalStatusKind::Computing},
-                DagNodeEvaluationStatus::Queued=>{self.computing_stale.insert(nid);DagNodeEvalStatusKind::Queued},
+                DagNodeEvaluationStatus::Computing{}=>{self.computing_active=Some(nid);DagNodeEvalStatusKind::Computing},
+                DagNodeEvaluationStatus::Queued{}=>{self.computing_stale.insert(nid);DagNodeEvalStatusKind::Queued},
                 DagNodeEvaluationStatus::Error{..}=>DagNodeEvalStatusKind::Error,
-                DagNodeEvaluationStatus::Blocked{ports}=>{for port in ports{self.unresolved_input_ports.insert((nid,port.clone()));}DagNodeEvalStatusKind::Blocked},
-                DagNodeEvaluationStatus::Ok=>DagNodeEvalStatusKind::Ok,
+                DagNodeEvaluationStatus::Blocked{ports}=>{for port in ports{if let Some(node)=self.host_snapshot.nodes.get((nid-1)as usize){for(index,input)in node.inputs().iter().enumerate(){if input.id==*port{self.unresolved_input_ports.insert((nid,index));}}}}DagNodeEvalStatusKind::Blocked},
+                DagNodeEvaluationStatus::Ok{}=>DagNodeEvalStatusKind::Ok,
             };
             self.node_eval_status.insert(nid,kind);
         }
@@ -4673,7 +3493,7 @@ impl DagHost {
 
     fn handle_id_for_port(&self, node_id: &str, port_id: &str) -> Option<HandleId> {
         let key = format!("{node_id}@{port_id}");
-        self.handle_key_map.iter().find(|(_, k)| k.as_str() == key).map(|(&hid, _)| hid)
+        self.handle_key_map.iter().filter(|(_, k)| k.as_str() == key).map(|(&hid, _)| hid).min()
     }
 
     /// 🔌️ The handle on ONE side of a port. `handle_key_map` keys every handle as `"{nodeId}@{portId}"`,
@@ -5473,7 +4293,7 @@ impl DagHost {
     /// by the body's own width, and nodes are laid out far enough apart to overhang it. Its
     /// budget is therefore `NODE_TITLE_WIDTH_FACTOR` node widths, while a caption INSIDE the
     /// body (the compact tier) and a rotated one keep the extent they actually sit in.
-    fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool, engine_nid: Option<NodeId>, unresolved_input_ports: &HashSet<(NodeId, String)>) -> Vec<Value> {
+    fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool, engine_nid: Option<NodeId>, unresolved_input_ports: &NumericSet<(NodeId,usize)>) -> Vec<Value> {
         let paint_px = dag_label_paint_px(zoom, lod_index);
         let mut labels = Vec::new();
         if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
@@ -5519,7 +4339,7 @@ impl DagHost {
         labels
     }
 
-    fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, engine_nid: Option<NodeId>, unresolved_input_ports: &HashSet<(NodeId, String)>) -> Vec<Value> {
+    fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, engine_nid: Option<NodeId>, unresolved_input_ports: &NumericSet<(NodeId,usize)>) -> Vec<Value> {
         use canvas::text::label_extent;
         let hw = node.width * 0.5;
         let handle_inset = 8.0 / zoom.max(0.05);
@@ -5530,10 +4350,10 @@ impl DagHost {
         let mut rows = Vec::new();
         let input_column_w = if computation { io_port_column_width(inputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
         let output_column_w = if computation { io_port_column_width(outputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
-        let input_port_label = |port: &IoPortSpec| -> String {
+        let input_port_label = |index:usize,port: &IoPortSpec| -> String {
             let mut port = port.clone();
             if let Some(nid) = engine_nid {
-                if unresolved_input_ports.contains(&(nid, port.id.clone())) {
+                if unresolved_input_ports.contains(&(nid,index)) {
                     port.resolved = Some(false);
                 }
             }
@@ -5543,7 +4363,7 @@ impl DagHost {
             if port.shape == PortShape::Triangle || !port.visible {
                 continue;
             }
-            let label = input_port_label(port);
+            let label = input_port_label(i,port);
             if label.trim().is_empty() {
                 continue;
             }
@@ -6549,7 +5369,7 @@ mod wasm_session {
         #[wasm_bindgen(js_name = reorganize)]
         pub fn reorganize(&self,options_json:&str,maximum_bytes:u32,maximum_work:u32,progress:js_sys::Function)->Result<(),JsValue>{
             let report=|phase:&str,completed:u64|progress.call2(&JsValue::NULL,&JsValue::from_str(phase),&JsValue::from_f64(completed as f64)).map(|v|v.as_bool().unwrap_or(false)).unwrap_or(false);
-            let mut decoding=|p:semio_framework_value::NativeDecodeProgress|report("decode",p.completed as u64);let mut decode=semio_framework_value::NativeDecodeControl::new(maximum_bytes as usize,&mut decoding);
+            let mut decoding=|p:semio_framework_value::native_decoding::NativeDecodeProgress|report("decode",p.completed as u64);let mut decode=semio_framework_value::NativeDecodeControl::new(maximum_bytes as usize,&mut decoding);
             let opts=crate::infinite::board::io::text::layout::decode_dag_options_json(options_json,&mut decode).map_err(|e|JsValue::from_str(&e.to_string()))?;
             let mut working=|p:crate::infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);let mut work=LayoutControl::new(maximum_work as u64,&mut working);
             self.state.borrow_mut().host.reorganize(&opts,&mut work).map_err(|e|JsValue::from_str(&e.to_string()))
@@ -6647,3 +5467,18 @@ mod wasm_bridge {
     }
 }
 //#endregion 🔖️WasmBridge
+
+impl crate::infinite::board::schema::dag_input::output::DagOutputCandidates for DagHost{
+    fn node_candidate_count(&self)->usize{self.engine.selection.node_ids.len()}
+    fn node_candidate_id(&self,index:usize)->Option<&str>{self.widget_id_for_node_id_ref(*self.engine.selection.node_ids.key_at_rank(index)?)}
+    fn edge_candidate_count(&self)->usize{self.engine.selection.edge_ids.len()}
+    fn edge_candidate_id(&self,index:usize)->Option<&str>{self.edge_id_map.get(self.engine.selection.edge_ids.key_at_rank(index)?).map(String::as_str)}
+    fn channel_candidate_count(&self)->usize{self.engine.selection.handle_ids.len()}
+    fn channel_candidate(&self,index:usize)->Option<crate::infinite::board::schema::dag_input::output::DagChannelView<'_>>{self.channel_view(*self.engine.selection.handle_ids.key_at_rank(index)?)}
+    fn handle_candidate_identity(&self,index:usize)->Option<&str>{let id=self.engine.selection.handle_ids.key_at_rank(index)?;self.channel_view(*id)?;self.handle_key_map.get(id).map(String::as_str)}
+    fn hovered_channel_view(&self)->Option<crate::infinite::board::schema::dag_input::output::DagChannelView<'_>>{self.engine.hover.and_then(|id|self.channel_view(id))}
+    fn wire_refusal_view(&self)->Option<crate::infinite::board::schema::dag_input::output::DagRefusalView<'_>>{
+        let(source,target)=self.engine.wire_drag_type_refusal()?;
+        Some(crate::infinite::board::schema::dag_input::output::DagRefusalView{source:self.handle_key_map.get(&source)?,source_types:self.engine.handles.get(&source).map_or(&[],|handle|handle.value_types.as_slice()),target:self.handle_key_map.get(&target)?,target_types:self.engine.handles.get(&target).map_or(&[],|handle|handle.value_types.as_slice())})
+    }
+}

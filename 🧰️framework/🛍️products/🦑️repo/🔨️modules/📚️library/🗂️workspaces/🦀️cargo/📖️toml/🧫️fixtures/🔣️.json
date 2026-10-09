@@ -1,0 +1,241 @@
+{
+  "schemaVersion": 1,
+  "scope": "cargo-owned-finite-values",
+  "cases": [
+    {
+      "id": "empty",
+      "source": "# owned\n",
+      "accepted": true,
+      "expected": {}
+    },
+    {
+      "id": "package",
+      "source": "[package]\nname = \"owned\"\nversion = '0.1.0'\npublish = false\n",
+      "accepted": true,
+      "expected": {
+        "package": {
+          "name": "owned",
+          "version": "0.1.0",
+          "publish": false
+        }
+      }
+    },
+    {
+      "id": "unicode-key",
+      "source": "[dependencies]\n\"📦️codec\" = { package = 'owned-codec', path = '../codec', features = [\"a\", \"b\"], default-features = false }\n",
+      "accepted": true,
+      "expected": {
+        "dependencies": {
+          "📦️codec": {
+            "package": "owned-codec",
+            "path": "../codec",
+            "features": [
+              "a",
+              "b"
+            ],
+            "default-features": false
+          }
+        }
+      }
+    },
+    {
+      "id": "dotted",
+      "source": "workspace.metadata.semio.repository.schema-version = 1\nworkspace.metadata.semio.repository.member-manifests = ['Cargo.toml']\n",
+      "accepted": true,
+      "expected": {
+        "workspace": {
+          "metadata": {
+            "semio": {
+              "repository": {
+                "schema-version": 1,
+                "member-manifests": [
+                  "Cargo.toml"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "array-comments",
+      "source": "members = [\n 'a', # owned\n \"b\",\n]\n",
+      "accepted": true,
+      "expected": {
+        "members": [
+          "a",
+          "b"
+        ]
+      }
+    },
+    {
+      "id": "target-key",
+      "source": "[target.'cfg(not(target_os = \"wasi\"))'.dependencies]\nui = { path = '../ui', features = ['board'] }\n",
+      "accepted": true,
+      "expected": {
+        "target": {
+          "cfg(not(target_os = \"wasi\"))": {
+            "dependencies": {
+              "ui": {
+                "path": "../ui",
+                "features": [
+                  "board"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "array-tables",
+      "source": "[[test]]\nname = 'one'\n[test.metadata]\nowned = true\n[[test]]\nname = 'two'\n",
+      "accepted": true,
+      "expected": {
+        "test": [
+          {
+            "name": "one",
+            "metadata": {
+              "owned": true
+            }
+          },
+          {
+            "name": "two"
+          }
+        ]
+      }
+    },
+    {
+      "id": "quoted-dot",
+      "source": "'a.b'.\"c.d\" = \"v\"\n",
+      "accepted": true,
+      "expected": {
+        "a.b": {
+          "c.d": "v"
+        }
+      }
+    },
+    {
+      "id": "string-escapes",
+      "source": "value = \"a\\tb\\n\\u263A\\U0001F642\\\\\\\"\"\n",
+      "accepted": true,
+      "expected": {
+        "value": "a\tb\n☺🙂\\\""
+      }
+    },
+    {
+      "id": "multiline-basic",
+      "source": "value = \"\"\"\nfirst\\\n  second\nthird\"\"\"\n",
+      "accepted": true,
+      "expected": {
+        "value": "firstsecond\nthird"
+      }
+    },
+    {
+      "id": "multiline-literal",
+      "source": "value = '''\nfirst\nsecond'''\n",
+      "accepted": true,
+      "expected": {
+        "value": "first\nsecond"
+      }
+    },
+    {
+      "id": "numeric",
+      "source": "decimal = -1_024\nhex = 0xFF\noctal = 0o77\nbinary = 0b11\nfloat = +1.25e-2\n",
+      "accepted": true,
+      "expected": {
+        "decimal": -1024,
+        "hex": 255,
+        "octal": 63,
+        "binary": 3,
+        "float": 0.0125
+      }
+    },
+    {
+      "id": "empty-key",
+      "source": "\"\" = 'owned'\n",
+      "accepted": true,
+      "expected": {
+        "": "owned"
+      }
+    },
+    {
+      "id": "prototype-key",
+      "source": "__proto__ = { constructor = 'owned' }\n",
+      "accepted": true,
+      "expected": {
+        "__proto__": {
+          "constructor": "owned"
+        }
+      }
+    },
+    {
+      "id": "duplicate-key",
+      "source": "name='a'\nname='b'\n",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-table",
+      "source": "[a]\nx=1\n[a]\ny=2\n",
+      "accepted": false
+    },
+    {
+      "id": "inline-extension",
+      "source": "a={b=1}\na.c=2\n",
+      "accepted": false
+    },
+    {
+      "id": "inline-trailing-comma",
+      "source": "a={b=1,}\n",
+      "accepted": false
+    },
+    {
+      "id": "leading-zero",
+      "source": "a=01\n",
+      "accepted": false
+    },
+    {
+      "id": "unfinished-string",
+      "source": "a=\"owned\n",
+      "accepted": false
+    },
+    {
+      "id": "surrogate",
+      "source": "a=\"\\uD800\"\n",
+      "accepted": false
+    },
+    {
+      "id": "unsafe-integer",
+      "source": "a=9223372036854775807\n",
+      "accepted": false
+    },
+    {
+      "id": "datetime-scope",
+      "source": "a=1979-05-27T07:32:00Z\n",
+      "accepted": false
+    },
+    {
+      "id": "nonfinite-scope",
+      "source": "a=nan\n",
+      "accepted": false
+    },
+    {
+      "id": "dotted-table-redefinition",
+      "source": "a.b=1\n[a]\nc=2\n",
+      "accepted": false
+    },
+    {
+      "id": "implicit-table-definition",
+      "source": "[a.b]\nc=1\n[a]\nd=2\n",
+      "accepted": true,
+      "expected": {
+        "a": {
+          "b": {
+            "c": 1
+          },
+          "d": 2
+        }
+      }
+    }
+  ]
+}

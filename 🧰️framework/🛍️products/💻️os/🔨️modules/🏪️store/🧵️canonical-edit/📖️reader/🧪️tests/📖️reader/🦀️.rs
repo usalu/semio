@@ -7,24 +7,13 @@ use std::sync::atomic::Ordering;
 //#region 📦️ReaderFixtures
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RootRetirementFactory;
-struct EmptyRetirement;
-impl ErasedSnapshotRetirement for EmptyRetirement {
-    fn close_step(&mut self, _items: usize, _bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        Ok(SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self) -> bool {
-        true
-    }
-}
 impl SnapshotRetirementFactory<Edit<MapMutation>> for RootRetirementFactory {
-    fn retirement_birth_bytes(&self, snapshot: &Arc<Edit<MapMutation>>) -> usize { if std::sync::Arc::strong_count(snapshot) == 1 { std::mem::size_of::<ArtifactStoreDecodedEditRetirement<MapMutation>>() + 2 * std::mem::size_of::<usize>() } else { std::mem::size_of::<EmptyRetirement>() } }
-
-    fn retire(&self, root: Arc<Edit<MapMutation>>) -> Box<dyn ErasedSnapshotRetirement> {
-        match Arc::into_inner(root) {
-            Some(edit) => Box::new(ArtifactStoreDecodedEditRetirement::new(edit, Arc::new(MapRetirementFactory))),
-            None => Box::new(EmptyRetirement),
-        }
-    }
+ fn retirement_birth_bytes(&self, root: &Arc<Edit<MapMutation>>) -> usize { semio_framework_value::retirement::SharedValueRetirementFactory::<Edit<MapMutation>>::default().retirement_birth_bytes(root) }
+ fn retire(&self, root: Arc<Edit<MapMutation>>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<Edit<MapMutation>>)> { semio_framework_value::retirement::SharedValueRetirementFactory::<Edit<MapMutation>>::default().retire(root, grant) }
+}
+static RETIREMENT_POLICY: std::sync::LazyLock<RetainedCloneGrant> = std::sync::LazyLock::new(super::super::borrowed_tests::fixture_retirement_grant);
+fn encoding_grant(items: usize, copy: usize) -> ArtifactStoreOneItemGrant {
+ ArtifactStoreOneItemGrant { maximum_items: items, maximum_copy_bytes: copy, maximum_capacity_bytes: RETIREMENT_POLICY.maximum_capacity_bytes, maximum_release_bytes: RETIREMENT_POLICY.maximum_release_bytes, maximum_depth: RETIREMENT_POLICY.maximum_depth }
 }
 
 fn make_reader() -> (ArtifactCanonicalJsonReader<Edit<MapMutation>>, serde_json::Value, Arc<MapLifetime>) {
@@ -37,7 +26,7 @@ fn finish(reader: &mut ArtifactCanonicalJsonReader<Edit<MapMutation>>, bytes: us
     for _ in 0..100_000 {
         let prior = reader.completed_bytes();
         let mut output = [0; 512];
-        let count = reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }, &mut output).unwrap();
+        let count = reader.encode_chunk(encoding_grant(1, bytes), &mut output).unwrap();
         assert!(count <= bytes.min(256));
         assert_eq!(reader.completed_bytes() - prior, count as u64);
         result.extend_from_slice(&output[..count]);
@@ -49,31 +38,21 @@ fn finish(reader: &mut ArtifactCanonicalJsonReader<Edit<MapMutation>>, bytes: us
 }
 
 fn close(reader: &mut ArtifactCanonicalJsonReader<Edit<MapMutation>>) {
-    reader.begin_close();
-    assert!(matches!(reader.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 0 }).unwrap(), SnapshotRetirementStep::Blocked));
-    for _ in 0..100_000 {
-        match reader.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).unwrap() {
-            SnapshotRetirementStep::Complete => {
-                assert!(reader.terminal_is_empty());
-                return;
-            }
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 1),
-            SnapshotRetirementStep::Blocked => panic!("positive reader retirement grant blocked"),
-        }
-    }
-    panic!("canonical reader did not retire");
+ reader.begin_close();
+ assert_eq!(reader.close_step(RetainedCloneGrant { maximum_items: 0, ..*RETIREMENT_POLICY }).unwrap().progress(), RetainedCloneProgress::default());
+ for _ in 0..100_000 {
+  let (step, heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||reader.close_step(*RETIREMENT_POLICY).unwrap());let receipt=step.progress();assert!(receipt.fits(*RETIREMENT_POLICY));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
+  if matches!(step,RetainedCloneStep::Complete(_)) { assert!(reader.terminal_is_empty());return; }
+ }
+ panic!("canonical reader did not retire");
 }
-
 fn retire(root: Arc<Edit<MapMutation>>, lifetime: &MapLifetime) {
-    let mut retirement = RootRetirementFactory.retire(root);
-    for _ in 0..100_000 {
-        if matches!(retirement.close_step(1, 1).unwrap(), SnapshotRetirementStep::Complete) {
-            assert!(retirement.terminal_is_empty());
-            assert_eq!(lifetime.root_drops.load(Ordering::SeqCst), 1);
-            return;
-        }
-    }
-    panic!("transferred reader root did not retire");
+ let (owner,progress)=RootRetirementFactory.retire(root,*RETIREMENT_POLICY).unwrap_or_else(|_|panic!("original reader root was refused"));assert!(progress.fits(*RETIREMENT_POLICY));let mut owner=Some(owner);
+ for _ in 0..100_000 {
+  let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||super::super::super::artifact_retirement_box_close_step(&mut owner,*RETIREMENT_POLICY).unwrap());let receipt=step.progress();assert!(receipt.fits(*RETIREMENT_POLICY));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
+  if owner.is_none() { assert_eq!(lifetime.root_drops.load(Ordering::SeqCst),1);return; }
+ }
+ panic!("transferred reader root did not retire");
 }
 //#endregion 📦️ReaderFixtures
 
@@ -88,8 +67,8 @@ fn canonical_reader_large_borrowed_map_matches_serde_and_transfers_exact_root() 
         assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
         assert_eq!(expected.len() as u64, reader_fixture["expectedByteLength"].as_u64().unwrap());
         assert!(reader.take_root().is_none());
-        assert_eq!(reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: bytes }, &mut [0; 256]).unwrap(), 0);
-        assert_eq!(reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 0 }, &mut [0; 256]).unwrap(), 0);
+        assert_eq!(reader.encode_chunk(encoding_grant(0, bytes), &mut [0; 256]).unwrap(), 0);
+        assert_eq!(reader.encode_chunk(encoding_grant(1, 0), &mut [0; 256]).unwrap(), 0);
         assert_eq!(reader.completed_bytes(), 0);
         assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
         let actual = finish(&mut reader, bytes);
@@ -113,12 +92,12 @@ fn canonical_reader_cancel_before_poll_mid_key_and_after_completion_retires_exac
         if stage == 1 {
             let target = fixture["expectedJson"].as_str().unwrap().find("key-").unwrap() as u64 + 128;
             while reader.completed_bytes() < target {
-                reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }, &mut [0; 1]).unwrap();
+                reader.encode_chunk(encoding_grant(1, 1), &mut [0; 1]).unwrap();
             }
             assert!(lifetime.active_iterators.load(Ordering::SeqCst) > 0);
             assert!(reader.take_root().is_none());
             reader = std::thread::spawn(move || {
-                reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }, &mut [0; 1]).unwrap();
+                reader.encode_chunk(encoding_grant(1, 1), &mut [0; 1]).unwrap();
                 reader
             })
             .join()
@@ -128,7 +107,7 @@ fn canonical_reader_cancel_before_poll_mid_key_and_after_completion_retires_exac
         }
         reader.cancel();
         let prior = reader.completed_bytes();
-        assert_eq!(reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 }, &mut [0; 256]).unwrap(), 0);
+        assert_eq!(reader.encode_chunk(encoding_grant(1, 4096), &mut [0; 256]).unwrap(), 0);
         assert_eq!(reader.completed_bytes(), prior);
         close(&mut reader);
         assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
@@ -140,24 +119,26 @@ fn canonical_reader_cancel_before_poll_mid_key_and_after_completion_retires_exac
 fn canonical_reader_rebound_root_rejected_before_borrowed_reference_use() {
     let (mut reader, _, lifetime) = make_reader();
     for _ in 0..100 {
-        reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 }, &mut [0; 7]).unwrap();
+        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap();
     }
-    let original = reader.owned.root.replace(Arc::new(fixture().0)).unwrap();
-    assert_eq!(reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 }, &mut [0; 7]).unwrap_err(), ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: "canonical-edit.borrowed-root-rebound".into() });
-    reader.owned.root = Some(original);
+    let (replacement, _, replacement_lifetime) = fixture();
+    let original = reader.owned.root.replace(Arc::new(replacement)).unwrap();
+    assert_eq!(reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap_err(), ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: "canonical-edit.borrowed-root-rebound".into() });
+    let replacement = reader.owned.root.replace(original).unwrap();
+    retire(replacement, &replacement_lifetime);
     close(&mut reader);
     assert_eq!(lifetime.root_drops.load(Ordering::SeqCst), 1);
 
     let (mut reader, _, lifetime) = make_reader();
     for _ in 0..100 {
-        reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 }, &mut [0; 7]).unwrap();
+        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap();
     }
     reader.cancel();
     reader.begin_close();
     while !reader.owned.encoder.terminal_is_empty() {
         assert!(!reader.is_complete());
         assert!(reader.take_root().is_none());
-        reader.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).unwrap();
+        reader.close_step(*RETIREMENT_POLICY).unwrap();
     }
     let root = reader.take_root().unwrap();
     assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
@@ -169,7 +150,7 @@ fn canonical_reader_rebound_root_rejected_before_borrowed_reference_use() {
 fn canonical_reader_unclosed_drop_preserves_owned_root_and_does_not_double_panic() {
     let (mut reader, _, lifetime) = make_reader();
     for _ in 0..100 {
-        reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 }, &mut [0; 7]).unwrap();
+        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap();
     }
     assert!(lifetime.active_iterators.load(Ordering::SeqCst) > 0);
     assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(reader))).is_err());
@@ -189,7 +170,9 @@ fn canonical_reader_unclosed_drop_preserves_owned_root_and_does_not_double_panic
 //#endregion 🧪️ReaderLifecycle
 
 //#region ⚠️ErrorProgress
+#[derive(semio_framework_value::RetireOwned)]
 struct ErrorLeaf;
+#[derive(semio_framework_value::RetireOwned)]
 struct ErrorRoot {
     text: String,
     borrowed: bool,
@@ -218,24 +201,23 @@ impl ArtifactCanonicalJson for ErrorRoot {
 }
 
 impl SnapshotRetirementFactory<ErrorRoot> for ErrorRootRetirement {
-    fn retirement_birth_bytes(&self, snapshot: &Arc<ErrorRoot>) -> usize { if std::sync::Arc::strong_count(snapshot) == 1 { std::mem::size_of::<ArtifactStoreStringRetirement>() } else { std::mem::size_of::<EmptyRetirement>() } }
-
-    fn retire(&self, root: Arc<ErrorRoot>) -> Box<dyn ErasedSnapshotRetirement> {
-        match Arc::into_inner(root) {
-            Some(root) => {
-                self.0.fetch_add(1, Ordering::SeqCst);
-                Box::new(ArtifactStoreStringRetirement::new(root.text))
-            }
-            None => Box::new(EmptyRetirement),
-        }
-    }
+ fn retirement_birth_bytes(&self,root:&Arc<ErrorRoot>)->usize {semio_framework_value::retirement::SharedValueRetirementFactory::<ErrorRoot>::default().retirement_birth_bytes(root)}
+ fn retire(&self,root:Arc<ErrorRoot>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<ErrorRoot>)> {
+  let unique=Arc::strong_count(&root)==1;let admitted=semio_framework_value::retirement::SharedValueRetirementFactory::<ErrorRoot>::default().retire(root,grant);if admitted.is_ok()&&unique{self.0.fetch_add(1,Ordering::SeqCst);}admitted
+ }
 }
-
 impl ArtifactOwnedValueRetirementFactory<ErrorRoot> for ErrorRootRetirement {
-    fn retire_owned(&self, root: ErrorRoot) -> Box<dyn ErasedSnapshotRetirement> {
-        self.0.fetch_add(1, Ordering::SeqCst);
-        Box::new(ArtifactStoreStringRetirement::new(root.text))
-    }
+ fn retirement_birth_bytes(&self,root:&ErrorRoot)->usize {semio_framework_value::retirement::OwnedValueRetirementFactory::<ErrorRoot>::default().retirement_birth_bytes(root)}
+ fn retire_owned(&self,root:ErrorRoot,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,ErrorRoot)> {
+  let admitted=semio_framework_value::retirement::OwnedValueRetirementFactory::<ErrorRoot>::default().retire_owned(root,grant);if admitted.is_ok(){self.0.fetch_add(1,Ordering::SeqCst);}admitted
+ }
+}
+impl ArtifactCanonicalJsonTree for ErrorLeaf {
+ fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonNode<'_>,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-reader.fixture-child"))}
+}
+impl ArtifactCanonicalJsonTree for ErrorRoot {
+ fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonNode<'_>,ValueError>{Ok(ArtifactCanonicalJsonNode::Array(2))}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{match ordinal{0=>Ok(&self.text),1=>Ok(&self.error),_=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-reader.fixture-child"))}}
 }
 
 #[test]
@@ -249,16 +231,17 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
         for bytes in fixture["grants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).filter(|bytes| *bytes != 0) {
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
             let root = ErrorRoot { text: fixture["text"].as_str().unwrap().into(), borrowed: mode == "borrowed", error: ErrorLeaf };
+            let snapshot_bytes = root.text.as_bytes().len();
             let mut reader = ArtifactCanonicalJsonReader::new(Arc::new(root), Arc::new(ErrorRootRetirement(count.clone())));
             let sentinel = fixture["sentinel"].as_u64().unwrap() as u8;
             let mut actual = Vec::new();
             let mut failure = None;
             let mut empty = [sentinel; 512];
-            assert_eq!(reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 0 }, &mut empty).unwrap(), 0);
+            assert_eq!(reader.encode_chunk(encoding_grant(1, 0), &mut empty).unwrap(), 0);
             assert!(empty.iter().all(|byte| *byte == sentinel));
             for _ in 0..128 {
                 let mut output = [sentinel; 512];
-                let result = reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }, &mut output);
+                let result = reader.encode_chunk(encoding_grant(1, bytes), &mut output);
                 let initialized = output.iter().position(|byte| *byte == sentinel).unwrap();
                 assert!(initialized <= bytes.min(256));
                 assert!(output[initialized..].iter().all(|byte| *byte == sentinel));
@@ -275,18 +258,16 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
             let reported = reader.completed_bytes();
             let complete = reader.is_complete();
             assert!(reader.take_root().is_none());
-            assert_eq!(reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 }, &mut empty).unwrap(), 0);
+            assert_eq!(reader.encode_chunk(encoding_grant(1, 4096), &mut empty).unwrap(), 0);
             assert!(empty.iter().all(|byte| *byte == sentinel));
             reader.begin_close();
-            let mut retired = 0;
+            let retired=snapshot_bytes;let mut physical_released=0;
             for _ in 0..256 {
-                match reader.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).unwrap() {
-                    SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                        assert!(released_items <= 1 && released_bytes <= 1);
-                        retired += released_bytes;
-                    }
-                    SnapshotRetirementStep::Complete => break,
-                    SnapshotRetirementStep::Blocked => panic!("failed reader must retain bounded close progress"),
+                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| reader.close_step(*RETIREMENT_POLICY).unwrap());
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+                match step {
+                    RetainedCloneStep::Progress(progress) => { assert!(progress.fits(*RETIREMENT_POLICY));physical_released+=progress.released_bytes; }
+                    RetainedCloneStep::Complete(progress) => { assert!(progress.fits(*RETIREMENT_POLICY));physical_released+=progress.released_bytes;break; },
                 }
             }
             assert!(reader.terminal_is_empty());
@@ -296,7 +277,7 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
             assert_eq!(complete, fixture["expectedComplete"].as_bool().unwrap());
             assert_eq!(count.load(Ordering::SeqCst) as u64, fixture["expectedRootRetirements"].as_u64().unwrap());
             assert_eq!(retired as u64, fixture["expectedSnapshotBytes"].as_u64().unwrap());
-            eprintln!("canonical reader failed mode={mode} grant={bytes} with all{reported} initialized prefix bytes owned and exact snapshot retirement={retired}");
+            eprintln!("[DEBUG] canonical reader failed mode={mode} grant={bytes} with all{reported} initialized prefix bytes owned, original UTF8 snapshot bytes={retired}, physical closure bytes={physical_released}");
         }
     }
 }
@@ -359,7 +340,7 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
             let authority = super::super::tests::authority();
             let mut owner = super::super::tests::admit_sealer(Arc::clone(&authority), edit, Arc::new(17u64), Arc::new(ErrorRootRetirement(count.clone())), Arc::new(super::super::tests::FixtureSnapshotRetirement));
-            let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes };
+            let grant = encoding_grant(1, maximum_bytes);
             let mut actual = Vec::new();
             let mut failure = None;
             for _ in 0..1024 {
@@ -383,7 +364,7 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             assert_eq!(owner.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked);
             owner.begin_close();
             for _ in 0..100_000 {
-                if owner.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).unwrap() == SnapshotRetirementStep::Complete {
+                if matches!(owner.close_step(*RETIREMENT_POLICY).unwrap(), RetainedCloneStep::Complete(_)) {
                     break;
                 }
             }

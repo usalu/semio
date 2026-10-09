@@ -1,0 +1,41 @@
+{
+  "executed": false,
+  "authored": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "authored": false,
+      "sha256": "4150a1e675de9f18b70549653896ce8511697ff72261df797cd73ffc685b20d1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs",
+      "authored": false,
+      "sha256": "8a42b905cedf9e341fbfb3ec22ccd814703af3c409cd43a1ab679b69410b1a15"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "authored": false,
+      "sha256": "053640192426604421c1fd147fd130f673099386877825347a3b2aace38035f5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "authored": false,
+      "sha256": "2aad42f3c82f20844c58daa380004d6c4346a6c26e3a0ffa02f04dd8d8dd9e18"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️retained-ownership/🦀️.rs",
+      "authored": false,
+      "sha256": "6da36492070924b84b7cc30076cd36d1c276cac3303ca75444c1e23588f02f8e"
+    }
+  ],
+  "failures": [
+    {
+      "test": "retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open",
+      "seam": "retained original cancel root; use genuine paid alias return witness"
+    },
+    {
+      "test": "retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers",
+      "seam": "post-transfer owner.local/peers_root access; current begin_retirement takes original owners"
+    }
+  ]
+}

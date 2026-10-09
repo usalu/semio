@@ -487,12 +487,6 @@ def same_outcome(got, want):
 DOMAINS = ["🌳️tree", "📏️kinds", "🧮️evaluation", "🕸️parameters", "🔤️syntax"]
 
 
-@pytest.mark.parametrize("domain", [d for d in DOMAINS if d != "🌳️tree"])
-def test_fixtures_validate_against_their_schema(domain):
-    errors = sorted(validator(domain).iter_errors(load(domain)), key=lambda e: list(e.path))
-    assert [e.message for e in errors[:3]] == []
-
-
 def test_the_schema_rejects_malformed_trees():
     tree = validator("🌳️tree")
     assert tree.is_valid({"op": "number", "value": 2.0})

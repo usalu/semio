@@ -1,0 +1,23 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+  "beforeSHA": "c51c97ca1bd8276b40f03d1f6bb71576850e320af58337c38ef363e673538d78",
+  "afterSHA": "4dbb15180e9101ef80d130a86d3b3215ef24c081990b2b184ab04605d6662473",
+  "actions": [
+    {
+      "scope": "fn artifact_store_history_metadata_retirement_cursors_authors_pins_and_ids_under_each_grant()",
+      "beforeBlockSHA": "64be411bd0ccfd2a5c1f36edbc5d1d94997be8bd2f34e1b8a8d91f00d5fba318",
+      "afterBlockSHA": "7eba593ca96640e69b33d7ba072c2cde651ca4606c3f0cb5fde670706423e576"
+    },
+    {
+      "scope": "fn fixed_edit_message_ledger_resolves_probe_collisions",
+      "beforeBlockSHA": "e79986c09ca8bba16581b028463f1a0f99a6726b6480a897aec437eb247e420e",
+      "afterBlockSHA": "04314110faa52014562403271865b752c589014a52b5652d4eb224083cca5906"
+    },
+    {
+      "scope": "fn drain_rejected_edit_message_ledger(",
+      "beforeBlockSHA": "e9aa5a707b7af7de8aface5cc1e0613caf604e676f2628ee72e7790d64d7d2c7",
+      "afterBlockSHA": "136a415917df9b58479a12a4fd938e3bad9897bd58ea17d2d8ff1bfbf8359e72"
+    }
+  ],
+  "nativeExecuted": false
+}

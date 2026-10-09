@@ -1,0 +1,231 @@
+{
+  "executed": false,
+  "count": 29,
+  "distinct": 29,
+  "selection": [
+    "-E",
+    "test(retained_presence_peer_rejection_keeps_its_minting_factory_after_source_close) | test(retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payload) | test(committed_wire_witness_is_the_canonical_wire) | test(direct_presence_fixture_value_inverse) | test(retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open) | test(retained_presence_local_replacements_release_shared_aliases_and_retire_exact_final_owners) | test(retained_presence_peer_commit_rejects_foreign_and_stale_roots_without_losing_exact_owners) | test(retained_presence_store_close_preserves_distinct_original_local_and_peer_factories) | test(retained_presence_overlapping_rosters_retire_shared_entries_once_across_workers) | test(retained_presence_read_return_releases_alias_before_cross_worker_reclamation) | test(retained_presence_read_return_injected_alias_barrier_preserves_unreturned_guard) | test(retained_presence_read_transfer_contention_preserves_unreturned_capability) | test(retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers) | test(retained_presence_store_close_rejects_nonempty_terminal_and_late_commit_without_drop) | test(original_presence_examples_supply_independent_physical_close_authority) | test(captured_store_source_preserves_original_read_on_refusal_and_returns_root_to_its_original_registry) | test(store_read_terminal_registry_receipt_preserves_original_system_release) | test(original_returned_read_registry_alias_has_exact_physical_custody) | test(original_returned_read_registry_parallel_aliases_credit_exactly_one_frame) | test(native_snapshot_paid_wallet_preserves_all_axes_and_refused_receipt) | test(native_snapshot_cursor_retains_paid_original_on_cancellation_and_commits_same_output) | test(history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds) | test(history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories) | test(history_completed_plan_retains_original_residue_and_transferred_results) | test(history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody) | test(history_preview_output_retains_original_inputs_until_granted_parent_and_projection_close) | test(backbone_detach_refusal_preserves_descriptor_and_payload_at_full_destination) | test(backbone_detach_refusal_preserves_descriptor_and_payload_at_generation_overflow) | test(field_close_failure_preserves_real_receipts_through_the_original_decode_job)",
+    "--success-output",
+    "immediate",
+    "--failure-output",
+    "immediate"
+  ],
+  "declarations": [
+    {
+      "name": "retained_presence_peer_rejection_keeps_its_minting_factory_after_source_close",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payload",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "committed_wire_witness_is_the_canonical_wire",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "direct_presence_fixture_value_inverse",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "retained_presence_local_replacements_release_shared_aliases_and_retire_exact_final_owners",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "retained_presence_peer_commit_rejects_foreign_and_stale_roots_without_losing_exact_owners",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "retained_presence_store_close_preserves_distinct_original_local_and_peer_factories",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "retained_presence_overlapping_rosters_retire_shared_entries_once_across_workers",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "retained_presence_read_return_releases_alias_before_cross_worker_reclamation",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "retained_presence_read_return_injected_alias_barrier_preserves_unreturned_guard",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "retained_presence_read_transfer_contention_preserves_unreturned_capability",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "retained_presence_store_close_keeps_captured_readers_and_retires_nonempty_peers",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "retained_presence_store_close_rejects_nonempty_terminal_and_late_commit_without_drop",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "original_presence_examples_supply_independent_physical_close_authority",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "captured_store_source_preserves_original_read_on_refusal_and_returns_root_to_its_original_registry",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "store_read_terminal_registry_receipt_preserves_original_system_release",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "original_returned_read_registry_alias_has_exact_physical_custody",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧪️tests/🦀️.rs"
+      ]
+    },
+    {
+      "name": "original_returned_read_registry_parallel_aliases_credit_exactly_one_frame",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧪️tests/🦀️.rs"
+      ]
+    },
+    {
+      "name": "native_snapshot_paid_wallet_preserves_all_axes_and_refused_receipt",
+      "declarations": [
+        "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs"
+      ]
+    },
+    {
+      "name": "native_snapshot_cursor_retains_paid_original_on_cancellation_and_commits_same_output",
+      "declarations": [
+        "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs"
+      ]
+    },
+    {
+      "name": "history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs"
+      ]
+    },
+    {
+      "name": "history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs"
+      ]
+    },
+    {
+      "name": "history_completed_plan_retains_original_residue_and_transferred_results",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs"
+      ]
+    },
+    {
+      "name": "history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs"
+      ]
+    },
+    {
+      "name": "history_preview_output_retains_original_inputs_until_granted_parent_and_projection_close",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs"
+      ]
+    },
+    {
+      "name": "backbone_detach_refusal_preserves_descriptor_and_payload_at_full_destination",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs"
+      ]
+    },
+    {
+      "name": "backbone_detach_refusal_preserves_descriptor_and_payload_at_generation_overflow",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs"
+      ]
+    },
+    {
+      "name": "field_close_failure_preserves_real_receipts_through_the_original_decode_job",
+      "declarations": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs"
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "3659df3afbf71368e11789fe1ec3a0424fb609d176ea41869e0fe8428148f185",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "4150a1e675de9f18b70549653896ce8511697ff72261df797cd73ffc685b20d1",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5cab50cd5e6e7f4485d87fec976d16d6aa3da395a36fcb118c643f4a8060ccbd",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧪️tests/🦀️.rs",
+      "sha256": "fe255bef0a16c2b2dfa6f3b8853a5307020e6a288eb65eab1305a8babda749a4",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+      "sha256": "8e674cdd88836e85d32aff3ca7a52fb7534db49ccba866891331d7d40d0a6467",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
+      "sha256": "ac6cb5dee42ccc3964fa0a2da967d99d794fa5eae76fb29f7117d3ccd08e7454",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "285c115d0828777968a878ee8135510b628bf35289613704a0ee19344d9d5583",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs",
+      "sha256": "b326b03e2bbb2cf870d938e5386145a8dddfe5448f35fba3431a325feb81e8b1",
+      "authored": false
+    }
+  ]
+}

@@ -25,4 +25,4 @@ impl semio_framework_value::retirement::RetireOwned for crate::FaultParams {
     fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)}
     fn controlled_retirement_supported()->bool{<Vec<(String,String)> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
-semio_framework_value::artifact_retire_struct!(crate::Fault { origin, code, severity, message, scope, span, causes, params, retryable });
+semio_framework_value::artifact_retire_struct!(crate::Fault { retained_progress, origin, code, severity, message, scope, span, causes, params, retryable });

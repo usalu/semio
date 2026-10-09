@@ -28,5 +28,68 @@
   "factoryRoutes": [
     "ownedMutation",
     "snapshotAlias"
+  ],
+  "preparationPhases": [
+    {
+      "phase": "received",
+      "original": true,
+      "frame": false,
+      "installed": false
+    },
+    {
+      "phase": "prepared",
+      "original": true,
+      "frame": true,
+      "installed": false
+    },
+    {
+      "phase": "deniedInstall",
+      "original": true,
+      "frame": true,
+      "installed": false
+    },
+    {
+      "phase": "installed",
+      "original": false,
+      "frame": true,
+      "installed": true
+    }
+  ],
+  "preparationGuards": [
+    {
+      "items": 0,
+      "depth": 1,
+      "sameRegistry": true,
+      "cancelled": false,
+      "mayInstall": false
+    },
+    {
+      "items": 1,
+      "depth": 0,
+      "sameRegistry": true,
+      "cancelled": false,
+      "mayInstall": false
+    },
+    {
+      "items": 1,
+      "depth": 1,
+      "sameRegistry": false,
+      "cancelled": false,
+      "mayInstall": false
+    },
+    {
+      "items": 1,
+      "depth": 1,
+      "sameRegistry": true,
+      "cancelled": true,
+      "mayInstall": false
+    },
+    {
+      "items": 1,
+      "depth": 1,
+      "sameRegistry": true,
+      "cancelled": false,
+      "mayInstall": true
+    }
   ]
 }

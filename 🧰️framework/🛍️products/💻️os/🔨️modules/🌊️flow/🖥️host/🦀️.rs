@@ -8,6 +8,8 @@ use semio_framework_artifact_infinite_dag::io::text::snapshot::dag_host_snapshot
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
+use protocol::causal::transition::HistoryFoldIndex;
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{controlled::ControlledRetirement,queue::RetirementQueue}};
 
 use semio_framework_os_infinite::board::schema::layout::{DagLayoutOptions};
 use dag::{fit_node_size, would_create_cycle, DagHost};
@@ -25,8 +27,14 @@ use crate::artifact::*;
 use crate::bridge::*;
 use crate::catalogue::*;
 use crate::drawing::*;
-use crate::os_store::{create_document_envelope, ArtifactCommand, MemberStoreOwner, SnapshotRetirementStep, SpaceMember};
+use crate::os_store::{create_document_envelope, ArtifactCommand, MemberStoreOwner, SpaceMember};
 use crate::registry::*;
+#[path="🧹️retirement/🦀️.rs"]
+mod original_retirement;
+use original_retirement::FlowHostPayload;
+#[path="📥️evaluation-source/🦀️.rs"]
+mod evaluation_source;
+use evaluation_source::FlowEvaluationSource;
 
 
 // #region ⚠️ Errors
@@ -34,7 +42,7 @@ use crate::registry::*;
 /// this crate's own graph-editing validation failures. Every variant's Display text is byte-for-byte
 /// identical to the `String` it replaces, so downstream `.to_string()` call sites and JSON error
 /// envelopes are unaffected.
-#[derive(Debug)]
+#[derive(Debug,semio_framework_value::RetireOwned)]
 pub enum FlowCoreError {
     /// 🌉️ Holds the formatted message rather than a codec error type directly — `pack::json`'s
     /// `JsonError` (syntax) and the value derive's `ValueError` (shape) both fold into this,
@@ -226,25 +234,73 @@ impl FlowWheelPlan {
     }
 }
 
+struct FlowPublicationShared<T:RetireOwned+Sync>(Arc<T>);
+impl<T:RetireOwned+Sync> RetireOwned for FlowPublicationShared<T> {
+    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(self.0))}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<T>())}
+    fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+struct FlowBaselinePublication {
+    snapshot:Option<TreeSnapshot>,
+    channels:Option<EvalChannels>,
+    shared_snapshot:Option<FlowPublicationShared<TreeSnapshot>>,
+    shared_channels:Option<FlowPublicationShared<EvalChannels>>,
+    generation:u64,
+    converged:bool,
+}
+
+struct FlowBaselineLeases {
+    snapshot:Option<Arc<TreeSnapshot>>,
+    channels:Option<Arc<EvalChannels>>,
+    current:Option<Arc<EvalChannels>>,
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+struct FlowPublicationDisplaced {
+    exports:Option<HistoryFoldIndex<String,Dictionary>>,
+    snapshot:Option<TreeSnapshot>,
+    leases:FlowBaselineLeases,
+}
+
+impl semio_framework_value::retirement::RetireOwned for FlowBaselineLeases {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{
+        use semio_framework_value::retirement::{RetireOwned,sequence,shared::SharedControlledRetirement};
+        let snapshot:Box<dyn semio_framework_value::retirement::RetirementCursor>=match self.snapshot{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
+        let channels:Box<dyn semio_framework_value::retirement::RetirementCursor>=match self.channels{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
+        let current:Box<dyn semio_framework_value::retirement::RetirementCursor>=match self.current{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
+        sequence(vec![snapshot,channels,current])
+    }
+    fn retirement_birth_bytes(&self)->Option<usize>{
+        use semio_framework_value::retirement::{sequence_birth_bytes,leaf_birth_bytes,shared::shared_retirement_birth_bytes};
+        sequence_birth_bytes(&[if self.snapshot.is_some(){shared_retirement_birth_bytes::<TreeSnapshot>()}else{leaf_birth_bytes::<()>()},if self.channels.is_some(){shared_retirement_birth_bytes::<EvalChannels>()}else{leaf_birth_bytes::<()>()},if self.current.is_some(){shared_retirement_birth_bytes::<EvalChannels>()}else{leaf_birth_bytes::<()>()}])
+    }
+    fn controlled_retirement_supported()->bool{true}
+}
+
 /// 🏠️ Retained flow host: host_snapshot, dag scene, evaluation cache.
 pub struct FlowHost {
     geometry_port: Option<Box<dyn crate::geometry::GeometryPort>>,
     operator_registry: Option<neural::SharedRegistry>,
     pub host_snapshot: FlowHostSnapshot,
     pub dag: DagHost,
-    pub outputs: BTreeMap<String, Dictionary>,
-    export_payloads: BTreeMap<String, Dictionary>,
+    current_channels: Option<Arc<EvalChannels>>,
+    export_payloads: HistoryFoldIndex<String, Dictionary>,
     pub last_eval_json: String,
-    eval_bridge: Option<EvalBridge>,
     host_catalogue_json: String,
     /// 🧠️ The operator catalogue this host indexes, SHARED with every other live host: it is a pure
     /// projection of the extension registry, ~108 kB of it, and an evaluation tick that rebuilt its
     /// own copy paid 11-26 ms per tick for a map nobody had changed
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    kind_infos: Arc<HashMap<String, OperatorInfo>>,
+    kind_infos: Arc<HistoryFoldIndex<String, OperatorInfo>>,
     neural_cache: Arc<NeuralCache>,
-    previous_snapshot: Option<TreeSnapshot>,
-    previous_channels: Option<EvalChannels>,
+    previous_snapshot: Option<Arc<TreeSnapshot>>,
+    previous_channels: Option<Arc<EvalChannels>>,
+    pending_baseline_publication:Option<FlowBaselinePublication>,
+    baseline_retirement:Option<ControlledRetirement<FlowPublicationDisplaced>>,
+    baseline_publication_progress:RetainedCloneProgress,
+    pending_evaluation:Option<neural::BudgetedEvalState>,
     /// 🔢 Which replacement of the process-wide flow extension registry
     /// `previous_snapshot`/`previous_channels` were computed against. An unchanged TREE is not an
     /// unchanged EVALUATION: the operator table the tree is dispatched through is process-wide
@@ -342,22 +398,25 @@ impl FlowHost {
     /// that would set the operator catalogue immediately afterwards: the bare constructor builds its
     /// dag against an empty catalogue, and the setter's own `rebuild_dag` then throws that work away
     /// — twice per evaluation tick (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn from_host_snapshot_with_cache_and_infos(mut host_snapshot: FlowHostSnapshot, neural_cache: Arc<NeuralCache>, kind_infos: Arc<HashMap<String, OperatorInfo>>) -> Self {
+    pub fn from_host_snapshot_with_cache_and_infos(mut host_snapshot: FlowHostSnapshot, neural_cache: Arc<NeuralCache>, kind_infos: Arc<HistoryFoldIndex<String, OperatorInfo>>) -> Self {
         dedupe_host_snapshot_widgets(&mut host_snapshot);
         let mut host = Self {
             geometry_port: None,
             operator_registry: None,
             host_snapshot: host_snapshot,
             dag: DagHost::from_host_snapshot(DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
-            outputs: BTreeMap::new(),
-            export_payloads: BTreeMap::new(),
+            current_channels: None,
+            export_payloads: HistoryFoldIndex::new(),
             last_eval_json: String::new(),
-            eval_bridge: None,
             host_catalogue_json: String::new(),
             kind_infos,
             neural_cache,
             previous_snapshot: None,
             previous_channels: None,
+            pending_baseline_publication:None,
+            baseline_retirement:None,
+            baseline_publication_progress:Default::default(),
+            pending_evaluation:None,
             baseline_registry_generation: flow_extension_registry_generation(),
             next_widget_serial: 1,
             next_synapse_serial: 100,
@@ -409,7 +468,7 @@ impl FlowHost {
         host_snapshot.camera = camera;
         std::mem::replace(&mut self.host_snapshot, host_snapshot).retire_cold();
         if !preserve_eval {
-            self.displace_eval_state();
+            self.displace_eval_state().expect("cold fixture load requires settled original baseline custody");
             self.last_eval_json.clear();
         }
         self.pan_anchor = None;
@@ -494,7 +553,7 @@ impl FlowHost {
     /// host concatenated the two sources into one body itself.
     pub fn set_neuron_kind_infos_payload(&mut self, payload: &str) -> Result<(), FlowCoreError> {
         let parts = resolve_flow_shared_payload_parts(payload)?;
-        let mut infos: HashMap<String, OperatorInfo> = HashMap::new();
+        let mut infos: HistoryFoldIndex<String, OperatorInfo> = HistoryFoldIndex::new();
         for part in &parts {
             if part.trim().is_empty() {
                 continue;
@@ -512,7 +571,7 @@ impl FlowHost {
     /// ([`FlowHost::kind_infos`]), and its `ChannelSpec::default` values are `Value`s that fail
     /// closed on a bare drop, so a plain assignment aborted the process the moment a host swapped
     /// a uniquely-owned catalogue out (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn install_kind_infos(&mut self, kind_infos: Arc<HashMap<String, OperatorInfo>>) {
+    fn install_kind_infos(&mut self, kind_infos: Arc<HistoryFoldIndex<String, OperatorInfo>>) {
         if let Some(displaced) = Arc::into_inner(std::mem::replace(&mut self.kind_infos, kind_infos)) {
             displaced.retire_cold();
         }
@@ -520,14 +579,14 @@ impl FlowHost {
     }
 
     pub fn set_neuron_kind_infos_json(&mut self, json: &str) {
-        self.install_kind_infos(Arc::new(if json.trim().is_empty() { HashMap::new() } else { semio_framework_pack_json::from_json_str::<Vec<OperatorInfo>>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect()).unwrap_or_default() }));
+        self.install_kind_infos(Arc::new(if json.trim().is_empty() { HistoryFoldIndex::new() } else { semio_framework_pack_json::from_json_str::<Vec<OperatorInfo>>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect()).unwrap_or_default() }));
     }
 
     /// 🧠️ Same as `set_neuron_kind_infos_json` but over the already-built id-keyed map — the ONE
     /// in-process path, because the JSON form of this catalogue is ~108 kB and an evaluation tick
     /// that serialized and re-parsed it spent 11-26 ms per tick doing nothing else
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn set_neuron_kind_info_map(&mut self, infos: Arc<HashMap<String, OperatorInfo>>) {
+    pub fn set_neuron_kind_info_map(&mut self, infos: Arc<HistoryFoldIndex<String, OperatorInfo>>) {
         self.install_kind_infos(infos);
     }
 
@@ -536,21 +595,17 @@ impl FlowHost {
         self.install_kind_infos(Arc::new(infos.iter().map(|record| (record.id.clone(), node_graph_operator_record_to_operator_info(record))).collect()));
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn set_eval_bridge_fn(&mut self, cb: Box<EvalBridgeFn>) {
-        self.eval_bridge = Some(EvalBridge { cb });
-    }
-
     pub fn evaluate(&mut self) -> Result<String, FlowCoreError> {
         self.evaluate_internal();
         Ok(self.last_eval_json.clone())
     }
 
     /// 📥️ Applies channel-structured eval JSON from an off-thread worker without re-running operators.
-    pub fn apply_eval_outputs_json(&mut self, json: &str) {
+    pub fn apply_eval_outputs_json(&mut self, json: &str)->Result<(),ValueError> {
+        if self.pending_baseline_publication.is_some(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original baseline publication must advance before another intake"))}
         if is_global_eval_error_json(json) {
             self.dag.clear_computing();
-            return;
+            return Ok(());
         }
         let outputs = outputs_from_channel_eval_json(json);
         let inputs = inputs_from_channel_eval_json(json);
@@ -558,27 +613,22 @@ impl FlowHost {
         let tree = self.build_tree();
         let seeds = self.build_seeds();
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
-        let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
+        let dirty = compute_dirty_set(self.previous_snapshot.as_deref(), &snapshot);
         let evaluated_generation = self.operator_registry_generation();
         let converged = self.probe_eval_outputs_converged(&tree, &seeds, &dirty, &channels);
         tree.retire_cold();
         seeds.retire_cold();
         self.last_eval_json = json.to_string();
         if converged {
-            let displaced_outputs = std::mem::replace(&mut self.outputs, channels.outputs.clone());
-            self.displaced.push_dictionaries(displaced_outputs);
             self.apply_preview_outputs(&channels.outputs);
             self.apply_export_outputs(&channels.outputs);
-            self.baseline_registry_generation = evaluated_generation;
-            self.previous_snapshot = Some(snapshot);
-            if let Some(displaced_channels) = self.previous_channels.replace(channels) {
-                self.displaced.push_channels(displaced_channels);
-            }
+            self.begin_baseline_publication(snapshot,channels,evaluated_generation).unwrap_or_else(|_|unreachable!("original baseline intake was checked before constructing owners"));
             self.dag.clear_computing();
         } else {
             channels.retire_cold();
             self.refresh_computing_chrome_from_pending();
         }
+        Ok(())
     }
 
     fn probe_eval_outputs_converged(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>, dirty: &HashSet<String>, channels: &EvalChannels) -> bool {
@@ -601,16 +651,25 @@ impl FlowHost {
     /// registry here: an ephemeral host is rebuilt after the install that bumped the generation, so
     /// reading "now" would tell every such host its inherited baseline is current when it is
     /// precisely the one that is not (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn install_eval_baseline(&mut self, snapshot: Option<TreeSnapshot>, channels: Option<EvalChannels>, registry_generation: u64) {
-        self.baseline_registry_generation = registry_generation;
-        self.previous_snapshot = snapshot;
-        if let Some(displaced_channels) = std::mem::replace(&mut self.previous_channels, channels) {
-            self.displaced.push_channels(displaced_channels);
-        }
-        if let Some(restored) = self.previous_channels.as_ref().map(|channels| channels.outputs.clone()) {
-            let displaced_outputs = std::mem::replace(&mut self.outputs, restored);
-            self.displaced.push_dictionaries(displaced_outputs);
-        }
+    pub fn install_eval_baseline(&mut self,snapshot:Option<Arc<TreeSnapshot>>,channels:Option<Arc<EvalChannels>>,registry_generation:u64,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Option<Arc<TreeSnapshot>>,Option<Arc<EvalChannels>>)>{
+        let refusal=if grant.maximum_items==0{Some((ValueRefusalKind::WorkLimit,"baseline lease handoff requires one admitted item"))}
+            else if grant.maximum_depth==0{Some((ValueRefusalKind::DepthLimit,"baseline lease handoff requires source depth"))}
+            else if !self.baseline_publication_terminal_is_empty(){Some((ValueRefusalKind::WorkLimit,"baseline publication must complete before installing another lease"))}
+            else if self.current_channels.is_some(){Some((ValueRefusalKind::UnsupportedOwner,"baseline installation requires original output lease handoff"))}else{None};
+        if let Some((kind,message))=refusal{return Err((ValueError::literal(kind,message),snapshot,channels))}
+        let original=FlowBaselineLeases{snapshot:self.previous_snapshot.take(),channels:self.previous_channels.take(),current:self.current_channels.take()};
+        if original.snapshot.is_some()||original.channels.is_some()||original.current.is_some(){self.baseline_retirement=Some(ControlledRetirement::new(FlowPublicationDisplaced{snapshot:None,leases:original}).unwrap_or_else(|_|unreachable!("original baseline leases are supported")));}
+        self.previous_snapshot=snapshot;self.current_channels=channels.clone();self.previous_channels=channels;self.baseline_registry_generation=registry_generation;
+        Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
+    }
+
+    /// 🔎️ Reads the original active output owner or its immutable installed baseline lease.
+    pub fn output_channels(&self,widget_id:&str)->Option<&Dictionary>{
+        self.current_channels.as_deref().or(self.previous_channels.as_deref())?.outputs.get(widget_id)
+    }
+    /// 📖️ Borrows actual output rows without restoring a copied map.
+    pub fn output_entries(&self)->impl Iterator<Item=(&String,&Dictionary)>{
+        self.current_channels.as_deref().or(self.previous_channels.as_deref()).into_iter().flat_map(|channels|channels.outputs.iter())
     }
 
     /// 🧹️ Hands every value displaced since the last drain to the artifact's bounded retirement
@@ -622,26 +681,66 @@ impl FlowHost {
         while !matches!(self.displaced.close_step(64, 65_536), neural::ValueRetirementStep::Complete) {}
     }
 
-    /// 🧹️ Displaces the whole evaluation baseline — `outputs`, `export_payloads`, the tree snapshot
-    /// and the channel pair — onto the frontier. `BTreeMap<String, Dictionary>::clear` is a bare drop
-    /// of every `Dictionary` in it, which aborts the worker as soon as one of them is a final owner.
-    fn displace_eval_state(&mut self) {
-        let outputs = std::mem::take(&mut self.outputs);
-        self.displaced.push_dictionaries(outputs);
-        let export_payloads = std::mem::take(&mut self.export_payloads);
-        self.displaced.push_dictionaries(export_payloads);
-        if let Some(snapshot) = self.previous_snapshot.take() {
-            self.displaced.push_snapshot(snapshot);
-        }
-        if let Some(channels) = self.previous_channels.take() {
-            self.displaced.push_channels(channels);
-        }
+    /// 📥️ Retains the original baseline and export arenas inline before funded retirement.
+    fn displace_eval_state(&mut self)->Result<(),ValueError>{
+        if self.pending_baseline_publication.is_some()||self.baseline_retirement.is_some(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original baseline publication must finish before displacement"))}
+        let original=FlowPublicationDisplaced{exports:Some(std::mem::take(&mut self.export_payloads)),snapshot:None,leases:FlowBaselineLeases{snapshot:self.previous_snapshot.take(),channels:self.previous_channels.take(),current:self.current_channels.take()}};
+        self.baseline_retirement=Some(ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("original baseline fields declare typed retirement")));Ok(())
     }
 
     /// 🧵️ Captures this host's eval baseline for persistence on a durable driver.
-    pub fn eval_baseline(&self) -> (Option<TreeSnapshot>, Option<EvalChannels>) {
+    pub fn eval_baseline(&self) -> (Option<Arc<TreeSnapshot>>, Option<Arc<EvalChannels>>) {
         (self.previous_snapshot.clone(), self.previous_channels.clone())
     }
+
+    /// 📥️ Retains the evaluator's genuine computed owners before admitting shared publication.
+    pub fn begin_baseline_publication(&mut self,snapshot:TreeSnapshot,channels:EvalChannels,generation:u64)->Result<(),(ValueError,TreeSnapshot,EvalChannels)>{
+        self.begin_eval_publication(snapshot,channels,generation,true)
+    }
+
+    fn begin_eval_publication(&mut self,snapshot:TreeSnapshot,channels:EvalChannels,generation:u64,converged:bool)->Result<(),(ValueError,TreeSnapshot,EvalChannels)>{
+        if !self.baseline_publication_terminal_is_empty(){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original evaluation publication is already pending"),snapshot,channels))}
+        self.pending_baseline_publication=Some(FlowBaselinePublication{snapshot:Some(snapshot),channels:Some(channels),shared_snapshot:None,shared_channels:None,generation,converged});Ok(())
+    }
+    /// 📏️ Borrows each independent currency of the actual publication owner.
+    pub fn next_baseline_publication_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(owner)=self.baseline_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
+        let Some(owner)=self.pending_baseline_publication.as_ref()else{return Ok(Default::default())};
+        let capacity_bytes=if owner.converged&&owner.snapshot.is_some(){semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<TreeSnapshot>()}else if owner.channels.is_some(){semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<EvalChannels>()}else{0};
+        Ok(RetirementDemand{capacity_bytes,depth:1,..Default::default()})
+    }
+    /// 🎟️ Creates one admitted Arc header or transfers the same original baseline owners.
+    pub fn baseline_publication_step_progress(&self)->RetainedCloneProgress{self.baseline_publication_progress}
+
+    pub fn baseline_publication_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        self.baseline_publication_progress=Default::default();
+        let empty=RetainedCloneProgress::default();
+        if self.baseline_publication_terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
+        let demand=self.next_baseline_publication_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original baseline publication exceeds admitted depth"))}
+        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
+        if let Some(owner)=self.baseline_retirement.as_mut(){
+            let result=owner.step(grant);self.baseline_publication_progress=owner.step_progress();let step=result.map_err(|error|error.with_retained_progress(self.baseline_publication_progress))?;
+            let progress=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"Flow original baseline source")?.progress();
+            if owner.terminal_is_empty(){self.baseline_retirement=None;}
+            return Ok(if self.baseline_publication_terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+        }
+        let owner=self.pending_baseline_publication.as_mut().unwrap();
+        if owner.converged{if let Some(source)=owner.snapshot.take(){owner.shared_snapshot=Some(FlowPublicationShared(Arc::new(source)));self.baseline_publication_progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:demand.capacity_bytes,..empty};return Ok(RetainedCloneStep::Progress(self.baseline_publication_progress))}}
+        if let Some(source)=owner.channels.take(){owner.shared_channels=Some(FlowPublicationShared(Arc::new(source)));self.baseline_publication_progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:demand.capacity_bytes,..empty};return Ok(RetainedCloneStep::Progress(self.baseline_publication_progress))}
+        let original=FlowPublicationDisplaced{exports:None,snapshot:owner.snapshot.take(),leases:FlowBaselineLeases{
+            snapshot:if owner.converged{self.previous_snapshot.take()}else{None},channels:if owner.converged{self.previous_channels.take()}else{None},current:self.current_channels.take(),
+        }};
+        if original.snapshot.is_some()||original.leases.snapshot.is_some()||original.leases.channels.is_some()||original.leases.current.is_some(){self.baseline_retirement=Some(ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("original publication sources are supported")));}
+        self.current_channels=owner.shared_channels.take().map(|lease|lease.0);
+        if owner.converged{self.previous_snapshot=owner.shared_snapshot.take().map(|lease|lease.0);self.previous_channels=self.current_channels.clone();self.baseline_registry_generation=owner.generation;}
+        self.pending_baseline_publication=None;
+        let progress=RetainedCloneProgress{copied_items:1,..empty};self.baseline_publication_progress=progress;
+        Ok(if self.baseline_publication_terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+    }
+    /// 🏁️ Publication completes only after all displaced original leases close.
+    pub fn baseline_publication_terminal_is_empty(&self)->bool{self.pending_baseline_publication.is_none()&&self.baseline_retirement.is_none()}
 
     /// 🔢 The flow extension registry replacement this host's eval baseline was computed against.
     pub fn eval_baseline_registry_generation(&self) -> u64 {
@@ -664,12 +763,12 @@ impl FlowHost {
     /// ⏮️ The snapshot to diff this evaluation against — `None` once the registry it was computed
     /// against has been replaced, which makes every node dirty.
     fn current_baseline_snapshot(&self) -> Option<&TreeSnapshot> {
-        self.previous_snapshot.as_ref().filter(|_| self.baseline_is_current())
+        self.previous_snapshot.as_deref().filter(|_| self.baseline_is_current())
     }
 
     /// ⏮️ The channels this evaluation may free-ride on, under the same condition.
     fn current_baseline_channels(&self) -> Option<&EvalChannels> {
-        self.previous_channels.as_ref().filter(|_| self.baseline_is_current())
+        self.previous_channels.as_deref().filter(|_| self.baseline_is_current())
     }
 
     /// ⚡️ Whether the incremental fast path may skip this evaluation entirely: nothing is dirty, a
@@ -678,7 +777,7 @@ impl FlowHost {
     /// One predicate, read by every caller that owns a fast path ([`FlowHost::evaluate_step`] and
     /// [`FlowHost::pending_eval_widget_ids`]), so the two can never drift apart.
     fn baseline_answers_everything(&self, dirty: &HashSet<String>) -> bool {
-        dirty.is_empty() && self.current_baseline_channels().is_some() && !self.outputs.is_empty()
+        dirty.is_empty() && self.current_baseline_channels().is_some() && self.output_entries().next().is_some()
     }
 
     /// ⚙️ Probes pending nodes and paints active/stale computing chrome on the DAG canvas.
@@ -1494,7 +1593,8 @@ impl FlowHost {
     /// [`NeuralCache`] (e.g. a generation-preview eval firing mid-chain) may have its in-progress
     /// entries swept early by that other call's completion; the next tick simply recomputes them —
     /// extra work, never a wrong result.
-    pub fn evaluate_step(&mut self, budget: EvalStepBudget,source_required:&dyn Fn(u64)->bool) -> Vec<String> {
+    pub fn evaluate_step(&mut self, budget: EvalStepBudget,source_required:&dyn Fn(u64)->bool) -> Result<Vec<String>,ValueError> {
+        if !self.baseline_publication_terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original baseline publication must advance before another evaluation"))}
         self.drain_displaced();
         self.pending_extension_evals.clear();
         let tree = self.build_tree();
@@ -1504,7 +1604,7 @@ impl FlowHost {
         if self.baseline_answers_everything(&dirty) {
             tree.retire_cold();
             seeds.retire_cold();
-            return Vec::new();
+            return Ok(Vec::new());
         }
         // 🔢 Read BEFORE the registry it describes: a replacement landing between the two reads
         // then stamps the baseline with the OLDER generation, which over-dirties the next step
@@ -1515,26 +1615,19 @@ impl FlowHost {
         let evaluator = Evaluator::new(registry.as_ref());
         self.neural_cache.begin_epoch();
         let previous = self.current_baseline_channels();
-        let budgeted = if let Some(bridge) = self.eval_bridge.as_ref() {
-            let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
-            evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget,source_required)
-        } else {
-            let mut dispatch = |kind: &str, input: &Dictionary| registry.as_ref().dispatch(kind, input);
-            evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget,source_required)
-        };
+        let mut dispatch = |kind: &str, input: &Dictionary| registry.as_ref().dispatch(kind, input);
+        let budgeted = evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget,source_required);
         tree.retire_cold();
         seeds.retire_cold();
         match budgeted {
             Ok(BudgetedEval { channels, remaining, pending_extensions }) => {
                 self.pending_extension_evals = pending_extensions;
-                let displaced_outputs = std::mem::replace(&mut self.outputs, channels.outputs.clone());
-                self.displaced.push_dictionaries(displaced_outputs);
                 self.apply_preview_outputs(&channels.outputs);
                 self.apply_export_outputs(&channels.outputs);
                 self.last_eval_json = build_channel_eval_json(&self.host_snapshot, &channels, &self.kind_infos);
-                if !remaining.is_empty() {
-                    channels.retire_cold();
-                    return remaining;
+                if !remaining.is_empty(){
+                    self.begin_eval_publication(snapshot,channels,evaluated_generation,false).unwrap_or_else(|_|unreachable!("original evaluation publication was checked before intake"));
+                    return Ok(remaining);
                 }
                 self.neural_cache.sweep();
                 // 🧹️ The converged channel set is this host's CLAIM on the process-wide geometry
@@ -1553,19 +1646,15 @@ impl FlowHost {
                 // 🔒️ Only advance the snapshot/channels/generation triple together, and only on
                 // success — a failed evaluation keeps diffing against the last known-good state
                 // next time, which is always a safe (never under-dirty) baseline.
-                self.baseline_registry_generation = evaluated_generation;
-                self.previous_snapshot = Some(snapshot);
-                if let Some(displaced_channels) = self.previous_channels.replace(channels) {
-                    self.displaced.push_channels(displaced_channels);
-                }
-                Vec::new()
+                self.begin_baseline_publication(snapshot,channels,evaluated_generation).unwrap_or_else(|_|unreachable!("original evaluation intake was checked before constructing owners"));
+                Ok(Vec::new())
             }
             Err(err) => {
                 self.neural_cache.sweep();
                 if self.last_eval_json.is_empty() || is_global_eval_error_json(&self.last_eval_json) {
                     self.last_eval_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".to_string(), semio_framework_pack_json::Value::String(err.to_string()))]));
                 }
-                Vec::new()
+                Ok(Vec::new())
             }
         }
     }
@@ -1579,7 +1668,7 @@ impl FlowHost {
     /// 👀️ Probes which widget ids still need evaluation without computing anything (`budget = 0`) —
     /// used to decide whether a tick chain must be (re)armed and what to mark as computing/stale.
     pub fn eval_baseline_snapshot(&self) -> Option<&TreeSnapshot> {
-        self.previous_snapshot.as_ref()
+        self.previous_snapshot.as_deref()
     }
 
     pub fn widget_blocked_ports(&self, widget_id: &str) -> Vec<String> {
@@ -1596,8 +1685,8 @@ impl FlowHost {
         // drop — and `Dictionary` fail-closes on a bare drop
         // (`🧠️neural/⚙️engine/🦀️.rs`'s `Drop`). Retire what is displaced
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        for (widget_id, channels) in self.outputs.clone() {
-            if let Some(displaced) = outputs.insert(widget_id, channels) {
+        for (widget_id, channels) in self.output_entries() {
+            if let Some(displaced) = outputs.insert(widget_id.clone(), channels.clone()) {
                 displaced.retire_cold();
             }
         }
@@ -1769,7 +1858,7 @@ impl FlowHost {
         seeds
     }
 
-    fn apply_preview_outputs(&mut self, outputs: &BTreeMap<String, Dictionary>) {
+    fn apply_preview_outputs(&mut self, outputs: &HistoryFoldIndex<String, Dictionary>) {
         for widget in &mut self.host_snapshot.widgets {
             if let Widget::OutputPreview { id, preview, .. } = widget {
                 if let Some(out) = outputs.get(id) {
@@ -1785,7 +1874,7 @@ impl FlowHost {
         self.dag.fit_preview_sizes();
     }
 
-    fn apply_export_outputs(&mut self, outputs: &BTreeMap<String, Dictionary>) {
+    fn apply_export_outputs(&mut self, outputs: &HistoryFoldIndex<String, Dictionary>) {
         for widget in &self.host_snapshot.widgets {
             if let Widget::OutputExport { id, .. } = widget {
                 if let Some(out) = outputs.get(id) {
@@ -1876,10 +1965,8 @@ impl FlowHost {
         self.dag.set_dimmed(&off);
     }
 
-    /// 🎯️ Selected widget ids as JSON array (legacy — prefer {@link selection_domains_json}).
-    pub fn selected_widget_ids_json(&self) -> String {
-        semio_framework_pack_json::to_json_string(&self.dag.selected_node_ids())
-    }
+    /// 🎯️ Projects selected semantic widget identities.
+    pub fn selected_widget_ids(&self)->Vec<String>{self.dag.selected_node_ids()}
 
     /// 🎯️ Projects typed node, edge and handle selection.
     pub fn selection_domains(&self)->DagSelectionDomains{self.dag.selection_domains()}
@@ -1900,10 +1987,8 @@ impl FlowHost {
         self.dag.entity_screen_json(domain, id)
     }
 
-    /// 🔌️ Hovered widget channel when the pointer is over a port row or handle.
-    pub fn hovered_channel_json(&self) -> String {
-        self.dag.hovered_channel_json()
-    }
+    /// 🖱️ Projects admitted widget hover and live wire refusal facts.
+    pub fn hover_facts(&self)->crate::infinite::board::schema::dag_input::DagHoverFacts{self.dag.hover_facts()}
 
     /// 🔌️ Projects selected typed widget channels.
     pub fn selected_channels(&self)->Vec<dag::DagChannelRef>{self.dag.selected_channels()}
@@ -2346,7 +2431,9 @@ impl FlowHost {
         let mut output_serial = 0usize;
         let mut boundary_index = 0usize;
         let mut cluster_external = Vec::new();
-        let outputs = self.outputs.clone();
+        let channels=self.current_channels.clone().or_else(||self.previous_channels.clone());
+        let empty_outputs=HistoryFoldIndex::new();
+        let outputs=channels.as_deref().map_or(&empty_outputs,|channels|&channels.outputs);
         let kind_infos = self.kind_infos.clone();
         let widgets = self.host_snapshot.widgets.clone();
         let synapses_snapshot = self.host_snapshot.synapses.clone();
@@ -2818,375 +2905,76 @@ impl FlowHost {
     // #endregion History
 }
 
-/// 🧹 Incremental exact-owner retirement for one retained flow host.
+/// 🏠️ Retains the whole original host before any independently admitted close work.
 #[doc(hidden)]
 pub struct FlowHostRetirementState {
-    geometry_port: Option<crate::geometry::GeometryPortRetirement>,
-    host_snapshot: FlowHostSnapshot,
-    dag: Option<dag::DagHostRetirement>,
-    outputs: BTreeMap<String, Dictionary>,
-    export_payloads: BTreeMap<String, Dictionary>,
-    last_eval_json: String,
-    eval_bridge: Option<EvalBridge>,
-    host_catalogue_json: String,
-    kind_infos: Arc<HashMap<String, OperatorInfo>>,
-    neural_cache: Option<neural::NeuralCacheRetirement>,
-    previous_snapshot: Option<TreeSnapshot>,
-    previous_channels: Option<EvalChannels>,
-    history_store: Option<FlowStore>,
-    pending_history_baseline: Option<FlowHostSnapshot>,
-    pending_extension_evals: Vec<neural::PendingExtensionEval>,
-    interaction_projection: Option<dag::DagInteractionProjection>,
-    domain: crate::retained::FlowRetirement,
-    neural: neural::ValueRetirement,
-    terminal: bool,
-    faulted: bool,
+    source:Option<FlowHost>,
+    geometry:Option<crate::geometry::GeometryPortRetirement>,
+    payload:Option<ControlledRetirement<FlowHostPayload>>,
 }
 
-/// 🔒️ Host ownership is guarded until every retained field has crossed its close boundary.
-pub struct FlowHostRetirement {
-    state: std::mem::ManuallyDrop<FlowHostRetirementState>,
-}
+/// 🔒️ Every original host field remains owned until its declared physical close authority completes.
+#[must_use="the original host must reach physical terminal emptiness"]
+pub struct FlowHostRetirement {state:std::mem::ManuallyDrop<FlowHostRetirementState>}
 
-/// 🪜️ The rungs of the retained host close ladder, in the order [`FlowHostRetirement::close_page`]
-/// takes them. `Domain` and `Neural` drain payload frontiers; every other rung retires one owner.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FlowHostClosePhase {
-    Geometry,
-    Dag,
-    Domain,
-    Neural,
-    Widgets,
-    Synapses,
-    Layout,
-    Schema,
-    Outputs,
-    Exports,
-    EvalJson,
-    Catalogue,
-    KindInfos,
-    PreviousSnapshot,
-    PreviousChannels,
-    HistoryBaseline,
-    PendingEvals,
-    Bridges,
-    Cache,
-    HistoryStore,
-    Faulted,
-    Complete,
-}
-
-impl FlowHostClosePhase {
-    pub fn is_backing(self) -> bool {
-        matches!(self, Self::Domain | Self::Neural)
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FlowHostRetirementFault {
-    NoCredit,
-    Failed,
-}
-impl std::ops::Deref for FlowHostRetirement {
-    type Target = FlowHostRetirementState;
-    fn deref(&self) -> &Self::Target {
-        &self.state
-    }
-}
-impl std::ops::DerefMut for FlowHostRetirement {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.state
-    }
-}
+/// 🪜️ Identifies the next original host ownership boundary.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub enum FlowHostClosePhase {Geometry,Dag,Domain,Neural,Widgets,Synapses,Layout,Schema,CurrentChannels,Exports,EvalJson,Catalogue,KindInfos,PreviousSnapshot,PreviousChannels,HistoryBaseline,PendingEvals,Bridges,Cache,HistoryStore,Faulted,Complete}
+impl FlowHostClosePhase {pub fn is_backing(self)->bool{matches!(self,Self::Domain|Self::Neural)}}
 
 impl FlowHostRetirement {
-    pub fn new(mut host: FlowHost) -> Self {
-        let geometry_port = host.geometry_port.take().map(crate::geometry::GeometryPortRetirement::new);
-        let FlowHost {
-            geometry_port: _,
-            operator_registry: _,
-            host_snapshot: host_snapshot,
-            dag,
-            outputs,
-            export_payloads,
-            last_eval_json,
-            eval_bridge,
-            host_catalogue_json,
-            kind_infos,
-            neural_cache,
-            previous_snapshot,
-            previous_channels,
-            baseline_registry_generation: _,
-            next_widget_serial: _,
-            next_synapse_serial: _,
-            viewport_w: _,
-            viewport_h: _,
-            viewport_dpr: _,
-            pan_anchor: _,
-            ghost_node,
-            history_store,
-            pending_history_baseline,
-            pending_change: _,
-            pending_leaves,
-            history_fault: _,
-            #[cfg(test)]
-            recorded,
-            journal_mark: _,
-            edited_note: _,
-            gesture_active: _,
-            pending_extension_evals,
-            interaction_revision: _,
-            interaction_projection,
-            displaced,
-        } = host;
-        let mut domain = crate::retained::FlowRetirement::default();
-        pending_leaves.into_iter().for_each(|leaf| domain.push_cold(crate::retained::FlowOwner::Mutation(leaf)));
-        #[cfg(test)]
-        recorded.into_iter().flatten().for_each(|leaf| domain.push_cold(crate::retained::FlowOwner::Mutation(leaf)));
-        let mut dag = dag::DagHostRetirement::new(dag);
-        if let Some(node) = ghost_node {
-            dag.retain_node_payload(node);
-        }
-        Self {
-            state: std::mem::ManuallyDrop::new(FlowHostRetirementState {
-                geometry_port,
-                host_snapshot: host_snapshot,
-                dag: Some(dag),
-                outputs,
-                export_payloads,
-                last_eval_json,
-                eval_bridge,
-                host_catalogue_json,
-                kind_infos,
-                neural_cache: Some(neural::NeuralCacheRetirement::new(neural_cache)),
-                previous_snapshot,
-                previous_channels,
-                history_store,
-                pending_history_baseline,
-                pending_extension_evals,
-                interaction_projection,
-                domain,
-                neural: displaced,
-                terminal: false,
-                faulted: false,
-            }),
-        }
+    /// 🪹️ Transfers the exact original source without decomposition, allocation, release or cancellation work.
+    pub fn new(host:FlowHost)->Self{Self{state:std::mem::ManuallyDrop::new(FlowHostRetirementState{source:Some(host),geometry:None,payload:None})}}
+    pub fn terminal_is_empty(&self)->bool{self.state.source.is_none()&&self.state.geometry.is_none()&&self.state.payload.is_none()}
+    pub fn close_phase(&self)->FlowHostClosePhase{if self.state.geometry.is_some()||self.state.source.as_ref().is_some_and(|host|host.geometry_port.is_some()){FlowHostClosePhase::Geometry}else if self.state.source.as_ref().is_some_and(|host|host.history_store.is_some()){FlowHostClosePhase::HistoryStore}else if self.state.source.is_some(){FlowHostClosePhase::Dag}else if self.state.payload.is_some(){FlowHostClosePhase::Domain}else{FlowHostClosePhase::Complete}}
+    fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        if self.terminal_is_empty(){return Ok(RetirementDemand::default())}
+        if let Some(payload)=self.state.payload.as_ref(){return Ok(if payload.terminal_is_empty(){RetirementDemand{depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:payload.next_copy_byte_demand()?,capacity_bytes:payload.next_capacity_byte_demand(copy)?,release_bytes:payload.next_release_byte_demand()?,depth:payload.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"host payload close depth overflow"))?}})}
+        if let Some(port)=self.state.geometry.as_ref(){return Ok(RetirementDemand{copy_bytes:port.next_copy_byte_demand()?,capacity_bytes:port.next_capacity_byte_demand(copy)?,release_bytes:port.next_release_byte_demand()?,depth:port.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"host geometry close depth overflow"))?})}
+        let source=self.state.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"host close lost original custody"))?;
+        if source.geometry_port.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
+        if let Some(store)=source.history_store.as_ref(){if !store.close_owned_store_terminal_is_empty(){let mut demand=store.close_owned_demands(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"host store close depth overflow"))?;return Ok(demand)}}
+        Ok(RetirementDemand{depth:1,..Default::default()})
     }
-
-    pub fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
-        if context.should_yield() {
-            return false;
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    pub fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+    pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
+    /// 🎟️ Uses the original supplied currencies and preserves the full actual child receipt.
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        let empty=RetainedCloneProgress::default();
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
+        let demand=self.close_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"host close exceeds admitted depth"))}
+        if grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
+        if let Some(port)=self.state.geometry.as_mut(){
+            if port.terminal_is_empty(){self.state.geometry=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
+            let step=port.close_step(child)?;
+            let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,port.terminal_is_empty(),"original host geometry retirement")?;
+            return Ok(RetainedCloneStep::Progress(step.progress()))
         }
-        let maximum_bytes = if self.close_phase() == FlowHostClosePhase::HistoryStore {
-            4096.max(self.state.history_store.as_ref().map_or(0, |store| store.next_close_byte_demand()))
-        } else {
-            4096
-        };
-        let complete = self.close_page(1, maximum_bytes).unwrap_or(false);
-        context.consume_fuel(1);
-        complete
-    }
-
-    /// 📏️ Advances one host owner with caller byte credit for its byte-backed retirement cursors.
-    ///
-    /// ⚠️ The Flow domain frontier reserves its own pages, but a heap allocation is freed WHOLE or
-    /// not at all, so this driver READS `next_close_byte_demand` and grants it out of its own
-    /// allocation currency (`last_eval_json` and `host_catalogue_json` are routinely over 4 KiB).
-    /// Granting only the caller's fixed page made [`FlowHost::retire_cold`] spin forever
-    /// (tickets 26/09/09/PROCEDURAL-3D-END-TO-END, 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
-    pub fn close_page(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<bool, FlowHostRetirementFault> {
-        use crate::os_store::ErasedSnapshotRetirement;
-        use crate::retained::FlowOwner;
-        let state = &mut *self.state;
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Err(FlowHostRetirementFault::NoCredit);
+        if let Some(payload)=self.state.payload.as_mut(){
+            if payload.terminal_is_empty(){self.state.payload=None;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))}
+            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=payload.step(child)?;
+            let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,payload.terminal_is_empty(),"original host payload retirement")?;
+            return Ok(RetainedCloneStep::Progress(step.progress()))
         }
-        if state.faulted {
-            return Err(FlowHostRetirementFault::Failed);
+        let source=self.state.source.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"host admitted close lost original source"))?;
+        if let Some(port)=source.geometry_port.take(){self.state.geometry=Some(crate::geometry::GeometryPortRetirement::new(port));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+        if let Some(store)=source.history_store.as_mut(){
+            if store.close_owned_store_terminal_is_empty(){source.history_store=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=store.close_owned_store_step(child)?;
+            let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,store.close_owned_store_terminal_is_empty(),"original host history store retirement")?;
+            return Ok(RetainedCloneStep::Progress(step.progress()))
         }
-        if let Some(port) = state.geometry_port.as_mut() {
-            match port.close_step(maximum_items,maximum_bytes) {
-                Ok(neural::ValueRetirementStep::Complete) if port.terminal_is_empty() => state.geometry_port = None,
-                Ok(_) => return Ok(false),
-                Err(_) => { state.faulted = true; return Err(FlowHostRetirementFault::Failed); }
-            }
-            return Ok(false);
-        }
-        if let Some(dag) = state.dag.as_mut() {
-            match dag.close_step(maximum_items, maximum_bytes) {
-                dag::DagRetirementStep::Blocked | dag::DagRetirementStep::Pending { .. } => return Ok(false),
-                dag::DagRetirementStep::Complete => {
-                    if !dag.terminal_is_empty() {
-                        state.faulted = true;
-                        return Err(FlowHostRetirementFault::Failed);
-                    }
-                    state.dag = None;
-                }
-            }
-        } else if !state.domain.is_empty() {
-            let demand = state.domain.next_close_byte_demand().unwrap_or(maximum_bytes);
-            if state.domain.close_page(1, maximum_bytes.max(demand)).is_err() {
-                state.faulted = true;
-            }
-        } else if !state.neural.terminal_is_empty() {
-            state.neural.close_step(1, maximum_bytes);
-        } else if let Some(widget) = state.host_snapshot.widgets.pop() {
-            state.domain.push(FlowOwner::Widget(widget));
-        } else if let Some(synapse) = state.host_snapshot.synapses.pop() {
-            state.domain.push(FlowOwner::Specs(vec![synapse]));
-        } else if !state.host_snapshot.layout.is_empty() {
-            state.domain.push(FlowOwner::Layouts(std::mem::take(&mut state.host_snapshot.layout)));
-        } else if !state.host_snapshot.schema.is_empty() {
-            state.domain.text(std::mem::take(&mut state.host_snapshot.schema));
-        } else if let Some((key, value)) = state.outputs.pop_first() {
-            state.neural.text(key);
-            state.neural.push_dictionary(value);
-        } else if let Some((key, value)) = state.export_payloads.pop_first() {
-            state.neural.text(key);
-            state.neural.push_dictionary(value);
-        } else if state.last_eval_json.capacity() != 0 {
-            state.domain.text(std::mem::take(&mut state.last_eval_json));
-        } else if state.host_catalogue_json.capacity() != 0 {
-            state.domain.text(std::mem::take(&mut state.host_catalogue_json));
-        } else if !state.kind_infos.is_empty() {
-            match Arc::get_mut(&mut state.kind_infos).and_then(|infos| infos.extract_if(|_, _| true).next()) {
-                Some((key, value)) => {
-                    state.neural.text(key);
-                    state.neural.push_operator(value);
-                }
-                None => state.kind_infos = Arc::default(),
-            }
-        } else if let Some(snapshot) = state.previous_snapshot.take() {
-            state.neural.push_snapshot(snapshot);
-        } else if let Some(channels) = state.previous_channels.take() {
-            state.neural.push_channels(channels);
-        } else if let Some(host_snapshot) = state.pending_history_baseline.take() {
-            state.domain.push(FlowOwner::HostSnapshot(host_snapshot));
-        } else if let Some(pending) = state.pending_extension_evals.pop() {
-            state.neural.text(pending.neuron_id);
-            state.neural.text(pending.extension_id);
-            state.neural.text(pending.operator_id);
-            state.neural.text(pending.input_json);
-        } else if state.eval_bridge.take().is_some() || state.interaction_projection.take().is_some() {
-        } else if let Some(cache) = state.neural_cache.as_mut() {
-            if matches!(cache.close_step(1, maximum_bytes), neural::ValueRetirementStep::Complete) {
-                if !cache.terminal_nonopaque_is_empty() {
-                    state.faulted = true;
-                    return Err(FlowHostRetirementFault::Failed);
-                }
-                state.neural_cache = None;
-            }
-        } else if let Some(store) = state.history_store.as_mut() {
-            match store.close_owned_step(1, maximum_bytes) {
-                Ok(SnapshotRetirementStep::Complete) if store.close_owned_terminal_is_empty() => state.history_store = None,
-                Ok(_) => {}
-                Err(_) => state.faulted = true,
-            }
-        } else {
-            state.terminal = true;
-            return Ok(true);
-        }
-        if state.faulted {
-            Err(FlowHostRetirementFault::Failed)
-        } else {
-            Ok(false)
-        }
-    }
-
-    /// 🪜️ Names the rung [`FlowHostRetirement::close_page`] would take next, in that method's own
-    /// branch order.
-    ///
-    /// `Domain` and `Neural` are the two rungs that move PAYLOAD — they drain the frontiers every
-    /// other rung pushes onto. Anchoring a close turn on the non-payload phase therefore retires one
-    /// retained host owner per turn, at whatever weight that owner carries
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn close_phase(&self) -> FlowHostClosePhase {
-        let state = &*self.state;
-        if state.faulted {
-            return FlowHostClosePhase::Faulted;
-        }
-        if state.geometry_port.is_some() {
-            FlowHostClosePhase::Geometry
-        } else if state.dag.is_some() {
-            FlowHostClosePhase::Dag
-        } else if !state.domain.is_empty() {
-            FlowHostClosePhase::Domain
-        } else if !state.neural.terminal_is_empty() {
-            FlowHostClosePhase::Neural
-        } else if !state.host_snapshot.widgets.is_empty() {
-            FlowHostClosePhase::Widgets
-        } else if !state.host_snapshot.synapses.is_empty() {
-            FlowHostClosePhase::Synapses
-        } else if !state.host_snapshot.layout.is_empty() {
-            FlowHostClosePhase::Layout
-        } else if !state.host_snapshot.schema.is_empty() {
-            FlowHostClosePhase::Schema
-        } else if !state.outputs.is_empty() {
-            FlowHostClosePhase::Outputs
-        } else if !state.export_payloads.is_empty() {
-            FlowHostClosePhase::Exports
-        } else if state.last_eval_json.capacity() != 0 {
-            FlowHostClosePhase::EvalJson
-        } else if state.host_catalogue_json.capacity() != 0 {
-            FlowHostClosePhase::Catalogue
-        } else if !state.kind_infos.is_empty() {
-            FlowHostClosePhase::KindInfos
-        } else if state.previous_snapshot.is_some() {
-            FlowHostClosePhase::PreviousSnapshot
-        } else if state.previous_channels.is_some() {
-            FlowHostClosePhase::PreviousChannels
-        } else if state.pending_history_baseline.is_some() {
-            FlowHostClosePhase::HistoryBaseline
-        } else if !state.pending_extension_evals.is_empty() {
-            FlowHostClosePhase::PendingEvals
-        } else if state.eval_bridge.is_some() || state.interaction_projection.is_some() {
-            FlowHostClosePhase::Bridges
-        } else if state.neural_cache.is_some() {
-            FlowHostClosePhase::Cache
-        } else if state.history_store.is_some() {
-            FlowHostClosePhase::HistoryStore
-        } else {
-            FlowHostClosePhase::Complete
-        }
-    }
-
-    pub fn terminal_nonopaque_is_empty(&self) -> bool {
-        self.terminal
-            && self.geometry_port.is_none()
-            && !self.faulted
-            && self.dag.is_none()
-            && self.host_snapshot.widgets.is_empty()
-            && self.host_snapshot.synapses.is_empty()
-            && self.host_snapshot.layout.is_empty()
-            && self.host_snapshot.schema.is_empty()
-            && self.outputs.is_empty()
-            && self.export_payloads.is_empty()
-            && self.last_eval_json.is_empty()
-            && self.eval_bridge.is_none()
-            && self.host_catalogue_json.is_empty()
-            && self.kind_infos.is_empty()
-            && self.neural_cache.is_none()
-            && self.previous_snapshot.is_none()
-            && self.previous_channels.is_none()
-            && self.history_store.is_none()
-            && self.pending_history_baseline.is_none()
-            && self.pending_extension_evals.is_empty()
-            && self.interaction_projection.is_none()
-            && self.domain.is_empty()
-            && self.neural.terminal_is_empty()
+        let payload=FlowHostPayload::from_host(self.state.source.take().unwrap());self.state.payload=Some(ControlledRetirement::new(payload).unwrap_or_else(|_|unreachable!("all original host payload fields declare typed retirement")));
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
     }
 }
-
 impl Drop for FlowHostRetirement {
-    fn drop(&mut self) {
-        if !self.terminal_nonopaque_is_empty() {
-            assert!(std::thread::panicking(), "FlowHostRetirement must reach terminal-empty before release");
-            return;
-        }
-        unsafe {
-            std::mem::ManuallyDrop::drop(&mut self.state);
-        }
-    }
+    fn drop(&mut self){if !self.terminal_is_empty(){assert!(std::thread::panicking(),"Flow host retirement abandoned its original source");return}unsafe{std::mem::ManuallyDrop::drop(&mut self.state)}}
 }
 
 impl FlowHost {
@@ -3196,8 +2984,8 @@ impl FlowHost {
     /// dropped. Retained callers drive [`FlowHostRetirement::close_step`] under their own grant
     /// instead; this drains the same ladder in one uninterrupted cold pass.
     pub fn retire_cold(self) {
-        let mut retirement = FlowHostRetirement::new(self);
-        while !retirement.close_page(1, 4096.max(retirement.geometry_port.as_ref().map_or(0,crate::geometry::GeometryPortRetirement::next_close_byte_demand))).expect("cold flow host retirement") {}
+        let mut retirement=FlowHostRetirement::new(self);
+        while !retirement.terminal_is_empty(){let copy=retirement.next_close_copy_byte_demand().expect("cold host copy authority");let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_close_capacity_byte_demand(copy).expect("cold host capacity authority"),maximum_release_bytes:retirement.next_close_release_byte_demand().expect("cold host release authority"),maximum_depth:retirement.next_close_depth_demand().expect("cold host depth authority")};let step=retirement.close_step(grant).expect("cold original host close");assert!(step.progress().copied_items!=0,"cold original host close stalled");}
     }
 
     /// 🏠️ Runs `body` against a host built from `fixture`, then retires that host — the ONE shape a
@@ -3313,6 +3101,8 @@ struct FlowEvalWindowTickLatch {
     unfinished: bool,
 }
 
+semio_framework_value::artifact_retire_leaf!(FlowEvalWindowTickLatch);
+
 /// 🔑️ The latch key for one preview window instance id. Hashed rather than retained: the latch map
 /// must cost nothing to retire, and a window id is the caller's string, never the session's.
 fn flow_eval_window_key(window_id: &str) -> u64 {
@@ -3329,8 +3119,8 @@ pub struct FlowEvalSessionState {
     geometry_port: Option<Box<dyn crate::geometry::GeometryPort>>,
     operator_registry: Option<neural::SharedRegistry>,
     neural_cache: Option<Arc<NeuralCache>>,
-    previous_snapshot: Option<TreeSnapshot>,
-    previous_channels: Option<EvalChannels>,
+    previous_snapshot: Option<Arc<TreeSnapshot>>,
+    previous_channels: Option<Arc<EvalChannels>>,
     eval_json: Option<Arc<String>>,
     /// 🖼️ The evaluation a preview PAINTS while this one is still running: the live walk's own
     /// answer, with every node the live walk has not answered YET filled in from the last CONVERGED
@@ -3356,30 +3146,30 @@ pub struct FlowEvalSessionState {
     /// convention every caller has to re-derive. Plain `Copy` rows keyed by hash, so retirement is
     /// a single `clear` (the `tessellate_progress_by_hash` precedent) and no window id is ever
     /// retained here.
-    window_tick_latches: BTreeMap<u64, FlowEvalWindowTickLatch>,
-    live_geometry_handles: BTreeSet<String>,
+    window_tick_latches: HistoryFoldIndex<u64, FlowEvalWindowTickLatch>,
+    live_geometry_handles: HistoryFoldIndex<String, ()>,
     /// 🧊 Tessellated preview meshes keyed by geometry handle, each one a base64 `pack` record body
     /// (see `mesh::encode_mesh_pack`) — filled via extension `tessellate` because
     /// runtime-installable brep owns the kernel that minted the handles. Binary, not a JSON number
     /// array: the render path decodes typed arrays instead of parsing millions of JSON tokens.
-    preview_mesh_pack_by_handle: BTreeMap<String, String>,
+    preview_mesh_pack_by_handle: HistoryFoldIndex<String, String>,
     /// ⏳ In-flight tessellate requests keyed by `nodeHash` forwarded through `InvokeExtension`. A
     /// request is removed the moment its answer is folded, even a partial one — the continuation
     /// re-admits it on the next tick.
-    pending_tessellate_by_hash: BTreeMap<u64, String>,
+    pending_tessellate_by_hash: HistoryFoldIndex<u64, String>,
     /// 🔗 The handle every admitted `nodeHash` belongs to, kept for as long as the tessellation is
     /// unfinished. This is what makes a MULTI-STEP tessellation survive `retain_preview_meshes`:
     /// its progress row and its half-received mesh body are keyed by hash, and pruning them by the
     /// (already emptied) pending table would restart the transfer from chunk zero forever.
-    tessellate_handle_by_hash: BTreeMap<u64, String>,
+    tessellate_handle_by_hash: HistoryFoldIndex<u64, String>,
     /// 📈 Progress of every tessellation this session has admitted, keyed by `nodeHash`. Plain
     /// `Copy` rows — no heap, so retirement is a single take.
-    tessellate_progress_by_hash: BTreeMap<u64, PreviewTessellateProgress>,
+    tessellate_progress_by_hash: HistoryFoldIndex<u64, PreviewTessellateProgress>,
     /// 🧱 Partially received mesh bodies keyed by `nodeHash`, accumulated one intake-sized base64
     /// chunk per round trip until `next_chunk == chunks`.
-    tessellate_chunks_by_hash: BTreeMap<u64, String>,
+    tessellate_chunks_by_hash: HistoryFoldIndex<u64, String>,
     /// 🩺 Blocking validate-gate findings keyed by geometry handle, as a JSON array string.
-    preview_diagnostics_by_handle: BTreeMap<String, String>,
+    preview_diagnostics_by_handle: HistoryFoldIndex<String, String>,
     /// 🔢 Which replacement of the process-wide flow extension registry every result this session
     /// still holds was computed against. A contributed operator that no plugin had contributed yet
     /// evaluates to a fault, and the fault is CACHED — in the neural cache, in the incremental
@@ -3408,14 +3198,21 @@ pub struct FlowEvalSessionState {
     /// tessellation until it has finished. Keyed by `nodeHash`, the same identity the extension
     /// resumes its retained job by (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
     /// `📓️extension-evaluate-budget-2026-09-12.md`).
-    eval_progress_by_hash: BTreeMap<u64, PreviewEvalProgress>,
+    eval_progress_by_hash: HistoryFoldIndex<u64, PreviewEvalProgress>,
     /// 📏️ Fingerprint of the mesh packs the preview last published — lets tessellation land without
     /// moving the evaluation text while still owing a republication
     /// (`📓️slider-mesh-supersession-fallback-2026-09-15.md`).
     published_preview_mesh_digest: u64,
-    retiring_cache: Option<neural::NeuralCacheRetirement>,
-    retirement: neural::ValueRetirement,
-    retiring_collections: std::collections::LinkedList<SessionCollectionOwner>,
+    baseline_geometry_pending:bool,
+    pending_host:Option<FlowHost>,
+    retiring_host:Option<FlowHostRetirement>,
+    pending_host_cancelled:bool,
+    preview_cancellation_cursor:Option<usize>,
+    preview_cancellation_phase:u8,
+    preview_cancellation_progress:RetainedCloneProgress,
+    preview_retention:Option<SessionPreviewRetention>,
+    preview_retention_progress:RetainedCloneProgress,
+    retirement: SessionRetirement,
     closing: bool,
 }
 
@@ -3430,6 +3227,8 @@ pub struct ExtensionEvaluateFault {
     pub code: String,
     pub message: String,
 }
+
+semio_framework_value::artifact_retire_struct!(ExtensionEvaluateFault{extension_id,capability,code,message});
 
 impl ExtensionEvaluateFault {
     /// 🪪️ The stable wire code the surface publishes for this fault family.
@@ -3526,11 +3325,180 @@ pub enum FlowEvalPublication {
     Changed(Option<String>),
 }
 
+struct SessionResetFields {
+    painted: String,
+    converged: String,
+    status: String,
+    handles: HistoryFoldIndex<String, ()>,
+    meshes: HistoryFoldIndex<String, String>,
+    diagnostics: HistoryFoldIndex<String, String>,
+    pending: HistoryFoldIndex<u64, String>,
+    tessellate_handles: HistoryFoldIndex<u64, String>,
+    chunks: HistoryFoldIndex<u64, String>,
+    tessellation: HistoryFoldIndex<u64, PreviewTessellateProgress>,
+    evaluation: HistoryFoldIndex<u64, PreviewEvalProgress>,
+    fault: Option<ExtensionEvaluateFault>,
+    latches: Option<HistoryFoldIndex<u64, FlowEvalWindowTickLatch>>,
+    retention:Option<SessionPreviewRetention>,
+}
+
+semio_framework_value::artifact_retire_struct!(SessionResetFields{painted,converged,status,handles,meshes,diagnostics,pending,tessellate_handles,chunks,tessellation,evaluation,fault,latches,retention});
+
+struct SessionResetSources {
+    eval: Option<Arc<String>>,
+    baseline:FlowBaselineLeases,
+    fields: SessionResetFields,
+}
+
+impl SessionResetSources {
+    fn take(state:&mut FlowEvalSessionState,reset_latches:bool)->Self {
+        Self{eval:state.eval_json.take(),baseline:FlowBaselineLeases{snapshot:state.previous_snapshot.take(),channels:state.previous_channels.take(),current:None},fields:SessionResetFields{
+            painted:std::mem::take(&mut state.painted_eval_json),converged:std::mem::take(&mut state.converged_eval_json),status:std::mem::take(&mut state.status_json),
+            handles:std::mem::take(&mut state.live_geometry_handles),meshes:std::mem::take(&mut state.preview_mesh_pack_by_handle),diagnostics:std::mem::take(&mut state.preview_diagnostics_by_handle),
+            pending:std::mem::take(&mut state.pending_tessellate_by_hash),tessellate_handles:std::mem::take(&mut state.tessellate_handle_by_hash),chunks:std::mem::take(&mut state.tessellate_chunks_by_hash),
+            tessellation:std::mem::take(&mut state.tessellate_progress_by_hash),evaluation:std::mem::take(&mut state.eval_progress_by_hash),fault:state.extension_evaluate_fault.take(),latches:reset_latches.then(||std::mem::take(&mut state.window_tick_latches)),retention:state.preview_retention.take(),
+        }}
+    }
+    fn restore(self,state:&mut FlowEvalSessionState){
+        let Self{eval,baseline:FlowBaselineLeases{snapshot,channels,current},fields:SessionResetFields{painted,converged,status,handles,meshes,diagnostics,pending,tessellate_handles,chunks,tessellation,evaluation,fault,latches,retention}}=self;
+        assert!(current.is_none(),"original session reset has no active Host channel lease");
+        state.eval_json=eval;state.previous_snapshot=snapshot;state.previous_channels=channels;state.preview_retention=retention;
+        state.painted_eval_json=painted;state.converged_eval_json=converged;state.status_json=status;
+        state.live_geometry_handles=handles;state.preview_mesh_pack_by_handle=meshes;state.preview_diagnostics_by_handle=diagnostics;
+        state.pending_tessellate_by_hash=pending;state.tessellate_handle_by_hash=tessellate_handles;state.tessellate_chunks_by_hash=chunks;
+        state.tessellate_progress_by_hash=tessellation;state.eval_progress_by_hash=evaluation;state.extension_evaluate_fault=fault;if let Some(latches)=latches{state.window_tick_latches=latches;}
+    }
+}
+
+impl semio_framework_value::retirement::RetireOwned for SessionResetSources {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{
+        use semio_framework_value::retirement::{RetireOwned,deferred,sequence,shared::SharedControlledRetirement};
+        let eval:Box<dyn semio_framework_value::retirement::RetirementCursor>=match self.eval{Some(value)=>Box::new(SharedControlledRetirement::lease(value)),None=>().retirement()};
+        sequence(vec![eval,deferred(self.baseline),deferred(self.fields)])
+    }
+    fn retirement_birth_bytes(&self)->Option<usize>{
+        use semio_framework_value::retirement::{deferred_birth_bytes_for,leaf_birth_bytes,sequence_birth_bytes,shared::shared_retirement_birth_bytes};
+        sequence_birth_bytes(&[if self.eval.is_some(){shared_retirement_birth_bytes::<String>()}else{leaf_birth_bytes::<()>()},deferred_birth_bytes_for(&self.baseline),deferred_birth_bytes_for(&self.fields)])
+    }
+    fn controlled_retirement_supported()->bool{true}
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+struct SessionPreviewCancellationSources {
+    retention:Option<SessionPreviewRetention>,
+    pending:HistoryFoldIndex<u64,String>,
+    handles:HistoryFoldIndex<u64,String>,
+    chunks:HistoryFoldIndex<u64,String>,
+    evaluation:HistoryFoldIndex<u64,PreviewEvalProgress>,
+}
+impl SessionPreviewCancellationSources {
+    fn take(state:&mut FlowEvalSessionState)->Self{Self{retention:state.preview_retention.take(),pending:std::mem::take(&mut state.pending_tessellate_by_hash),handles:std::mem::take(&mut state.tessellate_handle_by_hash),chunks:std::mem::take(&mut state.tessellate_chunks_by_hash),evaluation:std::mem::take(&mut state.eval_progress_by_hash)}}
+    fn restore(self,state:&mut FlowEvalSessionState){state.preview_retention=self.retention;state.pending_tessellate_by_hash=self.pending;state.tessellate_handle_by_hash=self.handles;state.tessellate_chunks_by_hash=self.chunks;state.eval_progress_by_hash=self.evaluation;}
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+enum SessionRetentionRow {
+    Mesh((String,String)),Pending((u64,String)),Progress((u64,PreviewTessellateProgress)),Roster(Vec<String>),
+}
+#[derive(semio_framework_value::RetireOwned)]
+struct SessionPreviewRetention {
+    roster:Option<Vec<String>>,phase:u8,slot:usize,comparison:usize,matched:bool,
+    removed:Option<ControlledRetirement<SessionRetentionRow>>,
+}
+
 enum SessionCollectionOwner {
-    SourceLease(Box<dyn semio_framework_value::ErasedSnapshotRetirement>),
-    Handles(BTreeSet<String>),
-    Meshes(BTreeMap<String, String>),
-    Pending(BTreeMap<u64, String>),
+    Retention(SessionPreviewRetention),
+    Cancellation(SessionPreviewCancellationSources),
+    Reset(SessionResetSources),
+    Baseline(FlowBaselineLeases),
+    SourceLease(Arc<String>),
+    Text(String),
+    Handles(HistoryFoldIndex<String, ()>),
+    Meshes(HistoryFoldIndex<String, String>),
+    Pending(HistoryFoldIndex<u64, String>),
+    Latches(HistoryFoldIndex<u64, FlowEvalWindowTickLatch>),
+    Tessellation(HistoryFoldIndex<u64, PreviewTessellateProgress>),
+    Evaluation(HistoryFoldIndex<u64, PreviewEvalProgress>),
+    Snapshot(Arc<TreeSnapshot>),
+    Channels(Arc<EvalChannels>),
+    Registry(neural::SharedRegistry),
+    Cache(Arc<NeuralCache>),
+    Fault(ExtensionEvaluateFault),
+}
+
+impl semio_framework_value::retirement::RetireOwned for SessionCollectionOwner {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{
+        use semio_framework_value::retirement::{RetireOwned,shared::SharedControlledRetirement};
+        match self{
+            Self::Retention(value)=>value.retirement(),
+            Self::Cancellation(value)=>value.retirement(),
+            Self::Reset(value)=>value.retirement(),
+            Self::Baseline(value)=>value.retirement(),
+            Self::SourceLease(value)=>Box::new(SharedControlledRetirement::lease(value)),
+            Self::Snapshot(value)=>Box::new(SharedControlledRetirement::lease(value)),Self::Channels(value)=>Box::new(SharedControlledRetirement::lease(value)),
+            Self::Cache(value)=>Box::new(SharedControlledRetirement::lease(value)),
+            Self::Text(value)=>value.retirement(),Self::Handles(value)=>value.retirement(),Self::Meshes(value)=>value.retirement(),Self::Pending(value)=>value.retirement(),
+            Self::Latches(value)=>value.retirement(),Self::Tessellation(value)=>value.retirement(),Self::Evaluation(value)=>value.retirement(),
+            Self::Registry(value)=>value.retirement(),Self::Fault(value)=>value.retirement(),
+        }
+    }
+    fn retirement_birth_bytes(&self)->Option<usize>{
+        use semio_framework_value::retirement::{RetireOwned,shared::shared_retirement_birth_bytes};
+        match self{
+            Self::Retention(value)=>value.retirement_birth_bytes(),
+            Self::Cancellation(value)=>value.retirement_birth_bytes(),
+            Self::Reset(value)=>value.retirement_birth_bytes(),
+            Self::Baseline(value)=>value.retirement_birth_bytes(),
+            Self::SourceLease(_)=>Some(shared_retirement_birth_bytes::<String>()),Self::Cache(_)=>Some(shared_retirement_birth_bytes::<NeuralCache>()),
+            Self::Snapshot(_)=>Some(shared_retirement_birth_bytes::<TreeSnapshot>()),Self::Channels(_)=>Some(shared_retirement_birth_bytes::<EvalChannels>()),
+            Self::Text(value)=>value.retirement_birth_bytes(),Self::Handles(value)=>value.retirement_birth_bytes(),Self::Meshes(value)=>value.retirement_birth_bytes(),Self::Pending(value)=>value.retirement_birth_bytes(),
+            Self::Latches(value)=>value.retirement_birth_bytes(),Self::Tessellation(value)=>value.retirement_birth_bytes(),Self::Evaluation(value)=>value.retirement_birth_bytes(),
+            Self::Registry(value)=>value.retirement_birth_bytes(),Self::Fault(value)=>value.retirement_birth_bytes(),
+        }
+    }
+    fn controlled_retirement_supported()->bool{true}
+}
+
+#[derive(Default)]
+struct SessionRetirement {
+    progress:RetainedCloneProgress,
+    root: Option<ControlledRetirement<SessionCollectionOwner>>,
+    owners: RetirementQueue,
+}
+
+impl SessionRetirement {
+    fn terminal_is_empty(&self)->bool{self.root.is_none()&&self.owners.terminal_is_empty()}
+    fn admission_demands(&self)->Result<RetirementDemand,ValueError>{
+        if self.root.is_none(){return Ok(RetirementDemand{depth:1,..Default::default()})}
+        if !self.owners.has_reserved_slot(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"session retirement requires an admitted original queue slot"))}
+        Ok(RetirementDemand{capacity_bytes:RetirementQueue::frame_birth_bytes::<SessionCollectionOwner>(),depth:self.owners.len()+1,..Default::default()})
+    }
+    fn preflight(&self,grant:RetainedCloneGrant)->Result<(),ValueError>{
+        if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"session mutation requires an admitted item"))}
+        let demand=self.admission_demands()?;
+        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"session mutation requires original source depth"))}
+        if grant.maximum_capacity_bytes<demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"session mutation requires its original retained frame capacity"))}
+        Ok(())
+    }
+    fn admit(&mut self,value:SessionCollectionOwner,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,SessionCollectionOwner)>{
+        if self.root.is_some(){return self.owners.admit_owned(value,grant)}
+        if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"session handoff requires an admitted item"),value))}
+        if grant.maximum_depth==0{return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"session handoff requires admitted depth"),value))}
+        match ControlledRetirement::new(value){Ok(owner)=>{self.root=Some(owner);Ok(RetainedCloneProgress{copied_items:1,..Default::default()})},Err(error)=>Err(error)}
+    }
+    fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(owner)=self.root.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
+        Ok(RetirementDemand{copy_bytes:self.owners.next_copy_byte_demand()?,capacity_bytes:self.owners.next_capacity_byte_demand(copy)?,release_bytes:self.owners.next_release_byte_demand()?,depth:self.owners.next_depth_demand()?})
+    }
+    fn step_progress(&self)->RetainedCloneProgress{self.progress}
+    fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        self.progress=Default::default();
+        let Some(owner)=self.root.as_mut()else{let result=self.owners.step(grant);self.progress=self.owners.step_progress();return result};
+        let result=owner.step(grant);self.progress=owner.step_progress();let step=result?;
+        let progress=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"Flow session original root")?.progress();
+        if owner.terminal_is_empty(){self.root=None;}
+        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+    }
 }
 
 /// 🔒️ Evaluation ownership stays guarded until every collection, domain, cache, and byte frontier is empty.
@@ -3603,22 +3571,29 @@ impl FlowEvalSession {
                 converged_eval_json: String::new(),
                 status_json: "{}".into(),
                 tick_scheduled: false,
-                window_tick_latches: BTreeMap::new(),
-                live_geometry_handles: BTreeSet::new(),
-                preview_mesh_pack_by_handle: BTreeMap::new(),
-                pending_tessellate_by_hash: BTreeMap::new(),
-                tessellate_handle_by_hash: BTreeMap::new(),
-                tessellate_progress_by_hash: BTreeMap::new(),
-                eval_progress_by_hash: BTreeMap::new(),
-                tessellate_chunks_by_hash: BTreeMap::new(),
-                preview_diagnostics_by_handle: BTreeMap::new(),
-                retiring_cache: None,
-                retirement: neural::ValueRetirement::default(),
+                window_tick_latches: HistoryFoldIndex::new(),
+                live_geometry_handles: HistoryFoldIndex::new(),
+                preview_mesh_pack_by_handle: HistoryFoldIndex::new(),
+                pending_tessellate_by_hash: HistoryFoldIndex::new(),
+                tessellate_handle_by_hash: HistoryFoldIndex::new(),
+                tessellate_progress_by_hash: HistoryFoldIndex::new(),
+                eval_progress_by_hash: HistoryFoldIndex::new(),
+                tessellate_chunks_by_hash: HistoryFoldIndex::new(),
+                preview_diagnostics_by_handle: HistoryFoldIndex::new(),
+                retirement: SessionRetirement::default(),
                 flow_extension_generation: flow_extension_registry_generation(),
                 extension_evaluate_fault: None,
                 preview_cancelled: false,
                 published_preview_mesh_digest: 0,
-                retiring_collections: std::collections::LinkedList::new(),
+                baseline_geometry_pending:false,
+                pending_host:None,
+                retiring_host:None,
+                pending_host_cancelled:false,
+                preview_cancellation_cursor:None,
+                preview_cancellation_phase:0,
+                preview_cancellation_progress:Default::default(),
+                preview_retention:None,
+                preview_retention_progress:Default::default(),
                 closing: false,
             }),
         }
@@ -3628,8 +3603,21 @@ impl FlowEvalSession {
         self.neural_cache.as_ref().expect("live Flow evaluation session owns its neural cache").clone()
     }
 
-    pub fn install_baseline_into(&self, host: &mut FlowHost) {
-        host.install_eval_baseline(self.previous_snapshot.clone(), self.previous_channels.clone(), self.state.flow_extension_generation);
+    /// 📥️ Retains the same admitted original Host across evaluation and publication turns.
+    pub fn retain_tick_host(&mut self,host:FlowHost,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,FlowHost)>{
+        if self.closing||self.state.pending_host.is_some()||self.state.retiring_host.is_some(){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original tick Host custody is occupied"),host))}
+        if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original tick Host intake requires an admitted item"),host))}
+        if grant.maximum_depth==0{return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"original tick Host intake requires source depth"),host))}
+        self.state.pending_host=Some(host);self.state.pending_host_cancelled=false;Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
+    }
+
+    /// 🔎️ Borrows the exact original Host retained by the current tick.
+    pub fn tick_host(&self)->Option<&FlowHost>{self.state.pending_host.as_ref()}
+
+    pub fn install_baseline_into(&self,host:&mut FlowHost,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+        match host.install_eval_baseline(self.previous_snapshot.clone(),self.previous_channels.clone(),self.state.flow_extension_generation,grant){
+            Ok(progress)=>Ok(progress),Err((error,snapshot,channels))=>{drop(snapshot);drop(channels);Err(error)},
+        }
     }
 
     /// 🧵️ Takes over a host's eval baseline, INCLUDING which registry replacement it was computed
@@ -3641,26 +3629,31 @@ impl FlowEvalSession {
     /// the incremental fast path forever. It can never walk BACKWARDS, so it cannot cancel a
     /// pending [`FlowEvalSession::invalidate_for_flow_extension_registry`]
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn capture_baseline_from(&mut self, host: &FlowHost) {
-        let (snapshot, channels) = host.eval_baseline();
+    pub fn capture_baseline_from(&mut self,host:&FlowHost,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+        if !host.baseline_publication_terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original host baseline publication must complete before capture"))}
+        if self.state.baseline_geometry_pending{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original geometry membership must finish before another baseline capture"))}
+        if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original baseline capture requires an admitted item"))}
+        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original baseline capture requires source depth"))}
+        let displaced=self.state.previous_snapshot.is_some()||self.state.previous_channels.is_some();
+        if displaced{self.state.retirement.preflight(grant)?;}
+        let (snapshot,channels)=host.eval_baseline();
         let evaluated_generation = host.eval_baseline_registry_generation();
-        let state = &mut *self.state;
-        if snapshot.is_some() && evaluated_generation > state.flow_extension_generation {
-            state.flow_extension_generation = evaluated_generation;
-        }
-        if let Some(previous) = std::mem::replace(&mut state.previous_snapshot, snapshot) {
-            state.retirement.push_snapshot(previous);
-        }
-        if let Some(previous) = std::mem::replace(&mut state.previous_channels, channels) {
-            state.retirement.push_channels(previous);
-        }
-        if let Some(channels) = state.previous_channels.as_ref() {
-            let next = collect_live_geometry_handles_from_channels(channels).into_iter().collect();
-            state.retiring_collections.push_back(SessionCollectionOwner::Handles(std::mem::replace(&mut state.live_geometry_handles, next)));
-            if let Some(port) = state.geometry_port.as_ref() { port.retain(&state.live_geometry_handles.iter().cloned().collect::<Vec<_>>()); }
-            retain_drawing_handles(&collect_live_drawing_handles_from_channels(channels));
-        }
+        let progress=if displaced{
+            let original=FlowBaselineLeases{snapshot:self.state.previous_snapshot.take(),channels:self.state.previous_channels.take(),current:None};
+            match self.state.retirement.admit(SessionCollectionOwner::Baseline(original),grant){
+                Ok(progress)=>progress,
+                Err((error,SessionCollectionOwner::Baseline(original)))=>{self.state.previous_snapshot=original.snapshot;self.state.previous_channels=original.channels;return Err(error)},
+                Err(_)=>unreachable!("original session baseline admission kind"),
+            }
+        }else{RetainedCloneProgress{copied_items:1,..Default::default()}};
+        if snapshot.is_some()&&evaluated_generation>self.state.flow_extension_generation{self.state.flow_extension_generation=evaluated_generation;}
+        self.state.previous_snapshot=snapshot;self.state.previous_channels=channels;
+        self.state.baseline_geometry_pending=self.state.previous_channels.is_some();
+        Ok(progress)
     }
+
+    /// 🌐️ Geometry claims remain pending until their original admitted roster operation finishes.
+    pub fn baseline_capture_terminal_is_empty(&self)->bool{!self.state.baseline_geometry_pending}
 
     pub fn sync(&mut self, host: &FlowHost) -> bool {
         let remaining = host.pending_eval_widget_ids();
@@ -3744,7 +3737,7 @@ impl FlowEvalSession {
     }
 
     pub fn status_json(&self) -> &str {
-        &self.status_json
+        if self.status_json.is_empty(){"{}"}else{&self.status_json}
     }
 
     pub fn status_json_for_host(&self, host: &FlowHost) -> String {
@@ -3752,29 +3745,53 @@ impl FlowEvalSession {
         build_flow_status_json(host, &remaining)
     }
 
-    pub fn set_eval_json(&mut self, eval_json: String) {
-        let state = &mut *self.state;
-        if let Some(previous) = state.eval_json.replace(Arc::new(eval_json)) { state.retiring_collections.push_back(SessionCollectionOwner::SourceLease(semio_framework_value::retirement::shared_lease_retirement(previous))); }
-        state.retirement.text(std::mem::take(&mut state.painted_eval_json));
-        state.retirement.text(std::mem::take(&mut state.converged_eval_json));
-        state.tick_scheduled = false;
-        if let Some(previous) = state.previous_snapshot.take() {
-            state.retirement.push_snapshot(previous);
+    /// 📤️ Advances the original live evaluation lease while preserving progress and preview owners.
+    pub fn publish_eval_json(&mut self,eval_json:Arc<String>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Arc<String>)>{
+        if self.state.eval_json.as_ref().is_some_and(|current|Arc::ptr_eq(current,&eval_json)){return Ok(Default::default())}
+        if let Err(error)=self.state.retirement.preflight(grant){return Err((error,eval_json))}
+        if let Some(original)=self.state.eval_json.take(){
+            match self.state.retirement.admit(SessionCollectionOwner::SourceLease(original),grant){
+                Ok(progress)=>{self.state.eval_json=Some(eval_json);Ok(progress)},
+                Err((error,SessionCollectionOwner::SourceLease(original)))=>{self.state.eval_json=Some(original);Err((error,eval_json))},
+                Err(_)=>unreachable!("original live evaluation lease returned a different source family"),
+            }
+        }else{self.state.eval_json=Some(eval_json);Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}
+    }
+
+    /// 🪙️ Borrows the pending Host publication demand without creating an evaluation owner.
+    pub fn next_tick_publication_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        self.state.pending_host.as_ref().map_or(Ok(Default::default()),|host|host.next_baseline_publication_demands(copy))
+    }
+
+    pub fn next_tick_publication_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_tick_publication_demands(0)?.copy_bytes)}
+    pub fn next_tick_publication_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.next_tick_publication_demands(copy)?.capacity_bytes)}
+    pub fn next_tick_publication_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_tick_publication_demands(0)?.release_bytes)}
+    pub fn next_tick_publication_depth_demand(&self)->Result<usize,ValueError>{Ok(self.next_tick_publication_demands(0)?.depth)}
+
+    /// 🎟️ Advances only the exact pending original Host publication under the incoming grant.
+    pub fn tick_publication_step_progress(&self)->RetainedCloneProgress{self.state.pending_host.as_ref().map_or(Default::default(),FlowHost::baseline_publication_step_progress)}
+
+    pub fn tick_publication_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        let Some(host)=self.state.pending_host.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()))};
+        let step=host.baseline_publication_step(grant)?;
+        semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,host.baseline_publication_terminal_is_empty(),"Flow original retained tick publication")
+    }
+
+    /// 🔗️ Captures the original retained tick's completed shared baseline, preserving refusal custody.
+    pub fn capture_tick_baseline_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+        let Some(host)=self.state.pending_host.take()else{return Ok(Default::default())};
+        let result=self.capture_baseline_from(&host,grant);self.state.pending_host=Some(host);result
+    }
+
+    /// 🎟️ Publishes one preborn immutable evaluation after admitting the original reset owners.
+    pub fn set_eval_json(&mut self,eval_json:Arc<String>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Arc<String>)>{
+        if let Err(error)=self.state.retirement.preflight(grant){return Err((error,eval_json))}
+        let original=SessionResetSources::take(&mut self.state,false);
+        match self.state.retirement.admit(SessionCollectionOwner::Reset(original),grant){
+            Ok(progress)=>{self.state.eval_json=Some(eval_json);self.state.tick_scheduled=false;self.state.published_preview_mesh_digest=0;self.state.pending_host_cancelled=self.state.pending_host.is_some();Ok(progress)},
+            Err((error,SessionCollectionOwner::Reset(original)))=>{original.restore(&mut self.state);Err((error,eval_json))},
+            Err(_)=>unreachable!("original session reset returned a different source family"),
         }
-        if let Some(previous) = state.previous_channels.take() {
-            state.retirement.push_channels(previous);
-        }
-        state.retirement.text(std::mem::replace(&mut state.status_json, "{}".into()));
-        state.retiring_collections.push_back(SessionCollectionOwner::Handles(std::mem::take(&mut state.live_geometry_handles)));
-        state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_pack_by_handle)));
-        state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_diagnostics_by_handle)));
-        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)));
-        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_handle_by_hash)));
-        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_chunks_by_hash)));
-        state.tessellate_progress_by_hash.clear();
-        state.eval_progress_by_hash.clear();
-        state.published_preview_mesh_digest = 0;
-        if let Some(port) = state.geometry_port.as_ref() { port.retain(&[]); }
     }
 
     pub fn pending(&self) -> bool {
@@ -3782,6 +3799,45 @@ impl FlowEvalSession {
     }
 
     //#region 🔒️TickLatch
+    /// 🪙️ Quotes the exact original latch arena without constructing a replacement row.
+    pub fn next_window_tick_latch_copy_byte_demand(&self,window_id:&str)->Result<usize,ValueError>{
+        let key=flow_eval_window_key(window_id);
+        if self.state.window_tick_latches.contains_key(&key){Ok(0)}else{self.state.window_tick_latches.next_insert_copy_byte_demand(&key)}
+    }
+    pub fn next_window_tick_latch_capacity_byte_demand(&self,window_id:&str,copy:usize)->Result<usize,ValueError>{
+        let key=flow_eval_window_key(window_id);
+        if self.state.window_tick_latches.contains_key(&key){Ok(0)}else{self.state.window_tick_latches.next_insert_capacity_byte_demand(&key,copy)}
+    }
+    pub fn next_window_tick_latch_release_byte_demand(&self,window_id:&str)->Result<usize,ValueError>{
+        let key=flow_eval_window_key(window_id);
+        if self.state.window_tick_latches.contains_key(&key){Ok(0)}else{self.state.window_tick_latches.next_insert_release_byte_demand(&key)}
+    }
+    pub fn next_window_tick_latch_depth_demand(&self,window_id:&str)->Result<usize,ValueError>{
+        let key=flow_eval_window_key(window_id);
+        if self.state.window_tick_latches.contains_key(&key){Ok(0)}else{self.state.window_tick_latches.next_insert_depth_demand(&key)}
+    }
+
+    /// 🌱️ Admits original backing before placing the original Copy-keyed latch.
+    pub fn prepare_window_tick_latch(&mut self,window_id:&str,grant:RetainedCloneGrant)->Result<RetainedCloneStep,(ValueError,RetainedCloneProgress)>{
+        let key=flow_eval_window_key(window_id);
+        if self.state.window_tick_latches.contains_key(&key){return Ok(RetainedCloneStep::Complete(Default::default()))}
+        if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original latch preparation requires one admitted item"),Default::default()))}
+        if self.state.window_tick_latches.next_insert_capacity_byte_demand(&key,grant.maximum_copy_bytes).map_err(|error|(error,RetainedCloneProgress::default()))?>0{
+            return self.state.window_tick_latches.reserve_insert_step(&key,grant).map(RetainedCloneStep::Progress);
+        }
+        match self.state.window_tick_latches.insert_reserved(key,FlowEvalWindowTickLatch::default(),grant){
+            Ok((None,progress))=>Ok(RetainedCloneStep::Complete(progress)),
+            Ok((Some(_),_))=>unreachable!("original latch preparation cannot displace an occupied row"),
+            Err((error,_,_))=>Err((error,Default::default())),
+        }
+    }
+
+    fn window_tick_latch_mut(&mut self,window_id:&str,grant:RetainedCloneGrant)->Result<&mut FlowEvalWindowTickLatch,ValueError>{
+        if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original latch mutation requires one admitted item"))}
+        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original latch mutation requires source depth"))}
+        self.state.window_tick_latches.get_mut(&flow_eval_window_key(window_id)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original latch backing must be admitted before mutation"))
+    }
+
     /// 🔒️ Arms `window_id`'s `flowEvalTick` if — and only if — nothing already owes one.
     ///
     /// This is the ONE gate every arming source goes through: the host refresh poll
@@ -3794,18 +3850,19 @@ impl FlowEvalSession {
     /// last. Ticking a window whose invocation is outstanding recomputes the identical pending
     /// request, which is how one graph turned into 298 invocations against 111 settles in 80 s of
     /// live console (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn arm_window_tick(&mut self, window_id: &str) -> bool {
-        let latch = self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default();
+    pub fn arm_window_tick(&mut self, window_id: &str,grant:RetainedCloneGrant) -> Result<(bool,RetainedCloneProgress),ValueError> {
+        let latch = self.window_tick_latch_mut(window_id,grant)?;
+        let progress=RetainedCloneProgress{copied_items:1,..Default::default()};
         if latch.armed {
-            return false;
+            return Ok((false,progress));
         }
         if latch.in_flight > 0 {
             latch.owed = true;
-            return false;
+            return Ok((false,progress));
         }
         latch.armed = true;
         latch.owed = false;
-        true
+        Ok((true,progress))
     }
 
     /// 🔎️ Whether `window_id` owes a tick that nothing has armed — a window that has never ticked
@@ -3813,6 +3870,7 @@ impl FlowEvalSession {
     /// only while no tick and no extension answer is already chasing it. The REFRESH poll's whole
     /// question, and the reason it costs no evaluation at all.
     pub fn window_tick_owed(&self, window_id: &str) -> bool {
+        if self.preview_cancelled{return false}
         match self.window_tick_latches.get(&flow_eval_window_key(window_id)) {
             None => true,
             Some(latch) => latch.unfinished && !latch.armed && latch.in_flight == 0,
@@ -3821,31 +3879,35 @@ impl FlowEvalSession {
 
     /// 🔒️ Arms the tick `window_id` actually owes — [`FlowEvalSession::window_tick_owed`] and
     /// [`FlowEvalSession::arm_window_tick`] as the single question a refresh poll asks.
-    pub fn arm_owed_window_tick(&mut self, window_id: &str) -> bool {
-        self.window_tick_owed(window_id) && self.arm_window_tick(window_id)
+    pub fn arm_owed_window_tick(&mut self, window_id: &str,grant:RetainedCloneGrant) -> Result<(bool,RetainedCloneProgress),ValueError> {
+        if self.window_tick_owed(window_id){self.arm_window_tick(window_id,grant)}else{Ok((false,Default::default()))}
     }
 
     /// ▶️ Marks `window_id`'s armed tick as RUNNING: the effect has been delivered, so the latch is
     /// free for whatever this tick's own outcome decides to arm next.
     /// 🛑 A tick that actually begins is work RESUMING, which is the one thing that retires the
     /// `cancelled` banner an explicit gesture raised — see [`FlowEvalSession::preview_cancelled`].
-    pub fn begin_window_tick(&mut self, window_id: &str) {
+    pub fn begin_window_tick(&mut self, window_id: &str,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        if !self.preview_cancellation_terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original preview cancellation must finish before another tick"))}
+        self.window_tick_latch_mut(window_id,grant)?.armed=false;
         self.state.preview_cancelled = false;
-        self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default().armed = false;
+        Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
     }
 
     /// ⏳️ Records that `window_id`'s tick parked `count` extension invocations. Those answers own
     /// the continuation from here — the tick that parked them owes no re-arm.
-    pub fn note_window_extensions_in_flight(&mut self, window_id: &str, count: usize) {
-        let latch = self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default();
+    pub fn note_window_extensions_in_flight(&mut self, window_id: &str, count: usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        let latch = self.window_tick_latch_mut(window_id,grant)?;
         latch.in_flight = latch.in_flight.saturating_add(u32::try_from(count).unwrap_or(u32::MAX));
+        Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
     }
 
     /// 📝️ Records what `window_id`'s tick reported: `unfinished` is the tick's own "there is more to
     /// compute". Only this makes a refresh poll able to answer [`FlowEvalSession::window_tick_owed`]
     /// without evaluating anything.
-    pub fn note_window_tick_outcome(&mut self, window_id: &str, unfinished: bool) {
-        self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default().unfinished = unfinished;
+    pub fn note_window_tick_outcome(&mut self, window_id: &str, unfinished: bool,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        self.window_tick_latch_mut(window_id,grant)?.unfinished=unfinished;
+        Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
     }
 
     /// 🚧️ Marks `window_id`'s chain as GIVEN UP: an extension answer this process cannot fold (a
@@ -3853,35 +3915,39 @@ impl FlowEvalSession {
     /// next tick would park the identical request and fault again at the host's own cadence. Nothing
     /// but a gesture — a contributions install, an example switch, an edit — may resume it, and each
     /// of those arms through [`FlowEvalSession::arm_window_tick`] directly.
-    pub fn abandon_window_tick(&mut self, window_id: &str) {
-        let latch = self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default();
+    pub fn abandon_window_tick(&mut self, window_id: &str,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        let latch = self.window_tick_latch_mut(window_id,grant)?;
         latch.unfinished = false;
         latch.owed = false;
+        Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
     }
 
     /// 🧹️ Drops the latch of every window that is no longer attached. A detached window's latch can
     /// never be discharged by a tick — the retained route refuses a window that has left the
     /// roster — so keeping it would make a window that comes back unarmable forever.
-    pub fn retain_window_tick_latches(&mut self, window_ids: &[&str]) {
-        if self.state.window_tick_latches.is_empty() {
-            return;
-        }
-        let live: BTreeSet<u64> = window_ids.iter().map(|window_id| flow_eval_window_key(window_id)).collect();
-        self.state.window_tick_latches.retain(|key, _| live.contains(key));
+    pub fn retain_window_tick_latches(&mut self,window_ids:&[&str],cursor:&mut usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if grant.maximum_depth<self.state.window_tick_latches.next_extract_slot_depth_demand(*cursor)?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"session latch pruning requires original arena depth"))}
+        let slot=*cursor;
+        if slot>=self.state.window_tick_latches.slot_count(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+        self.state.window_tick_latches.extract_slot_if(slot,|key,_|window_ids.iter().any(|id|flow_eval_window_key(id)==*key));
+        let progress=RetainedCloneProgress{copied_items:1,..Default::default()};
+        *cursor+=1;
+        Ok(if *cursor==self.state.window_tick_latches.slot_count(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
     }
 
     /// ✅️ Folds ONE extension answer back into `window_id`'s latch. Answers whether that settle
     /// discharged an arm a sibling answer had already asked for, so the LAST answer of a fan-out
     /// emits exactly one re-arm and the earlier ones emit none.
-    pub fn settle_window_extension(&mut self, window_id: &str) -> bool {
-        let latch = self.state.window_tick_latches.entry(flow_eval_window_key(window_id)).or_default();
+    pub fn settle_window_extension(&mut self, window_id: &str,grant:RetainedCloneGrant) -> Result<(bool,RetainedCloneProgress),ValueError> {
+        let latch = self.window_tick_latch_mut(window_id,grant)?;
         latch.in_flight = latch.in_flight.saturating_sub(1);
         if latch.in_flight == 0 && latch.owed && !latch.armed {
             latch.armed = true;
             latch.owed = false;
-            return true;
+            return Ok((true,RetainedCloneProgress{copied_items:1,..Default::default()}));
         }
-        false
+        Ok((false,RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
 
     /// 🔁️ Whether the fold that just settled `window_id`'s answer may run that window's next wave
@@ -3926,8 +3992,15 @@ impl FlowEvalSession {
     /// chain was chasing have just been swept (a registry replacement, a fresh document), so the
     /// invocations it parked can no longer resume anything and their windows must be free to be
     /// armed again from scratch.
-    pub fn clear_window_tick_latches(&mut self) {
-        self.state.window_tick_latches.clear();
+    pub fn clear_window_tick_latches(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        if self.state.window_tick_latches.terminal_is_empty(){return Ok(Default::default())}
+        self.state.retirement.preflight(grant)?;
+        let source=SessionCollectionOwner::Latches(std::mem::take(&mut self.state.window_tick_latches));
+        match self.state.retirement.admit(source,grant){
+            Ok(progress)=>Ok(progress),
+            Err((error,SessionCollectionOwner::Latches(original)))=>{self.state.window_tick_latches=original;Err(error)},
+            Err(_)=>unreachable!("session original latch admission kind"),
+        }
     }
     //#endregion 🔒️TickLatch
 
@@ -3952,33 +4025,45 @@ impl FlowEvalSession {
     ///
     /// Answers whether anything was actually invalidated, so the caller only re-arms a chain it
     /// owes.
-    pub fn invalidate_for_flow_extension_registry(&mut self, generation: u64) -> bool {
-        if self.operator_registry.is_some() { return false; }
-        if self.state.flow_extension_generation == generation {
-            return false;
+    pub fn invalidate_for_flow_extension_registry(&mut self,generation:u64,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),ValueError>{
+        if self.operator_registry.is_some()||self.state.flow_extension_generation==generation{return Ok((false,Default::default()))}
+        self.state.retirement.preflight(grant)?;
+        let original=SessionResetSources::take(&mut self.state,true);
+        match self.state.retirement.admit(SessionCollectionOwner::Reset(original),grant){
+            Ok(progress)=>{self.state.flow_extension_generation=generation;self.state.preview_cancelled=false;self.state.tick_scheduled=false;self.state.published_preview_mesh_digest=0;self.state.pending_host_cancelled=self.state.pending_host.is_some();Ok((true,progress))},
+            Err((error,SessionCollectionOwner::Reset(original)))=>{original.restore(&mut self.state);Err(error)},
+            Err(_)=>unreachable!("original registry invalidation returned a different source family"),
         }
-        self.state.flow_extension_generation = generation;
-        self.state.extension_evaluate_fault = None;
-        self.state.preview_cancelled = false;
-        self.state.window_tick_latches.clear();
-        if let Some(cache) = self.state.neural_cache.as_ref() {
-            cache.begin_epoch();
-            cache.sweep();
-        }
-        self.set_eval_json(String::new());
-        true
     }
 
     /// 💥 Records the fault an `evaluate` answer came back with. The extension id and the decoded
     /// message are the SDK's own (`reactor::extension_response_args` echoes `faultCode`/
     /// `faultMessage` onto the response action) — nothing here re-words them.
-    pub fn note_extension_evaluate_fault(&mut self, fault: ExtensionEvaluateFault) {
-        self.state.extension_evaluate_fault = Some(fault);
+    pub fn note_extension_evaluate_fault(&mut self,fault:ExtensionEvaluateFault,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,ExtensionEvaluateFault)> {
+        if self.state.extension_evaluate_fault.is_none(){
+            if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"session fault handoff requires an admitted item"),fault))}
+            if grant.maximum_depth==0{return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"session fault handoff requires original source depth"),fault))}
+            self.state.extension_evaluate_fault=Some(fault);return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
+        }
+        if let Err(error)=self.state.retirement.preflight(grant){return Err((error,fault))}
+        let original=self.state.extension_evaluate_fault.take().unwrap();
+        match self.state.retirement.admit(SessionCollectionOwner::Fault(original),grant){
+            Ok(progress)=>{self.state.extension_evaluate_fault=Some(fault);Ok(progress)},
+            Err((error,SessionCollectionOwner::Fault(original)))=>{self.state.extension_evaluate_fault=Some(original);Err((error,fault))},
+            Err(_)=>unreachable!("session original fault admission kind"),
+        }
     }
 
     /// ✅️ Forgets the last evaluate fault — an answer that folded supersedes it.
-    pub fn clear_extension_evaluate_fault(&mut self) {
-        self.state.extension_evaluate_fault = None;
+    pub fn clear_extension_evaluate_fault(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        if self.state.extension_evaluate_fault.is_none(){return Ok(Default::default())}
+        self.state.retirement.preflight(grant)?;
+        let original=self.state.extension_evaluate_fault.take().unwrap();
+        match self.state.retirement.admit(SessionCollectionOwner::Fault(original),grant){
+            Ok(progress)=>Ok(progress),
+            Err((error,SessionCollectionOwner::Fault(original)))=>{self.state.extension_evaluate_fault=Some(original);Err(error)},
+            Err(_)=>unreachable!("session original fault admission kind"),
+        }
     }
 
     /// 💥 The evaluate fault this session is currently living with, if any.
@@ -4022,17 +4107,72 @@ impl FlowEvalSession {
         self.preview_diagnostics_by_handle.iter().map(|(handle, issues)| (handle.as_str(), issues.as_str())).collect()
     }
 
-    /// 🧹 Drops preview meshes/pending tessellates whose handles are no longer live. A tessellation
-    /// still in progress keeps its row and its half-received body — liveness is judged by HANDLE
-    /// (`tessellate_handle_by_hash`), never by the pending table, which a partial answer empties.
-    pub fn retain_preview_meshes(&mut self, live_handles: &HashSet<String>) {
-        self.preview_mesh_pack_by_handle.retain(|handle, _| live_handles.contains(handle));
-        self.preview_diagnostics_by_handle.retain(|handle, _| live_handles.contains(handle));
-        self.tessellate_handle_by_hash.retain(|_, handle| live_handles.contains(handle));
-        self.pending_tessellate_by_hash.retain(|_, handle| live_handles.contains(handle));
-        let live_hashes: BTreeSet<u64> = self.tessellate_handle_by_hash.keys().copied().collect();
-        self.tessellate_progress_by_hash.retain(|hash, _| live_hashes.contains(hash));
-        self.tessellate_chunks_by_hash.retain(|hash, _| live_hashes.contains(hash));
+    /// 📥️ Retains the exact incoming roster before pruning any original preview owner.
+    pub fn begin_retain_preview_meshes(&mut self,handles:Vec<String>)->Result<(),(ValueError,Vec<String>)>{
+        if self.closing||self.state.preview_retention.is_some()||!self.preview_cancellation_terminal_is_empty(){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original preview retention is already active or closing"),handles))}
+        self.state.preview_retention=Some(SessionPreviewRetention{roster:Some(handles),phase:0,slot:0,comparison:0,matched:false,removed:None});
+        self.state.preview_retention_progress=Default::default();Ok(())
+    }
+    pub fn preview_retention_terminal_is_empty(&self)->bool{self.state.preview_retention.is_none()}
+    pub fn preview_retention_step_progress(&self)->RetainedCloneProgress{self.state.preview_retention_progress}
+    fn preview_retention_handle(&self,owner:&SessionPreviewRetention)->Option<&str>{
+        match owner.phase {
+            0=>self.state.preview_mesh_pack_by_handle.slot_entry(owner.slot).map(|(handle,_)|handle.as_str()),
+            1=>self.state.preview_diagnostics_by_handle.slot_entry(owner.slot).map(|(handle,_)|handle.as_str()),
+            2=>self.state.pending_tessellate_by_hash.slot_entry(owner.slot).map(|(_,handle)|handle.as_str()),
+            3=>self.state.tessellate_progress_by_hash.slot_entry(owner.slot).and_then(|(hash,_)|self.state.tessellate_handle_by_hash.get(hash)).map(String::as_str),
+            4=>self.state.tessellate_chunks_by_hash.slot_entry(owner.slot).and_then(|(hash,_)|self.state.tessellate_handle_by_hash.get(hash)).map(String::as_str),
+            5=>self.state.tessellate_handle_by_hash.slot_entry(owner.slot).map(|(_,handle)|handle.as_str()),
+            _=>None,
+        }
+    }
+    /// 🪙️ Borrows all five currencies from the actual removed row or actual geometry cursor.
+    pub fn next_preview_retention_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        let Some(owner)=self.state.preview_retention.as_ref()else{return Ok(Default::default())};
+        if let Some(removed)=owner.removed.as_ref(){return Ok(RetirementDemand{copy_bytes:removed.next_copy_byte_demand()?,capacity_bytes:removed.next_capacity_byte_demand(copy)?,release_bytes:removed.next_release_byte_demand()?,depth:removed.next_depth_demand()?})}
+        if owner.phase==7 {let port=self.geometry_port.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original geometry retention source disappeared"))?;return Ok(RetirementDemand{copy_bytes:port.next_retain_copy_byte_demand()?,capacity_bytes:port.next_retain_capacity_byte_demand(copy)?,release_bytes:port.next_retain_release_byte_demand()?,depth:port.next_retain_depth_demand()?})}
+        let depth=match owner.phase {0=>self.preview_mesh_pack_by_handle.next_extract_slot_depth_demand(owner.slot)?,1=>self.preview_diagnostics_by_handle.next_extract_slot_depth_demand(owner.slot)?,2=>self.pending_tessellate_by_hash.next_extract_slot_depth_demand(owner.slot)?,3=>self.tessellate_progress_by_hash.next_extract_slot_depth_demand(owner.slot)?,4=>self.tessellate_chunks_by_hash.next_extract_slot_depth_demand(owner.slot)?,5=>self.tessellate_handle_by_hash.next_extract_slot_depth_demand(owner.slot)?,_=>1};
+        Ok(RetirementDemand{depth:depth.max(1),..Default::default()})
+    }
+    /// 🍂️ Compares one roster entry or closes one exact original removed row per turn.
+    pub fn retain_preview_meshes_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        self.state.preview_retention_progress=Default::default();
+        if self.preview_retention_terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        let demand=self.next_preview_retention_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original preview retention exceeds admitted depth"))}
+        if grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        let mut owner=self.state.preview_retention.take().unwrap();
+        let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
+        if let Some(removed)=owner.removed.as_mut(){
+            let result=removed.step(grant);self.state.preview_retention_progress=removed.step_progress();self.state.preview_retention=Some(owner);
+            let step=result?;progress=step.progress();
+            if self.state.preview_retention.as_ref().unwrap().removed.as_ref().unwrap().terminal_is_empty(){self.state.preview_retention.as_mut().unwrap().removed=None;}
+            self.state.preview_retention_progress=progress;return Ok(RetainedCloneStep::Progress(progress))
+        }
+        if owner.phase==7 {
+            let port=self.geometry_port.as_mut().unwrap();let result=port.retain_step(grant);progress=port.retain_step_progress();
+            if port.retain_terminal_is_empty(){owner.phase=8;}
+            self.state.preview_retention=Some(owner);self.state.preview_retention_progress=progress;
+            let step=result.map_err(|error|error.with_retained_progress(progress))?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.geometry_port.as_ref().unwrap().retain_terminal_is_empty(),"Flow original preview geometry retention")?;
+            return Ok(RetainedCloneStep::Progress(progress))
+        }
+        if owner.phase==8 {self.state.baseline_geometry_pending=false;self.state.preview_retention_progress=progress;return Ok(RetainedCloneStep::Complete(progress))}
+        if owner.phase==6 {
+            let handles=owner.roster.take().unwrap();
+            if let Some(port)=self.geometry_port.as_mut(){if let Err((error,handles))=port.begin_retain(handles){owner.roster=Some(handles);self.state.preview_retention=Some(owner);return Err(error)}owner.phase=7;}
+            else{owner.removed=Some(ControlledRetirement::new(SessionRetentionRow::Roster(handles)).unwrap_or_else(|_|unreachable!("original roster declares retirement")));owner.phase=8;}
+        }else {
+            let slots=match owner.phase {0=>self.preview_mesh_pack_by_handle.slot_count(),1=>self.preview_diagnostics_by_handle.slot_count(),2=>self.pending_tessellate_by_hash.slot_count(),3=>self.tessellate_progress_by_hash.slot_count(),4=>self.tessellate_chunks_by_hash.slot_count(),5=>self.tessellate_handle_by_hash.slot_count(),_=>unreachable!()};
+            if owner.slot>=slots{owner.phase+=1;owner.slot=0;owner.comparison=0;owner.matched=false;}
+            else if !owner.matched&&owner.comparison<owner.roster.as_ref().unwrap().len(){owner.matched=self.preview_retention_handle(&owner).is_some_and(|handle|handle==owner.roster.as_ref().unwrap()[owner.comparison]);owner.comparison+=1;}
+            else{
+                let keep=owner.matched;let row=match owner.phase {0=>self.preview_mesh_pack_by_handle.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Mesh),1=>self.preview_diagnostics_by_handle.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Mesh),2=>self.pending_tessellate_by_hash.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Pending),3=>self.tessellate_progress_by_hash.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Progress),4=>self.tessellate_chunks_by_hash.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Pending),5=>self.tessellate_handle_by_hash.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Pending),_=>unreachable!()};
+                if let Some(row)=row{owner.removed=Some(ControlledRetirement::new(row).unwrap_or_else(|_|unreachable!("original preview row declares retirement")));}
+                owner.slot+=1;owner.comparison=0;owner.matched=false;
+            }
+        }
+        self.state.preview_retention=Some(owner);self.state.preview_retention_progress=progress;Ok(RetainedCloneStep::Progress(progress))
     }
 
     /// 📨 Notes an in-flight tessellate; returns true when the caller should emit `InvokeExtension`.
@@ -4091,62 +4231,68 @@ impl FlowEvalSession {
         status
     }
 
-    /// 🛑 Retires every in-flight preview evaluation and tessellation: the kernel jobs this process
-    /// owns are cancelled in place, every pending request is forgotten, every partial mesh body is
-    /// dropped, every window's arming latch falls back to QUIESCENT (`window_id`'s is CREATED if it
-    /// does not exist yet) and the session remembers that the gesture happened. Returns how many in-flight tessellations were retired. Idempotent — a
-    /// second cancel is a no-op.
-    ///
-    /// 🧱 The mesh-body chunk CURSOR is reset alongside the half-received body it addresses. The two
-    /// are one fact in two fields: `tessellate_chunks_by_hash` holds the base64 assembled so far and
-    /// `PreviewTessellateProgress::next_chunk` says which chunk continues it. Dropping the body
-    /// while keeping the cursor made the NEXT evaluation of the same handle ask the kernel for chunk
-    /// `n` and concatenate it onto nothing — a silently truncated `pack` body, i.e. exactly the
-    /// "stale mesh from the cancelled run" a cancel exists to prevent
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    ///
-    /// 🔒️ The latches are reset to [`FlowEvalWindowTickLatch::default`] rather than REMOVED: a
-    /// missing latch reads as "this window never ticked" and [`FlowEvalSession::window_tick_owed`]
-    /// answers `true` for it, so `clear()` here would have the host refresh poll re-arm the very
-    /// chain the user just stopped. A defaulted latch owes nothing and admits the next gesture.
-    ///
-    /// 🚪️ This cancels what THIS process holds. The kernel jobs the geometry extension retains live
-    /// in the extension actor's own instance and are only reachable through its `tessellateCancel`
-    /// capability — see [`FlowEvalSession::preview_cancel_invocation_request_json`], which the
-    /// cancelling command emits alongside this call.
-    pub fn cancel_preview_evaluation(&mut self, window_id: &str) -> usize {
-        let retired = self.pending_tessellate_by_hash.len();
-        if let Some(port) = self.state.geometry_port.as_ref() { port.cancel(); }
-        let state = &mut *self.state;
-        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)));
-        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_handle_by_hash)));
-        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_chunks_by_hash)));
-        for progress in state.tessellate_progress_by_hash.values_mut() {
-            if progress.phase != PreviewTessellatePhase::Complete {
-                progress.phase = PreviewTessellatePhase::Cancelled;
-            }
-            progress.next_chunk = 0;
-            progress.chunks = 0;
-        }
-        // ⏱️ The budgeted-evaluation ledger is EMPTIED rather than stamped: unlike a tessellation,
-        // whose frozen counters are what the surface keeps showing beside `phase: "cancelled"`, a
-        // parked evaluation that survives here would make the very next `preview_eval_status()`
-        // report work in flight that nothing will ever answer.
-        state.eval_progress_by_hash.clear();
-        for latch in state.window_tick_latches.values_mut() {
-            *latch = FlowEvalWindowTickLatch::default();
-        }
-        // 🔒️ The ADDRESSED window's latch is created if it does not exist yet. A window with no
-        // latch reads as "never ticked", which `window_tick_owed` answers `true` for — so a cancel
-        // that left the addressed window latchless would be undone by the very next host refresh
-        // poll (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        if !window_id.is_empty() {
-            state.window_tick_latches.insert(flow_eval_window_key(window_id), FlowEvalWindowTickLatch::default());
-        }
-        state.preview_cancelled = true;
-        state.tick_scheduled = false;
-        retired
+    /// 🛑️ Records cancellation while retaining every original source until its admitted turn.
+    pub fn cancel_preview_evaluation(&mut self,_window_id:&str,grant:RetainedCloneGrant)->Result<(usize,RetainedCloneProgress),ValueError>{
+        if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original preview session is closing"))}
+        if self.preview_cancelled{return Ok((0,Default::default()))}
+        if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"preview cancellation requires an admitted item"))}
+        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"preview cancellation requires admitted depth"))}
+        let count=self.state.pending_tessellate_by_hash.len();
+        self.state.preview_cancelled=true;self.state.tick_scheduled=false;self.state.pending_host_cancelled=self.state.pending_host.is_some();self.state.preview_cancellation_cursor=Some(0);self.state.preview_cancellation_phase=0;
+        Ok((count,RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
+
+    pub fn next_preview_cancellation_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        if self.state.preview_cancellation_cursor.is_none(){return Ok(Default::default())}
+        match self.state.preview_cancellation_phase{
+            0=>self.retirement.admission_demands(),
+            4=>self.geometry_port.as_ref().map_or(Ok(Default::default()),|port|Ok(RetirementDemand{copy_bytes:port.next_cancel_copy_byte_demand()?,capacity_bytes:port.next_cancel_capacity_byte_demand(copy)?,release_bytes:port.next_cancel_release_byte_demand()?,depth:port.next_cancel_depth_demand()?})),
+            5=>self.retirement.demands(copy),
+            _=>Ok(RetirementDemand{depth:1,..Default::default()}),
+        }
+    }
+
+    /// ⏱️ Hands off exact sources, resets one actual row, or advances the original geometry cancellation.
+    pub fn preview_cancellation_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        self.state.preview_cancellation_progress=Default::default();
+        let Some(cursor)=self.state.preview_cancellation_cursor else{return Ok(RetainedCloneStep::Complete(Default::default()))};
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        let demand=self.next_preview_cancellation_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"preview cancellation requires its original cursor depth"))}
+        if grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
+        match self.state.preview_cancellation_phase{
+            0=>{
+                self.retirement.preflight(grant)?;
+                let original=SessionPreviewCancellationSources::take(&mut self.state);
+                match self.retirement.admit(SessionCollectionOwner::Cancellation(original),grant){Ok(receipt)=>progress=receipt,Err((error,SessionCollectionOwner::Cancellation(original)))=>{original.restore(&mut self.state);return Err(error)},Err(_)=>unreachable!("original cancellation source changed")}
+                self.state.preview_cancellation_phase=1;
+            },
+            1=>{
+                if cursor<self.state.tessellate_progress_by_hash.slot_count(){if let Some((_,row))=self.state.tessellate_progress_by_hash.slot_entry_mut(cursor){if row.phase!=PreviewTessellatePhase::Complete{row.phase=PreviewTessellatePhase::Cancelled;}row.next_chunk=0;row.chunks=0;}self.state.preview_cancellation_cursor=Some(cursor+1);}
+                else{self.state.preview_cancellation_phase=2;self.state.preview_cancellation_cursor=Some(0);}
+            },
+            2=>{
+                if cursor<self.state.window_tick_latches.slot_count(){if let Some((_,row))=self.state.window_tick_latches.slot_entry_mut(cursor){*row=FlowEvalWindowTickLatch::default();}self.state.preview_cancellation_cursor=Some(cursor+1);}
+                else{self.state.preview_cancellation_phase=3;}
+            },
+            3=>{if let Some(port)=self.geometry_port.as_mut(){port.begin_cancel()?;self.state.preview_cancellation_phase=4;}else{self.state.preview_cancellation_phase=5;}},
+            4=>{
+                let port=self.geometry_port.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original cancelling geometry source disappeared"))?;
+                let result=port.cancel_step(grant);progress=port.cancel_step_progress();self.state.preview_cancellation_progress=progress;let step=result.map_err(|error|error.with_retained_progress(progress))?;
+                semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,port.cancel_terminal_is_empty(),"Flow session original geometry cancellation")?;
+                if port.cancel_terminal_is_empty(){self.state.preview_cancellation_phase=5;}
+            },
+            5=>{let result=self.retirement.step(grant);progress=self.retirement.step_progress();self.state.preview_cancellation_progress=progress;let step=result?;progress=step.progress();if self.retirement.terminal_is_empty(){self.state.preview_cancellation_cursor=None;}},
+            _=>unreachable!("original preview cancellation phase"),
+        }
+        self.state.preview_cancellation_progress=progress;
+        Ok(if self.preview_cancellation_terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+    }
+
+    pub fn preview_cancellation_step_progress(&self)->RetainedCloneProgress{self.state.preview_cancellation_progress}
+
+    pub fn preview_cancellation_terminal_is_empty(&self)->bool{self.state.preview_cancellation_cursor.is_none()}
 
     /// 🛑 The `tessellateCancel` request body the cancelling command sends to the geometry extension.
     /// Deliberately addresses NO handle: the session keys its ledger by `nodeHash`, which is a
@@ -4329,165 +4475,104 @@ impl FlowEvalSession {
         }
     }
 
-    /// 🧹 Begins exact incremental retirement of this instance-owned evaluation session.
-    pub fn begin_close(&mut self) {
-        self.state.operator_registry.take();
-        self.closing = true;
-        self.tick_scheduled = false;
-        self.window_tick_latches.clear();
-        if let Some(port) = self.state.geometry_port.take() { self.state.retiring_geometry_port = Some(crate::geometry::GeometryPortRetirement::new(port)); }
+    /// 🧹️ Marks the original session closed without releasing or replacing any source.
+    pub fn begin_close(&mut self){self.closing=true;self.tick_scheduled=false;}
+
+    fn owns_session_source(&self)->bool{
+        let state=&*self.state;
+        state.operator_registry.is_some()||state.neural_cache.is_some()||state.previous_snapshot.is_some()||state.previous_channels.is_some()||state.eval_json.is_some()
+            ||state.painted_eval_json.capacity()!=0||state.converged_eval_json.capacity()!=0||state.status_json.capacity()!=0||state.extension_evaluate_fault.is_some()
+            ||state.preview_retention.is_some()||!state.window_tick_latches.terminal_is_empty()||!state.live_geometry_handles.terminal_is_empty()||!state.preview_mesh_pack_by_handle.terminal_is_empty()
+            ||!state.pending_tessellate_by_hash.terminal_is_empty()||!state.tessellate_handle_by_hash.terminal_is_empty()||!state.tessellate_progress_by_hash.terminal_is_empty()
+            ||!state.eval_progress_by_hash.terminal_is_empty()||!state.tessellate_chunks_by_hash.terminal_is_empty()||!state.preview_diagnostics_by_handle.terminal_is_empty()
     }
 
-    /// 🧊️ Explicit cold-only disposal of a detached evaluation session — the twin of
-    /// [`FlowHost::retire_cold`]. A `FlowEvalSession` refuses a bare drop
-    /// (`FlowEvalSession must finish explicit close before drop`), so a caller that only needed one
-    /// for the length of a law closes it here instead of hand-rolling the same
-    /// `begin_close` + bounded `close_step` loop at every site
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn retire_cold(mut self) {
-        self.begin_close();
-        for _ in 0..FLOW_EVAL_SESSION_COLD_CLOSE_STEPS {
-            if self.terminal_is_empty() {
-                return;
-            }
-            let _ = self.close_step(usize::MAX, usize::MAX);
-        }
-        assert!(self.terminal_is_empty(), "cold flow evaluation session disposal did not reach terminal-empty within its bound");
+    fn take_session_source(&mut self)->Option<SessionCollectionOwner>{
+        let state=&mut*self.state;
+        if let Some(value)=state.preview_retention.take(){return Some(SessionCollectionOwner::Retention(value))}
+        if let Some(value)=state.operator_registry.take(){return Some(SessionCollectionOwner::Registry(value))}
+        if !state.window_tick_latches.terminal_is_empty(){return Some(SessionCollectionOwner::Latches(std::mem::take(&mut state.window_tick_latches)))}
+        if !state.preview_mesh_pack_by_handle.terminal_is_empty(){return Some(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_pack_by_handle)))}
+        if !state.preview_diagnostics_by_handle.terminal_is_empty(){return Some(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_diagnostics_by_handle)))}
+        if !state.tessellate_chunks_by_hash.terminal_is_empty(){return Some(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_chunks_by_hash)))}
+        if !state.tessellate_handle_by_hash.terminal_is_empty(){return Some(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_handle_by_hash)))}
+        if !state.tessellate_progress_by_hash.terminal_is_empty(){return Some(SessionCollectionOwner::Tessellation(std::mem::take(&mut state.tessellate_progress_by_hash)))}
+        if !state.eval_progress_by_hash.terminal_is_empty(){return Some(SessionCollectionOwner::Evaluation(std::mem::take(&mut state.eval_progress_by_hash)))}
+        if !state.pending_tessellate_by_hash.terminal_is_empty(){return Some(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)))}
+        if !state.live_geometry_handles.terminal_is_empty(){return Some(SessionCollectionOwner::Handles(std::mem::take(&mut state.live_geometry_handles)))}
+        if let Some(value)=state.previous_snapshot.take(){return Some(SessionCollectionOwner::Snapshot(value))}
+        if let Some(value)=state.previous_channels.take(){return Some(SessionCollectionOwner::Channels(value))}
+        if let Some(value)=state.eval_json.take(){return Some(SessionCollectionOwner::SourceLease(value))}
+        for text in [&mut state.painted_eval_json,&mut state.converged_eval_json,&mut state.status_json]{if text.capacity()!=0{return Some(SessionCollectionOwner::Text(std::mem::take(text)))}}
+        if let Some(value)=state.extension_evaluate_fault.take(){return Some(SessionCollectionOwner::Fault(value))}
+        state.neural_cache.take().map(SessionCollectionOwner::Cache)
     }
 
-    /// 📄 Releases at most one retained owner under the caller's close-page grant.
-    ///
-    /// ⚠️ Both nested frontiers are driven through their PAID entry point
-    /// ([`neural::ValueRetirement::close_page`]): a session's `eval_json`, its status JSON and every
-    /// mesh pack are routinely larger than the framework's 4 KiB close page, and an unpaid
-    /// `close_step` answers `Blocked` — never an error — on any owner the grant cannot cover, so the
-    /// app close ladder would yield and ask again with the same grant forever
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(host)=self.state.retiring_host.as_ref(){return Ok(RetirementDemand{copy_bytes:host.next_close_copy_byte_demand()?,capacity_bytes:host.next_close_capacity_byte_demand(copy)?,release_bytes:host.next_close_release_byte_demand()?,depth:host.next_close_depth_demand()?})}
+        if self.state.pending_host.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
+        if let Some(port)=self.retiring_geometry_port.as_ref(){return Ok(RetirementDemand{copy_bytes:port.next_copy_byte_demand()?,capacity_bytes:port.next_capacity_byte_demand(copy)?,release_bytes:port.next_release_byte_demand()?,depth:port.next_depth_demand()?})}
+        if !self.retirement.terminal_is_empty(){return self.retirement.demands(copy)}
+        Ok(RetirementDemand{depth:usize::from(self.geometry_port.is_some()||self.owns_session_source()),..Default::default()})
+    }
+
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    pub fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+    pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
+
+    /// 🎟️ Quotes a new original retirement source handoff without allocating its queue or frame.
+    pub fn next_retirement_admission_demands(&self)->Result<RetirementDemand,ValueError>{self.retirement.admission_demands()}
+    pub fn next_retirement_reserve_capacity_byte_demand(&self)->Result<usize,ValueError>{self.retirement.owners.next_reserve_capacity_byte_demand()}
+    pub fn reserve_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.retirement.owners.reserve_step(grant)}
+    pub fn next_retirement_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement.demands(0)?.copy_bytes)}
+    pub fn next_retirement_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.retirement.demands(copy)?.capacity_bytes)}
+    pub fn next_retirement_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement.demands(0)?.release_bytes)}
+    pub fn next_retirement_depth_demand(&self)->Result<usize,ValueError>{Ok(self.retirement.demands(0)?.depth)}
+    pub fn retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.retirement.step(grant)}
+
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
         use semio_framework_job::InteractiveJobCloseStep as Step;
-        let state = &mut *self.state;
-        if !state.closing || maximum_items == 0 || maximum_bytes == 0 {
-            return Step::Blocked;
+        let empty=RetainedCloneProgress::default();
+        if !self.closing{return Step::Blocked}
+        if grant.maximum_items==0{return Step::Pending{progress:empty}}
+        let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(value)=>value,Err(error)=>return Step::Refused{kind:error.kind,progress:error.retained_progress()}};
+        if grant.maximum_depth<demand.depth{return Step::Refused{kind:ValueRefusalKind::DepthLimit,progress:Default::default()}}
+        if let Some(host)=self.state.retiring_host.as_mut(){
+            let result=host.close_step(grant).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,host.terminal_is_empty(),"Flow session original pending Host"));
+            if host.terminal_is_empty(){self.state.retiring_host=None;}
+            return match result{Ok(step)=>if self.terminal_is_empty(){Step::Complete{progress:step.progress()}}else{Step::Pending{progress:step.progress()}},Err(error)=>Step::Refused{kind:error.kind,progress:error.retained_progress()}}
         }
-        if let Some(port) = state.retiring_geometry_port.as_mut() {
-            return match port.close_step(maximum_items,maximum_bytes) {
-                Ok(neural::ValueRetirementStep::Complete) if port.terminal_is_empty() => { state.retiring_geometry_port = None; Step::Pending { released_items:0,released_bytes:0 } },
-                Ok(neural::ValueRetirementStep::Pending { released_items,released_bytes }) => Step::Pending { released_items,released_bytes },
-                Ok(_) => Step::Blocked,
-                Err(error) => panic!("geometry port retirement failed: {error}"),
-            };
+        if let Some(host)=self.state.pending_host.take(){self.state.retiring_host=Some(FlowHostRetirement::new(host));return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}}}
+        if let Some(port)=self.retiring_geometry_port.as_mut(){
+            let result=port.close_step(grant).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,port.terminal_is_empty(),"Flow session original geometry port"));
+            if port.terminal_is_empty(){self.retiring_geometry_port=None;}
+            return match result{Ok(step)=>Step::Pending{progress:step.progress()},Err(error)=>Step::Refused{kind:error.kind,progress:error.retained_progress()}}
         }
-        if !state.retirement.terminal_is_empty() {
-            return match state.retirement.close_step(maximum_items, maximum_bytes) {
-                neural::ValueRetirementStep::Pending { released_items, released_bytes } => Step::Pending { released_items, released_bytes },
-                neural::ValueRetirementStep::Complete => Step::Pending { released_items: 1, released_bytes: 0 },
-                neural::ValueRetirementStep::Blocked => Step::Blocked,
-            };
+        if !self.retirement.terminal_is_empty(){
+            return match self.retirement.step(grant){Ok(step)=>if self.terminal_is_empty(){Step::Complete{progress:step.progress()}}else{Step::Pending{progress:step.progress()}},Err(error)=>Step::Refused{kind:error.kind,progress:error.retained_progress()}}
         }
-        if let Some(owner) = state.retiring_collections.pop_front() {
-            match owner {
-                SessionCollectionOwner::SourceLease(mut retirement) => {
-                    match retirement.close_step(maximum_items,maximum_bytes).expect("session primary source lease retirement") {
-                        semio_framework_value::SnapshotRetirementStep::Complete => assert!(retirement.terminal_is_empty()),
-                        semio_framework_value::SnapshotRetirementStep::Pending {released_items,released_bytes} => {state.retiring_collections.push_front(SessionCollectionOwner::SourceLease(retirement));return Step::Pending {released_items,released_bytes};},
-                        semio_framework_value::SnapshotRetirementStep::Blocked => {state.retiring_collections.push_front(SessionCollectionOwner::SourceLease(retirement));return Step::Blocked;},
-                    }
-                }
-                SessionCollectionOwner::Handles(mut values) => {
-                    if let Some(value) = values.pop_first() {
-                        state.retirement.text(value);
-                    }
-                    if !values.is_empty() {
-                        state.retiring_collections.push_front(SessionCollectionOwner::Handles(values));
-                    }
-                }
-                SessionCollectionOwner::Meshes(mut values) => {
-                    if let Some((key, value)) = values.pop_first() {
-                        state.retirement.text(key);
-                        state.retirement.text(value);
-                    }
-                    if !values.is_empty() {
-                        state.retiring_collections.push_front(SessionCollectionOwner::Meshes(values));
-                    }
-                }
-                SessionCollectionOwner::Pending(mut values) => {
-                    if let Some((_, value)) = values.pop_first() {
-                        state.retirement.text(value);
-                    }
-                    if !values.is_empty() {
-                        state.retiring_collections.push_front(SessionCollectionOwner::Pending(values));
-                    }
-                }
-            }
-            return Step::Pending { released_items: 1, released_bytes: 0 };
+        if let Some(port)=self.geometry_port.take(){self.retiring_geometry_port=Some(crate::geometry::GeometryPortRetirement::new(port));return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}}}
+        if let Some(source)=self.take_session_source(){
+            self.retirement.root=Some(ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!("declared original session source root supports controlled retirement")));
+            return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}}
         }
-        if !state.preview_mesh_pack_by_handle.is_empty() {
-            state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_pack_by_handle)));
-        } else if !state.preview_diagnostics_by_handle.is_empty() {
-            state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_diagnostics_by_handle)));
-        } else if !state.tessellate_chunks_by_hash.is_empty() {
-            state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_chunks_by_hash)));
-        } else if !state.tessellate_handle_by_hash.is_empty() {
-            state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_handle_by_hash)));
-        } else if !state.tessellate_progress_by_hash.is_empty() {
-            state.tessellate_progress_by_hash.clear();
-        } else if !state.eval_progress_by_hash.is_empty() {
-            state.eval_progress_by_hash.clear();
-        } else if !state.window_tick_latches.is_empty() {
-            state.window_tick_latches.clear();
-        } else if !state.pending_tessellate_by_hash.is_empty() {
-            state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)));
-        } else if !state.live_geometry_handles.is_empty() {
-            state.retiring_collections.push_back(SessionCollectionOwner::Handles(std::mem::take(&mut state.live_geometry_handles)));
-        } else if let Some(snapshot) = state.previous_snapshot.take() {
-            state.retirement.push_snapshot(snapshot);
-        } else if let Some(channels) = state.previous_channels.take() {
-            state.retirement.push_channels(channels);
-        } else if let Some(source) = state.eval_json.take() {
-            state.retiring_collections.push_back(SessionCollectionOwner::SourceLease(semio_framework_value::retirement::shared_lease_retirement(source)));
-        } else if state.status_json.capacity() != 0 {
-            state.retirement.text(std::mem::take(&mut state.status_json));
-        } else if let Some(cache) = state.neural_cache.take() {
-            state.retiring_cache = Some(neural::NeuralCacheRetirement::new(cache));
-        } else if let Some(cache) = state.retiring_cache.as_mut() {
-            match cache.close_step(maximum_items, maximum_bytes) {
-                neural::ValueRetirementStep::Pending { released_items, released_bytes } => return Step::Pending { released_items, released_bytes },
-                neural::ValueRetirementStep::Blocked => return Step::Blocked,
-                neural::ValueRetirementStep::Complete => {
-                    assert!(cache.terminal_nonopaque_is_empty());
-                    state.retiring_cache = None;
-                }
-            }
-        } else {
-            return Step::Complete;
-        }
-        Step::Pending { released_items: 1, released_bytes: 0 }
+        Step::Complete{progress:empty}
     }
 
-    /// ✅️ Proves that every retained evaluation owner has crossed the close boundary.
-    pub fn terminal_is_empty(&self) -> bool {
-        self.closing
-            && self.geometry_port.is_none()
-            && self.retiring_geometry_port.is_none()
-            && self.operator_registry.is_none()
-            && self.neural_cache.is_none()
-            && self.previous_snapshot.is_none()
-            && self.previous_channels.is_none()
-            && self.eval_json.is_none()
-            && self.status_json.capacity() == 0
-            && self.live_geometry_handles.is_empty()
-            && self.preview_mesh_pack_by_handle.is_empty()
-            && self.preview_diagnostics_by_handle.is_empty()
-            && self.tessellate_chunks_by_hash.is_empty()
-            && self.tessellate_handle_by_hash.is_empty()
-            && self.tessellate_progress_by_hash.is_empty()
-            && self.eval_progress_by_hash.is_empty()
-            && self.window_tick_latches.is_empty()
-            && self.pending_tessellate_by_hash.is_empty()
-            && self.retiring_cache.is_none()
-            && self.retirement.terminal_is_empty()
-            && self.retiring_collections.is_empty()
+    /// 🧊️ Pays each original close currency explicitly at the existing cold disposal boundary.
+    pub fn retire_cold(mut self){
+        self.begin_close();
+        for _ in 0..FLOW_EVAL_SESSION_COLD_CLOSE_STEPS{
+            if self.terminal_is_empty(){return}
+            let copy=self.next_close_copy_byte_demand().expect("cold session original copy demand").max(4096);
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_close_capacity_byte_demand(copy).expect("cold session original capacity demand"),maximum_release_bytes:self.next_close_release_byte_demand().expect("cold session original release demand"),maximum_depth:self.next_close_depth_demand().expect("cold session original depth demand")};
+            if let semio_framework_job::InteractiveJobCloseStep::Refused{kind,..}=self.close_step(grant){panic!("cold session original owner refused: {kind:?}")}
+        }
+        assert!(self.terminal_is_empty(),"cold session disposal did not reach original terminal ownership");
     }
+
+    pub fn terminal_is_empty(&self)->bool{self.closing&&self.state.pending_host.is_none()&&self.state.retiring_host.is_none()&&self.geometry_port.is_none()&&self.retiring_geometry_port.is_none()&&!self.owns_session_source()&&self.retirement.terminal_is_empty()}
 }
 
 /// 🧊 True when a base64 `pack` mesh body carries something paintable — decoded once, structurally,
@@ -4665,6 +4750,8 @@ pub struct PreviewEvalProgress {
     pub phase: PreviewEvalPhase,
 }
 
+semio_framework_value::artifact_retire_leaf!(PreviewEvalProgress);
+
 /// 📈 The whole session's budgeted-evaluation state, as the status object reports it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PreviewEvalStatus {
@@ -4782,6 +4869,8 @@ pub struct PreviewTessellateProgress {
     pub chunks: u32,
 }
 
+semio_framework_value::artifact_retire_leaf!(PreviewTessellateProgress);
+
 /// 📈 The whole session's preview tessellation state, as the status object reports it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PreviewTessellateStatus {
@@ -4879,15 +4968,11 @@ pub fn preview_tessellate_node_hash(handle: &str, tolerance_bits: u64) -> u64 {
 }
 
 /// 🏠 Builds a host wired to `session`'s shared cache and converged baseline.
-pub fn flow_host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSession) -> FlowHost {
-    let infos = session.operator_registry.as_ref().map(|registry| Arc::new(registry.operator_infos().map(|info| (info.id.clone(),info.clone())).collect())).unwrap_or_else(flow_neuron_kind_info_map);
-    let mut host = FlowHost::from_host_snapshot_with_cache_and_infos(host_snapshot.clone(), session.neural_cache(), infos);
-    if let Some(registry) = &session.operator_registry { host = host.with_operator_registry(registry.clone()); }
-    session.install_baseline_into(&mut host);
-    if !session.eval_json().is_empty() {
-        host.last_eval_json = session.eval_json().to_string();
+pub fn flow_host_with_session(mut host:FlowHost,session:&FlowEvalSession,grant:RetainedCloneGrant)->Result<(FlowHost,RetainedCloneProgress),(ValueError,FlowHost)>{
+    match session.install_baseline_into(&mut host,grant){
+        Ok(progress)=>{if let Some(registry)=session.operator_registry.as_ref(){host.operator_registry=Some(registry.clone());}Ok((host,progress))},
+        Err(error)=>Err((error,host)),
     }
-    host
 }
 
 /// 🚧️ The operator kinds `fixture` needs that the live flow extension registry cannot serve — the
@@ -5041,7 +5126,7 @@ pub enum PortSide {
 
 /// 🔤️ The value schemas one endpoint declares, read straight off the port the operator catalogue
 /// published — an untyped declared port answers with an empty list; connection admission separately checks exact endpoint identity.
-pub fn widget_port_value_types(widget_id: &str, port_id: &str, side: PortSide, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> Vec<String> {
+pub fn widget_port_value_types(widget_id: &str, port_id: &str, side: PortSide, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Vec<String> {
     let Some(widget) = widgets.iter().find(|widget| widget_id_for(widget) == widget_id) else {
         return Vec::new();
     };
@@ -5062,21 +5147,21 @@ pub fn port_value_types_compatible(source: &[String], target: &[String]) -> bool
     source.iter().any(|provided| target.iter().any(|accepted| accepted == provided))
 }
 
-fn widget_has_declared_port(widget_id: &str, port_id: &str, side: PortSide, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> bool {
+fn widget_has_declared_port(widget_id: &str, port_id: &str, side: PortSide, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> bool {
     widgets.iter().find(|widget| widget_id_for(widget) == widget_id).is_some_and(|widget| {
         let (inputs, outputs, _, _) = widget_io_ports(widget, synapses, kind_infos);
         (if side == PortSide::Output { outputs } else { inputs }).iter().any(|port| port.id == port_id)
     })
 }
 
-fn widget_has_output(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> bool {
+fn widget_has_output(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> bool {
     widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w, synapses, kind_infos).1.is_empty())
 }
 
 /// 🔌️ Maps a synapse endpoint onto the `IoPortSpec.id` the board keys its handles with.
 /// An exact id is kept. Legacy `out` / `in` and an empty id select the first port on that side.
 /// A missing widget or an unknown port stays unresolved so the canvas draws no wire.
-fn resolve_synapse_port(widget_id: &str, port_id: &str, side: PortSide, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> Option<String> {
+fn resolve_synapse_port(widget_id: &str, port_id: &str, side: PortSide, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Option<String> {
     let widget = widgets.iter().find(|widget| widget_id_for(widget) == widget_id)?;
     let (inputs, outputs, _, _) = widget_io_ports(widget, synapses, kind_infos);
     let ports: Vec<String> = match side {
@@ -5091,11 +5176,11 @@ fn resolve_synapse_port(widget_id: &str, port_id: &str, side: PortSide, widgets:
     if legacy { ports.first().cloned() } else { None }
 }
 
-fn first_output_port(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> String {
+fn first_output_port(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> String {
     widgets.iter().find(|w| widget_id_for(w) == widget_id).and_then(|w| widget_io_ports(w, synapses, kind_infos).1.first().map(|port| port.id.clone())).unwrap_or_default()
 }
 
-fn first_input_port(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> String {
+fn first_input_port(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> String {
     widgets
         .iter()
         .find(|w| widget_id_for(w) == widget_id)
@@ -5106,7 +5191,7 @@ fn first_input_port(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec
         .unwrap_or_default()
 }
 
-fn widget_has_input(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> bool {
+fn widget_has_input(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> bool {
     widgets.iter().any(|w| {
         if widget_id_for(w) != widget_id {
             return false;
@@ -5122,7 +5207,7 @@ fn widget_has_input(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec
 mod tests;
 // #endregion 🔖️Tests
 
-fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> (f64, f64) {
+fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> (f64, f64) {
     let label = widget_label(widget);
     match widget {
         Widget::InputSlider { .. } => {

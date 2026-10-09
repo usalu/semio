@@ -1,0 +1,35 @@
+{
+  "executed": false,
+  "authored": false,
+  "graph": {
+    "bytes": 175232853,
+    "sha256": "fb67a3b65ba63298acd1b21525e426d3836415157cb7dd3461cc86d840d6bf62",
+    "nodes": 1351,
+    "externalNodes": 1960,
+    "edges": 36420,
+    "edgeTypes": {
+      "static": 36414,
+      "implicit": 6
+    },
+    "errors": 0,
+    "testNamedNodes": 620,
+    "normalizedCollectionRootNodes": []
+  },
+  "sourceObservations": [
+    {
+      "path": ".nxignore",
+      "sha256": "e69deb121e72bb6487b559fb922100c54cb7a7fb8e4d7c7967d6f8dbdacb52ad",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "sha256": "6d7e248129c033ac99d6db41f88302158153427556a6380bef7aca28db953293",
+      "authored": false
+    }
+  ],
+  "positiveFixtureInputOccurrences": {
+    "testNamedProjects": 5391,
+    "otherProjects": 3531
+  },
+  "qualification": "Inputs are task cache dependencies, not proof of runtime import or emitted asset"
+}

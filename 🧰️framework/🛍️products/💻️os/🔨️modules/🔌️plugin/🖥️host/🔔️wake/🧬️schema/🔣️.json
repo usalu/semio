@@ -1,0 +1,85 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "phases",
+    "foreign",
+    "missing",
+    "receipts",
+    "locales",
+    "driver",
+    "closeCustody"
+  ],
+  "properties": {
+    "version": {
+      "const": "original-host-wake-authority.v1"
+    },
+    "policy": {
+      "const": {
+        "items": 1,
+        "copy": 4096,
+        "capacity": 65536,
+        "release": 262144,
+        "depth": 64
+      }
+    },
+    "phases": {
+      "const": [
+        "original-issuer",
+        "receipt-held",
+        "receipt-collected",
+        "session-registration",
+        "terminal-retirement"
+      ]
+    },
+    "foreign": {
+      "const": "UnsupportedOwner"
+    },
+    "missing": {
+      "const": "Retained"
+    },
+    "receipts": {
+      "const": [
+        {
+          "copiedItems": 1,
+          "copiedBytes": 120,
+          "retainedCapacityBytes": 112,
+          "releasedBytes": 0
+        },
+        {
+          "copiedItems": 1,
+          "copiedBytes": 16,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      ]
+    },
+    "locales": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "driver": {
+      "const": {
+        "epochs": [
+          70,
+          71,
+          72
+        ],
+        "returnBeforeRenewal": true,
+        "reuse": "InvalidValue",
+        "zeroReceipt": "ReturnOriginalGrant"
+      }
+    },
+    "closeCustody": {
+      "const": {
+        "checkoutPerOriginalTurn": true,
+        "collectBeforeSuccessor": true,
+        "wholeHeaderRequiresOriginalGrant": true
+      }
+    }
+  }
+}

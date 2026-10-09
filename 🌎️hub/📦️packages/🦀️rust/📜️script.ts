@@ -41,6 +41,9 @@ import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, validDoc
 import type { TestBrowserHostRootsV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🟦️.ts";
 import { stageTestBrowserHostV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🏗️staging/🟦️.ts";
 import { pluginModulesRootIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import {parseFreshProcessPolicyV1} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🟦️.ts";
+import cargoCommandLimits from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json";
+import {repositoryCargoPreparationStorageV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { produceFreshComponentV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
 import { FRESH_COMPONENT_MAX_BYTES } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
@@ -6239,7 +6242,7 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
         { pluginId: "gis", cargoPackage: "semio-hub-gis", componentPackageId: "semio:gis", outputName: "semio_hub_gis.wasm", componentProfile: "wasm-release", rootCdylib: true },
         target,
         stage,
-        build.control,
+        {...build.control,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(this.repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})},
         (lease) =>
           lease.consume((component) =>
             buildClosedBrowserActorArtifactV1(component, {
@@ -10360,7 +10363,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
   const observationStage = join(trustedRoot, `provenance-staging-${nonce}`);
   mkdirSync(observationStage, { mode: 0o700 });
   const buildControl = trustedBootstrapBuildControl(buildBudgetMs());
-  const { control } = buildControl;
+  const control={...buildControl.control,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})};
   const checkBuild = () => {
     if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted catalog build cancelled");
   };

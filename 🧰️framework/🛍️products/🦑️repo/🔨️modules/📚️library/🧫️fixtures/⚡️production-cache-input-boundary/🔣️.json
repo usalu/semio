@@ -58,6 +58,118 @@
         {
           "path": "neutral/other/producer.ts",
           "selected": false
+        },
+        {
+          "path": "neutral/tool/🧫️fixtures/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/nested/🧫️fixtures/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/🔨️modules/🧫️fixtures/producer.json",
+          "selected": true
+        },
+        {
+          "path": "neutral/tool/nested/🔨️modules/🧫️fixtures/producer.json",
+          "selected": true
+        },
+        {
+          "path": "neutral/tool/🔨️modules/🧫️fixtures/nested/🧫️fixtures/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/🧪️examples/🔨️modules/🧫️fixtures/producer.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/🧫️examples/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/nested/🧫️examples/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/🔨️modules/🧫️examples/producer.json",
+          "selected": true
+        },
+        {
+          "path": "neutral/tool/nested/🔨️modules/🧫️examples/producer.json",
+          "selected": true
+        },
+        {
+          "path": "neutral/tool/🔨️modules/🧫️examples/nested/🧫️fixtures/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/🧪️examples/🔨️modules/🧫️examples/producer.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/🧪️fixtures/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/nested/🧪️fixtures/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/🔨️modules/🧪️fixtures/producer.json",
+          "selected": true
+        },
+        {
+          "path": "neutral/tool/nested/🔨️modules/🧪️fixtures/producer.json",
+          "selected": true
+        },
+        {
+          "path": "neutral/tool/🔨️modules/🧪️fixtures/nested/🧫️fixtures/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/🧪️examples/🔨️modules/🧪️fixtures/producer.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/🧪️examples/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/nested/🧪️examples/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/🔨️modules/🧪️examples/producer.json",
+          "selected": true
+        },
+        {
+          "path": "neutral/tool/nested/🔨️modules/🧪️examples/producer.json",
+          "selected": true
+        },
+        {
+          "path": "neutral/tool/🔨️modules/🧪️examples/nested/🧫️fixtures/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/🧪️examples/🔨️modules/🧪️examples/producer.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/examples/producer.json",
+          "selected": true
+        },
+        {
+          "path": "neutral/tool/🔨️modules/Fixture/producer.json",
+          "selected": true
+        },
+        {
+          "path": "neutral/tool/🔧️modules/🧫️fixtures/input.json",
+          "selected": false
+        },
+        {
+          "path": "neutral/tool/owner[1]/🔨️modules/🧫️fixtures/producer.json",
+          "selected": true
         }
       ],
       "refused": false
@@ -90,6 +202,120 @@
       "target": "missingNativeSources",
       "samples": [],
       "refused": true
+    }
+  ],
+  "collectionBoundaries": [
+    {
+      "path": "🧫️fixtures/input.json",
+      "production": false
+    },
+    {
+      "path": "nested/🧫️fixtures/input.json",
+      "production": false
+    },
+    {
+      "path": "🔨️modules/🧫️fixtures/producer.json",
+      "production": true
+    },
+    {
+      "path": "nested/🔨️modules/🧫️fixtures/producer.json",
+      "production": true
+    },
+    {
+      "path": "🔨️modules/🧫️fixtures/nested/🧫️fixtures/input.json",
+      "production": false
+    },
+    {
+      "path": "🧪️examples/🔨️modules/🧫️fixtures/producer.json",
+      "production": false
+    },
+    {
+      "path": "🧫️examples/input.json",
+      "production": false
+    },
+    {
+      "path": "nested/🧫️examples/input.json",
+      "production": false
+    },
+    {
+      "path": "🔨️modules/🧫️examples/producer.json",
+      "production": true
+    },
+    {
+      "path": "nested/🔨️modules/🧫️examples/producer.json",
+      "production": true
+    },
+    {
+      "path": "🔨️modules/🧫️examples/nested/🧫️fixtures/input.json",
+      "production": false
+    },
+    {
+      "path": "🧪️examples/🔨️modules/🧫️examples/producer.json",
+      "production": false
+    },
+    {
+      "path": "🧪️fixtures/input.json",
+      "production": false
+    },
+    {
+      "path": "nested/🧪️fixtures/input.json",
+      "production": false
+    },
+    {
+      "path": "🔨️modules/🧪️fixtures/producer.json",
+      "production": true
+    },
+    {
+      "path": "nested/🔨️modules/🧪️fixtures/producer.json",
+      "production": true
+    },
+    {
+      "path": "🔨️modules/🧪️fixtures/nested/🧫️fixtures/input.json",
+      "production": false
+    },
+    {
+      "path": "🧪️examples/🔨️modules/🧪️fixtures/producer.json",
+      "production": false
+    },
+    {
+      "path": "🧪️examples/input.json",
+      "production": false
+    },
+    {
+      "path": "nested/🧪️examples/input.json",
+      "production": false
+    },
+    {
+      "path": "🔨️modules/🧪️examples/producer.json",
+      "production": true
+    },
+    {
+      "path": "nested/🔨️modules/🧪️examples/producer.json",
+      "production": true
+    },
+    {
+      "path": "🔨️modules/🧪️examples/nested/🧫️fixtures/input.json",
+      "production": false
+    },
+    {
+      "path": "🧪️examples/🔨️modules/🧪️examples/producer.json",
+      "production": false
+    },
+    {
+      "path": "examples/producer.json",
+      "production": true
+    },
+    {
+      "path": "🔨️modules/Fixture/producer.json",
+      "production": true
+    },
+    {
+      "path": "🔧️modules/🧫️fixtures/input.json",
+      "production": false
+    },
+    {
+      "path": "owner[1]/🔨️modules/🧫️fixtures/producer.json",
+      "production": true
     }
   ]
 }

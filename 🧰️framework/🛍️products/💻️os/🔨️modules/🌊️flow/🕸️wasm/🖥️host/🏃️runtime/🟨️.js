@@ -5,6 +5,7 @@ export const FLOW_MAX_PAGE_BYTES = 65_536;
 export const FLOW_MAX_TRANSFER_BYTES = 16_777_216;
 export const FLOW_MAX_ENCODED_MESSAGE_BYTES = FLOW_MAX_REQUEST_BYTES + 32;
 export const FLOW_MAX_IN_FLIGHT = 256;
+export const FLOW_RETAINED_GRANT = Object.freeze({maximumItems:1,maximumCopyBytes:4096,maximumCapacityBytes:0xffff_ffff,maximumReleaseBytes:0xffff_ffff,maximumDepth:4096});
 
 export const FlowOperation = Object.freeze({
   open:2500,vcsCheckpoint:2501,vcsFault:2502,vcsRetryCheckpoint:2503,catalogueJson:2504,setCatalogueJson:2505,setNeuronKindInfosJson:2506,addInputPort:2507,removeInputPort:2508,addOutputPort:2509,removeOutputPort:2510,connectPorts:2511,compiledWireLiteral:2512,applyEvalOutputsJson:2513,setComputingProgress:2514,setNodeStatuses:2515,clearComputingWidgetIds:2516,previewText:2517,selectedWidgetIds:2518,selectedEdgeIds:2519,selectionDomainsJson:2520,hoveredWidgetId:2521,hoveredChannelJson:2522,selectedChannelsJson:2523,previewOffWidgetIds:2524,setSelection:2525,setHover:2526,setHoverChannel:2527,setSelectedChannels:2528,setPreviewOff:2529,togglePreview:2530,collapseSelection:2531,explodeCluster:2532,takePendingExportClick:2533,exportPayloadJson:2534,takePendingClusterExplode:2535,setSliderValue:2536,sliderOverlayStateJson:2537,setNoteText:2538,beginNoteEdit:2539,noteInsertText:2540,noteBackspace:2541,noteDeleteForward:2542,noteMoveCaret:2543,noteCommitEdit:2544,setNoteCaretVisible:2545,setImageSrc:2546,schemasJson:2547,setVariableName:2548,setVariableSchema:2549,addWidget:2550,setGhostWidget:2551,clearGhostWidget:2552,removeWidget:2553,moveWidget:2554,insertBetween:2555,makeSpace:2556,setNeuronParams:2557,connect:2558,disconnect:2559,undo:2560,redo:2561,canUndo:2562,canRedo:2563,worldFromScreen:2564,setCamera:2565,viewport:2566,wheelScreen:2567,setWheelZoomActive:2568,lodScaleJson:2569,setAutomaticLod:2570,setProximityDistance:2571,setForcedDrawLodLabel:2572,drawLodLabel:2573,labelOverlayPaintStateJson:2574,attachSurface:2575,surfaceStatus:2576,gpuReady:2577,setSize:2578,setCanvasThemeJson:2579,reorganize:2580,renderFrame:2581,pointerDownScreen:2582,pointerMoveScreen:2583,pickTargetsAtScreenJson:2584,entityScreenJson:2585,widgetDragActive:2586,pointerUpScreen:2587,setSelectionOptions:2588,selectionPreviewPointsJson:2589,selectionPreviewCrossing:2590,selectionPreviewMethod:2591,selectionUnionBoundsScreenJson:2592,alignSelection:2593,preselectWidgetIdsJson:2594,cancelAreaSelect:2595,deleteSelection:2596,hasSelection:2597,selectAll:2598,tessellate:2599,renderDrawingScene:2600,exportDrawingSvg:2601,exportDrawingPdf:2602,traceDrawingBitmap:2605,booleanDrawingSegments:2606,dispose:2607,pointerCancelScreen:2608,snapshotJson:2609,synchronizeSnapshotJson:2610,
@@ -58,30 +59,43 @@ const ownedFlowExports = new WeakSet();
 class FlowMessageRejected extends Error {}
 class FlowSessionOpenRejected extends Error {}
 
-export function createFlowHost({ exports, memory, schedule = createFlowPumpScheduler(), now = Date.now, maximumInFlight = FLOW_MAX_IN_FLIGHT } = {}) {
-  if (!exports || !(memory instanceof WebAssembly.Memory) || memory !== exports.memory || ["flow_bridge_allocate", "flow_bridge_release", "flow_bridge_send", "flow_bridge_poll", "flow_bridge_begin_close", "flow_bridge_terminal_is_empty"].some((name) => typeof exports[name] !== "function")) throw new Error("Flow Wasm exports and exact memory are required");
+export function createFlowHost({ exports, memory, schedule = createFlowPumpScheduler(), now = Date.now, maximumInFlight = FLOW_MAX_IN_FLIGHT, retainedGrant = FLOW_RETAINED_GRANT } = {}) {
+  if (!exports || !(memory instanceof WebAssembly.Memory) || memory !== exports.memory || ["flow_bridge_allocate", "flow_bridge_release", "flow_bridge_send", "flow_bridge_poll", "flow_bridge_step_progress", "flow_bridge_begin_close", "flow_bridge_terminal_is_empty"].some((name) => typeof exports[name] !== "function")) throw new Error("Flow Wasm exports and exact memory are required");
+  const axes=Object.keys(FLOW_RETAINED_GRANT);
+  if (!retainedGrant || Reflect.ownKeys(retainedGrant).length!==axes.length || axes.some((axis)=>!Number.isInteger(retainedGrant[axis])||retainedGrant[axis]<0||retainedGrant[axis]>0xffff_ffff)) throw new Error("Flow retained grant requires five explicit u32 currencies");
+  const wallet=axes.map((axis)=>retainedGrant[axis]);
   if (ownedFlowExports.has(exports.flow_bridge_send)) throw new Error("Flow Wasm exports already have a runtime owner");
   ownedFlowExports.add(exports.flow_bridge_send);
-  const state = { nextRequest: 1n, generation: 1, pending: new Map(), uncertainOpens: new Set(), sessions: new Map(), pages: new Map(), blocked: undefined, pumping: false, closing: false, closed: false, closePromise: undefined };
+  const state = { nextRequest: 1n, generation: 1, pending: new Map(), uncertainOpens: new Set(), sessions: new Map(), pages: new Map(), blocked: undefined, pumping: false, closing: false, closed: false, closePromise: undefined, retainedProgress: Object.freeze({copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0}) };
 
-  const budget = () => { const time = BigInt(Math.trunc(now())); return [4_096, time, time + 8n]; };
+  const budget = () => { const time = BigInt(Math.trunc(now())); return [4_096, ...wallet, time, time + 8n]; };
   const transfer = (bytes) => {
     if (bytes.length === 0 || bytes.length > FLOW_MAX_ENCODED_MESSAGE_BYTES) throw new Error("Flow message exceeds its bound");
     const pointer = exports.flow_bridge_allocate(bytes.length);
     if (!pointer) throw new Error("Flow allocation failed");
     try {
       new Uint8Array(memory.buffer, pointer, bytes.length).set(bytes);
-      const [credit, time, deadline] = budget();
-      if (exports.flow_bridge_send(pointer, bytes.length, credit, time, deadline) !== 1) throw new FlowMessageRejected("Flow message rejected");
+      if (exports.flow_bridge_send(pointer, bytes.length, ...budget()) !== 1) throw new FlowMessageRejected("Flow message rejected");
     } finally { exports.flow_bridge_release(pointer, bytes.length); }
+  };
+  const pollTurn = (pointer, capacity) => {
+    const length = exports.flow_bridge_poll(pointer, capacity, ...budget());
+    const axes = ["copiedItems", "copiedBytes", "retainedCapacityBytes", "releasedBytes"];
+    const values = axes.map((_, axis) => exports.flow_bridge_step_progress(axis));
+    if (values.some((value) => typeof value !== "bigint" || value < 0n || value > 0xffff_ffffn)) throw new Error("Flow retained receipt requires four explicit u32 effects");
+    state.retainedProgress = Object.freeze(Object.fromEntries(axes.map((axis, index) => [axis, Number(values[index])])));
+    return length;
+  };
+  const preserveFailureProgress = (error) => {
+    if (error && typeof error === "object" && !("retainedProgress" in error)) Object.defineProperty(error, "retainedProgress", {value:state.retainedProgress, enumerable:true});
+    return error;
   };
   const pollExact = () => {
     let capacity = 1_024;
     let pointer = exports.flow_bridge_allocate(capacity);
     if (!pointer) throw new Error("Flow poll allocation failed");
     try {
-      let [credit, time, deadline] = budget();
-      let length = exports.flow_bridge_poll(pointer, capacity, credit, time, deadline);
+      let length = pollTurn(pointer, capacity);
       if (length <= 0) return { length };
       if (length > FLOW_MAX_ENCODED_MESSAGE_BYTES) throw new Error("Flow poll exceeds its bound");
       if (length > capacity) {
@@ -89,8 +103,7 @@ export function createFlowHost({ exports, memory, schedule = createFlowPumpSched
         capacity = length;
         pointer = exports.flow_bridge_allocate(capacity);
         if (!pointer) throw new Error("Flow exact poll allocation failed");
-        [credit, time, deadline] = budget();
-        length = exports.flow_bridge_poll(pointer, capacity, credit, time, deadline);
+        length = pollTurn(pointer, capacity);
         if (length !== capacity) throw new Error("Flow retained poll changed length");
       }
       return { length, bytes: new Uint8Array(memory.buffer, pointer, length).slice() };
@@ -181,6 +194,7 @@ export function createFlowHost({ exports, memory, schedule = createFlowPumpSched
           if (!accept(message)) { state.blocked = message; break; }
         }
       } catch (error) {
+        preserveFailureProgress(error);
         for (const [requestId, pending] of state.pending) {
           if (pending.requestedOperation === FlowOperation.open) state.uncertainOpens.add(`${requestId}:${state.generation}`);
           pending.reject(error);
@@ -270,6 +284,7 @@ export function createFlowHost({ exports, memory, schedule = createFlowPumpSched
           }
           schedule(drain);
         } catch (error) {
+          preserveFailureProgress(error);
           state.closed = true; state.closing = false;
           for (const pending of state.pending.values()) pending.reject(error);
           for (const owner of state.sessions.values()) owner.reject?.(error);
@@ -280,7 +295,7 @@ export function createFlowHost({ exports, memory, schedule = createFlowPumpSched
     });
     return state.closePromise;
   };
-  return { state, start, cancel, sessionLifetime, close, terminalIsEmpty: () => exports.flow_bridge_terminal_is_empty() === 1 };
+  return { state, start, cancel, sessionLifetime, close, stepProgress: () => state.retainedProgress, terminalIsEmpty: () => exports.flow_bridge_terminal_is_empty() === 1 };
 }
 
 export async function createFlowFeatures(host) {

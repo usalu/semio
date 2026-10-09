@@ -16,6 +16,10 @@ mod component;
 #[path = "../../../🧠️interpreter/🦀️.rs"]
 pub mod interpreter;
 pub use component::*;
+/// 🌿️ Exposes the canonical first-party authority named by host operation signatures.
+pub use semio_framework_os_kernel::os_vcs;
+#[path="../../../🚪️io/🛂️authority/🦀️.rs"]
+pub mod operation_authority;
 
 /// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the one world's contract-parity
 /// test (effect ↔ host-async import parity, plus the collapsed shape itself) — mounted here rather than inside `🦀️.rs` (other packets are live

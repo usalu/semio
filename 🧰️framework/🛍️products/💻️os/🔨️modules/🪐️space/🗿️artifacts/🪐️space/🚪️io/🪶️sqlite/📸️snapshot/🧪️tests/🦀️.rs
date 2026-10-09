@@ -101,7 +101,8 @@ fn sqlite_snapshot_framework_space_public_borrowed_native_preflight_admits_actua
  let facet:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📏️preflight/🔣️.json")).unwrap();
  let mut short=fixture();short.name=facet["textUnit"].as_str().unwrap().into();
  let mut long=short.clone();long.name=facet["textUnit"].as_str().unwrap().repeat(usize::try_from(facet["repeat"].as_u64().unwrap()).unwrap());
- public_preflight::verify(&short,&long,SQL,usize::try_from(facet["rows"].as_u64().unwrap()).unwrap(),long.name.len(),usize::try_from(facet["cancelAt"].as_u64().unwrap()).unwrap(),|operation|crate::test_allocation::observe(operation));
+ let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(facet["callerGrant"].clone()).unwrap();let maximum=facet["nativeMaximumBytes"].as_u64().unwrap()as usize;let mut receive=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{assert!(event.owned_bytes<=maximum);true};let mut emit=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(event.owned_bytes<=maximum);true};let mut receive_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut emit_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut decode=semio_framework_value::NativeDecodeControl::new(maximum,&mut receive);let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut emit);decode.install_retirement_recipient(&mut receive_recipient).unwrap();encode.install_retirement_recipient(&mut emit_recipient).unwrap();let mut original_io=store::io::io_mechanism::IoRunControl::new(&mut decode,&mut encode,grant);
+ public_preflight::verify(&short,&long,SQL,usize::try_from(facet["rows"].as_u64().unwrap()).unwrap(),long.name.len(),usize::try_from(facet["cancelAt"].as_u64().unwrap()).unwrap(),|operation|crate::test_allocation::observe(operation),&mut original_io);
 }
 
 #[test]
@@ -219,7 +220,7 @@ fn sqlite_snapshot_framework_space_borrowed_semantic_gate_uses_closed_exact_cell
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=payload(&source,encoding);
    for(field,maximum,success)in[("bytes",bytes,true),("bytes",bytes-1,false),("rows",rows,true),("rows",rows-1,false),("columns",8,true),("columns",7,false),("schema",schema,true),("schema",schema-1,false)]{
     let limits=match field{"bytes"=>SqliteDatabaseLimits{max_value_bytes:maximum,..defaults},"rows"=>SqliteDatabaseLimits{max_rows:maximum,..defaults},"columns"=>SqliteDatabaseLimits{max_columns:maximum,..defaults},"schema"=>SqliteDatabaseLimits{max_schema_bytes:maximum,..defaults},_=>unreachable!()};
-    let mut callback=|_|true;let mut caller=SqliteSnapshotControl::new(&mut callback,defaults);let admitted=store::decode_sqlite_snapshot_record_native(&input,SpaceSnapshot::__DSL_ENVELOPE_ID,SpaceSnapshot::__dsl_spec_producer(),|record,native|crate::snapshot_sqlite::admission::record(record,native,limits),&mut caller);assert_eq!(admitted.is_ok(),success,"{} isolated borrowed {} grant before typed construction",sample["id"],field);
+    let mut callback=|_|true;let mut caller=SqliteSnapshotControl::new(&mut callback,defaults);let admitted=store::decode_sqlite_snapshot_record_native(&input,SpaceSnapshot::__DSL_ENVELOPE_ID,SpaceSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {crate::snapshot_sqlite::admission::record(record,native,limits)})(); *snapshot_output = Some(constructed?); Ok(()) },&mut caller);assert_eq!(admitted.is_ok(),success,"{} isolated borrowed {} grant before typed construction",sample["id"],field);
    }
   }source.retire_sqlite_snapshot();
  }

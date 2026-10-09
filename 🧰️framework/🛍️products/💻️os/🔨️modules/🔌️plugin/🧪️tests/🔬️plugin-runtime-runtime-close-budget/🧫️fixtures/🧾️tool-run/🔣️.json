@@ -1,0 +1,11 @@
+{
+  "schema": "framework.plugin.original-tool-run-receipt",
+  "owners": ["preparation", "history", "tool-run"],
+  "receiptCurrencies": ["items", "copy", "capacity", "release"],
+  "grantCurrencies": ["items", "copy", "capacity", "release", "depth"],
+  "toolRunOperationIdentity": null,
+  "toolRunGrantSource": "original-mounted-maintenance-turn",
+  "collectBeforeNextSemanticUnit": true,
+  "rows": [[1, 31, 64, 0], [1, 17, 0, 128], [0, 29, 32, 16]],
+  "totals": [2, 77, 96, 144]
+}

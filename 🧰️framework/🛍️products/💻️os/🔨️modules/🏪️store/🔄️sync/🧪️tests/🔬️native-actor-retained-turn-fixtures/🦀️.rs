@@ -289,7 +289,7 @@ pub(super) mod retained_turn_fixtures {
     async fn idle_then_late_send_upgrades_the_host_retained_runner_once() {
         let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
         let host = ArtifactHost::new(pool);
-        let channels = host.open(ArtifactActorConfig { document_id: "quiet".into(), schema: "fixture/v1".into(), bindings: Vec::new(), watch_external: false, actor: "fixture".into() }).await;
+        let channels = host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "quiet".into(), schema: "fixture/v1".into(), bindings: Vec::new(), watch_external: false, actor: "fixture".into() }).await;
         let runner = channels.runner.runner.upgrade().expect("host retains the quiet runner");
         for _ in 0..10_000 {
             if !runner.scheduled.load(std::sync::atomic::Ordering::Acquire) {
@@ -362,7 +362,7 @@ pub(super) mod retained_turn_fixtures {
         assert!(host.set_document_execution_target_lease(&space_b, surface));
         assert!(!host.set_document_execution_target_lease(&ArtifactDocumentKey::local("shared-document"), fixture_execution_target_lease("fixture.editor")));
         let channels_a = host
-            .open(ArtifactActorConfig {
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
                 document_id: "shared-document".into(),
                 schema: "fixture/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: "http://127.0.0.1:1".into(), space_id: "space-a".into(), surface: Some("fixture.editor".into()) }],
@@ -371,7 +371,7 @@ pub(super) mod retained_turn_fixtures {
             })
             .await;
         let channels_b = host
-            .open(ArtifactActorConfig {
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
                 document_id: "shared-document".into(),
                 schema: "fixture/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: "http://127.0.0.1:1".into(), space_id: "space-b".into(), surface: Some("fixture.editor".into()) }],
@@ -399,7 +399,7 @@ pub(super) mod retained_turn_fixtures {
         let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
         pool.shutdown().expect("fixture pool shuts down without retained uses");
         let host = ArtifactHost::new(pool);
-        let channels = host.open(ArtifactActorConfig { document_id: "held".into(), schema: "fixture/v1".into(), bindings: Vec::new(), watch_external: false, actor: "fixture".into() }).await;
+        let channels = host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "held".into(), schema: "fixture/v1".into(), bindings: Vec::new(), watch_external: false, actor: "fixture".into() }).await;
         let generation = channels.runner.generation();
         assert_eq!(host.close("held"), Some(generation));
         let control = host.closing_runner(generation).expect("closing registry owns the runner before cancellation progression");
@@ -416,7 +416,7 @@ pub(super) mod retained_turn_fixtures {
         let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
         pool.shutdown().expect("fixture pool shuts down without retained uses");
         let host = ArtifactHost::new(pool);
-        let channels = host.open(ArtifactActorConfig { document_id: "returned".into(), schema: "fixture/v1".into(), bindings: Vec::new(), watch_external: false, actor: "fixture".into() }).await;
+        let channels = host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "returned".into(), schema: "fixture/v1".into(), bindings: Vec::new(), watch_external: false, actor: "fixture".into() }).await;
         let generation = channels.runner.generation();
         channels.runner.return_to_host();
         assert_eq!(host.close("returned"), Some(generation));

@@ -1,0 +1,40 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json",
+      "beforeSHA": "eca81f4fd530b1d83a4dc8d9ffe26877aca40d66bdc886a6904be33493e446ea",
+      "recordedAfterSHA": "a652fe434b049aef56ce3b927d4e97b4c0f3246f13f0caefe7062812c4242904",
+      "logicalActions": [
+        "plain five-axis denial regression"
+      ],
+      "currentObservedSHA": "a652fe434b049aef56ce3b927d4e97b4c0f3246f13f0caefe7062812c4242904"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "beforeSHA": "66aec7c0500fee41552b70c4386202e99c0b50b4e79420d98265993b8b99f75e",
+      "recordedAfterSHA": "7db140b397d5ebb4d691bcc65ffe027dbe91a841bdc48187e072a634e5a3b6ff",
+      "logicalActions": [
+        "independent SQLite/Ajv grant coverage source regression"
+      ],
+      "currentObservedSHA": "7db140b397d5ebb4d691bcc65ffe027dbe91a841bdc48187e072a634e5a3b6ff"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSHA": "784ac84807800eed81924ed5fd881d61d0ebbd50f5637b4e92f0d6de3645719a",
+      "recordedAfterSHA": "0dfb2d8564456e005bf481d2c49255d771afc5c4847bbaf1ebb92f0166b7002e",
+      "logicalActions": [
+        "actual native coverage regression"
+      ],
+      "currentObservedSHA": "0dfb2d8564456e005bf481d2c49255d771afc5c4847bbaf1ebb92f0166b7002e"
+    }
+  ],
+  "sourceCopiesAdded": false,
+  "nativeExecuted": false,
+  "executedProof": {
+    "sourceRedSession": 78790,
+    "sourceGreenSession": 56543,
+    "sourceGreenResult": "Nx0/3.9s25laws629assertions",
+    "sourceGreenLog": "🗑️generated/coverage-green.log",
+    "nativeExecuted": false
+  }
+}

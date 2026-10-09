@@ -1,0 +1,33 @@
+{
+  "ownership": false,
+  "executed": false,
+  "vcsObservations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
+      "sha256": "40a474d032ccb4667e27d1070509b95bfbb474933713ab115e58e7cfc64c0d08",
+      "rootRequired": [
+        "version",
+        "sources",
+        "storeFrontiers",
+        "reservedFrontiers",
+        "publicPluginFrontiers",
+        "expectedFakeWrappers",
+        "checkIdentityScopes",
+        "checkPluginSelfCalls",
+        "runtimeFrontiers",
+        "checkRuntimeCalls",
+        "guestBoundaryCalls"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json",
+      "sha256": "9b8642085aa5d0b5eba1573e0d55b5692cc072309126bccbe91de64a4009bdf7",
+      "rootRequired": [
+        "version",
+        "cases",
+        "control",
+        "stream"
+      ]
+    }
+  ]
+}

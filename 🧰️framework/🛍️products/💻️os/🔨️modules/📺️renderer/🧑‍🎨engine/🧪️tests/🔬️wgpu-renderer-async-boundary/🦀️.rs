@@ -1034,7 +1034,7 @@ fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
     *runtime.0.asset_probe.lock().unwrap() = Some(RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner)));
     let operation = semio_framework_job::OperationId(71);
     let generation = semio_framework_job::Generation(0);
-    let mut candidate = FrameTransaction::new(Default::default(), operation, generation);
+    let mut candidate = FrameTransaction::new(Default::default(), operation, generation, semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 16_777_216, maximum_depth: 64 });
     let mut sequence = 0;
     let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
     let result = candidate.step(&runtime, &Arc::downgrade(&runtime.0), &mut context);
@@ -2032,7 +2032,7 @@ fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &s
         && glue.contains("if base_witness != current_witness {")
         && glue.contains("self.base_witness = Some(current_witness);")
         && glue.contains(concat!("runtime.admit_build_presentation_", "witness(presentation_witness);"))
-        && glue.contains("self.build_cursor = Some(FrameBuildCursor::new(presentation_witness));")
+        && glue.contains("self.build_cursor = Some(FrameBuildCursor::new(presentation_witness, self.retained));")
         && glue.contains("presentation_witness.scene_revision")
         && glue.contains("presentation_witness.input_generation")
         && glue.matches(concat!("let expected = self.presentation_", "authority.admitted();")).count() == 1
@@ -2518,4 +2518,41 @@ fn original_decoder_close_hands_back_same_response_under_exact_independent_grant
     assert_eq!(recovered.owner().owner().received_bytes(), observed);
     close_owned_decoder_fixture(authority, recovered);
     eprintln!("[DEBUG] original decoder close same response, zero physical handback, exact item receipt");
+}
+
+#[test]
+fn original_engine_packet_empty_backing_requires_its_actual_array_release_grant() {
+    use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneGrant};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️frame-close/🔣️.json")).unwrap();
+    assert_eq!(fixture["enginePacketBacking"]["slots"], FRAME_ENGINE_PACKET_CAPACITY);
+    let caller = &fixture["caller"];
+    let grant = RetainedCloneGrant { maximum_items: caller["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: caller["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: caller["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: caller["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: caller["maximumDepth"].as_u64().unwrap() as usize };
+    let mut owner = FrameEnginePackets::default();
+    assert!(owner.is_empty());
+    assert!(!owner.terminal_is_empty());
+    let pointer = owner.slots.as_ref().unwrap().as_ptr();
+    let demand = owner.backing_retirement_demands();
+    let layout = std::alloc::Layout::array::<Option<engine_canvas::EngineCanvasPacket>>(FRAME_ENGINE_PACKET_CAPACITY).unwrap();
+    assert_eq!(demand.release_bytes, layout.size());
+    for refused in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }] {
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_backing_step(refused));
+        assert!(matches!(step, InteractiveJobCloseStep::Pending { progress } if progress == Default::default()));
+        assert_eq!(heap, (0, 0));
+        assert_eq!(owner.slots.as_ref().unwrap().as_ptr(), pointer);
+    }
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_backing_step(RetainedCloneGrant { maximum_depth: 0, ..grant }));
+    assert!(matches!(step, InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)));
+    assert_eq!(heap, (0, 0));
+    assert_eq!(owner.slots.as_ref().unwrap().as_ptr(), pointer);
+    let tiny = RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant };
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_backing_step(tiny));
+    assert!(matches!(step, InteractiveJobCloseStep::Pending { progress } if progress == Default::default()));
+    assert_eq!(heap, (0, 0));
+    assert_eq!(owner.slots.as_ref().unwrap().as_ptr(), pointer);
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_backing_step(grant));
+    assert!(matches!(step, InteractiveJobCloseStep::Complete { progress } if progress.fits(grant) && progress.released_bytes == layout.size() && progress.copied_bytes == demand.copy_bytes && progress.retained_capacity_bytes == 0));
+    assert_eq!(heap, (0, layout.size()));
+    assert!(owner.terminal_is_empty());
+    assert!(matches!(owner.close_backing_step(RetainedCloneGrant::default()), InteractiveJobCloseStep::Complete { progress } if progress == Default::default()));
+    println!("[DEBUG] original engine packet array backing released={} terminal=true", layout.size());
 }

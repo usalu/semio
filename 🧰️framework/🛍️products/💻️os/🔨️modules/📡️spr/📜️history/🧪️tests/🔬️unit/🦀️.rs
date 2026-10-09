@@ -8,7 +8,7 @@ fn transition_record(doc_id: &str, actor: &str, transition: crate::os_spr::Histo
     let envelope = crate::os_spr::history_transition_envelope(
         &transition,
         &crate::os_spr::ArtifactId(doc_id.to_string()),
-        &crate::os_spr::ActorId(actor.to_string()),
+        &crate::os_spr::ActorId(actor.into()),
         Vec::new(),
         crate::os_spr::HybridLogicalTimestamp { actor: timestamp.0, physical_ms: timestamp.1, logical: timestamp.2 },
     );
@@ -37,7 +37,7 @@ async fn sample_log() -> HistoryLog {
         edits: vec![
             HistoryEdit { line: None,
                 id: "edit-1".to_string(),
-                actor: Some("alice".to_string()),
+                actor: Some("alice".into()),
                 started_at: "2024-01-15T10:30:00Z".to_string(),
                 finished_at: Some("2024-01-15T10:30:05Z".to_string()), verb: Some("typeText".to_string()),
                 ops: vec![OpPayload { text: Some("set foo=1".to_string()), binary: None }, OpPayload { text: Some("set bar=2".to_string()), binary: None }],
@@ -55,7 +55,7 @@ async fn sample_log() -> HistoryLog {
                     op_id: Some("op-1".to_string()),
                     dependencies: vec!["edit-1".to_string()],
                     base_version: 7,
-                    author_id: Some("alice".to_string()),
+                    author_id: Some("alice".into()),
                     hlt: Some((1, 1_700_000_000_000, 3)),
                     undo_policy: 2,
                     payload_hash: Some([9u8; 32]),
@@ -91,7 +91,7 @@ async fn sample_conflicts() -> Vec<HistoryConflict> {
             id: "conflict-quarantine-1".to_string(),
             kind: 0,
             status: 0,
-            actors: vec!["alice".to_string(), "bob".to_string()],
+            actors: vec!["alice".into(), "bob".into()],
             hlt: (1, 1_700_000_000_000, 4),
             edit_ids: Vec::new(),
             envelopes: vec![vec![1, 2, 3], vec![4, 5, 6, 7]],
@@ -101,7 +101,7 @@ async fn sample_conflicts() -> Vec<HistoryConflict> {
             id: "conflict-degraded-1".to_string(),
             kind: 1,
             status: 1,
-            actors: vec!["carol".to_string()],
+            actors: vec!["carol".into()],
             hlt: (2, 1_700_000_001_000, 0),
             edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()],
             envelopes: Vec::new(),
@@ -162,7 +162,7 @@ async fn retained_history_decode_yields_across_bytes_and_semantic_records() {
 #[semio_framework_async_macros::async_test]
 async fn retained_history_decode_rejects_a_crc_valid_malformed_transition_after_valid_records() {
     let mut log = sample_log().await;
-    log.transitions.push(HistoryTransitionRecord { id: "transition-after-valid-prefix".to_string(), actor: "alice".to_string(), hlt: (1, 2, 0), dependencies: Vec::new(), observed: None, payload: vec![0xff] });
+    log.transitions.push(HistoryTransitionRecord { id: "transition-after-valid-prefix".to_string(), actor: "alice".into(), hlt: (1, 2, 0), dependencies: Vec::new(), observed: None, payload: vec![0xff] });
     let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode semantically malformed retained history");
     let limits = crate::os_spr::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
     let mut decode = RetainedHistoryDecode::new(bytes.len(), limits).expect("admit retained semantic refusal");
@@ -439,7 +439,7 @@ async fn ops_text_skips_comments_and_blank_lines() {
     let text = "doc doc-1 schema=s1\n\n# a comment\ntransition t-1 actor=alice hlc=1,2,3 dependencies=[] payload=\"AAEEb3AtYg==\"\n";
     let log = parse_ops_text(text).unwrap();
     assert_eq!(log.doc_id, "doc-1");
-    assert_eq!(log.transitions, vec![HistoryTransitionRecord { id: "t-1".to_string(), actor: "alice".to_string(), hlt: (1, 2, 3), dependencies: Vec::new(), observed: None, payload: hex("0001046f702d62") }]);
+    assert_eq!(log.transitions, vec![HistoryTransitionRecord { id: "t-1".to_string(), actor: "alice".into(), hlt: (1, 2, 3), dependencies: Vec::new(), observed: None, payload: hex("0001046f702d62") }]);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -456,7 +456,7 @@ async fn ops_text_round_trips_every_transition_field() {
     for edit in &mut log.edits {
         edit.meta = None;
     }
-    log.transitions.push(HistoryTransitionRecord { id: "transition-x".to_string(), actor: "bob".to_string(), hlt: (u64::MAX, 0, 7), dependencies: vec!["op-1".to_string(), "edit-1#0".to_string()], observed: None, payload: Vec::new() });
+    log.transitions.push(HistoryTransitionRecord { id: "transition-x".to_string(), actor: "bob".into(), hlt: (u64::MAX, 0, 7), dependencies: vec!["op-1".to_string(), "edit-1#0".to_string()], observed: None, payload: Vec::new() });
     let text = print_ops_text(&log).unwrap();
     assert_eq!(text.lines().filter(|line| line.starts_with("transition ")).count(), 3);
     assert_eq!(parse_ops_text(&text).unwrap(), log);
@@ -543,7 +543,7 @@ async fn transition_payload_matches_the_language_agnostic_fixture() {
     assert_eq!(crate::os_spr::encode_history_transition(&revert), hex(record["payloadHex"].as_str().unwrap()));
     let transition = HistoryTransitionRecord {
         id: record["id"].as_str().unwrap().to_string(),
-        actor: record["actor"].as_str().unwrap().to_string(),
+        actor: record["actor"].as_str().unwrap().into(),
         hlt: (hlt[0], hlt[1], hlt[2]),
         dependencies: record["dependencies"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_string()).collect(),
         observed: None,
@@ -579,11 +579,13 @@ async fn transition_decoder_rejects_newer_format_truncation_and_trailing_bytes()
 async fn transition_record_round_trips_its_envelope() {
     let transition = sample_log().await.transitions.remove(0);
     let envelope = transition.to_envelope("doc-1");
+    assert_eq!(envelope.actor.0.as_ptr(),transition.actor.as_ptr());
     assert!(crate::os_spr::is_history_transition(&envelope));
     assert_eq!(envelope.inverse.schema.0, crate::os_spr::HISTORY_TRANSITION_SCHEMA);
     assert!(envelope.inverse.payload.is_empty());
     assert_eq!(envelope.document_id.0, "doc-1");
     assert_eq!(HistoryTransitionRecord::from_envelope(&envelope), transition);
+    assert_eq!(HistoryTransitionRecord::from_envelope(&envelope).actor.as_ptr(),transition.actor.as_ptr());
     assert!(matches!(crate::os_spr::history_transition_from_envelope(&envelope).unwrap(), Some(crate::os_spr::HistoryTransition::Commit(_))));
 }
 
@@ -591,7 +593,7 @@ async fn transition_record_round_trips_its_envelope() {
 async fn edit_payload_round_trips_a_backwards_section_mixing_text_and_binary_payloads() {
     let edit = HistoryEdit { line: None,
         id: "edit-y".to_string(),
-        actor: Some("bob".to_string()),
+        actor: Some("bob".into()),
         started_at: "2024-02-01T00:00:00Z".to_string(),
         finished_at: Some("2024-02-01T00:00:01Z".to_string()), verb: None,
         ops: vec![OpPayload { text: Some("set n=1".to_string()), binary: Some(vec![1, 2, 3]) }, OpPayload { text: Some("set n=2".to_string()), binary: None }],
@@ -760,7 +762,7 @@ async fn appended_transitions_decode_in_append_order_across_commits() {
 fn fold_edit(id: &str, op_id: &str, physical_ms: i64) -> HistoryEdit {
     HistoryEdit { line: None,
         id: id.to_string(),
-        actor: Some("alice".to_string()),
+        actor: Some("alice".into()),
         started_at: "2024-01-15T10:30:00Z".to_string(),
         finished_at: None, verb: None,
         ops: vec![OpPayload { text: Some(format!("set {id}=1")), binary: None }],
@@ -825,7 +827,7 @@ async fn fold_excludes_edits_quarantined_by_an_unaccepted_conflict() {
     let quarantined = crate::os_spr::MutationEnvelope {
         mutation_id: crate::os_spr::MutationId("op-a".to_string()),
         document_id: crate::os_spr::ArtifactId("doc-f".to_string()),
-        actor: crate::os_spr::ActorId("bob".to_string()),
+        actor: crate::os_spr::ActorId("bob".into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
@@ -836,7 +838,7 @@ async fn fold_excludes_edits_quarantined_by_an_unaccepted_conflict() {
     };
     let mut envelope = Vec::new();
     crate::os_spr::encode_envelope(&quarantined, &mut envelope);
-    log.conflicts.push(HistoryConflict { id: "conflict-1".to_string(), kind: 0, status: 0, actors: vec!["bob".to_string()], hlt: (2, 100, 0), edit_ids: Vec::new(), envelopes: vec![envelope], messages: Vec::new() });
+    log.conflicts.push(HistoryConflict { id: "conflict-1".into(), kind: 0, status: 0, actors: vec!["bob".into()], hlt: (2, 100, 0), edit_ids: Vec::new(), envelopes: vec![envelope], messages: Vec::new() });
     assert_eq!(log.fold().unwrap().applied, vec!["edit-b".to_string()]);
     log.conflicts[0].status = 1;
     assert_eq!(log.fold().unwrap().applied, vec!["edit-a".to_string(), "edit-b".to_string()]);
@@ -955,17 +957,17 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
             for _ in 0..100000 {
                 match job.step(job.next_step_grant(work.as_u64().unwrap() as usize, bytes.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
                     crate::os_spr::HistoryFoldJobStep::Pending { completed: next, .. } => { assert!(next >= completed && next-completed <= work.as_u64().unwrap()); completed = next; },
-                    crate::os_spr::HistoryFoldJobStep::Ready((fold, transitions, replay_order, conflicts)) => {
+                    crate::os_spr::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), .. } => {
                         assert_eq!(conflicts.len(), source.conflicts.len());
                         if !conflicts.is_empty() {
-                            assert_eq!(conflicts[0].actors[0].0, "Aé😀");
+                            assert_eq!(conflicts[0].actors[0].0.as_str(), "Aé😀");
                             assert_eq!(conflicts[0].messages[0].message, "Änderung");
                             assert_eq!(conflicts[0].messages[0].target, vec!["Aé😀"]);
                             let crate::os_spr::ConflictKind::Quarantined { envelopes } = &conflicts[0].kind else { panic!("quarantine kind preserved") };
                             assert_eq!(envelopes[0].diff.payload, vec![0xaa,0xbb,0xcc]);
                             assert!(matches!(&conflicts[1].kind, crate::os_spr::ConflictKind::Degraded { edit_ids } if edit_ids == &vec!["edit-b".to_string()]));
                         } assert_eq!(replay_order, fold.applied); assert_eq!(fold, expected); assert_eq!(transitions, source.transitions.iter().map(|transition| transition.to_envelope(&source.doc_id)).collect::<Vec<_>>()); reached = true; break; },
-                    crate::os_spr::HistoryFoldJobStep::Rejected(error) => panic!("native history fold: {error:?}"),
+                    crate::os_spr::HistoryFoldJobStep::Rejected { .. } => panic!("native history fold: {:?}", job.rejection()),
                 }
             }
             assert!(reached && job.terminal_is_empty());

@@ -1,0 +1,22 @@
+use super::*;
+
+/// 🧹️ Original live handles, roots and body slots retire in exact funded turns without a copied directory.
+#[test]
+fn original_brep_retention_borrows_live_rows_and_restarts_changed_source(){
+    use crate::brep::queries::tessellation::tests::observe_tessellation_system as observe;
+    use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../📸️representation/🕸️topology/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
+    for copy_grant in [1,3,64]{for changing in [false,true]{
+        let((mut kernel,kept,discard),source)=observe(||{let mut kernel=Brep::new();let kept=kernel.box_prim_sync(1.,1.,1.).unwrap();let discard=kernel.box_prim_sync(2.,2.,2.).unwrap();(kernel,kept,discard)});
+        let (mut job,heap)=observe(||BrepRetentionJob::new(&kernel));assert_eq!(heap,(0,0));let(mut born,mut freed,mut turns,mut changed)=(source.0,source.1,0,false);let mut new=None;
+        while !job.terminal_is_empty(){
+            if changing&&!changed&&turns==20{let(handle,heap)=observe(||kernel.box_prim_sync(3.,3.,3.).unwrap());born+=heap.0;freed+=heap.1;new=Some(handle);changed=true;}
+            if let Some(handle)=job.candidate_handle(&kernel){let decision=handle==kept.as_str()||new.as_ref().is_some_and(|source|source.as_str()==handle);let(result,heap)=observe(||job.decide(&kernel,decision));result.unwrap();assert_eq!(heap,(0,0));}
+            let copy=job.next_copy_byte_demand(&kernel).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy_grant,maximum_capacity_bytes:job.next_capacity_byte_demand(&kernel,copy_grant).unwrap(),maximum_release_bytes:job.next_release_byte_demand(&kernel).unwrap(),maximum_depth:job.next_depth_demand(&kernel).unwrap()};
+            let(step,heap)=observe(||job.step(&mut kernel,RetainedCloneGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));let(step,heap)=observe(||job.step(&mut kernel,grant).unwrap());assert!(step.progress().fits(grant));assert!(step.progress().copied_items<=1);assert!(step.progress().copied_items!=0||job.terminal_is_empty(),"original retained frontier stalls at turn {turns}: copyDemand={copy} grant={grant:?} receipt={:?} originalPhysical={born}/{freed} actualSystem={heap:?}",step.progress());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<100000);assert!(kernel.live.get(kept.as_str()).is_some());
+        }
+        assert!(kernel.live.get(discard.as_str()).is_none());assert_eq!(kernel.body.entity_counts().solids,law["retention"]["keptBoxes"].as_u64().unwrap()as usize+usize::from(changing));let(_,heap)=observe(||drop(job));assert_eq!(heap,(0,0));
+        let(mut handles,heap)=observe(||ControlledRetirement::new((kept.0,discard.0,new.map(|handle|handle.0))).unwrap_or_else(|(error,_)|panic!("original retained caller handles: {error}")));assert_eq!(heap,(0,0));while !handles.terminal_is_empty(){let copy=handles.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:handles.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:handles.next_release_byte_demand().unwrap(),maximum_depth:handles.next_depth_demand().unwrap()};let(step,heap)=observe(||handles.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}let(_,heap)=observe(||drop(handles));assert_eq!(heap,(0,0));
+        let(mut owner,heap)=observe(||ControlledRetirement::new(kernel).unwrap_or_else(|(error,_)|panic!("original kernel close: {error}")));assert_eq!(heap,(0,0));while !owner.terminal_is_empty(){let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));eprintln!("[DEBUG] Original BRep retention changing={changing} copy={copy_grant} noRootDirectory=true physical={freed} turns={turns} terminalDrop=0");
+    }}
+}

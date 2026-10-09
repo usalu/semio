@@ -85,11 +85,13 @@ fn laid_out_with_flow(case: &Value, block_reversed: bool) -> (UiTree, NodeId) {
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview = 0;
     while !job.is_admitted() {
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(5), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(5), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview,&mut actual_retained_progress);
         assert!(!matches!(job.admit_one(&tree, &mut cx), LayoutJobStep::Fault(_)));
     }
     while job.stage() != LayoutJobStage::PublishResults {
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(5), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(5), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview,&mut actual_retained_progress);
         let _ = semio_framework_job::InteractiveJob::step(&mut job, &mut cx);
     }
     let published = job.identity();

@@ -24,6 +24,34 @@ class TypeOwnershipTestScript extends BundleScript {
   await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🏷️type/🟦️.ts")], this.repoRoot, "neural:type:ownership", 15000);
  }
 }
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-source", SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript);
+/** 🧭️ Validates original topology ordering against Graphlib through the shared schema. */
+class TopologySourceTestScript extends BundleScript {
+ async run(args: string[]): Promise<void> {
+  if (args.length) throw Error("Expected test-topology-source");
+  await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧭️topology/🧪️tests/🟦️.ts")], this.repoRoot, "neural:topology:source", 15000);
+ }
+}
+/** 📥️ Validates original immutable input assembly against independent JSONPatch. */
+class InputSourceTestScript extends BundleScript {
+ async run(args: string[]): Promise<void> {
+  if (args.length) throw Error("Expected test-input-source");
+  await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../📥️input/🧪️tests/🟦️.ts")], this.repoRoot, "neural:input:source", 15000);
+ }
+}
+/** ⏱️ Validates original boundary channel semantics with independent Graphlib and JSONPatch. */
+class EvaluationSourceTestScript extends BundleScript {
+ async run(args: string[]): Promise<void> {
+  if (args.length) throw Error("Expected test-evaluation-source");
+  await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../⏱️evaluation/🧪️tests/🟦️.ts")], this.repoRoot, "neural:evaluation:source", 15000);
+ }
+}
+/** ✅️ Validates original finished output contracts against independent strict Ajv. */
+class OutputSourceTestScript extends BundleScript {
+ async run(args: string[]): Promise<void> {
+  if (args.length) throw Error("Expected test-output-source");
+  await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../📔️registry/✅️output/🧪️tests/🟦️.ts")], this.repoRoot, "neural:output:source", 15000);
+ }
+}
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-source", SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-topology-source", TopologySourceTestScript).register("test-input-source", InputSourceTestScript).register("test-evaluation-source", EvaluationSourceTestScript).register("test-output-source", OutputSourceTestScript);
 await runScriptMain(router, { defaultCommand: "test" });
 //#endregion 🧪️Validation

@@ -1,0 +1,61 @@
+{
+  "ownership": false,
+  "executed": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "1f7d720949a373e16671e47332121d2992c7e0f17e74814d8ce468c46f85a247",
+      "matches": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🦀️.rs",
+      "sha256": "2f203eca54b61314bdbb576a575e33758299ede42c565eb7668b38c161bfa2da",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🌱️genesis/🦀️.rs",
+      "sha256": "6130411e6132967084ee2d8b91ed9710b9c7e321501c4539f57c562715a1b162",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "a85402e742df7bcf82017594b04eaa287d71ceba188c5afe3529c6673516a869",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📏️physical-demand/🔣️.json",
+      "sha256": "d9340afd6209758752d062170110f557242259c74afd97d5766849b74ef0931f",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "eff32c120b405720d4c9cec2c0fe5108fe55284a4fc299493605f67f7f34cb29",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs",
+      "sha256": "8025340ae08887941fc6e15b6e7893f6d0a82b1960e0a4ad13570fc9513d585c",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🦀️.rs",
+      "sha256": "34de4f1a74552a51f94ccf751912c609fe8b6515a7d8ab44d42ce7533a63566f",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "42c8c08914e0cb02f00022ad49506589526b30672ad50406a5492c1205e631da",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧫️fixtures/🔣️.json",
+      "sha256": "e71b0ed491e9b1fb9fdb7685dbf9abb0d3beeb0f393617692326e7d65681f7df",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "0dfb2d8564456e005bf481d2c49255d771afc5c4847bbaf1ebb92f0166b7002e",
+      "matches": true
+    }
+  ]
+}

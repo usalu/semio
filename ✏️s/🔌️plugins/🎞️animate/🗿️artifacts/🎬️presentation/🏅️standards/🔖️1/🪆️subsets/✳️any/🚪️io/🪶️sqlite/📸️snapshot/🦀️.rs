@@ -14,16 +14,16 @@ fn restore_child<S>(row:&SqliteRow,native:&mut semio_framework_value::NativeDeco
 fn bound_child<S>(bound:&mut NativeEncodingBound<'_,'_>,child:&store::ArtifactChild<S>)->Result<(),ValueError>{let t=&child.target;for text in[&child.child_id,&t.artifact_id,&t.dialect.artifact_kind,&t.dialect.standard,&t.dialect.subset]{bound.repeated(text.len(),24)?}Ok(())}
 impl ArtifactSqliteSnapshot for PresentationSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
-  semantic_owned(self,control.limits().max_value_bytes,&mut SemanticCheck(control))?;control.check_rows(self.tiles.len().checked_add(4).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Presentation row count overflow"))?)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
+  semantic_owned(self,control.limits().max_value_bytes,&mut SemanticCheck(control))?;control.check_rows(self.tiles.len().checked_add(4).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Presentation row count overflow"))?)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   control.check_rows(4)?;let maximum=control.limits().max_rows;let maximum_bytes=control.limits().max_value_bytes;
-  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{
+  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
    let count=match record.get(2){Some(semio_framework_dsl_record::FieldValue::List(values))=>values.len(),None|Some(semio_framework_dsl_record::FieldValue::Absent)=>0,_=>return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Presentation tiles require a literal list").to_string()))};
    if count.checked_add(4).filter(|count|*count<=maximum).is_none(){return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Presentation native snapshot exceeds row limit").to_string()))}
    semantic_borrowed(record,maximum_bytes,native)?;Self::__dsl_from_record_controlled(record,native)
-  },control)
+  })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   control.check_rows(self.tiles.len().checked_add(4).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Presentation row count overflow"))?)?;let mut bound=NativeEncodingBound::new(control)?;bound.add(8192)?;
@@ -44,7 +44,7 @@ impl ArtifactSqliteSnapshot for PresentationSnapshot{
   if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=2||documents[0].integer(0)?!=1||sources.len()!=1||sources[0].rowid!=1||children.len()!=2{return Err(invalid("Presentation requires one document, one source and its two child slots"))}
   let source=&sources[0];identity(source,20)?;let mut presentation=None;let mut animation=None;
   for child in children{identity(child,8)?;match child.text(2)?{"presentation" if presentation.is_none()=>presentation=Some(child),"animation" if animation.is_none()=>animation=Some(child),_=>return Err(invalid("Presentation requires its two distinct child slots"))}}
-  control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint|{let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native=semio_framework_value::NativeDecodeControl::new(remaining,&mut progress);let result=(||{
+  control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining,&mut progress,&mut native_allocation);let result=(||{
   native.begin_stage(rows.len())?;let mut ids=native.allocate_vec::<i64>(rows.len())?;let mut ordered=native.allocate_vec::<Option<&SqliteRow>>(rows.len())?;ordered.resize(rows.len(),None);
   for row in rows{native.step()?;identity(row,17)?;let ordinal=usize::try_from(row.integer(2)?).map_err(|e|invalid(e.to_string()))?;ids.push(row.rowid);if ordinal>=ordered.len()||ordered[ordinal].replace(row).is_some(){return Err(invalid("Presentation tiles require unique entities and dense ordinals"))}}
   sort_ids(&mut ids,&mut native)?;if ids.windows(2).any(|p|p[0]==p[1]){return Err(invalid("Presentation tiles require unique entities and dense ordinals"))}native.begin_stage(rows.len().checked_add(4).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Presentation workload overflow"))?)?;native.charge(std::mem::size_of::<Self>())?;
@@ -79,4 +79,3 @@ fn sort_ids(ids:&mut[i64],control:&mut semio_framework_value::NativeDecodeContro
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

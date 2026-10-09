@@ -38,7 +38,7 @@ import { canonicalFilenameForKind, fixedContractFilename, loadCatalogTaxonomy, l
 
 import { loadFrameworkOsPlaygroundCatalog } from "./🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "./🗂️workspaces/🟦️.ts";
-import { cargoRepositoryPackages, cargoRepositoryPackageSelections, cargoWorkspaceForManifest, cargoNextestConfiguration, selectedCargoArguments, prepareCargoWorkspaceInvocation } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1, cargoRepositoryPackages, cargoRepositoryPackageSelections, cargoWorkspaceForManifest, cargoNextestConfiguration, selectedCargoArguments, prepareCargoWorkspaceInvocation } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
 import { budgetTimeoutHint, cargoProfileDir, defaultBudgetMs, daemonBudgetOpts, orchestratorBudgetOpts, resolveWorkspaceBin, runCmd, runCmdStatus, runNodeBin, runNodeBinStatus, semioBuildMode, semioShipEnv, tryRun, type RunCmdOpts, type SemioBuildMode } from "./🏃️process/🟦️.ts";
 
 export const HUB_DATA_DIR_NAME = "🌐hub";
@@ -1214,7 +1214,7 @@ function killBudgetTree(pid: number): void {
 /** 🦀️ Composes repository Cargo preparation with neutral bounded test execution. */
 export async function runRepositoryTestCommand(command: string, args: string[], options: { cwd?: string; env?: Readonly<Record<string, string | undefined>>; budgetMs?: number; signal?: AbortSignal; onTimeoutHint?: string; throwOnFailure?: boolean } = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
-  if (command === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, cwd);
+  if (command === "cargo") prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot()),getWorkspaceRoot(),args,cwd,process.env);
   await runBudgetedTestCommand(command, args, { ...options, cwd, budgetMs: options.budgetMs ?? testLevelBudgetMs() });
 }
 
@@ -1422,7 +1422,7 @@ export async function runRepositoryCargoTests(packages:string[],cwd:string,extra
   for(const manifest of manifests){const scope=cargoWorkspaceForManifest(repository,manifest).directory;scopes.set(scope,[...(scopes.get(scope)??[]),manifest]);}
   for(const manifests of scopes.values()){
     const manifest=resolve(repository,manifests[0]!),names=rows.filter(row=>manifests.includes(row.manifest)).map(row=>row.name);
-    prepareCargoWorkspaceInvocation(repository,["test","--manifest-path",manifest,...names.flatMap(name=>["-p",name])],cwd,env);
+    prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(repository),repository,["test","--manifest-path",manifest,...names.flatMap(name=>["-p",name])],cwd,env);
     const policy=repositoryCargoTestPolicyV1(manifest,cwd,env);
     await runCargoTestsV1({manifestPath:manifest,packages:names,cwd,extraArgs,environment:env},{...policy,assertionBudgets:names.length?Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs(names,value,env)])) as Record<TestLevel,number>:policy.assertionBudgets});
   }
@@ -1531,7 +1531,7 @@ export async function runRepositoryExactCargoLaws(options: Omit<ExactCargoLawOpt
   const preparedPort: ExactCargoLawPort = port ?? {
     fingerprint: exactExecutableFingerprint,
     probe: async (command, args, capture) => {
-      if (command === "cargo") prepareCargoWorkspaceInvocation(root, args, capture.cwd);
+      if (command === "cargo") prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(root),root,args,capture.cwd,process.env);
       return await captureOwnedProcess(command, args, capture);
     },
   };
@@ -2231,7 +2231,7 @@ export function repositoryWasmBuildPolicyV1(cwd: string): WasmBuildPolicyV1 {
 }
 /** 🦀️ Composes actual repository source preparation with neutral browser compiler execution. */
 export async function buildRepositoryWasmWebV1(options: WasmPackWebBuildOptions): Promise<void> {
-  prepareCargoWorkspaceInvocation(getWorkspaceRoot(), ["build", "--manifest-path", join(options.rsDir, "Cargo.toml")], options.rsDir);
+  prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot()),getWorkspaceRoot(),["build", "--manifest-path", join(options.rsDir, "Cargo.toml")],options.rsDir,process.env);
   await buildWasmWebV1(options, repositoryWasmBuildPolicyV1(options.rsDir));
 }
 

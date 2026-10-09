@@ -4,6 +4,7 @@ import { toolJobFixedOperationRegistryExact } from "../../../../../📜️script
 export function toolJobFixedOperationRegistrySelfTests(source: string): number {
   if (!toolJobFixedOperationRegistryExact(source)) throw new Error("[verify interactivity tool-jobs fixed-operation-registry] valid scheduler authority source was rejected.");
   const anchors = [
+    "fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep",
     "pub operation: OperationId",
     "pub generation: Generation",
     "pub owner: T",
@@ -19,8 +20,8 @@ export function toolJobFixedOperationRegistrySelfTests(source: string): number {
     "entry.owner.begin_close()",
     "pub fn cancel_stale_step",
     "entry.key.generation == live_generation",
-    "entry.owner.close_step(1, maximum_bytes)",
-    "if entry.owner.terminal_is_empty()",
+    "entry.owner.close_step(child_grant).admit(child_grant,entry.owner.terminal_is_empty())",
+    "entry.owner.terminal_is_empty()",
     "assert_eq!(self.occupied, 0, \"fixed operation registry reached Drop before every exact owner was terminal-empty\")",
     "maximum_plus_one_and_saturation_return_the_exact_owner",
     "stale_generation_interrupted_close_and_aba_preserve_exact_authority",

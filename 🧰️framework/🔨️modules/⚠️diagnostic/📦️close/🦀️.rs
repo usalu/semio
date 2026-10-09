@@ -19,7 +19,7 @@ impl FaultCloseOwner{
     pub fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->FaultCloseStep{
         if maximum_items==0||maximum_bytes==0{return FaultCloseStep::Pending{released_items:0,released_bytes:0};}
         let Some(fault)=self.fault.as_mut()else{return FaultCloseStep::Complete};
-        let Fault{origin:_,code,severity:_,message,scope,span:_,causes,params,retryable:_}=fault;
+        let Fault{retained_progress:_,origin:_,code,severity:_,message,scope,span:_,causes,params,retryable:_}=fault;
         let crate::FaultCode(code)=code;
         for text in [message,code]{if let Some(step)=close_text(text,maximum_bytes){return step;}}
         let FaultScope{plugin_id,app_id,instance_id,module,body_key}=scope.as_mut();

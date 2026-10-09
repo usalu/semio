@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "inputOperations": [
+    2514,
+    2515,
+    2525,
+    2528
+  ],
+  "outputOperations": [
+    2518,
+    2519,
+    2520,
+    2522,
+    2523
+  ],
+  "selection": {
+    "nodes": [
+      "slider"
+    ],
+    "edges": [],
+    "handles": []
+  },
+  "replacement": {
+    "nodes": [],
+    "edges": [],
+    "handles": []
+  },
+  "workGrants": [
+    0,
+    1,
+    4096
+  ],
+  "terminalRefusals": [
+    "cancelled",
+    "interrupted",
+    "deadline",
+    "revoked"
+  ],
+  "maximumTurns": 100000,
+  "requestBytes": 1048576,
+  "outputBytes": 16777216,
+  "retainedGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 8,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 2048
+  },
+  "pollOperations": [
+    2518,
+    2519,
+    2520,
+    2522,
+    2523,
+    2525
+  ]
+}

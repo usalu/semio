@@ -13,6 +13,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runRetainedIntrinsicSource(this.root,this.repoRoot);
+    await runOccurrenceOrderSource(this.root,this.repoRoot);
     await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-pack"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }
 }
@@ -104,9 +105,23 @@ async function runRetainedIntrinsicSource(root:string,repoRoot:string):Promise<v
   await runBudgetedTestCommand(process.execPath,["test",test],{cwd:repoRoot,budgetMs:30000,throwOnFailure:true});
 }
 
+/** 🔤️ Validates canonical UTF8 order without depending on a product encoder. */
+class OccurrenceOrderSourceScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-occurrence-order-source accepts no arguments");
+  await runOccurrenceOrderSource(this.root,this.repoRoot);
+ }
+}
+
+async function runOccurrenceOrderSource(root:string,repoRoot:string):Promise<void>{
+ const test=resolve(root,"../../🌱️value/🌳️intrinsic/🔢️occurrence-order/🧪️tests/🟦️.ts");
+ await runBudgetedTestCommand(process.execPath,["test",test],{cwd:repoRoot,budgetMs:30000,throwOnFailure:true});
+}
+
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript).register("test-absolute-varint-source", AbsoluteVarintSourceScript).register("test-absolute-varint-native", AbsoluteVarintNativeScript).register("test-borrowed-preflight-source",BorrowedPreflightSourceScript).register("test-borrowed-preflight-native",BorrowedPreflightNativeScript).register("test-schema-hash-native",SchemaHashNativeScript).register("test-schema-storage-native",SchemaStorageNativeScript);
 
 router.register("test-retained-intrinsic-native",RetainedIntrinsicNativeScript);
 router.register("test-intrinsic-schema-native",IntrinsicSchemaNativeScript);
 router.register("test-retained-intrinsic-source",RetainedIntrinsicSourceScript);
+router.register("test-occurrence-order-source",OccurrenceOrderSourceScript);
 await runScriptMain(router, { defaultCommand: "test" });

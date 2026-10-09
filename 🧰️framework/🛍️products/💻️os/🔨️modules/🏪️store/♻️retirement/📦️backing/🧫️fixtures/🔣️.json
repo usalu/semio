@@ -155,5 +155,62 @@
     "refusalReleaseBytes": 0,
     "terminalDropBytes": 0,
     "receipt": "actual-full-owner-and-frame"
+  },
+  "completedRecordCustody": {
+    "factorySources": 2,
+    "publicationSourceReleaseBytes": 0,
+    "terminalRequiresFactoryEmpty": true,
+    "publishedOwnerRoute": "original-close-ticket-pump",
+    "terminalDropBytes": 0,
+    "pointerWordsPerCapability": 2,
+    "wordBytes": [
+      4,
+      8
+    ]
+  },
+  "storeDisposer": {
+    "copyBytes": 1,
+    "capacityBytes": 32,
+    "releaseBytes": 257,
+    "depth": 3,
+    "terminalReceipt": {
+      "copiedItems": 1,
+      "copiedBytes": 1,
+      "retainedCapacityBytes": 32,
+      "releasedBytes": 257
+    }
+  },
+  "evaluationResources": {
+    "copyBytes": 1,
+    "capacityBytes": 257,
+    "releaseBytes": 4096,
+    "depth": 4,
+    "constructorRefusals": [
+      "items",
+      "capacity",
+      "depth"
+    ],
+    "terminalIncludes": [
+      "parser",
+      "writer",
+      "encoding",
+      "decoding",
+      "dictionary",
+      "operator-job",
+      "source-lease",
+      "map-key",
+      "map-backing"
+    ],
+    "receipt": "original-physical-source-and-admitted-cursor",
+    "operatorStep": {
+      "grant": "unchanged-caller-five-currencies",
+      "receipt": "same-actual-child-progress-including-Done",
+      "inquiries": [
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    }
   }
 }

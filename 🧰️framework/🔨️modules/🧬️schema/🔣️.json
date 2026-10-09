@@ -125,7 +125,7 @@
     },
     "SchemaExportEntries": {
       "title": "SchemaExportEntries",
-      "description": "📤️ The `schema-export-registry-entries-v1` dump of the runtime export registry, read by `schema verify --rust-entries`. Entries are sorted and deduplicated by `(scope, export, format)`.",
+      "description": "📤️ The `schema-export-registry-entries-v1` dump of the runtime export registry, read by `schema verify`. Entries are sorted and deduplicated by `(scope, export, format)`.",
       "type": "object",
       "additionalProperties": false,
       "required": [

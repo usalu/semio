@@ -38,3 +38,18 @@ fn validate(s:&FormsSnapshot,c:&mut semio_framework_value::NativeDecodeControl<'
  for response in &s.responses{c.step()?;if response.definition_version.is_empty()||response.submitted_at>9_007_199_254_740_991{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms response invariant differs"))}}c.checkpoint()
 }
 pub(crate) fn reconstruct_record(source:&semio_framework_dsl_record::RecordValue)->Result<FormsSnapshot,ValueError>{let mut callback=|_:semio_framework_value::native_decoding::NativeDecodeProgress|true;let mut c=semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut callback);reconstruct_record_controlled(source,&mut c,usize::MAX)}
+
+/// 🧮️ Counts borrowed native fields before projecting their exact backing under the original encoder.
+pub(crate)fn record_native_controlled(snapshot:&FormsSnapshot,c:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
+ use crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::Counts;
+ enum Pending<'s>{Value(&'s semio_framework_value::DslValue),Condition(&'s crate::FormExpr)}
+ fn push<'s>(pending:&mut Vec<Pending<'s>>,value:Pending<'s>,c:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ValueError>{if pending.len()==pending.capacity(){let capacity=pending.len().checked_add(1).and_then(|n|n.checked_mul(2)).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Forms native frontier overflow"))?;let mut next=c.allocate_vec(capacity)?;next.append(pending);*pending=next;}pending.push(value);Ok(())}
+ fn add(value:&mut usize,count:usize)->Result<(),ValueError>{*value=value.checked_add(count).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms native field count overflow"))?;Ok(())}
+ let mut counts=Counts::default();let mut pending=Vec::new();c.begin_stage(0)?;
+ for step in &snapshot.definition.steps{add(&mut counts.steps,1)?;for q in &step.blocks{add(&mut counts.questions,1)?;add(&mut counts.options,q.options.as_ref().map_or(0,Vec::len))?;add(&mut counts.fields,q.fields.as_ref().map_or(0,Vec::len))?;if let Some(value)=&q.default{push(&mut pending,Pending::Value(value),c)?;}if let Some(value)=&q.params{push(&mut pending,Pending::Value(value),c)?;}if let Some(value)=&q.condition{push(&mut pending,Pending::Condition(value),c)?;}c.step()?;}c.step()?;}
+ for response in &snapshot.responses{add(&mut counts.responses,1)?;for answer in &response.answers{add(&mut counts.answers,1)?;push(&mut pending,Pending::Value(&answer.value),c)?;c.step()?;}c.step()?;}
+ while let Some(value)=pending.pop(){match value{
+ Pending::Value(value)=>{add(&mut counts.values,1)?;match value{semio_framework_value::DslValue::Array(values)=>{add(&mut counts.array_elements,values.len())?;for value in values{push(&mut pending,Pending::Value(value),c)?;}},semio_framework_value::DslValue::Object(values)=>{add(&mut counts.object_members,values.len())?;for(_,value)in values{push(&mut pending,Pending::Value(value),c)?;}},semio_framework_value::DslValue::Bytes(values)=>add(&mut counts.octets,values.len())?,_=>{}}},
+ Pending::Condition(value)=>{add(&mut counts.conditions,1)?;match value{crate::FormExpr::Const{value}=>push(&mut pending,Pending::Value(value),c)?,crate::FormExpr::Var{..}=>{},crate::FormExpr::Eq{left,right}=>{push(&mut pending,Pending::Condition(left),c)?;push(&mut pending,Pending::Condition(right),c)?;},crate::FormExpr::Truthy{expr}=>push(&mut pending,Pending::Condition(expr),c)?,crate::FormExpr::And{items}|crate::FormExpr::Or{items}=>{add(&mut counts.condition_items,items.len())?;for value in items{push(&mut pending,Pending::Condition(value),c)?;}}}}
+ }c.step()?;}c.checkpoint()?;record_controlled(snapshot,&counts,c)
+}

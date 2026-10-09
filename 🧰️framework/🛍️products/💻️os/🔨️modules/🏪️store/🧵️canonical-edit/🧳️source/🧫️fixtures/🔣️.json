@@ -1,0 +1,1 @@
+{"phases":["semantic","identity","identity-return","hash","edit-return","authority-close","source-frame-close","prepare"],"copyCapacityLimit":4096,"actorRepeat":8192,"cancellationPhases":[0,1,2,3,4,5,6,7]}

@@ -1,0 +1,1877 @@
+{
+  "ownership": false,
+  "executed": false,
+  "rawBytes": 10122,
+  "rawSha256": "29847bce8890fd915a7e07ce947fe0a8b7966f2b015860d13dc4d39cc28504f2",
+  "rows": 28,
+  "uniquePaths": 27,
+  "observations": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧬️schema/🔣️.json",
+      "sha256": "60e5354ccd06a33aa68943ffaf70373461f5de9dcdbcac6320eb47f26c366041",
+      "classification": "embedded-trial-definitions-preserve-domain-root",
+      "selectors": [
+        "definitions/fixture",
+        "definitions/styleFixtures"
+      ],
+      "rootFields": [
+        "format",
+        "width",
+        "height",
+        "transparent"
+      ],
+      "diagnostics": [
+        "fixture defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas.",
+        "styleFixtures defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 25
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 41
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 58
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 157,
+      "pathUtf16": 168
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "sha256": "2a38e3c7a2c682d60d1e289261ef38fd3d26e0026239009cc8a9d2ee819faaa6",
+      "classification": "embedded-trial-definitions-preserve-domain-root",
+      "selectors": [
+        "definitions/fixtures"
+      ],
+      "rootFields": [
+        "viewBox",
+        "maxOutputBytes",
+        "maxWork"
+      ],
+      "diagnostics": [
+        "fixtures defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🦀️.rs",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🟦️.ts",
+          "line": 20
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 185,
+      "pathUtf16": 201
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧬️schema/🔣️.json",
+      "sha256": "e46f913cfe0c3690274a1456a039a47ba3991b43ce9a0a293f222546f6f9c14a",
+      "classification": "embedded-trial-definitions-preserve-domain-root",
+      "selectors": [
+        "definitions/fixtures"
+      ],
+      "rootFields": [
+        "viewBox",
+        "maxOutputBytes",
+        "maxWork"
+      ],
+      "diagnostics": [
+        "fixtures defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+          "line": 27
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+          "line": 37
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🦀️.rs",
+          "line": 13
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🦀️.rs",
+          "line": 22
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 185,
+      "pathUtf16": 201
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🔐️lifecycle/🔣️.json",
+      "sha256": "a857df2934b88ede620678eae4ce364a6b1ac6fb1591400eff93f7b5dda9ed52",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "source",
+        "grants",
+        "expected"
+      ],
+      "diagnostics": [
+        "The document defines a test corpus contract outside the admitted schema facets."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+          "line": 10
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+          "line": 11
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+          "line": 13
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️edit-path/🧵️simplify/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 17
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔀️combine-boolean/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 1
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔀️combine-boolean/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 7
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 17
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 33
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🖼️image/🧪️tests/🟦️.ts",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+          "line": 27
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+          "line": 37
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🦀️.rs",
+          "line": 13
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🦀️.rs",
+          "line": 22
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 14
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 27
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 33
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 61
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 87
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 181
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 202
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🪟️runtime/🦀️.rs",
+          "line": 11
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🦀️.rs",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 13
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 42
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 85
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 87
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 102
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 170
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 190
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+          "line": 63
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 86
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 72
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 121
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 25
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 41
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 58
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️geometry/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 4
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️geometry/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 16
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️geometry/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 80
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️geometry/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 92
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️geometry/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 110
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🟦️.ts",
+          "line": 1
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🦀️.rs",
+          "line": 400
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🦀️.rs",
+          "line": 426
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 2166
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️gesture-operation-owner/🦀️.rs",
+          "line": 195
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 41
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 63
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 90
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖊️stroke/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 21
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖊️stroke/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 32
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖊️stroke/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 37
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 16
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 26
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 43
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 10
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 120
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 17
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 19
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️drag-layers/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/↗️transform/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 40
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️scale-layers/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🌀️rule/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts",
+          "line": 13
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts",
+          "line": 37
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts",
+          "line": 38
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts",
+          "line": 40
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🛤️path/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 62
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🦀️.rs",
+          "line": 59
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️drag-path-points/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔷️shape/✏️coordinates/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 13
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+          "line": 103
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️rotate-layers/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 17
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 55
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 258
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 281
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 14
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 25
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 30
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️window/🟦️.ts",
+          "line": 40
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️window/🟦️.ts",
+          "line": 41
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️window/🟦️.ts",
+          "line": 42
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🧪️tests/🎛️selection/🦀️.rs",
+          "line": 301
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 22
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 71
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 79
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 15
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 24
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 57
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 86
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 19
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 23
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 32
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 14
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 23
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 26
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 54
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 70
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 81
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 99
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 112
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 15
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 5
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 8
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🖼️images/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🖼️assets/🟦️.ts",
+          "line": 14
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 22
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 69
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 16
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 156,
+      "pathUtf16": 169
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧬️schema/🔣️.json",
+      "sha256": "bb65c0bef5cb0bae21abebfb4c4270cfeb4b47825c53b1a6c56f5313cb81fe57",
+      "classification": "embedded-trial-definitions-preserve-domain-root",
+      "selectors": [
+        "definitions/ownedAdmissionFixtures"
+      ],
+      "rootFields": [
+        "assets",
+        "nodes"
+      ],
+      "diagnostics": [
+        "ownedAdmissionFixtures defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 13
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 42
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 85
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 87
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 102
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 170
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 190
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+          "line": 10
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+          "line": 11
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+          "line": 13
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️geometry/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 4
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️geometry/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 16
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️geometry/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 80
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️geometry/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 92
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️geometry/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 110
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 25
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 41
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 58
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 41
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 63
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 90
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️edit-path/🧵️simplify/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 17
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🖼️image/🧪️tests/🟦️.ts",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔀️combine-boolean/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 1
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔀️combine-boolean/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 7
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 14
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+          "line": 63
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 17
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 33
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🟦️.ts",
+          "line": 1
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️window/🟦️.ts",
+          "line": 40
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️window/🟦️.ts",
+          "line": 41
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️window/🟦️.ts",
+          "line": 42
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🦀️.rs",
+          "line": 400
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🦀️.rs",
+          "line": 426
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 2166
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 10
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 120
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 16
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 26
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 43
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🪟️runtime/🦀️.rs",
+          "line": 11
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/↗️transform/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️gesture-operation-owner/🦀️.rs",
+          "line": 195
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+          "line": 27
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+          "line": 37
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖊️stroke/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 21
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖊️stroke/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 32
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖊️stroke/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 37
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🧪️tests/🎛️selection/🦀️.rs",
+          "line": 301
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🦀️.rs",
+          "line": 13
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🦀️.rs",
+          "line": 22
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 27
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 33
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 61
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 87
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔷️shape/✏️coordinates/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 13
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 181
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 202
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️drag-layers/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🛤️path/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️scale-layers/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts",
+          "line": 13
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts",
+          "line": 37
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts",
+          "line": 38
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts",
+          "line": 40
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️drag-path-points/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🌀️rule/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+          "line": 103
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 86
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 72
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 121
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🦀️.rs",
+          "line": 59
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 26
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 54
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 70
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 81
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 99
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 112
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 15
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 24
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 57
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 86
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 19
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 23
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 32
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 14
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 25
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 30
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🦀️.rs",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 16
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️rotate-layers/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 40
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 62
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 17
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 55
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 258
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 281
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🖼️assets/🟦️.ts",
+          "line": 14
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 14
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 23
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🖼️images/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 5
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 8
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 15
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 12
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 17
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 19
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 22
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 69
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 22
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 71
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 79
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 146,
+      "pathUtf16": 158
+    },
+    {
+      "path": "🧫️fixtures/🧫️diff-only-law-gate/🫧️lanes/🧬️schema/🔣️.json",
+      "sha256": "4e1a6b0942c012981256909d54edef1e26bd2d35a97b9600eab99a97dfa4460c",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "version",
+        "cases"
+      ],
+      "diagnostics": [
+        "🧫️fixtures/🧫️diff-only-law-gate/🫧️lanes/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+      ],
+      "boundedCandidateReaderLocations": [],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 84,
+      "pathUtf16": 89
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧬️schema/🔣️.json",
+      "sha256": "7b9bc5187ed5c45835b80cfc94ff44ca9f5c057cb250027132943566e252ac28",
+      "classification": "embedded-trial-definitions-preserve-domain-root",
+      "selectors": [
+        "definitions/fixtures"
+      ],
+      "rootFields": [
+        "maxFontBytes",
+        "maxTables",
+        "maxGlyphs",
+        "maxPoints",
+        "maxContours",
+        "maxComponents",
+        "maxDepth",
+        "maxSegments",
+        "maxWork"
+      ],
+      "diagnostics": [
+        "fixtures defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️tests/🟦️.ts",
+          "line": 12
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 85,
+      "pathUtf16": 91
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️schema/🧺️heap.json",
+      "sha256": "e55c3752859f0c757f5f9964e48f001c891fac2d9160c637dbe183a1df54eca9",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "version",
+        "keys",
+        "expected",
+        "capacityBytes",
+        "copyGrants",
+        "maximumDeniedReleaseBytes",
+        "handoffCapacityBytes",
+        "handoffReleaseBytes",
+        "sameBacking",
+        "sameKeyPointers",
+        "terminalDropBytes"
+      ],
+      "diagnostics": [
+        "The document defines a test corpus contract outside the admitted schema facets."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧺️heap.ts",
+          "line": 9
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🧪️tests/🟦️.ts",
+          "line": 14
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🧪️tests/🟦️.ts",
+          "line": 22
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🧪️tests/🟦️.ts",
+          "line": 35
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔐️unique/🧪️tests/🟦️.ts",
+          "line": 8
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔐️unique/🧪️tests/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔐️unique/🧪️tests/🟦️.ts",
+          "line": 12
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️turn/🧪️tests/🟦️.ts",
+          "line": 7
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts",
+          "line": 23
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️boxed/🧪️tests/🟦️.ts",
+          "line": 9
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 91,
+      "pathUtf16": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/📦️full-receipt/🔣️.json",
+      "sha256": "8737948118eb3511a2edf5e09c75404270399b671f351ad1824a8df5d43efba4",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "id",
+        "key",
+        "payloadByte",
+        "sourceCapacityBytes",
+        "replacementCapacityBytes",
+        "copyGrants",
+        "minimumReleaseGrantBytes",
+        "expected",
+        "expectedMixedDemand",
+        "deque"
+      ],
+      "diagnostics": [
+        "The document defines a test corpus contract outside the admitted schema facets."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧪️tests/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧪️tests/🟦️.ts",
+          "line": 10
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧪️tests/🟦️.ts",
+          "line": 34
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧪️tests/🟦️.ts",
+          "line": 48
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 112,
+      "pathUtf16": 119
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧬️schema/🔣️.json",
+      "sha256": "ccea4d44989eb08d9c061ee9f0aa54ce920c8289298a156c49feb290d3e92720",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "authority",
+        "actorSuffix",
+        "actorRepeats",
+        "copyCapacityLimit",
+        "turnLimit",
+        "pauses",
+        "cases"
+      ],
+      "diagnostics": [
+        "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧪️tests/🟦️.ts",
+          "line": 7
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 115,
+      "pathUtf16": 123
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🧬️schema/🔣️.json",
+      "sha256": "6971e00bd6a3674b775c77eb51fe2843036c544d0fca15f9e612b43d16d1b2d9",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "cases",
+        "pauses",
+        "maximumTurns",
+        "maximumBodyBytes"
+      ],
+      "diagnostics": [
+        "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧪️tests/🟦️.ts",
+          "line": 7
+        },
+        {
+          "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🧪️tests/🟦️.ts",
+          "line": 10
+        },
+        {
+          "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🔏️seal/🧪️tests/🟦️.ts",
+          "line": 8
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 103,
+      "pathUtf16": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧬️schema/🔣️.json",
+      "sha256": "b42016c41e6d3d65409d637687137b235a3bf534906a50c92b076e8ed7c826a5",
+      "classification": "embedded-trial-definitions-preserve-domain-root",
+      "selectors": [
+        "definitions/admissionFixture"
+      ],
+      "rootFields": [
+        "completed",
+        "total",
+        "done"
+      ],
+      "diagnostics": [
+        "admissionFixture defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 90,
+      "pathUtf16": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json",
+      "sha256": "412e4917c288b158e0eb9871c2d7a5b692ff1d8e9080cbc748031365de91ffe2",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "version",
+        "nativeFamily",
+        "system",
+        "grants",
+        "cold",
+        "cancel",
+        "box",
+        "liveRows",
+        "validationScratch",
+        "meshImport"
+      ],
+      "diagnostics": [
+        "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧫️fixtures/🎟️ownership/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🟦️.ts",
+          "line": 24
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 125,
+      "pathUtf16": 135
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️expression/📏️kinds/🧬️schema/🔣️.json",
+      "sha256": "0a3ab05be72605cf04795d61ae99745baac76459f2a1982629387709cac7ab64",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "cases"
+      ],
+      "diagnostics": [
+        "KindFixtures defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 87,
+      "pathUtf16": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️expression/🕸️parameters/🧬️schema/🔣️.json",
+      "sha256": "8ebd3b1554e697b74f91315d63f0d58dcddbd30c8355768d9547fc1783837596",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "cases"
+      ],
+      "diagnostics": [
+        "ParameterFixtures defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 92,
+      "pathUtf16": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️expression/🧮️evaluation/🧬️schema/🔣️.json",
+      "sha256": "ac2f2dbd6227e2b3ebd5efb273c8d1daabc48fb9617669a547a09f8ae1e95d02",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "cases"
+      ],
+      "diagnostics": [
+        "EvaluationFixtures defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 92,
+      "pathUtf16": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🧬️schema/🔣️.json",
+      "sha256": "71bb0f9e259575303970942b807b13aeb98aada365dacbf2ff93d11cfeaebb3f",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "schema",
+        "admissionBytes",
+        "pageBytes",
+        "demandRole",
+        "callerRole",
+        "grant",
+        "progress",
+        "close",
+        "deniedCredits",
+        "cases",
+        "phasePolicy"
+      ],
+      "diagnostics": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📏️close-demand/🟦️.ts",
+          "line": 23
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📏️close-demand/🟦️.ts",
+          "line": 66
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+          "line": 21
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+          "line": 56
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+          "line": 57
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 106,
+      "pathUtf16": 114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧬️schema/📇️fixed-operation/🔣️.json",
+      "sha256": "daa86cd1e862269dbc15603b463429312e855386d1cea2131e01816f7f9f59fc",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "schema",
+        "cases"
+      ],
+      "diagnostics": [
+        "The document defines a test corpus contract outside the admitted schema facets."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧪️tests/🔬️contract/🟦️.ts",
+          "line": 12
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧪️tests/🔬️contract/🟦️.ts",
+          "line": 13
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧪️tests/🟦️.ts",
+          "line": 7
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📏️close-demand/🟦️.ts",
+          "line": 23
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📏️close-demand/🟦️.ts",
+          "line": 66
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+          "line": 20
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+          "line": 21
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+          "line": 56
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+          "line": 57
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts",
+          "line": 60
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 90,
+      "pathUtf16": 96
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json",
+      "sha256": "190c0b25c1ef1e8841c3c71e9d84cd7c4a49c364321912089c7c6047b5b5d45a",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "schema",
+        "cases",
+        "keyboard"
+      ],
+      "diagnostics": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+      ],
+      "boundedCandidateReaderLocations": [],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 154,
+      "pathUtf16": 165
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json",
+      "sha256": "7ace898958fd3815db1abc36f774814b3900ab0900c57564fad6271bdd0f4982",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "sources",
+        "pure",
+        "old",
+        "semanticForbiddenTypes",
+        "typedSources",
+        "typedRetired",
+        "typedRegions"
+      ],
+      "diagnostics": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json defines schema authority inside examples; contract identity cannot be declared inert."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧪️tests/🟦️.ts",
+          "line": 13
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/📊️progress/🧪️tests/🦀️.rs",
+          "line": 9
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 141,
+      "pathUtf16": 150
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
+      "sha256": "6c9c8db810cc49888d13330e116cea2337cc1a4b1156a33b2c80ee57b17c05b9",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "version",
+        "sources",
+        "storeFrontiers",
+        "reservedFrontiers",
+        "publicPluginFrontiers",
+        "expectedFakeWrappers",
+        "checkIdentityScopes",
+        "checkPluginSelfCalls",
+        "runtimeFrontiers",
+        "checkRuntimeCalls"
+      ],
+      "diagnostics": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json defines schema authority inside examples. Ordinary parser specimens require an explicit inert data declaration."
+      ],
+      "boundedCandidateReaderLocations": [],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 134,
+      "pathUtf16": 145
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json",
+      "sha256": "3307a5855f045dea07dd7ecdf222004c71755ce08ee00ab15e268cc0f5163970",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "version",
+        "cases",
+        "control",
+        "stream"
+      ],
+      "diagnostics": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json defines schema authority inside examples. Ordinary parser specimens require an explicit inert data declaration."
+      ],
+      "boundedCandidateReaderLocations": [],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 122,
+      "pathUtf16": 132
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧬️schema/♻️retirement/🔣️.json",
+      "sha256": "01bd916d4c6d47ecdf9542e532022f5a67a33d738b789352b6ece9998f4a5cf5",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "schema",
+        "baselines",
+        "aliasMode",
+        "weakLeaseMode",
+        "cases",
+        "conservation",
+        "rejectedConservation"
+      ],
+      "diagnostics": [
+        "The document defines a test corpus contract outside the admitted schema facets."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts",
+          "line": 12
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 142,
+      "pathUtf16": 152
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🧬️schema/🔣️.json",
+      "sha256": "4f034d4fa7c2969be26d32675b38c6b1d031e6ed5134ba04bb963c5569134026",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "schema",
+        "mountCases",
+        "cases"
+      ],
+      "diagnostics": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+      ],
+      "boundedCandidateReaderLocations": [],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 173,
+      "pathUtf16": 187
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🧬️schema/🔣️.json",
+      "sha256": "736f2d0f5c81aa08e09278a6d9b0b8d5983e78debf3bd1dc52be10b4824116c2",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "schema",
+        "locales",
+        "cases",
+        "catalogCases",
+        "unsupportedLocales"
+      ],
+      "diagnostics": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🧬️schema/🔣️.json defines schema authority inside examples; contract identity cannot be declared inert."
+      ],
+      "boundedCandidateReaderLocations": [],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 157,
+      "pathUtf16": 170
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧬️schema/🔣️.json",
+      "sha256": "0dac50216c0fa6a721c95c0c08b0a387d190ad8ba1ce1b61a7086c9d73464e3f",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "version",
+        "preservedOwners",
+        "cases"
+      ],
+      "diagnostics": [
+        "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧪️tests/🟦️.ts",
+          "line": 10
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧪️tests/🟦️.ts",
+          "line": 11
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧪️tests/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧪️tests/🟦️.ts",
+          "line": 19
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 122,
+      "pathUtf16": 131
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-allocation-close/🔣️.json",
+      "sha256": "aaf86b303df9bcd1d81cf953891d6c9724f87f20c8f5d4def117d3faa7c7f900",
+      "classification": "whole-trial-authority",
+      "selectors": [
+        ""
+      ],
+      "rootFields": [
+        "schema",
+        "maximumItems",
+        "maximumCopyBytes",
+        "cases"
+      ],
+      "diagnostics": [
+        "The document defines a test corpus contract outside the admitted schema facets."
+      ],
+      "boundedCandidateReaderLocations": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧪️tests/🟦️.ts",
+          "line": 10
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧪️tests/🟦️.ts",
+          "line": 11
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧪️tests/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧪️tests/🟦️.ts",
+          "line": 19
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts",
+          "line": 18
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts",
+          "line": 82
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/♻️raw-allocation-close/🟦️.ts",
+          "line": 9
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/♻️raw-allocation-close/🟦️.ts",
+          "line": 10
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/♻️raw-allocation-close/🟦️.ts",
+          "line": 13
+        }
+      ],
+      "readerQualification": "locations are candidate bindings requiring exact per-call confirmation; no absent-reader/global claim",
+      "pathCodepoints": 133,
+      "pathUtf16": 142
+    }
+  ]
+}

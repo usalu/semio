@@ -4,8 +4,17 @@ import { expect, test } from "bun:test";
 import fixture from "../🧫️fixtures/🔣️.json";
 import { tsvSnapshotToSqliteDatabase, tsvSnapshotFromSqliteDatabase, TSV_SQLITE_SCHEMA } from "../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
+import {parseRetainedCloneGrant} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts";
 
 const input = { ...fixture, lineEnding: "crlf" as const };
+
+test("TSV typed destination neutral UTF8 prefixes match independent SQLite",async()=>{
+ const law=controlFixture.typedDestination,text=controlFixture.copyTextUnit.repeat(controlFixture.copyTextRepeat),bytes=Buffer.from(text,"utf8"),db=new Database(":memory:");
+ expect(parseRetainedCloneGrant(law.normalGrant)).toEqual(law.normalGrant);expect(parseRetainedCloneGrant(law.closeGrant)).toEqual(law.closeGrant);for(const field of Object.keys(law.normalGrant)){const incomplete:Record<string,unknown>={...law.normalGrant};delete incomplete[field];expect(()=>parseRetainedCloneGrant(incomplete)).toThrow("five axes");}
+ try{db.run("CREATE TABLE prefix(value TEXT NOT NULL, octets INTEGER NOT NULL)");for(const cancel of law.cancelAt){let end=0;while(end<bytes.length&&(cancel===null||end<cancel)){let next=Math.min(end+65536,bytes.length);while(next<bytes.length&&(bytes[next]!&0xc0)===0x80)next--;end=next;}const prefix=new TextDecoder("utf8",{fatal:true}).decode(bytes.subarray(0,end));db.run("DELETE FROM prefix");db.run("INSERT INTO prefix VALUES(?,?)",[prefix,end]);expect(db.query("SELECT length(CAST(value AS BLOB)) AS bytes,octets FROM prefix").get()).toEqual({bytes:end,octets:end});expect(Buffer.from(prefix,"utf8")).toEqual(bytes.subarray(0,end));expect(JSON.parse(JSON.stringify(prefix))).toBe(prefix);expect(end).toBeLessThanOrEqual(law.normalGrant.maximumCopyBytes);}
+ expect(law.normalGrant.maximumCapacityBytes).toBeGreaterThan(bytes.length);expect(law.closeGrant.maximumItems).toBe(1);expect(law.closeGrant.maximumDepth).toBeGreaterThan(law.normalGrant.maximumDepth);expect(law.terminalDropBytes).toBe(0);
+ }finally{db.close();}
+});
 
 test("TSV shared handcrafted schema, semantic SQL joins and independent edits", async () => {
   expect(TSV_SQLITE_SCHEMA).toBe(await Bun.file(new URL("../🗄️.sql", import.meta.url)).text());
@@ -185,7 +194,7 @@ test("TSV canonical producer assets retain complete owner fields and remain sepa
   expect(text.startsWith("semio stdio.tsv.dsl v1\n")).toBe(true);
   expect(text).toContain("schema=");
  }
- const assets=new URL("../../../../📚️examples/🎬️demo/🖼️assets",import.meta.url);
+ const assets=new URL("../../../../📚️examples/🎬️demo/🖼️assets/",import.meta.url);
  const raw=readLogicalAsset(new URL("📊️.tsv",assets),"utf8"),rows=readExternalRows(raw);
  const demo=readTSVLogicalAsset(readLogicalAsset(new URL("🎒️.pack.semio",assets)));
  expect(demo.schema).toBe("stdio.tsv");
@@ -202,4 +211,14 @@ test("tsv closed complete semantic cells agree with independent third-party SQL"
   expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);let rows=0,bytes=0;const quote=(v:string)=>'"'+v.replaceAll('"','""')+'"';
   for(const[table,width]of Object.entries(completeSemantic.tableWidths)){const fields=db.query("PRAGMA table_info("+quote(table)+")").all()as{name:string}[];expect(fields.length).toBe(width);const cells=fields.map(({name})=>{const f=quote(name);return "CASE typeof("+f+") WHEN 'integer' THEN 8 WHEN 'real' THEN 8 WHEN 'text' THEN length(CAST("+f+" AS BLOB)) WHEN 'blob' THEN length("+f+") ELSE 0 END";}).join("+");const extent=db.query("SELECT COUNT(*) AS rows,COALESCE(SUM("+cells+"),0) AS bytes FROM "+quote(table)).get()as{rows:number;bytes:number};rows+=extent.rows;bytes+=extent.bytes;}expect(rows).toBe(sample.rows);expect(bytes).toBe(sample.bytes);
  }finally{db.close();}}
+});
+
+import RustSyntaxParser from "web-tree-sitter";
+import {dirname,join} from "node:path";
+
+test("TSV original typed receiving and bounded quote Rust syntax parses",async()=>{
+ await RustSyntaxParser.init();const parser=new RustSyntaxParser();parser.setLanguage(await RustSyntaxParser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",import.meta.dir)),"out/tree-sitter-rust.wasm")));
+ try{for(const relative of ["../🛂️admission/🦀️.rs","./🦀️.rs"]){const tree=parser.parse(readLogicalAsset(new URL(relative,import.meta.url),"utf8"));expect(tree?.rootNode.hasError()).toBe(false);tree?.delete();}}finally{parser.delete();}
+ expect(controlFixture.typedDestination.quoteCancelCheckpoint).toBe(3);
+ console.log("[DEBUG] original TSV typed receiving and borrowed quote syntax2; no compiler or Native physical credit");
 });

@@ -9,7 +9,7 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import type { Server } from "node:http";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runTool } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts";
+import {repositoryCargoPreparationStorageV1, runTool } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts";
 import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 import { nativeRendererBinary } from "../🏗️compiler/🦀️native/📜️script.ts";
@@ -36,7 +36,7 @@ async function nativeExecutable(executable: string, cwd: string, signal: AbortSi
 /** 🏃️ Keeps the owning JavaScript event loop responsive while the native child runs. */
 export async function runNativeBinary(executable: string, args: readonly string[], environment: NodeJS.ProcessEnv, cwd = getWorkspaceRoot(), signal: AbortSignal = new AbortController().signal): Promise<void> {
   const binary=await nativeExecutable(executable,cwd,signal);
-  await runTool(binary, [...args], cwd, signal, false, nativeRunnerEnvironment(environment));
+  await runTool(binary, [...args], cwd, signal, false, nativeRunnerEnvironment(environment),repositoryCargoPreparationStorageV1(process.cwd()));
 }
 
 /** 🌐️ Starts one ready asset listener, runs the native consumer and closes all owned connections. */
@@ -111,7 +111,7 @@ class McpScript extends BundleScript {
     if(!binary || !existsSync(binary))throw new Error("Missing Nx MCP owner artifact");
     const controller=new AbortController(),cancel=()=>controller.abort();
     process.once("SIGINT",cancel);process.once("SIGTERM",cancel);
-    try {await runTool(await nativeExecutable(binary,this.repoRoot,controller.signal),[transport,...args],this.repoRoot,controller.signal,false,process.env);}
+    try {await runTool(await nativeExecutable(binary,this.repoRoot,controller.signal),[transport,...args],this.repoRoot,controller.signal,false,process.env,repositoryCargoPreparationStorageV1(process.cwd()));}
     finally {process.removeListener("SIGINT",cancel);process.removeListener("SIGTERM",cancel);}
   }
 }

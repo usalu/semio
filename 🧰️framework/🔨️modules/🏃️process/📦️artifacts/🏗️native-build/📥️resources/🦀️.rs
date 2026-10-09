@@ -1,3 +1,5 @@
+#[path = "../../../../🔏️hash/🦀️.rs"]
+mod content_hash;
 use std::{fs, io};
 use std::path::{Path, PathBuf};
 
@@ -45,12 +47,11 @@ impl ResourceObservationsV1 {
         self.rows.push(format!("{{\"kind\":\"copy\",\"path\":{},\"output\":{}}}", path_text(source), path_text(output)));
     }
 
-    pub fn read(&mut self, source: &Path, out_dir: &Path) -> io::Result<Vec<u8>> {
+    pub fn read(&mut self, source: &Path) -> io::Result<Vec<u8>> {
+        let source = std::path::absolute(source)?;
         let owner = PathBuf::from(file!()); let owner = if owner.is_absolute() { owner } else { std::env::current_dir()?.join(owner) };
-        let operation = format!("{{\"source\":{},\"line\":{},\"name\":\"read\"}}", path_text(&owner), line!()); let bytes = match fs::read(source) { Ok(bytes) => bytes, Err(error) => { self.failed(source, &operation); return Err(error); } };
-        let output = out_dir.join(format!("semio-runtime-resource-read-{}.bin", self.rows.len()));
-        fs::write(&output, &bytes).expect("record actual build resource read");
-        self.rows.push(format!("{{\"kind\":\"read\",\"path\":{},\"output\":{},\"operation\":{}}}", path_text(source), path_text(&output), operation));
+        let operation = format!("{{\"source\":{},\"line\":{},\"name\":\"read\"}}", path_text(&owner), line!()); let bytes = match fs::read(&source) { Ok(bytes) => bytes, Err(error) => { self.failed(&source, &operation); return Err(error); } };
+        self.rows.push(format!("{{\"kind\":\"read\",\"path\":{},\"bytes\":{},\"sha256\":{},\"operation\":{}}}", path_text(&source), bytes.len(), quoted(&content_hash::sha256_hex(&bytes)), operation));
         Ok(bytes)
     }
 

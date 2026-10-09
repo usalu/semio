@@ -4,6 +4,8 @@ use semio_framework::abi::{
     AbiBytes, AbiControl, AbiCursorStep, AbiError, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiHandleTable, AbiMessage, AbiMessageBytes, AbiPage, AbiPageReader, AbiPort, AbiPortPoll, AbiPortRejection, AbiReply, AbiReplyLedger,
     AbiRequest, AbiRequestId, AbiStatus, AbiStatusCode, AbiWorkBudget, ABI_MAX_BODY_BYTES, ABI_MAX_IN_FLIGHT_HANDLES, ABI_MAX_IN_FLIGHT_REQUESTS, ABI_MAX_MESSAGE_BYTES, ABI_MAX_TRANSFER_BYTES,
 };
+use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};
+use crate::vcs::FlowVcsCloseDemands;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
@@ -43,12 +45,16 @@ pub const FLOW_DEADLINE_MILLISECONDS: u64 = 8;
 pub struct FlowFailure {
     pub code: AbiErrorCode,
     pub message: String,
+    pub retained_progress:semio_framework_value::retained_clone::RetainedCloneProgress,
 }
 
 impl FlowFailure {
     pub fn new(code: AbiErrorCode, message: impl Into<String>) -> Self {
-        Self { code, message: message.into() }
+        Self { code, message: message.into(),retained_progress:Default::default() }
     }
+    /// 🧾️ Preserves actual retained effects when a native refusal crosses the original Flow boundary.
+    pub fn with_retained_progress(mut self,progress:semio_framework_value::retained_clone::RetainedCloneProgress)->Self{self.retained_progress=progress;self}
+
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -81,9 +87,7 @@ pub trait FlowFeature {
         Err(FlowFailure::new(AbiErrorCode::UnknownHandle, "feature has no retained page"))
     }
 
-    fn close_step(&mut self, _: AbiWorkBudget) -> Result<bool, FlowFailure> {
-        Ok(true)
-    }
+    fn close_step(&mut self, budget: AbiWorkBudget) -> Result<RetainedCloneStep, FlowFailure>;
 }
 
 pub trait FlowDomain: Sized + 'static {
@@ -91,7 +95,8 @@ pub trait FlowDomain: Sized + 'static {
 
     fn start_feature(domain: Rc<RefCell<Self>>, admission: FlowFeatureAdmission, operation: u16, payload: Vec<u8>) -> Result<Box<dyn FlowFeature>, FlowFailure>;
     fn begin_close(&mut self);
-    fn close_step(&mut self, budget: AbiWorkBudget) -> Result<bool, FlowFailure>;
+    fn next_close_demands(&self,copy:usize)->Result<FlowVcsCloseDemands,FlowFailure>;
+    fn close_step(&mut self, budget: AbiWorkBudget) -> Result<RetainedCloneStep, FlowFailure>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -262,9 +267,15 @@ pub struct FlowBridge<D: FlowDomain> {
     active_resources: usize,
     next_event_sequence: u32,
     closing: bool,
+    retained_progress:RetainedCloneProgress,
 }
 
 impl<D: FlowDomain> FlowBridge<D> {
+    /// 🧾️ Actual retained effects survive the original success and refusal protocol paths.
+    pub fn step_progress(&self)->RetainedCloneProgress{self.retained_progress}
+
+    pub(super) fn clear_step_progress(&mut self){self.retained_progress=Default::default();}
+
     pub fn new(factory: fn() -> D) -> Self {
         Self {
             factory,
@@ -279,6 +290,7 @@ impl<D: FlowDomain> FlowBridge<D> {
             active_resources: 0,
             next_event_sequence: 1,
             closing: false,
+            retained_progress:Default::default(),
         }
     }
 
@@ -470,8 +482,10 @@ impl<D: FlowDomain> FlowBridge<D> {
                         return Ok(());
                     }
                 }
-                let feature_closed = operation.feature.close_step(budget).map_err(|failure| failure.code)?;
-                if !feature_closed {
+                let close=operation.feature.close_step(budget);
+                self.retained_progress=match &close{Ok(step)=>step.progress(),Err(failure)=>failure.retained_progress};
+                let feature_closed=close.map_err(|failure|failure.code)?;
+                if !matches!(feature_closed,RetainedCloneStep::Complete(_)) {
                     self.work.push_back(handle);
                     return Ok(());
                 }
@@ -613,7 +627,9 @@ impl<D: FlowDomain> FlowBridge<D> {
             if !session.domain_terminal {
                 {
                     let mut domain = session.domain.borrow_mut();
-                    if !domain.close_step(budget).map_err(|failure| failure.code)? { return Ok(false); }
+                    let close=domain.close_step(budget);
+                    self.retained_progress=match &close{Ok(step)=>step.progress(),Err(failure)=>failure.retained_progress};
+                    if !matches!(close.map_err(|failure|failure.code)?,RetainedCloneStep::Complete(_)){return Ok(false)}
                     if !domain.terminal_is_empty() { return Err(AbiErrorCode::Busy); }
                 }
                 session.domain_terminal = true;
@@ -684,6 +700,7 @@ impl<D: FlowDomain> AbiPort for FlowBridge<D> {
     }
 
     fn poll(&mut self, budget: AbiWorkBudget) -> Result<AbiPortPoll, AbiErrorCode> {
+        self.retained_progress=Default::default();
         validate_budget(budget)?;
         if let Some(message) = self.outbound.pop_front() {
             return Ok(AbiPortPoll::Message(message));
@@ -735,7 +752,7 @@ pub(super) fn validate_budget(budget: AbiWorkBudget) -> Result<(), AbiErrorCode>
 }
 
 fn bridge_control_budget() -> AbiWorkBudget {
-    AbiWorkBudget { byte_credit: 1, now_ms: 0, deadline_ms: Some(FLOW_DEADLINE_MILLISECONDS), cancelled: false, interrupted: false }
+    AbiWorkBudget { byte_credit: 1, retained:semio_framework::abi::AbiWorkBudget::credits(0).retained, now_ms: 0, deadline_ms: Some(FLOW_DEADLINE_MILLISECONDS), cancelled: false, interrupted: false }
 }
 
 //#endregion 🔖️Runtime

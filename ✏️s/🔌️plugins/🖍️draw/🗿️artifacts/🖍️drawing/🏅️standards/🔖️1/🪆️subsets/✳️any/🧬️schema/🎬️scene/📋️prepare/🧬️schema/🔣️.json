@@ -637,52 +637,6 @@
           }
         }
       ]
-    },
-    "ownedAdmissionFixtures": {
-      "items": {
-        "properties": {
-          "expectedRefusal": {
-            "const": true
-          },
-          "source": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "expectedSourceUnchanged": {
-            "const": true
-          },
-          "limit": {
-            "enum": [
-              "maxWork",
-              "maxNodes",
-              "maxEdges",
-              "width",
-              "maxPixels"
-            ]
-          },
-          "value": {
-            "const": 0
-          },
-          "producer": {
-            "enum": [
-              "vector",
-              "raster"
-            ]
-          }
-        },
-        "required": [
-          "source",
-          "producer",
-          "limit",
-          "value",
-          "expectedRefusal",
-          "expectedSourceUnchanged"
-        ],
-        "additionalProperties": false,
-        "type": "object"
-      },
-      "type": "array",
-      "minItems": 1
     }
   }
 }

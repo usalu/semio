@@ -17,6 +17,13 @@ use semio_framework_value::ValueRefusalKind;
 use semio_framework_value::list::{PagedListError,PagedListAllocationError,PagedListRefusalKind};
 use std::mem::size_of;
 use protocol::value::native_decoding::NativeDecodeControl;
+use semio_framework_value::{RetirementDemand, ValueError};
+
+fn retained_page_close_demands<T, const N: usize>(pages: &protocol::list::PagedList<T, N>) -> Result<RetirementDemand, ValueError> {
+    let error = |error: PagedListError| ValueError::literal(ValueRefusalKind::OwnershipLimit, error.reason);
+    if !pages.is_empty() { return Ok(RetirementDemand { copy_bytes: size_of::<T>(), depth: pages.next_pop_depth_demand().map_err(error)?, ..Default::default() }); }
+    Ok(RetirementDemand { release_bytes: pages.next_release_allocation_bytes().map_err(error)?, depth: pages.next_release_depth_demand().map_err(error)?.max(1), ..Default::default() })
+}
 
 #[path="🛫️encoding/🦀️.rs"]
 mod controlled_encoding;
@@ -1483,6 +1490,12 @@ impl RetainedPackSourceCursor {
         self.pages.allocated_bytes()
     }
 
+    /// 📏️ Observes the original page movement or whole backing release before close.
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if self.terminal_is_empty() { return Ok(Default::default()); }
+        retained_page_close_demands(&self.pages)
+    }
+
     pub fn next_release_allocation_bytes(&self) -> Result<usize, protocol::list::PagedListError> {
         self.pages.next_release_allocation_bytes()
     }
@@ -1715,6 +1728,14 @@ pub struct RetainedPackSegmentCursor {
 }
 
 impl RetainedPackSegmentCursor {
+    /// 📏️ Observes one original segment frame or its retained decompressor close action.
+    pub fn retirement_demands(&self) -> RetirementDemand {
+        if self.terminal_is_empty() { return Default::default(); }
+        if self.pending.is_some() { return RetirementDemand { copy_bytes: size_of::<RetainedPackSourceEvent>(), depth: 1, ..Default::default() }; }
+        #[cfg(feature = "deflate")]
+        if let Some(inflater) = self.inflater.as_ref() { return if inflater.terminal_is_empty() { RetirementDemand { copy_bytes: size_of::<crate::codec::DeflateRetainedCursor>(), depth: 1, ..Default::default() } } else { inflater.retirement_demands() }; }
+        RetirementDemand { depth: 1, ..Default::default() }
+    }
     pub fn try_new(limits: PackLimits, maximum_inflater_allocation_bytes: usize) -> Result<Self, PackRefusal> {
         if limits.max_segment_len == 0 || limits.max_file_len < (HEADER_SIZE + FOOTER_SIZE) as u64 {
             return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::InvalidValue,limit:"retained pack limits"});
@@ -2500,6 +2521,15 @@ pub struct RetainedPackSymbolTable {
 }
 
 impl RetainedPackSymbolTable {
+    /// 📏️ Quotes the next original scalar, symbol or semantic page close action.
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if self.terminal_is_empty() { return Ok(Default::default()); }
+        if !self.scalars.is_empty() { return retained_page_close_demands(&self.scalars); }
+        if !self.symbols.is_empty() { return retained_page_close_demands(&self.symbols); }
+        if !self.scalars.terminal_is_empty() { return retained_page_close_demands(&self.scalars); }
+        if !self.symbols.terminal_is_empty() { return retained_page_close_demands(&self.symbols); }
+        Ok(RetirementDemand { depth: 1, ..Default::default() })
+    }
     pub fn try_new(maximum_symbols: usize, maximum_utf8_bytes: usize, maximum_scalars: usize, maximum_allocation_bytes: usize) -> Result<Self, RetainedPackCatalogFault> {
         if maximum_symbols > RETAINED_PACK_MAXIMUM_SYMBOL_SPANS
             || maximum_scalars > RETAINED_PACK_MAXIMUM_SYMBOL_SCALARS
@@ -2838,6 +2868,22 @@ pub struct RetainedPackCatalogCursor {
 }
 
 impl RetainedPackCatalogCursor {
+    /// 📏️ Borrows the exact currently retained catalog frame or page path for close.
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if self.terminal_is_empty() { return Ok(Default::default()); }
+        let frame = |copy_bytes| Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
+        if self.pending.is_some() { return frame(size_of::<RetainedPackSegmentEvent>()); }
+        if self.active.is_some() { return frame(size_of::<RetainedPackSegmentHeader>()); }
+        if !self.symbol_parser.closed { return frame(size_of::<RetainedSymbolsCursor>()); }
+        if !self.symbols.scalars.is_empty() { return retained_page_close_demands(&self.symbols.scalars); }
+        if !self.symbols.symbols.is_empty() { return retained_page_close_demands(&self.symbols.symbols); }
+        if !self.chunks.is_empty() { return retained_page_close_demands(&self.chunks); }
+        if !self.observed_chunks.is_empty() { return retained_page_close_demands(&self.observed_chunks); }
+        if !self.symbols.terminal_is_empty() { return self.symbols.retirement_demands(); }
+        if !self.chunks.terminal_is_empty() { return retained_page_close_demands(&self.chunks); }
+        if !self.observed_chunks.terminal_is_empty() { return retained_page_close_demands(&self.observed_chunks); }
+        frame(0)
+    }
     pub fn try_new(
         limits: PackLimits,
         maximum_symbols: usize,

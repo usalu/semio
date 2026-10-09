@@ -27,7 +27,7 @@ class OwnedVerifyScript extends BundleScript {
 
     if (segments.length === 1 && segments[0] === "snapshot-sqlite-source") {
       const schema=resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-      runCmd("bun",[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--skipLibCheck",resolve(schema,"🟦️.ts"),resolve(schema,"📸️snapshot/🟦️.ts"),resolve(schema,"🧬️mutations/🟦️.ts"),resolve(schema,"🔺️diff/🟦️.ts"),resolve(schema,"../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"),resolve(schema,"../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"),resolve(schema,"../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️schema/🟦️.ts"),resolve(schema,"../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts")],{cwd:this.repoRoot});
+      runCmd("bun",[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--skipLibCheck",resolve(schema,"🟦️.ts"),resolve(schema,"📸️snapshot/🟦️.ts"),resolve(schema,"🧬️mutations/🟦️.ts"),resolve(schema,"🔺️diff/🟦️.ts"),resolve(schema,"../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"),resolve(schema,"../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"),resolve(schema,"../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧱️content/🟦️.ts"),resolve(schema,"../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts")],{cwd:this.repoRoot});
       return;
     }
     if (segments.length === 1 && segments[0] === "snapshot-sqlite-native-syntax") {

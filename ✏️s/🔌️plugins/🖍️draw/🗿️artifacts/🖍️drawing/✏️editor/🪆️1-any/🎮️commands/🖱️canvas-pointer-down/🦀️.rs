@@ -218,31 +218,8 @@ pub(crate) fn draft_preview_segments(utility: &str, points: &UiFixedList<[f64; 2
     segments
 }
 
-/// 🔷️ The replay-stable id of a dragged shape: its kind, geometry and document ordinal, scoped by the admitted operation.
-fn shape_drag_id(utility: &str, geometry: [f64; 4], layer_ordinal: usize, operation: Option<&AppOperationContext>) -> String {
-    let mut identity = Vec::with_capacity(1 + 4 + 8 + operation.map_or(0, |operation| operation.parent_document_id.len() + 60) + 32);
-    identity.push(match utility {
-        "shapeLine" => 1,
-        "shapeEllipse" => 2,
-        _ => 0,
-    });
-    if let Some(operation) = operation {
-        identity.extend_from_slice(&operation.app_instance_id.to_be_bytes());
-        identity.extend_from_slice(&(operation.parent_document_id.len() as u64).to_be_bytes());
-        identity.extend_from_slice(operation.parent_document_id.as_bytes());
-        identity.extend_from_slice(&operation.operation_id.to_be_bytes());
-        identity.extend_from_slice(&operation.generation.to_be_bytes());
-        identity.extend_from_slice(&operation.canonical_base_revision);
-    }
-    identity.extend_from_slice(&(layer_ordinal as u64).to_be_bytes());
-    for value in geometry {
-        identity.extend_from_slice(&value.to_bits().to_be_bytes());
-    }
-    crate::standards::v1::subsets::any::schema::create_drawing_id("shape", &identity)
-}
-
 /// 🔷️ The `create-layer` a shape drag yields, `None` when the drag is too small to commit.
-fn shape_drag_layer(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end: [f64; 2], operation: Option<&AppOperationContext>) -> Option<DrawingMutation> {
+fn shape_drag_layer(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end: [f64; 2], identity:crate::schema::identity::DrawingIdentity) -> Option<DrawingMutation> {
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
@@ -255,8 +232,7 @@ fn shape_drag_layer(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end: 
         "shapeEllipse" => ("Ellipse", "ellipse", [x + width / 2.0, y + height / 2.0, width / 2.0, height / 2.0]),
         _ => ("Rectangle", "rect", [x, y, width, height]),
     };
-    let mut base = crate::schema::default_layer_base(name);
-    base.id = shape_drag_id(utility, geometry, doc.layers.len(), operation).into();
+    let base=crate::schema::default_layer_base(identity,name);
     let mut layer = DrawingLayerNode::Shape(crate::DrawingShapeBody {
         base,
         shape_kind: shape_kind.into(),
@@ -271,15 +247,15 @@ fn shape_drag_layer(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end: 
 }
 
 /// 🖊️ The `create-layer` a committed pen or polygon draft yields, `None` below two points.
-fn draft_layer(doc: &DrawingSnapshot, utility: &str, points: &UiFixedList<[f64; 2], DRAWING_GESTURE_PREVIEW_POINT_CAPACITY>, operation: Option<&AppOperationContext>) -> Option<DrawingMutation> {
+fn draft_layer(doc: &DrawingSnapshot, utility: &str, points: &UiFixedList<[f64; 2], DRAWING_GESTURE_PREVIEW_POINT_CAPACITY>, identity:crate::schema::identity::DrawingIdentity) -> Option<DrawingMutation> {
     if points.len() < 2 {
         return None;
     }
     let mut layer = if utility == "pen" {
-        create_drawing_path_layer("Path", points.iter().enumerate().map(|(index, point)| if index == 0 { PathSegment::Move { to: *point } } else { PathSegment::Line { to: *point } }).collect())
+        create_drawing_path_layer(identity, "Path", points.iter().enumerate().map(|(index, point)| if index == 0 { PathSegment::Move { to: *point } } else { PathSegment::Line { to: *point } }).collect())
     } else {
         DrawingLayerNode::Shape(crate::DrawingShapeBody {
-            base: crate::schema::default_layer_base("Polygon"),
+            base: crate::schema::default_layer_base(identity, "Polygon"),
             shape_kind: "polygon".into(),
             rect: None,
             ellipse: None,
@@ -288,14 +264,14 @@ fn draft_layer(doc: &DrawingSnapshot, utility: &str, points: &UiFixedList<[f64; 
             polygon: Some(crate::DrawingPolygon { points: points.iter().copied().collect() }),
         })
     };
-    crate::editor::drawing::commands::add_layer::identify_created_layer(doc, &mut layer, if utility == "pen" { "path" } else { "shape:polygon" }, operation);
     crate::editor::drawing::commands::add_layer::initialize_appearance(&mut layer);
     Some(crate::mutations::create_layer(None, Some(doc.layers.len()), layer))
 }
 
 /// 🖼️ The `create-layer` a finished trace yields, `None` without an image source.
-fn trace_layer(doc: &DrawingSnapshot, source_key: Option<&str>) -> Option<DrawingMutation> {
-    let mut layer = create_drawing_trace_layer("Trace", source_key?);
+fn trace_layer(doc: &DrawingSnapshot, source_key: Option<&str>,identity:crate::schema::identity::DrawingIdentity) -> Option<DrawingMutation> {
+    let source_key=source_key?;
+    let mut layer = create_drawing_trace_layer(identity, "Trace", source_key);
     crate::editor::drawing::commands::add_layer::initialize_appearance(&mut layer);
     Some(crate::mutations::create_layer(None, Some(doc.layers.len()), layer))
 }
@@ -372,9 +348,13 @@ pub struct DrawingToolBase {
     pub operation: Option<AppOperationContext>,
 }
 
+#[derive(Clone,Debug)]
+pub struct DrawingDraftCommit {pub base:DrawingToolBase,pub identity:Option<crate::schema::identity::DrawingIdentity>}
+
 /// ⬆️ One release: the pointer, the drag threshold in world units, and the base a commit yields against.
 #[derive(Clone, Debug)]
 pub struct DrawingRelease {
+    pub identity:Option<crate::schema::identity::DrawingIdentity>,
     pub pointer: DrawingPointer,
     pub threshold: f64,
     pub base: DrawingToolBase,
@@ -383,6 +363,7 @@ pub struct DrawingRelease {
 /// 🖼️ A finished trace: the base and the image source it traces, if the pointer found one.
 #[derive(Clone, Debug)]
 pub struct DrawingTraced {
+    pub identity:Option<crate::schema::identity::DrawingIdentity>,
     pub base: DrawingToolBase,
     pub source_key: Option<String>,
 }
@@ -538,7 +519,7 @@ fn start_shape(ctx: &mut DrawingToolContext, event: Option<&canvas_tool::Event>,
 fn commit_shape(ctx: &mut DrawingToolContext, event: Option<&canvas_tool::Event>, sink: &mut Vec<Command<canvas_tool::CanvasTool>>) {
     let Some(canvas_tool::Event::PointerUp(release)) = event else { return };
     ctx.cursor = release.pointer.world;
-    if let Some(layer) = shape_drag_layer(&release.base.document, &ctx.utility, ctx.start, release.pointer.world, release.base.operation.as_ref()) {
+    if let Some(layer) = release.identity.as_ref().and_then(|identity|shape_drag_layer(&release.base.document,&ctx.utility,ctx.start,release.pointer.world,identity.clone())) {
         sink.push(Command::Effect(ToolYield::upsert(DRAWING_TOOL_LEAF_KEY, layer)));
         sink.push(Command::Effect(ToolYield::Commit));
     }
@@ -566,8 +547,8 @@ fn append_draft_point(ctx: &mut DrawingToolContext, event: Option<&canvas_tool::
 
 /// 🖊️ Committing a draft yields its `create-layer` and commits — fewer than two points yield nothing.
 fn yield_draft(ctx: &mut DrawingToolContext, event: Option<&canvas_tool::Event>, sink: &mut Vec<Command<canvas_tool::CanvasTool>>) {
-    let Some(canvas_tool::Event::CommitDraft(base)) = event else { return };
-    if let Some(layer) = draft_layer(&base.document, &ctx.utility, &ctx.points, base.operation.as_ref()) {
+    let Some(canvas_tool::Event::CommitDraft(commit)) = event else { return };
+    if let Some(layer) = commit.identity.as_ref().and_then(|identity|draft_layer(&commit.base.document,&ctx.utility,&ctx.points,identity.clone())) {
         sink.push(Command::Effect(ToolYield::upsert(DRAWING_TOOL_LEAF_KEY, layer)));
         sink.push(Command::Effect(ToolYield::Commit));
     }
@@ -585,7 +566,7 @@ fn start_trace(ctx: &mut DrawingToolContext, event: Option<&canvas_tool::Event>,
 /// 🖼️ A finished trace yields its `create-layer` and commits — no image source yields nothing.
 fn commit_trace(_ctx: &mut DrawingToolContext, event: Option<&canvas_tool::Event>, sink: &mut Vec<Command<canvas_tool::CanvasTool>>) {
     let Some(canvas_tool::Event::Traced(traced)) = event else { return };
-    if let Some(layer) = trace_layer(&traced.base.document, traced.source_key.as_deref()) {
+    if let Some(layer) = traced.identity.as_ref().and_then(|identity|trace_layer(&traced.base.document,traced.source_key.as_deref(),identity.clone())) {
         sink.push(Command::Effect(ToolYield::upsert(DRAWING_TOOL_LEAF_KEY, layer)));
         sink.push(Command::Effect(ToolYield::Commit));
     }
@@ -610,7 +591,7 @@ machine::statechart! {
             PointerUp(DrawingRelease),
             Grab(DrawingGrab),
             NodeMarquee(DrawingPointer),
-            CommitDraft(DrawingToolBase),
+            CommitDraft(DrawingDraftCommit),
             Traced(DrawingTraced),
             Once(DrawingMutation),
             Escape,
@@ -1070,6 +1051,8 @@ pub struct DrawingInteractionSnapshot {
 /// 🧪️ `app_commands!` dispatch context — the canvas tool, the preview tick counter, the current selections, the Canvas
 /// window's state, the committed base of this dispatch and the retained hit-test and trace jobs.
 pub struct DrawingSession {
+    pub(crate) identity_cancel:Option<semio_framework_job::CancelToken>,
+    pub(crate) identity_checkpoints:u64,
     /// 🛠️ The canvas tool driving pointer gestures (ephemeral tool state, never history).
     pub(crate) tool: DrawingTool,
     /// 👻️ Monotone preview counter.
@@ -1268,10 +1251,18 @@ impl Default for DrawingSession {
 }
 
 impl DrawingSession {
+    pub(crate) fn with_identity_control<T>(&mut self,operation:impl FnOnce(&mut semio_framework_value::NativeEncodeControl<'_>)->Result<T,Fault>)->Result<T,Fault>{
+        let cancel=self.identity_cancel.as_ref().ok_or_else(||Fault::from("Drawing identity requires its caller cancellation scope"))?;
+        let checkpoints=&mut self.identity_checkpoints;
+        let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|{*checkpoints=checkpoints.saturating_add(1);};
+        crate::standards::v1::subsets::any::io::text::identity::control::with_identity_control(cancel,1024*1024,&mut observer,operation)
+    }
+
     /// 🚀️ A session at rest for `active_utility_id`, its canvas tool minting from `authoring_seed`.
     pub(crate) fn new(active_utility_id: &str, authoring_seed: &str) -> Self {
         Self {
             tool: DrawingTool::start(active_utility_id, authoring_seed),
+            identity_cancel:None,identity_checkpoints:0,
             preview_seq: 0,
             interaction: DrawingInteractionSnapshot::default(),
             active_utility_id: active_utility_id.into(),
@@ -1338,12 +1329,15 @@ impl DrawingSession {
 
     /// ✅️ Commits the open pen or polygon draft as one transaction.
     pub(crate) fn finish_draft(&mut self, base: DrawingToolBase) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
-        self.step(canvas_tool::Event::CommitDraft(base))
+        let context=self.tool.context().clone();
+        let identity=if context.points.len()<2{None}else{let operation=base.operation.as_ref().ok_or_else(||Fault::from("Drawing draft lacks original operation admission"))?;Some(self.with_identity_control(|control|crate::editor::drawing::commands::add_layer::prepare_identity(&base.document,if context.utility=="pen"{"path"}else{"shape:polygon"},operation,control))?)};
+        self.step(canvas_tool::Event::CommitDraft(DrawingDraftCommit {base,identity}))
     }
 
     /// 🖼️ Commits a finished trace as one transaction.
     fn traced(&mut self, base: DrawingToolBase, source_key: Option<String>) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
-        self.step(canvas_tool::Event::Traced(DrawingTraced { base, source_key }))
+        let identity=if source_key.is_none(){None}else{let operation=base.operation.as_ref().ok_or_else(||Fault::from("Drawing trace lacks original operation admission"))?;Some(self.with_identity_control(|control|crate::editor::drawing::commands::add_layer::prepare_identity(&base.document,"trace",operation,control))?)};
+        self.step(canvas_tool::Event::Traced(DrawingTraced { base, source_key,identity }))
     }
 
     /// ⬆️ One release. A marquee's or a resting select utility's release is interaction: it arms the bounded selection query
@@ -1354,7 +1348,7 @@ impl DrawingSession {
         let document = base.document.clone();
         if self.tool.matches("marqueeing") {
             let context = self.tool.context().clone();
-            self.step(canvas_tool::Event::PointerUp(DrawingRelease { pointer: pointer.clone(), threshold, base }))?;
+            self.step(canvas_tool::Event::PointerUp(DrawingRelease { pointer: pointer.clone(), threshold, base,identity:None }))?;
             let end = pointer.world;
             if let Some(selection) = self.node_marquee.take() {
                 if !context.active {
@@ -1386,7 +1380,9 @@ impl DrawingSession {
             self.point_query = Some(DrawingPointQuery::new(command_id, TracePointerJob::new_query(&document, pointer.world, tolerance, true), false, selection_merge_mode(pointer.shift, pointer.ctrl, pointer.meta).into(), false));
             return Ok(None);
         }
-        let mut emit = self.step(canvas_tool::Event::PointerUp(DrawingRelease { pointer, threshold, base }))?;
+        let context=self.tool.context();let utility=context.utility.clone();let start=context.start;
+        let identity=if self.tool.matches("shaping") && ((pointer.world[0]-start[0]).abs()>=1.0||(pointer.world[1]-start[1]).abs()>=1.0){let operation=base.operation.as_ref().ok_or_else(||Fault::from("Drawing shape lacks original operation admission"))?;let x=start[0].min(pointer.world[0]);let y=start[1].min(pointer.world[1]);let width=(pointer.world[0]-start[0]).abs();let height=(pointer.world[1]-start[1]).abs();let geometry=match utility.as_str(){"shapeLine"=>[start[0],start[1],pointer.world[0],pointer.world[1]],"shapeEllipse"=>[x+width/2.0,y+height/2.0,width/2.0,height/2.0],_=>[x,y,width,height]};Some(self.with_identity_control(|control|crate::standards::v1::subsets::any::io::text::identity::creation::shape_identity(&utility,geometry,base.document.layers.len(),operation,control).map_err(|error|Fault::from(error.to_string())))?)}else{None};
+        let mut emit = self.step(canvas_tool::Event::PointerUp(DrawingRelease { pointer, threshold, base,identity }))?;
         if let Some(leaf @ DrawingMutation::DragPathPoints(_)) = emit.artifact_mutations.first() {
             let rebound = drawing_rebound_points(&document, leaf)?;
             emit.effects.push(point_selection_effect(&rebound));

@@ -1,11 +1,34 @@
 {
-  "logicalAuthority":"maximum-signed-native-owner",
-  "maximumItems":1,
-  "maximumBytes":4096,
-  "firstScalarMaximumAllocations":2,
-  "firstScalarMaximumAllocationBytes":8192,
-  "ownerWords":7,
-  "scalar":7,
-  "growthPayloadBytes":[8194,65537],
-  "cases":["empty-root-no-allocation","first-leaf-and-payload-only","growth-retains-first-pointer","growth-grant-refusal-preserves-root","exact-parent-handoff-zero-child-disposal"]
+  "logicalAuthority": "maximum-signed-native-owner",
+  "maximumItems": 1,
+  "maximumBytes": 4096,
+  "firstScalarMaximumAllocations": 2,
+  "firstScalarMaximumAllocationBytes": 8192,
+  "ownerWords": 7,
+  "scalar": 7,
+  "growthPayloadBytes": [
+    8194,
+    65537
+  ],
+  "cases": [
+    "empty-root-no-allocation",
+    "first-leaf-and-payload-only",
+    "growth-retains-first-pointer",
+    "growth-grant-refusal-preserves-root",
+    "exact-parent-handoff-zero-child-disposal"
+  ],
+  "reservedPushDepth": [
+    {
+      "index": 0,
+      "depth": 3
+    },
+    {
+      "index": 4096,
+      "depth": 4
+    },
+    {
+      "index": 65536,
+      "depth": 5
+    }
+  ]
 }

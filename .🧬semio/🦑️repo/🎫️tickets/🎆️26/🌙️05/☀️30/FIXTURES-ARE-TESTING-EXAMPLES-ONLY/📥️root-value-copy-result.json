@@ -1,0 +1,18 @@
+{
+  "session": 46306,
+  "exitCode": 0,
+  "durationMs": 21400,
+  "nativeLawsPassed": 1,
+  "nativeLawsSkipped": 256,
+  "lawDurationSeconds": 0.015,
+  "debugVerified": true,
+  "observedSourceCount": 156,
+  "drifts": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs",
+      "beforeSha256": "8f358b332a177c704f0c295ffbdb66df25af37715dc596b2d85f289ba4e35601",
+      "afterSha256": "4039debd6c32e716546bea916ba683d570c275ccee3658807b426d5957795fdd"
+    }
+  ],
+  "qualification": "Actual original Value named native law only; observers are bounded shared Source, not exclusive authorship/transitive native/runtime closure"
+}

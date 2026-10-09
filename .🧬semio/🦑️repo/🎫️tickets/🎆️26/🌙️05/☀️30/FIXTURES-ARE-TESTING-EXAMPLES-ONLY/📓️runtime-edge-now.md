@@ -1,0 +1,7 @@
+# Current Runtime Edge Cut
+
+Bounded original Source review only; no runtime acquisition dispatched. Hash observations are separate from authorship. The genuine schema registry loader/native export binary/component/facade inspected here contain no direct fixture resource read. The registry test source does read its sibling plain examples; that is a test-only edge, not the default production entries route. Runtime domain script dispatches its explicit tests and selection tests; its test fixture reads do not establish a runtime dependency.
+
+Current runtime verification derives the four normalized fixture/example collections from taxonomy and observes physical source/resource identity, selected guest compiler/resource witnesses, actual closed actors and browser production mounts. Acquisition lines405–427 require current produced provenance and actor witnesses. Browser producer/mount imports451–457 are configured production owners; no neutral fixture witness substitution is visible in these inspected entrypoints. Runtime source path checks remain lexical/physical observation policy, not fixture reads.
+
+No new direct fixture-as-runtime positive was established in this finite cut. Transitive roots were not acquired or exhaustively traversed, so this is not runtime purity or absence proof. The prior actual graph failure remains a refusal, not a completed graph. Tests/declarations and current production acquisition are explicitly separate categories.

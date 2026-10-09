@@ -1,0 +1,23 @@
+{
+  "sessionId": 48189,
+  "nxExitCode": 1,
+  "cargoExitCode": 101,
+  "duration": "5m1s",
+  "locatedCompilerErrors": 625,
+  "nativeAssertions": 0,
+  "selectedLaws": 21,
+  "sourceObservers": 30091,
+  "sourceDrifts": 86,
+  "partitions": {
+    "native": 163,
+    "publication": 430,
+    "root": 32
+  },
+  "originalFeatures": [
+    "sync",
+    "ureq"
+  ],
+  "originalNextestProfile": "long",
+  "budgetChanges": false,
+  "sourceCopies": 0
+}

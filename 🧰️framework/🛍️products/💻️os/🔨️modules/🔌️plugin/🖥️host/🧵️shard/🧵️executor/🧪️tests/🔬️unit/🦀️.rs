@@ -21,7 +21,7 @@ async fn shard_stack_authority_matches_the_neutral_fixture() {
     assert_eq!(deferred["capacity"].as_u64(), Some(SHARD_DEFERRED_ITEMS as u64));
     assert!([seeds, refusals, deferred].iter().all(|row| row["storage"] == "heap"));
     let (_, shard_side) = ThreadTransport::new_pair().await;
-    let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), ShardTransports::SharedThread(SharedThreadTransport(Arc::new(shard_side)))).await;
+    let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), ShardTransports::SharedThread(SharedThreadTransport(Arc::new(shard_side))),crate::shard::test_identity_issuer()).await;
     assert_eq!(shard.replay_seeds.len(), super::super::JOB_REPLAY_SEED_SLOT_CAPACITY);
     assert_eq!(shard.replay_seed_refusals.len(), super::super::JOB_REPLAY_REFUSAL_SLOT_CAPACITY);
     assert_eq!(FixedOwnerRing::<u8, SHARD_DEFERRED_ITEMS>::new(SHARD_DEFERRED_BYTES).slots.len(), SHARD_DEFERRED_ITEMS);
@@ -44,7 +44,7 @@ async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners
         let mock = Arc::new(MockGuestRuntime::new().await);
         let runtime = Arc::new(GuestRuntimes::Mock(Arc::clone(&mock)));
         let pool = test_pool();
-        let executor = ShardExecutor::new(Arc::clone(&pool), runtime, Vec::new(), OutcomeSink::new()).await;
+        let executor = ShardExecutor::new(Arc::clone(&pool), runtime, Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
         let actor = ActorId(717);
         let package = PackageRef { package: PackageId("registration-owner".into()), hash: PackageHash([0; 32]) };
         let compiled = mock.compile(&package, &[]).await.unwrap();
@@ -116,7 +116,7 @@ async fn terminal_registration_reply_wakes_outside_the_state_lock() {
         }
     }
     let mock = Arc::new(MockGuestRuntime::new().await);
-    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), Vec::new(), OutcomeSink::new()).await;
+    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
     executor.scheduled.store(true, Ordering::Release);
     let shard = executor.state.lock().unwrap().shard.take().unwrap();
     let actor = ActorId(718);
@@ -154,7 +154,7 @@ async fn admitted_registration_reply_wakes_outside_the_state_lock() {
         }
     }
     let mock = Arc::new(MockGuestRuntime::new().await);
-    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), Vec::new(), OutcomeSink::new()).await;
+    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
     executor.scheduled.store(true, Ordering::Release);
     let shard = executor.state.lock().unwrap().shard.take().unwrap();
     let actor = ActorId(718);
@@ -203,7 +203,7 @@ async fn shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool
 
     let pool = test_pool();
     let outcomes = OutcomeSink::new();
-    let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone()).await;
+    let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone(),crate::shard::test_identity_issuer()).await;
 
     let envelope = Envelope {
         to: actor,
@@ -269,7 +269,7 @@ async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbo
     entered_rx.recv_timeout(Duration::from_secs(2)).expect("pool blocker entered");
 
     let outcomes = OutcomeSink::new();
-    let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock)), vec![(background, background_instance), (interactive, interactive_instance)], outcomes.clone()).await;
+    let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock)), vec![(background, background_instance), (interactive, interactive_instance)], outcomes.clone(),crate::shard::test_identity_issuer()).await;
     let envelope = |actor, lane, seq| Envelope {
         to: actor,
         from: semio_framework_actor::Origin::Kernel,
@@ -327,7 +327,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
 
         let pool = Arc::new(WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, worker_count)));
         let outcomes = OutcomeSink::new();
-        let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone()).await;
+        let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone(),crate::shard::test_identity_issuer()).await;
         let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
         let event = Envelope {
             to: actor,
@@ -417,7 +417,7 @@ async fn every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_sha
     let outcomes = OutcomeSink::new();
     let mut executors = Vec::new();
     for _ in 0..SHARDS {
-        executors.push(ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), Vec::new(), outcomes.clone()).await);
+        executors.push(ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), Vec::new(), outcomes.clone(),crate::shard::test_identity_issuer()).await);
     }
     let mut shards = ShardTable::new(ShardKind::Native, SHARDS, 0).await;
     let package = PackageRef { package: PackageId("grant-routing-property".to_string()), hash: PackageHash([55u8; 32]) };
@@ -467,7 +467,7 @@ async fn suspend_then_resume_round_trip_lands_on_a_shard_where_the_actor_is_regi
     let outcomes = OutcomeSink::new();
     let mut executors = Vec::new();
     for _ in 0..SHARDS {
-        executors.push(ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), Vec::new(), outcomes.clone()).await);
+        executors.push(ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), Vec::new(), outcomes.clone(),crate::shard::test_identity_issuer()).await);
     }
     let mut shards = ShardTable::new(ShardKind::Native, SHARDS, 0).await;
     let package = PackageRef { package: PackageId("suspend-resume-property".to_string()), hash: PackageHash([77u8; 32]) };
@@ -542,7 +542,7 @@ async fn concurrent_send_frame_bursts_never_drop_an_outcome() {
         initial.push((actor, instance));
         actors.push(actor);
     }
-    let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), initial, outcomes.clone()).await;
+    let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), initial, outcomes.clone(),crate::shard::test_identity_issuer()).await;
     let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
 
     let mut handles = Vec::new();
@@ -595,7 +595,7 @@ fn retry_trigger_is_one_shot_until_the_generation_owner_releases_it() {
 #[semio_framework_async_macros::async_test]
 async fn terminal_ingress_returns_the_exact_late_frame_before_transport_or_epoch_mutation() {
     let pool = test_pool();
-    let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new()).await;
+    let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
     pool.shutdown();
     let raw = vec![4, 3, 2, 1];
     let owner = match executor.send_frame(raw.clone(), semio_framework_actor::Lane::Maintenance).await {
@@ -610,7 +610,7 @@ async fn terminal_ingress_returns_the_exact_late_frame_before_transport_or_epoch
 
 #[semio_framework_async_macros::async_test]
 async fn over_capacity_ingress_hands_back_bytes_plus_one_exactly() {
-    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new()).await;
+    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
     let raw = vec![7; SHARD_FRAME_MAX_BYTES + 1];
     let owner = match executor.send_frame(raw, semio_framework_actor::Lane::Maintenance).await {
         FrameIngress::Rejected(owner) => owner,
@@ -624,7 +624,7 @@ async fn over_capacity_ingress_hands_back_bytes_plus_one_exactly() {
 
 #[semio_framework_async_macros::async_test]
 async fn occupied_terminal_overflow_rejects_plus_one_and_plus_two_before_mutation() {
-    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new()).await;
+    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
     executor.terminal_overflow_occupied.store(true, Ordering::Release);
     let first = vec![0xf1, 1];
     let second = vec![0xf2, 2];

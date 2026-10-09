@@ -1,0 +1,66 @@
+{
+  "observedInputsOnly": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🔐️lifecycle/🔣️.json",
+      "beforeSha256": "a857df2934b88ede620678eae4ce364a6b1ac6fb1591400eff93f7b5dda9ed52",
+      "rootFields": [
+        "source",
+        "grants",
+        "expected"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay/🧬️schema/🔣️.json",
+      "beforeSha256": "190c0b25c1ef1e8841c3c71e9d84cd7c4a49c364321912089c7c6047b5b5d45a",
+      "rootFields": [
+        "schema",
+        "cases",
+        "keyboard"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧫️fixtures/receivers.schema.json",
+      "beforeSha256": "7ace898958fd3815db1abc36f774814b3900ab0900c57564fad6271bdd0f4982",
+      "rootFields": [
+        "sources",
+        "pure",
+        "old",
+        "semanticForbiddenTypes",
+        "typedSources",
+        "typedRetired",
+        "typedRegions"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/📥️receiving/🧬️.json",
+      "beforeSha256": "40a474d032ccb4667e27d1070509b95bfbb474933713ab115e58e7cfc64c0d08",
+      "rootFields": [
+        "version",
+        "sources",
+        "storeFrontiers",
+        "reservedFrontiers",
+        "publicPluginFrontiers",
+        "expectedFakeWrappers",
+        "checkIdentityScopes",
+        "checkPluginSelfCalls",
+        "runtimeFrontiers",
+        "checkRuntimeCalls"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧫️fixtures/🧬️.json",
+      "beforeSha256": "9b8642085aa5d0b5eba1573e0d55b5692cc072309126bccbe91de64a4009bdf7",
+      "rootFields": [
+        "version",
+        "cases",
+        "control",
+        "stream"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "5b4aca45bdaee50cc5ae590d14dd8b4d754b87bacb65d2001276da4714b1bd2c"
+    }
+  ],
+  "noSourceCopies": true
+}

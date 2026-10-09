@@ -1,0 +1,34 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧫️fixtures/🔭️observer/🧬️.json",
+    "sha256": "d91279de5ec02e3ded4fe39ce63ec0747782c74f0bec2108c2c5e13c8d12f379",
+    "bytes": 4265
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🎟️insertion/🔣️.json",
+    "sha256": "83ee893b699bc2fba89259e1bab3013d2520fe2a164f7c8bcc9d969c8549c202",
+    "bytes": 3763
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts",
+    "sha256": "54f6df5a096b8a3b50aa4d56938b4e7360b62a58b4b65082880c554e7a165361",
+    "bytes": 9773
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🎟️insertion/🟦️.ts",
+    "sha256": "ea58caf2b4c6c5381c90cf3702def109816985d1d854cbdd7730323b67ca8d78",
+    "bytes": 2854
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧫️fixtures/🔭️observer/🔣️.json",
+    "sha256": "f4fb6e5eaf336d5261dd6bdbf0106e625011d181566de8ca250595b1480e06ad",
+    "bytes": 2303,
+    "role": "unchanged plain input"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧫️fixtures/🎟️insertion/🔣️.json",
+    "sha256": "26c42216c926aaf39a838756cedf669a9ac03ce33290ab31a4bdc9f386724b65",
+    "bytes": 18010,
+    "role": "unchanged plain input"
+  }
+]

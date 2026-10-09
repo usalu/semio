@@ -1,0 +1,14 @@
+{
+  "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🚼️construction/🦀️.rs",
+  "sha256": "40aedb797559bf407f07c04c05985a1a2578c62d739752568633f242e9be4d2b",
+  "currentExplicitDebugImpls": 1,
+  "authored": false,
+  "actualRed": "pub-foreign-collection-native.log E0119 at lines10/11",
+  "currentDiagnosticFields": [
+    "error",
+    "original_address",
+    "has_ticket",
+    "progress"
+  ],
+  "qualification": "Current source already has exactly one implementation; no deletion/adoption or native resolution credit"
+}

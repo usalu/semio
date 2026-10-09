@@ -51,6 +51,13 @@ export function geometryInferenceOracle(directory: string): number {
   const request = ajv.compile(JSON.parse(readFileSync(resolve(root, "📥️request.json"), "utf8")));
   const result = ajv.compile(JSON.parse(readFileSync(resolve(root, "📤️result.json"), "utf8")));
   assert(request(fixture.request), JSON.stringify(request.errors));
+  const { retained, ...withoutRetained } = fixture.request;
+  assert.equal(request(withoutRetained), false);
+  for (const axis of Object.keys(retained)) {
+    assert.equal(request({ ...fixture.request, retained: { ...retained, [axis]: -1 } }), false);
+    assert.equal(request({ ...fixture.request, retained: { ...retained, [axis]: 0 } }), true);
+  }
+  assert.equal(request({ ...fixture.request, retained: { ...retained, extra: 1 } }), false);
   assert(result({ ...fixture.expected, outputJson: "{}" }), JSON.stringify(result.errors));
   assert.equal(request({ ...fixture.request, operatorId: "math.add" }), false);
   assert.equal(result({ ...fixture.expected, outputJson: "{}", unitsDone: -1 }), false);
@@ -72,5 +79,5 @@ export function geometryInferenceOracle(directory: string): number {
   assert.notDeepEqual(JSON.parse(fixture.request.dependencyJson), JSON.parse(fixture.changedDependencies.dependencyJson));
   for (const phase of fixture.replacement.pendingPhases) assert(result({ done:false,cancellable:true,phase,unitsDone:0,unitsTotal:0,outputJson:fixture.replacement.outputJson }));
   assert.equal(fixture.replacement.initialUnits,fixture.expected.unitsDone);
-  return 10;
+  return 22;
 }

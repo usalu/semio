@@ -1,0 +1,12 @@
+{
+  "kind": "original-detached-native-receiving",
+  "maximumBytes": 100,
+  "firstOwnedBytes": 8,
+  "secondOwnedBytes": 3,
+  "finalOwnedBytes": 11,
+  "wrongRecipient": "refuse-with-original-receipt",
+  "phaseReset": false,
+  "terminalOwnerDropBytes": 0,
+  "firstText": "original",
+  "secondText": "new"
+}

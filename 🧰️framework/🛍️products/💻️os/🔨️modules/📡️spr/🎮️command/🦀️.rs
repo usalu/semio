@@ -265,11 +265,9 @@ where
     fn may_emit_foreign_steps(&self) -> bool {
         false
     }
-    /// 🌐️ Foreign steps this kind additionally dispatches to OTHER artifacts. Defaults to
-    /// `Vec::new()` so no existing handcrafted `impl MutationKind` breaks; `#[derive(Mutations)]`
-    /// gains a per-variant delegating arm (see `🗣️dsl/✨️derive/🦀️.rs` `🔖️Mutations`).
-    fn foreign_steps(&self, _base: &P) -> Vec<ForeignStep> {
-        Vec::new()
+    /// 🌐️ Borrows one declared original foreign source under the original snapshot.
+    fn foreign_step_source<'a>(&'a self, _base: &'a P, _index: usize) -> Result<Option<ForeignStepSource<'a>>, semio_framework_value::ValueError> {
+        Ok(None)
     }
 }
 
@@ -819,6 +817,10 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
 pub trait CompositeMutationKind<P, Op: Mutation<P>>: MutationLeaf + Clone + protocol::value::ToValue + protocol::value::FromValue {
     const SEMANTICS: SemanticDescriptor;
     fn plan(&self, base: &P, planner: &mut Planner<P, Op>) -> Result<(), PlanError>;
+    /// 🌐️ Declares foreign capability without executing the local plan.
+    fn may_emit_foreign_steps(&self) -> bool { false }
+    /// 🌐️ Borrows an original declared hop; domain refusal remains explicit.
+    fn foreign_step_source<'a>(&'a self, _base: &'a P, _index: usize) -> Result<Option<ForeignStepSource<'a>>, semio_framework_value::ValueError> { Ok(None) }
     fn label(&self) -> crate::LocalizedLabel;
     /// ⏱️ Returns only the clock explicitly carried by this composite payload.
     fn timestamp(&self) -> Option<protocol::ids::HybridLogicalTimestamp> {
@@ -839,21 +841,6 @@ pub fn plan_of<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind:
     Ok(planner.into_steps())
 }
 
-/// 🌐️ The [`ForeignStep`]s of a composite's plan, in discovery order — what
-/// `#[derive(CompositeMutation)]`'s generated `MutationKind::foreign_steps` delegates to. A
-/// planning failure folds to `Vec::new()`, never a panic.
-pub fn plan_foreign_steps<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Vec<ForeignStep> {
-    let Ok(steps) = plan_of(kind, base) else {
-        return Vec::new();
-    };
-    steps
-        .into_iter()
-        .filter_map(|step| match step {
-            PlanStep::Foreign(foreign) => Some(foreign),
-            PlanStep::Local(_) => None,
-        })
-        .collect()
-}
 //#endregion 🔖️Composite
 
 //#region 🔖️PayloadLaw

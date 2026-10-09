@@ -1,0 +1,20 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+  "beforeSHA": "444556cfb3e57204718e7176b75ae309d75acfaf8cfb1723348d36593f296b0e",
+  "afterSHA": "4621f89e5fa89a15b8a8f0230ae6008279db320a4ab33bc6f8df61668aa2a098",
+  "actions": [
+    {
+      "scope": "fn admit_demo_alias_retirement(",
+      "beforeBlockSHA": "8f7373c5fc0a817af20ec13d6ffba4bf5339271c431d0350a9f876c0c5b42505",
+      "afterBlockSHA": "ceca6b3d78bdc87b334474011d31687edb14e98a02a35bcb2efb47008d5f3589",
+      "action": "original configured test policy supplies positive birth authority; demand stays frontier/one-below negative input only"
+    },
+    {
+      "scope": "async fn artifact_store_snapshot_roots_and_final_envelope_transfer",
+      "beforeBlockSHA": "eb7669ba12fac83749ecf5b83f75e4b3db5c1ca09ca887ad8cdbe7ceb678dc56",
+      "afterBlockSHA": "1f45ba53590414c0c26ef04c36f13e83aa34efcc48f9ecbf7a310bbab1793283",
+      "action": "original configured test policy supplies positive birth authority; demand stays frontier/one-below negative input only"
+    }
+  ],
+  "nativeExecuted": false
+}

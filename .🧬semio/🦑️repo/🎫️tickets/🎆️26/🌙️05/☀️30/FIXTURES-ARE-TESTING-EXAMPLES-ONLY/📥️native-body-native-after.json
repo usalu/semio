@@ -1,0 +1,67 @@
+{
+  "terminal": "66763 actual Nx1/2m40s; one located E0599 in VCS entity-identity control test; zero native assertions",
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+      "beforeSHA": "e01deb1911e0debe1515bc56920bf3e172731ac90e0fed953fbc59ff25dad44f",
+      "afterSHA": "e01deb1911e0debe1515bc56920bf3e172731ac90e0fed953fbc59ff25dad44f",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs",
+      "beforeSHA": "3ee99e16f43b5c6af0aa04e94241784bf1f9f6c3492cd7c483e258d28f915ba9",
+      "afterSHA": "3ee99e16f43b5c6af0aa04e94241784bf1f9f6c3492cd7c483e258d28f915ba9",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🪆️receiving/🔣️.json",
+      "beforeSHA": "4334312f31766785a3a0b72304db33c2be718d6c7b3ba237c47fb1778a71269b",
+      "afterSHA": "4334312f31766785a3a0b72304db33c2be718d6c7b3ba237c47fb1778a71269b",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+      "beforeSHA": "ca0e18ddd77f14d5c2bd7c103e7410e9ad0a64fc269d3ffc6f0ef662acd7590e",
+      "afterSHA": "ca0e18ddd77f14d5c2bd7c103e7410e9ad0a64fc269d3ffc6f0ef662acd7590e",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "beforeSHA": "24d17f507c4c3e3839f1aa7289f0aed1dcb79a27acf543c402f23b20ef17a167",
+      "afterSHA": "24d17f507c4c3e3839f1aa7289f0aed1dcb79a27acf543c402f23b20ef17a167",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSHA": "37a8d9880c42b9012f4a3a5e209bba1b87cd16b3b0d065d96f8670194a0c9edd",
+      "afterSHA": "37a8d9880c42b9012f4a3a5e209bba1b87cd16b3b0d065d96f8670194a0c9edd",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "beforeSHA": "28649679f2d4ab784521da3dad0ebdec8e3e665629400e2dff51c2b86b05db94",
+      "afterSHA": "28649679f2d4ab784521da3dad0ebdec8e3e665629400e2dff51c2b86b05db94",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+      "beforeSHA": "0d9ef8669aba75a59c3a7cc6625032e5c804a10125deadaf7ded2ad7e6fe93bd",
+      "afterSHA": "0d9ef8669aba75a59c3a7cc6625032e5c804a10125deadaf7ded2ad7e6fe93bd",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSHA": "8e529bda73ec6fdb0f67edb7b5375ee375742c5527ff125c3b419bac58f8e48e",
+      "afterSHA": "8e529bda73ec6fdb0f67edb7b5375ee375742c5527ff125c3b419bac58f8e48e",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "beforeSHA": "713285c5e6d3580e6e923926a4f306e10e45df26d3a8e0077e1e492548a9bf60",
+      "afterSHA": "713285c5e6d3580e6e923926a4f306e10e45df26d3a8e0077e1e492548a9bf60",
+      "matches": true
+    }
+  ],
+  "knownOwnLive": [],
+  "foreignJobsPreserved": true
+}

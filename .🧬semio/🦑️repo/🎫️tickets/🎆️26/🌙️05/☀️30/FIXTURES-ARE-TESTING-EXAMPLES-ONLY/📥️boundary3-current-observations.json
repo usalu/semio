@@ -1,0 +1,58 @@
+{
+  "command": "bun nx run workspace:schema-fixture-boundary --skip-nx-cache --outputStyle=static",
+  "session": 20903,
+  "exitCode": 1,
+  "durationSeconds": 50.8,
+  "modules": 4688,
+  "scopes": 3754,
+  "findings": [
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧫️fixtures/🔭️observer/🧬️.json",
+      "detail": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧫️fixtures/🔭️observer/🧬️.json defines schema authority inside examples. Ordinary parser specimens require an explicit inert data declaration.",
+      "sha256": "d91279de5ec02e3ded4fe39ce63ec0747782c74f0bec2108c2c5e13c8d12f379",
+      "currentKeys": [
+        "$schema",
+        "$id",
+        "type",
+        "additionalProperties",
+        "required",
+        "properties",
+        "$defs"
+      ],
+      "classification": "read-only observation; not authorship"
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧬️schema/🎟️insertion/🔣️.json",
+      "detail": "The document defines a test corpus contract outside the admitted schema facets.",
+      "sha256": "83ee893b699bc2fba89259e1bab3013d2520fe2a164f7c8bcc9d969c8549c202",
+      "currentKeys": [
+        "$schema",
+        "type",
+        "additionalProperties",
+        "required",
+        "properties",
+        "definitions"
+      ],
+      "classification": "read-only observation; not authorship"
+    },
+    {
+      "code": "schema-fixture-defines-schema",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🎟️preparation/🧬️schema/🔣️.json",
+      "detail": "The document root defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas.",
+      "sha256": "8e012774b76fa845077b31f7558dd59fc92bb087dc1d5d2e72d23a7d2e328bbd",
+      "currentKeys": [
+        "$schema",
+        "$id",
+        "type",
+        "additionalProperties",
+        "required",
+        "properties",
+        "$defs"
+      ],
+      "classification": "read-only observation; not authorship"
+    }
+  ],
+  "limitation": "Boundary inventory only; no native or runtime purity proof."
+}

@@ -1,0 +1,46 @@
+{
+  "schema": "framework.plugin.original-member-ingress-headers.v1",
+  "currencies": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "phases": [
+    "request",
+    "field",
+    "identity",
+    "registry-entry",
+    "registry-page",
+    "registry-backing"
+  ],
+  "originalGrant": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "deniedCurrencies": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "fields": 10,
+  "texts": [
+    "original",
+    "ursprünglich",
+    "雪🧵"
+  ],
+  "capacities": [
+    16,
+    257,
+    4096
+  ],
+  "separateRegistrySeal": true,
+  "childCompleteIsParentProgress": true,
+  "nativeHeadersMustBePaid": true
+}

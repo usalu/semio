@@ -1,0 +1,721 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "logicalActions": [
+    {
+      "owner": "DelegatingSpaceMember seven identity caller methods",
+      "beforeBlockSHA": "a5d3e45008f653edf2de0b5248885d267172cb0740474f95d1cc8163bebe2168",
+      "afterBlockSHA": "f63b45484f08f488594a86f379216d4802d1081399bb0c8d0a23ca2f81c966dc",
+      "action": "forward exact borrowed caller EntityIdentityAuthority through all canonical methods"
+    },
+    {
+      "owner": "UnusedEditDecoder two ZST definitions",
+      "action": "use genuine typed FactoryPayloadRetirement derive; no heap payload and canonical paid Arc/ticket release",
+      "beforeBlockSHA": "8e976ce37a3977c8fb213772b0069e4e8499ea9de6dc0f3c9f0d1aa0e68e79f1",
+      "afterBlockSHA": "032b9b3707d06b191f468e8d58c49fd72425bcff19469702a2616af1ae42b361"
+    },
+    {
+      "owner": "ReleaseOnlyCatalog two ZST definitions",
+      "action": "use genuine typed FactoryPayloadRetirement derive; no heap payload and canonical paid Arc/ticket release",
+      "beforeBlockSHA": "3771bd0e5b3973d13f84d7bf69467615511f0ef12edd4ec8746917d4e8b9c243",
+      "afterBlockSHA": "e2b58f8c9ab550ab4663336307cfdc9d36bfbf8a673261165e971464e5d97b70"
+    },
+    {
+      "owner": "retained_member_common_root_copies_history_under_grant_and_publishes_three_lanes_once",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "c7cfcf25e45738fff9e2cdff2478e11dc4908bf3a674f4cea2809d5033ceb4a3",
+      "afterBlockSHA": "21a9737edf817031783288072eed09f9f4e46206a983126ce03040f721b9de2d"
+    },
+    {
+      "owner": "derived_child_reads_require_the_exact_store_frontier_and_genuine_operation_or_history_fold",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "98d4962d889df1f53438c7750149fe4b5cf801b6176ea59f7734bf0308e5640a",
+      "afterBlockSHA": "845562eadbbdfabb457864ed75fa784f2209a30e0ee6735eededef3fe111d4ce"
+    },
+    {
+      "owner": "apply_undo_redo_transfers_each_snapshot_root_to_one_exact_retirement_owner",
+      "action": "forward original caller identity through 3 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "bacfd37089f5970da9618185ba8b3b3c918af42179153c9365031f440f4eae9d",
+      "afterBlockSHA": "3de974904308611ff4c25977f041f5cd267c67e1810165b2d66b1514e86ae60f"
+    },
+    {
+      "owner": "store_close_waits_for_a_live_snapshot_read_then_retires_its_returned_owner",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "c081252f17cdb43d61a7fa12ee1a7fc1d84c982e6a7d770d488163880eab2d60",
+      "afterBlockSHA": "841fe7283834312b1a02d8ac39b4ab8ae49e4bbdd991ed565e3654f5436220b5"
+    },
+    {
+      "owner": "space_checkpoint_commits_dirty_members_and_pins_their_checkpoints",
+      "action": "forward original caller identity through 3 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "889c766858f06d8c02230669b8c84f38d04a167cb1d458487bc4f566d4bb5a53",
+      "afterBlockSHA": "b57c4d3c7c82ead9376c36b9b8b65a5f6379c396aebb7c03e5feace92dd3457e"
+    },
+    {
+      "owner": "space_vcs_host_meta_document_is_backbone_attachable_and_detachable",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "ece2e4cd6bcc65ce86c16f18e68fa42c5506901c5993d750c10a9370e2e2eaf8",
+      "afterBlockSHA": "191b080dd569527f3fb0332c144bf6b3174d53db1b0e5a41e4a4b8abfdfdf6e3"
+    },
+    {
+      "owner": "space_checkout_checkpoint_fans_out_and_restores_pinned_member_state",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "3b3785ecc5c9af7cc6a9fa9b31133f73bd264adf9b4cdb162fa5c7f9011ae0e7",
+      "afterBlockSHA": "fbf51c536d693865ef550ed0aebbd0bcb38af8153c9cd819366907fbf7ec7809"
+    },
+    {
+      "owner": "space_switch_alternative_fans_out_and_restores_pinned_member_state",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "dc01f1d0764fb06cdf6b87835a8e2e93170953388f4b724c126fe1f5dcd17502",
+      "afterBlockSHA": "7849db93c543e4feb6d46e8d21e4f65da298f0e98e49b33ac309c1682fb68bac"
+    },
+    {
+      "owner": "space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "d16e97d6bb143fcc2b4b62ec1776a3098a67e9a93001414ea0c6cd47aafd1c8f",
+      "afterBlockSHA": "4d25695ae20ff4c1f14702a1b88c4cbb4da7fa1599817e89a16949f8e38baf0a"
+    },
+    {
+      "owner": "snapshot_matches_materialize_and_conflicts_stay_empty_absent_remote_ingestion",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "7332c3ff43bb1863118bba2c5ddbe97f69cc79da82b074937066fb4268c6591a",
+      "afterBlockSHA": "510f3f220f051971fdbf58f5a3d34ca24364762487134e87324287893a16e484"
+    },
+    {
+      "owner": "document_text_round_trips_authoritative_metadata_messages_conflicts_and_cursor",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "e0a4efd0beb9bbcd1f09c53a3b93d1e40f3f352559186bcca8912c9fd8232b8a",
+      "afterBlockSHA": "4f24bd8f0b9932a075ba5fd244df22bfb02a80aea823f2b3fbe7ba084e103fea"
+    },
+    {
+      "owner": "document_text_rejects_missing_metadata_and_dangling_transitions_without_synthesis",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "fe814a71494bb5b88ec8fa32d01a85f173179b478c3f54f895074b7050f63ced",
+      "afterBlockSHA": "b94fc842c7470cb37dc61f407d1f9d78daf1529cae58ab131c12ed3773b8f0f7"
+    },
+    {
+      "owner": "document_text_preserves_non_contiguous_edit_sequences_and_rejects_invalid_ones",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "78c60e52fd9771a624c35a6d5da5782837fb05027b7f93d6f0bc65f8d1fdc99c",
+      "afterBlockSHA": "16b2c03f14e23fec1f8f5afce04698eb6bbe1c2673cfcf7f52a8fcce4384aa53"
+    },
+    {
+      "owner": "persisted_conflict_requires_a_global_owned_operation_index",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "ff4ab48eb43e9a64d5394044728ed6dc37bd834943f22eeaedb6afed255dc3a6",
+      "afterBlockSHA": "b00fd8f53b14b3f2b05d168ffec19acd7326328d43d1a3ae6afbf55ace15af40"
+    },
+    {
+      "owner": "spr_round_trip_preserves_edit_messages_and_conflicts",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "6b754b26bc185ae9beae6b0fb6407d56b01b780b9fd780fda8196902afd5cd5d",
+      "afterBlockSHA": "0309f563d0a10ea8693a6ec21b0d07864f0352cf5a147d23fe67561cbd22b987"
+    },
+    {
+      "owner": "spr_round_trip_preserves_state_dependent_error_codes",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "26a1aa721d519eadad8fc35deebe10ec27c8338a2b8ed4cc4ef0666df7a3a924",
+      "afterBlockSHA": "47298ddc26ec33d1e14c710e08d9b17e3738c24afaf2d7bd4b1e92ef0e1b3900"
+    },
+    {
+      "owner": "document_text_round_trips_with_an_active_alternative_and_a_quoted_description",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "14bc3b71f775c53c2c249ac02fb51ad5147c8608a2b5b8a0af9217c5655fde4a",
+      "afterBlockSHA": "8a8ea87a2acf8ed426e4efa28f6fe43042136f4a04b59b944fe5e48af08af7fd"
+    },
+    {
+      "owner": "document_text_round_trips_a_cursor_after_undo_then_apply_interleaving",
+      "action": "forward original caller identity through 3 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "2dfe4e84931aef47c5ee80fd6d7dd0129f1d60a4b52f5c55fb462e3bb9ae0b55",
+      "afterBlockSHA": "72363c01824aa4a41d88cf38cf0530d63c5239c411882850dde9ee9cfb1ebd68"
+    },
+    {
+      "owner": "save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position",
+      "action": "forward original caller identity through 6 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "891a03f5471a3f53e8cab344ee55dc283d674911af361e39e3a3932ff39b10dc",
+      "afterBlockSHA": "63fbb172c9cd532ad6cd06043db8c8452eba57025ce534236e213167322ccdc5"
+    },
+    {
+      "owner": "document_codecs_share_complete_authoritative_history_validation",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "bc742cc4ab3484c12d2a84ce708905d457560bbfbd2395866a06619a28f2b143",
+      "afterBlockSHA": "3892391caa9ace7f5552ddecb5f25ff55318b27dc10a00884d2d63dceedce405"
+    },
+    {
+      "owner": "apply_with_no_mutations_is_rejected",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "0ce668dcb5cc4b808a3a6131dd83424117d88a4ddcb9bf8f4943081d20bd315b",
+      "afterBlockSHA": "f80603e0faa65d514624728427fbbdf4143d31a8fc3a4a9294cd1ce083080a23"
+    },
+    {
+      "owner": "undo_with_nothing_applied_is_rejected",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "4c8ce2aa2b74ffcb688b95e64a6a489d2afec8ad228f9684b08e07102b7e1bbe",
+      "afterBlockSHA": "e8b96750ecd072b76e909a786353444c7bc05a93ac78e15948eb2007f7ca6355"
+    },
+    {
+      "owner": "redo_with_nothing_undone_is_rejected",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "dd1179eca2d7e88c2c1975c14a1634a98657201f0822d5c6d4329fd014487b35",
+      "afterBlockSHA": "d8385cc7b6002b30346387e3b64b6e55c42fda9ffdde607ef3b2a7f75bc85cfa"
+    },
+    {
+      "owner": "checkout_of_an_unknown_checkpoint_is_rejected",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "86639884c834f974aee83b72874f5123b23eabe1589b3b932e04699ed50e6245",
+      "afterBlockSHA": "f005b993019be92cde96e1b611dd451ce55d3d313db5d890055650803d27955f"
+    },
+    {
+      "owner": "switch_to_an_unknown_alternative_is_rejected",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "cbf92ff4423638f8a2f8bcb91fd6e0e36afc0d87115cd06ed0f0d6243d809ae6",
+      "afterBlockSHA": "4bb8a22b1c2ab3b141738a0cec998c707cd361b8476809a9664c2c4c4aecfe23"
+    },
+    {
+      "owner": "create_alternative_with_no_edits_and_no_checkpoints_is_rejected",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "83372e3e359f0db401520fcea39f183adc57ce54ddd456aa24acd3548ce58caf",
+      "afterBlockSHA": "ca3f8be74848985878cd9aed39b2a617cd300fffa6cccfeed7941dea2f595f12"
+    },
+    {
+      "owner": "compensating_undo_without_a_semantic_command_is_rejected",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "53e312e53e9a8c3ceedc1d9907259d76f48145fa58c6ee0eed84133adb2a0b38",
+      "afterBlockSHA": "6e5b79f4409a583bdb0d7bbd3211229ffdc6499f8e99f3c35086daec7559ac08"
+    },
+    {
+      "owner": "reconcile_alternative_pins_the_latest_checkpoint_and_optionally_records_a_reconciliation_checkpoint",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "484cdbd348e19dbde7352a7434172576014080170bdba83554e30fac0875cdeb",
+      "afterBlockSHA": "3bf24ce081ede9c53897892a71f03e0ca8537d21b1793f7a3884ea720c311c98"
+    },
+    {
+      "owner": "commit_checkpoint_mints_distinct_content_addressed_ids_for_distinct_commits",
+      "action": "forward original caller identity through 4 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "7310b34b1f25acd7806d2d97d84bd3b60ad3cba27993f48f9e4497b400963409",
+      "afterBlockSHA": "bec46dc193bd85f764d4bc3c78ae4c6ddadfa0327ddefa52607c257b9f938442"
+    },
+    {
+      "owner": "merge_base_finds_the_nearest_common_ancestor_across_a_fork",
+      "action": "forward original caller identity through 9 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "9ffc4eb69e392cdcbac8665b7cb971d78e988adf4b13fc96e9d6a5cab3572287",
+      "afterBlockSHA": "48bd3ac94b2c45254d718d398e84bef175418ab9aa1e4057da26dd36718c3f2c"
+    },
+    {
+      "owner": "merge_base_is_none_for_a_dangling_unknown_checkpoint_id",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "e08ad7ddfbc1e9c48b528333e5892cb8d163ab216bb6d0e7b9fc863f9a3109e3",
+      "afterBlockSHA": "abdc915848b3d741717002ef7a3b260bfa56597fa90b63cfea260bba295f4216"
+    },
+    {
+      "owner": "event_log_catch_up_adds_only_unknown_events_and_derives_their_records",
+      "action": "forward original caller identity through 4 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "062b105e12a4b59264f443676273777d8d5bc44c316b794cd719b53a298f126d",
+      "afterBlockSHA": "1ddb1cd707f579f58de034c512d650feefdb9ac72d1062bf18ca4ec01704996a"
+    },
+    {
+      "owner": "structural_history_replicates_as_events_over_a_backbone",
+      "action": "forward original caller identity through 3 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "447eea3baa8078568cceff595b8b444fe25033888dab9971c675f976ff9b30d8",
+      "afterBlockSHA": "8ca7cca2501d7117aaf4b4f5a0adbff94dbcf2b4e0fa67b727a8afe60c81f836"
+    },
+    {
+      "owner": "a_concurrent_checkout_and_edit_converge_in_either_arrival_order",
+      "action": "forward original caller identity through 6 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "52a6585df31a2b683bc2767f7e532df0fa525794657165dbc71498f31b4a1143",
+      "afterBlockSHA": "31ea9ea0d2129f0863ef603e728f44084c8b02061cf303d758371f1cbde043eb"
+    },
+    {
+      "owner": "reload_replays_the_event_log_into_the_same_positions",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "17a9646a3fc31d2106cb9769b05aded03013277883c5572cac2bbfa140bd2212",
+      "afterBlockSHA": "ef2b8f85cf3326d04ce510e1e749b9d83954ce4e8c925ee660e070d6641b3ba9"
+    },
+    {
+      "owner": "space_member_checkout_switches_at_the_alternative_tip_and_falls_back_to_checkout_when_stale",
+      "action": "forward original caller identity through 4 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "3b7c206f25dac617b2244515ec56666434844b88c399cba1afee5936916e5fe5",
+      "afterBlockSHA": "dd5fb93cc88f3dd65b3d2c18ff685ebab819691e5f66e9f54784cb7241f05b18"
+    },
+    {
+      "owner": "typed_child_store_factory_round_trips_a_child_through_create_persist_open",
+      "action": "forward original caller identity through 3 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "35e33b39f2ded6dc32bf264d2cf93d6d634885e00b8c32681fa5484c6101d286",
+      "afterBlockSHA": "cd049426b1174cf024716c8c5775a6f4ee3266ae172b83b8a6f16d0104097a67"
+    },
+    {
+      "owner": "pack_at_checkpoint_reads_history_without_moving_the_live_cursor",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "ece5150592b89d104530e12a7da203ae534e969e896f6a21df9ca8164579d47e",
+      "afterBlockSHA": "6b78d72e36b57c65359e53837c5e64caf6b3c70bb5801c49aa42a87f8efb6b5c"
+    },
+    {
+      "owner": "member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pins",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "2a70c1718f0de86c100c3e3bb4ae3fe4b1b663f83ce65eb54b32b9739465df7b",
+      "afterBlockSHA": "7ed576c4ded6bda0ede456ebda5f0f8b95710978d430d6d613523a6286df7cac"
+    },
+    {
+      "owner": "compensate_undoes_applied_members_in_reverse_order",
+      "action": "forward original caller identity through 3 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "c09ef4aad172ad8f732cbebcac6e60493e841ec5dbb29d224d328421128d2c60",
+      "afterBlockSHA": "e2b5780ffa7f447abf67ba8e819f9043b82750053bfacf7c5039e0a223972a30"
+    },
+    {
+      "owner": "compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_compensation_failed",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "39f3d4e3bf9946894f6b79c49ce69392a28248987e9acf7d0275019607aa85b1",
+      "afterBlockSHA": "9f174ae5017a4fb719432f9f41573fd6fe855d58fdc7952459a3df4b43eeea03"
+    },
+    {
+      "owner": "undo_group_skips_a_foreign_tail_member_but_still_undoes_the_rest",
+      "action": "forward original caller identity through 3 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "416095ffd203d1a21653102c200f50207fe7ed7801f048200c0fafe61f54698a",
+      "afterBlockSHA": "2a877cf687acfa497253a63996c5c28b60e8188d2ec1165d1624cabab3234b06"
+    },
+    {
+      "owner": "redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest",
+      "action": "forward original caller identity through 4 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "cd602de6baa183e29b379774a3701e3024fe6c2c8b29b12f2495b6c92657cf36",
+      "afterBlockSHA": "b5819d9781f2a5c17eeaaaa6ed90e3034914df09ad5d3a87ac5572f57f3f8ea2"
+    },
+    {
+      "owner": "compensate_undoes_applied_peer_members_in_reverse_order",
+      "action": "forward original caller identity through 2 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "4f8172e5110c4d8fb73af319cd46b6f0f7fdfdf62b48d6efc16dde0049263f16",
+      "afterBlockSHA": "9c17ec56cf9645574a6f5a439f923afad90e778452035c5de7bf36f83a1a6f5e"
+    },
+    {
+      "owner": "fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_operation_id",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "3da836485d63639c69fa3c4614bbccc088c82b4fa9d89770d4230a36d262044a",
+      "afterBlockSHA": "8213d6332c3848e5c2734a35a193053771451d5e239e576cbc72a35329f7f601"
+    },
+    {
+      "owner": "opened_actor_ownership_obeys_the_neutral_law",
+      "action": "forward original caller identity through 3 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "64ae87e3807c9d26e7f8fd0769c6b7b522210ce421b7d130ef5a27ee5f9961c7",
+      "afterBlockSHA": "3a8eb5979f6ec8e57845e45a3ec5005d5caa165a6d1915dd58357a0cbb7a823d"
+    },
+    {
+      "owner": "retained_hydrators_refuse_actorless_history_from_the_neutral_law",
+      "action": "forward original caller identity through 1 direct authoring calls; fixed independent201-page caller policy and returned original receipt",
+      "beforeBlockSHA": "3d0a33ac35904619c6485da1e976c2e6c7e175e038a92ebb280c8c79dd4ebaa3",
+      "afterBlockSHA": "e2e66ae7dabad0ed64b4f9492fa847ddc808ccb84795e1613ebb519e7c7bd0b5"
+    },
+    {
+      "owner": "space_checkpoint_commits_dirty_members_and_pins_their_checkpoints",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; reuse existing caller authority",
+      "beforeBlockSHA": "b57c4d3c7c82ead9376c36b9b8b65a5f6379c396aebb7c03e5feace92dd3457e",
+      "afterBlockSHA": "1771cf23610f40106601bd2f6faf5491caab5b4ec72d021d9c1ad288fb4fe1fe"
+    },
+    {
+      "owner": "space_vcs_host_meta_document_is_backbone_attachable_and_detachable",
+      "action": "forward original caller authority through 2 canonical authoring/group calls; reuse existing caller authority",
+      "beforeBlockSHA": "191b080dd569527f3fb0332c144bf6b3174d53db1b0e5a41e4a4b8abfdfdf6e3",
+      "afterBlockSHA": "e5a426fd6189ec34f779cc2f0784937bb27133155714bf7c6fd6939c048957ef"
+    },
+    {
+      "owner": "space_checkout_checkpoint_fans_out_and_restores_pinned_member_state",
+      "action": "forward original caller authority through 3 canonical authoring/group calls; reuse existing caller authority",
+      "beforeBlockSHA": "fbf51c536d693865ef550ed0aebbd0bcb38af8153c9cd819366907fbf7ec7809",
+      "afterBlockSHA": "7db3e58cc80bde2843f78f2630f2ae1cf59d2f9d60855d6eb8c15ecf321f72eb"
+    },
+    {
+      "owner": "space_switch_alternative_fans_out_and_restores_pinned_member_state",
+      "action": "forward original caller authority through 3 canonical authoring/group calls; reuse existing caller authority",
+      "beforeBlockSHA": "7849db93c543e4feb6d46e8d21e4f65da298f0e98e49b33ac309c1682fb68bac",
+      "afterBlockSHA": "80e8a252138e63b26d32e34a1d0d736bda9c8772fbe6d108db29fe93b98ef4f2"
+    },
+    {
+      "owner": "space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt",
+      "action": "forward original caller authority through 2 canonical authoring/group calls; reuse existing caller authority",
+      "beforeBlockSHA": "4d25695ae20ff4c1f14702a1b88c4cbb4da7fa1599817e89a16949f8e38baf0a",
+      "afterBlockSHA": "905f52085c31ee6a4ffd120e4ffb894762671831897a9d388b3d2db1f23a8be4"
+    },
+    {
+      "owner": "dispatch_text_applies_a_command_block_and_snapshot_json_reflects_it",
+      "action": "forward original caller authority through 2 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "dd9b1487c70dc394848052ada6e00eb71fc9b0f7721d444be9918aae816bda8f",
+      "afterBlockSHA": "1726a56eb457ac4235bd88895d73c179f1554646118b89407c6ab940e8782eed"
+    },
+    {
+      "owner": "dispatch_binary_applies_an_encoded_command_and_rejects_wrong_format",
+      "action": "forward original caller authority through 2 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "bc2e1696069a69ab42ab2e6f26832bd2f0270bbac21d1788ae0c6c3bc2430910",
+      "afterBlockSHA": "e8b98c4bafbb0b24aba0fd85642fd244292239e17c07d3241756d6427e0bbf74"
+    },
+    {
+      "owner": "dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "41178e3cb7e2019c0fdb9eea9e509c378d355e37241ab8d5d1bbfc51145c6930",
+      "afterBlockSHA": "f06b8c1bb6575b88a74d3be93db57c54d0e5e246ce0d80fc1811254f6afb1e50"
+    },
+    {
+      "owner": "dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "825b3d00593fe3c7a5b7e4960e2b4e92f282a2c418e0e20d7c33a1b898ca7874",
+      "afterBlockSHA": "db1fff4dede6765f35d7860d123f900bcb778c0a2ae4169c5717175048d8c88d"
+    },
+    {
+      "owner": "compensate_undoes_applied_members_in_reverse_order",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; reuse existing caller authority",
+      "beforeBlockSHA": "e2b5780ffa7f447abf67ba8e819f9043b82750053bfacf7c5039e0a223972a30",
+      "afterBlockSHA": "fd25bc935f279e5ef3e633a25c97bb57c677b4e4c42116b8e2c18eafe31ced92"
+    },
+    {
+      "owner": "compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_compensation_failed",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; reuse existing caller authority",
+      "beforeBlockSHA": "9f174ae5017a4fb719432f9f41573fd6fe855d58fdc7952459a3df4b43eeea03",
+      "afterBlockSHA": "a92d7203be801f15b48538ccd0303da2f3d794c622ef548cc86bbfc51f7857ec"
+    },
+    {
+      "owner": "dispatch_group_mints_genesis_child_ids_deterministically_across_replicas",
+      "action": "forward original caller authority through 2 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "f5e41f76e36750f44ee41a0370b564815d493ccc53f650a112c7cd506fe3b7b5",
+      "afterBlockSHA": "a55aba2ab9c6aba1eb59cf67aba593704a071eadca67b8ab9a2a3552a1dfc264"
+    },
+    {
+      "owner": "undo_group_skips_a_foreign_tail_member_but_still_undoes_the_rest",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; reuse existing caller authority",
+      "beforeBlockSHA": "2a877cf687acfa497253a63996c5c28b60e8188d2ec1165d1624cabab3234b06",
+      "afterBlockSHA": "bc128fc0b20784fbae93dbca2f2daba8fcf4dbb5ba56f859ba82183e4f16dfea"
+    },
+    {
+      "owner": "redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; reuse existing caller authority",
+      "beforeBlockSHA": "b5819d9781f2a5c17eeaaaa6ed90e3034914df09ad5d3a87ac5572f57f3f8ea2",
+      "afterBlockSHA": "e2653aab2475fdfbe75a7b2b908d48f8cc143b4934d2599b10afc21a21a38698"
+    },
+    {
+      "owner": "dispatch_peer_group_commits_both_members_with_one_shared_group_id",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "cdffef08e055cf3293cb761b4d034d920b17d1f8b0054fea2cde0bb90f089a36",
+      "afterBlockSHA": "67173751c8ccd77aa083405bca9500223dc4f08e8f947f239605b9035a8d5276"
+    },
+    {
+      "owner": "compensate_undoes_applied_peer_members_in_reverse_order",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; reuse existing caller authority",
+      "beforeBlockSHA": "9c17ec56cf9645574a6f5a439f923afad90e778452035c5de7bf36f83a1a6f5e",
+      "afterBlockSHA": "199ea35515e15c6f4d5360738499120e091ecf8291f2a300928899f983c33f11"
+    },
+    {
+      "owner": "undo_group_reverses_both_members_of_a_real_peer_transaction",
+      "action": "forward original caller authority through 2 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "c8b0468cc562f30b15a04b0990c8441cb171a87b96b56680505efa639d9eaa0a",
+      "afterBlockSHA": "5ed068cfbe0bc5fe11c069e33fa80a4d249ccc656956d1251dabe44c2459b612"
+    },
+    {
+      "owner": "dispatch_peer_group_rejects_a_transaction_that_would_close_a_peer_link_cycle",
+      "action": "forward original caller authority through 2 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "aa2fa7f8a69fea04b437c713ed760514d747176b7370c94bcb8c4057ad7afaac",
+      "afterBlockSHA": "764906c94a30f15bcb7ed55dd781d58bcdd233317087b60d64f712520652028b"
+    },
+    {
+      "owner": "dispatch_group_owned_path_never_stamps_a_transaction_origin",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "b9abe8d3586d7f7b990b5721c78e545b4ef188204a9e0d8488a140cc3eacf142",
+      "afterBlockSHA": "f80845e695eef1f336b0e80ecfc0f8bee61d2618bde5dfe9681d4a05f225cd52"
+    },
+    {
+      "owner": "dispatch_group_stamps_one_tool_transaction_on_parent_and_owned_child",
+      "action": "forward original caller authority through 2 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "450e9d9255388112ac279a7c14d49c3b9a2265733ec4c079e41bc98421263293",
+      "afterBlockSHA": "18aaed9f924664c352047ca1d2bb6940248e1e973174dec3f0f0ec933db07fab"
+    },
+    {
+      "owner": "dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_error_and_nothing_applies",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "6f5a4cef24782d7d1e9c0189eebfd555b675f863f0ed5b739759ea47d23b3a0e",
+      "afterBlockSHA": "67b18a709071214e41d7b138ef5cb80805358c9e1e682fabc4eec54d723b6e5e"
+    },
+    {
+      "owner": "dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_faire",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "dc614c19f04555b2e6b891bce7d4f946ba3d30faa45c20ef88402d765484553f",
+      "afterBlockSHA": "b72dd019be5e63d5e36b259f573906d54ea8ce49cbb49c9ede1a1b383a05d413"
+    },
+    {
+      "owner": "dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "70dd2dbdee37f14f7ce0134d2e719e33aaf9dffba83cd31853f0023ca30051e9",
+      "afterBlockSHA": "1105740a4af13d4ade9beaf6ec879e0aa1e196d74321ed9db34f0f6f98ad4a6f"
+    },
+    {
+      "owner": "group_receipt_messages_contains_the_union_with_member_path_prefixed_targets",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "b94c20234727c613180303c1b8e3feb213fc1feeb39635f53974b7d6fb3db25d",
+      "afterBlockSHA": "9222266c24f6a8659237b015cb9b04600dc93ed8c86ebcd20ed6ebc2a76a0870"
+    },
+    {
+      "owner": "dispatch_group_borrowed_child_keeps_exact_sources_on_policy_refusal",
+      "action": "forward original caller authority through 1 canonical authoring/group calls; fixed independent201-page caller ceiling",
+      "beforeBlockSHA": "2c7bd750cca4682a5499d1575e03a88795c0f860f19193d9206ae3cd07243487",
+      "afterBlockSHA": "6c2101c596ff79923f611ecea270fd5ce15a9cdadedeaa5e27e9516f6527c1de"
+    },
+    {
+      "owner": "retire_demo_envelope actual generic contract",
+      "beforeBlockSHA": "ac56b5dcb16ef8a6ed8c02ccbe6a987501787d3571834a877025f0a9b19e2c0b",
+      "afterBlockSHA": "e7ce04780463bb755354521991e323439feb270cc1a83cf0f837af0a09e8e575",
+      "action": "require defining controlled ownership from actual mutation source, no fallback"
+    },
+    {
+      "owner": "DemoMemberWirePreparation advance",
+      "beforeBlockSHA": "a8aeeddfa7da34c6b3be80f0e49208037e0249b251d314bc04c4da5bf70bfb62",
+      "afterBlockSHA": "8fb1ef16857c860c14dcb7f39a936ddce489a545e0632ed84b9436d940739539",
+      "action": "carry original child physical progress with parent depth debit; retain typed refusal original; report exactly copied borrowed byte/original request movement"
+    },
+    {
+      "owner": "original preparation readiness/pending match callers",
+      "action": "propagate actual Prepared two-field variant in 4 matches, no new fabricated progress",
+      "beforeBlockSHA": "8e53b2a54cf53ce8497618fee9fb404cea8ecca9a7837533267f067aaa4d4b14",
+      "afterBlockSHA": "e89ae6dceb4a7871230eb6ce760ebb7808e24df5cbaae5036f4bf9dc545713f8"
+    },
+    {
+      "owner": "original preparation readiness/pending match callers",
+      "action": "propagate actual Progress two-field variant in 2 matches, no new fabricated progress",
+      "beforeBlockSHA": "0c1ed8d12645c4d7931c708ad234a6a3b062b3e38a88a9ef7ffe6a8e44e9edbc",
+      "afterBlockSHA": "c46f916dc030f839aca3cc438f5a32df9dfab2b732e1702269b0fc267715cfb1"
+    },
+    {
+      "owner": "retained clone success original advance matcher",
+      "action": "retain and validate real PreparationProgress receipt under original supplied grant",
+      "beforeBlockSHA": "257469c2e7e0324b38694e8ae8a5655e2fe8b270f15ecb542d9fa8b3de1f5c9f",
+      "afterBlockSHA": "670608a2ef4d531e204dcb84497bb9da6a1ef8d5b1cf98d4a1a3263696541a6d"
+    },
+    {
+      "owner": "ephemeral test cleanup grant helper and direct consumers",
+      "beforeBlockSHA": "eec14af40e0e981f54953f335b23b3346f50f928333ea3104992fcc6933f298c",
+      "afterBlockSHA": "a3f941c3f30ad5de6a4e37103c9a505fcd240c8a08b857cb369894c35462a249",
+      "action": "remove self-priced demand grant; preserve exact immutable plain physicalCloseGrant five-axis policy and 4 consumer calls; frontier query remains only diagnosis"
+    },
+    {
+      "owner": "existing Unit cleanup driver",
+      "beforeBlockSHA": "9b189ddb80abf6df658fa4fe5399cb3c8ed30d8bc355448c49d71c8b588d43d1",
+      "afterBlockSHA": "1e43d6e621db3719d3a2c1bb9ddb76ffc7f655bedb04381c9cd51850c41fa4b8",
+      "action": "remove 1 demand-priced grants; independent immutable original physicalCloseGrant with actual demands checked within caller bounds"
+    },
+    {
+      "owner": "existing Unit cleanup driver",
+      "beforeBlockSHA": "37f5f562c9e35002c377edefe78b7e065af949a3fd4b65a4d3f0a681b6d4bd30",
+      "afterBlockSHA": "3a00ac7cb99b1d4937cd0c1e0693d424a8bf2eebd3cea02e2949287d9c15d833",
+      "action": "remove 1 demand-priced grants; independent immutable original physicalCloseGrant with actual demands checked within caller bounds"
+    },
+    {
+      "owner": "existing Unit cleanup driver",
+      "beforeBlockSHA": "0f39ab6e316f39bf1981b95f0c87e68f0ba0512822e2948e937cfd37fa8304fa",
+      "afterBlockSHA": "6970c17dd20c5c6dadaefa9a0fcd03061d9476ce269d0ee8ab8931956b2b3648",
+      "action": "remove 1 demand-priced grants; independent immutable original physicalCloseGrant with actual demands checked within caller bounds"
+    },
+    {
+      "owner": "existing Unit cleanup driver",
+      "beforeBlockSHA": "15d47e9e540af3b4335bcb679421f3b2fc18da0d7fe4720b80885fb1bc3edbf8",
+      "afterBlockSHA": "e6f204b3ba888300d6a07c6aed5c512cf63e71ab488145ee99a23d76b774c0ae",
+      "action": "remove 2 demand-priced grants; independent immutable original physicalCloseGrant with actual demands checked within caller bounds"
+    },
+    {
+      "owner": "existing Unit cleanup driver",
+      "beforeBlockSHA": "af84de8ebb6fa4c1dced7deb9b91ad182547d27e8f89ae025a95d6faac1bd01f",
+      "afterBlockSHA": "a423560f123aaff16ca641ee45676327c20c7ea4ac11cf5f59e0daf6f15dcf2a",
+      "action": "remove 1 demand-priced grants; independent immutable original physicalCloseGrant with actual demands checked within caller bounds"
+    },
+    {
+      "owner": "current Unit direct identity/hydration consumers",
+      "beforeBlockSHA": "d60001f04c7e949c220e5ae6770e5e256c6ee0dd1016d099081e8408c79883ba",
+      "afterBlockSHA": "c236922f4ccca2e67150e9f071b2757f738fd6374847408d8b9625140c0a548f",
+      "action": "2 exact consumers pass original supplied identity or independent plain full grant; no scalar bridge"
+    },
+    {
+      "owner": "current Unit direct identity/hydration consumers",
+      "beforeBlockSHA": "710eb82c4df3d079922e9bae14e1ffa691efd08327e044dc21c0ce21905a7fe9",
+      "afterBlockSHA": "66be2f1d0ef823cf40c0a186b6ffe00ce8346d47d224ea0861bdb394f5e661a7",
+      "action": "1 exact consumers pass original supplied identity or independent plain full grant; no scalar bridge"
+    },
+    {
+      "owner": "current Unit direct identity/hydration consumers",
+      "beforeBlockSHA": "5a7d7633aebd85631b566d4489b2eccf74a4d7f0367d6962c9614ccc839f8d9a",
+      "afterBlockSHA": "ff7a7d23d973aa703daed45706b02f8afe383c3bf1498508b8f80cb9821f7538",
+      "action": "1 exact consumers pass original supplied identity or independent plain full grant; no scalar bridge"
+    },
+    {
+      "owner": "original child identity convergence law",
+      "beforeBlockSHA": "dec4227b27a95e448a1add3a79b0876d5ba8f350e418c84ad96301f0a015aea0",
+      "afterBlockSHA": "d50a34fc687462f975dd719b69463dd76b8645b68b6c88c4c848540ba2740da0",
+      "action": "use actual synchronous domain fingerprint/mint under original fixed NativeEncodeControl; preserve convergence/ordinal/slot behavior"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🦀️.rs",
+      "owner": "EditMessageLedgerRetirement borrowed original rows",
+      "beforeBlockSHA": "3b070b1f7924931dfc7c235b75d9ba68828fd0b7e31f961ad53044482fa49dbe",
+      "afterBlockSHA": "f7a226ea6e1660829942e61ac5498f91ef383ab3048c5b165c6f10dbd22ebb2b",
+      "action": "genuine allocation-free original owner observer; fields and full-grant close unchanged"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "owner": "ArtifactEditMessageLedgerRejected original row forwarding",
+      "beforeBlockSHA": "ab310d89413245e15066600ae390036901c6a6023a6457aecea996553cc2381a",
+      "afterBlockSHA": "3840fbed4990e5c030965de989536ea148970df23b9ba81a8410334815824193",
+      "action": "forward exact genuine canonical owned rows; no duplicate collection or close semantics"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "owner": "duplicate.entries.len()",
+      "beforeBlockSHA": "7988b992bee5e33a82bdc20869f0a7a032086c9a32a4b672bab81535c1e07e74",
+      "afterBlockSHA": "4be12683a573b42b4dd8a21822f97bd5d1e381d9181771f493697fea60d749f6",
+      "action": "original duplicate/capacity exact retained row count law through canonical owner borrow"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "owner": "plus_one.entries.len()",
+      "beforeBlockSHA": "9d24eb1ae98952dae8a5dbca8f909a06053d3a34514fc184221c9bbaf288dee3",
+      "afterBlockSHA": "bd72fa366cd631ccb5bf011708c5faa498b8fca52101024022cc95af73398cab",
+      "action": "original duplicate/capacity exact retained row count law through canonical owner borrow"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "owner": "ephemeral excessive work preflight fixture factory",
+      "beforeBlockSHA": "33abefb74115840f21b631a1edec87515a989a0f7d425ecfec4a1a8b98570bfa",
+      "afterBlockSHA": "ae2458167183f0f1b6cf29a5a8f0961652289fcdcafa7ad2013abf8263318b3e",
+      "action": "retain actual snapshot and mutation issuers in explicit cold test setup; no granted production birth/zero receipt claim"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "owner": "impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItemPreparation { already-prepared branch only",
+      "beforeBlockSHA": "9696e5c417463773b055564e014c98afeae531feb65a78becd636d82968a4067",
+      "afterBlockSHA": "16c54c8d179e5ecf8cfa8bff1dc3fd0931b9ed102c55b312609ed9f360671d9f",
+      "action": "idempotent read of already owned prepared state truthfully has zero new physical work; original cold assembly receipt remains unresolved and is not guessed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "owner": "impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEphemeralPreparation { already-prepared branch only",
+      "beforeBlockSHA": "bc4cab10adea5c31d8578a2e6babee40217189b0e1d5908e4c26452ee98d06d0",
+      "afterBlockSHA": "3c867ac63aa5936742d965f76ab6a2992de87b6602951c22eb278673f39d22f2",
+      "action": "idempotent read of already owned prepared state truthfully has zero new physical work; original cold assembly receipt remains unresolved and is not guessed"
+    }
+  ],
+  "beforeFileSHA": "42cf77f7f5171ce12496e5a7bf941e91edcbb454560d8279ed48328b350e600e",
+  "observedAfterFileSHA": "72ed327989ab6b8068109c888a7976e4cebab37b6ac9cc8229b0cd9343cfc572",
+  "actualRed": "Kernel77921 actual14 delegate errors, original compiler flags; current block unchanged at guarded mutation",
+  "sourceCopiesAdded": false,
+  "sourceOnlyQualification": "Current compiler RED drives direct callers; no type/native runtime GREEN yet. Changed test bodies only, four native-owned constructors preserved.",
+  "grammarTest": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+    "beforeSHA": "42c3d376fc0eed3a3ab88cb06a7da02480a333f1a4fe8d56a62bd32b61898e0e",
+    "recordedAfterSHA": "a6cb48b1edeff3d296a920805cd8c6c65e242fafe00ae2ca1fc7d5206f20a570",
+    "action": "original-source independent rustfmt grammar law; stdout discarded, no Sourcecopy, no native claim"
+  },
+  "launchActions": [
+    {
+      "path": ".vscode/launch.json",
+      "beforeSHA": "6e8f0e533019f79fd07210f1822d2535e3bb40e88c6707d8126bbdab24ab438d",
+      "recordedAfterSHA": "2f8b19bada62a0f01e9dfd9b78df5541a817efee7d2f0ef66b6d333f500eb146",
+      "action": "register existing private tests target for original Unit grammar/neutral cases after durable group900.29871",
+      "entry": "🧫️fixtures-testing-only-unit-source🧪️"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeSHA": "5582e3163c7c9d349496593d8790cd7df035d726a0d4ac90be48d7ff9bf8bfa2",
+      "recordedAfterSHA": "b5b6abf6fc9e41ed80317888f61aad9ddd9defb14b92bdd4ec5d9e92a4da4c9c",
+      "action": "register existing private tests target for original Unit grammar/neutral cases after durable group900.29871",
+      "entry": "🧫️fixtures-testing-only-unit-source🧪️"
+    }
+  ],
+  "actualSourceGreen": "original Unit2laws329ms; Nx0/375ms, Rustfmt307ms with ignoredSource stdout; no native type/runtime credit",
+  "fixtureDerivationActions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "2323fa83495f8a75f1beafea50f4c379c667607550de041e30c9f07b94331a07",
+      "recordedAfterSHA": "cd1e68808eeadb2ef65e6589db5aa29ecd299069d265ed8354449ae36f9f0b5b",
+      "beforeBlockSHA": "b89840bdd45386a051f9aef96962a77ecda6e8847eb62a224310af9c7069cb70",
+      "afterBlockSHA": "a252fd760b34e697d31cbbc5ec88a1eeb860364367abc4eb1f01fea946019273"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/⚠️set-warning-n/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "2015b47f743498f3eef7577cf9c8cdf478ebc39a7b5a6497ccd1c631bb364343",
+      "recordedAfterSHA": "0bbc303f5873abed8963775335f9edd100072860a7f5f130c5838bde12d33fbd",
+      "beforeBlockSHA": "416ca5dcf1cc557489438df0c081417d1cc3c3bce87f589e6c592f8f32fa04fa",
+      "afterBlockSHA": "f8e27a96327ee7f778e2121ea2b01f99f5de010875a8fe3c51ba3673feb7f863"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🚫️set-error-n/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "0133664f69323695de0a893d8f3b608144bfd1fe1556787cc84975cc71065bbb",
+      "recordedAfterSHA": "a264c04e46022c8a53b8ab9c2cf7902ae26f68b801c4df3a53dfda6978ee7eed",
+      "beforeBlockSHA": "416ca5dcf1cc557489438df0c081417d1cc3c3bce87f589e6c592f8f32fa04fa",
+      "afterBlockSHA": "f8e27a96327ee7f778e2121ea2b01f99f5de010875a8fe3c51ba3673feb7f863"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🔢️set-n/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "69fc9b4e4ba739a716c872f85884e35b33139846af05b78c5e730263b600c913",
+      "recordedAfterSHA": "a3a55094ca6cef9104274a23ef5191d53e432054c6f166832d08dc95a8852378",
+      "beforeBlockSHA": "416ca5dcf1cc557489438df0c081417d1cc3c3bce87f589e6c592f8f32fa04fa",
+      "afterBlockSHA": "f8e27a96327ee7f778e2121ea2b01f99f5de010875a8fe3c51ba3673feb7f863"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🛑️set-fatal-n/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "3a95caac226dfa7da6ad6adf647884c9e198bcbe2af199de27ba080a635c42e8",
+      "recordedAfterSHA": "c1ea1b9a946da6d4730144d7a8b6dbf8b4f64b40eca36223f76dd0321c8af49e",
+      "beforeBlockSHA": "416ca5dcf1cc557489438df0c081417d1cc3c3bce87f589e6c592f8f32fa04fa",
+      "afterBlockSHA": "f8e27a96327ee7f778e2121ea2b01f99f5de010875a8fe3c51ba3673feb7f863"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️assign-n/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "61940d72026e7491cc49b7e1055a1b814bf7955e43d5fc23a00761bc0c551388",
+      "recordedAfterSHA": "09fd0820cbda7ea71d408cfda53026a48bb815db96cdb676ce89fc76ffba02f3",
+      "beforeBlockSHA": "416ca5dcf1cc557489438df0c081417d1cc3c3bce87f589e6c592f8f32fa04fa",
+      "afterBlockSHA": "f8e27a96327ee7f778e2121ea2b01f99f5de010875a8fe3c51ba3673feb7f863"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "beeb80006f4ce321b3606699641be83e2548aa97e7a7cb0d0032cab98a59a7a1",
+      "recordedAfterSHA": "2a4d2eb5eededcba8e1e23f1f62b90a870c5e9c062b7367ea35df6e7079fd050",
+      "beforeBlockSHA": "b89840bdd45386a051f9aef96962a77ecda6e8847eb62a224310af9c7069cb70",
+      "afterBlockSHA": "a252fd760b34e697d31cbbc5ec88a1eeb860364367abc4eb1f01fea946019273"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🔢️set-n/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "61b56a4a93db424c47c37bfb22fc4906e4f811b499d9ffd1331151ce54c36a70",
+      "recordedAfterSHA": "3e306b33efc4efd987c9b72762d580ec86347fb9edbecc78cc835beb77176051",
+      "beforeBlockSHA": "416ca5dcf1cc557489438df0c081417d1cc3c3bce87f589e6c592f8f32fa04fa",
+      "afterBlockSHA": "f8e27a96327ee7f778e2121ea2b01f99f5de010875a8fe3c51ba3673feb7f863"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️assign-n/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "0429ebef16cc9260fdac973d1b6881f7dee08815c78a41eda8dfdf844220b66a",
+      "recordedAfterSHA": "d3f77e83469901c68069897ee6132470653d5b29ebe3aefa7cb4e2d8f93ed882",
+      "beforeBlockSHA": "416ca5dcf1cc557489438df0c081417d1cc3c3bce87f589e6c592f8f32fa04fa",
+      "afterBlockSHA": "f8e27a96327ee7f778e2121ea2b01f99f5de010875a8fe3c51ba3673feb7f863"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "308794d7bc6368b76ebaa75b406e92352e1331b931048312f7a0d874f05caf50",
+      "recordedAfterSHA": "006fd079040f09b6eabb2851a7bd3b4141e19de55b89c7460e88f2e70c8f7d24",
+      "beforeBlockSHA": "b89840bdd45386a051f9aef96962a77ecda6e8847eb62a224310af9c7069cb70",
+      "afterBlockSHA": "a252fd760b34e697d31cbbc5ec88a1eeb860364367abc4eb1f01fea946019273"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🔢️set-n/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "bff9d1d4fd4981560d94cad8acab6eef76138eda4990f617ff84e0577765f6df",
+      "recordedAfterSHA": "38522c1c8cc9966c5868d9fd770735582a4e61d6d54cf5e66ccf8370245bc131",
+      "beforeBlockSHA": "416ca5dcf1cc557489438df0c081417d1cc3c3bce87f589e6c592f8f32fa04fa",
+      "afterBlockSHA": "f8e27a96327ee7f778e2121ea2b01f99f5de010875a8fe3c51ba3673feb7f863"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️assign-n/🦀️.rs",
+      "action": "derive canonical scalar controlled retirement for original typed mutation payload preserving all serde/DSL/plain laws",
+      "beforeSHA": "5252c02d705d348895de3a04a36ff0e25954c812adaeb88da38117179a55cc36",
+      "recordedAfterSHA": "b63e9620888d9b2601db02078a6dbb52ec7b67ffc305ec3c9e2a73b227cf8f6e",
+      "beforeBlockSHA": "416ca5dcf1cc557489438df0c081417d1cc3c3bce87f589e6c592f8f32fa04fa",
+      "afterBlockSHA": "f8e27a96327ee7f778e2121ea2b01f99f5de010875a8fe3c51ba3673feb7f863"
+    }
+  ],
+  "currentSourceSHA": "167c03ddd8eaaa3096d3c08def6cd5e398db91c2b1086a53870c8dc32cc58d3a"
+}

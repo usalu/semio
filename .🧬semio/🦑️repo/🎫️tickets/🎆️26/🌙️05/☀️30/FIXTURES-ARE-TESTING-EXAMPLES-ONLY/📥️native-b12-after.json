@@ -1,0 +1,41 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧬️schema/🔣️.json",
+      "sha256": null,
+      "beforeMatch": false,
+      "kind": "observer"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧪️tests/🟦️.ts",
+      "sha256": "55337f4711e569feca7bd54d4607566a080668f453aa59757a37fc4e4af87189",
+      "beforeMatch": false,
+      "kind": "observer"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🛂️policy/🧫️fixtures/🔣️.json",
+      "sha256": "3f5d092d44d4b07525391b54f361a0619b91756b7a6aec1a3b440349b17fceb1",
+      "beforeMatch": true,
+      "kind": "plain"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/✅️output/🧬️schema/🔣️.json",
+      "sha256": null,
+      "beforeMatch": false,
+      "kind": "observer"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/✅️output/🧪️tests/🟦️.ts",
+      "sha256": "c230811245e486f83e04e8f8f8f5bf3e5740035309f0ff27d38a3e8d2f9ff254",
+      "beforeMatch": false,
+      "kind": "observer"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/✅️output/🧫️fixtures/🔣️.json",
+      "sha256": "08e716e89ea4941c2a2a2b052ae067ae2a00eea33cc82bc16a0a9ddf1123e105",
+      "beforeMatch": true,
+      "kind": "plain"
+    }
+  ],
+  "qualification": "Current originals only, no copies. Exact TS/JSON logical actions separate."
+}

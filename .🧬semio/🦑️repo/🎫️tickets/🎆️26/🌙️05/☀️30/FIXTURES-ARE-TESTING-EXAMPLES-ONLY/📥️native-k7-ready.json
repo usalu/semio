@@ -1,0 +1,60 @@
+{
+  "actualCompilerRED": "Root k7 29580 Nx1/Cargo101, 212 located errors, own partition 19; no native assertions",
+  "currentSourceGREEN": {
+    "session": 87970,
+    "NxExit": 0,
+    "duration": "1.6s",
+    "log": "🗑️generated/native-k7-ready-source.log",
+    "selectedLaws": 7,
+    "assertions": 104,
+    "additionalDepthLawAssertions": 612
+  },
+  "observers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "sha256": "e6602a2c15c1cca0c2f63f639a3896dc9479b93e92f2493df9c6c95c3237e7eb",
+      "role": "observer; authored blocks only as explicit action ledgers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "cb3c18cb4d697494366d56f0d11dbcb1d3563511e8da69843375e3c40f85e31f",
+      "role": "observer; authored blocks only as explicit action ledgers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "cf2902e40642a3ca82dc3b9e76511efa241236b3dfc0c2d7c84b533ea9282c3f",
+      "role": "observer; authored blocks only as explicit action ledgers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "d30391776f6e4b2e368fdbb2dabe02a5ca771013fc0d2d73c42fe5a75bd5af1c",
+      "role": "observer; authored blocks only as explicit action ledgers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "dc06202a7bfa2111c3cf5f44bf042ebcd59456ab9a830a83540fe51834f69838",
+      "role": "observer; authored blocks only as explicit action ledgers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "a6174a54a1555bb2f7c4b36333780666a9af1c806d5d762a10c89c99cd86728d",
+      "role": "observer; authored blocks only as explicit action ledgers"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🔣️.json",
+      "sha256": "c0641a0b23ec99ddbbdf28ccc3cc4a9a59c5804613777e1d274934daa25a8250",
+      "role": "observer; authored blocks only as explicit action ledgers"
+    }
+  ],
+  "actionLedgers": [
+    "native-k7-durable-actions.json",
+    "native-k7-request-actions.json",
+    "native-k7-request-policy-action.json",
+    "native-k7-semantic-action.json",
+    "native-k7-semantic-source-action.json",
+    "native-k7-source-authority-action.json",
+    "native-catalog-policy-actions.json",
+    "native-catalog-policy-test-action.json"
+  ],
+  "qualification": "Whole-file hashes are observations, not authorship. Hydration actor and Snapshot supplied-control/fourth-parameter concurrent repairs excluded authorship. No current native compilation or runtime proof; cold typed body/whole-turn receipts outstanding."
+}

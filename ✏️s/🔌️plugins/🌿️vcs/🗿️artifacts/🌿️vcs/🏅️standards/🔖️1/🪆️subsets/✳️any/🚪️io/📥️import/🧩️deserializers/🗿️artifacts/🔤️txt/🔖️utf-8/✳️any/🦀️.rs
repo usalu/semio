@@ -12,7 +12,7 @@ pub struct TxtIntoVcs;
 impl Deserializer<VcsSnapshot> for TxtIntoVcs {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<VcsSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<VcsSnapshot> {
         deserialize_dsl_txt(payload)
     }
 }

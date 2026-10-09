@@ -103,8 +103,8 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
         crate::app::plugin_job_yield_once().await;
     }
 
-    let runtime = super::PluginRuntime::new();
-    runtime.instances.borrow_mut().insert_admitted(1, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 1, app, surface_contexts: Default::default() })));
+    let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    runtime.instances.borrow_mut().insert_admitted(1, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 1, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
     let surfaces = fixture["surfaces"].as_array().expect("surfaces");
     let mut expected: BTreeMap<String, ViewModel> = BTreeMap::new();
     for surface in surfaces {

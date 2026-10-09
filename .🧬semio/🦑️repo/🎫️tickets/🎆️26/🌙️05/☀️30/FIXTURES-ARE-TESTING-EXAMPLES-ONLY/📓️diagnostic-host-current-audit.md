@@ -1,0 +1,9 @@
+# Diagnostic Vocabulary and Host Review
+
+Root SchemaScript sharedDiagnosticCodes15108 dynamically imports the taxonomy-defined Repo test-domain package. Its facade only reexports the defining test-domain TS owner. This is a developer schema verification dependency, not evidence that application/runtime acquisition loads fixture data. The imported owner does statically import external TypeScript and the genuine test protocol schema; that is broader developer harness coupling, but not a whole-fixture default input.
+
+The existing schema-first vocabulary authority is Framework test protocol JSON $defs.SchemaDiagnosticCode (line2523). Repo test-domain SCHEMA_DIAGNOSTIC_CODE_TABLE4241 owns emitter/description metadata, and SCHEMA_DIAGNOSTIC_CODES derives its keys. Its documentation explicitly joins harness and Root checker implementations. Current exact key sets match: 46 table codes and 46 schema enum entries. A clean narrower vocabulary import can bind to that genuine contract without importing the whole harness; no separate fixture schema is needed. No TS/Rust schema facet was found at this protocol owner’s direct schema paths, so no second-language schema implementation is claimed.
+
+Current Host evaluation reader imports only genuine Flow retained and Ordered retirement contracts for Ajv authority. It validates individual Widget/Synapse payloads and per-value id/from null negatives. Whole fixture is only traversed for existing Graphlib cycle/dedup/port and JSONPatch cluster expected behavior; the local corpus schema is asserted absent and is not compiled. The plain fixture remains a test input. This finite source review establishes no execution or global runtime purity.
+
+Hashes and vocabulary equality observations are retained in the companion input; no source edits/tests were performed.

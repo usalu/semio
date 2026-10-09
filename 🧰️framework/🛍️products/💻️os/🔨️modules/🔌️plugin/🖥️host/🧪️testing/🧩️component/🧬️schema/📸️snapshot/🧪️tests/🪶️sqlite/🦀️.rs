@@ -12,6 +12,15 @@ fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framewor
 fn codec()->store::ArtifactSqliteSnapshotCodec{
  store::ArtifactCodec::bare::<Snapshot,Mutation>(KIND).snapshot_sqlite.expect("the actual published Count owner must opt its bare native codec into semantic SQLite")
 }
+fn original_native_grant()->semio_framework_value::RetainedCloneGrant{
+ let request:semio_framework_plugin::sqlite_wire::SnapshotInput=serde_json::from_str(include_str!("../../../../../../../🧬️schema/🪶️sqlite/🧫️fixtures/🔣️.json")).unwrap();request.native.native().unwrap()
+}
+fn export_native(codec:&store::ArtifactSqliteSnapshotCodec,schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,payload:&store::io::IoPayload,sql:&mut SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<SqliteDatabase>{
+ let grant=original_native_grant();let mut observe=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut owner=store::io::control::NativeSnapshotDecodeOwner::new(&mut native,grant);(codec.export)(schema,dialect,payload,sql,&mut owner)
+}
+fn import_native(codec:&store::ArtifactSqliteSnapshotCodec,schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:SqliteDatabase,encoding:SnapshotEncoding,sql:&mut SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<store::io::IoPayload>{
+ let grant=original_native_grant();let mut observe=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut owner=store::io::control::NativeSnapshotEncodeOwner::new(&mut native,grant);(codec.import)(schema,dialect,database,encoding,sql,&mut owner)
+}
 fn database(count:i32)->SqliteDatabase{
  let mut database=SqliteDatabase::from_schema(SQL).unwrap();
  database.table_mut("fixture_counter").unwrap().rows.push(SqliteRow{rowid:1,values:vec![SqliteValue::Integer(1),SqliteValue::Integer(i64::from(count))]});
@@ -41,11 +50,11 @@ fn sqlite_snapshot_host_count_erased_native_and_physical_roundtrip_preserve_full
  for count in counts(){let source=Snapshot{count};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let native=payload(&source,encoding);assert_eq!(decode(payload(&source,encoding)),source);
   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);
-  let projected=(codec.export)(KIND,&dialect(),&native,&mut control).unwrap().value;
+  let projected=export_native(&codec,KIND,&dialect(),&native,&mut control).unwrap().value;
   assert_eq!(projected,database(count));
   let bytes=export_sqlite_database(&projected,limits,&mut |_|true).unwrap();assert_eq!(&bytes[..16],b"SQLite format 3\0");
   let imported=import_sqlite_database(&bytes,limits,&mut |_|true).unwrap();assert_eq!(imported,projected);
-  let output=(codec.import)(KIND,&dialect(),imported,encoding,&mut control).unwrap().value;assert_eq!(decode(output),source);
+  let output=import_native(&codec,KIND,&dialect(),imported,encoding,&mut control).unwrap().value;assert_eq!(decode(output),source);
  }}
 }
 #[test]
@@ -62,7 +71,7 @@ fn sqlite_snapshot_host_count_reconstruction_rejects_structural_and_integer_doma
  let mut wrong=SqliteDatabase::from_schema(&(SQL.to_owned()+"CREATE TABLE foreign_owner(id INTEGER PRIMARY KEY);")).unwrap();wrong.table_mut("fixture_counter").unwrap().rows=valid.table("fixture_counter").unwrap().rows.clone();cases.push(wrong);
  for malformed in cases{for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,SqliteDatabaseLimits::default());
-  assert_eq!((codec.import)(KIND,&dialect(),malformed.clone(),encoding,&mut control).unwrap_err().cause.kind,ValueRefusalKind::InvalidValue);
+  assert_eq!(import_native(&codec,KIND,&dialect(),malformed.clone(),encoding,&mut control).unwrap_err().cause.kind,ValueRefusalKind::InvalidValue);
  }}
 }
 #[test]
@@ -72,8 +81,8 @@ fn sqlite_snapshot_host_count_full_erased_backing_limits_and_phase_cancellation_
   let native=payload(&source,encoding);let defaults=SqliteDatabaseLimits::default();
   for reconstruct in[false,true]{
    let operation=|control:&mut SqliteSnapshotControl<'_>,input:&mut Option<SqliteDatabase>|{
-    if reconstruct{(codec.import)(KIND,&coordinate,input.take().unwrap(),encoding,control).map(|output|{drop(output.value);})}
-    else{(codec.export)(KIND,&coordinate,&native,control).map(|output|{drop(output.value);})}
+    if reconstruct{import_native(&codec,KIND,&coordinate,input.take().unwrap(),encoding,control).map(|output|{drop(output.value);})}
+    else{export_native(&codec,KIND,&coordinate,&native,control).map(|output|{drop(output.value);})}
    };
    let mut accept=|_|true;
    let mut control=SqliteSnapshotControl::new(&mut accept,defaults);
@@ -92,13 +101,13 @@ fn sqlite_snapshot_host_count_full_erased_backing_limits_and_phase_cancellation_
    assert_eq!(operation(&mut control,&mut Some(expected.clone())).unwrap_err().cause.kind,ValueRefusalKind::OwnershipLimit);assert_eq!(control.allocation_remaining_bytes(),0);
   }
   for(limits,kind)in[(SqliteDatabaseLimits{max_rows:0,..defaults},ValueRefusalKind::WorkLimit),(SqliteDatabaseLimits{max_schema_bytes:SQL.len()-1,..defaults},ValueRefusalKind::OwnershipLimit)]{
-   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);assert_eq!((codec.export)(KIND,&dialect(),&native,&mut control).unwrap_err().cause.kind,kind);
-   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);assert_eq!((codec.import)(KIND,&dialect(),expected.clone(),encoding,&mut control).unwrap_err().cause.kind,kind);
+   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);assert_eq!(export_native(&codec,KIND,&dialect(),&native,&mut control).unwrap_err().cause.kind,kind);
+   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);assert_eq!(import_native(&codec,KIND,&dialect(),expected.clone(),encoding,&mut control).unwrap_err().cause.kind,kind);
   }
   for phase in[SqliteSnapshotPhase::DecodeNative,SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative]{
    let mut reached=false;let mut cancel=|progress:SqliteSnapshotProgress|{let stop=progress.phase==phase;reached|=stop;!stop};
    let mut control=SqliteSnapshotControl::new(&mut cancel,defaults);
-   let error=if matches!(phase,SqliteSnapshotPhase::DecodeNative|SqliteSnapshotPhase::ProjectSnapshot){(codec.export)(KIND,&dialect(),&native,&mut control).unwrap_err()}else{(codec.import)(KIND,&dialect(),expected.clone(),encoding,&mut control).unwrap_err()};
+   let error=if matches!(phase,SqliteSnapshotPhase::DecodeNative|SqliteSnapshotPhase::ProjectSnapshot){export_native(&codec,KIND,&dialect(),&native,&mut control).unwrap_err()}else{import_native(&codec,KIND,&dialect(),expected.clone(),encoding,&mut control).unwrap_err()};
    assert_eq!(error.cause.kind,ValueRefusalKind::Canceled);drop(control);assert!(reached);
   }
   assert_eq!(source,Snapshot{count:i32::MIN});
@@ -112,13 +121,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
  use semio_framework_plugin::{plugin_runtime,sqlite_wire::{SnapshotInput,SnapshotLimits,SnapshotFileResult,SnapshotPayloadResult}};
  let coordinate=dialect().to_coordinate();
  assert_eq!(plugin_runtime::plugin_snapshot_sqlite_schema(&coordinate).unwrap(),SQL);
+ let neutral:SnapshotInput=serde_json::from_str(include_str!("../../../../../../../🧬️schema/🪶️sqlite/🧫️fixtures/🔣️.json")).unwrap();
+ let grant=neutral.native.native().unwrap();let limits=neutral.limits.native().unwrap();
  for count in counts(){let source=Snapshot{count};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
+  let mut receive=|_|true;let mut publish=|_|true;let mut progress=|_|true;
+  let mut decoder=semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut receive);
+  let mut encoder=semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut publish);
+  let mut native_control=semio_framework_os_kernel::io::io_mechanism::IoRunControl::new(&mut decoder,&mut encoder,grant);
+  let mut snapshot_control=SqliteSnapshotControl::new(&mut progress,limits);
   let native=payload(&source,encoding);let payload=match native{store::io::IoPayload::Binary(bytes)=>bytes,store::io::IoPayload::Text(text)=>text.into_bytes()};
-  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_export(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload,limits:SnapshotLimits::from(SqliteDatabaseLimits::default())})).unwrap();
+  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_export(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload,limits:SnapshotLimits::from(limits),native:grant.into()},&mut native_control,&mut snapshot_control)).unwrap();
   let SnapshotFileResult::Done(file)=output else{panic!("actual published Count export must succeed")};assert_eq!(&file.bytes[..16],b"SQLite format 3\0");
   let database=import_sqlite_database(&file.bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
   assert_eq!(store::io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap(),(dialect(),encoding));
-  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_import(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload:file.bytes,limits:SnapshotLimits::from(SqliteDatabaseLimits::default())})).unwrap();
+  let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_import(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload:file.bytes,limits:SnapshotLimits::from(limits),native:grant.into()},&mut native_control,&mut snapshot_control)).unwrap();
   let SnapshotPayloadResult::Done(output)=output else{panic!("actual published Count import must succeed")};assert_eq!(output.encoding,encoding.as_str());
   assert_eq!(decode(match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(output.bytes),SnapshotEncoding::Text=>store::io::IoPayload::Text(String::from_utf8(output.bytes).unwrap())}),source);
  }}

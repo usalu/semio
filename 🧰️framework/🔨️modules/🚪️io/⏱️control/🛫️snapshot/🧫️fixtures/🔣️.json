@@ -1,0 +1,134 @@
+{
+  "schema": "io.native-snapshot-encode-owner/v1",
+  "nativeMaximumBytes": 1073741824,
+  "initialBytes": 7,
+  "copy": "雪",
+  "producer": {
+    "items": 1,
+    "copyBytes": 3,
+    "capacityBytes": 3,
+    "releaseBytes": 0,
+    "depth": 2,
+    "custody": "originalDestinationBeforeCopy",
+    "receipt": "actualDestinationOnSuccessAndRefusal",
+    "publication": "moveOriginal",
+    "walletGrant": {
+      "maximumItems": 4,
+      "maximumCopyBytes": 8,
+      "maximumCapacityBytes": 16,
+      "maximumReleaseBytes": 16,
+      "maximumDepth": 3
+    },
+    "receipts": [
+      {
+        "copiedItems": 1,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 3,
+        "releasedBytes": 0
+      },
+      {
+        "copiedItems": 2,
+        "copiedBytes": 5,
+        "retainedCapacityBytes": 7,
+        "releasedBytes": 4
+      }
+    ],
+    "remainingGrant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 6,
+      "maximumReleaseBytes": 12,
+      "maximumDepth": 3
+    },
+    "retirementCopy": {
+      "payloadBytes": 3,
+      "cancelledBytes": 3,
+      "headers": [
+        {
+          "nativeWordBytes": 4,
+          "headerBytes": 12,
+          "aggregateBytes": 15
+        },
+        {
+          "nativeWordBytes": 8,
+          "headerBytes": 24,
+          "aggregateBytes": 27
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "full",
+      "grant": {
+        "maximumItems": 256,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 4096
+      },
+      "expectedNativeOwnedBytes": 10,
+      "expectedGrantPreserved": true
+    },
+    {
+      "id": "maximumItems",
+      "grant": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 4096
+      },
+      "expectedNativeOwnedBytes": 10,
+      "expectedGrantPreserved": true
+    },
+    {
+      "id": "maximumCopyBytes",
+      "grant": {
+        "maximumItems": 256,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 4096
+      },
+      "expectedNativeOwnedBytes": 10,
+      "expectedGrantPreserved": true
+    },
+    {
+      "id": "maximumCapacityBytes",
+      "grant": {
+        "maximumItems": 256,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 4096
+      },
+      "expectedNativeOwnedBytes": 10,
+      "expectedGrantPreserved": true
+    },
+    {
+      "id": "maximumReleaseBytes",
+      "grant": {
+        "maximumItems": 256,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 4096
+      },
+      "expectedNativeOwnedBytes": 10,
+      "expectedGrantPreserved": true
+    },
+    {
+      "id": "maximumDepth",
+      "grant": {
+        "maximumItems": 256,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 0
+      },
+      "expectedNativeOwnedBytes": 10,
+      "expectedGrantPreserved": true
+    }
+  ]
+}

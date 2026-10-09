@@ -1,0 +1,107 @@
+{
+  "grant": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 262144,
+    "release": 262144,
+    "depth": 256
+  },
+  "maximumTurns": 1048576,
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    17
+  ],
+  "terminalDropBytes": 0,
+  "selection": [
+    {
+      "base": null,
+      "next": "é中🐚\u0000"
+    },
+    {
+      "base": "original🐚\u0000",
+      "next": null
+    },
+    {
+      "base": "original",
+      "next": ""
+    }
+  ],
+  "camera": {
+    "base": {
+      "viewport": {
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 3.0
+      },
+      "eye": [
+        4.0,
+        5.0,
+        6.0
+      ]
+    },
+    "next": {
+      "viewport": {
+        "x": 7.0,
+        "y": 8.0,
+        "zoom": 9.0
+      },
+      "eye": [
+        10.0,
+        11.0,
+        12.0
+      ]
+    }
+  },
+  "selectionBounds": [
+    {
+      "base": null,
+      "next": "a",
+      "repeat": 500,
+      "bytes": 1023,
+      "admissible": true
+    },
+    {
+      "base": null,
+      "next": "a",
+      "repeat": 501,
+      "bytes": 1025,
+      "admissible": false
+    },
+    {
+      "base": null,
+      "next": "\u0000",
+      "repeat": 143,
+      "bytes": 1024,
+      "admissible": true
+    },
+    {
+      "base": null,
+      "next": "\u0000",
+      "repeat": 144,
+      "bytes": 1031,
+      "admissible": false
+    },
+    {
+      "base": "b",
+      "next": "a",
+      "repeat": 500,
+      "bytes": 1028,
+      "admissible": false
+    },
+    {
+      "base": "é中🐚",
+      "next": "\"\\\b\t\n\f\r",
+      "repeat": 1,
+      "bytes": 57,
+      "admissible": true
+    }
+  ]
+}

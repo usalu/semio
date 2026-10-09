@@ -1,0 +1,6 @@
+{
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+  "before": "a85402e742df7bcf82017594b04eaa287d71ceba188c5afe3529c6673516a869",
+  "after": "7e45d62b8a4a97dba9c875a4c7e71c869ef0398a00711a496b7e2f3f1e0a5720",
+  "action": "correct actual two compiler E0432 to defining private ancestor owners; no public API/alias added"
+}

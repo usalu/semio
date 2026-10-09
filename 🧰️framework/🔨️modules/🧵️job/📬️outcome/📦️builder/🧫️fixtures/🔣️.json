@@ -1,0 +1,32 @@
+{
+  "policy": {
+    "items": 1,
+    "copy": 4096,
+    "capacity": 65536,
+    "release": 262144,
+    "depth": 64
+  },
+  "byteLengths": [
+    0,
+    1,
+    4096,
+    8193,
+    32769
+  ],
+  "stages": [
+    "bindings",
+    "metadata",
+    "original-append",
+    "seal",
+    "borrow",
+    "physical-close",
+    "presence"
+  ],
+  "ledgerStages": [
+    "original-admission",
+    "borrowed-context",
+    "actual-page-lease",
+    "separate-retirement"
+  ],
+  "ledgerLeaseWords": 2
+}

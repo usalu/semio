@@ -307,7 +307,7 @@ macro_rules! config_owner {
             const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
             type State = Grid3dWindowConfig;
             type Mutation = Grid3dWindowConfigMutation;
-            fn build_store_owners() -> store::DocumentStoreOwners<Self::State, Self::Mutation> {
+            fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
                 semio_framework_plugin::bounded_window_config_store_owners::<Self>()
             }
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {

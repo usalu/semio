@@ -196,6 +196,7 @@ mod plugin_builder_contract_tests {
     }
 
     impl store::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation> for TestCountOneItemPreparationFactory {
+        fn begin_batch_digest(&self,edit:&mut Option<Box<protocol::Edit<TestMutation>>>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<TestMutation>>,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{store::admit_artifact_batch_digest(edit,grant)}
         fn preflight(&self, mutation: &TestMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
             if !matches!(mutation, TestMutation::SetCount(SetCount { .. })) || lane != store::HistoryLane::Document {
                 return Err("test count accepts exactly one scalar mutation".into());
@@ -587,6 +588,8 @@ mod plugin_builder_contract_tests {
         }
     }
 
+    const TEST_COMMAND_RETAINED_GRANT: semio_framework_value::RetainedCloneGrant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+
     async fn test_retained_command_payload(completion: ArtifactToolCompletion<TestApp>) -> crate::retained_command::ArtifactRetainedCommandPayload<TestApp> {
         crate::retained_command::ArtifactRetainedCommandPayload::new(
             crate::retained_command::ArtifactRetainedCommandInputs {
@@ -597,7 +600,7 @@ mod plugin_builder_contract_tests {
                 interaction_state: std::sync::Arc::new(InteractionState::default()),
                 interaction_hover: std::sync::Arc::new(InteractionHoverState::new()),
                 context: None,
-                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "test-document".into(), operation_id: 41, generation: 3, canonical_base_revision: [5; 32], authoring_seed: "authoring-seed-test".into() },
+                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "test-document".into(), operation_id: 41, generation: 3, canonical_base_revision: [5; 32], retained: TEST_COMMAND_RETAINED_GRANT, authoring_seed: "authoring-seed-test".into() },
                 completion,
             },
             test_retained_command_id,
@@ -617,7 +620,7 @@ mod plugin_builder_contract_tests {
                 interaction_state: std::sync::Arc::new(InteractionState::default()),
                 interaction_hover: std::sync::Arc::new(InteractionHoverState::new()),
                 context: None,
-                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "test-document".into(), operation_id: 42, generation: 3, canonical_base_revision: [5; 32], authoring_seed: "authoring-seed-test".into() },
+                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "test-document".into(), operation_id: 42, generation: 3, canonical_base_revision: [5; 32], retained: TEST_COMMAND_RETAINED_GRANT, authoring_seed: "authoring-seed-test".into() },
                 completion,
             },
             test_retained_command_id,
@@ -750,34 +753,13 @@ mod plugin_builder_contract_tests {
     }
     //#endregion 🧪️TestClipboardReservedJob
 
-    struct PublicationPresenceRetirement {
-        snapshot: Option<std::sync::Arc<PublicationPresence>>,
-    }
-
-    impl store::ErasedSnapshotRetirement for PublicationPresenceRetirement {
-        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-            if maximum_items == 0 {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            if self.snapshot.take().is_some() {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            Ok(store::SnapshotRetirementStep::Complete)
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            self.snapshot.is_none()
-        }
-    }
-
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct PublicationPresenceRetirementFactory;
 
     impl store::SnapshotRetirementFactory<PublicationPresence> for PublicationPresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<PublicationPresence>) -> usize { std::mem::size_of::<PublicationPresenceRetirement>() }
-
-        fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
-            Box::new(PublicationPresenceRetirement { snapshot: Some(snapshot) })
+        fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<PublicationPresence>) -> usize { semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<PublicationPresence>() }
+        fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<PublicationPresence>)> {
+            semio_framework_value::retirement::shared::admit_shared_retirement(snapshot, grant, true)
         }
     }
 
@@ -1627,48 +1609,114 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
         test_retained_keyed_dispatch::<KeyedTestApp>(
             keyed_test_registry().await,
             |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value },
             |value| TestMutation::SetCount(SetCount { value }),
             |snapshot| snapshot.count,
             None,
+            mounted_policy,
+            &mut identity,
         )
         .await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn typed_operation_ingress_pre_admits_the_exact_slot_before_it_mints_an_operation_id() {
-        test_typed_operation_slot_preadmission::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        test_typed_operation_slot_preadmission::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn every_admitted_typed_operation_slot_is_released_by_the_host_continuation_that_reports_it_runnable() {
-        test_typed_operation_slot_retirement_under_storm::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        test_typed_operation_slot_retirement_under_storm::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn a_settled_a_replaced_and_a_cancelled_typed_operation_all_release_their_exact_slot() {
-        test_typed_operation_slot_release_on_every_outcome::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        test_typed_operation_slot_release_on_every_outcome::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn a_mounted_typed_operation_never_parks_a_turn_that_reports_no_runnable_work() {
-        test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn a_status_only_host_call_finishes_every_typed_operation_it_admitted() {
-        test_typed_operation_completes_under_a_status_only_host_call::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        test_typed_operation_completes_under_a_status_only_host_call::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn an_admitting_host_call_hands_back_the_terminal_lane_it_earned() {
-        test_typed_operation_lands_its_edit_inside_the_admitting_call::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        test_typed_operation_lands_its_edit_inside_the_admitting_call::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn microsecond_registered_factory_dispatch_preserves_exact_half_ms_fake_clock() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
         fn clock() -> Option<u64> {
             Some(1_000)
         }
@@ -1678,6 +1726,8 @@ mod plugin_builder_contract_tests {
             |value| TestMutation::SetCount(SetCount { value }),
             |snapshot| snapshot.count,
             Some(clock),
+            mounted_policy,
+            &mut identity,
         )
         .await;
     }
@@ -1708,18 +1758,27 @@ mod plugin_builder_contract_tests {
     /// published as its own acknowledgeable `Fault` page on exactly the wire this law measures.
     #[semio_framework_async_macros::async_test]
     async fn concurrent_typed_operations_hand_every_presentable_page_to_one_turn() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         const OPERATIONS: usize = 4;
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
         let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         app.bind_instance_id(id).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
         for index in 0..OPERATIONS {
             let command = TestCommand::CompositeEdit { slot: String::new(), child_id: format!("batch-{index}").into(), child_value: index as i32 + 1 };
-            app.dispatch_typed(command, &meta).await.unwrap();
+            app.dispatch_typed(command, &meta, &mut identity).await.unwrap();
         }
-        let runtime = super::PluginRuntime::new();
-        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
+        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let (mut pages, mut crossings, mut widest) = (0usize, 0usize, 0usize);
         for _ in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() * OPERATIONS as u64 {
@@ -1772,13 +1831,22 @@ mod plugin_builder_contract_tests {
     /// capacity").
     #[semio_framework_async_macros::async_test]
     async fn a_many_mutation_publication_folds_every_mutation_and_is_never_terminated_as_stalled() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         const ROWS: i32 = 4_400;
         let id = 4_103;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         app.bind_instance_id(id).await;
-        app.dispatch_typed(TestCommand::BulkEdit { rows: ROWS }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.unwrap();
-        let runtime = super::PluginRuntime::new();
-        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
+        app.dispatch_typed(TestCommand::BulkEdit { rows: ROWS }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.unwrap();
+        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let mut terminal = false;
         let mut faults: Vec<String> = Vec::new();
@@ -1819,11 +1887,20 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn a_host_crossing_outranks_every_background_hold_on_the_same_app() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let id = 4_101;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         app.bind_instance_id(id).await;
-        let runtime = super::PluginRuntime::new();
-        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
+        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let background_entered = std::sync::atomic::AtomicBool::new(false);
         std::thread::scope(|scope| {
@@ -1871,15 +1948,24 @@ mod plugin_builder_contract_tests {
     /// runnable turn still carried its exact receipt. The ceiling constant is untouched.
     #[semio_framework_async_macros::async_test]
     async fn retained_operation_continues_after_command_admission_until_publication_and_retirement() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
         let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         app.bind_instance_id(id).await;
         let value = fixture["command"]["value"].as_i64().unwrap() as i32;
         let command = TestCommand::CompositeEdit { slot: String::new(), child_id: fixture["command"]["target"].as_str().unwrap().into(), child_value: value };
-        app.dispatch_typed(command, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.unwrap();
-        let runtime = super::PluginRuntime::new();
-        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
+        app.dispatch_typed(command, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.unwrap();
+        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let mut terminal = false;
         let mut receipts = 0;
@@ -1950,10 +2036,19 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_child_group_publishes_one_acknowledged_parent_child_gesture_and_retires() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         let id = 41;
-        let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         app.bind_instance_id(id).await;
         let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
         app.test_store_mut().await.dispatch(store::ArtifactCommand::Apply {
@@ -1962,10 +2057,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }).await.expect("the actual parent declares the exact member before registration");
         let child = new_test_child("child-1").await.expect("construct child");
         app.register_child("slot", "child-1", test_child_dialect().await, child).await.expect("register child");
-        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("admit retained child gesture");
+        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("admit retained child gesture");
 
-        let runtime = super::PluginRuntime::new();
-        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
+        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let acknowledgement_fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral result ACK fixture");
         let mut lanes = Vec::new();
@@ -2059,7 +2154,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("live child").member;
             assert_eq!(child.snapshot().expect("child snapshot").count, 9);
 
-            let admitted = active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("undo retained group");
+            let admitted = active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("undo retained group");
             let undone = crate::app::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("undo reserved-job commit");
             artifact_app_laws::settle_registered_typed_operation(&mut active.app, id).await.expect("undo publication");
             let skipped: Vec<String> = undone.diagnostics.iter().map(|diagnostic| diagnostic.message.clone()).collect();
@@ -2068,7 +2163,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("undone child").member;
             assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
 
-            let admitted = active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("redo retained group");
+            let admitted = active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("redo retained group");
             crate::app::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("redo reserved-job commit");
             artifact_app_laws::settle_registered_typed_operation(&mut active.app, id).await.expect("redo publication");
             assert_eq!(active.app.snapshot().expect("redone parent snapshot").count, 9);
@@ -2151,8 +2246,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         crate::app::settle_framework_reserved_admission(app, admitted).await.expect("settle reserved")
     }
 
-    async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, args: Option<&DslValue>) -> semio_framework::InvocationResult {
-        let admitted = app.handle_action(action, args, &meta()).await.expect(action);
+    async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, args: Option<&DslValue>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> semio_framework::InvocationResult {
+        let admitted = app.handle_action(action, args, &meta(), identity).await.expect(action);
         settle_reserved(app, admitted).await
     }
 
@@ -2177,32 +2272,32 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// child member or an app-typed presence peer under explicit retirement authority cannot reach the
     /// store's terminal-empty Drop witness by `close_step` alone — that authority is exactly what
     /// `maintenance_step` pumps, one bounded unit per stage rotation.
-    fn drain_and_close_fixture(app: &mut VcsArtifactApp<TestApp>) {
+    fn drain_and_close_fixture(app: &mut VcsArtifactApp<TestApp>, mounted_policy: crate::MountedOwnerPolicyV1) {
         for _ in 0..64 {
-            for stage in 0..MAINTENANCE_STAGES {
-                app.maintenance_stage = stage;
-                let _ = PluginApp::maintenance_step(app, 1, 4096);
+            for _ in 0..MAINTENANCE_STAGES {
+                let grant=crate::app::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),maximum_copy_bytes:4096.min(mounted_policy.maintenance.maximum_copy_bytes),..mounted_policy.maintenance};
+                let _ = PluginApp::maintenance_step(app, grant);
             }
         }
-        artifact_app_laws::close_registered_fixture_app(app);
+        artifact_app_laws::close_registered_fixture_app(app, mounted_policy);
     }
 
     /// 🧹️ [`drain_and_close_fixture`] for a composed fixture that owns members.
-    fn drain_and_close_composed_fixture(app: &mut VcsArtifactApp<TestApp, TestMembers>) {
+    fn drain_and_close_composed_fixture(app: &mut VcsArtifactApp<TestApp, TestMembers>, mounted_policy: crate::MountedOwnerPolicyV1) {
         for _ in 0..64 {
-            for stage in 0..MAINTENANCE_STAGES {
-                app.maintenance_stage = stage;
-                let _ = PluginApp::maintenance_step(app, 1, 4096);
+            for _ in 0..MAINTENANCE_STAGES {
+                let grant=crate::app::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),maximum_copy_bytes:4096.min(mounted_policy.maintenance.maximum_copy_bytes),..mounted_policy.maintenance};
+                let _ = PluginApp::maintenance_step(app, grant);
             }
         }
-        artifact_app_laws::close_registered_fixture_app(app);
+        artifact_app_laws::close_registered_fixture_app(app, mounted_policy);
     }
 
-    fn close_reserved_app(app: &mut VcsArtifactApp<TestApp>) {
+    fn close_reserved_app(app: &mut VcsArtifactApp<TestApp>, mounted_policy: crate::MountedOwnerPolicyV1) {
         for _ in 0..100_000 {
-            match app.close_step(1, 4096).expect("reserved fixture closes") {
-                crate::app::PluginCloseStep::Complete => return,
-                crate::app::PluginCloseStep::Pending { .. } => {}
+            match app.close_step(crate::app::RetainedCloneGrant{maximum_items:1.min(mounted_policy.close.maximum_items),maximum_copy_bytes:4096.min(mounted_policy.close.maximum_copy_bytes),..mounted_policy.close}).expect("reserved fixture closes") {
+                crate::app::PluginLifecycleStep::Complete(progress) => {assert!(progress.fits(mounted_policy.close));return},
+                crate::app::PluginLifecycleStep::Progress(progress) => {assert!(progress.fits(mounted_policy.close));}
                 other => panic!("reserved fixture close stalled: {other:?}"),
             }
         }
@@ -2328,7 +2423,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// registry-backed (so a typed verb has a manifest declaration at all), it binds its live
     /// instance (`dispatch_typed_command_inner` refuses `interactive-job.live-instance` otherwise),
     /// and it retires its stores before `ArtifactStore::drop` can fire its terminal-empty witness.
-    struct ContractApp(VcsArtifactApp<TestApp>);
+    struct ContractApp(VcsArtifactApp<TestApp>, crate::MountedOwnerPolicyV1);
 
     impl std::ops::Deref for ContractApp {
         type Target = VcsArtifactApp<TestApp>;
@@ -2348,7 +2443,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             if std::thread::panicking() || self.0.close_terminal_is_empty() {
                 return;
             }
-            artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            artifact_app_laws::close_registered_fixture_app(&mut self.0, self.1);
         }
     }
 
@@ -2368,11 +2463,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         /// worker's emit has walked the publication ladder above. Rebuilt here through the SAME
         /// `result_from_last_edit` the unmigrated route calls, with the SAME `amended_same_edit` tail
         /// rule, so a coalesced gesture still reports only the operation THIS dispatch added.
-        async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta) -> Result<semio_framework::InvocationResult, Fault> {
+        async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<semio_framework::InvocationResult, Fault> {
             let verb = test_command_id(&command);
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
-            let mut admitted = self.0.dispatch_typed(command, meta).await?;
+            let mut admitted = self.0.dispatch_typed(command, meta, identity).await?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
@@ -2397,10 +2492,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         /// hands its reducer to a worker. This drives both, exactly as
         /// {@link artifact_app_laws::settle_history_verb} does for the raw wrapper, and rebuilds the
         /// settled mutations/inverse through the same `result_from_last_edit`.
-        async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<semio_framework::InvocationResult, Fault> {
+        async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<semio_framework::InvocationResult, Fault> {
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
-            let admitted = self.0.dispatch_action(action, args, meta).await?;
+            let admitted = self.0.dispatch_action(action, args, meta, identity).await?;
             let mut admitted = crate::app::settle_framework_reserved_admission(&mut self.0, admitted).await?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
             admitted.requested_effects.extend(receipt.effects);
@@ -2423,11 +2518,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// same admission receipt every migrated dispatch answers with, so a law that reads the store right
     /// after it observed the previous revision. Settles the operation and rebuilds the settled
     /// mutations/inverse through the SAME `result_from_last_edit` the direct route uses.
-    async fn handle_intent_settled(app: &mut ContractApp, intent: &UiIntent, meta: &ActionMeta) -> Result<semio_framework::InvocationResult, Fault> {
+    async fn handle_intent_settled(app: &mut ContractApp, intent: &UiIntent, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<semio_framework::InvocationResult, Fault> {
         let verb = intent.action.name.to_string();
         let before_edit_id = app.0.test_last_edit_id();
         let before_tail = app.0.test_edit_tail_lengths();
-        let mut admitted = PluginApp::handle_intent_frame(&mut app.0, intent, meta).await?;
+        let mut admitted = PluginApp::handle_intent_frame(&mut app.0, intent, meta, identity).await?;
         let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id).await?;
         admitted.requested_effects.extend(receipt.effects);
         admitted.events.extend(receipt.events);
@@ -2453,38 +2548,38 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id).await.expect("registered fixture settles its addressed dispatch");
     }
 
-    async fn contract_app_under_test() -> ContractApp {
-        contract_app_with(migrated_contract_registry().await).await
+    async fn contract_app_under_test(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
+        contract_app_with(migrated_contract_registry().await, mounted_policy, identity).await
     }
 
     /// 🧪️ [`contract_app_under_test`] over an explicit registry — the flat-menu and interaction
     /// fixtures declare their own manifests but need the same mounted, self-closing shape.
-    async fn contract_app_with(registry: AppActionRegistry) -> ContractApp {
-        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    async fn contract_app_with(registry: AppActionRegistry, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
+        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
         app.bind_instance_id(meta().instance_id).await;
-        ContractApp(app)
+        ContractApp(app, mounted_policy)
     }
 
     /// 🧪️ The fixture every law that used to build a bare `VcsArtifactApp::<TestApp>::new` wrapper
     /// uses now. A registry-less wrapper can no longer dispatch anything at all (it has no manifest
     /// declaration for the verb), so "no registry" was never what those laws were testing.
-    async fn contract_app() -> ContractApp {
-        contract_app_with(migrated_contract_registry().await).await
+    async fn contract_app(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
+        contract_app_with(migrated_contract_registry().await, mounted_policy, identity).await
     }
 
     /// 🧪️ [`contract_app`] without the self-closing wrapper — for the laws that MOVE the app into a
     /// `PluginRuntime` cell or a `dyn_enum_close!` arm, or that drive it through `PluginApp`'s
     /// generic surface (a generic bound never applies a `Deref` coercion). Those laws own the close
     /// themselves, exactly as they did before.
-    async fn contract_app_raw() -> VcsArtifactApp<TestApp> {
-        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    async fn contract_app_raw(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
+        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
         app.bind_instance_id(meta().instance_id).await;
         app
     }
 
     /// 🧩️ [`contract_app_raw`] over the composed member roster.
-    async fn contract_composed_app_raw() -> VcsArtifactApp<TestApp, TestMembers> {
-        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    async fn contract_composed_app_raw(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp, TestMembers> {
+        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
         app.bind_instance_id(meta().instance_id).await;
         app
     }
@@ -2495,12 +2590,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// `BatchOnlyPendingRewrite`. The migrated registry is not an option here: an app declaring migrated
     /// verbs and supplying no proof row cannot be CONSTRUCTED at all (`interactive-job.catalog-incomplete`),
     /// which is the same fail-closed join from the other side.
-    async fn unproved_contract_app() -> VcsArtifactApp<TestApp<false, TEST_APP_TOOLS_NONE>> {
-        VcsArtifactApp::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await
+    async fn unproved_contract_app(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp<false, TEST_APP_TOOLS_NONE>> {
+        VcsArtifactApp::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await
     }
 
     /// 🧩️ [`ContractApp`] over the composed member roster — same three laws by construction.
-    struct ContractComposedApp(VcsArtifactApp<TestApp, TestMembers>);
+    struct ContractComposedApp(VcsArtifactApp<TestApp, TestMembers>, crate::MountedOwnerPolicyV1);
 
     impl std::ops::Deref for ContractComposedApp {
         type Target = VcsArtifactApp<TestApp, TestMembers>;
@@ -2520,7 +2615,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             if std::thread::panicking() || self.0.close_terminal_is_empty() {
                 return;
             }
-            drain_and_close_composed_fixture(&mut self.0);
+            drain_and_close_composed_fixture(&mut self.0, self.1);
         }
     }
 
@@ -2542,11 +2637,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         /// leaves `member_edits` empty by construction, so it must never overwrite a composed
         /// result the pipeline itself already filled — a composite gesture's child lane would
         /// vanish into the rebuild.
-        async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta) -> Result<semio_framework::InvocationResult, Fault> {
+        async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<semio_framework::InvocationResult, Fault> {
             let verb = test_command_id(&command);
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
-            let mut admitted = self.0.dispatch_typed(command, meta).await?;
+            let mut admitted = self.0.dispatch_typed(command, meta, identity).await?;
             let mut receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
@@ -2574,10 +2669,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
         /// ⏪️ See {@link ContractApp::dispatch_action}: a framework-reserved history verb admits an
         /// `Effect::SpawnJob` the caller must run, and an app verb hands its reducer to a worker.
-        async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<semio_framework::InvocationResult, Fault> {
+        async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<semio_framework::InvocationResult, Fault> {
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
-            let admitted = self.0.dispatch_action(action, args, meta).await?;
+            let admitted = self.0.dispatch_action(action, args, meta, identity).await?;
             let mut admitted = crate::app::settle_framework_reserved_admission(&mut self.0, admitted).await?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
             admitted.requested_effects.extend(receipt.effects);
@@ -2596,10 +2691,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
     }
 
-    async fn contract_composed_app() -> ContractComposedApp {
-        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    async fn contract_composed_app(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractComposedApp {
+        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
         app.bind_instance_id(meta().instance_id).await;
-        ContractComposedApp(app)
+        ContractComposedApp(app, mounted_policy)
     }
 
     /// 🧭️ The bijection has exactly two named residues, and both are asserted as exact sets so a
@@ -2623,11 +2718,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// not the cause — the clause above still proves there is no factory to find.
     #[semio_framework_async_macros::async_test]
     async fn activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations() {
+        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let identity_started=std::time::Instant::now();
+        let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+
         let platform = Platform::new(None).await;
         let registry = contract_registry().await;
         let declared = registry.test_migrated_tool_ids();
         let controller_id = registry.test_controller_id().to_string();
-        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry.clone(), platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into())).await;
+        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry.clone(), platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         let registered: std::collections::BTreeSet<String> = app
             .test_registered_tool_keys()
             .into_iter()
@@ -2655,7 +2756,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         );
         let runtime_source: String = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect();
         assert!(
-            runtime_source.split("ifis_time_travel_action_id(action){").nth(1).and_then(|arm| arm.split('}').next()).is_some_and(|arm| arm.ends_with("returnBox::pin(self.dispatch_time_travel_action(action,args,meta)).await;")),
+            runtime_source.split("ifis_time_travel_action_id(action){").nth(1).and_then(|arm| arm.split('}').next()).is_some_and(|arm| arm.ends_with("returnBox::pin(self.dispatch_time_travel_action(action,args,meta,identity)).await;")),
             "the only reason the history-edit verbs may carry no factory is their host-driven, boxed arm at the head of `dispatch_action`"
         );
         assert!(
@@ -2672,10 +2773,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let verb = <TestApp<false, TEST_APP_TOOLS_NONE> as ArtifactApp>::command_id(&TestCommand::IncrementViaCommand).await;
         assert!(!registered.contains(verb), "the unproved verb has no activated factory of its own");
         assert!(!declared.contains(verb), "and this registry does not declare it migrated either");
-        let error = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect_err("an unproved typed command must remain fail closed");
+        let error = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta(), &mut identity).await.expect_err("an unproved typed command must remain fail closed");
         assert_eq!(error.code.0, "interactive-job.not-ui-safe");
         assert_eq!(platform.action_bus.dispatch_count(), before);
-        artifact_app_laws::close_registered_fixture_app(&mut app);
+        artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy);
     }
 
     //#region 🧪️SharedFrameworkActionRouteTests
@@ -2689,10 +2790,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 1 MiB wire admission that the bus has never granted them.
     #[semio_framework_async_macros::async_test]
     async fn shared_framework_actions_have_exact_registered_factory_and_joined_bus_identity() {
+        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let identity_started=std::time::Instant::now();
+        let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+
         let platform = Platform::new(None).await;
         let registry = contract_registry().await;
         let controller_id = registry.test_controller_id().to_string();
-        let app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry, platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into())).await;
+        let app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry, platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         type UnprovedFrameworkOwner = TestApp<false, TEST_APP_TOOLS_NONE>;
         let expected: [(&str, &str, std::any::TypeId, &'static str, usize); 12] = [
             ("copy", "framework.reserved.copy.v1", std::any::TypeId::of::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), 8_192),
@@ -2737,7 +2844,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             assert!(platform.action_bus.admit_exact_wire(&controller_id, tool_id, schema_id, &vec![0_u8; maximum + 1]).is_err());
         }
         let mut app = app;
-        artifact_app_laws::close_registered_fixture_app(&mut app);
+        artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy);
     }
 
     #[test]
@@ -2946,7 +3053,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn segmented_download_remains_addressable_until_terminal_none_is_observed() {
-        let mut app = contract_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let chunks = ArtifactOutputChunks::new(4);
         assert_eq!(chunks.push(vec![1, 2, 3, 4]), Ok(4));
         assert_eq!(chunks.seal(), Ok(4));
@@ -2956,12 +3072,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(app.take_segmented_download_chunk(91).await.expect("terminal none"), None);
         assert!(!app.segmented_downloads.contains(91));
         assert_eq!(app.take_segmented_download_chunk(91).await.expect_err("terminal none removes authority").code.0, "interactive-job.unknown-segmented-download");
-        artifact_app_laws::close_registered_fixture_app(&mut *app);
+        artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn completed_media_cancel_moves_exact_output_to_bounded_cleanup() {
-        let mut app = contract_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let operation_id = semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, 0);
         let handle = ArtifactMediaExportHandle {
             app_instance_id: meta().instance_id,
@@ -2992,11 +3117,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         app.maintenance_stage = 2;
         assert_eq!(app.maintenance_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES).expect("terminal cleanup"), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         assert!(!app.test_segmented_closure_contains(operation_id.0));
-        artifact_app_laws::close_registered_fixture_app(&mut *app);
+        artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_maintenance_reclaims_late_envelope_field_returns_before_close_terminal() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         struct ReturnedDecoder {
             terminal: bool,
             drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
@@ -3061,7 +3195,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             }
         }
 
-        let mut app = contract_app_raw().await;
+        let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let lease = app.envelope_field_decoders.try_admit(Box::new(ReturnedDecoder { terminal: false, drops: drops.clone() })).unwrap_or_else(|_| panic!("app decoder return registry admits one exact owner"));
         let ticket = lease.ticket();
@@ -3076,8 +3210,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert!(app.envelope_field_decoder_retirements.is_empty());
         assert!(app.envelope_field_decoders.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-        assert_eq!(app.drive_envelope_field_decoder_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, true).expect("close hierarchy observes exact terminal state"), PluginCloseStep::Complete);
-        artifact_app_laws::close_registered_fixture_app(&mut app);
+        assert_eq!(app.drive_envelope_field_decoder_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close hierarchy observes exact terminal state"), PluginLifecycleStep::Complete(Default::default()));
+        artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy);
     }
 
     /// 🔢️ Swept over every declared stage instead of a frozen stage index: which ordinal owns the
@@ -3085,6 +3219,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// the law — ordinary maintenance never retires an unconsumed completed output — is not.
     #[semio_framework_async_macros::async_test]
     async fn app_maintenance_and_close_retain_completed_envelope_results_until_terminal_empty() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         struct CompletedRecordSentinel {
             remaining: usize,
             terminal: bool,
@@ -3136,7 +3279,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             }
         }
 
-        let mut app = contract_app_raw().await;
+        let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let owner: Box<dyn store::ArtifactEnvelopeCompletedRecord<TestSnapshot, TestMutation>> = Box::new(CompletedRecordSentinel { remaining: 2, terminal: false, drops: drops.clone() });
         let ticket = match app.envelope_completed_records.try_admit(owner) {
@@ -3173,8 +3316,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert!(app.envelope_completed_record_retirements.is_empty());
         assert!(app.envelope_completed_records.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-        assert_eq!(app.drive_envelope_completed_record_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, true).expect("close observes exact completed terminal state"), PluginCloseStep::Complete);
-        artifact_app_laws::close_registered_fixture_app(&mut app);
+        assert_eq!(app.drive_envelope_completed_record_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close observes exact completed terminal state"), PluginLifecycleStep::Complete(Default::default()));
+        artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy);
     }
 
     /// 🪜️ Park the ladder exactly ON the segment stage without touching it. Every stage before it
@@ -3183,7 +3326,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// to that stage and then stands still there — which is itself the bounded-grant refusal.
     #[semio_framework_async_macros::async_test]
     async fn app_close_step_drains_at_most_one_segment_and_one_chunk_budget() {
-        let mut app = contract_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         app.close_started = true;
         app.close_cancellation_cursor = TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS;
         app.close_media_cursor = ARTIFACT_LIVE_OUTPUT_SLOTS;
@@ -3503,12 +3655,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn unproved_command_fails_before_an_overrun_reducer_can_start() {
-        let mut app = unproved_contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = unproved_contract_app(mounted_policy, &mut identity).await;
         assert!(!app.test_registered_tool_keys().iter().any(|key| key.1 == "watchdogOverrun"), "the unproved fixture registers no owned factory for this verb");
-        let error = app.dispatch_typed(TestCommand::WatchdogOverrun, &meta()).await.expect_err("an unproved operation must fail before an over-budget reducer starts");
+        let error = app.dispatch_typed(TestCommand::WatchdogOverrun, &meta(), &mut identity).await.expect_err("an unproved operation must fail before an over-budget reducer starts");
         assert_eq!(error.code.0, "interactive-job.not-ui-safe", "a verb with no proof is a verb that was never migrated, and the backstop names the cause");
         assert_eq!(app.test_snapshot().await.count, 0, "the over-budget reducer never started");
-        artifact_app_laws::close_registered_fixture_app(&mut app);
+        artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy);
     }
 
     /// 🧪️ A registry declaring one `HierarchyProvider::Topology` interaction domain ("items", see
@@ -3551,14 +3712,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         app.definition
     }
 
-    async fn interaction_app_under_test() -> ContractApp {
-        contract_app_with(interaction_registry().await).await
+    async fn interaction_app_under_test(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
+        contract_app_with(interaction_registry().await, mounted_policy, identity).await
     }
 
     /// 🕹️ [`interaction_app_under_test`] without the self-closing wrapper — for the local-interaction
     /// laws that move the app into a `PluginRuntime` cell.
-    async fn interaction_app_raw() -> VcsArtifactApp<TestApp> {
-        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), interaction_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    async fn interaction_app_raw(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
+        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), interaction_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
         app.bind_instance_id(meta().instance_id).await;
         app
     }
@@ -3725,7 +3886,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// fails for every page count under that pacing, which is what makes it discriminating.
     #[semio_framework_async_macros::async_test]
     async fn a_command_page_set_reaches_its_terminal_status_in_one_turn_per_page() {
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_022;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "command-page-set".into())]).await.lifecycle_receipt.expect("Captured receipt");
@@ -3885,7 +4046,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     async fn a_command_page_that_is_not_the_next_one_is_refused_by_its_order() {
         let fixture: CommandIngressDisorderFixture =
             serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json")).expect("📥️command-ingress-pages fixture parses");
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_031;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "command-page-order".into())]).await.lifecycle_receipt.expect("Captured receipt");
@@ -3935,7 +4096,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// `📓️a2-mcp-plugin-host-instance-open.md` §6.1, `📓️r2-reactor-retained-command-owner.md`).
     #[semio_framework_async_macros::async_test]
     async fn an_abandoned_ingress_owner_never_answers_the_command_the_host_is_driving() {
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_024;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "abandoned-ingress-owner".into())]).await.lifecycle_receipt.expect("Captured receipt");
@@ -3995,7 +4156,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// process-wide difference weighs every concurrent law in the binary as this command's own.
     #[semio_framework_async_macros::async_test]
     async fn a_long_command_stream_never_pins_the_retained_ingress_authority() {
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_021;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "command-page-authority".into())]).await.lifecycle_receipt.expect("Captured receipt");
@@ -4057,10 +4218,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn plugin_builder_wires_app_factory_for_create_app() {
+        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let identity_started=std::time::Instant::now();
+        let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+
         let bundle = __semio_plugin_bundle().await.expect("synthetic plugin assembly");
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🏪️store/🧫️fixtures/🧫️actor-genesis/🔣️.json")).expect("neutral actor/genesis fixture");
         let actor = protocol::ActorId(fixture["actors"]["opened"].as_str().expect("opened actor").into());
-        let mut app = bundle.create_app(TestApp::<false>::APP_ID, actor.clone()).expect("registered app");
+        let mut app = bundle.create_app(TestApp::<false>::APP_ID, actor.clone(), mounted_policy, &mut identity).expect("registered app");
         assert_eq!(app.app_id().await, TestApp::<false>::APP_ID);
         let TestRuntimeApps::Test(owner) = &mut app;
         assert_eq!(owner.store.local_actor_id(), &actor);
@@ -4070,15 +4237,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let roots = [owner.store.local_actor_id(), owner.config_store.local_actor_id(), owner.draft_store.local_actor_id(), owner.interaction_store.local_actor_id()];
         assert_eq!(serde_json::to_value(roots.map(|actor| actor.0.as_str())).expect("independent actor projection"), serde_json::json!([fixture["actors"]["opened"], fixture["actors"]["opened"], fixture["actors"]["opened"], fixture["actors"]["opened"]]));
         let pack = owner.document_pack().await.expect("stored document");
-        artifact_app_laws::load_document(owner, &pack).await.expect("production reload");
+        artifact_app_laws::load_document(owner, &pack, &mut identity).await.expect("production reload");
         assert_eq!(owner.store.local_actor_id(), &actor, "reload retains the opened actor");
-        assert!(bundle.create_app("unknown-app", actor).is_none());
-        artifact_app_laws::close_registered_fixture_app(&mut app);
+        assert!(bundle.create_app("unknown-app", actor, mounted_policy, &mut identity).is_none());
+        artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads() {
-        let mut app = contract_app_raw().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         let before_snapshot = app.test_snapshot().await;
         let before_edits = app.test_store().await.applied_edit_ids().len();
 
@@ -4092,7 +4268,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(invalid_policy.code.0, "merge.invalid-policy");
         assert_eq!(app.dispatch_report().await.policy, protocol::MergePolicy::Vigilant, "invalid policy never changes the active policy");
 
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("seed one durable edit");
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("seed one durable edit");
         artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the seeded durable edit reaches its publication");
         let (mut envelope, applied_edit_ids) = {
             let store = app.test_store().await;
@@ -4134,13 +4310,22 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let open: Vec<protocol::Conflict> = crate::plugin_runtime::decode_wire_serialized(conflicts).await.expect("post-resolution conflict payload decodes canonically");
         assert!(open.is_empty(), "accepted conflict leaves the open projection");
         assert!(app.open_conflicts().await.is_empty());
-        drain_and_close_fixture(&mut app);
+        drain_and_close_fixture(&mut app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn operation_action_emits_kernel_op_with_true_inverse() {
-        let mut app = contract_app().await;
-        let result = app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        let result = app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
         assert_eq!(result.mutations.len(), 1);
         assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 1 })).unwrap());
         assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 0 })).unwrap()]));
@@ -4156,9 +4341,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// were never part of the undoable gesture in the first place.
     #[semio_framework_async_macros::async_test]
     async fn a_command_reaches_both_ephemeral_lanes_without_touching_history() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let fixture: Value = serde_json::from_str(include_str!("../../🧵️retained-command/🧫️fixtures/🧬️request-context.json")).expect("neutral captured-context fixture");
         let vectors = &fixture["ephemeralPublication"];
-        let mut app = contract_app().await;
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         assert_eq!(app.presence_store.generation().await, 0);
         assert_eq!(app.transient_store.generation().await, 0);
 
@@ -4181,7 +4375,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(app.test_store().await.envelope().vcs.edits.len(), 1, "an ephemeral lane leaked into the document's edit log");
 
         assert_eq!(json!({ "presenceGeneration": app.presence_store.generation().await, "transientGeneration": app.transient_store.generation().await, "documentEdits": app.test_store().await.envelope().vcs.edits.len() }), vectors["completed"]);
-        app.dispatch_action("undo", None, &meta()).await.expect("undo");
+        app.dispatch_action("undo", None, &meta(), &mut identity).await.expect("undo");
         assert_eq!(app.test_snapshot().await.count, 0);
         assert_eq!(app.presence_store.generation().await, 1, "undo must not rewind presence");
         assert_eq!(app.transient_store.generation().await, 1, "undo must not rewind transient");
@@ -4190,8 +4384,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "x".into() }, &meta()).await.expect("set label");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "x".into() }, &meta(), &mut identity).await.expect("set label");
         assert_eq!(app.presence_store.generation().await, 0);
         assert_eq!(app.transient_store.generation().await, 0);
     }
@@ -4206,9 +4409,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// the pick as an unknown id and the domain never shows up in `interaction_state()`.
     #[semio_framework_async_macros::async_test]
     async fn ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs() {
-        let mut app = interaction_app_under_test().await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
 
         let snapshot = app.ephemeral_snapshot().await;
         assert!(!snapshot.interaction.is_empty(), "a broadcasting domain with a live selection must not encode to empty bytes");
@@ -4232,13 +4444,22 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn one_framework_reserved_route_fits_a_bounded_thread_stack() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         std::thread::Builder::new()
             .stack_size(2 * 1024 * 1024)
             .spawn(|| {
                 semio_framework_async::block_on(async {
-                    let mut app = interaction_app_under_test().await;
-                    reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
-                    artifact_app_laws::close_registered_fixture_app(&mut *app);
+                    let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+                    reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
+                    artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy);
                 });
             })
             .expect("bounded-stack worker")
@@ -4303,7 +4524,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 👋 bob leaves the roster — a second call carrying only alice must drop bob from BOTH maps.
     #[semio_framework_async_macros::async_test]
     async fn retained_presence_fills_presence_store_and_peer_marks_and_drops_left_peers() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         let alice = sample_presence_peer("user:alice#s1", Some(3), true);
         let bob = sample_presence_peer("user:bob#s1", Some(5), false);
 
@@ -4322,7 +4552,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(app.peer_presence.len(), 1);
         assert!(app.peer_presence.contains_key("user:alice#s1"));
         assert!(!app.peer_presence.contains_key("user:bob#s1"), "an actor absent from the roster must be dropped, not left stale");
-        drain_and_close_fixture(&mut app);
+        drain_and_close_fixture(&mut app, mounted_policy);
     }
 
     /// 🧮️ The drive bound was a hand-picked 16 calls; the retirement needs 21 (three item releases,
@@ -4332,7 +4562,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// fails at the exact call it happened on instead of hiding under a larger number.
     #[semio_framework_async_macros::async_test]
     async fn peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root() {
-        let mut app = contract_app_raw().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         let alice = sample_presence_peer("user:alice#s1", Some(3), true);
         let bob = sample_presence_peer("user:bob#s1", Some(5), false);
         assert!(publish_presence_roster(&mut app, 1, Some(9), &[alice.clone(), bob], 1000).await.fault.is_none());
@@ -4369,7 +4608,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             }
         }
         assert!(app.presence_peer_retirements.is_empty(), "displaced app-typed peer reaches its domain-owned terminal witness");
-        drain_and_close_fixture(&mut app);
+        drain_and_close_fixture(&mut app, mounted_policy);
     }
 
     /// 🎡️ One maintenance call now runs every stage that still has something to give, so the whole
@@ -4378,7 +4617,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// stays mounted (next line).
     #[semio_framework_async_macros::async_test]
     async fn peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority() {
-        let mut saturated = contract_app_raw().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut saturated = contract_app_raw(mounted_policy, &mut identity).await;
         for seq in 0..ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
             let admission = saturated.reserve_presence_ingress(seq).expect("fixed roster slot admits before decode");
             let cursor = protocol::PresenceCommandCursor::admit_page(seq, None, 0, FixedCommandPage::try_copy_from(&[]).expect("empty fixed page")).map_err(|(error, _)| error).expect("empty roster cursor");
@@ -4401,9 +4649,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             assert!(saturated.take_presence_outcome().is_some(), "every admitted roster has one ordered outcome");
         }
 
-        drain_and_close_fixture(&mut saturated);
+        drain_and_close_fixture(&mut saturated, mounted_policy);
 
-        let mut cancelled = contract_app_raw().await;
+        let mut cancelled = contract_app_raw(mounted_policy, &mut identity).await;
         let admission = cancelled.reserve_presence_ingress(1).expect("cancel roster admission");
         let cancel = admission.cancel.clone();
         let page = FixedCommandPage::try_copy_from(&[0xA5; 17]).expect("fixed retained peer page");
@@ -4427,9 +4675,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert!(cancelled.peer_presence.is_empty(), "cancelled roster never publishes metadata");
         assert_eq!(cancelled.presence_store.peers_root().len(), 0, "cancelled roster never publishes app-typed presence");
 
-        drain_and_close_fixture(&mut cancelled);
+        drain_and_close_fixture(&mut cancelled, mounted_policy);
 
-        let mut stale = contract_app_raw().await;
+        let mut stale = contract_app_raw(mounted_policy, &mut identity).await;
         let admission = stale.reserve_presence_ingress(9).expect("stale roster admission");
         let cursor = protocol::PresenceCommandCursor::admit_page(9, None, 0, FixedCommandPage::try_copy_from(&[]).expect("empty fixed page")).map_err(|(error, _)| error).expect("stale empty roster cursor");
         stale.admit_presence_ingress(admission, cursor, 0);
@@ -4445,7 +4693,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(outcome.fault.expect("stale generation is observable").code.0, "interactive-job.peer-roster-publication-authority");
         assert!(stale.peer_presence.is_empty(), "stale roster never changes the live peer root");
         assert_eq!(stale.presence_store.peers_root().len(), 0, "stale roster never changes the typed peer root");
-        drain_and_close_fixture(&mut stale);
+        drain_and_close_fixture(&mut stale, mounted_policy);
     }
     //#endregion 🔖️AdoptPresenceTests
 
@@ -4713,7 +4961,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn member_factory_closed_dialect_open_failure_retains_pin_and_drains_exact_member() {
-        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let identity_started=std::time::Instant::now();
+        let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         let dialect = test_child_dialect().await;
         let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
         app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
@@ -4754,7 +5008,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn member_factory_closed_dialect_register_rejects_pin_without_mutating_member() {
-        let mut app = contract_composed_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         let dialect = test_child_dialect().await;
         let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
         app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
@@ -4776,7 +5039,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn member_factory_closed_dialect_fresh_register_and_restore_publish_exact_parent_owner() {
-        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let identity_started=std::time::Instant::now();
+        let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         let dialect = test_child_dialect().await;
         let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
         app.register_child("slot", "child-1", dialect.clone(), member).await.expect("pure fresh member is adopted");
@@ -4785,7 +5054,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let member = app.child_store("slot", "child-1").await.unwrap();
         assert_eq!(member.owner_ref(), Some(owner.clone()));
         let packed = member.envelope_pack_bytes().await.unwrap();
-        let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         restored.open_child("slot", "child-1", dialect, &packed).await.expect("fresh factory restores exact parent owner");
         assert_eq!(restored.test_child_admission_state(1).generation, 1);
         assert_eq!(restored.child_store("slot", "child-1").await.unwrap().owner_ref(), Some(owner.clone()));
@@ -4811,10 +5080,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// one composite row names the child's edit, and it is the row that carries the parent's.
     #[semio_framework_async_macros::async_test]
     async fn composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles() {
-        let mut app = contract_composed_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
 
-        let result = app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
+        let result = app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
 
         assert_eq!(
             result.mutations.len(),
@@ -4851,7 +5129,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn an_agent_transaction_carries_owned_child_op_groups_and_commits_undoes_and_redoes_them_as_one_group() {
-        let mut app = contract_composed_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
         let children = vec![test_child_emit("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 5 })])];
         let wire = ChildEmit::encode_groups(&children);
@@ -4925,9 +5212,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// "parent first, children later" route.
     #[semio_framework_async_macros::async_test]
     async fn a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames() {
-        let mut app = contract_composed_app_raw().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
-        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
+        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the migrated composite gesture settles before it is persisted");
         assert_eq!(app.test_snapshot().await.slot.len(), 1, "the live parent declares exactly its one member");
 
@@ -4939,7 +5235,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             "the archive carries the one member, owner-stamped to the document"
         );
 
-        let mut reloaded = contract_composed_app_raw().await;
+        let mut reloaded = contract_composed_app_raw(mounted_policy, &mut identity).await;
         let status = drive_test_archive_load(&mut reloaded, 21, archive.clone()).await;
         assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{:?}", semio_framework_diagnostic::decode_fault_bytes(&status.fault));
         assert_eq!(reloaded.test_snapshot().await.slot.len(), 1, "the reloaded parent carries its own declaration through the pack");
@@ -4948,7 +5244,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(restored.count, 7, "the reloaded child lost its own edit history");
         assert_eq!(child.owner_ref().map(|owner| (owner.parent.artifact_id, owner.slot, owner.child_id)), Some((document.clone(), "slot".to_string(), "child-1".to_string())), "the reloaded child is owned by the reloaded document");
 
-        let mut halved = contract_composed_app_raw().await;
+        let mut halved = contract_composed_app_raw(mounted_policy, &mut identity).await;
         let mut parent_alone = archive;
         parent_alone.members.clear();
         let refused = drive_test_archive_load(&mut halved, 22, parent_alone).await;
@@ -4957,9 +5253,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert!(refusal.contains("closure-rejected"), "the ownership closure names the refusal: {refusal}");
         assert!(halved.test_snapshot().await.slot.is_empty() && halved.child_store("slot", "child-1").await.is_none(), "a refused load leaves the open document as it was");
 
-        drain_and_close_composed_fixture(&mut halved);
-        drain_and_close_composed_fixture(&mut reloaded);
-        drain_and_close_composed_fixture(&mut app);
+        drain_and_close_composed_fixture(&mut halved, mounted_policy);
+        drain_and_close_composed_fixture(&mut reloaded, mounted_policy);
+        drain_and_close_composed_fixture(&mut app, mounted_policy);
     }
 
     /// 🪆️ LAW (design §20.15, W-b): `child_head_packs` — what `AppCommand::ReadChildHeads` answers and the MCP gateway injects as
@@ -4967,11 +5263,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// its slot, id and dialect: a reader that composes on read decodes the child's live value from it, no history fold.
     #[semio_framework_async_macros::async_test]
     async fn a_composed_documents_child_heads_answer_each_owned_childs_current_head_snapshot() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
-        let mut app = contract_composed_app_raw().await;
+        let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
-        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
+        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the composite gesture settles");
 
         let heads = PluginApp::child_head_packs(&app).await.expect("child heads");
@@ -4979,7 +5284,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let head: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&heads[0].head_pack).expect("the head pack is the child's snapshot pack");
         assert_eq!(head.count, 7, "the head pack carries the child's current value");
         assert_eq!(crate::inference_child_dependency(&heads[0].slot, &heads[0].child_id), "child:slot/child-1");
-        drain_and_close_composed_fixture(&mut app);
+        drain_and_close_composed_fixture(&mut app, mounted_policy);
     }
 
     /// 🎞️ LAW (W2A-6 P5, `📓️api-stepped-document-load.md` §4/§9): consuming a whole document of the app's own schema never folds
@@ -4988,7 +5293,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// a text-only host edge carries it losslessly. A foreign document schema is refused under the localized framework code.
     #[semio_framework_async_macros::async_test]
     async fn a_whole_document_media_import_is_a_stepped_archive_load_and_never_folds_inside_the_call() {
-        let mut source = contract_composed_app_raw().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut source = contract_composed_app_raw(mounted_policy, &mut identity).await;
         source
             .test_store_mut()
             .await
@@ -4996,7 +5310,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             .await
             .expect("the source edits its document");
         let artifact = PluginApp::produce_media(&mut source, "artifact:out").await.expect("the source hands out its whole document");
-        let mut consumer = contract_composed_app_raw().await;
+        let mut consumer = contract_composed_app_raw(mounted_policy, &mut identity).await;
         let before = consumer.test_snapshot().await;
         let source_id = PluginApp::document_identity(&source).expect("the source's identity");
         assert!(std::str::from_utf8(&artifact.data).is_ok_and(|text| text.starts_with("pk:")), "the whole-document carrier is pk: base64 text");
@@ -5025,8 +5339,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(fault.code.0, crate::app::MEDIA_SCHEMA_MISMATCH_CODE);
         let notice = semio_framework::kernel::fault_notice(&fault, &[], semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).expect("the refusal earns its localized notice");
         assert!(notice.text.contains("foreign.document") && notice.text.contains(<TestApp as ArtifactApp>::DOCUMENT_SCHEMA), "{}", notice.text);
-        drain_and_close_composed_fixture(&mut consumer);
-        drain_and_close_composed_fixture(&mut source);
+        drain_and_close_composed_fixture(&mut consumer, mounted_policy);
+        drain_and_close_composed_fixture(&mut source, mounted_policy);
     }
 
     /// 🪆️ LAW (design §20.15, S4-LOAD wave 4): a COMPOSED document crosses a media edge whole — `produce_media("artifact:out")` carries the
@@ -5034,14 +5348,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// adopts the members: the child comes back as its own live store at the value its history ended on.
     #[semio_framework_async_macros::async_test]
     async fn a_composed_document_crosses_a_media_edge_with_its_children() {
-        let mut source = contract_composed_app_raw().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut source = contract_composed_app_raw(mounted_policy, &mut identity).await;
         register_test_child(&mut source, "child-1").await;
-        source.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
+        source.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         artifact_app_laws::settle_registered_typed_operation(&mut source, meta().instance_id).await.expect("the composite gesture settles");
         let mut artifact = PluginApp::produce_media(&mut source, "artifact:out").await.expect("the composed source hands out its whole document");
         artifact.data = String::from_utf8(artifact.data).expect("a text-only host edge carries the carrier").into_bytes();
 
-        let mut consumer = contract_composed_app_raw().await;
+        let mut consumer = contract_composed_app_raw(mounted_policy, &mut identity).await;
         let crate::app::MediaConsumption::DocumentLoad(archive) = PluginApp::consume_media(&mut consumer, "artifact:in", artifact).await.expect("consumed") else {
             panic!("a whole document is answered as a document archive load");
         };
@@ -5058,8 +5381,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let child = consumer.child_store("slot", "child-1").await.expect("the member came along");
         let restored: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&child.document_pack_bytes().await.expect("child pack")).expect("decode child");
         assert_eq!(restored.count, 7, "the child arrives at the value its own history ended on");
-        drain_and_close_composed_fixture(&mut consumer);
-        drain_and_close_composed_fixture(&mut source);
+        drain_and_close_composed_fixture(&mut consumer, mounted_policy);
+        drain_and_close_composed_fixture(&mut source, mounted_policy);
     }
 
     /// 🧪️ Runs the reserved spawn-job the host would for `admitted` and answers the bytes its
@@ -5104,10 +5427,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// publishes its result — pins included — only after the last unit.
     #[semio_framework_async_macros::async_test]
     async fn a_composed_checkpoint_commit_is_driven_one_ready_unit_per_turn_with_progress() {
-        let mut app = contract_composed_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         for child in ["child-1", "child-2"] {
             register_test_child(&mut app, child).await;
-            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta()).await.expect("composite edit");
+            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         }
         let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("admit checkpoint");
         let (job, output) = finish_reserved_spawn_job(&admitted).await;
@@ -5140,10 +5472,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// still closes to terminal emptiness.
     #[semio_framework_async_macros::async_test]
     async fn a_composed_checkpoint_commit_cancels_between_units() {
-        let mut app = contract_composed_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         for child in ["child-1", "child-2"] {
             register_test_child(&mut app, child).await;
-            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta()).await.expect("composite edit");
+            app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         }
         let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("admit checkpoint");
         let (job, output) = finish_reserved_spawn_job(&admitted).await;
@@ -5167,21 +5508,30 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// otherwise a restored composition silently mixes an old parent with a new child.
     #[semio_framework_async_macros::async_test]
     async fn a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them() {
-        let mut app = contract_composed_app().await;
-        register_test_child(&mut app, "child-1").await;
-        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("first composite edit");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
 
-        app.dispatch_action("commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("checkpoint");
+        let mut app = contract_composed_app(mounted_policy, &mut identity).await;
+        register_test_child(&mut app, "child-1").await;
+        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("first composite edit");
+
+        app.dispatch_action("commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta(), &mut identity).await.expect("checkpoint");
         let pinned_checkpoint = app.test_store().await.current_checkpoint_id().map(str::to_string).expect("parent checkpoint exists");
         let pins = app.test_store().await.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == pinned_checkpoint).map(|checkpoint| checkpoint.composition_pins.clone()).expect("checkpoint found");
         assert_eq!(pins.len(), 1, "a composing document's checkpoint must pin its children");
         assert_eq!(pins[0].child_ref.artifact_id, "child-1");
 
-        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 42 }, &meta()).await.expect("second composite edit");
+        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 42 }, &meta(), &mut identity).await.expect("second composite edit");
         let live = reads_child_count(&app);
         assert_eq!(live.await, 42);
 
-        app.dispatch_action("checkoutCheckpoint", Some(&dv(serde_json::json!({ "checkpointId": pinned_checkpoint }))), &meta()).await.expect("checkout");
+        app.dispatch_action("checkoutCheckpoint", Some(&dv(serde_json::json!({ "checkpointId": pinned_checkpoint }))), &meta(), &mut identity).await.expect("checkout");
         assert_eq!(reads_child_count(&app).await, 7, "checkout did not cascade to the pinned child");
     }
 
@@ -5196,7 +5546,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// already run against it.
     #[semio_framework_async_macros::async_test]
     async fn child_content_publication_path_copies_fixed_pages_and_command_capture_retains_one_root() {
-        let mut app = contract_composed_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-a").await;
         let admitted = ChildContentView::clone(&app.child_content_root);
         let admitted_root = admitted.root.as_ref().expect("published root").clone();
@@ -5211,7 +5570,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(!app.child_content_retirements.is_empty(), "the replaced nonempty root remains under explicit retirement authority");
         drop(admitted);
         drop(admitted_root);
-        drain_and_close_composed_fixture(&mut app);
+        drain_and_close_composed_fixture(&mut app, mounted_policy);
     }
 
     /// 🎡️ The rotation is fair: one call runs every stage that still has something to give and
@@ -5220,7 +5579,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// authority never reports a block at all, so nothing here is weakened.
     #[semio_framework_async_macros::async_test]
     async fn child_snapshot_retirement_rejection_preserves_exact_erased_owner() {
-        let mut app = contract_composed_app_raw().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         let generation = app.admit_child_content_publication().expect("admit replacement root");
@@ -5230,7 +5598,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let entry = retirement.pending.as_ref().expect("exact rejected snapshot remains pending");
         assert!(entry.snapshot.typed::<TestSnapshot>().is_some(), "rejection preserves the exact erased owner and type identity");
         install_test_member_owners(&mut app, "child-a");
-        drain_and_close_composed_fixture(&mut app);
+        drain_and_close_composed_fixture(&mut app, mounted_policy);
     }
 
     /// 🎡️ The property is RECLAMATION, not the step word. `maintenance_step` rotates: one call
@@ -5258,7 +5626,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// law proves the refusal, not a leak.
     #[semio_framework_async_macros::async_test]
     async fn child_root_maintenance_requires_terminal_empty_before_reclaim() {
-        let mut app = contract_composed_app_raw().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", true);
@@ -5303,12 +5680,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             "the lie must be caught BY NAME: {fault:?}"
         );
         assert!(!app.child_content_retirements.is_empty(), "terminal witness failure retains the registry authority");
-        drain_and_close_composed_fixture(&mut app);
+        drain_and_close_composed_fixture(&mut app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn child_root_maintenance_reclaims_completed_owner_for_later_publication() {
-        let mut app = contract_composed_app_raw().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", false);
@@ -5324,7 +5710,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(app.child_content_retirements.is_empty(), "terminal-empty retirement is reclaimed while the app remains live");
         let generation = app.admit_child_content_publication().expect("later publication can reuse the fixed retirement registry");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("later publication after bounded reclaim");
-        drain_and_close_composed_fixture(&mut app);
+        drain_and_close_composed_fixture(&mut app, mounted_policy);
     }
 
     /// ⌨️ LAW (coordinator P1, ticket 26/09/23 C12): child-content publications at the maximum rate — 10 000 with no
@@ -5334,7 +5720,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// reports maintenance pressure until maintenance returned it below its quarter-occupancy bound.
     #[semio_framework_async_macros::async_test]
     async fn child_publications_at_the_maximum_rate_wait_on_retirement_instead_of_faulting() {
-        let mut app = contract_composed_app_raw().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", false);
@@ -5348,7 +5743,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(PluginApp::maintenance_under_pressure(&app), "a saturated child-root retirement registry reports maintenance pressure");
         crate::app::artifact_app_laws::drain_maintenance_pressure(&mut app);
         assert!(app.child_content_retirements.len() < MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY, "pressure maintenance returns the child roots below their quarter-occupancy bound");
-        drain_and_close_composed_fixture(&mut app);
+        drain_and_close_composed_fixture(&mut app, mounted_policy);
     }
 
     /// ⏱️ This clause used to be an 8 ms wall clock. The clock was a PROXY for one property — the
@@ -5360,7 +5755,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 4 MiB snapshot would have to clone it or pack-encode it, and both are counted.
     #[semio_framework_async_macros::async_test]
     async fn maximum_child_public_dispatch_reaches_first_continuation_without_clone_or_encode() {
-        let mut app = contract_composed_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-maximum").await;
         let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-maximum".to_string())).expect("maximum child").member;
         child.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "x".repeat(MAXIMUM_CHILD_PROBE_BYTES) })], transaction: None }).await.expect("seed maximum child");
@@ -5369,7 +5773,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         MAXIMUM_CHILD_CLONES.store(0, std::sync::atomic::Ordering::Release);
         MAXIMUM_CHILD_ENCODINGS.store(0, std::sync::atomic::Ordering::Release);
 
-        let result = app.dispatch_action("probeChild", Some(&dv(serde_json::json!({ "slot": "slot", "childId": "child-maximum" }))), &meta()).await.expect("public maximum-child probe");
+        let result = app.dispatch_action("probeChild", Some(&dv(serde_json::json!({ "slot": "slot", "childId": "child-maximum" }))), &meta(), &mut identity).await.expect("public maximum-child probe");
         assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "probeChildContinuation")));
         let answer = format!("{:?}", result.output);
         assert!(answer.len() < 4096, "the public dispatch's own answer carried {} bytes of the maximum child instead of a continuation", answer.len());
@@ -5382,14 +5786,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// `thread_local!` child caches this view replaces used to go stale.
     #[semio_framework_async_macros::async_test]
     async fn the_child_content_view_never_goes_stale_across_undo_and_redo() {
-        let mut app = contract_composed_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
-        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
+        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         assert_eq!(reads_child_count(&app).await, 7);
 
-        app.dispatch_action("undo", None, &meta()).await.expect("undo");
+        app.dispatch_action("undo", None, &meta(), &mut identity).await.expect("undo");
         assert_eq!(reads_child_count(&app).await, 0, "the view must reflect the child's undone state");
-        app.dispatch_action("redo", None, &meta()).await.expect("redo");
+        app.dispatch_action("redo", None, &meta(), &mut identity).await.expect("redo");
         assert_eq!(reads_child_count(&app).await, 7, "the view must reflect the child's redone state");
     }
 
@@ -5405,15 +5818,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// SKIPPED, not silently dropped nor allowed to abort the rest of the group.
     #[semio_framework_async_macros::async_test]
     async fn group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child() {
-        let mut app = contract_composed_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-a").await;
         register_test_child(&mut app, "child-b").await;
 
         let before = app.test_snapshot().await;
-        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-a".into(), child_value: 5 }, &meta()).await.expect("composite edit");
+        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-a".into(), child_value: 5 }, &meta(), &mut identity).await.expect("composite edit");
         assert_eq!(app.test_snapshot().await.label, "composite");
 
-        let result = app.dispatch_action("undo", None, &meta()).await.expect("group undo");
+        let result = app.dispatch_action("undo", None, &meta(), &mut identity).await.expect("group undo");
 
         assert_eq!(app.test_snapshot().await, before);
         let TestMembers::Child(child_a_store) = &mut app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("child-a").member;
@@ -5432,7 +5854,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// doc comment, skipping this step would make `ChildGenesis` pointless.
     #[semio_framework_async_macros::async_test]
     async fn created_children_survive_absorb_into_the_child_store_map() {
-        let mut app = contract_composed_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "genesis-child").await;
         let parent_id = app.store.envelope().id.clone();
         app.composition.graph_mut().await.insert_owns(&parent_id, "slot", "genesis-child").await.expect("seed ownership so absorb's slot_of lookup resolves");
@@ -5444,15 +5875,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let entry = app.children.get_mut(&("slot".to_string(), "genesis-child".to_string())).expect("genesis child absorbed into the live map under the slot its parent declares it in");
         assert_eq!(entry.reference.dialect.artifact_kind, "s.test.child");
         assert_eq!(entry.member.document_id().await, "genesis-child");
-        drain_and_close_composed_fixture(&mut app);
+        drain_and_close_composed_fixture(&mut app, mounted_policy);
     }
     //#endregion 🔖️CompositionTests
 
     /// 👁️ A view command never advances the document.
     #[semio_framework_async_macros::async_test]
     async fn view_action_emits_no_operations() {
-        let mut app = contract_app().await;
-        let result = app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).await.expect("select");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        let result = app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta(), &mut identity).await.expect("select");
         assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
         assert_eq!(app.test_snapshot().await, TestSnapshot::default());
@@ -5477,16 +5917,25 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// config the select wrote stays.
     #[semio_framework_async_macros::async_test]
     async fn a_config_lane_edit_is_never_a_history_row_and_undo_never_steps_over_it() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-        app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).await.expect("select");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
+        app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta(), &mut identity).await.expect("select");
         assert_eq!(app.test_config().await.selected, Some("node-1".to_string()), "the select wrote the config lane");
         let history = app.test_history().await;
         assert_eq!(history.commands.iter().map(|entry| entry.action_id.as_str()).collect::<Vec<_>>(), vec!["increment"], "only the document row is listed");
-        reserved_action(&mut app, "undo", None).await;
+        reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.count, 0, "undo retracts the document edit, never the config one");
         assert_eq!(app.test_config().await.selected, Some("node-1".to_string()), "undo never steps over the config lane");
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
 
@@ -5494,16 +5943,25 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// after it" — reverting to the first increment undoes the second and leaves the config the interleaved selects wrote.
     #[semio_framework_async_macros::async_test]
     async fn revert_to_command_walks_the_document_lane_and_leaves_config_alone() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).await.expect("select a");
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-        app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).await.expect("select b");
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment again");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta(), &mut identity).await.expect("select a");
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
+        app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta(), &mut identity).await.expect("select b");
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment again");
         let history = app.test_history().await;
         assert_eq!(history.commands.len(), 2, "two document rows and no config row");
         let first = history.commands.iter().min_by_key(|entry| entry.seq).expect("the first increment row");
         assert!(first.revertible, "a document row is revertible");
-        reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first.seq })))).await;
+        reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first.seq }))), &mut identity).await;
         assert_eq!(app.test_snapshot().await.count, 1, "reverting to the first increment undoes the second");
         assert_eq!(app.test_config().await.selected, Some("b".to_string()), "the config lane is never walked");
         let after = app.test_history().await;
@@ -5515,8 +5973,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// instead of replaying anything locally, and does NOT append a new log entry on its own.
     #[semio_framework_async_macros::async_test]
     async fn shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally() {
-        let mut app = contract_app().await;
-        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } })))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } }))), &mut identity).await;
 
         let history = app.test_history().await;
         let entry = history.commands.first().expect("one logged shell row");
@@ -5524,26 +5991,44 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(entry.revertible, "a Shell row with a stored inverse must be revertible");
         let seq = entry.seq;
 
-        let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq })))).await;
+        let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq }))), &mut identity).await;
 
         assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(semio_framework::dsl_value!({ "themeId": "light" })) }]);
         assert_eq!(app.test_history().await.commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
-        artifact_app_laws::close_registered_fixture_app(&mut *app);
+        artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn shell_action_emits_host_effect_without_operations() {
-        let mut app = contract_app().await;
-        let result = app.dispatch_typed(TestCommand::Navigate, &meta()).await.expect("navigate");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        let result = app.dispatch_typed(TestCommand::Navigate, &meta(), &mut identity).await.expect("navigate");
         assert!(result.mutations.is_empty());
         assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }]);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn copy_emits_clipboard_write_effect_with_no_operations() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).await.expect("setLabel");
-        let result = app.handle_action("copy", None, &meta()).await.expect("copy");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta(), &mut identity).await.expect("setLabel");
+        let result = app.handle_action("copy", None, &meta(), &mut identity).await.expect("copy");
         assert!(result.mutations.is_empty(), "copy must not record an undo entry");
         assert_eq!(result.requested_effects.len(), 1);
         let Effect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
@@ -5553,8 +6038,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn copy_on_empty_selection_is_a_benign_no_operation() {
-        let mut app = contract_app().await;
-        let result = app.handle_action("copy", None, &meta()).await.expect("copy");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        let result = app.handle_action("copy", None, &meta(), &mut identity).await.expect("copy");
         assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
     }
@@ -5562,19 +6056,37 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// ✂️ One undo restores the cut label — cut is a single coalesced edit, not two.
     #[semio_framework_async_macros::async_test]
     async fn cut_removes_label_and_emits_clipboard_write_as_one_undo_unit() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).await.expect("setLabel");
-        let result = app.handle_action("cut", None, &meta()).await.expect("cut");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta(), &mut identity).await.expect("setLabel");
+        let result = app.handle_action("cut", None, &meta(), &mut identity).await.expect("cut");
         assert_eq!(app.test_snapshot().await.label, "");
         assert_eq!(result.requested_effects.len(), 1);
         assert!(matches!(&result.requested_effects[0], Effect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
-        reserved_action(&mut app, "undo", None).await;
+        reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.label, "hello");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn paste_materializes_fragment_at_original_anchor() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         let fragment = ClipboardFragment {
             schema: "semio.test/v1".into(),
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
@@ -5584,13 +6096,22 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             label: "pasted".into(),
         };
         let args = dv(json!({ "fragment": fragment, "anchor": "original" }));
-        app.handle_action("paste", Some(&args), &meta()).await.expect("paste");
+        app.handle_action("paste", Some(&args), &meta(), &mut identity).await.expect("paste");
         assert_eq!(app.test_snapshot().await.label, "pasted");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn paste_with_non_original_anchor_reaches_the_app_placement() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         let fragment = ClipboardFragment {
             schema: "semio.test/v1".into(),
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
@@ -5600,14 +6121,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             label: "pasted".into(),
         };
         let args = dv(json!({ "fragment": fragment, "anchor": "centroid" }));
-        app.handle_action("paste", Some(&args), &meta()).await.expect("paste");
+        app.handle_action("paste", Some(&args), &meta(), &mut identity).await.expect("paste");
         assert_eq!(app.test_snapshot().await.label, format!("pasted-{:?}", PasteAnchor::Centroid));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
-        let mut app = contract_app().await;
-        let result = app.handle_action("paste", None, &meta()).await.expect("paste");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        let result = app.handle_action("paste", None, &meta(), &mut identity).await.expect("paste");
         assert!(result.mutations.is_empty());
         assert_eq!(app.test_snapshot().await.label, "");
     }
@@ -5630,13 +6160,22 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// and one undo reverts the whole gesture back to the empty label.
     #[semio_framework_async_macros::async_test]
     async fn streamed_ticks_and_their_commit_are_one_undo_step() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         for value in ["a", "ab"] {
-            app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit: false }, &meta()).await.expect("streamLabel tick");
+            app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit: false }, &meta(), &mut identity).await.expect("streamLabel tick");
         }
-        app.dispatch_typed(TestCommand::StreamLabel { value: "abc".into(), commit: true }, &meta()).await.expect("streamLabel commit");
+        app.dispatch_typed(TestCommand::StreamLabel { value: "abc".into(), commit: true }, &meta(), &mut identity).await.expect("streamLabel commit");
         assert_eq!(app.test_snapshot().await.label, "abc");
-        reserved_action(&mut app, "undo", None).await;
+        reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.label, "");
     }
 
@@ -5644,38 +6183,65 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// reverts exactly the last dispatch.
     #[semio_framework_async_macros::async_test]
     async fn plain_emissions_never_coalesce() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         for value in ["a", "ab", "abc"] {
-            app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).await.expect("setLabel");
+            app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta(), &mut identity).await.expect("setLabel");
         }
-        reserved_action(&mut app, "undo", None).await;
+        reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.label, "ab");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn history_actions_round_trip_through_the_store() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc1");
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc2");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("inc1");
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("inc2");
         assert_eq!(app.test_snapshot().await.count, 2);
 
-        let undo = reserved_action(&mut app, "undo", None).await;
+        let undo = reserved_action(&mut app, "undo", None, &mut identity).await;
         assert!(undo.mutations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.test_snapshot().await.count, 1);
 
-        reserved_action(&mut app, "redo", None).await;
+        reserved_action(&mut app, "redo", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.count, 2);
 
-        let checkpoint = reserved_action(&mut app, "commitCheckpoint", None).await;
+        let checkpoint = reserved_action(&mut app, "commitCheckpoint", None, &mut identity).await;
         assert!(checkpoint.mutations.is_empty());
         assert!(checkpoint.events.iter().any(|event| event.kind == "history-changed"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_invocation_does_not_require_window_ownership() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         use semio_framework::manifest::{ActionAddress, ActionInvocation};
-        let mut app = contract_app().await;
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         let invocation = ActionInvocation {
             address: ActionAddress {
                 plugin_id: "test".into(),
@@ -5687,7 +6253,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             },
             arguments: Default::default(),
         };
-        let admitted = app.handle_action_invocation(&invocation, Some("edit"), &meta()).await.expect("reserved undo without window ownership");
+        let admitted = app.handle_action_invocation(&invocation, Some("edit"), &meta(), &mut identity).await.expect("reserved undo without window ownership");
         let result = settle_reserved(&mut app, admitted).await;
         assert!(result.mutations.is_empty());
         for _ in 0..100_000 {
@@ -5701,8 +6267,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_actor_ingress_admits_undeclared_window_kind() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         use semio_framework::manifest::{ActionAddress, ActionInvocation, ViewWindowInstance};
-        let mut app = contract_app().await;
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
             .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
@@ -5729,7 +6304,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(super::addressed_action_view(&view, &invocation).is_err(), "strict window projection rejects a missing instance");
         let admitted = super::admit_addressed_action_view(&view, &invocation).expect("reserved undo is admitted without window ownership");
         let meta = ActionMeta { view_state: Some(admitted), ..meta() };
-        let admitted = super::drive_self_waking_ready(app.handle_action_invocation(&invocation, Some("edit"), &meta)).expect("actor reserved undo");
+        let admitted = super::drive_self_waking_ready(app.handle_action_invocation(&invocation, Some("edit"), &meta, &mut identity)).expect("actor reserved undo");
         assert!(admitted.mutations.is_empty());
         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)), "first turn must admit spawn-job");
         assert_eq!(app.test_snapshot().await.count, 1, "first turn must not commit history");
@@ -5748,14 +6323,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_first_turn_admits_spawn_job_and_drive_commits_history_route() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
             .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
             .await
             .expect("seed document edit");
         assert_eq!(app.test_snapshot().await.count, 1);
-        let admitted = app.handle_action("undo", None, &meta()).await.expect("admit undo");
+        let admitted = app.handle_action("undo", None, &meta(), &mut identity).await.expect("admit undo");
         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)));
         assert!(admitted.events.iter().all(|event| event.kind != "history-changed"));
         assert_eq!(app.test_snapshot().await.count, 1, "first turn answers without committing");
@@ -5774,7 +6358,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧪 Browser #37 chrome: [Set Active Example, Resize Window] then spawn-admit undo.
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_pops_chrome_top_shell_then_publishes_history_patch() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         reserved_action(
             &mut app,
             NOTE_SHELL_COMMAND_ACTION_ID,
@@ -5784,7 +6377,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 "inverseCommandId": "setActiveExample",
                 "inverseArgs": { "exampleId": "forest" }
             }))),
-        )
+         &mut identity)
         .await;
         reserved_action(
             &mut app,
@@ -5795,14 +6388,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 "inverseCommandId": "os.resizeWindow",
                 "inverseArgs": { "width": 800, "height": 600 }
             }))),
-        )
+         &mut identity)
         .await;
         let before = app.test_history().await;
         assert_eq!(before.commands.iter().map(|entry| label_in(&entry.label, Locale::En)).collect::<Vec<_>>(), ["Resize Window", "Set Active Example"]);
         assert!(before.can_undo);
         assert!(!before.can_redo);
 
-        let admitted = app.handle_action("undo", None, &meta()).await.expect("admit chrome undo");
+        let admitted = app.handle_action("undo", None, &meta(), &mut identity).await.expect("admit chrome undo");
         assert!(
             admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
             "first turn must admit Isolated framework.reserved.tool"
@@ -5826,7 +6419,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let example = after_resize.commands.iter().find(|entry| entry.action_id == "setActiveExample").expect("example");
         assert!(example.revertible);
 
-        let second = reserved_action(&mut app, "undo", None).await;
+        let second = reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(
             second.requested_effects,
             vec![Effect::ReplayShellCommand { action_id: "setActiveExample".into(), args: Some(dv(json!({ "exampleId": "forest" }))) }]
@@ -5835,26 +6428,35 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(!patch2.can_undo);
         assert!(patch2.can_redo);
 
-        let redo_example = reserved_action(&mut app, "redo", None).await;
+        let redo_example = reserved_action(&mut app, "redo", None, &mut identity).await;
         assert_eq!(redo_example.requested_effects, vec![Effect::ReplayShellCommand { action_id: "setActiveExample".into(), args: None }]);
         let redo_patch = redo_example.history_patch.expect("redo publishes history_patch");
         assert!(redo_patch.can_undo);
         assert!(redo_patch.can_redo);
         assert!(app.test_history().await.commands.iter().find(|entry| entry.action_id == "setActiveExample").is_some_and(|entry| entry.revertible));
 
-        let redo_resize = reserved_action(&mut app, "redo", None).await;
+        let redo_resize = reserved_action(&mut app, "redo", None, &mut identity).await;
         assert_eq!(redo_resize.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: None }]);
         let redo_resize_patch = redo_resize.history_patch.expect("second redo publishes history_patch");
         assert!(redo_resize_patch.can_undo);
         assert!(!redo_resize_patch.can_redo);
         assert!(app.test_history().await.commands.iter().find(|entry| entry.action_id == "os.resizeWindow").is_some_and(|entry| entry.revertible));
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🧪 #38 host-drive contract: spawn-admit undo reaches Done in 2 Isolated steps with the browser budget.
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_reaches_done_within_host_drive_contract() {
-        let mut app = contract_app_raw().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         reserved_action(
             &mut app,
             NOTE_SHELL_COMMAND_ACTION_ID,
@@ -5864,7 +6466,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 "inverseCommandId": "setActiveExample",
                 "inverseArgs": { "exampleId": "forest" }
             }))),
-        )
+         &mut identity)
         .await;
         reserved_action(
             &mut app,
@@ -5875,9 +6477,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 "inverseCommandId": "os.resizeWindow",
                 "inverseArgs": { "width": 800, "height": 600 }
             }))),
-        )
+         &mut identity)
         .await;
-        let admitted = app.handle_action("undo", None, &meta()).await.expect("admit chrome undo");
+        let admitted = app.handle_action("undo", None, &meta(), &mut identity).await.expect("admit chrome undo");
         assert!(
             admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
             "first turn must admit Isolated framework.reserved.tool"
@@ -5889,13 +6491,22 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: Some(dv(json!({ "width": 800, "height": 600 }))) }]
         );
         assert!(settled.history_patch.is_some_and(|patch| patch.can_undo && patch.can_redo && !patch.upserts.is_empty()));
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🧪 Browser #37 mixed stack: document example under chrome-top Resize Window.
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_pops_shell_then_falls_through_to_document_store() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
             .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
@@ -5911,14 +6522,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 "inverseCommandId": "os.resizeWindow",
                 "inverseArgs": { "width": 800, "height": 600 }
             }))),
-        )
+         &mut identity)
         .await;
         assert_eq!(app.test_snapshot().await.count, 1);
         let before = app.test_history().await;
         assert!(before.commands.iter().any(|entry| label_in(&entry.label, Locale::En).contains("Set Active Example")));
         assert_eq!(before.commands.first().map(|entry| label_in(&entry.label, Locale::En)), Some("Resize Window"));
 
-        let first = reserved_action(&mut app, "undo", None).await;
+        let first = reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(
             first.requested_effects,
             vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: Some(dv(json!({ "width": 800, "height": 600 }))) }]
@@ -5926,28 +6537,37 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(app.test_snapshot().await.count, 1, "first undo must pop the chrome-top shell, not the document example");
         assert!(first.history_patch.as_ref().is_some_and(|patch| patch.can_undo && !patch.upserts.is_empty()));
 
-        let second = reserved_action(&mut app, "undo", None).await;
+        let second = reserved_action(&mut app, "undo", None, &mut identity).await;
         assert!(second.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })));
         assert_eq!(app.test_snapshot().await.count, 0, "second undo must apply the document inverse");
         assert!(second.history_patch.as_ref().is_some_and(|patch| patch.can_redo && !patch.upserts.is_empty()));
 
-        reserved_action(&mut app, "redo", None).await;
+        reserved_action(&mut app, "redo", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.count, 1, "redo must restore the document example before the shell");
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🧪 Host `handleAction` JSON (`windowKindId=puzzle3d-main`, `actionId=undo`) through `plugin_handle_action`.
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_host_json_export_admits_isolated_spawn_job() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         use semio_framework::manifest::ViewWindowInstance;
-        let mut app = contract_app_raw().await;
+        let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         app.bind_instance_id(1).await;
         app.test_store_mut()
             .await
             .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
             .await
             .expect("seed document edit");
-        let runtime = super::PluginRuntime::<TestRuntimeApps>::new();
+        let runtime = super::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         super::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.expect("host-wire bundle"));
         super::test_push_instance(&runtime, super::AppInstance { id: 1, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
         let action_json = format!(
@@ -5987,10 +6607,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// is what the window-kind gate refused `undeclared-action` on every undo (ticket 26/09/18 §3.2).
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_browser_note_without_inverse_is_not_an_undo_target() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/reserved-undo-browser-note.json")).expect("browser-note fixture");
-        let mut app = contract_app().await;
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         for entry in fixture["stack"].as_array().expect("stack") {
-            reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(entry.clone()))).await;
+            reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(entry.clone())), &mut identity).await;
         }
         let before = app.test_history().await;
         assert_eq!(before.commands.iter().map(|entry| label_in(&entry.label, Locale::En)).collect::<Vec<_>>(), ["Activate Window", "Resize Window", "Set Active Example"]);
@@ -5999,7 +6628,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let entry = before.commands.iter().find(|entry| entry.action_id == action_id).expect("undeclared-inverse chrome is still logged");
             assert!(!entry.revertible, "{action_id} declared no inverse, so it must not be revertible");
         }
-        let admitted = app.handle_action("undo", None, &meta()).await.expect("admit browser-note undo");
+        let admitted = app.handle_action("undo", None, &meta(), &mut identity).await.expect("admit browser-note undo");
         assert!(
             admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
             "first turn must admit Isolated framework.reserved.tool"
@@ -6019,11 +6648,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(!patch.upserts.is_empty());
         let after = app.test_history().await;
         assert!(after.commands.iter().find(|entry| entry.action_id == replay_id).is_some_and(|entry| !entry.revertible), "popped chrome-top shell is no longer revertible");
-        let redo = reserved_action(&mut app, "redo", None).await;
+        let redo = reserved_action(&mut app, "redo", None, &mut identity).await;
         assert_eq!(redo.requested_effects, vec![Effect::ReplayShellCommand { action_id: fixture["redo"]["replayActionId"].as_str().expect("redo replayActionId").into(), args: None }]);
         assert!(redo.history_patch.is_some_and(|patch| patch.can_undo && !patch.can_redo));
         assert!(app.test_history().await.commands.iter().find(|entry| entry.action_id == replay_id).is_some_and(|entry| entry.revertible));
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🧪 §3.2's user-visible half: clicking a window between two edits noted `shell.windowActivate`,
@@ -6032,7 +6661,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// not an undo target, so the DOCUMENT edit is what `undo` pops and no replay leaves the guest.
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_steps_over_undeclared_chrome_and_pops_the_document_edit() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
             .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
@@ -6043,13 +6681,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             &mut app,
             NOTE_SHELL_COMMAND_ACTION_ID,
             Some(&dv(json!({ "commandId": "shell.windowActivate", "label": "Activate Window", "detail": { "windowId": "trinity-jack-graph" } }))),
-        )
+         &mut identity)
         .await;
         let before = app.test_history().await;
         assert_eq!(before.commands.first().map(|entry| label_in(&entry.label, Locale::En)), Some("Activate Window"), "the window activation is the newest row");
         assert!(before.commands.iter().find(|entry| entry.action_id == "shell.windowActivate").is_some_and(|entry| !entry.revertible), "a note that declared no inverse is not an undo target");
         assert_eq!(app.test_snapshot().await.count, 1);
-        let undone = reserved_action(&mut app, "undo", None).await;
+        let undone = reserved_action(&mut app, "undo", None, &mut identity).await;
         assert!(
             undone.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })),
             "undo must not replay a window activation into the guest"
@@ -6057,7 +6695,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(app.test_snapshot().await.count, 0, "undo must pop the document edit, not the window activation");
         let after = app.test_history().await;
         assert!(after.commands.iter().any(|entry| entry.action_id == "shell.windowActivate"), "the chrome row stays in the append-only log");
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🧪 `ReplayShellCommand` survives the leftover `pack_rt` encode/`decode_wire_effect` path.
@@ -6087,8 +6725,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// rather than untranslated English, which is the property this clause exists for.
     #[semio_framework_async_macros::async_test]
     async fn an_operation_action_appends_one_command_log_entry_linked_to_its_edit() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
         let history = app.test_history().await;
         assert_eq!(history.commands.len(), 1);
         let entry = &history.commands[0];
@@ -6103,9 +6750,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn a_streamed_gesture_appends_exactly_one_command_log_entry() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         for (value, commit) in [("a", false), ("ab", false), ("abc", true)] {
-            app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit }, &meta()).await.expect("streamLabel");
+            app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit }, &meta(), &mut identity).await.expect("streamLabel");
         }
         let history = app.test_history().await;
         let stream_entries: Vec<&CommandView> = history.commands.iter().filter(|entry| entry.action_id == "streamLabel").collect();
@@ -6117,11 +6773,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// costs the same per tick at the end of a long gesture as at its start.
     #[semio_framework_async_macros::async_test]
     async fn a_long_streamed_gesture_previews_its_newest_operations_only() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         let mut value = String::new();
         for key in 0..64u8 {
             value.push(char::from(b'a' + key % 26));
-            app.dispatch_typed(TestCommand::StreamLabel { value: value.clone(), commit: key == 63 }, &meta()).await.expect("streamLabel");
+            app.dispatch_typed(TestCommand::StreamLabel { value: value.clone(), commit: key == 63 }, &meta(), &mut identity).await.expect("streamLabel");
             let _ = app.test_history().await;
         }
         let history = app.test_history().await;
@@ -6136,14 +6801,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn undo_and_redo_append_entries_and_never_shrink_the_log() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
         assert_eq!(app.test_history().await.commands.len(), 1);
-        reserved_action(&mut app, "undo", None).await;
+        reserved_action(&mut app, "undo", None, &mut identity).await;
         let after_undo = app.test_history().await;
         assert_eq!(after_undo.commands.len(), 2, "undo appends, it does not remove the increment entry");
         assert!(after_undo.commands.iter().any(|entry| entry.action_id == "increment"));
-        reserved_action(&mut app, "redo", None).await;
+        reserved_action(&mut app, "redo", None, &mut identity).await;
         let after_redo = app.test_history().await;
         assert_eq!(after_redo.commands.len(), 3, "redo appends a third entry");
         assert!(after_redo.commands.iter().any(|entry| entry.action_id == "undo"));
@@ -6154,14 +6828,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧾️ `commands` is newest-first — the just-appended revert entry is the FIRST element, not the last.
     #[semio_framework_async_macros::async_test]
     async fn revert_to_command_restores_the_snapshot_and_appends_one_entry() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc1");
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc2");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("inc1");
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("inc2");
         assert_eq!(app.test_snapshot().await.count, 2);
         let first_increment_seq = app.test_history().await.commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
         let before_len = app.test_history().await.commands.len();
 
-        let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first_increment_seq })))).await;
+        let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first_increment_seq }))), &mut identity).await;
         assert!(result.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.test_snapshot().await.count, 1, "revert leaves the target edit applied, undoing only what came after it");
         let history = app.test_history().await;
@@ -6172,10 +6855,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧾️ The receiver never dispatched anything itself — any log entry it has must come from backfill.
     #[semio_framework_async_macros::async_test]
     async fn ingested_remote_edits_are_backfilled_into_the_command_log() {
-        let mut sender = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut sender = contract_app(mounted_policy, &mut identity).await;
         let (near, mut far) = MemoryBackbone::pair("mem://doc-history-backfill", "mem://doc-history-backfill").await;
         sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
-        sender.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
+        sender.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
 
         let mut envelopes = Vec::new();
         for message in far.receive().await.expect("receive") {
@@ -6185,7 +6877,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
         let operations = protocol::encode_envelopes(&envelopes);
 
-        let mut receiver = contract_app().await;
+        let mut receiver = contract_app(mounted_policy, &mut identity).await;
         receiver.ingest_operations(&operations).await.expect("ingest");
         let history = receiver.test_history().await;
         assert_eq!(history.commands.len(), 1);
@@ -6195,11 +6887,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn set_history_command_filter_emits_no_operations_and_updates_the_view() {
-        let mut app = contract_app().await;
-        let result = reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" })))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        let result = reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &mut identity).await;
         assert!(result.mutations.is_empty());
         assert_eq!(app.test_history().await.command_filter, HistoryCommandFilter::OnlyMutations);
-        artifact_app_laws::close_registered_fixture_app(&mut *app);
+        artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy);
     }
 
     /// 📌️ Six since the explicit check-in row landed (`#s-checkin`, React's
@@ -6476,17 +7177,35 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn a_config_only_view_action_is_not_a_history_row() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).await.expect("select");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta(), &mut identity).await.expect("select");
         assert!(app.test_history().await.commands.is_empty(), "a config-only View is never a row (design §20.13, L4)");
         assert_eq!(app.test_config().await.selected, Some("node-1".to_string()), "while the config lane holds its edit");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn consecutive_config_only_view_dispatches_add_no_history_rows() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         for id in ["node-1", "node-2", "node-3"] {
-            app.dispatch_typed(TestCommand::Select { id: Some(id.into()) }, &meta()).await.expect("select");
+            app.dispatch_typed(TestCommand::Select { id: Some(id.into()) }, &meta(), &mut identity).await.expect("select");
         }
         assert!(app.test_history().await.commands.is_empty(), "three config-only Views add no row");
         assert_eq!(app.test_config().await.selected, Some("node-3".to_string()));
@@ -6494,20 +7213,38 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn interleaved_config_only_views_leave_only_the_document_row() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).await.expect("select a");
-        app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).await.expect("select b");
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-        app.dispatch_typed(TestCommand::Select { id: Some("c".into()) }, &meta()).await.expect("select c");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta(), &mut identity).await.expect("select a");
+        app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta(), &mut identity).await.expect("select b");
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
+        app.dispatch_typed(TestCommand::Select { id: Some("c".into()) }, &meta(), &mut identity).await.expect("select c");
         let history = app.test_history().await;
         assert_eq!(history.commands.iter().map(|entry| (entry.action_id.as_str(), entry.count)).collect::<Vec<_>>(), vec![("increment", 1)]);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn note_shell_command_is_intercepted_before_the_app_and_records_each_repeat() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         let args = dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" }));
-        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args)).await;
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &mut identity).await;
         assert!(app.test_app().await.received_actions.borrow().is_empty(), "interception must happen before the app ever sees noteShellCommand");
         let history = app.test_history().await;
         assert_eq!(history.commands.len(), 1);
@@ -6516,12 +7253,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(entry.kind, ActionKind::Shell);
         assert!(label_in(&entry.label, Locale::En).contains("dark"));
 
-        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args)).await;
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &mut identity).await;
         assert!(app.test_app().await.received_actions.borrow().is_empty());
         let history = app.test_history().await;
         assert_eq!(history.commands.len(), 2);
         assert!(history.commands.iter().all(|entry| entry.count == 1));
-        artifact_app_laws::close_registered_fixture_app(&mut *app);
+        artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy);
     }
 
     /// 🌐️ A shell-noted row's text is the shell's own already-rendered copy, so the row stores it as
@@ -6530,8 +7267,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// shell instead of leaking a locale it does not have.
     #[semio_framework_async_macros::async_test]
     async fn a_shell_noted_row_carries_the_same_text_in_every_locale() {
-        let mut app = contract_app().await;
-        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" })))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" }))), &mut identity).await;
         let history = app.test_history().await;
         let label = &history.commands[0].label;
         for terminology in Terminology::ALL {
@@ -6539,13 +7285,22 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 assert_eq!(label.resolve(terminology, locale), "Set Theme", "{terminology:?}/{locale:?}");
             }
         }
-        artifact_app_laws::close_registered_fixture_app(&mut *app);
+        artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn history_delivery_does_not_widen_a_none_ui_scope() {
-        let mut app = contract_app().await;
-        let result = app.dispatch_typed(TestCommand::ViewNoScope, &meta()).await.expect("viewNoScope");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        let result = app.dispatch_typed(TestCommand::ViewNoScope, &meta(), &mut identity).await.expect("viewNoScope");
         assert_eq!(result.ui_scope, UiDirtyScope::None);
     }
 
@@ -6553,15 +7308,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// dispatch; the first view of a window, an unchanged utility and a window the view names no utility for deliver none.
     #[semio_framework_async_macros::async_test]
     async fn a_utility_switch_in_a_dispatch_view_delivers_one_host_event_to_its_window() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         take_test_host_events();
         let under = |view: ViewModel| ActionMeta { view_state: Some(view), ..meta() };
-        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-1", Some("select")))).await.expect("the first view");
-        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-1", Some("select")))).await.expect("the same utility");
+        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-1", Some("select"))), &mut identity).await.expect("the first view");
+        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-1", Some("select"))), &mut identity).await.expect("the same utility");
         assert_eq!(take_test_host_events(), Vec::new(), "neither the first view of a window nor an unchanged utility is a switch");
-        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-1", Some("brush")))).await.expect("the switch");
+        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-1", Some("brush"))), &mut identity).await.expect("the switch");
         assert_eq!(take_test_host_events(), vec![HostEvent::UtilityChanged { window_id: "main-1".into(), from: Some("select".into()), to: Some("brush".into()) }]);
-        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-2", None))).await.expect("another window");
+        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-2", None)), &mut identity).await.expect("another window");
         assert_eq!(take_test_host_events(), Vec::new(), "main-2 is seen first, and this view names no utility for main-1");
     }
 
@@ -6569,7 +7333,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// answer dispatches without a history row of its own, and an unknown kind is refused.
     #[semio_framework_async_macros::async_test]
     async fn a_forwarded_host_event_reaches_the_app_and_its_answer_is_never_a_history_row() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         take_test_host_events();
         let under = ActionMeta { view_state: Some(host_event_view("main-1", None)), ..meta() };
         for (kind, event) in [
@@ -6577,22 +7350,31 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             ("captureLost", HostEvent::PointerCaptureLost { window_id: "main-2".into() }),
             ("retiring", HostEvent::Retiring { window_id: "main-2".into() }),
         ] {
-            app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&dv(json!({ "windowId": "main-2", "kind": kind }))), &under).await.unwrap_or_else(|fault| panic!("{kind}: {fault:?}"));
+            app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&dv(json!({ "windowId": "main-2", "kind": kind }))), &under, &mut identity).await.unwrap_or_else(|fault| panic!("{kind}: {fault:?}"));
             assert_eq!(take_test_host_events(), vec![event], "{kind}");
         }
         let history = app.test_history().await;
         assert!(history.commands.is_empty(), "the answer to a blur is never a history row: {:?}", history.commands.iter().map(|entry| &entry.action_id).collect::<Vec<_>>());
-        let refused = app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&dv(json!({ "windowId": "main-1", "kind": "wobble" }))), &under).await;
+        let refused = app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&dv(json!({ "windowId": "main-1", "kind": "wobble" }))), &under, &mut identity).await;
         assert_eq!(refused.err().map(|fault| fault.code), Some(FaultCode::new("hostEvent.invalid")));
     }
 
     /// 🙈️ A `View` verb that edited no store and carries no inverse is no history row, while a mutation next to it is.
     #[semio_framework_async_macros::async_test]
     async fn a_pure_view_verb_is_no_history_row() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::ViewNoScope, &meta()).await.expect("viewNoScope");
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
-        app.dispatch_typed(TestCommand::ViewPartialScope, &meta()).await.expect("viewPartialScope");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::ViewNoScope, &meta(), &mut identity).await.expect("viewNoScope");
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
+        app.dispatch_typed(TestCommand::ViewPartialScope, &meta(), &mut identity).await.expect("viewPartialScope");
         let history = app.test_history().await;
         let rows: Vec<&str> = history.commands.iter().map(|entry| entry.action_id.as_str()).collect();
         assert_eq!(rows, vec!["increment"], "pure view verbs never become rows");
@@ -6617,8 +7399,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn history_delivery_preserves_partial_ui_scope() {
-        let mut app = contract_app().await;
-        let result = app.dispatch_typed(TestCommand::ViewPartialScope, &meta()).await.expect("viewPartialScope");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        let result = app.dispatch_typed(TestCommand::ViewPartialScope, &meta(), &mut identity).await.expect("viewPartialScope");
         let UiDirtyScope::Partial { window_bodies, panel_bodies, .. } = result.ui_scope else { panic!("expected a Partial scope") };
         assert_eq!(window_bodies, vec!["some.window".to_string()]);
         assert!(panel_bodies.is_empty());
@@ -6626,35 +7417,71 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn scope_upgrade_full_stays_full() {
-        let mut app = contract_app().await;
-        let result = app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).await.expect("select");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        let result = app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta(), &mut identity).await.expect("select");
         assert_eq!(result.ui_scope, UiDirtyScope::Full);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         let before_len = app.test_history().await.commands.len();
-        let result = reserved_action(&mut app, "undo", None).await;
+        let result = reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(result.ui_scope, UiDirtyScope::None, "nothing was logged, so the scope must not be upgraded either");
         assert_eq!(app.test_history().await.commands.len(), before_len);
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_history_command_filter_is_never_logged() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         let before_len = app.test_history().await.commands.len();
-        reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" })))).await;
+        reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &mut identity).await;
         assert_eq!(app.test_history().await.commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
-        artifact_app_laws::close_registered_fixture_app(&mut *app);
+        artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render before");
-        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" })))).await;
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" }))), &mut identity).await;
         let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render after");
         assert_eq!(rendered.root.children.len(), 2, "Actions + Commands");
         assert_eq!(rendered.root.children[1].children.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");
@@ -6662,8 +7489,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn an_operation_kind_action_with_zero_operations_still_logs_one_entry() {
-        let mut app = contract_app_under_test().await;
-        app.dispatch_typed(TestCommand::NoopMutation, &meta()).await.expect("noopMutation");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::NoopMutation, &meta(), &mut identity).await.expect("noopMutation");
         let history = app.test_history().await;
         assert_eq!(history.commands.len(), 1);
         let entry = &history.commands[0];
@@ -6676,31 +7512,58 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn undo_on_empty_history_is_a_benign_no_operation() {
-        let mut app = contract_app().await;
-        let result = reserved_action(&mut app, "undo", None).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        let result = reserved_action(&mut app, "undo", None, &mut identity).await;
         assert!(result.mutations.is_empty());
         assert!(result.events.is_empty());
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn document_round_trips_through_serialization() {
-        let mut app = contract_app().await;
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("inc");
-        app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta()).await.expect("label");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("inc");
+        app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta(), &mut identity).await.expect("label");
         let files = app.document_pack().await.expect("document pack");
 
-        let mut restored = contract_app().await;
-        artifact_app_laws::load_document(&mut restored, &files).await.expect("load document pack");
+        let mut restored = contract_app(mounted_policy, &mut identity).await;
+        artifact_app_laws::load_document(&mut restored, &files, &mut identity).await.expect("load document pack");
         assert_eq!(restored.test_snapshot().await, TestSnapshot { count: 1, label: "hi".into(), slot: Vec::new() });
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent() {
-        let mut sender = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut sender = contract_app(mounted_policy, &mut identity).await;
         let (near, mut far) = MemoryBackbone::pair("mem://doc", "mem://doc").await;
         sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
-        sender.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
+        sender.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
 
         let mut envelopes = Vec::new();
         for message in far.receive().await.expect("receive") {
@@ -6711,7 +7574,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(!envelopes.is_empty(), "expected the applied operation to flow onto the channel");
         let operations = protocol::encode_envelopes(&envelopes);
 
-        let mut receiver = contract_app().await;
+        let mut receiver = contract_app(mounted_policy, &mut identity).await;
         receiver.ingest_operations(&operations).await.expect("ingest once");
         receiver.ingest_operations(&operations).await.expect("ingest twice");
         assert_eq!(receiver.test_snapshot().await.count, 1, "feeding the same operation twice must not double-apply");
@@ -6719,24 +7582,33 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn attach_detach_reattach_resumes_backbone_convergence() {
-        let mut app = contract_app().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
         assert!(app.backbone_ref().is_none(), "default is unattached");
 
         let (near, mut far) = MemoryBackbone::pair("mem://reattach", "mem://reattach").await;
         app.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment while attached");
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment while attached");
         assert!(!far.receive().await.expect("receive after attach").is_empty(), "attached edits reach the peer");
 
         app.detach_backbone().await.expect("detach");
         assert!(app.backbone_ref().is_none());
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment while detached");
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment while detached");
         assert_eq!(app.test_snapshot().await.count, 2, "detached edits still land on the in-memory graph");
         assert!(far.receive().await.expect("receive while detached").is_empty(), "detached edits never reach the peer");
 
         let (near_again, mut far_again) = MemoryBackbone::pair("mem://reattach-2", "mem://reattach-2").await;
         app.attach_backbone(store::Backbones::Memory(near_again)).await.expect("re-attach");
         assert!(app.backbone_ref().is_some());
-        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment after re-attach");
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment after re-attach");
         assert_eq!(app.test_snapshot().await.count, 3);
         assert!(!far_again.receive().await.expect("receive after re-attach").is_empty(), "re-attaching resumes outbound convergence on the new backbone");
     }
@@ -6753,7 +7625,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// "something is selected"), both rows resolve label/icon from the declared registry entries.
     #[semio_framework_async_macros::async_test]
     async fn context_menu_resolves_labels_from_the_registry_and_respects_guards() {
-        let mut app = contract_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
 
         use semio_framework::default_action_icon_id;
@@ -6765,7 +7646,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(empty_label.len(), 1, "the gated command must be absent with no label set: {empty_label:?}");
         assert_eq!(empty_label[0], ContextMenuItemSpec { id: "setLabelRequired".into(), label: Some("Set Label".into()), icon: Some(set_label_icon), action: Some("setLabelRequired".into()), ..Default::default() });
 
-        app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta()).await.expect("set label");
+        app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta(), &mut identity).await.expect("set label");
         let with_label = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
         assert_eq!(with_label.len(), 2, "the guard must open once a label is set: {with_label:?}");
         assert_eq!(with_label[1], ContextMenuItemSpec { id: "incrementViaCommand".into(), label: Some("Increment".into()), icon: Some(increment_icon), action: Some("incrementViaCommand".into()), ..Default::default() });
@@ -6833,8 +7714,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// `organize_context_menu` to every emitter, not just ones that call `Menu::group` themselves.
     #[semio_framework_async_macros::async_test]
     async fn context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu() {
-        let mut app = contract_app_with(flat_menu_registry().await).await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "flat-menu-test".into() }, &meta()).await.expect("set label");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_with(flat_menu_registry().await, mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "flat-menu-test".into() }, &meta(), &mut identity).await.expect("set label");
         let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
 
         let organized = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
@@ -6871,11 +7761,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn surface_context_reaches_real_app_render_and_rejects_hidden_surfaces() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
-        let runtime = super::PluginRuntime::new();
-        let app = contract_app_raw().await;
-        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }));
+        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let app = contract_app_raw(mounted_policy, &mut identity).await;
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(7, cell);
         for surface in fixture["surfaces"].as_array().unwrap() {
             let view = surface["windowId"].as_str().map(|window| host_view.for_window_instance(window).unwrap()).unwrap_or_else(|| host_view.clone());
@@ -6899,12 +7798,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn surface_context_refresh_projects_panels_from_focused_window_state() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
         let focused = host_view.for_window_instance("right").unwrap();
-        let runtime = super::PluginRuntime::new();
-        let app = contract_app_raw().await;
-        runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() })));
+        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let app = contract_app_raw(mounted_policy, &mut identity).await;
+        runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
         let response = super::plugin_refresh_ui(&runtime, 7, &serde_json::to_string(&json!({"viewState":focused,"panels":[{"key":"properties","bodyKey":"properties"}]})).unwrap()).await.unwrap();
         let response: Value = serde_json::from_str(&response).unwrap();
         assert_eq!(response["panels"][0]["key"], "properties");
@@ -6915,12 +7823,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn reserved_section_surfaces_render_accessor_maps_instead_of_app_bodies() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let mut host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
         host_view.active_tool_id = Some("fill".into());
-        let runtime = super::PluginRuntime::new();
-        let app = contract_app_raw().await;
-        runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() })));
+        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let app = contract_app_raw(mounted_policy, &mut identity).await;
+        runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
         let mut payloads = BTreeMap::new();
         for section in UiRefreshSection::ALL {
             let surface = format!("7:{}", section.body_key());
@@ -7172,9 +8089,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn surface_context_presence_targets_each_concrete_surface() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
-        let mut app = interaction_app_raw().await;
+        let mut app = interaction_app_raw(mounted_policy, &mut identity).await;
         let mut peers = PeerPresenceRoot::empty();
         peers.insert(fixture["presence"]["actor"].as_str().unwrap().into(), PeerPresence {
             color: Some(3), surface: None,
@@ -7184,8 +8110,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }),
         }).unwrap();
         *app.peer_presence = std::sync::Arc::new(peers);
-        let runtime = super::PluginRuntime::new();
-        runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() })));
+        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
         for surface in fixture["surfaces"].as_array().unwrap() {
             let id = surface["id"].as_str().unwrap();
             let view = surface["windowId"].as_str().map(|window| host_view.for_window_instance(window).unwrap()).unwrap_or_else(|| host_view.for_panel());
@@ -7200,8 +8126,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn view_action_emitting_ops_is_rejected() {
-        let mut app = contract_app_under_test().await;
-        let error = app.dispatch_typed(TestCommand::BadView, &meta()).await.expect_err("a View command emitting operations must be rejected");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
+        let error = app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity).await.expect_err("a View command emitting operations must be rejected");
         assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
         assert_eq!(app.test_snapshot().await, TestSnapshot::default());
     }
@@ -7214,7 +8149,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// `dirty_render` pass.
     #[semio_framework_async_macros::async_test]
     async fn activate_intent_dispatches_through_the_typed_command_path_same_turn() {
-        let mut app = contract_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let intent = UiIntent {
             surface: SurfaceId::try_from("s").expect("bounded fixture"),
             revision: UiRevision(0),
@@ -7226,7 +8170,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             input: None,
             seq: 1,
         };
-        let result = handle_intent_settled(&mut app, &intent, &meta()).await.expect("an Activate intent on a Mutation-kind action must dispatch");
+        let result = handle_intent_settled(&mut app, &intent, &meta(), &mut identity).await.expect("an Activate intent on a Mutation-kind action must dispatch");
         assert_eq!(app.test_snapshot().await.count, 1, "the mutation must have applied");
         assert_eq!(result.mutations.len(), 1, "the returned invocation carries the one mutation the intent caused");
         let history = app.test_history().await;
@@ -7239,7 +8183,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// command path uses.
     #[semio_framework_async_macros::async_test]
     async fn view_kind_intent_returning_operations_hard_faults() {
-        let mut app = contract_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let intent = UiIntent {
             surface: SurfaceId::try_from("s").expect("bounded fixture"),
             revision: UiRevision(0),
@@ -7251,7 +8204,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             input: None,
             seq: 2,
         };
-        let error = handle_intent_settled(&mut app, &intent, &meta()).await.expect_err("a View-kind intent emitting operations must be rejected");
+        let error = handle_intent_settled(&mut app, &intent, &meta(), &mut identity).await.expect_err("a View-kind intent emitting operations must be rejected");
         assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
         assert_eq!(app.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
     }
@@ -7278,8 +8231,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_utility_carries_its_value_directly_and_emits_no_operations() {
-        let mut app = contract_app_under_test().await;
-        let result = app.dispatch_typed(TestCommand::SetActiveUtility { utility_id: "brush".into() }, &meta()).await.expect("setActiveUtility is a valid View command");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
+        let result = app.dispatch_typed(TestCommand::SetActiveUtility { utility_id: "brush".into() }, &meta(), &mut identity).await.expect("setActiveUtility is a valid View command");
         assert!(result.mutations.is_empty(), "utility switching must not create history");
         let event = result.events.iter().find(|event| event.kind == "active-utility").expect("echoed active utility");
         assert_eq!(event.payload, semio_framework_value::DslValue::from(json!({ "utilityId": "brush" })));
@@ -7289,19 +8251,28 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// only reverts the last one.
     #[semio_framework_async_macros::async_test]
     async fn a_streamed_gesture_is_one_undo_step_while_each_commit_is_its_own() {
-        let mut app = contract_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         for (value, commit) in [("a", false), ("ab", false), ("abc", true)] {
-            app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit }, &meta()).await.expect("streamLabel");
+            app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit }, &meta(), &mut identity).await.expect("streamLabel");
         }
         assert_eq!(app.test_snapshot().await.label, "abc");
-        reserved_action(&mut app, "undo", None).await;
+        reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.label, "");
 
         for value in ["x", "xy"] {
-            app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).await.expect("setLabel");
+            app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta(), &mut identity).await.expect("setLabel");
         }
         assert_eq!(app.test_snapshot().await.label, "xy");
-        reserved_action(&mut app, "undo", None).await;
+        reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.label, "x");
     }
 
@@ -7313,10 +8284,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// The narrowed per-dispatch reporting must not affect the one-edit/undo semantics of the transaction.
     #[semio_framework_async_macros::async_test]
     async fn a_streamed_tick_reports_only_its_own_new_operation() {
-        let mut app = contract_app_under_test().await;
-        app.dispatch_typed(TestCommand::StreamLabel { value: "a".into(), commit: false }, &meta()).await.expect("streamLabel a");
-        app.dispatch_typed(TestCommand::StreamLabel { value: "ab".into(), commit: false }, &meta()).await.expect("streamLabel ab");
-        let result = app.dispatch_typed(TestCommand::StreamLabel { value: "abc".into(), commit: false }, &meta()).await.expect("streamLabel abc");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::StreamLabel { value: "a".into(), commit: false }, &meta(), &mut identity).await.expect("streamLabel a");
+        app.dispatch_typed(TestCommand::StreamLabel { value: "ab".into(), commit: false }, &meta(), &mut identity).await.expect("streamLabel ab");
+        let result = app.dispatch_typed(TestCommand::StreamLabel { value: "abc".into(), commit: false }, &meta(), &mut identity).await.expect("streamLabel abc");
         assert_eq!(result.mutations.len(), 1, "must report only this dispatch's new operation, not the whole open edit");
         assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetLabel(SetLabel { value: "abc".into() })).unwrap());
         assert_eq!(
@@ -7327,15 +8307,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(result.inverse_group.mutations.len(), 1);
         assert_eq!(result.inverse_group.inverse_mutations.len(), 1);
         assert_eq!(app.test_snapshot().await.label, "abc");
-        app.dispatch_typed(TestCommand::StreamLabel { value: "abcd".into(), commit: true }, &meta()).await.expect("streamLabel commit");
-        reserved_action(&mut app, "undo", None).await;
+        app.dispatch_typed(TestCommand::StreamLabel { value: "abcd".into(), commit: true }, &meta(), &mut identity).await.expect("streamLabel commit");
+        reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.label, "");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn operation_command_emits_kernel_op_with_true_inverse() {
-        let mut app = contract_app_under_test().await;
-        let result = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("incrementViaCommand");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
+        let result = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta(), &mut identity).await.expect("incrementViaCommand");
         assert_eq!(result.mutations.len(), 1);
         assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 1 })).unwrap());
         assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 0 })).unwrap()]));
@@ -7344,69 +8333,105 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn manifest_command_dispatch_validates_structural_app_ownership() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
-        let mut app = contract_app_under_test().await;
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let valid = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into() }, command_id: "incrementViaCommand".into() }, arguments: Default::default() };
-        app.handle_command(&valid, Some("edit"), &meta()).await.expect("app-owned command");
+        app.handle_command(&valid, Some("edit"), &meta(), &mut identity).await.expect("app-owned command");
         settle_contract_app(&mut app).await;
         assert_eq!(app.test_snapshot().await.count, 1);
         let unknown = CommandInvocation { address: CommandAddress { command_id: "nope".into(), ..valid.address }, arguments: Default::default() };
-        let error = app.handle_command(&unknown, Some("edit"), &meta()).await.expect_err("undeclared app command");
+        let error = app.handle_command(&unknown, Some("edit"), &meta(), &mut identity).await.expect_err("undeclared app command");
         assert!(error.message.contains("not owned by app"), "unexpected error: {}", error.message);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ui_dispatch_backstop_rejects_every_non_migrated_action_and_command() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         use semio_framework::InteractiveJobClassification::{BatchOnlyPendingRewrite, Deleted, ForbiddenFromUi, Unclassified};
         use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
 
         for classification in [Unclassified, BatchOnlyPendingRewrite, ForbiddenFromUi, Deleted] {
             let mut action_registry = contract_registry().await;
             action_registry.test_set_action_classification("badView", classification);
-            let mut action_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), action_registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+            let mut action_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), action_registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
             assert!(!action_app.test_registered_tool_keys().iter().any(|key| key.1 == "badView"));
-            let action_error = action_app.dispatch_typed(TestCommand::BadView, &meta()).await.expect_err("non-migrated action must be rejected before its handler runs");
+            let action_error = action_app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity).await.expect_err("non-migrated action must be rejected before its handler runs");
             assert_eq!(action_error.code.0, "interactive-job.not-ui-safe");
             assert_eq!(action_app.test_snapshot().await.count, 0);
 
             let mut command_registry = contract_registry().await;
             command_registry.test_set_app_command_classification("incrementViaCommand", classification);
-            let mut command_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), command_registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+            let mut command_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), command_registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
             assert!(!command_app.test_registered_tool_keys().iter().any(|key| key.1 == "incrementViaCommand"));
             let invocation =
                 CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into() }, command_id: "incrementViaCommand".into() }, arguments: Default::default() };
-            let command_error = command_app.handle_command(&invocation, Some("edit"), &meta()).await.expect_err("non-migrated command must be rejected before its handler runs");
+            let command_error = command_app.handle_command(&invocation, Some("edit"), &meta(), &mut identity).await.expect_err("non-migrated command must be rejected before its handler runs");
             assert_eq!(command_error.code.0, "interactive-job.not-ui-safe");
             assert_eq!(command_app.test_snapshot().await.count, 0);
-            artifact_app_laws::close_registered_fixture_app(&mut action_app);
-            artifact_app_laws::close_registered_fixture_app(&mut command_app);
+            artifact_app_laws::close_registered_fixture_app(&mut action_app, mounted_policy);
+            artifact_app_laws::close_registered_fixture_app(&mut command_app, mounted_policy);
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn manifest_mode_command_requires_the_active_structural_owner() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
         let invocation = CommandInvocation {
             address: CommandAddress { owner: CommandOwnerAddress::Mode { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into(), mode_id: "edit".into() }, command_id: "mode.increment".into() },
             arguments: Default::default(),
         };
-        let mut app = contract_app_under_test().await;
-        app.handle_command(&invocation, Some("edit"), &meta()).await.expect("active mode-owned command");
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
+        app.handle_command(&invocation, Some("edit"), &meta(), &mut identity).await.expect("active mode-owned command");
         settle_contract_app(&mut app).await;
         assert_eq!(app.test_snapshot().await.count, 1);
-        let error = app.handle_command(&invocation, None, &meta()).await.expect_err("inactive mode command");
+        let error = app.handle_command(&invocation, None, &meta(), &mut identity).await.expect_err("inactive mode command");
         assert!(error.message.contains("not owned by active mode edit"), "unexpected error: {}", error.message);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn addressed_window_action_injects_the_exact_window_instance_into_the_typed_handler() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         use semio_framework::manifest::{ActionAddress, ActionInvocation};
         let invocation = ActionInvocation {
             address: ActionAddress { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-instance-2".into(), action_id: "targetWindow".into() },
             arguments: Default::default(),
         };
-        let mut app = contract_app_under_test().await;
-        app.handle_action_invocation(&invocation, Some("edit"), &meta()).await.expect("addressed window action");
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
+        app.handle_action_invocation(&invocation, Some("edit"), &meta(), &mut identity).await.expect("addressed window action");
         settle_contract_app(&mut app).await;
         assert_eq!(app.test_snapshot().await.label, "main-instance-2");
     }
@@ -7445,30 +8470,54 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn command_op_records_history_exactly_like_an_operation_action() {
-        let mut app = contract_app_under_test().await;
-        app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("inc");
-        app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("inc");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::IncrementViaCommand, &meta(), &mut identity).await.expect("inc");
+        app.dispatch_typed(TestCommand::IncrementViaCommand, &meta(), &mut identity).await.expect("inc");
         assert_eq!(app.test_snapshot().await.count, 2);
-        reserved_action(&mut app, "undo", None).await;
+        reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.count, 1);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn registry_less_construction_rejects_before_the_reducer() {
-        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>::new(TestApp::<false, TEST_APP_TOOLS_FACTORIES>::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
-        let error = app.dispatch_typed(TestCommand::BadView, &meta()).await.expect_err("an empty registry must fail closed");
+        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let identity_started=std::time::Instant::now();
+        let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>::new(TestApp::<false, TEST_APP_TOOLS_FACTORIES>::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        let error = app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity).await.expect_err("an empty registry must fail closed");
         assert_eq!(error.code.0, "interactive-job.unknown-key");
         assert_eq!(app.test_snapshot().await, TestSnapshot::default());
-        artifact_app_laws::close_registered_fixture_app(&mut app);
+        artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy);
     }
 
     //#region 🔖️InteractionDispatchTests
     /// 🕹️ `interaction_topology` requires a non-empty `label` for "item-1" to exist.
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_replace_persists_through_the_interaction_store() {
-        let mut app = interaction_app_under_test().await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
         let selection = app.interaction_state().await.selection.get("items").cloned().expect("items domain selected");
         assert_eq!(selection.ids, vec!["item-1".to_string()]);
         assert_eq!(selection.granularity, "item");
@@ -7477,17 +8526,26 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🐁️ Empty targets clears the channel (see `next_hover`'s "empty batch clears" law).
     #[semio_framework_async_macros::async_test]
     async fn interaction_hover_is_ephemeral_and_never_touches_the_persisted_interaction_store() {
-        let mut app = interaction_app_under_test().await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
         let edits_after_select = app.interaction_store.envelope().vcs.edits.len();
 
-        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
 
         assert_eq!(app.interaction_store.envelope().vcs.edits.len(), edits_after_select, "hover must never mint a persisted interaction_store edit");
         assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.clone()), Some(vec!["item-1".to_string()]));
 
-        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&dv(json!({ "domainId": "items", "channel": "pointer", "targets": "[]" })))).await;
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&dv(json!({ "domainId": "items", "channel": "pointer", "targets": "[]" }))), &mut identity).await;
         assert!(app.interaction_state().await.hover.get("items").is_none(), "an emptied hover channel is removed, not left as an empty entry");
     }
 
@@ -7495,12 +8553,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// DOCUMENT store) — with only the label-seed edit on it, one undo reverts THAT, not the pick.
     #[semio_framework_async_macros::async_test]
     async fn a_pick_is_never_undoable_the_default_undo_only_ever_walks_the_document_store() {
-        let mut app = interaction_app_under_test().await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
 
-        reserved_action(&mut app, "undo", None).await;
+        reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.label, "", "undo must revert the document edit (seeding the label)");
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the pick itself must survive an unrelated document undo — lane discipline");
     }
@@ -7510,27 +8577,45 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// reserved job's commit, exactly where `reserved_action` above drives the accepted ones.
     #[semio_framework_async_macros::async_test]
     async fn set_selection_mode_and_set_interaction_granularity_persist_immediately() {
-        let mut app = interaction_app_under_test().await;
-        reserved_action(&mut app, SET_SELECTION_MODE_ACTION_ID, Some(&dv(json!({ "domainId": "items", "mode": "single" })))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        reserved_action(&mut app, SET_SELECTION_MODE_ACTION_ID, Some(&dv(json!({ "domainId": "items", "mode": "single" }))), &mut identity).await;
         assert_eq!(app.interaction_state().await.active_mode.get("items").copied(), Some(SelectionMode::Single));
 
-        reserved_action(&mut app, SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" })))).await;
+        reserved_action(&mut app, SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" }))), &mut identity).await;
         assert_eq!(app.interaction_state().await.active_granularity.get("items").map(String::as_str), Some("item"));
 
-        let admitted = app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "bogus" }))), &meta()).await.expect("undeclared granularity admission");
+        let admitted = app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "bogus" }))), &meta(), &mut identity).await.expect("undeclared granularity admission");
         let error = crate::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect_err("undeclared granularity must be rejected");
         assert!(error.message.contains("bogus"), "unexpected error: {}", error.message);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn clear_selection_and_select_all_apply_across_every_declared_domain() {
-        let mut app = interaction_app_under_test().await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
 
-        reserved_action(&mut app, SELECT_ALL_ACTION_ID, None).await;
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
+
+        reserved_action(&mut app, SELECT_ALL_ACTION_ID, None, &mut identity).await;
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "selectAll must select every id `interaction_topology` reports for the declared granularity");
 
-        reserved_action(&mut app, CLEAR_SELECTION_ACTION_ID, None).await;
+        reserved_action(&mut app, CLEAR_SELECTION_ACTION_ID, None, &mut identity).await;
         assert!(app.interaction_state().await.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "clearSelection must empty every declared domain's selection");
     }
 
@@ -7538,12 +8623,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// "item-1 was deleted from the document" — task 4: revalidated after EVERY artifact dispatch.
     #[semio_framework_async_macros::async_test]
     async fn validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it() {
-        let mut app = interaction_app_under_test().await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
 
-        app.dispatch_typed(TestCommand::SetLabel { value: "".into() }, &meta()).await.expect("delete item-1 (empty label)");
+        app.dispatch_typed(TestCommand::SetLabel { value: "".into() }, &meta(), &mut identity).await.expect("delete item-1 (empty label)");
 
         assert!(app.interaction_state().await.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "the deleted id must be pruned from selection automatically");
     }
@@ -7552,11 +8646,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// only the seeding edit stays in the log.
     #[semio_framework_async_macros::async_test]
     async fn interaction_verbs_never_become_history_rows() {
-        let mut app = interaction_app_under_test().await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
-        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
-        reserved_action(&mut app, CLEAR_SELECTION_ACTION_ID, None).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
+        reserved_action(&mut app, CLEAR_SELECTION_ACTION_ID, None, &mut identity).await;
         let history = app.test_history().await;
         let kinds: Vec<(&str, ActionKind)> = history.commands.iter().map(|entry| (entry.action_id.as_str(), entry.kind)).collect();
         assert_eq!(kinds, vec![("setLabel", ActionKind::Mutation)], "only the seeding edit is a row");
@@ -7599,9 +8702,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// threaded through, with the app-local body key before runtime surface binding.
     #[semio_framework_async_macros::async_test]
     async fn ui_tree_stamping_caches_interaction_topology_from_a_domain_bound_tree() {
-        let mut app = interaction_app_under_test().await;
-        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
 
         app.own_color = Some(9);
         let mut peer_presence = PeerPresenceRoot::empty();
@@ -7674,7 +8786,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// for the life of the session on BOTH renderers — the row the user deselected never hears about it.
     #[semio_framework_async_macros::async_test]
     async fn a_dropped_selection_publishes_a_cleared_presence_update() {
-        let mut app = interaction_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let row = |key: &str, label: &str| {
             TreeNode::try_new(
                 key,
@@ -7709,32 +8830,41 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             ComponentTree { root }
         };
 
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
         let state = app.interaction_state().await;
         app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
         let first: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
         assert_eq!(first, vec![("item-1".to_string(), true)]);
 
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2"))).await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2")), &mut identity).await;
         let state = app.interaction_state().await;
         app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
         let second: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
         assert!(second.contains(&("item-2".to_string(), true)), "the newly selected row must be marked: {second:?}");
         assert!(second.contains(&("item-1".to_string(), false)), "the row that LOST the selection must be retired, not left marked: {second:?}");
 
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2"))).await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2")), &mut identity).await;
         let state = app.interaction_state().await;
         app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
         let third: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
         assert_eq!(third, vec![("item-2".to_string(), true)], "an unchanged selection must cost exactly its own mark, never a repeated retirement");
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🧪 W-G3 §8.21 — `interactionSelect` leftover `Invocation.output` carries InteractionView selected ids + lock.
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_job_completion_publishes_interaction_view_on_leftover() {
-        let mut app = interaction_app_under_test().await;
-        let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
         let view = settled.output.get("interactionView").expect("leftover InteractionView");
         let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
         assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
@@ -7743,35 +8873,53 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let gumball = view.get("gumball").expect("gumball leftover");
         assert_eq!(gumball.get("active").and_then(semio_framework_value::DslValue::as_bool), Some(false), "leftover selection must not arm the world gumball — the guest selectionJson lane owns utility-aware gumballActive");
         assert_eq!(gumball.get("anchorId").and_then(semio_framework_value::DslValue::as_str), Some("item-1"));
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🧪 W-G3 §8.30 — leftover `interactionSelect` of an object id on a vortex-domain-shaped pick still lands in `selectedIds`.
     #[semio_framework_async_macros::async_test]
     async fn leftover_interaction_select_object_id_on_vortex_domain_lands_in_selected_ids() {
-        let mut app = interaction_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let settled = reserved_action(
             &mut app,
             INTERACTION_SELECT_ACTION_ID,
             Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "seed-left-001")),
-        )
+         &mut identity)
         .await;
         let view = settled.output.get("interactionView").expect("leftover InteractionView");
         let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
         assert!(ids.iter().any(|id| id.as_str() == Some("seed-left-001")), "leftover selected ids {ids:?}");
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🧪 W-G3 §8.21 — `interactionHover` leftover publishes the hover target on the same leftover output.
     #[semio_framework_async_macros::async_test]
     async fn interaction_hover_job_completion_publishes_hover_target_on_leftover() {
-        let mut app = interaction_app_under_test().await;
-        let settled = reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        let settled = reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
         let view = settled.output.get("interactionView").expect("leftover InteractionView");
         let hover = view.get("hoverTarget").expect("hover target");
         assert_eq!(hover.get("id").and_then(semio_framework_value::DslValue::as_str), Some("item-1"));
         assert_eq!(hover.get("domain").and_then(semio_framework_value::DslValue::as_str), Some("items"));
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🐁️ Wave B34 — the plugin-host half of the app-declared interaction scope: an `interactionHover`
@@ -7782,23 +8930,41 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// (ticket 26/09/02 `📓️2026-09-12-wave-B32-world-lane-after-completion.md` §3.2).
     #[semio_framework_async_macros::async_test]
     async fn interaction_hover_dirties_only_the_hovering_windows_own_lane() {
-        let mut app = interaction_app_under_test().await;
-        let settled = reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        let settled = reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
         let UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, tools, engagements, measures, labels } = settled.ui_scope else {
             panic!("a declared hover scope is never Full or None: {:?}", settled.ui_scope);
         };
         assert_eq!(window_bodies, vec![TEST_APP_WINDOW_BODY_KEY.to_string()], "a hover dirties the hovering window's own body and no other");
         assert!(panel_bodies.is_empty(), "a hover cannot dirty a panel: {panel_bodies:?}");
         assert!(!utilities && !tools && !engagements && !measures && !labels, "a hover cannot dirty the shell chrome");
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🖱️ Wave B34 — the same hop for a PICK: the declaring app's answer is carried through verbatim,
     /// panel bodies included, so an app can widen a select beyond a hover without widening the hover.
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_carries_the_apps_declared_selection_lane() {
-        let mut app = interaction_app_under_test().await;
-        let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
         assert_eq!(
             settled.ui_scope,
             UiDirtyScope::Partial {
@@ -7812,7 +8978,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             },
             "a pick publishes the app's declared selection scope verbatim"
         );
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🈳️ The framework DEFAULT: a verb the app declares no scope for falls through to the scope
@@ -7823,14 +8989,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// reached only when not even a window declares the touched domain (the sibling law below).
     #[semio_framework_async_macros::async_test]
     async fn an_undeclared_interaction_verb_falls_through_to_the_declared_surface_scope() {
-        let mut app = interaction_app_under_test().await;
-        let settled = reserved_action(&mut app, SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" })))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        let settled = reserved_action(&mut app, SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" }))), &mut identity).await;
         assert_eq!(
             settled.ui_scope,
             UiDirtyScope::Partial { window_bodies: vec![TEST_APP_WINDOW_BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: true, labels: false },
             "an app that declares the domain on a window narrows to that window without declaring a scope hook"
         );
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🌀️ The widest, always-correct answer is what is left when there is nothing to derive from: no
@@ -7865,30 +9040,48 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧪 Empty-target `interactionSelect` with `replace` clears the domain (background deselect) even when an object is hovered.
     #[semio_framework_async_macros::async_test]
     async fn emitted_empty_replace_write_clears_selection_while_hover_remains() {
-        let mut app = interaction_app_under_test().await;
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
-        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
         let clear = Emit { interaction_writes: vec![InteractionWrite::replace("items", "object", std::iter::empty::<String>())], ..Default::default() };
         app.test_dispatch_emit("canvasPointerDown", clear, &meta()).await.expect("explicit selection clear lands");
         let snapshot = app.test_interaction_selection_snapshot();
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.ids.is_empty()));
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.anchor_id.is_none()));
         assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.as_slice()), Some(["item-1".to_string()].as_slice()));
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn empty_target_interaction_select_clears_selection_while_hover_remains() {
-        let mut app = interaction_app_under_test().await;
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
-        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
-        let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_empty_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" })))).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
+        let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_empty_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }))), &mut identity).await;
         let view = settled.output.get("interactionView").expect("leftover InteractionView");
         let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
         assert!(ids.is_empty(), "empty-target replace interactionSelect must clear selectedIds, got {ids:?}");
         let hover = view.get("hoverTarget").expect("hoverTarget");
         assert_eq!(hover.get("id").and_then(semio_framework_value::DslValue::as_str), Some("item-1"));
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🔀️ The exact effect every app's `interaction_select_effect` builds — a guest asking the host
@@ -7906,7 +9099,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// host and the pick landed one guest round trip later, behind any pointer input issued meanwhile.
     #[semio_framework_async_macros::async_test]
     async fn guest_emitted_interaction_select_is_folded_into_the_carrying_turn() {
-        let mut app = interaction_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let emit = Emit {
             effects: vec![Effect::Navigate { uri: "semio://home".into() }, inline_interaction_select(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))],
             ui_scope: UiDirtyScope::None,
@@ -7924,7 +9126,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
         let history = app.test_history().await;
         assert!(!history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction), "the folded verb is never a history row");
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🔀️ A second carrier whose folded `interactionSelect` names no target with `replace` clears the
@@ -7933,7 +9135,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// refresh is dropped.
     #[semio_framework_async_macros::async_test]
     async fn guest_emitted_empty_replace_select_clears_and_unions_the_carrier_scope() {
-        let mut app = interaction_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let pick = Emit { effects: vec![inline_interaction_select(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))], ui_scope: UiDirtyScope::None, ..Default::default() };
         app.test_dispatch_emit("canvasPointerUp", pick, &meta()).await.expect("pick lands");
         assert_eq!(app.test_interaction_selection_snapshot().selection.get("items").map(|selection| selection.ids.len()), Some(1));
@@ -7950,7 +9161,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(window_bodies.iter().any(|body| body == TEST_APP_WINDOW_BODY_KEY), "the verb's declared window body joins it: {window_bodies:?}");
         assert!(panel_bodies.iter().any(|body| body == FRAMEWORK_HISTORY_BODY_KEY), "the verb's declared panel body joins it: {panel_bodies:?}");
         assert!(*utilities, "the carrier's own section flag survives the merge");
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🔀️ A folded verb that cannot be applied (an undeclared domain here) must not fail the app
@@ -7960,7 +9171,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// untouched. A `Full` carrier scope stays `Full`.
     #[semio_framework_async_macros::async_test]
     async fn guest_emitted_interaction_select_on_an_undeclared_domain_is_a_diagnostic_not_a_fault() {
-        let mut app = interaction_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let bad = Emit { effects: vec![inline_interaction_select(interaction_target_args(json!({ "domainId": "ghosts", "merge": "replace", "method": "pick" }), "item-1"))], ui_scope: UiDirtyScope::Full, ..Default::default() };
         let result = app.test_dispatch_emit("canvasPointerUp", bad, &meta()).await.expect("a refused inline verb never fails its carrier");
         assert!(result.requested_effects.is_empty(), "the refused verb is consumed, not bounced to the host: {:?}", result.requested_effects);
@@ -7970,20 +9190,29 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(result.ui_scope, UiDirtyScope::Full);
         let snapshot = app.test_interaction_selection_snapshot();
         assert!(snapshot.selection.values().all(|selection| selection.ids.is_empty()), "a refused verb moves nothing: {:?}", snapshot.selection);
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🔀️ The fold is scoped to the six interaction verbs: an undo/redo inverse replay or an `os.*`
     /// shell relay riding the same `ReplayShellCommand` variant keeps reaching the host untouched.
     #[semio_framework_async_macros::async_test]
     async fn non_interaction_replay_shell_commands_still_reach_the_host() {
-        let mut app = interaction_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let relay = Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(semio_framework_value::DslValue::from(&json!({ "themeId": "light" }))) };
         let result = app.test_dispatch_emit("relayTheme", Emit { effects: vec![relay.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta()).await.expect("relay lands");
         assert_eq!(result.requested_effects, vec![relay]);
         assert_eq!(result.ui_scope, UiDirtyScope::None, "no verb was folded, so no scope was widened");
         assert!(result.diagnostics.is_empty());
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🔀️ The second emission shape for the same intent — `Effect::DispatchAction { action ∈
@@ -7995,7 +9224,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// The placeholder `req` an app literal carries is awaited by nothing, so dropping it is silent.
     #[semio_framework_async_macros::async_test]
     async fn guest_emitted_dispatch_action_interaction_select_is_folded_into_the_carrying_turn() {
-        let mut app = interaction_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let verb = Effect::DispatchAction { req: RequestId(115), action: INTERACTION_SELECT_ACTION_ID.into(), args: Some(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), delay_ms: 0 };
         let emit = Emit { effects: vec![Effect::Navigate { uri: "semio://home".into() }, verb], ui_scope: UiDirtyScope::None, ..Default::default() };
         let result = app.test_dispatch_emit("canvasPointerDown", emit, &meta()).await.expect("the carrying command lands");
@@ -8010,7 +9248,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
         let history = app.test_history().await;
         assert!(!history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction), "the folded verb is never a history row");
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🔀️ The `DispatchAction` fold is scoped to the six interaction verbs exactly like the
@@ -8019,7 +9257,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// `delay_ms` intact.
     #[semio_framework_async_macros::async_test]
     async fn non_interaction_dispatch_actions_still_reach_the_host() {
-        let mut app = interaction_app_under_test().await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let chain = Effect::DispatchAction { req: RequestId(91_002), action: "probeChildContinuation".into(), args: Some(semio_framework_value::DslValue::from(&json!({ "pass": 2 }))), delay_ms: 16 };
         let result = app.test_dispatch_emit("stagedPass", Emit { effects: vec![chain.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta()).await.expect("chain lands");
         assert_eq!(result.requested_effects, vec![chain]);
@@ -8027,7 +9274,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(result.diagnostics.is_empty());
         let snapshot = app.test_interaction_selection_snapshot();
         assert!(snapshot.selection.values().all(|selection| selection.ids.is_empty()), "a non-interaction DispatchAction moves no selection: {:?}", snapshot.selection);
-        close_reserved_app(&mut app);
+        close_reserved_app(&mut app, mounted_policy);
     }
 
     /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — the PER-TURN law of the typed-operation
@@ -8052,12 +9299,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 📡️ EXACTLY the host's per-turn effect drain — every effect this turn hands out.
     #[semio_framework_async_macros::async_test]
     async fn typed_ladder_never_hands_a_guest_interaction_verb_to_the_host_on_any_turn() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let id = 47u32;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         app.bind_instance_id(id).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
         let outcome: Result<(), String> = async {
-            let admitted = app.dispatch_typed(TestCommand::PickItem { id: "item-1".into() }, &meta).await.map_err(|error| format!("admit the pick: {error:?}"))?;
+            let admitted = app.dispatch_typed(TestCommand::PickItem { id: "item-1".into() }, &meta, &mut identity).await.map_err(|error| format!("admit the pick: {error:?}"))?;
             if !admitted.requested_effects.is_empty() || !admitted.mutations.is_empty() {
                 return Err(format!("the admitting result of a typed command carries no effect and no mutation: {:?}", admitted.requested_effects));
             }
@@ -8182,6 +9438,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// Fails-before: one plain pick published the id twice, once per mirroring domain.
     #[semio_framework_async_macros::async_test]
     async fn leftover_interaction_view_selected_ids_are_a_set_for_every_merge() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🕹️selection-set.json")).expect("language-neutral selection-set fixture");
         let domain = fixture["domain"].as_str().expect("fixture domain");
         let granularity = fixture["granularity"].as_str().expect("fixture granularity");
@@ -8193,11 +9458,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let seed = strings(&case["seed"]);
             let targets = strings(&case["targets"]);
             let expected = strings(&case["selectedIds"]);
-            let mut app = interaction_app_under_test().await;
+            let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
             if !seed.is_empty() {
-                reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": domain, "merge": "replace", "method": "pick" }), granularity, &seed))).await;
+                reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": domain, "merge": "replace", "method": "pick" }), granularity, &seed)), &mut identity).await;
             }
-            let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": domain, "merge": case["merge"].as_str().expect("case merge"), "method": "pick" }), granularity, &targets))).await;
+            let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": domain, "merge": case["merge"].as_str().expect("case merge"), "method": "pick" }), granularity, &targets)), &mut identity).await;
             let view = settled.output.get("interactionView").expect("leftover InteractionView");
             let published: Vec<String> = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds").iter().map(|id| id.as_str().expect("selected id").to_string()).collect();
             assert_eq!(published, expected, "{case_id}: {}", case["why"].as_str().unwrap_or_default());
@@ -8209,7 +9474,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             assert_eq!(locked.len(), published.len(), "{case_id}: locked has exactly one key per published id, got {locked:?}");
             let gumball = view.get("gumball").expect("gumball leftover");
             assert_eq!(gumball.get("anchorId").and_then(semio_framework_value::DslValue::as_str), published.first().map(String::as_str), "{case_id}: the gumball anchor is the first published id");
-            close_reserved_app(&mut app);
+            close_reserved_app(&mut app, mounted_policy);
         }
     }
     /// 🎯️ Ticket 26/09/09/PROCEDURAL-3D-END-TO-END (`📓️selection-merge-vocabulary-2026-09-12.md`): the
@@ -8224,23 +9489,32 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 'add'` and only the unmodified `replace` pick worked.
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_speaks_exactly_the_schema_merge_vocabulary() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let fixture: Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🕹️interaction/🧫️fixtures/🎯️merge-modes.json")).expect("language-neutral merge-modes fixture");
         let words = |value: &Value| -> Vec<String> { value.as_array().expect("fixture word list").iter().map(|word| word.as_str().expect("fixture word").to_string()).collect() };
         let vocabulary = words(&fixture["vocabulary"]);
         let deleted = words(&fixture["deletedWords"]);
         assert!(!vocabulary.is_empty() && !deleted.is_empty(), "the vocabulary fixture must carry both the accepted and the deleted words");
         for word in &vocabulary {
-            let mut app = interaction_app_under_test().await;
-            let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": "items", "merge": word, "method": "pick" }), "item", &["item-1".to_string()]))).await;
+            let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+            let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": "items", "merge": word, "method": "pick" }), "item", &["item-1".to_string()])), &mut identity).await;
             assert!(settled.output.get("interactionView").is_some(), "the declared merge '{word}' must settle a leftover InteractionView, not a fault");
-            close_reserved_app(&mut app);
+            close_reserved_app(&mut app, mounted_policy);
         }
         for word in &deleted {
-            let mut app = interaction_app_under_test().await;
-            let admitted = app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": "items", "merge": word, "method": "pick" }), "item", &["item-1".to_string()])), &meta()).await.expect("the reserved job is admitted before its args are decoded");
+            let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+            let admitted = app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": "items", "merge": word, "method": "pick" }), "item", &["item-1".to_string()])), &meta(), &mut identity).await.expect("the reserved job is admitted before its args are decoded");
             let fault = crate::app::settle_framework_reserved_admission(&mut app, admitted).await.expect_err("a merge word outside the schema vocabulary must fault the reserved job, never fall back to a replace");
             assert!(format!("{fault:?}").contains(&format!("unknown merge '{word}'")), "the deleted word '{word}' must be rejected outright — no adapter, no silent replace; got {fault:?}");
-            close_reserved_app(&mut app);
+            close_reserved_app(&mut app, mounted_policy);
         }
     }
 
@@ -8297,12 +9571,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// nothing at all and applies nothing.
     #[semio_framework_async_macros::async_test]
     async fn a_spawned_task_awaits_a_real_request_and_its_resume_mutates_the_store_under_the_original_meta() {
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
         let instance = 501;
         let spawn_meta = ActionMeta { actor: "alice".into(), instance_id: instance, view_state: None };
-        let mut app = contract_app_raw().await;
+        let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         crate::app::PluginApp::bind_instance_id(&mut app, instance).await;
 
-        let result = app.dispatch_typed(TestCommand::SpawnCountTask, &spawn_meta).await.expect("dispatching SpawnCountTask must succeed");
+        let result = app.dispatch_typed(TestCommand::SpawnCountTask, &spawn_meta, &mut identity).await.expect("dispatching SpawnCountTask must succeed");
         assert!(result.mutations.is_empty(), "SpawnCountTask itself must emit no document mutation — only the LATER resume does");
         let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, instance).await.expect("the spawning operation's publication settles");
         assert_eq!(
@@ -8332,7 +9615,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let decoded_command = <TestCommand as ::protocol::OpBinary>::decode_op(&command_bytes).expect("must decode back to a TestCommand");
         assert_eq!(decoded_command, TestCommand::ApplyCountFromTask { value: 42 }, "the resolved command must carry the value the injected completion delivered");
 
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::test_push_instance(&runtime, AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
         let output = crate::plugin_runtime::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, crate::plugin_runtime::TaskResumeInput::Command(command_bytes)).await;
         assert_eq!(output.frames.len(), 1, "a successful resume must frame exactly one AppFrame::Emit");
@@ -8354,6 +9637,28 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(row.op_lines.iter().any(|line| line.contains("42")), "the applied edit carries the value the injected completion delivered: {:?}", row.op_lines);
     }
 
+    /// 🧵️ Defers the original task factory until the actor polls its admitted future.
+    #[semio_framework_async_macros::async_test]
+    async fn task_admission_defers_the_user_factory_until_actor_execution() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../⚛️reactor/🧵️task/🧫️fixtures/📥️admission/🔣️.json")).expect("canonical task admission fixture");
+        let expected = |phase: &str| fixture["observations"].as_array().expect("observations").iter().find(|row| row["phase"] == phase).expect("phase")["invokesTaskFactory"].as_bool().expect("factory invocation");
+        let calls = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let factory_calls = calls.clone();
+        let instance = 510;
+        let meta = ActionMeta { actor: "factory-owner".into(), instance_id: instance, view_state: None };
+        let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("deferred-factory", move |_ctx| {
+            factory_calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            async move { Ok(TaskResolution::Done) }
+        });
+        crate::reactor::spawn_task(instance, &meta, task).expect("original task admitted");
+        assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), usize::from(expected("admission")));
+        assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 1);
+        crate::reactor::reactor_driver::run_until_idle(8).await;
+        assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), usize::from(expected("execution")));
+        assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 0);
+        eprintln!("[DEBUG] task admission factory-calls=0 actor-execution factory-calls=1");
+    }
+
     /// 🚫️ The (quota+1)th task on one instance is refused with a typed `Fault` — never a
     /// silent drop — while earlier tasks and OTHER instances are unaffected.
     ///
@@ -8366,19 +9671,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         for label in ["first", "second"] {
             let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new(label, |_ctx| async move { Ok(TaskResolution::Done) });
-            crate::reactor::spawn_task(instance, &meta, task).await.unwrap_or_else(|error| panic!("task '{label}' must be admitted under quota 2: {error:?}"));
+            crate::reactor::spawn_task(instance, &meta, task).unwrap_or_else(|error| panic!("task '{label}' must be admitted under quota 2: {error:?}"));
         }
         assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 2);
 
         let third = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("third", |_ctx| async move { Ok(TaskResolution::Done) });
-        let error = crate::reactor::spawn_task(instance, &meta, third).await.expect_err("the 3rd task must be refused — quota is 2, not a silent drop");
+        let error = crate::reactor::spawn_task(instance, &meta, third).expect_err("the 3rd task must be refused — quota is 2, not a silent drop");
         assert_eq!(error.code.0, "plugin.task.quota-exceeded");
         assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 2, "a refused spawn must not have added a 3rd record");
 
         let other_instance = 503;
         let other_meta = ActionMeta { actor: "local".into(), instance_id: other_instance, view_state: None };
         let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("elsewhere", |_ctx| async move { Ok(TaskResolution::Done) });
-        crate::reactor::spawn_task(other_instance, &other_meta, task).await.expect("a different instance must not be affected by 502's quota exhaustion");
+        crate::reactor::spawn_task(other_instance, &other_meta, task).expect("a different instance must not be affected by 502's quota exhaustion");
     }
 
     /// 🔑️ Spawning a second task under the SAME `(instance, key)` cancels the first — its
@@ -8395,7 +9700,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Ok(TaskResolution::Done)
         })
         .keyed("search");
-        crate::reactor::spawn_task(instance, &meta, first).await.expect("first must be admitted");
+        crate::reactor::spawn_task(instance, &meta, first).expect("first must be admitted");
         assert!(crate::reactor::reactor_driver::task_key_is_live(instance, "search").await);
         assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 1);
 
@@ -8406,7 +9711,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Ok(TaskResolution::Done)
         })
         .keyed("search");
-        crate::reactor::spawn_task(instance, &meta, second).await.expect("second must be admitted, cancelling the first");
+        crate::reactor::spawn_task(instance, &meta, second).expect("second must be admitted, cancelling the first");
         assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 1, "the SAME key must never have two live tasks at once");
 
         crate::reactor::reactor_driver::run_until_idle(8).await;
@@ -8439,13 +9744,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             dying_ran_inner.store(true, std::sync::atomic::Ordering::SeqCst);
             Ok(TaskResolution::Done)
         });
-        crate::reactor::spawn_task(dying, &dying_meta, dying_task).await.expect("dying instance's task must spawn");
+        crate::reactor::spawn_task(dying, &dying_meta, dying_task).expect("dying instance's task must spawn");
 
         let survivor_task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("survivor", move |ctx: TaskCtx| async move {
             let _ = ctx.host.storage_read("also-never-resolved").await;
             Ok(TaskResolution::Done)
         });
-        crate::reactor::spawn_task(survivor, &survivor_meta, survivor_task).await.expect("survivor instance's task must spawn");
+        crate::reactor::spawn_task(survivor, &survivor_meta, survivor_task).expect("survivor instance's task must spawn");
 
         let pending = crate::reactor::reactor_driver::run_until_idle(8).await;
         assert!(pending, "both tasks must have parked on their own storage_read");
@@ -8480,7 +9785,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     #[semio_framework_async_macros::async_test]
     async fn checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume() {
         let completion: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧫️fixtures/⏳️completion/🔣️.json"))).unwrap();
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let instance = 507;
         let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
         let restart_command = <TestCommand as ::protocol::OpBinary>::encode_op(&TestCommand::ApplyCountFromTask { value: 7 }).expect("must encode");
@@ -8495,7 +9800,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
         })
         .restartable(restart_command.clone());
-        crate::reactor::spawn_task(instance, &meta, task).await.expect("must spawn");
+        crate::reactor::spawn_task(instance, &meta, task).expect("must spawn");
         assert!(crate::reactor::reactor_driver::run_until_idle(8).await);
         let observed_parked_requests = crate::reactor::reactor_driver::pending_request_count().await;
 
@@ -8542,22 +9847,69 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     include!("../🔬️surface-view-state-routing/🦀️.rs");
     #[semio_framework_async_macros::async_test]
     async fn mounted_command_history_original_pages_retain_exact_app_close_authority() {
-        let mut app = Box::pin(contract_app_raw()).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
         crate::app::test_mounted_command_history_pages(&mut app);
     }
     #[semio_framework_async_macros::async_test]
     async fn mounted_command_history_document_replacement_keeps_original_held_rows() {
-        let mut app = Box::pin(contract_app_raw()).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
         app.test_store_mut().await.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }).await.unwrap();
         crate::app::test_mounted_command_history_replacement(&mut app);
     }
     #[semio_framework_async_macros::async_test]
     async fn mounted_private_child_frame_retains_exact_admission_and_close_authority() {
-        let mut app = Box::pin(contract_app_raw()).await;
+        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+
+        let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
         crate::app::test_mounted_private_child_frame(&mut app);
         crate::app::artifact_app_laws::close_registered_fixture_app(&mut app);
     }
     mod mounted_owned_child_laws { include!("🪟️mounted-owned-child/🦀️.rs"); }
     mod owned_child_dispatch_laws { include!("📨️owned-child-dispatch/🦀️.rs"); }
 
+/// 👷️ Original reserved route returns physical backing separately from logical payload work.
+#[test]
+fn original_reserved_job_currency_law_retains_spare_backing_until_exact_release(){
+ use crate::app::FrameworkSetSelectionModeJob;
+ use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep};
+ use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
+ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/👷️reserved/🔣️.json")).unwrap();
+ let (raw,birth)=observe(||{let mut raw=Vec::with_capacity(law["backingBytes"].as_u64().unwrap()as usize);raw.resize(law["payloadBytes"].as_u64().unwrap()as usize,0x72);raw});
+ let pointer=raw.as_ptr();let capacity=raw.capacity();assert_eq!((birth.requested_bytes,birth.released_bytes),(capacity,0));
+ let mut job=FrameworkSetSelectionModeJob::new(raw,1);job.begin_close();
+ let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:capacity,maximum_depth:1};
+ for refused in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant}]{let(step,event)=observe(||job.close_step(refused));assert_eq!(step,InteractiveJobCloseStep::Pending{progress:Default::default()});assert_eq!((event.requested_bytes,event.released_bytes),(0,0));assert_eq!(job.raw.as_ptr(),pointer);assert_eq!(job.raw.len(),8193);}
+ let(step,event)=observe(||job.close_step(RetainedCloneGrant{maximum_depth:0,..grant}));assert!(matches!(step,InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,..}));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));assert_eq!(job.raw.as_ptr(),pointer);
+ for expected in law["turns"].as_array().unwrap().iter().take(3){let(step,event)=observe(||job.close_step(grant));let progress=step.progress();assert_eq!(progress.copied_items,expected["copiedItems"].as_u64().unwrap()as usize);assert_eq!(progress.copied_bytes,expected["copiedBytes"].as_u64().unwrap()as usize);assert_eq!(progress.retained_capacity_bytes,0);assert_eq!(progress.released_bytes,0);assert_eq!((event.requested_bytes,event.released_bytes),(0,0));assert_eq!(job.raw.capacity(),capacity);assert!(!job.terminal_is_empty());}
+ let(step,event)=observe(||job.close_step(RetainedCloneGrant{maximum_release_bytes:capacity-1,..grant}));assert_eq!(step,InteractiveJobCloseStep::Pending{progress:Default::default()});assert_eq!((event.requested_bytes,event.released_bytes),(0,0));assert_eq!(job.raw.as_ptr(),pointer);assert_eq!(job.raw.capacity(),capacity);
+ let(step,event)=observe(||job.close_step(grant));assert_eq!(step,InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()}});assert_eq!((event.requested_bytes,event.released_bytes),(0,capacity));assert_eq!(job.raw.capacity(),0);assert!(job.terminal_is_empty());
+ let(step,event)=observe(||job.close_step(grant));assert_eq!(step,InteractiveJobCloseStep::Complete{progress:Default::default()});assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
+ println!("[DEBUG] original reserved job copied={} actualBorn={} actualReleased={} separate zero-item/copy/depth/one-short-release refusals retain original backing",8193,birth.requested_bytes,capacity);
+}
 }

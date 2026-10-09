@@ -1,0 +1,25 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
+      "beforeSha256": "e0028ec9305e5da09e031cbe7e311144cf467bbec5ded59e8d5c7b7c39a3eeb1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+      "beforeSha256": "41d9a2b27023e22efd3221be015b96376d6a366847ca582c366f145ea258baeb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "beforeSha256": "ee2ccbe8513ad9e7ba0f2644d0f02f31af09a3a8d3e1f827310821a57105b7d5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "beforeSha256": "061bde56c3cdf7287742727fe065247bad1f2436223610c4d4951cb883d4ce0d"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSha256": "53c47536fdc0bc2fa6d8abab0c3f862f3d12873d73b33b9d34af6585722732bb"
+    }
+  ],
+  "sourceCopies": false
+}

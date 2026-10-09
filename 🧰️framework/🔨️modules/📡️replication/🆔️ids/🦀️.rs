@@ -17,7 +17,7 @@ pub struct MutationId(pub String);
 /// 🌱️ Same reason as `MutationId` above — real `🎠️kernel` consumer.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
-pub struct ActorId(pub String);
+pub struct ActorId(pub semio_framework_value::SharedUtf8);
 
 /// 🌱️ Explicit actor for standalone genesis and named local test contexts.
 pub const LOCAL_ACTOR_ID: &str = "local";
@@ -43,7 +43,7 @@ pub struct SchemaId(pub String);
 pub struct SchemaVersion(pub u32);
 
 /// #⃣ A blake3 content hash over an operation/snapshot payload.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct PayloadHash(pub [u8; 32]);
 
 /// 🌉️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp` above (this crate
@@ -67,7 +67,7 @@ impl crate::value::ToValue for ActorId {
 }
 impl crate::value::FromValue for ActorId {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        Ok(Self(<String as crate::value::FromValue>::from_value(value)?))
+        Ok(Self(<semio_framework_value::SharedUtf8 as crate::value::FromValue>::from_value(value)?))
     }
 }
 

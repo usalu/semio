@@ -199,5 +199,46 @@
         true
       ]
     }
-  ]
+  ],
+  "retained": {
+    "grant": {
+      "maximumItems": 3,
+      "maximumCopyBytes": 23,
+      "maximumCapacityBytes": 64,
+      "maximumReleaseBytes": 65536,
+      "maximumDepth": 3
+    },
+    "receipts": [
+      {
+        "copiedItems": 1,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 64,
+        "releasedBytes": 0
+      },
+      {
+        "copiedItems": 1,
+        "copiedBytes": 23,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      {
+        "copiedItems": 1,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 64
+      }
+    ],
+    "remaining": {
+      "maximumItems": 0,
+      "maximumCopyBytes": 0,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 65472,
+      "maximumDepth": 3
+    },
+    "fuel": 7,
+    "deadlineUs": 1500,
+    "source": "original source payload",
+    "sourceIdentity": "same-original-step-context",
+    "failedReceipt": "record-actual-before-refusal"
+  }
 }

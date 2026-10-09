@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy",
+    "sources",
+    "stages",
+    "languages",
+    "logicalMetadataBytes",
+    "backingMetadataBytes"
+  ],
+  "properties": {
+    "policy": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64
+      }
+    },
+    "sources": {
+      "const": [
+        {
+          "length": 0,
+          "capacity": 0
+        },
+        {
+          "length": 1,
+          "capacity": 8192
+        },
+        {
+          "length": 8193,
+          "capacity": 65536
+        }
+      ]
+    },
+    "stages": {
+      "const": [
+        "logical-source",
+        "physical-backing",
+        "parent-complete"
+      ]
+    },
+    "languages": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "logicalMetadataBytes": {
+      "const": 8
+    },
+    "backingMetadataBytes": {
+      "const": 24
+    }
+  }
+}

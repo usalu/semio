@@ -1,0 +1,20 @@
+import assert from "node:assert/strict";
+import {readFileSync,writeFileSync,mkdirSync,existsSync,readdirSync} from "node:fs";
+import {dirname,join,resolve} from "node:path";
+import {createHash} from "node:crypto";
+const ticket=dirname(import.meta.dir),root=resolve(ticket,"../../../../../../.."),[command,epoch]=process.argv.slice(2);
+assert.ok(command==="source"||command==="json-source");assert.ok(epoch&&/^\d+$/.test(epoch));
+const output=join(ticket,"🗑️generated/"+(command==="source"?"rpk":"rjp")+epoch);assert.ok(!existsSync(output));mkdirSync(output,{recursive:true});
+const pack=join(root,"🧰️framework/🔨️modules/🎒️pack"),script=join(pack,command==="source"?"📦️packages/🦀️rust/📜️script.ts":"🔤️json/📦️packages/🦀️rust/📜️script.ts"),paths=[import.meta.path,script];
+const walk=(path:string)=>{for(const entry of readdirSync(path,{withFileTypes:true})){const next=join(path,entry.name);assert.ok(!entry.isSymbolicLink());if(entry.isDirectory())walk(next);else paths.push(next);}};
+walk(join(pack,command==="source"?"🌱️value/🌳️intrinsic/🔢️occurrence-order":"🔤️json/📥️decode/🛂️policy"));
+if(command==="json-source")for(const path of["🔤️json/📥️decode/🫳️borrowed/🦀️.rs","🔤️json/🧫️fixtures/🫳️read-source.json","🔤️json/🧫️fixtures/🎟️borrowed-retirement/🔣️.json"])paths.push(join(pack,path));
+if(command==="json-source"){walk(join(pack,"🔤️json/📥️decode/🧾️receipt"));walk(join(pack,"🔤️json/📥️decode/🧵️operation"));paths.push(join(pack,"🔤️json/🦀️.rs"));}
+const capture=(path:string)=>{assert.ok(path.length<=256&&[...path].length<=256);const bytes=readFileSync(path);return {path,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")};};
+const before=paths.map(capture);writeFileSync(join(output,"admission.json"),JSON.stringify(before));
+const child=Bun.spawn([process.execPath,script,command==="source"?"test-occurrence-order-source":"test-read-policy-source"],{cwd:root,env:process.env,stdout:Bun.file(join(output,"out.txt")),stderr:Bun.file(join(output,"err.txt"))});
+let timedOut=false;const cancel=()=>child.kill();process.once("SIGINT",cancel);process.once("SIGTERM",cancel);const timeout=setTimeout(()=>{timedOut=true;cancel();},30000);
+const code=await child.exited;clearTimeout(timeout);process.off("SIGINT",cancel);process.off("SIGTERM",cancel);
+const after=paths.map(capture),exact=before.every((row,index)=>row.sha256===after[index]!.sha256&&row.bytes===after[index]!.bytes);
+writeFileSync(join(output,"terminal.json"),JSON.stringify({code,timedOut,before,after,exact,trackedSourceCopiesCreated:0,maxPath:Math.max(...paths.map(path=>path.length))}));
+console.log(`[DEBUG] Pack order source physically closed=${code} exact=${exact} timedOut=${timedOut}`);process.exitCode=code||Number(!exact||timedOut);

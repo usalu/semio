@@ -1,6 +1,7 @@
 //! 🌉️ Flow eval bridge and channel-eval helpers.
 
 use neural_engine as neural;
+use protocol::causal::transition::HistoryFoldIndex;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -9,20 +10,7 @@ use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels,
 use crate::artifact::*;
 use semio_framework_artifact_flow_flow::widget_id_for;
 
-// #region 🔖️EvalBridge
-/// 🔌️ Native eval-bridge callback: operator kind id + input dictionary in, evaluated dictionary or `EvalError` out.
-pub(crate) type EvalBridgeFn = dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Send;
 
-pub(crate) struct EvalBridge {
-    pub(crate) cb: Box<EvalBridgeFn>,
-}
-
-impl EvalBridge {
-    pub(crate) fn evaluate(&self, kind_id: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        (self.cb)(kind_id, input)
-    }
-}
-// #endregion 🔖️EvalBridge
 
 // #region 🔖️ChannelEval
 fn neural_value_to_json(value: &NeuralValue) -> semio_framework_pack_json::Value {
@@ -143,7 +131,7 @@ pub(crate) fn preview_dict_from_connection(src: &Dictionary, from_port: &str, to
     }
 }
 
-pub(crate) fn widget_operator_info(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> Option<OperatorInfo> {
+pub(crate) fn widget_operator_info(widget: &Widget, kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Option<OperatorInfo> {
     match widget {
         Widget::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind).cloned(),
         Widget::Variable { name, schema, .. } => {
@@ -226,7 +214,7 @@ fn dictionary_schema_at_port(output: &Dictionary, port: &str) -> Option<String> 
     dict.schema().map(str::to_string)
 }
 
-pub(crate) fn infer_port_schema(outputs: &BTreeMap<String, Dictionary>, kind_infos: &HashMap<String, OperatorInfo>, widgets: &[Widget], synapses: &[SynapseSpec], widget_id: &str, port: &str) -> String {
+pub(crate) fn infer_port_schema(outputs: &protocol::causal::transition::HistoryFoldIndex<String, Dictionary>, kind_infos: &HistoryFoldIndex<String, OperatorInfo>, widgets: &[Widget], synapses: &[SynapseSpec], widget_id: &str, port: &str) -> String {
     if let Some(schema) = outputs.get(widget_id).and_then(|out| dictionary_schema_at_port(out, port)) {
         return schema;
     }
@@ -298,7 +286,7 @@ pub(crate) fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
     }
 }
 
-pub(crate) fn build_channel_eval_json(host_snapshot: &FlowHostSnapshot, channels: &EvalChannels, kind_infos: &HashMap<String, OperatorInfo>) -> String {
+pub(crate) fn build_channel_eval_json(host_snapshot: &FlowHostSnapshot, channels: &EvalChannels, kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> String {
     let mut widgets = semio_framework_pack_json::Object::new();
     for widget in &host_snapshot.widgets {
         let id = widget_id_for(widget);

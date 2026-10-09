@@ -9,7 +9,7 @@ fn relay_lifecycle_fixture() -> serde_json::Value {
 fn neutral_relay_lifecycle_traces_drive_production_machines() {
     let _replay_authority = shard::replay_test_authority();
     for trace in relay_lifecycle_fixture()["traces"].as_array().expect("relay lifecycle traces") {
-        let actual: serde_json::Value = serde_json::from_str(&exercise_relay_lifecycle_trace(&trace.to_string()).expect("production lifecycle trace")).expect("production lifecycle projection");
+        let actual: serde_json::Value = serde_json::from_str(&exercise_relay_lifecycle_trace(&trace.to_string(),test_relay_wake_authority()).expect("production lifecycle trace")).expect("production lifecycle projection");
         assert_eq!(actual, trace["expected"], "{} production projection", trace["🪪️id"]);
     }
 }
@@ -63,7 +63,7 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
     );
     assert!(matches!(failure_receiver.await.expect("shutdown terminal failure"), GuestRelayPoolFailure::Admission(semio_framework_async::WorkerSubmitErrorKind::Shutdown)));
     assert!(!ran.load(std::sync::atomic::Ordering::SeqCst));
-    let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool));
+    let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool,test_relay_wake_authority()));
     let (index, generation) = registry.reserve().expect("pre-failure mounted slot");
     registry.mount(index, generation, GuestRelayMountedOwner::Empty);
     registry.detach(index, generation);
@@ -88,7 +88,7 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
     );
     maximum_rejected_job.begin_close();
     for _ in 0..semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES.saturating_add(3) {
-        if matches!(maximum_rejected_job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
+        if matches!(maximum_rejected_job.close_step(test_relay_drive_policy()), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
             break;
         }
     }
@@ -105,7 +105,7 @@ fn mounted_relay_stack_authority_matches_the_neutral_fixture() {
     assert_eq!(fixture["schemaVersion"], 1);
     assert_eq!(registry["capacity"].as_u64(), Some(GUEST_RELAY_MOUNTED_SLOTS as u64));
     assert_eq!(registry["storage"], "heap");
-    assert_eq!(GuestRelayMountedRegistry::new().slots.len(), GUEST_RELAY_MOUNTED_SLOTS);
+    assert_eq!(GuestRelayMountedRegistry::new(test_relay_wake_authority()).slots.len(), GUEST_RELAY_MOUNTED_SLOTS);
     assert!(size_of::<GuestRelayMountedSlot>() <= maximum);
     assert!(size_of::<GuestRelayMountedRegistry>() <= maximum);
 }
@@ -124,7 +124,7 @@ fn admit_test_relay(relay: GuestColdRelayJob, params: semio_framework_job::Batch
         Err(mut rejected) => {
             rejected.begin_close();
             while !rejected.terminal_is_empty() {
-                let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let _ = rejected.close_step(test_relay_drive_policy());
             }
             panic!("relay test session admission");
         }
@@ -143,7 +143,7 @@ fn test_payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<
 
 async fn test_relay_step(session: &semio_framework_job::WorkerJobSession<GuestColdRelayJob>, _pool: &WorkerPool) -> TestRelayOutcome {
     if matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
-        let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = session.close_step(test_relay_drive_policy());
         return TestRelayOutcome::Yield;
     }
     let (ticket, poll) = session.try_step_on_caller().expect("relay test caller opportunity");
@@ -160,7 +160,7 @@ async fn test_relay_step(session: &semio_framework_job::WorkerJobSession<GuestCo
         semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => TestRelayOutcome::Yield,
     };
     while !outcome.terminal_is_empty() {
-        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = outcome.close_step(test_relay_drive_policy());
     }
     if outcome.is_terminal() {
         owner.begin_close();
@@ -172,7 +172,7 @@ async fn test_relay_step(session: &semio_framework_job::WorkerJobSession<GuestCo
 
 #[test]
 fn guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact() {
-    let registry = GuestRelayMountedRegistry::new();
+    let registry = GuestRelayMountedRegistry::new(test_relay_wake_authority());
     let mut generations = Vec::new();
     for _ in 0..GUEST_RELAY_MOUNTED_SLOTS {
         let (index, generation) = registry.reserve().expect("exact mounted relay capacity");
@@ -193,7 +193,7 @@ fn guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact() {
         assert_eq!(output.storage.as_ptr(), output_identity);
         *slot = GuestRelayMountedSlot::Empty;
     }
-    let exhausted = GuestRelayMountedRegistry::new();
+    let exhausted = GuestRelayMountedRegistry::new(test_relay_wake_authority());
     exhausted.next_generation.store(u64::MAX, std::sync::atomic::Ordering::Release);
     let (index, generation) = exhausted.reserve().expect("last generation remains admissible");
     assert_eq!(generation, u64::MAX);
@@ -206,6 +206,7 @@ fn mounted_test_session(generation: u64, lifecycle: GuestRelayMountedLifecycle, 
     mounted_output.write_page(output).expect("mounted test output");
     GuestRelayMountedSession {
         generation,
+        wake:GuestRelayWakeCustody::new(),
         owner: GuestRelayMountedOwner::Empty,
         checked_out: None,
         lifecycle_probe_checked_out: None,
@@ -223,7 +224,7 @@ fn detached_reaper_reclaims_one_slot_per_opportunity_round_robin_and_refuses_sta
     assert_eq!(fixture["schemaVersion"], 1);
     assert_eq!(fixture["capacities"]["mountedRelaySlots"].as_u64(), Some(GUEST_RELAY_MOUNTED_SLOTS as u64));
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
-    let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone()));
+    let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone(),test_relay_wake_authority()));
     let mut generations = Vec::new();
     for _ in 0..GUEST_RELAY_MOUNTED_SLOTS {
         let (index, generation) = registry.reserve().expect("full detached fixture capacity");
@@ -254,7 +255,7 @@ fn detached_reaper_never_steals_a_live_draining_callers_exact_output() {
     let fixture = relay_lifecycle_fixture();
     let expected = fixture["traces"].as_array().expect("fixture traces").iter().find(|trace| trace["🪪️id"] == "relay-live-terminal-caller-output").and_then(|trace| trace["expected"]["callerOutput"].as_str()).expect("caller output trace");
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
-    let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone()));
+    let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone(),test_relay_wake_authority()));
     let (detached_index, detached_generation) = registry.reserve().expect("detached slot");
     *registry.slots[detached_index].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = GuestRelayMountedSlot::Mounted(mounted_test_session(detached_generation, GuestRelayMountedLifecycle::DetachedForReap, &[]));
     let (live_index, live_generation) = registry.reserve().expect("live slot");
@@ -279,10 +280,10 @@ fn guest_cold_relay_publication_max_plus_one_selects_retained_fault_without_losi
     maximum.begin_close();
     plus_one.begin_close();
     while !maximum.terminal_is_empty() {
-        let _ = maximum.close_step(1, semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES + 1);
+        let _ = maximum.close_step(test_relay_drive_policy());
     }
     while !plus_one.terminal_is_empty() {
-        let _ = plus_one.close_step(1, semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES + 1);
+        let _ = plus_one.close_step(test_relay_drive_policy());
     }
 }
 
@@ -304,6 +305,7 @@ async fn relay_session_with_tokens(
         generation: semio_framework_job::Generation(1),
         cancel: session_cancel,
         config: semio_framework_job::BatchDriveConfig {
+            retained:test_relay_drive_policy(),
             site: "test.plugin-host.guest-cold-relay",
             stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
             fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
@@ -327,7 +329,7 @@ async fn relay_session(
 async fn mounted_handle(mock: Arc<MockGuestRuntime>, actor: RuntimeActorId) -> PluginInstanceHandle {
     let compiled = mock.compile(&PackageRef { package: PackageId("mounted-relay-test".to_string()), hash: PackageHash([43; 32]) }, &[]).await.expect("mock compile");
     let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
-    PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance).await
+    PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance,test_relay_wake_authority()).await
 }
 
 async fn relay_session_for_handle(
@@ -345,6 +347,7 @@ async fn relay_session_for_handle(
         generation: semio_framework_job::Generation(77),
         cancel: session_cancel,
         config: semio_framework_job::BatchDriveConfig {
+            retained:test_relay_drive_policy(),
             site: "test.plugin-host.guest-cold-relay.mounted",
             stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
             fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
@@ -368,7 +371,7 @@ async fn drive_until_step_admitted(session: &semio_framework_job::WorkerJobSessi
 
 async fn wait_for_cancel_admission(pool: &WorkerPool, mock: &MockGuestRuntime) {
     for _ in 0..64 {
-        let _ = semio_framework_job::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_framework_job::pump_worker_job_retirements(1,test_relay_drive_policy());
         if mock.cancel_admissions() == 1 {
             return;
         }
@@ -474,7 +477,7 @@ async fn dropping_a_pending_mounted_future_reaps_without_a_second_foreground_pol
     let cancel = semio_framework_async::CancelToken::root_now();
     let (session, gate, instance) = relay_session(Arc::clone(&mock), actor, pool.clone(), cancel.clone(), JobStep::Done { output: b"abandoned".to_vec() }).await;
     let cancel_gate = mock.script_pending_cancel_job();
-    let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone()));
+    let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone(),test_relay_wake_authority()));
     let (index, generation) = registry.reserve().expect("mounted relay slot");
     registry.mount(index, generation, GuestRelayMountedOwner::Session(session));
     let mut future = Box::pin(GuestRelayMountedFuture { registry: Arc::clone(&registry), index, generation, complete: false });
@@ -529,7 +532,7 @@ async fn dropping_a_pending_mounted_future_reaps_without_a_second_foreground_pol
 #[semio_framework_async_macros::async_test]
 async fn wake_incapable_close_uses_one_coalesced_bounded_fallback() {
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
-    let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone()));
+    let registry = Arc::new(GuestRelayMountedRegistry::with_pool(pool.clone(),test_relay_wake_authority()));
     registry.park_blocked_reaper(std::task::Waker::noop(), true);
     assert_eq!(registry.reaper_timers.load(std::sync::atomic::Ordering::SeqCst), 0, "wake-capable owners never enter fallback timing");
     registry.park_blocked_reaper(std::task::Waker::noop(), false);
@@ -989,4 +992,8 @@ async fn poisoned_instance_slot_recovers_without_losing_the_mounted_route() {
     assert!(handle.instance.is_poisoned());
     assert_eq!(handle.infer(b"request", &semio_framework_job::root_cancel_token()).await.expect("poison recovery must preserve the resident instance"), b"poison-recovered");
     assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_available());
+}
+
+fn test_relay_drive_policy()->semio_framework_value::RetainedCloneGrant{
+ serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../../../⚡️effects/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap()
 }

@@ -17,7 +17,7 @@ pub struct PresentationIntoJson;
 impl Serializer<PresentationSnapshot> for PresentationIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &PresentationSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &PresentationSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(from));
         let json = JsonSnapshot::from_value(value);
         Ok(IoOutcome::clean(IoPayload::Binary(write_json_pretty(&json.value).into_bytes())))

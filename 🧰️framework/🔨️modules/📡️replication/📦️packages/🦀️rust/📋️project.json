@@ -151,6 +151,15 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json"
       ]
+    },
+    "test-original-conflict-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-conflict-source",
+        "forwardAllArgs": true
+      },
+      "outputs": []
     }
   }
 }

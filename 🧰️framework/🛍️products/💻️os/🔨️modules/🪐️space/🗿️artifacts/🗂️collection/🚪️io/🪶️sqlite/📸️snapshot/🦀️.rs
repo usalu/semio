@@ -24,11 +24,11 @@ fn semantic(value:&CollectionSnapshot,phase:SqliteSnapshotPhase,control:&mut Sql
 impl ArtifactSqliteSnapshot for CollectionSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<store::io::IoPayload,ValueError>{
   semantic(self,SqliteSnapshotPhase::EncodeNative,control)?;
-  store::encode_sqlite_snapshot_record_native(encoding,Self::__DSL_ENVELOPE_ID,Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+  store::encode_sqlite_snapshot_record_native(encoding,Self::__DSL_ENVELOPE_ID,Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;schema(control)?;let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,Self::__DSL_ENVELOPE_ID,Self::__dsl_spec_producer(),|record,native|{admission::record(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)},control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;schema(control)?;let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,Self::__DSL_ENVELOPE_ID,Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {admission::record(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_owner)}
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let total=rows(self)?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,total)?;schema(control)?;control.check_rows(total)?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;write_rows(self,total,&mut p)?;p.finish()}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   schema(control)?;validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;

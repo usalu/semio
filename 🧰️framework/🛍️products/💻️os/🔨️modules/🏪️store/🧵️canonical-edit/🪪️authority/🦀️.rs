@@ -2,7 +2,15 @@
 use super::ArtifactStoreOneItemLiveAuthority;
 use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement}};
 
-type AuthorityFields=(String,Option<String>,Option<String>,Option<String>);
+impl crate::command::ArtifactCanonicalEditAuthority for ArtifactStoreOneItemLiveAuthority {
+    fn sequence_number(&self)->i32{self.next_sequence_number}
+    fn clock(&self)->crate::os_spr::HybridLogicalTimestamp{self.next_clock}
+    fn actor(&self)->&(dyn semio_framework_value::paged::Utf8Text+Sync){&self.actor}
+    fn line(&self)->Option<&(dyn semio_framework_value::paged::Utf8Text+Sync)>{self.line.as_ref().map(|value|value as &(dyn semio_framework_value::paged::Utf8Text+Sync))}
+    fn group(&self)->Option<&(dyn semio_framework_value::paged::Utf8Text+Sync)>{self.group_id.as_ref().map(|value|value as &(dyn semio_framework_value::paged::Utf8Text+Sync))}
+}
+
+type AuthorityFields=(semio_framework_value::SharedUtf8,Option<String>,Option<String>,Option<String>);
 struct PublicationAuthorityFieldsRetirement(ControlledRetirement<AuthorityFields>);
 impl RetireOwned for ArtifactStoreOneItemLiveAuthority {
     fn retirement(self)->Box<dyn RetirementCursor>{

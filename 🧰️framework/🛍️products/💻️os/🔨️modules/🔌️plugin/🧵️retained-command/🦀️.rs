@@ -321,7 +321,7 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
 }
 
 impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
-    fn controlled_close_step(step:Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>)->InteractiveJobCloseStep{match step{Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Pending{progress},Err(error)=>InteractiveJobCloseStep::Refused(error.kind)}}
+    fn controlled_close_step(step:Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>)->InteractiveJobCloseStep{match step{Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Pending{progress},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
     fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if self.admission_refusal.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if !self.raw.is_empty(){return Ok(RetirementDemand{copy_bytes:1,depth:1,..Default::default()});}
@@ -329,7 +329,14 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         for input in [&self.checkpoint_input,&self.raw_input]{if let Some(owner)=input.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_close_copy_byte_demand()?,capacity_bytes:owner.next_close_capacity_byte_demand(copy)?,release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?});}}
         if self.download.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if let Some(owner)=self.download_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
-        if self.emit.is_some()||self.ephemeral.is_some(){return Err(Self::unadmitted_input());}
+        if let Some(emit)=self.emit.as_ref(){
+            if let Some(mut demand)=emit.child_close_demands(copy)?{
+                demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"retained emitted child depth overflow"))?;
+                return Ok(demand);
+            }
+            return Err(Self::unadmitted_input());
+        }
+        if self.ephemeral.is_some(){return Err(Self::unadmitted_input());}
         if let Some(work)=self.work.as_ref(){return if work.terminal_is_empty(){Ok(RetirementDemand{release_bytes:work.terminal_frame_release_bytes().ok_or_else(Self::unadmitted_input)?,depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:work.next_close_copy_byte_demand()?,capacity_bytes:work.next_close_capacity_byte_demand(copy)?,release_bytes:work.next_close_release_byte_demand()?,depth:work.next_close_depth_demand()?})};}
         if self.command.is_some()||self.snapshot.is_some()||self.config.is_some()||self.history.is_some()||self.interaction_state.is_some()||self.interaction_hover.is_some()||self.context.is_some()||self.operation.is_some(){return Err(Self::unadmitted_input());}
         if self.completion.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
@@ -661,18 +668,27 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
     fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep {
         if !self.closing{return InteractiveJobCloseStep::Blocked;}
         if grant.maximum_items==0{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}
-        let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return InteractiveJobCloseStep::Refused(error.kind)};
-        if grant.maximum_depth<demand.depth{return InteractiveJobCloseStep::Refused(ValueRefusalKind::DepthLimit);}
+        let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
+        if grant.maximum_depth<demand.depth{return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::DepthLimit,progress:Default::default()};}
         if self.admission_refusal.take().is_some(){return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
         if !self.raw.is_empty(){let bytes=self.raw.len().min(grant.maximum_copy_bytes);if bytes==0{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}self.raw.truncate(self.raw.len()-bytes);return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}};}
         if self.raw.capacity()!=0{let bytes=self.raw.capacity();if grant.maximum_release_bytes<bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}drop(std::mem::take(&mut self.raw));return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}};}
         for input in [&mut self.checkpoint_input,&mut self.raw_input]{if let Some(owner)=input.as_mut(){let step=owner.close_step(grant);if owner.terminal_is_empty(){input.take();}return match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step};}}
-        if let Some(download)=self.download.take(){match ControlledRetirement::new(download){Ok(owner)=>self.download_retirement=Some(owner),Err((error,original))=>{self.download=Some(original);return InteractiveJobCloseStep::Refused(error.kind);}}return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
+        if let Some(download)=self.download.take(){match ControlledRetirement::new(download){Ok(owner)=>self.download_retirement=Some(owner),Err((error,original))=>{self.download=Some(original);return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()};}}return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
         if let Some(owner)=self.download_retirement.as_mut(){let step=owner.step(grant);if owner.terminal_is_empty(){self.download_retirement.take();}return Self::controlled_close_step(step);}
-        if self.emit.is_some()||self.ephemeral.is_some(){return InteractiveJobCloseStep::Refused(ValueRefusalKind::UnsupportedOwner);}
-        if let Some(work)=self.work.as_mut(){if !work.terminal_is_empty(){return work.close_step(grant);}let Some(bytes)=work.terminal_frame_release_bytes()else{return InteractiveJobCloseStep::Refused(ValueRefusalKind::UnsupportedOwner);};if grant.maximum_release_bytes<bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}self.work.take();return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}};}
-        if self.command.is_some()||self.snapshot.is_some()||self.config.is_some()||self.history.is_some()||self.interaction_state.is_some()||self.interaction_hover.is_some()||self.context.is_some()||self.operation.is_some(){return InteractiveJobCloseStep::Refused(ValueRefusalKind::UnsupportedOwner);}
-        if let Some(completion)=self.completion.take(){match ControlledRetirement::new(completion){Ok(owner)=>self.completion_retirement=Some(owner),Err((error,original))=>{self.completion=Some(original);return InteractiveJobCloseStep::Refused(error.kind);}}return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
+        if let Some(emit)=self.emit.as_mut(){
+            let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
+            return match emit.close_child_one(child){
+                Ok(Some(crate::app::PluginLifecycleStep::Progress(progress)|crate::app::PluginLifecycleStep::Complete(progress))) if progress.fits(child)=>InteractiveJobCloseStep::Pending{progress},
+                Ok(Some(crate::app::PluginLifecycleStep::Blocked{..}|crate::app::PluginLifecycleStep::AwaitingInput{..}))=>InteractiveJobCloseStep::Blocked,
+                Ok(Some(_))=>InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::InvariantViolated,progress:Default::default()},
+                Ok(None)|Err(_)=>InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::UnsupportedOwner,progress:Default::default()},
+            };
+        }
+        if self.ephemeral.is_some(){return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::UnsupportedOwner,progress:Default::default()};}
+        if let Some(work)=self.work.as_mut(){if !work.terminal_is_empty(){return work.close_step(grant);}let Some(bytes)=work.terminal_frame_release_bytes()else{return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::UnsupportedOwner,progress:Default::default()};};if grant.maximum_release_bytes<bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}self.work.take();return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}};}
+        if self.command.is_some()||self.snapshot.is_some()||self.config.is_some()||self.history.is_some()||self.interaction_state.is_some()||self.interaction_hover.is_some()||self.context.is_some()||self.operation.is_some(){return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::UnsupportedOwner,progress:Default::default()};}
+        if let Some(completion)=self.completion.take(){match ControlledRetirement::new(completion){Ok(owner)=>self.completion_retirement=Some(owner),Err((error,original))=>{self.completion=Some(original);return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()};}}return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
         if let Some(owner)=self.completion_retirement.as_mut(){let step=owner.step(grant);if owner.terminal_is_empty(){self.completion_retirement.take();}return Self::controlled_close_step(step);}
         InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}
     }

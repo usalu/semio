@@ -380,17 +380,15 @@ impl GraphHost {
         Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom }
     }
 
-    pub fn selected_node_ids_json(&self) -> String {
-        serde_json::to_string(&self.dag.selected_node_ids()).unwrap_or_else(|_| "[]".into())
-    }
+    /// 🎯️ Projects selected semantic node identities.
+    pub fn selected_node_ids(&self)->Vec<String>{self.dag.selected_node_ids()}
 
     pub fn hovered_node_id(&self) -> Option<String> {
         self.dag.hovered_node_id()
     }
 
-    pub fn hovered_channel_json(&self) -> String {
-        self.dag.hovered_channel_json()
-    }
+    /// 🖱️ Projects channel hover and live wire refusal facts.
+    pub fn hover_facts(&self)->crate::infinite::board::schema::dag_input::DagHoverFacts{self.dag.hover_facts()}
 
     pub fn label_overlay_paint_state_json(&self) -> Result<String, NodeGraphError> {
         Ok(self.dag.label_overlay_paint_state_json()?)
@@ -802,8 +800,10 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = selectedNodeIdsJson)]
-        pub fn selected_node_ids_json(&self) -> String {
-            self.state.borrow().host.selected_node_ids_json()
+        pub fn selected_node_ids_json(&self) -> Result<String,JsValue> {
+            let mut observe=|progress:semio_framework_value::NativeEncodeProgress|progress.owned_bytes<=256*1024;
+            let mut control=semio_framework_value::NativeEncodeControl::new(256*1024,&mut observe);
+            crate::infinite::board::io::text::dag_input::encode_dag_node_ids_json(&self.state.borrow().host.selected_node_ids(),&mut control).map_err(|error|JsValue::from_str(&error.to_string()))
         }
 
         #[wasm_bindgen(js_name = hoveredNodeId)]
@@ -812,8 +812,10 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = hoveredChannelJson)]
-        pub fn hovered_channel_json(&self) -> String {
-            self.state.borrow().host.hovered_channel_json()
+        pub fn hovered_channel_json(&self) -> Result<String,JsValue> {
+            let mut observe=|progress:semio_framework_value::NativeEncodeProgress|progress.owned_bytes<=256*1024;
+            let mut control=semio_framework_value::NativeEncodeControl::new(256*1024,&mut observe);
+            crate::infinite::board::io::text::dag_input::encode_dag_hover_json(&self.state.borrow().host.hover_facts(),&mut control).map_err(|error|JsValue::from_str(&error.to_string()))
         }
 
         #[wasm_bindgen(js_name = viewport)]

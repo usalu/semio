@@ -38,6 +38,7 @@ pub fn expand(input: &DeriveInput) -> syn::Result<TokenStream> {
         }
     }
     let count = children.len();
+    let child_indices:Vec<_>=(0..count).map(syn::Index::from).collect();
     let indices: Vec<_> = (1..=owned.len()).map(syn::Index::from).collect();
     let owned_members: Vec<_> = owned.iter().map(|row| &row.0).collect();
     let owned_bindings: Vec<_> = owned.iter().map(|row| &row.1).collect();
@@ -55,29 +56,45 @@ pub fn expand(input: &DeriveInput) -> syn::Result<TokenStream> {
             type CloseState = (::semio_framework_value::FactoryChildTickets<#count>, #(<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::CloseState,)*);
             fn close_state_birth_bytes(&self) -> usize {
                 let mut bytes = 0usize;
-                #(bytes = bytes.checked_add(::semio_framework_value::FactoryRetirement::factory_retirement_birth_bytes(self.#children.as_ref())).expect("factory child ticket birth");)*
                 #(bytes = bytes.checked_add(<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_birth_bytes(&self.#owned_members)).expect("factory inline close state birth");)*
                 bytes
             }
             fn close_state_constructor_depth(&self) -> usize {
                 let mut depth = 0usize;
-                #(depth = depth.max(::semio_framework_value::FactoryRetirement::factory_retirement_depth_demand(self.#children.as_ref()));)*
                 #(depth = depth.max(<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_constructor_depth(&self.#owned_members));)*
                 depth
             }
             fn prepare_close_state(&self) -> Self::CloseState {
-                (::semio_framework_value::FactoryChildTickets([#({
-                    let child = ::std::sync::Arc::clone(&self.#children);
-                    let grant = ::semio_framework_value::retained_clone::RetainedCloneGrant {
-                        maximum_items: 1,
-                        maximum_copy_bytes: 0,
-                        maximum_capacity_bytes: ::semio_framework_value::FactoryRetirement::factory_retirement_birth_bytes(child.as_ref()),
-                        maximum_release_bytes: 0,
-                        maximum_depth: ::semio_framework_value::FactoryRetirement::factory_retirement_depth_demand(child.as_ref()),
-                    };
-                    let (ticket, _) = ::semio_framework_value::FactoryRetirement::preborn_factory_retirement(child, grant).unwrap_or_else(|(error, _)| panic!("prefunded factory child refused: {error}"));
-                    Some(ticket)
-                }),*]), #(<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::prepare_close_state(&self.#owned_members),)*)
+                (::semio_framework_value::FactoryChildTickets{slots: ::std::array::from_fn(|_|::semio_framework_value::FactoryChildSlot::empty()),prepared:0}, #(<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::prepare_close_state(&self.#owned_members),)*)
+            }
+            fn close_state_constructor_copy_bytes(&self)->usize {
+                let mut bytes=0usize;
+                #(bytes=bytes.checked_add(<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_constructor_copy_bytes(&self.#owned_members)).expect("factory original inline construction copy");)*
+                bytes
+            }
+            fn close_state_preparation_demands(&self,state:&Self::CloseState,body:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{
+                #(if state.0.prepared==#child_indices {
+                    let slot=&state.0.slots[#child_indices];
+                    if slot.preparation_is_complete(){return Ok(::semio_framework_value::RetirementDemand{copy_bytes:0,depth:1,..Default::default()});}
+                    return slot.preparation_demands(self.#children.as_ref(),body);
+                })*
+                #(if !<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_preparation_is_complete(&state.#indices){return <#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_preparation_demands(&self.#owned_members,&state.#indices,body);})*
+                Ok(Default::default())
+            }
+            fn prepare_close_state_step(&self,state:&mut Self::CloseState,grant: ::semio_framework_value::retained_clone::RetainedCloneGrant)->Result<::semio_framework_value::retained_clone::RetainedCloneStep,::semio_framework_value::ValueError>{
+                #(if state.0.prepared==#child_indices {
+                    let slot=&mut state.0.slots[#child_indices];
+                    if slot.preparation_is_complete(){
+                        if grant.maximum_items==0||grant.maximum_depth==0{return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));}
+                        state.0.prepared+=1;return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(::semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}));
+                    }
+                    return slot.prepare_step(self.#children.as_ref(),||{let original: ::std::sync::Arc<dyn ::semio_framework_value::FactoryRetirement>=self.#children.clone();original},grant).map(|step|::semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress()));
+                })*
+                #(if !<#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_preparation_is_complete(&state.#indices){return <#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::prepare_close_state_step(&self.#owned_members,&mut state.#indices,grant).map(|step|::semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress()));})*
+                Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))
+            }
+            fn close_state_preparation_is_complete(state:&Self::CloseState)->bool {
+                state.0.prepared==#count #(&& <#owned_types as ::semio_framework_value::FactoryPayloadRetirement>::close_state_preparation_is_complete(&state.#indices))*
             }
             fn transfer_payload(value: Self, state: &mut Self::CloseState) {
                 #unpack

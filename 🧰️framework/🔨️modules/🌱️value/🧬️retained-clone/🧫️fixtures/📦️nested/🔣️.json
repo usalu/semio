@@ -5,19 +5,53 @@
     "choice": {
       "kind": "nested",
       "rows": [
-        { "id": 1, "text": "English" },
-        { "id": 2, "text": "Deutsch" },
-        { "id": 3, "text": "日本語" }
+        {
+          "id": 1,
+          "text": "English"
+        },
+        {
+          "id": 2,
+          "text": "Deutsch"
+        },
+        {
+          "id": 3,
+          "text": "日本語"
+        }
       ]
     },
     "choices": [
-      { "kind": "unit" },
-      { "kind": "text", "text": "βeta" },
-      { "kind": "nested", "rows": [{ "id": 4, "text": "recursive" }] }
+      {
+        "kind": "unit"
+      },
+      {
+        "kind": "text",
+        "text": "βeta"
+      },
+      {
+        "kind": "nested",
+        "rows": [
+          {
+            "id": 4,
+            "text": "recursive"
+          }
+        ]
+      }
     ],
-    "fixedArray": [0, 1, 2, 3],
-    "pair": ["tuple β", 42],
-    "triple": ["Deutsch", 7, "日本語"],
+    "fixedArray": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "pair": [
+      "tuple β",
+      42
+    ],
+    "triple": [
+      "Deutsch",
+      7,
+      "日本語"
+    ],
     "labels": {
       "de": "Dokument",
       "en": "Document",
@@ -41,5 +75,22 @@
     "externalAfterCapture": "zbyd",
     "expected": "abcd"
   },
-  "cancellationStops": [0, 1, 2, 3, 8, 17, 520, 560, 620]
+  "cancellationStops": [
+    0,
+    1,
+    2,
+    3,
+    8,
+    17,
+    520,
+    560,
+    620
+  ],
+  "retirementGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 4194304,
+    "maximumReleaseBytes": 4194304,
+    "maximumDepth": 1024
+  }
 }

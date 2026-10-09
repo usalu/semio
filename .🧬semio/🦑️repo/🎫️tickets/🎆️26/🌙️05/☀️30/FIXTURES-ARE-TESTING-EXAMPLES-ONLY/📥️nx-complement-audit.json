@@ -1,0 +1,25 @@
+{
+  "owned": false,
+  "oracle": "actual installed ignore/minimatch pure Bun in-memory checks",
+  "counterexample": {
+    "predecessor": "🔧️modules",
+    "pattern": "**/[!🔨]*/🧫️fixtures/**/project.json",
+    "ignoreActual": false,
+    "canonicalExpected": true
+  },
+  "utf16Expansion": "sampled checks match, but requires isolated surrogate literals not portable UTF8 configuration",
+  "observations": [
+    {
+      "path": "node_modules/ignore/index.js",
+      "sha256": "3d580a0188919a58035ca2700216bca7d143a1cae40bf8ef71237ca2396ef5a6"
+    },
+    {
+      "path": "node_modules/nx/dist/src/project-graph/plugins/get-plugins.js",
+      "sha256": "c4bc6c59a38b4b72b11065c3cb26a5bb90c93950a67341d258ef01a5bca5661d"
+    },
+    {
+      "path": "node_modules/nx/dist/src/plugins/package-json/create-nodes.js",
+      "sha256": "14a60290d97a2541673621fb136b9e472f8664960370380313f9b6696f51cd4f"
+    }
+  ]
+}

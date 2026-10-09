@@ -450,3 +450,23 @@ fn browser_exact_event_and_page_are_credited_and_acknowledged_once() {
 }
 
 //#endregion 🌐️Browser host laws
+
+#[cfg(not(target_arch="wasm32"))]
+#[test]
+fn native_clipboard_original_string_close_requires_whole_capacity_and_depth(){
+ use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep as Close};
+ use semio_framework_value::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress};
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📋️clipboard-close/🔣️.json")).unwrap();
+ for text in fixture["texts"].as_array().unwrap(){
+  let mut original=String::with_capacity(fixture["reserve"].as_u64().unwrap()as usize);original.push_str(text.as_str().unwrap());let pointer=original.as_ptr();let capacity=original.capacity();
+  let mut job=super::NativeClipboardJob::write(original);job.begin_close();
+  let exact=Grant{maximum_items:fixture["closeItems"].as_u64().unwrap()as usize,maximum_copy_bytes:fixture["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:fixture["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:capacity,maximum_depth:fixture["closeDepth"].as_u64().unwrap()as usize};
+  assert_eq!(job.next_close_copy_byte_demand().unwrap(),0);assert_eq!(job.next_close_capacity_byte_demand(0).unwrap(),0);assert_eq!(job.next_close_release_byte_demand().unwrap(),capacity);assert_eq!(job.next_close_depth_demand().unwrap(),1);
+  for short in [Grant{maximum_items:0,..exact},Grant{maximum_release_bytes:capacity-1,..exact},Grant{maximum_depth:0,..exact}]{
+   assert_eq!(job.close_step(short),Close::Pending{progress:Progress::default()});
+   let Some(super::NativeClipboardOperation::Write(text))=&job.operation else{panic!("original clipboard owner survived refusal")};assert_eq!(text.as_ptr(),pointer);assert_eq!(text.capacity(),capacity);
+  }
+  let progress=Progress{copied_items:1,released_bytes:capacity,..Progress::default()};assert_eq!(job.close_step(exact),Close::Complete{progress});assert!(progress.fits(exact));assert!(job.terminal_is_empty());assert_eq!(job.close_step(exact),Close::Complete{progress:Progress::default()});
+  eprintln!("[DEBUG] original clipboard close sameString=true empty={} wholeCapacity={} exactRelease={} depth=1",text.as_str().unwrap().is_empty(),capacity,progress.released_bytes);
+ }
+}

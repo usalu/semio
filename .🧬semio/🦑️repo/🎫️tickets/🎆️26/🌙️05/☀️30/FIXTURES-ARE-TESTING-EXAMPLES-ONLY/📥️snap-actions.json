@@ -1,0 +1,56 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+    "beforeSha256": "17179fe54914fc7c2b00dd478fdffe59fc451c2101e9ab10e2b8b36635425299",
+    "afterSha256": "aed4fd8d8d872dec947694ab45b6b81423e6b3f3a118317fbc0c0ea038c9c08b",
+    "action": "supplied Snapshot step grant + original input paid birth/copy receipts + parent childgrant validation"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs",
+    "beforeSha256": "f7ea5bf8bc96bd9448a629afdc3396de768f3f445a876cf245c0967ca7e1912b",
+    "afterSha256": "9d9addf2a96c139f7426a55b876d8767af0041e288531ceb5c62b3528cee07be",
+    "action": "canonical actual snapshot receipt/helper exports"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+    "beforeSha256": "aed4fd8d8d872dec947694ab45b6b81423e6b3f3a118317fbc0c0ea038c9c08b",
+    "afterSha256": "8ca7397a52fbf1187200260cda261e3ef54e2e1e3ed92dd19b438371c0e76413",
+    "action": "preserve immediate cancellation before grant denial +Unsupported direct caller"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "beforeSha256": "b7300acbbcccae9c1ad1fe77f21a154ddbde383b5be80e35a5d1132ddc43c28b",
+    "afterSha256": "095f362c51c129578a5ba3e8faa8db66101f3eea48e0dfd2be7085469700a216",
+    "action": "exact genuine shared helper/receipt export edge only"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs",
+    "beforeSha256": "42723e03b64f99af32241b72e07b89f924731973a11271f497f0cb1be4be803d",
+    "afterSha256": "cd098a38ff1c45649a9a3eec1c359a24d074a9bbddc3aa876b44de28764705d4",
+    "action": "recursive current input consumer supplied grant/receipt with original256chunk;typedDecode remains separate"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+    "beforeSha256": "fcf5e45a60dfff4ec156ea4c7db06b883c93985e0175844fdb0907e8fe68d2a4",
+    "afterSha256": "e8573b6a583a8e4428c1b930d4376ebfba443b9c6efa60299cf445343b52f1f8",
+    "action": "reuse original native request fixture constructor for actual adapter law"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "beforeSha256": "5dcbd03528c1a8195c8c1a9116518a90cd649352d6d21bbab0da2884a212aad4",
+    "afterSha256": "5722978ed334a1df5cbe33dd43fadd3f532846f0d5264150faf53f2df4cdde4b",
+    "action": "actual canonical pending publisher Source assertion; original independent currency/payload oracles unchanged"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+    "beforeSha256": "8ca7397a52fbf1187200260cda261e3ef54e2e1e3ed92dd19b438371c0e76413",
+    "afterSha256": "e9de34b64e6418ce2d1e11f0327fc090c08a63aa21b195d0d50c3efbb2a07581",
+    "action": "author actual Pack adapter original policy/allocator/copy/cancel/pointer native law;unrun"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "beforeSha256": "5722978ed334a1df5cbe33dd43fadd3f532846f0d5264150faf53f2df4cdde4b",
+    "afterSha256": "2eddd0f94a76fd9d5098bab33481c80fb76dc94f5f1bfbced84e19fa5a3b1230",
+    "action": "add original recursive native caller to unchanged2s Rust grammar law"
+  }
+]

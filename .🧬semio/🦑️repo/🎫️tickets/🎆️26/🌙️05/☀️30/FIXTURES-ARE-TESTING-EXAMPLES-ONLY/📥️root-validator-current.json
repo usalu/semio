@@ -1,0 +1,20 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧫️fixtures/🔣️.json",
+      "exists": true,
+      "sha256": "ceea57bb7fba8a169fd93add6f413504a3b6622c4840521ba60615f36a8d9a43"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧬️schema/🔣️.json",
+      "exists": true,
+      "sha256": "069bb23c15d73058f11233bf85a38123809faceeb487e7348fe6462ebceec870"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧪️tests/🟦️.ts",
+      "exists": true,
+      "sha256": "4b15caf1ab578f9da13718c9f70daf16539abe52463ee3dc04a1983246a6b1d1"
+    }
+  ]
+}

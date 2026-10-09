@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "policy",
+    "aliases",
+    "borrowedWitness",
+    "receipt",
+    "denied",
+    "foreignWitness",
+    "rootRetains",
+    "genericRefusals",
+    "waiterCapacity"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.cancel.borrowed-alias-return.v1"
+    },
+    "policy": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 8,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 1
+      }
+    },
+    "aliases": {
+      "const": [
+        1,
+        3,
+        48
+      ]
+    },
+    "borrowedWitness": {
+      "const": "same-original-strong-allocation-held-through-turn"
+    },
+    "receipt": {
+      "const": {
+        "copiedItems": 1,
+        "copiedBytes": 8,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "denied": {
+      "const": [
+        "items",
+        "copy",
+        "depth"
+      ]
+    },
+    "foreignWitness": {
+      "const": "InvariantViolated"
+    },
+    "rootRetains": {
+      "const": [
+        "node",
+        "registeredWaiters",
+        "weakHeaders",
+        "cancellationState"
+      ]
+    },
+    "genericRefusals": {
+      "const": [
+        "SharedAlias",
+        "WeakAlias",
+        "RegisteredWaiter"
+      ]
+    },
+    "waiterCapacity": {
+      "const": 8
+    }
+  }
+}

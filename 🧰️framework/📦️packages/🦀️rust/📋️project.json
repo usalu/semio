@@ -231,6 +231,14 @@
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-history-progress"
       }
+    },
+    "test-argument-retirement-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-argument-retirement-native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

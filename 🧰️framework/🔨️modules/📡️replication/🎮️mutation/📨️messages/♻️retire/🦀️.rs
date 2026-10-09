@@ -79,6 +79,8 @@ pub struct EditMessageLedgerRetirement {
 }
 
 impl EditMessageLedgerRetirement {
+    /// 🔎️ Borrows the original untransferred rows without allocating or changing close custody.
+    pub fn retained_entries(&self) -> &[EditMessages] { &self.entries }
     pub fn new(entries: Vec<EditMessages>) -> Self { Self { entries: ManuallyDrop::new(entries), active: None } }
     pub fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.active.as_ref().map_or_else(|| usize::from(!self.entries.is_empty()) * size_of::<EditMessages>(), MutationMessageLedgerRetirement::next_copy_byte_demand)) }
     pub fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }

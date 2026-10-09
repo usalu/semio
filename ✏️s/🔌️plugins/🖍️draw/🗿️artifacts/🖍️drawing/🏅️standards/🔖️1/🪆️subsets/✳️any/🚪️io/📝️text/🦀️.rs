@@ -16,3 +16,6 @@ pub mod inferences;
 pub mod color;
 #[path="🖊️dash/🦀️.rs"]
 pub mod dash;
+
+#[path="🪪️identity/🦀️.rs"]
+pub mod identity;

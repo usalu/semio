@@ -18,10 +18,12 @@ use parley::fontique::{Blob, Collection, CollectionOptions, FamilyId, FontInfoOv
 use parley::{FontContext, FontStack, LayoutContext, PositionedLayoutItem, StyleProperty};
 use swash::scale::image::Content as SwashContent;
 use swash::scale::{Render, ScaleContext, Source, StrikeWith};
+#[cfg(test)]
 use swash::shape::ShapeContext;
 use swash::zeno::Format as SwashFormat;
 use swash::zeno::{Cap as ZenoCap, Join as ZenoJoin, Mask as ZenoMask, Stroke as ZenoStroke, Style as ZenoStyle, Transform as ZenoTransform};
 use swash::FontRef as SwashFontRef;
+use super::font_pair_io::{BorrowedFontPairSource,FontPairQuery};
 
 /// 🔠️ One packed glyph. `atlas_*`/`width`/`height` are ATLAS TEXELS — device pixels, because the
 /// atlas is rasterised at `size_px * raster_scale` so text stays crisp on a HiDPI surface.
@@ -216,61 +218,37 @@ fn authored_face_bytes(face: TextFace) -> &'static [u8] {
     }
 }
 
-/// 🤝️ Pair kerning read from the authored faces' own tables — GPOS pair adjustments, or the legacy `kern` table — through one
-/// reusable shaping context over faces held once (so the context's per-font caches stay warm): the ONE kerning source both the
-/// atlas (which caches it per face and pair, [`FontAtlas::kerning_for`]) and the retained layout's text worker (which holds one
-/// per job) answer to. Chromium's kerning is pairwise for the shipped faces: the corpus's kerned widths are its unkerned widths
-/// plus the sum of each adjacent pair's kerning within 0.008 px (ticket 26/09/23 session 14d, WG11 T7b probe).
+/// 🤝️ Reads the authored faces through borrowed font IO without retaining a shaping cache.
+#[derive(Clone,Copy)]
 pub(crate) struct PairKerning {
-    shaper: ShapeContext,
     sans: Option<SwashFontRef<'static>>,
     mono: Option<SwashFontRef<'static>>,
+    sans_pairs: BorrowedFontPairSource<'static>,
+    mono_pairs: BorrowedFontPairSource<'static>,
 }
 
 impl Default for PairKerning {
     fn default() -> Self {
-        Self { shaper: ShapeContext::new(), sans: SwashFontRef::from_index(authored_face_bytes(TextFace::Sans), 0), mono: SwashFontRef::from_index(authored_face_bytes(TextFace::Mono), 0) }
+        Self {
+            sans: SwashFontRef::from_index(authored_face_bytes(TextFace::Sans), 0),
+            mono: SwashFontRef::from_index(authored_face_bytes(TextFace::Mono), 0),
+            sans_pairs: BorrowedFontPairSource::read(authored_face_bytes(TextFace::Sans),*b"latn").expect("embedded Anta pair table"),
+            mono_pairs: BorrowedFontPairSource::read(authored_face_bytes(TextFace::Mono),*b"latn").expect("embedded Share Tech Mono pair table"),
+        }
     }
 }
 
 impl PairKerning {
-    /// 🤝️ The kerning between two adjacent scalars of `face`, per logical pixel of font size: the pair shaped alone in design
-    /// units with ligatures and contextual alternates off, less its two nominal advances — exactly the adjustment Chromium's
-    /// shaper puts between the two nominal glyphs. A scalar outside the authored face, or a default-ignorable one, never kerns:
-    /// a fallback run does not kern against its neighbour.
+    /// 👓️ Borrowed font views own no physical allocation requiring retirement.
+    pub(crate) fn terminal_is_empty(&self)->bool {true}
+    /// 📏️ Projects the original glyph pair's design-unit adjustment to logical em units.
     pub(crate) fn em(&mut self, face: TextFace, left: char, right: char) -> f32 {
-        if is_zero_width_format_char(left) || is_zero_width_format_char(right) {
-            return 0.0;
-        }
-        let font = match face {
-            TextFace::Sans => self.sans,
-            TextFace::Mono => self.mono,
-        };
-        let Some(font) = font else { return 0.0 };
-        let (charmap, metrics) = (font.charmap(), font.glyph_metrics(&[]));
-        let units = f32::from(font.metrics(&[]).units_per_em);
-        if units <= 0.0 || charmap.map(left) == 0 || charmap.map(right) == 0 {
-            return 0.0;
-        }
-        let mut bytes = [0u8; 8];
-        let left_len = left.encode_utf8(&mut bytes).len();
-        let pair_len = left_len + right.encode_utf8(&mut bytes[left_len..]).len();
-        let Ok(pair) = std::str::from_utf8(&bytes[..pair_len]) else { return 0.0 };
-        let mut shaper = self.shaper.builder(font).features(&[("liga", 0), ("clig", 0), ("calt", 0)]).build();
-        shaper.add_str(pair);
-        let (mut shaped, mut nominal, mut glyphs) = (0.0f32, 0.0f32, 0usize);
-        shaper.shape_with(|cluster| {
-            for glyph in cluster.glyphs {
-                shaped += glyph.advance;
-                nominal += metrics.advance_width(glyph.id);
-                glyphs += 1;
-            }
-        });
-        if glyphs == 2 {
-            (shaped - nominal) / units
-        } else {
-            0.0
-        }
+        if is_zero_width_format_char(left) || is_zero_width_format_char(right) { return 0.0; }
+        let (font,pairs)=match face {TextFace::Sans=>(self.sans,&self.sans_pairs),TextFace::Mono=>(self.mono,&self.mono_pairs)};
+        let Some(font)=font else{return 0.0};let charmap=font.charmap();let units=f32::from(font.metrics(&[]).units_per_em);
+        let query=FontPairQuery{left_glyph:charmap.map(left),right_glyph:charmap.map(right)};
+        if units<=0.0||query.left_glyph==0||query.right_glyph==0{return 0.0;}
+        pairs.adjustment(query).expect("embedded authored pair adjustment").advance_units as f32/units
     }
 }
 

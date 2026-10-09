@@ -3,11 +3,15 @@ use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🧫️Snapshot
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, semio_framework_value_derive::ToValue, Deserialize, semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, semio_framework_value_derive::ToValue, Deserialize, semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = store)]
 #[artifact(extension = "testkit-macro-cfg")]
 pub(crate) struct TestConfig {
     pub(crate) selected: Option<String>,
 }
+semio_framework_value::artifact_retire_struct!(TestConfig { selected });
+#[path="🧬️preparation/🦀️.rs"]
+pub(crate) mod preparation;
 
 impl store::ArtifactDsl for TestConfig {
     const EXTENSION: &'static str = "testkit-macro-cfg";

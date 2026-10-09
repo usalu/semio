@@ -47,8 +47,8 @@ export async function testSelectedFontDependencies(workspace: string): Promise<v
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎯️selected-runtime/🔣️.json"), "utf8")).fontTool;
   const manifest = require("@iarna/toml").parse(readFileSync(join(workspace, fixture.root, "Cargo.toml"), "utf8"));
   assert.equal(manifest.package.name, fixture.project);
-  const { runTool } = await import("../../🚀️bootstrap/📦️dependencies/📜️script.ts");
-  const result = await runTool("cargo", ["tree", "--locked", "--offline", "-p", fixture.project, "--edges", "normal,build", "--prefix", "none", "--format", "{p}"], workspace, AbortSignal.timeout(60_000), true);
+  const {repositoryCargoPreparationStorageV1, runTool } = await import("../../🚀️bootstrap/📦️dependencies/📜️script.ts");
+  const result = await runTool("cargo",["tree", "--locked", "--offline", "-p", fixture.project, "--edges", "normal,build", "--prefix", "none", "--format", "{p}"],workspace,AbortSignal.timeout(60_000),true,process.env,repositoryCargoPreparationStorageV1(process.cwd()));
   const crates = [...new Set(result.trim().split("\n").map(line => line.split(" ")[0]))].sort();
   assert.deepEqual(crates, fixture.crates);
   const { cacheInternals } = await import("../../../🟨️.mjs");

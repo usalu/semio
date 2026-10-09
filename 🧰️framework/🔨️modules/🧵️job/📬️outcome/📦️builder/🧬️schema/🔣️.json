@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy",
+    "byteLengths",
+    "stages",
+    "ledgerStages",
+    "ledgerLeaseWords"
+  ],
+  "properties": {
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "const": 1
+        },
+        "copy": {
+          "const": 4096
+        },
+        "capacity": {
+          "const": 65536
+        },
+        "release": {
+          "const": 262144
+        },
+        "depth": {
+          "const": 64
+        }
+      }
+    },
+    "byteLengths": {
+      "const": [
+        0,
+        1,
+        4096,
+        8193,
+        32769
+      ]
+    },
+    "stages": {
+      "const": [
+        "bindings",
+        "metadata",
+        "original-append",
+        "seal",
+        "borrow",
+        "physical-close",
+        "presence"
+      ]
+    },
+    "ledgerStages": {
+      "const": [
+        "original-admission",
+        "borrowed-context",
+        "actual-page-lease",
+        "separate-retirement"
+      ]
+    },
+    "ledgerLeaseWords": {
+      "const": 2
+    }
+  }
+}

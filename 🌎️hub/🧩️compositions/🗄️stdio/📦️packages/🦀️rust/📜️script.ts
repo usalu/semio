@@ -15,7 +15,7 @@ import { devToolingEnv, resolveWorkspaceBin, runCmd, runRepositoryExactCargoLaws
 import { runRepositoryCargoTests, runRepositoryTestCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { prepareCargoWorkspaceInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
 import { acquireCargoBuildLeaseV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
@@ -58,7 +58,7 @@ function assertControlled(control: CatalogControl): void {
 
 async function runControlled(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, control: CatalogControl): Promise<void> {
   assertControlled(control);
-  if (command === "cargo") prepareCargoWorkspaceInvocation(cwd, args, cwd);
+  if (command === "cargo") prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(cwd),cwd,args,cwd,process.env);
   const child = spawn(command, args, { cwd, env, stdio: "inherit", windowsHide: true });
   const drained = new Promise<void>((resolve) => child.once("close", () => resolve()));
   let settled = false;
@@ -1281,7 +1281,8 @@ class NativeCodecProjectionScript extends BundleScript {
       try {
         const receipts: NativeCodecPublicationReceiptV1[] = [];
         console.log(`[DEBUG] native-codec-projection proving current ${artifact} compiled carrier and live codec`);
-        await runRepositoryCommand(process.execPath, ["nx", "run", `@semio-tech/stdio-${artifact}-rs:test`, "--excludeTaskDependencies", "--skip-nx-cache", "--", "long", "owned_fixture_publication_reports_canonical_logical_carriers", "--", "--nocapture"], this.repoRoot, "native-codec-publication", buildBudgetMs(), {
+        const ownerScript=resolve(this.repoRoot,dirname(authored.definition_path),"📦️packages/🦀️rust/📜️script.ts");
+        await runRepositoryCommand(process.execPath, ["nx", "exec", `--projects=@semio-tech/stdio-${artifact}-rs`, "--excludeTaskDependencies", "--", process.execPath, ownerScript, "test", "long", "--lib", "owned_fixture_publication_reports_canonical_logical_carriers", "--", "--nocapture"], this.repoRoot, "native-codec-publication", buildBudgetMs(), {
           env: { ...process.env, NEXTEST_SUCCESS_OUTPUT: "immediate" },
           signal: control.signal,
           onLine: line => { const prefix = "[DEBUG] native-codec-publication="; const index = line.indexOf(prefix); if (index >= 0) receipts.push(JSON.parse(line.slice(index + prefix.length))); },

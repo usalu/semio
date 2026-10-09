@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "identityMaximumCapacityBytes": 1048576,
   "actorAuthority": {
     "historyActor": "historical-window-author",
     "openedActor": "opened-window-reader-é",
@@ -16,7 +17,10 @@
     "foreignActorFault": "window-config.actor",
     "foreignActorPublication": 0,
     "retirementItems": 1,
-    "retirementBytes": 3
+    "retirementCopyBytes": 65536,
+    "retirementCapacityBytes": 65536,
+    "retirementReleaseBytes": 65536,
+    "retirementDepth": 64
   },
   "budgets": {
     "threadStackBytes": 2097152,

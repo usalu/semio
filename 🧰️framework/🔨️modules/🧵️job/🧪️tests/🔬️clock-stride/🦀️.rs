@@ -97,7 +97,7 @@ fn a_worker_step_reads_the_clock_once_on_entry_and_once_on_exit() {
     let _serial = SERIAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let law = law();
     FAKE_NOW_US.store(9_000_000, Ordering::SeqCst);
-    let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { site: "clock-stride-law", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: fake_now_us };
+    let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "clock-stride-law", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: fake_now_us };
     let mut authority = WorkerJobAuthorityOwner::try_new(StagedStep { closing: false }, params).unwrap_or_else(|_| panic!("fixture admission"));
     for _ in 0..3 {
         FAKE_READS.store(0, Ordering::SeqCst);
@@ -105,16 +105,15 @@ fn a_worker_step_reads_the_clock_once_on_entry_and_once_on_exit() {
         assert!(!drive_worker_job_authority(&mut authority));
         assert_eq!(FAKE_READS.load(Ordering::SeqCst), law["stepReadsOutsideTheJob"].as_u64().unwrap(), "a step reads the clock on entry and on exit only");
         assert_eq!(authority.last_step_end_us, Some(FAKE_NOW_US.load(Ordering::SeqCst)), "the exit reading is kept for the caller");
-        let _ = authority.outcome.take();
+        let _ = authority.outcome.return_original();
     }
-    let job = authority.job.as_mut().expect("fixture job");
+    let job = authority.job.original_mut().expect("fixture job");
     job.begin_close();
     assert!(job.terminal_is_empty());
-    if let Some(fault) = authority.preadmitted_fault.as_mut() {
-        while !fault.terminal_is_empty() {
-            let _ = fault.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
-        }
+    while !authority.preadmitted_fault.is_empty() {
+        authority.preadmitted_fault.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 64 }).unwrap();
     }
+    authority.job.remove_terminal(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64}).unwrap();
 }
 
 /// 🧮️ The logical clock advances exactly one microsecond per read and belongs to its thread: a law driven by it measures

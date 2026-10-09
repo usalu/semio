@@ -542,6 +542,10 @@ pub const SEMIO_OWNED_REPLAY_ENVELOPES_EXPORT: &str = "semio_owned_replay_envelo
 pub const SEMIO_OWNED_SQLITE_SCHEMA_EXPORT: &str = "semio_owned_sqlite_schema_v1";
 pub const SEMIO_OWNED_SQLITE_EXPORT_EXPORT: &str = "semio_owned_sqlite_export_v1";
 pub const SEMIO_OWNED_SQLITE_IMPORT_EXPORT: &str = "semio_owned_sqlite_import_v1";
+pub const SEMIO_OWNED_SQLITE_TAKE_PAYLOAD_EXPORT:&str="semio_owned_sqlite_take_payload_v1";
+pub const SEMIO_OWNED_SQLITE_TAKE_FILE_EXPORT:&str="semio_owned_sqlite_take_file_v1";
+pub const SEMIO_OWNED_SQLITE_CLOSE_EXPORT:&str="semio_owned_sqlite_close_v1";
+pub const SEMIO_OWNED_SQLITE_RETIREMENT_EXPORT:&str="semio_owned_sqlite_retirement_v1";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SemioActorExport {
@@ -604,10 +608,14 @@ pub enum OwnedSemioExport {
     SqliteSchema,
     SqliteExport,
     SqliteImport,
+    SqliteRetirement,
+    SqliteClose,
+    SqliteTakeFile,
+    SqliteTakePayload,
 }
 
 impl OwnedSemioExport {
-    pub const ALL: [Self; 18] = [
+    pub const ALL: [Self; 22] = [
         Self::Allocate,
         Self::Deallocate,
         Self::Checkpoint,
@@ -626,6 +634,10 @@ impl OwnedSemioExport {
         Self::SqliteSchema,
         Self::SqliteExport,
         Self::SqliteImport,
+        Self::SqliteRetirement,
+        Self::SqliteClose,
+        Self::SqliteTakeFile,
+        Self::SqliteTakePayload,
     ];
 
     pub fn core_name(self) -> &'static str {
@@ -648,6 +660,11 @@ impl OwnedSemioExport {
             Self::SqliteSchema => SEMIO_OWNED_SQLITE_SCHEMA_EXPORT,
             Self::SqliteExport => SEMIO_OWNED_SQLITE_EXPORT_EXPORT,
             Self::SqliteImport => SEMIO_OWNED_SQLITE_IMPORT_EXPORT,
+            Self::SqliteRetirement => SEMIO_OWNED_SQLITE_RETIREMENT_EXPORT,
+            Self::SqliteClose => SEMIO_OWNED_SQLITE_CLOSE_EXPORT,
+            Self::SqliteTakeFile => SEMIO_OWNED_SQLITE_TAKE_FILE_EXPORT,
+            Self::SqliteTakePayload => SEMIO_OWNED_SQLITE_TAKE_PAYLOAD_EXPORT,
+
         }
     }
 
@@ -656,7 +673,7 @@ impl OwnedSemioExport {
             Self::Allocate => FunctionType { parameters: vec![ValueType::I32], results: vec![ValueType::I32] },
             Self::Deallocate => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![] },
             Self::Checkpoint | Self::Describe | Self::ChannelVersion => FunctionType { parameters: vec![], results: vec![ValueType::I64] },
-            Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport => {
+            Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport | Self::SqliteRetirement | Self::SqliteClose | Self::SqliteTakeFile | Self::SqliteTakePayload => {
                 FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![ValueType::I64] }
             }
         }
@@ -720,7 +737,22 @@ pub struct OwnedSemioInstance {
     core: CoreInstance,
 }
 
+pub(crate) struct OwnedSemioCheckpointLayout<'a>{actor:&'a OwnedSemioInstance,core_bytes:usize}
+impl OwnedSemioCheckpointLayout<'_>{
+    /// 👓️ Writes the same retained borrowed VM after its original observed measurement.
+    pub(crate) fn visit(&self,visitor:&mut dyn FnMut(&[u8])->Result<(),semio_framework_value::ValueError>)->Result<(),semio_framework_value::ValueError>{
+        visitor(SEMIO_ACTOR_CHECKPOINT_MAGIC)?;visitor(&[SEMIO_ACTOR_CHECKPOINT_VERSION])?;visitor(&self.actor.component_fingerprint.to_le_bytes())?;visitor(&(self.core_bytes as u64).to_le_bytes())?;
+        let mut written=0usize;self.actor.core.visit_checkpoint(&mut |bytes|{written=written.checked_add(bytes.len()).filter(|written|*written<=self.core_bytes).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"borrowed actor checkpoint changed after measurement"))?;visitor(bytes)})?;
+        if written!=self.core_bytes{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"borrowed actor checkpoint changed after measurement"));}Ok(())
+    }
+}
+
 impl OwnedSemioInstance {
+    /// 📏️ Retains the original VM borrow and scalar extent without allocating checkpoint storage.
+    pub(crate) fn checkpoint_layout<'a>(&'a self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<OwnedSemioCheckpointLayout<'a>,semio_framework_value::ValueError>{
+        control.scoped_stage(|control|{control.begin_stage(0)?;let mut core_bytes=0usize;self.core.visit_checkpoint(&mut |bytes|{core_bytes=core_bytes.checked_add(bytes.len()).filter(|count|*count<=isize::MAX as usize-25).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"borrowed actor checkpoint extent exceeds address space"))?;control.advance(bytes.len())})?;Ok(OwnedSemioCheckpointLayout{actor:self,core_bytes})})
+    }
+
     pub fn startup_active(&self) -> bool {
         self.core.active()
     }
@@ -3114,9 +3146,23 @@ fn saturating_i64_from_f64(value: f64, signed: bool) -> i64 {
 
 //#region 💾️CheckpointCodec
 
+#[cfg(test)]
+#[path="🚪️io/📤️checkpoint/🧪️tests/👓️borrowed/🦀️.rs"]
+mod borrowed_actor_checkpoint_tests;
+
 impl CoreInstance {
+    /// 👓️ Visits original borrowed checkpoint fields without creating intermediate storage.
+    pub(crate) fn visit_checkpoint(&self,visitor:&mut dyn FnMut(&[u8])->Result<(),semio_framework_value::ValueError>)->Result<(),semio_framework_value::ValueError>{
+        let mut writer=CheckpointWriter{sink:Some(visitor),..Default::default()};self.write_checkpoint(&mut writer);writer.error.map_or(Ok(()),Err)
+    }
+
     pub fn checkpoint(&self) -> Vec<u8> {
         let mut writer = CheckpointWriter::default();
+        self.write_checkpoint(&mut writer);
+        writer.output
+    }
+
+    fn write_checkpoint(&self,writer:&mut CheckpointWriter<'_>){
         writer.bytes(CHECKPOINT_MAGIC);
         writer.byte(CHECKPOINT_VERSION);
         writer.u64(self.module.bytes_fingerprint);
@@ -3127,7 +3173,21 @@ impl CoreInstance {
         writer.list(&self.data, |writer, data| writer.option(data.as_ref(), |writer, bytes| writer.sized_bytes(bytes)));
         writer.list(&self.elements, |writer, elements| writer.option(elements.as_ref(), |writer, values| writer.list(values, |writer, value| writer.option(*value, |writer, value| writer.u32(value)))));
         writer.option(self.machine.as_ref(), |writer, machine| writer.machine(machine));
-        writer.output
+    }
+
+    /// 📤️ Measures borrowed state before original allocation and returns every failure owner to its caller slot.
+    pub fn checkpoint_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Vec<u8>,semio_framework_value::ValueError>{
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        control.scoped_stage(|control|{
+            control.begin_stage(0)?;let mut count=0usize;
+            {let mut sink=|bytes:&[u8]|{count=count.checked_add(bytes.len()).filter(|count|*count<=isize::MAX as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"owned checkpoint extent exceeds address space"))?;control.advance(bytes.len())};let mut writer=CheckpointWriter{sink:Some(&mut sink),..Default::default()};self.write_checkpoint(&mut writer);if let Some(error)=writer.error{return Err(error);}}
+            control.begin_stage(count)?;
+            control.with_retirement_owner(std::mem::size_of::<CheckpointOutputRetirement>(),|control|{
+                let mut owner=Box::new(CheckpointOutputRetirement{bytes:std::mem::ManuallyDrop::new(None)});
+                let result=(||{owner.bytes.replace(control.allocate_vec(count)?);let output=owner.bytes.as_mut().unwrap();let mut sink=|bytes:&[u8]|{let next=output.len().checked_add(bytes.len()).filter(|next|*next<=count).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"checkpoint changed after measured reservation"))?;control.advance(bytes.len())?;output.extend_from_slice(bytes);debug_assert_eq!(output.len(),next);Ok(())};let mut writer=CheckpointWriter{sink:Some(&mut sink),..Default::default()};self.write_checkpoint(&mut writer);if let Some(error)=writer.error{return Err(error);}if owner.bytes.as_ref().unwrap().len()!=count{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"checkpoint changed after measured reservation"));}Ok(owner.bytes.take().unwrap())})();
+                (result,Some(owner as Box<dyn semio_framework_value::ErasedSnapshotRetirement>))
+            })
+        })
     }
 
     pub fn restore(module: Arc<CoreModule>, bytes: &[u8]) -> Result<Self, CoreError> {
@@ -3181,26 +3241,41 @@ impl CoreInstance {
     }
 }
 
+
+struct CheckpointOutputRetirement{bytes:std::mem::ManuallyDrop<Option<Vec<u8>>>}
+impl semio_framework_value::ErasedSnapshotRetirement for CheckpointOutputRetirement{
+    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};let empty=RetainedCloneProgress::default();if self.bytes.is_none(){return Ok(RetainedCloneStep::Complete(empty));}let release=self.bytes.as_ref().unwrap().capacity();let copy=std::mem::size_of::<Option<Vec<u8>>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release{return Ok(RetainedCloneStep::Progress(empty));}if grant.maximum_depth==0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"checkpoint owner release requires original depth"));}drop(self.bytes.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:release,..empty}))}
+    fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if self.bytes.is_some(){std::mem::size_of::<Option<Vec<u8>>>()}else{0})}
+    fn next_capacity_byte_demand(&self,_:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.bytes.as_ref().map_or(0,Vec::capacity))}
+    fn next_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(self.bytes.is_some()))}
+    fn terminal_is_empty(&self)->bool{self.bytes.is_none()}
+}
+impl Drop for CheckpointOutputRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.bytes.is_none(),"checkpoint original output reached Drop before admitted release");if self.bytes.is_none(){unsafe{std::mem::ManuallyDrop::drop(&mut self.bytes);}}}}
+
 #[derive(Default)]
-struct CheckpointWriter {
+struct CheckpointWriter<'a> {
     output: Vec<u8>,
+    sink: Option<&'a mut dyn FnMut(&[u8])->Result<(),semio_framework_value::ValueError>>,
+    error: Option<semio_framework_value::ValueError>,
 }
 
-impl CheckpointWriter {
+impl CheckpointWriter<'_> {
     fn byte(&mut self, value: u8) {
-        self.output.push(value);
+        self.bytes(&[value]);
     }
 
     fn bytes(&mut self, bytes: &[u8]) {
-        self.output.extend_from_slice(bytes);
+        if self.error.is_some(){return;}
+        if let Some(sink)=self.sink.as_mut(){if let Err(error)=sink(bytes){self.error=Some(error);}}else{self.output.extend_from_slice(bytes);}
     }
 
     fn u32(&mut self, value: u32) {
-        self.output.extend_from_slice(&value.to_le_bytes());
+        self.bytes(&value.to_le_bytes());
     }
 
     fn u64(&mut self, value: u64) {
-        self.output.extend_from_slice(&value.to_le_bytes());
+        self.bytes(&value.to_le_bytes());
     }
 
     fn usize(&mut self, value: usize) {
@@ -3215,6 +3290,7 @@ impl CheckpointWriter {
     fn list<T>(&mut self, values: &[T], mut write: impl FnMut(&mut Self, &T)) {
         self.usize(values.len());
         for value in values {
+            if self.error.is_some(){break;}
             write(self, value);
         }
     }

@@ -96,6 +96,24 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/⏱️consumed-browser-clock/🟨️.js"
       ]
     },
+    "test-evaluation-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-evaluation-source"
+      }
+    },
+    "test-session-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-session-source",
+        "cwd": "{projectRoot}"
+      },
+      "cache": false
+    },
     "test-source": {
       "executor": "nx:run-commands",
       "options": {
@@ -174,6 +192,42 @@
       "cache": false,
       "dependsOn": [],
       "outputs": []
+    },
+    "test-retained-grant-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-retained-grant-source",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-host-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-host-source",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-dag-source": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-dag-source"
+      }
+    },
+    "test-vcs-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-vcs-source",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-retained-receipt-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-retained-receipt-source"
+      }
     }
   },
   "implicitDependencies": [

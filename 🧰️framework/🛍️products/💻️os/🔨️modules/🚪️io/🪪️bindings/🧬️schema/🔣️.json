@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:artifact-codec-binding:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "channel",
+    "contributor",
+    "artifactKind",
+    "apps",
+    "schema",
+    "dialect",
+    "nativeIdentity",
+    "sqliteSchema",
+    "factory"
+  ],
+  "properties": {
+    "channel": {
+      "enum": [
+        "ownedDeclaration",
+        "hostedDeclaration",
+        "foreignApp",
+        "treeSubset",
+        "directNative",
+        "directDocumentNative",
+        "schemaOnlyDocument",
+        "guest"
+      ]
+    },
+    "contributor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifactKind": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "apps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dialect": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "nativeIdentity": {
+      "$ref": "#/$defs/nativeIdentity"
+    },
+    "sqliteSchema": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "factory": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"channel": {"const": "schemaOnlyDocument"}}},
+      "then": {"properties": {"artifactKind": {"const": null}, "dialect": {"const": null}, "apps": {"type": "array", "maxItems": 0}, "factory": {"const": null}}}
+    },
+    {
+      "if": {"properties": {"channel": {"const": "foreignApp"}}},
+      "then": {"properties": {"artifactKind": {"const": null}, "dialect": {"type": "string"}, "apps": {"type": "array", "minItems": 1, "maxItems": 1}}}
+    },
+    {
+      "if": {"properties": {"channel": {"enum": ["ownedDeclaration", "hostedDeclaration", "treeSubset", "directNative", "directDocumentNative", "guest"]}}},
+      "then": {"properties": {"artifactKind": {"type": "string"}, "dialect": {"type": "string"}}}
+    },
+    {
+      "if": {"properties": {"channel": {"const": "guest"}}},
+      "then": {"properties": {"nativeIdentity": {"type": "object", "properties": {"kind": {"const": "guest"}}}}}
+    }
+  ],
+  "$defs": {
+    "nativeIdentity": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "owner"
+          ],
+          "properties": {
+            "kind": {
+              "const": "typed"
+            },
+            "owner": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "pluginId",
+            "packageHash",
+            "schema"
+          ],
+          "properties": {
+            "kind": {
+              "const": "guest"
+            },
+            "pluginId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "packageHash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "path": "nx.json",
+    "action": "update",
+    "beforeSha256": "8d5b1ad39a0199e7ddb180d8e3040091d496966287fb08a474668f436a3fe9ee",
+    "afterSha256": "3413c117a2a97839347771c679df1ead8a7cb1aab96af2c3f64d578c9da42307",
+    "qualification": "Root production and default nativeSource input vocabulary apply exact four-collection predecessor-aware minimatch policy while test inputs remain complete"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+    "action": "update",
+    "beforeSha256": "6d7e248129c033ac99d6db41f88302158153427556a6380bef7aca28db953293",
+    "afterSha256": "259f383591cd190c03a928ec470d40796806c3cfe02ac3a6c53fec0b4c9ef352",
+    "qualification": "Defining physical callback refuses actual collection ancestry before physical admission; all inferred production/native inputs share exact module-name-aware four-collection exclusions"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "5a6cc9f852ffd4f16f500be1a395ca5705b4507708f8d6db3293ba107136b345",
+    "afterSha256": "b76378d812a2f993ec57298962bd7b3549e5bcfcdd0d0eabcf3190eef53e6e9d",
+    "qualification": "Replace blanket-pattern identity assertion with canonical shape; original actual sample behavior and new semantic RED expectations remain unchanged"
+  }
+]

@@ -108,10 +108,10 @@ impl PresentationEnvelopeMaterializeJob {
                 line: 0,
                 column: 0,
                 path: store::OwnedSchemaPath::ROOT,
-            })?;
+             refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
             if step == store::SnapshotRetirementStep::Complete {
                 if !store::ErasedSnapshotRetirement::terminal_is_empty(retirement) {
-                    return Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.field-return-false-terminal", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT });
+                    return Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.field-return-false-terminal", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
                 }
                 drop(self.field_retirement.take());
             }
@@ -124,7 +124,7 @@ impl PresentationEnvelopeMaterializeJob {
                 Ok(true)
             }
             Err(store::ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => Ok(true),
-            Err(_) => Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.field-return-stale", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT }),
+            Err(_) => Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.field-return-stale", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }),
         }
     }
 
@@ -134,7 +134,7 @@ impl PresentationEnvelopeMaterializeJob {
             self.state = PresentationEnvelopeMaterializeState::Cancelled;
             return Ok(());
         };
-        self.completed_registry.try_request_close(ticket).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.completed-close-request", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })?;
+        self.completed_registry.try_request_close(ticket).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.completed-close-request", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
         match self.completed_registry.try_detach(ticket) {
             Ok(owner) => {
                 self.completed_retirement = Some(owner);
@@ -142,7 +142,7 @@ impl PresentationEnvelopeMaterializeJob {
                 Ok(())
             }
             Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => Ok(()),
-            Err(_) => Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.completed-close-stale", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT }),
+            Err(_) => Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.completed-close-stale", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }),
         }
     }
 
@@ -1149,7 +1149,7 @@ impl PresentationPackSnapshotAuthority {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
     fn owners_terminal_empty(&self) -> bool {
@@ -1166,7 +1166,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot> for Pre
         cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path };
+        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
         if matches!(self.state, PresentationPackSnapshotState::AwaitToken) {
             if !terminal {
                 return Err(diagnostic("presentation-envelope.snapshot-pack-must-be-scalar", token.start));
@@ -1220,7 +1220,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot> for Pre
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let diagnostic = |code: &'static str| store::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path };
+        let diagnostic = |code: &'static str| store::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1281,7 +1281,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<PresentationMutation> for Pre
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: self.code, offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: self.code, offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn publish_reserved(
@@ -1290,7 +1290,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<PresentationMutation> for Pre
         _reservation: store::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: self.code, offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: self.code, offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
@@ -1318,7 +1318,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for PresentationRejectedConflic
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {

@@ -1,0 +1,5 @@
+{
+  "beforeSha256": "9fef0ab37b15e3f98e5c0dada454e66be5693da07f1f954145731d5e384f3cfc",
+  "afterSha256": "648c8d5a7da7e59608492b1b4d2740e3140206d392be274738277f6aa44f52c3",
+  "action": "Run original actual repository inventory before unrelated mounted tests; filter exactly two current owner prefixes and retain output under generated. No source copies or output-dependent policy."
+}

@@ -50,33 +50,43 @@ fn instance_open_event(app_id: &str, config: Vec<u8>) -> Event {
 
 #[semio_framework_async_macros::async_test]
 async fn a_trapped_owned_instance_refuses_every_later_turn() {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
     let runtime = OwnedRuntime::new();
     let compiled = runtime.compile(&package_ref("semio:neutral-host-fixture", &bytes), &bytes).await.expect("compile plugin component");
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(2), &[], &open_budget()).await.expect("instantiate plugin actor");
     owned_state_mut(&mut instance).expect("owned instance").poisoned = true;
-    let refusal = runtime.execute_turn(&mut instance, &[], open_budget()).await.expect_err("a trapped owned instance must refuse");
+    let refusal = runtime.execute_turn(&mut instance, &[], open_budget(), &mut identity).await.expect_err("a trapped owned instance must refuse");
     assert!(format!("{refusal:?}").contains("poisoned"), "a trapped owned instance must name its poisoning, got {refusal:?}");
     let refusal = runtime.start_job(&mut instance, 1, "semio.test", Vec::new()).await.expect_err("a trapped owned instance must refuse jobs too");
     assert!(format!("{refusal:?}").contains("poisoned"), "a trapped owned instance must name its poisoning, got {refusal:?}");
+    crate::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_mid_flight_owned_turn_refuses_new_events_instead_of_dropping_them() {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
     let runtime = OwnedRuntime::new();
     let compiled = runtime.compile(&package_ref("semio:neutral-host-fixture", &bytes), &bytes).await.expect("compile plugin component");
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(3), &[], &open_budget()).await.expect("instantiate plugin actor");
     let one_instruction = Budget { fuel: 1, ..open_budget() };
-    assert!(matches!(runtime.execute_turn(&mut instance, &[instance_open_event(FIXTURE_EDITOR_APP, Vec::new())], one_instruction).await, Err(TurnFault::FuelExhausted)));
+    assert!(matches!(runtime.execute_turn(&mut instance, &[instance_open_event(FIXTURE_EDITOR_APP, Vec::new())], one_instruction, &mut identity).await, Err(TurnFault::FuelExhausted)));
     assert!(instance.turn_in_flight(), "a fuel-yielded turn is mid-flight");
-    let refusal = runtime.execute_turn(&mut instance, &[Event::Wake], open_budget()).await.expect_err("a mid-flight turn must refuse new events");
+    let refusal = runtime.execute_turn(&mut instance, &[Event::Wake], open_budget(), &mut identity).await.expect_err("a mid-flight turn must refuse new events");
     assert!(format!("{refusal:?}").contains("mid-flight"), "a mid-flight turn must say so, got {refusal:?}");
-    let resumed = runtime.execute_turn(&mut instance, &[], Budget { fuel: 1_000_000, ..open_budget() }).await;
+    let resumed = runtime.execute_turn(&mut instance, &[], Budget { fuel: 1_000_000, ..open_budget() }, &mut identity).await;
     assert!(matches!(resumed, Err(TurnFault::FuelExhausted | TurnFault::DeadlineExceeded)), "resuming with no events continues the same turn rather than refusing it, got {resumed:?}");
     assert!(instance.turn_in_flight(), "the resumed turn is still the same one");
+    crate::test_native_authority::close(&mut identity);
 }
 
 
@@ -122,6 +132,10 @@ async fn owned_codec_pack_schema_hash_answers_on_a_real_plugin_component() {
 
 #[semio_framework_async_macros::async_test]
 async fn owned_codec_print_mirror_round_trips_a_genesis_pair() {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
     let runtime = OwnedRuntime::new();
@@ -135,8 +149,9 @@ async fn owned_codec_print_mirror_round_trips_a_genesis_pair() {
         mirror.ops.len(),
         mirror.ops.chars().take(320).collect::<String>()
     );
-    let applied = runtime.codec_apply_ops(&compiled, FIXTURE_DOCUMENT_SCHEMA, &pair.pack, &pair.spr, &[], codec_budget()).await.expect("codec.apply-ops with an empty batch");
+    let applied = runtime.codec_apply_ops(&compiled, FIXTURE_DOCUMENT_SCHEMA, &pair.pack, &pair.spr, &[], codec_budget(), &mut identity).await.expect("codec.apply-ops with an empty batch");
     assert!(!applied.pack.is_empty() && !applied.spr.is_empty(), "an empty apply-ops batch must return the baseline pair, not an empty one");
+    crate::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -177,6 +192,11 @@ enum CodecSweepRuntime {
 
 
 async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, schema: &str, which: CodecSweepRuntime, text: GenesisMirrorText) -> Result<(), String> {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+    let result=async {
+
     let path=fixture_component();
     let bytes = std::fs::read(&path).map_err(|error| format!("read {}: {error}", path.display()))?;
     let runtime = match which {
@@ -212,11 +232,14 @@ async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, s
             mirror.ops.chars().take(320).collect::<String>()
         ));
     }
-    let applied = runtime.codec_apply_ops(&compiled, schema, &pair.pack, &pair.spr, &[], &budget).await.map_err(|error| format!("codec.apply-ops({schema}): {error:?}"))?;
+    let applied = runtime.codec_apply_ops(&compiled, schema, &pair.pack, &pair.spr, &[], &budget, &mut identity).await.map_err(|error| format!("codec.apply-ops({schema}): {error:?}"))?;
     if applied.pack.is_empty() || applied.spr.is_empty() {
         return Err(format!("codec.apply-ops({schema}) returned an empty baseline"));
     }
     Ok(())
+    }.await;
+    crate::test_native_authority::close(&mut identity);
+    result
 }
 
 #[semio_framework_async_macros::async_test]
@@ -264,6 +287,10 @@ async fn owned_codec_genesis_completes_under_the_fixture_budget() {
 //#region 🗂️GuestCodecDispatch
 #[semio_framework_async_macros::async_test]
 async fn guest_runtimes_forwards_all_four_codec_exports_to_the_runtime_beneath_it() {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
     let concrete = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
@@ -277,11 +304,12 @@ async fn guest_runtimes_forwards_all_four_codec_exports_to_the_runtime_beneath_i
 
     let mirror = routed.codec_print_mirror(&compiled, FIXTURE_DOCUMENT_SCHEMA, &direct_pair.pack, &direct_pair.spr, &jit_budget()).await.expect("routed codec.print-mirror");
     assert!(!mirror.dsl.is_empty(), "a genesis pair prints a non-empty dsl mirror");
-    let applied = routed.codec_apply_ops(&compiled, FIXTURE_DOCUMENT_SCHEMA, &direct_pair.pack, &direct_pair.spr, &[], &jit_budget()).await.expect("routed codec.apply-ops with an empty batch");
+    let applied = routed.codec_apply_ops(&compiled, FIXTURE_DOCUMENT_SCHEMA, &direct_pair.pack, &direct_pair.spr, &[], &jit_budget(), &mut identity).await.expect("routed codec.apply-ops with an empty batch");
     assert_eq!(applied, direct_pair, "an empty batch applied to a pair is that pair");
 
     let refusal = routed.codec_pack_schema_hash(&compiled, "not.a.kind.this.package.owns", &jit_budget()).await.expect_err("a foreign kind has no fingerprint here");
     assert!(matches!(&refusal, TurnFault::Guest(fault) if !fault.code.0.is_empty() && !fault.message.is_empty()), "the guest's refusal reads as its own typed fault, as under the interpreter: {refusal}");
+    crate::test_native_authority::close(&mut identity);
 }
 //#endregion 🗂️GuestCodecDispatch
 
@@ -298,6 +326,10 @@ fn fresh_codec_answer<T: serde::de::DeserializeOwned>(runtime: &OwnedRuntime, co
 
 #[semio_framework_async_macros::async_test]
 async fn codec_calls_answer_from_the_assembled_origin_exactly_what_a_fresh_instance_answers() {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
     let runtime = OwnedRuntime::new();
@@ -334,8 +366,9 @@ async fn codec_calls_answer_from_the_assembled_origin_exactly_what_a_fresh_insta
     let (fresh_mirror, _): (GuestDocumentMirror, u64) = fresh_codec_answer(&runtime, &compiled, OwnedOperation::PrintMirror, &pair_input);
     assert_eq!(runtime.codec_print_mirror(&compiled, FIXTURE_DOCUMENT_SCHEMA, &fresh_pair.pack, &fresh_pair.spr, codec_budget()).await.expect("codec.print-mirror from the origin"), fresh_mirror);
     let (fresh_applied, _): (GuestDocumentPair, u64) = fresh_codec_answer(&runtime, &compiled, OwnedOperation::ApplyOps, &pair_input);
-    assert_eq!(runtime.codec_apply_ops(&compiled, FIXTURE_DOCUMENT_SCHEMA, &fresh_pair.pack, &fresh_pair.spr, &[], codec_budget()).await.expect("codec.apply-ops from the origin"), fresh_applied);
+    assert_eq!(runtime.codec_apply_ops(&compiled, FIXTURE_DOCUMENT_SCHEMA, &fresh_pair.pack, &fresh_pair.spr, &[], codec_budget(), &mut identity).await.expect("codec.apply-ops from the origin"), fresh_applied);
     runtime.codec_pack_schema_hash(&compiled, "not.a.kind.this.package.owns", codec_budget()).await.expect_err("a foreign kind is refused from the origin as from a fresh instance");
+    crate::test_native_authority::close(&mut identity);
 }
 
 #[test]

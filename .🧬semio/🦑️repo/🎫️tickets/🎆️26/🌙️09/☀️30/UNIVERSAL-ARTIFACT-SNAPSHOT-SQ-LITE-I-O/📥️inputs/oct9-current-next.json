@@ -1,0 +1,49 @@
+{
+  "recordedAt": "2026-10-09T10:17:00Z",
+  "rootSocketCurrent": {
+    "source": {
+      "session": 20397,
+      "exitCode": 0,
+      "laws": 4,
+      "expects": 126,
+      "strict": true,
+      "runtimeDebug": true
+    },
+    "native": {
+      "session": 67298,
+      "pending": true,
+      "beforeSession": 79646,
+      "beforeExitCode": 130,
+      "beforeAssertions": 0,
+      "beforeCompilerLeaseOnly": true
+    },
+    "productionDialect": "native.socket-grant.probe@1/*",
+    "nativeProviderMounted": true,
+    "publicTypedErasedLawsMounted": 4,
+    "wholePhysicalRetirementQualified": false
+  },
+  "rootGenerationLatest": {
+    "session": 34526,
+    "exitCode": 1,
+    "assertions": 0,
+    "compilerOnly": true,
+    "currentLawRequalificationRequired": true
+  },
+  "rootJpgPublicationLatest": {
+    "session": 71785,
+    "exitCode": 1,
+    "assertions": 0,
+    "compilerOnly": true,
+    "digestPublished": false
+  },
+  "rootFleetCurrent": {
+    "main": "gpt-6.1-sol/xhigh",
+    "execution": [
+      "native_owner_execution:gpt-6.1-sol/high",
+      "window_owner_execution:gpt-6.1-sol/high"
+    ],
+    "readOnly": "current_readonly_audit:gpt-6.1-sol/low",
+    "maximumConcurrent": 4
+  },
+  "rootUniversalComplete": false
+}

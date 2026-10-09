@@ -19,7 +19,8 @@
       "additionalProperties": false,
       "required": [
         "kind",
-        "message"
+        "message",
+        "retainedProgress"
       ],
       "properties": {
         "kind": {
@@ -27,6 +28,38 @@
         },
         "message": {
           "type": "string"
+        },
+        "retainedProgress": {
+          "$ref": "#/$defs/retainedProgress"
+        }
+      }
+    },
+    "retainedProgress": {
+      "title": "Retained Clone Progress",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retainedCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     }

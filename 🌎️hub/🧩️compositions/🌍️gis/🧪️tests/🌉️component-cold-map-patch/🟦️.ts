@@ -3,6 +3,9 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import {parseFreshProcessPolicyV1} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🟦️.ts";
+import cargoCommandLimits from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json";
+import {repositoryCargoPreparationStorageV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { produceFreshComponentV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { type FreshBuildControlV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
 import { compileGisScopeExport } from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧰️schema/🟦️.ts";
@@ -123,7 +126,7 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
     mkdirSync(target, { mode: 0o700 });
     mkdirSync(stage, { mode: 0o700 });
     const build = freshGisComponentBuildControl();
-    const control = build.control;
+    const control={...build.control,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(this.repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})};
     try {
       const produced = await produceFreshComponentV1(
         this.repoRoot,

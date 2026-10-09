@@ -1,0 +1,22 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🚫️refusal/🧬️schema/🔣️.json",
+    "sha256": "8ca11b566e0ae91d4890b3bd3bdf078e5631357930833dc53352e9f785109c5f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🚫️refusal/🧫️fixtures/🔣️.json",
+    "sha256": "402b6d6a4178b268aeb8e9dd6c349e975df63d62827666ab729c667c8b85e17f"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "sha256": "90c8f3b620d9df369d86c44a4cbd4f5b0735bee37608967f1720aa7385857847"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "49e0382959a41f57b7a3d9465c6b81585392ae96bcc3d3860310ece9b85fe996"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json",
+    "sha256": "bfcaa71551e4293ed27cc884d05546ba19196b3ba2391ecfe0cab304e31713b5"
+  }
+]

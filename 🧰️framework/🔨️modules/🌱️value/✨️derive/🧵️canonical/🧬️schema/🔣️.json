@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tag",
+    "variant",
+    "values",
+    "expected",
+    "maximumBodyBytes",
+    "maximumTurns"
+  ],
+  "properties": {
+    "tag": {
+      "const": "mutation"
+    },
+    "variant": {
+      "const": "moveNode"
+    },
+    "values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "newX",
+        "newY"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "newX": {
+          "type": "number"
+        },
+        "newY": {
+          "type": "number"
+        }
+      }
+    },
+    "expected": {
+      "type": "string"
+    },
+    "maximumBodyBytes": {
+      "const": 4096
+    },
+    "maximumTurns": {
+      "const": 100000
+    }
+  }
+}

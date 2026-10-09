@@ -951,6 +951,7 @@ pub fn evaluate_tick(
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
+    retained_grant: semio_framework_value::RetainedCloneGrant,
 ) -> FlowEvalTickOutcome {
     let started_us = semio_framework_job::runtime_diagnostics_enabled().then(semio_framework_job::default_now_us).flatten();
     // ▶️ The armed tick is now RUNNING, so its latch is free for whatever THIS tick decides to arm.
@@ -975,6 +976,7 @@ pub fn evaluate_tick(
         // name which extension refused it — the tick's geometry address is a different extension
         // from the one an operator hop was routed to (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
+            ("retained".to_string(), semio_framework_value::ToValue::to_value(&retained_grant)),
             ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
             ("inputJson".to_string(), semio_framework_value::DslValue::String(if resume {String::new()}else{pending.input_json})),
             ("dependencyJson".to_string(), semio_framework_value::DslValue::String(if resume {String::new()}else{geometry_dependency_json(host_snapshot, &pending.neuron_id)})),

@@ -817,10 +817,10 @@ fn initialize_drawing_mutation_arena_pool_for_test() {
 fn nested_snapshot() -> DrawingSnapshot {
     initialize_drawing_mutation_arena_pool_for_test();
     let mut snapshot = crate::standards::v1::subsets::any::schema::default_drawing_document("drawing-retained-mutation", None);
-    let shape = crate::schema::create_drawing_shape_layer_rect("Shape");
-    let boolean = crate::schema::create_drawing_boolean_layer("Boolean", "union", vec![crate::schema::layer_id(&shape).into()]);
-    let trace = crate::schema::create_drawing_trace_layer("Trace", "asset-a");
-    let mut group = crate::schema::create_drawing_group_layer("Group");
+    let shape = crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Shape")).to_string().into()).expect("nonempty authored identity"), "Shape");
+    let boolean = crate::schema::create_drawing_boolean_layer(crate::schema::identity::DrawingIdentity::admit((("Boolean")).to_string().into()).expect("nonempty authored identity"), "Boolean", "union", vec![crate::schema::layer_id(&shape).into()]);
+    let trace = crate::schema::create_drawing_trace_layer(crate::schema::identity::DrawingIdentity::admit((("Trace")).to_string().into()).expect("nonempty authored identity"), "Trace", "asset-a");
+    let mut group = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
     if let DrawingLayerNode::Group(value) = &mut group {
         value.children.push(shape);
         value.children.push(boolean);
@@ -1040,7 +1040,7 @@ fn digest(mutation: &DrawingMutation) -> Result<[u8; 32], &'static str> {
 }
 
 fn rich_layer() -> DrawingLayerNode {
-    let mut group = crate::schema::create_drawing_group_layer("Digest Group");
+    let mut group = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Digest Group")).to_string().into()).expect("nonempty authored identity"), "Digest Group");
     let base = crate::schema::layer_base_mut(&mut group);
     base.visible = false;
     base.locked = true;
@@ -1050,8 +1050,8 @@ fn rich_layer() -> DrawingLayerNode {
     base.attributes.fill = Some(FillStyle::RadialGradient { cx: 1.0, cy: 2.0, r: 3.0, stops: vec![GradientStop { offset: 0.25, color: [0.1, 0.2, 0.3, 0.4] }].into() });
     base.attributes.stroke = Some(StrokeStyle { color: [0.5, 0.6, 0.7, 0.8], width: 2.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![1.0, 2.0].into()) });
     if let DrawingLayerNode::Group(value) = &mut group {
-        value.children.push(crate::schema::create_drawing_shape_layer_rect("Shape"));
-        value.children.push(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(
+        value.children.push(crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Shape")).to_string().into()).expect("nonempty authored identity"), "Shape"));
+        value.children.push(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), 
             "Path",
             vec![
                 PathSegment::Move { to: [1.0, 2.0] },
@@ -1062,10 +1062,10 @@ fn rich_layer() -> DrawingLayerNode {
                 PathSegment::Close,
             ].into(),
         ));
-        value.children.push(crate::schema::create_drawing_text_layer("Text"));
-        value.children.push(crate::schema::create_drawing_image_layer("Image", "asset-reference"));
-        value.children.push(crate::schema::create_drawing_boolean_layer("Boolean", "union", vec!["a".into(), "b".into()].into()));
-        value.children.push(crate::schema::create_drawing_trace_layer("Trace", "trace-source"));
+        value.children.push(crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text"));
+        value.children.push(crate::schema::create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit((("Image")).to_string().into()).expect("nonempty authored identity"), "Image", "asset-reference"));
+        value.children.push(crate::schema::create_drawing_boolean_layer(crate::schema::identity::DrawingIdentity::admit((("Boolean")).to_string().into()).expect("nonempty authored identity"), "Boolean", "union", vec!["a".into(), "b".into()].into()));
+        value.children.push(crate::schema::create_drawing_trace_layer(crate::schema::identity::DrawingIdentity::admit((("Trace")).to_string().into()).expect("nonempty authored identity"), "Trace", "trace-source"));
     }
     group
 }
@@ -1114,8 +1114,8 @@ fn retained_drawing_mutation_candidate_covers_all_variants_and_returns_exact_own
         DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: shape.clone(), stroke: Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.0, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![1.0, 2.0].into()) }) }),
         DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: boolean, boolean_operation: "difference".into() }),
         DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: trace, params: crate::DrawingTraceParams { threshold: 0.4, simplify_epsilon: 1.2 } }),
-        DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group.clone()), index: Some(1), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Created", vec![PathSegment::Move { to: [0.0, 0.0] }].into())) }),
-        DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: shape.clone() }),
+        DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group.clone()), index: Some(1), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Created")).to_string().into()).expect("nonempty authored identity"), "Created", vec![PathSegment::Move { to: [0.0, 0.0] }].into())) }),
+        DrawingMutation::DuplicateLayer(DuplicateLayer { identities: duplicate_assignments(&source,&shape), layer_id: shape.clone() }),
         DrawingMutation::DeleteLayer(DeleteLayer { layer_id: shape.clone() }),
         DrawingMutation::ReorderLayer(ReorderLayer { layer_id: shape, parent_id: None, index: 0 }),
     ];
@@ -1131,8 +1131,8 @@ fn retained_image_asset_mutations_replay_sparse_delta_and_reference_refusal(){
     let after:DrawingSnapshot=serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/➡️after/🔣️.json")).unwrap();
     let mutation=crate::mutations::import_image_asset("bitmap".into(),after.assets.get("bitmap").unwrap().clone());let imported=apply(before.clone(),&mutation).unwrap();assert_eq!(imported,after);drain_mutation(mutation);
     let removal=crate::mutations::remove_image_asset("bitmap".into());let restored=apply(imported,&removal).unwrap();assert_eq!(restored,before);drain_snapshot(restored);
-    let mut referenced=after.clone();let mut image=crate::schema::create_drawing_image_layer("Image","bitmap");crate::schema::layer_base_mut(&mut image).id="image".into();referenced.layers.push(image);let expected=referenced.clone();let (rejected,error)=apply(referenced,&removal).unwrap_err();assert_eq!(error,"drawing-store.asset-still-referenced");assert_eq!(rejected,expected);drain_snapshot(rejected);
-    let mut referenced=after.clone();let mut trace=crate::schema::create_drawing_trace_layer("Trace","bitmap");crate::schema::layer_base_mut(&mut trace).id="trace".into();referenced.layers.push(trace);let expected=referenced.clone();let (rejected,error)=apply(referenced,&removal).unwrap_err();assert_eq!(error,"drawing-store.asset-still-referenced");assert_eq!(rejected,expected);drain_snapshot(rejected);drain_mutation(removal);drain_snapshot(before);drain_snapshot(after);
+    let mut referenced=after.clone();let mut image=crate::schema::create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit((("Image")).to_string().into()).expect("nonempty authored identity"), "Image","bitmap");crate::schema::layer_base_mut(&mut image).id="image".into();referenced.layers.push(image);let expected=referenced.clone();let (rejected,error)=apply(referenced,&removal).unwrap_err();assert_eq!(error,"drawing-store.asset-still-referenced");assert_eq!(rejected,expected);drain_snapshot(rejected);
+    let mut referenced=after.clone();let mut trace=crate::schema::create_drawing_trace_layer(crate::schema::identity::DrawingIdentity::admit((("Trace")).to_string().into()).expect("nonempty authored identity"), "Trace","bitmap");crate::schema::layer_base_mut(&mut trace).id="trace".into();referenced.layers.push(trace);let expected=referenced.clone();let (rejected,error)=apply(referenced,&removal).unwrap_err();assert_eq!(error,"drawing-store.asset-still-referenced");assert_eq!(rejected,expected);drain_snapshot(rejected);drain_mutation(removal);drain_snapshot(before);drain_snapshot(after);
     eprintln!("[DEBUG] Retained native image asset import/remove exact neutral delta and unchanged image/trace reference refusals");
 }
 
@@ -1456,9 +1456,9 @@ fn retained_drawing_arena_bootstrap_job_cancel_budget_contention_and_saturation_
 
 #[test]
 fn retained_drawing_depth_plus_one_and_hostile_fields_fault_then_close_terminal_empty() {
-    let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("leaf", Default::default());
+    let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("leaf")).to_string().into()).expect("nonempty authored identity"), "leaf", Default::default());
     for depth in 0..=DRAWING_MAXIMUM_LAYER_DEPTH {
-        let mut parent = crate::schema::create_drawing_group_layer(&format!("depth-{depth}"));
+        let mut parent = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit(((&format!("depth-{depth}"))).to_string().into()).expect("nonempty authored identity"), &format!("depth-{depth}"));
         if let DrawingLayerNode::Group(value) = &mut parent {
             value.children.push(layer);
         }
@@ -1480,12 +1480,12 @@ fn retained_drawing_depth_plus_one_and_hostile_fields_fault_then_close_terminal_
 #[test]
 fn retained_drawing_container_false_terminal_saturation_and_interrupted_close_preserve_exact_owner() {
     let mut snapshot = crate::standards::v1::subsets::any::schema::default_drawing_document("rebuild-reservation", None);
-    snapshot.layers = vec![crate::standards::v1::subsets::any::schema::create_drawing_path_layer("first", Default::default()), crate::standards::v1::subsets::any::schema::create_drawing_path_layer("second", Default::default())].into();
-    let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("pending", Default::default())) });
+    snapshot.layers = vec![crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("first")).to_string().into()).expect("nonempty authored identity"), "first", Default::default()), crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("second")).to_string().into()).expect("nonempty authored identity"), "second", Default::default())].into();
+    let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("pending")).to_string().into()).expect("nonempty authored identity"), "pending", Default::default())) });
     let workset = live_workset(&mut snapshot, &mutation).expect("live Drawing rebuild workset admitted");
     let source = std::mem::take(&mut snapshot.layers);
     let DrawingMutation::CreateLayer(mut create) = mutation else { unreachable!() };
-    let pending = *std::mem::replace(&mut create.layer, Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("retired-placeholder", Default::default())));
+    let pending = *std::mem::replace(&mut create.layer, Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("retired-placeholder")).to_string().into()).expect("nonempty authored identity"), "retired-placeholder", Default::default())));
     drain_mutation(DrawingMutation::CreateLayer(create));
     drain_snapshot(snapshot);
     let mut reverse = Vec::new();
@@ -1542,11 +1542,11 @@ fn retained_drawing_rebuild_fault_after_every_phase_rolls_back_exact_container_a
             let mut source = crate::standards::v1::subsets::any::schema::default_drawing_document("rebuild-rollback", None);
             reserve_native_layer_slots(&mut source.layers, DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY);
             for index in 0..3 {
-                source.layers.push(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(&format!("source-{index}"), Default::default()));
+                source.layers.push(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit(((&format!("source-{index}"))).to_string().into()).expect("nonempty authored identity"), &format!("source-{index}"), Default::default()));
             }
             let source_owner = native_layer_backing(&source.layers);
             let source_ids: Vec<_> = source.layers.iter().map(|layer| crate::schema::layer_id(layer).to_string()).collect();
-            let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("pending", Default::default())) });
+            let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("pending")).to_string().into()).expect("nonempty authored identity"), "pending", Default::default())) });
             let operation = semio_framework_job::OperationId(8_500 + phase as u64);
             let generation = semio_framework_job::Generation(850 + phase as u64);
             let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(operation, generation, pool.clone()).expect("Drawing rollback candidate borrows one exact pool slot");
@@ -1869,7 +1869,7 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
         DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: id.clone(), boolean_operation: "intersection".into() }),
         DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: id.clone(), params: crate::DrawingTraceParams { threshold: 0.25, simplify_epsilon: 0.5 } }),
         DrawingMutation::CreateLayer(CreateLayer { parent_id: Some("parent".into()), index: Some(2), layer: Box::new(baseline.clone()) }),
-        DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: id.clone() }),
+        DrawingMutation::DuplicateLayer(DuplicateLayer { identities: vec![crate::schema::identity::DrawingIdentityAssignment{source:(id.clone()),target:"copied-layer".into()}].into(), layer_id: id.clone() }),
         DrawingMutation::DeleteLayer(DeleteLayer { layer_id: id.clone() }),
         DrawingMutation::ReorderLayer(ReorderLayer { layer_id: id, parent_id: Some("parent".into()), index: 3 }),
     ];
@@ -1923,7 +1923,7 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
         DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: None, layer: Box::new(baseline.clone()) }),
         DrawingMutation::CreateLayer(CreateLayer { parent_id: Some("parent".into()), index: Some(1), layer: Box::new(baseline.clone()) }),
     );
-    assert_mutation_digest_distinct(DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: "left".into() }), DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: "right".into() }));
+    assert_mutation_digest_distinct(DrawingMutation::DuplicateLayer(DuplicateLayer { identities: vec![crate::schema::identity::DrawingIdentityAssignment{source:("left".into()),target:"copied-layer".into()}].into(), layer_id: "left".into() }), DrawingMutation::DuplicateLayer(DuplicateLayer { identities: vec![crate::schema::identity::DrawingIdentityAssignment{source:("right".into()),target:"copied-layer".into()}].into(), layer_id: "right".into() }));
     assert_mutation_digest_distinct(DrawingMutation::DeleteLayer(DeleteLayer { layer_id: "left".into() }), DrawingMutation::DeleteLayer(DeleteLayer { layer_id: "right".into() }));
     assert_mutation_digest_distinct(
         DrawingMutation::ReorderLayer(ReorderLayer { layer_id: "layer".into(), parent_id: None, index: 0 }),
@@ -1990,7 +1990,7 @@ fn retained_drawing_duplicate_plans_exact_clone_work_before_overlay_and_source_h
         DrawingLayerNode::Group(group) => group.base.id.clone(),
         _ => unreachable!("Drawing clone-plan group remains exact"),
     };
-    let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target });
+    let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { identities: duplicate_assignments(&source,&target), layer_id: target });
     let (workset, actual_clone) = planned_clone_workset(&mut source, &mutation).expect("duplicate clone construction and census finish before binding the overlay");
     assert_eq!(native_layer_backing(&source.layers), source_owner, "clone planning retains the exact source owner");
     assert_eq!((workset.clone_items, workset.clone_bytes), (actual_clone.items, actual_clone.bytes), "workset clone credit equals the retained clone traversal's actual capacities");
@@ -2058,7 +2058,7 @@ fn drawing_mutation_admission_fixture_matches_native_dispositions_and_serde_json
     let duplicate_source = nested_snapshot();
     let initial_layers = duplicate_source.layers.len();
     let duplicate_target = crate::schema::layer_id(duplicate_source.layers.last().expect("neutral duplicate source")).clone();
-    let duplicate_mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: duplicate_target.clone() });
+    let duplicate_mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { identities: duplicate_assignments(&duplicate_source,&duplicate_target), layer_id: duplicate_target.clone() });
     let duplicate_source = apply(duplicate_source, &duplicate_mutation).expect("neutral duplicate disposition is applied");
     let duplicate_carrier: serde_json::Value = serde_json::from_str(&serde_json::to_string(&duplicate_source).expect("serde_json carrier writes duplicate result")).expect("serde_json carrier reads duplicate result");
     assert_eq!(duplicate_carrier["layers"].as_array().expect("carrier layers").len(), initial_layers + 1);
@@ -2071,7 +2071,7 @@ fn drawing_mutation_admission_fixture_matches_native_dispositions_and_serde_json
 fn retained_drawing_duplicate_hash_frames_domain_id_and_name_lengths_without_concatenation_collision() {
     fn duplicate_id(id: &str, name: &str) -> String {
         let mut source = crate::standards::v1::subsets::any::schema::default_drawing_document("duplicate-framing", None);
-        let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(name, Default::default());
+        let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit(((name)).to_string().into()).expect("nonempty authored identity"), name, Default::default());
         let base = crate::schema::layer_base_mut(&mut layer);
         base.id.clear();
         base.id.push_str(id);
@@ -2079,7 +2079,7 @@ fn retained_drawing_duplicate_hash_frames_domain_id_and_name_lengths_without_con
         source.layers.clear();
         reserve_native_layer_slots(&mut source.layers, 2);
         source.layers.push(layer);
-        let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: id.into() });
+        let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { identities: duplicate_assignments(&source,&semio_framework_value::paged::PagedUtf8::<{usize::MAX}>::from(id)), layer_id: id.into() });
         let source = apply(source, &mutation).expect("framed duplicate mutation applies");
         let duplicate = source.layers.get(1).map(crate::schema::layer_id).expect("duplicated layer remains retained").to_string();
         drain_mutation(mutation);
@@ -2093,14 +2093,14 @@ fn retained_drawing_duplicate_hash_frames_domain_id_and_name_lengths_without_con
 #[test]
 fn retained_drawing_duplicate_name_uses_preadmitted_page_and_returns_exact_rejection_owner() {
     let mut source = crate::standards::v1::subsets::any::schema::default_drawing_document("duplicate-name-owner", None);
-    let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Layer", Default::default());
+    let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Layer")).to_string().into()).expect("nonempty authored identity"), "Layer", Default::default());
     admit_layer_string_destinations(&mut layer);
     let target = crate::schema::layer_id(&layer).clone();
     let original_name_owner = native_text_backing(&crate::schema::layer_base(&layer).name);
     source.layers.clear();
     reserve_native_layer_slots(&mut source.layers, 2);
     source.layers.push(layer);
-    let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target });
+    let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { identities: duplicate_assignments(&source,&target), layer_id: target });
     let source = apply(source, &mutation).expect("duplicate name suffix uses only pre-admitted destination and fixed scratch page");
     assert_eq!(native_text_backing(&crate::schema::layer_base(&source.layers[0]).name), original_name_owner, "last-valid name backing remains exact");
     assert_eq!(crate::schema::layer_base(&source.layers[1]).name, "Layer copy");
@@ -2108,11 +2108,11 @@ fn retained_drawing_duplicate_name_uses_preadmitted_page_and_returns_exact_rejec
     drain_snapshot(source);
 
     let mut rejected = crate::standards::v1::subsets::any::schema::default_drawing_document("duplicate-name-rejected", None);
-    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Layer", Default::default());
+    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Layer")).to_string().into()).expect("nonempty authored identity"), "Layer", Default::default());
     let target = crate::schema::layer_id(&layer).clone();
     rejected.layers = vec![layer].into();
     let exact_owner = native_layer_backing(&rejected.layers);
-    let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target });
+    let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { identities: duplicate_assignments(&rejected,&target), layer_id: target });
     let (rejected, error) = apply(rejected, &mutation).expect_err("unadmitted duplicate destination rejects without allocating after operation admission");
     assert_eq!(error, "drawing-store.duplicate-destination-capacity");
     assert_eq!(native_layer_backing(&rejected.layers), exact_owner, "duplicate rejection returns the exact source native container owner");
@@ -2145,10 +2145,10 @@ fn retained_drawing_cancel_stale_each_precommit_replay_candidate_container_stage
             };
             let last_valid_id = source.id.clone();
             let mutation = match stage {
-                DrawingMutationCandidatePhase::LocateSecondary => DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group_id), index: Some(0), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer("cancel-create", Default::default())) }),
+                DrawingMutationCandidatePhase::LocateSecondary => DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group_id), index: Some(0), layer: Box::new(crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("cancel-create")).to_string().into()).expect("nonempty authored identity"), "cancel-create", Default::default())) }),
                 DrawingMutationCandidatePhase::LocatePrimary => DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: target, visible: false }),
                 DrawingMutationCandidatePhase::RebuildSource | DrawingMutationCandidatePhase::LocateDestination => DrawingMutation::ReorderLayer(ReorderLayer { layer_id: target, parent_id: Some(group_id), index: 2 }),
-                _ => DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target }),
+                _ => DrawingMutation::DuplicateLayer(DuplicateLayer { identities: duplicate_assignments(&source,&target), layer_id: target }),
             };
             let operation = semio_framework_job::OperationId(8_003);
             let generation = semio_framework_job::Generation(83);
@@ -2190,7 +2190,7 @@ fn retained_drawing_committed_candidate_finishes_exact_owner_return_after_late_c
         let mut source = nested_snapshot();
         let initial_layers = source.layers.len();
         let target = crate::schema::layer_id(source.layers.last().expect("Drawing duplicate source")).clone();
-        let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target });
+        let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { identities: duplicate_assignments(&source,&target), layer_id: target });
         let operation = semio_framework_job::OperationId(8_004);
         let generation = semio_framework_job::Generation(84);
         let mut authority = borrowed_candidate(operation, generation).expect("Drawing candidate fixed owner arenas admit");
@@ -2231,7 +2231,7 @@ fn retained_path_geometry_mutation_preserves_appearance_and_retires_segments() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧫️fixtures/🔣️.json"))).unwrap();
     let before: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}> = serde_json::from_value(fixture["before"].clone()).unwrap();
     let after: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}> = serde_json::from_value(fixture["after"].clone()).unwrap();
-    let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Curve", before);
+    let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", before);
     crate::schema::layer_base_mut(&mut layer).opacity = 0.4;
     let id = crate::schema::layer_id(&layer).clone();
     let source = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
@@ -2247,7 +2247,7 @@ fn retained_path_geometry_mutation_preserves_appearance_and_retires_segments() {
 #[test]
 fn retained_path_edit_cancellation_preserves_the_entire_document() {
     initialize_drawing_mutation_arena_pool_for_test();
-    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer("Curve", vec![PathSegment::Move { to: [0.0,0.0] }, PathSegment::Line { to: [10.0,0.0] }].into());
+    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", vec![PathSegment::Move { to: [0.0,0.0] }, PathSegment::Line { to: [10.0,0.0] }].into());
     let id = crate::schema::layer_id(&layer).clone();
     let mut source = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let expected = source.clone();
@@ -2284,7 +2284,7 @@ fn retained_path_geometry_digest_distinguishes_control_points() {
 #[test]
 fn retained_text_edit_preserves_identity_and_appearance() {
     initialize_drawing_mutation_arena_pool_for_test();
-    let mut layer = crate::schema::create_drawing_text_layer("Caption");
+    let mut layer = crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Caption")).to_string().into()).expect("nonempty authored identity"), "Caption");
     crate::schema::layer_base_mut(&mut layer).opacity = 0.4;
     let id = crate::schema::layer_id(&layer).clone();
     let source = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
@@ -2308,7 +2308,7 @@ fn retained_text_digest_distinguishes_content_and_size() {
 #[test]
 fn retained_text_edit_cancellation_keeps_the_complete_document() {
     initialize_drawing_mutation_arena_pool_for_test();
-    let layer = crate::schema::create_drawing_text_layer("Caption");
+    let layer = crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Caption")).to_string().into()).expect("nonempty authored identity"), "Caption");
     let id = crate::schema::layer_id(&layer).clone();
     let mut source = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let expected = source.clone();
@@ -2367,11 +2367,11 @@ fn retained_blend_mutations_validate_vocabulary_and_return_unchanged_rejections(
 #[test]
 fn retained_authored_shape_and_image_facets_match_sparse_diffs_and_digest_all_arguments() {
     use crate::schema::shape_geometry::ShapeCoordinateField;
-    let shape=crate::schema::create_drawing_shape_layer_rect("Shape");let id=crate::schema::layer_id(&shape).clone();
+    let shape=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Shape")).to_string().into()).expect("nonempty authored identity"), "Shape");let id=crate::schema::layer_id(&shape).clone();
     let before=DrawingSnapshot{layers:vec![shape].into(),..Default::default()};
     let value=apply(before,&crate::mutations::set_shape_coordinate(id,ShapeCoordinateField::RectWidth,None,64.0)).unwrap();
     let DrawingLayerNode::Shape(shape)=&value.layers[0] else{panic!()};assert_eq!(shape.rect.as_ref().unwrap().width,64.0);drain_snapshot(value);
-    let image=crate::schema::create_drawing_image_layer("Image","before");let id=crate::schema::layer_id(&image).clone();
+    let image=crate::schema::create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit((("Image")).to_string().into()).expect("nonempty authored identity"), "Image","before");let id=crate::schema::layer_id(&image).clone();
     let before=DrawingSnapshot{layers:vec![image].into(),..Default::default()};
     let value=apply(before,&crate::mutations::update_image(id,"after".into(),64.0,32.0)).unwrap();
     let DrawingLayerNode::Image(image)=&value.layers[0] else{panic!()};assert_eq!(image.image_key,"after");assert_eq!((image.width,image.height),(64.0,32.0));drain_snapshot(value);
@@ -2381,4 +2381,9 @@ fn retained_authored_shape_and_image_facets_match_sparse_diffs_and_digest_all_ar
     assert_mutation_digest_distinct(crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::RectX,None,1.0),crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::RectY,None,1.0));
     assert_mutation_digest_distinct(crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::PolygonX,Some(1),1.0),crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::PolygonX,Some(2),1.0));
     assert_mutation_digest_distinct(crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::RectX,None,1.0),crate::mutations::set_shape_coordinate("shape".into(),ShapeCoordinateField::RectX,None,2.0));
+}
+
+fn duplicate_assignments(document:&DrawingSnapshot,target:&DrawingNativeText)->semio_framework_value::list::PagedList<crate::schema::identity::DrawingIdentityAssignment,{usize::MAX}>{
+ let node=crate::schema::find_drawing_layer(document,target).expect("authored duplicate source exists");let mut callback=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut callback);
+ crate::standards::v1::subsets::any::io::text::identity::clone::admit_clone_identities(node," copy",&mut control).expect("fixture duplicate identity admission")
 }

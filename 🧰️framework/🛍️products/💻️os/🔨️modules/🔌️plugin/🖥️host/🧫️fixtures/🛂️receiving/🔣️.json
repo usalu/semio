@@ -1,0 +1,11 @@
+{
+  "maximumNativeBytes": 33554432,
+  "maximumCloseTurns": 2048,
+  "grant": {
+    "maximumItems": 64,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 2097152,
+    "maximumReleaseBytes": 33554432,
+    "maximumDepth": 128
+  }
+}

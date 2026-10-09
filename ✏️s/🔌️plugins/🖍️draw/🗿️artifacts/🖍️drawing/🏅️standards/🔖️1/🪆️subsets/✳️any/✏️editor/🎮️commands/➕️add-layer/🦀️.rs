@@ -28,37 +28,23 @@ pub(crate) fn initialize_appearance(layer: &mut crate::DrawingLayerNode) {
     if outlined { attributes.stroke=Some(StrokeStyle { color:[0.1,0.15,0.2,1.0],width:2.0,cap: crate::StrokeCap::Round,join: crate::StrokeJoin::Round,dash:None }); }
 }
 
-pub(crate) fn build_layer(document: &DrawingSnapshot, kind: &str, operation: Option<&semio_framework_plugin::AppOperationContext>) -> Result<crate::DrawingLayerNode, Fault> {
+pub(crate) fn build_layer(document: &DrawingSnapshot, kind: &str, operation: &semio_framework_plugin::AppOperationContext, control:&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<crate::DrawingLayerNode, Fault> {
     if !matches!(kind, "shape:rect" | "shape:ellipse" | "shape:line" | "shape:polygon" | "path" | "text" | "image" | "group" | "boolean" | "trace") { return Err(Fault::from("Unknown layer kind")); }
-    let mut layer = create_layer_by_kind(kind);
+    let identity=prepare_identity(document,kind,operation,control)?;
+    let mut layer = create_layer_by_kind(identity, kind);
     initialize_appearance(&mut layer);
-    identify_created_layer(document,&mut layer,kind,operation);
     Ok(layer)
 }
 
-/// 🪪️ Assigns a fresh layer identity within the document and retained operation scope.
-pub(crate) fn identify_created_layer(document: &DrawingSnapshot, layer: &mut crate::DrawingLayerNode, kind: &str, operation: Option<&semio_framework_plugin::AppOperationContext>) {
-    let mut material = document.id.bytes().collect::<Vec<_>>();
-    material.extend_from_slice(kind.as_bytes());
-    if let Some(operation) = operation {
-        material.extend_from_slice(&operation.app_instance_id.to_be_bytes());
-        material.extend_from_slice(&operation.operation_id.to_be_bytes());
-        material.extend_from_slice(&operation.generation.to_be_bytes());
-        material.extend_from_slice(&operation.canonical_base_revision);
-    }
-    let mut ordinal = document.layers.len();
-    loop {
-        let mut candidate = material.clone();
-        candidate.extend_from_slice(&(ordinal as u64).to_be_bytes());
-        let id = crate::standards::v1::subsets::any::schema::create_drawing_id("layer", &candidate);
-        if crate::schema::find_drawing_layer(document, &id).is_none() { crate::schema::layer_base_mut(layer).id = id.into(); return; }
-        ordinal += 1;
-    }
+/// 🪪️ Admits a fresh identity at the explicit command IO boundary.
+pub(crate) fn prepare_identity(document:&DrawingSnapshot,kind:&str,operation:&semio_framework_plugin::AppOperationContext,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<crate::schema::identity::DrawingIdentity,Fault>{
+ crate::standards::v1::subsets::any::io::text::identity::creation::layer_identity(document,kind,operation,control).map_err(|error|Fault::from(error.to_string()))
 }
 
-pub fn handle(payload: &AddLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
+pub fn handle(payload: &AddLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     if payload.kind=="image" {return Ok(super::import_image::request());}
-    let layer = build_layer(doc.snapshot, &payload.kind, doc.operation_optional())?;
+    let operation=doc.operation()?;
+    let layer = session.with_identity_control(|control|build_layer(doc.snapshot,&payload.kind,operation,control))?;
     let id=crate::schema::layer_id(&layer).to_string();
     let mut emit=Emit::mutations(vec![crate::mutations::create_layer(None, Some(doc.snapshot.layers.len()), layer)]);
     emit.effects.push(crate::editor::drawing::commands::canvas_pointer_down::interaction_select_effect(&[id],"replace"));

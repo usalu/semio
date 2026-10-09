@@ -627,7 +627,7 @@ impl FixtureDirectory {
     }
 
     fn binding(&self) -> NativeCodecBinding {
-        NativeCodecBinding::new("fixture.editor", "semio:fixture-editor", "s.fixture.document", fixture_codec(&self.schema, [0x11; 32]))
+        let binding=NativeCodecBinding::new("fixture.editor", "semio:fixture-editor", "s.fixture.document", None, fixture_codec(&self.schema, [0x11; 32]));assert_eq!(binding.factory_id(),None);binding
     }
 
     fn rewrite_descriptor(&mut self, index: usize, schema: Option<&str>, dependency: Option<(&str, &str)>) {
@@ -660,7 +660,7 @@ impl FixtureDirectory {
         let schema = format!("{}.base", self.schema);
         self.bundle["packages"][1]["nativeCodecs"] = serde_json::json!([{ "artifactKind": "s.fixture.document", "artifactSchema": schema, "packSchemaHash": "11".repeat(32) }]);
         self.rewrite_descriptor(1, Some(&schema), None);
-        vec![NativeCodecBinding::new("fixture.base", "semio:fixture-base", "s.fixture.document", fixture_codec(&schema, [0x11; 32])), self.binding()]
+        vec![NativeCodecBinding::new("fixture.base", "semio:fixture-base", "s.fixture.document", None, fixture_codec(&schema, [0x11; 32])), self.binding()]
     }
 }
 
@@ -973,7 +973,7 @@ async fn assert_linked_fixture_denied(fixture: &FixtureDirectory) {
 /// 🧪️ Loads real GIS assembly metadata and native receipts around synthetic component bytes; component execution is outside this fixture.
 #[cfg(feature = "native-artifact-execution")]
 async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> FixtureDirectory {
-    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
+    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().expect("GIS assembly"));
     let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
     let mut descriptor = decode_package_descriptor(&emitted).expect("actual native GIS descriptor");
@@ -1077,7 +1077,7 @@ fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], _operations: &'a [u8]) -> di
 }
 
 fn fixture_codec(schema: &str, pack_schema_hash: [u8; 32]) -> ArtifactCodec {
-    ArtifactCodec { schema: schema.to_string(), extension: "fixture", snapshot_sqlite: None, pack_schema_hash, compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_apply }
+    ArtifactCodec { schema: schema.to_string(), extension: "fixture", native_identity: directory::os_store::ArtifactNativeSnapshotIdentity::typed::<Vec<u8>>(), snapshot_sqlite: None, pack_schema_hash, compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_apply }
 }
 
 async fn expect_load_error(fixture: &FixtureDirectory, bindings: &[NativeCodecBinding], control: &TestControl) -> AuthorityError {
@@ -1099,7 +1099,7 @@ async fn selected_native_providers_are_descriptor_verified_dependency_first_and_
         { "pluginId": "fixture.editor", "packageId": "semio:fixture-editor", "version": "1.2.3" }
     ]);
     single.rewrite_descriptor(0, Some(&single.schema.clone()), None);
-    let unselected = NativeCodecBinding::new("unselected", "semio:unselected", "fixture.unselected", fixture_codec(&format!("{}.unselected", single.schema), [0x11; 32]));
+    let unselected = NativeCodecBinding::new("unselected", "semio:unselected", "fixture.unselected", None, fixture_codec(&format!("{}.unselected", single.schema), [0x11; 32]));
     let mut source = FixtureProviderSource::new(vec![single.binding(), unselected]);
     source.exact_pool = false;
     let catalog = TrustedCatalogLoader::load_fixture(&single.bundle_path, "fixture", &source, &TestControl::new().context()).await.expect("selected-only catalog");
@@ -1692,7 +1692,7 @@ async fn all_trust_failures_precede_activation_and_have_bounded_diagnostics() {
     assert!(document_codec(&missing.schema).await.expect("codec registry").is_none());
 
     let wrong_package = prepared_fixture();
-    let lossy = NativeCodecBinding::new("fixture.editor", "semio:fixture-wrong", "s.fixture.document", fixture_codec(&wrong_package.schema, [0x11; 32]));
+    let lossy = NativeCodecBinding::new("fixture.editor", "semio:fixture-wrong", "s.fixture.document", None, fixture_codec(&wrong_package.schema, [0x11; 32]));
     let error = expect_load_error(&wrong_package, &[lossy], &control).await;
     assert!(error.to_string().contains("no explicit native codec"));
     assert!(document_codec(&wrong_package.schema).await.expect("codec registry").is_none());
@@ -1712,7 +1712,7 @@ async fn all_trust_failures_precede_activation_and_have_bounded_diagnostics() {
     assert!(document_codec(&detached_open_target.schema).await.expect("codec registry").is_none());
 
     let mismatch = prepared_fixture();
-    let binding = NativeCodecBinding::new("fixture.editor", "semio:fixture-editor", "s.fixture.document", fixture_codec(&mismatch.schema, [0x12; 32]));
+    let binding = NativeCodecBinding::new("fixture.editor", "semio:fixture-editor", "s.fixture.document", None, fixture_codec(&mismatch.schema, [0x12; 32]));
     let error = expect_load_error(&mismatch, &[binding], &control).await;
     assert!(error.to_string().contains("mismatched"));
     assert!(document_codec(&mismatch.schema).await.expect("codec registry").is_none());
@@ -1908,7 +1908,7 @@ async fn no_codec_call_is_served_from_a_row_its_component_has_not_answered() {
 async fn guest_codec_tables_answer_like_the_linked_native_codecs() {
     macro_rules! compare_plugin {
         ($plugin:expr, $codecs:expr) => {{
-            let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
+            let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
             semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, $plugin.expect("plugin assembles"));
             let document_id = format!("artifact-{}", "2".repeat(32));
             let (mut owned, mut unowned) = (Vec::new(), 0usize);
@@ -2525,6 +2525,7 @@ fn the_most_general_dialect_rule_answers_the_shared_fixture() {
 /// every multi-subset kind stayed uncreatable, and a hosted creation resolved no codec for the host's identity.
 #[tokio::test]
 async fn a_hosted_multi_subset_kind_is_created_and_executed_by_its_hosts_most_general_editor() {
+    for linked in [true, false] {
     let mut fixture = prepared_fixture();
     let (schema, component_sha256) = (fixture.schema.clone(), snapshot_json()["componentSha256"].as_str().expect("component sha256").to_owned());
     let codecs = fixture.bundle["packages"][0]["nativeCodecs"].take();
@@ -2552,8 +2553,7 @@ async fn a_hosted_multi_subset_kind_is_created_and_executed_by_its_hosts_most_ge
         bootstrap_frontier: directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
         bootstrap_snapshot_hash: "33".repeat(32),
     };
-    for linked in [true, false] {
-        let bindings = if linked { vec![NativeCodecBinding::new("fixture.base", "semio:fixture-base", "s.fixture.document", fixture_codec(&schema, [0x11; 32]))] } else { Vec::new() };
+        let bindings = if linked { vec![NativeCodecBinding::new("fixture.base", "semio:fixture-base", "s.fixture.document", None, fixture_codec(&schema, [0x11; 32]))] } else { Vec::new() };
         let catalog = load_fixture(&fixture, &bindings, &TestControl::new().context()).await.expect("hosting catalog loads");
         let selection = catalog.artifact_creation_selection("s.fixture.document").expect("the hosted multi-subset kind is creatable");
         assert!(host(&selection.package.plugin_id), "the host creates: {:?}", selection.package);
@@ -2571,6 +2571,11 @@ async fn a_hosted_multi_subset_kind_is_created_and_executed_by_its_hosts_most_ge
         let codec = catalog.resolve(&identity).await.expect("the host's identity resolves a codec");
         assert_eq!(codec.guest.component.package.package.0, "semio:fixture-editor", "genesis and guest calls go to the host's component");
         assert_eq!(codec.codec.is_some(), linked, "the owner's linked native codec executes the hosted identity");
+        let declarations=directory::io::artifact_catalog_bindings().unwrap().into_iter().filter(|row|row.artifact.schema==schema).collect::<Vec<_>>();
+        assert_eq!(declarations.len(),catalog.open_targets.len()+1);
+        for declaration in &declarations{assert_eq!(declaration.owner.plugin_id,"fixture.base");assert_eq!(declaration.owner.package_id,"semio:fixture-base");assert_eq!(matches!(declaration.capability,ArtifactCatalogCapability::Linked{..}),linked);if let ArtifactCatalogCapability::Linked{factory,..}=&declaration.capability{assert!(factory.is_none());}if let Some(target)=&declaration.target{assert!(host(&declaration.contributor.plugin_id));let original=catalog.open_targets.iter().find(|selection|selection.package==declaration.contributor&&selection.artifact==declaration.artifact&&selection.surface==target.surface&&selection.parent_dialect==target.parent_dialect).expect("exact immutable selected catalog target");assert_eq!(original.grant,target.grant);assert_eq!(original.browser_actor,target.browser_actor);}}
+        assert_eq!(codec.owner_declaration.owner.plugin_id,"fixture.base");assert_eq!(codec.owner_declaration.contributor.plugin_id,"fixture.base");assert_eq!(serde_json::to_value(codec.owner_declaration.owner.plugin_id.as_str()).unwrap(),serde_json::json!("fixture.base"));
+        println!("[DEBUG] Original verified hosted catalog linked={linked} declarations={} exactOwnerPackage=true noGuessedFactory=true exactSelectedSurfaces=true independentSerde=true",declarations.len());
         let owner = TrustedArtifactIdentity { plugin_id: "fixture.base".into(), package_id: "semio:fixture-base".into(), version: "1.0.0".into(), ..identity.clone() };
         assert_eq!(catalog.resolve(&owner).await.expect("the owner's row stays its own").guest.component.package.package.0, "semio:fixture-base");
         assert_eq!(catalog.resolve_document_open(&descriptor, None, true).expect("default editor").surface.surface_id, "s.fixture.document@1/*#editor");

@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "🧵️ Job Fixed Operation Root Oracle Red",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/📜️script.ts\" verify interactivity tool-jobs --fixed-operation-fixture-only",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fo0/data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fo0/cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.746
+      }
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "🧵️ Job Fixed Operation Root Oracle Green",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/📜️script.ts\" verify interactivity tool-jobs --fixed-operation-fixture-only",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_DAEMON": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fo1/data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/fo1/cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.7461
+      }
+    }
+  ],
+  "retireNames": []
+}

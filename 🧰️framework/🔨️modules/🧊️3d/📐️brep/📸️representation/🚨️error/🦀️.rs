@@ -118,6 +118,17 @@ pub struct ValidationIssue {
     pub message: String,
 }
 
+impl semio_framework_value::retirement::RetireOwned for ValidationIssue {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        let Self {entity,code:_,message}=self;
+        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(entity),semio_framework_value::retirement::deferred(message)])
+    }
+    fn retirement_birth_bytes(&self)->Option<usize> {
+        semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.entity),semio_framework_value::retirement::deferred_birth_bytes_for(&self.message)])
+    }
+    fn controlled_retirement_supported()->bool {true}
+}
+
 impl std::fmt::Display for ValidationIssue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "[{}] {}: {}", self.code, self.entity, self.message)

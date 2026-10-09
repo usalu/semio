@@ -1,0 +1,543 @@
+{
+  "qualification": "Read-only current Native draft static census, not compilation/execution qualification",
+  "nativeSourceSha256": "6c6614b3f1f7bb82b392f75642d0dc9127d1f5151d076865c4f2e8a2b5304c59",
+  "censusSourceSha256": "6a2dc7eff8e24e713279cb995574c86c5d5b08b888279d871175c5fd603fe45c",
+  "tableWidths": {
+    "bim_document": 2,
+    "bim_project": 6,
+    "bim_phase_name": 4,
+    "bim_material": 24,
+    "bim_wall_type": 5,
+    "bim_slab_type": 5,
+    "bim_roof_type": 5,
+    "bim_column_type": 6,
+    "bim_beam_type": 6,
+    "bim_window_type": 22,
+    "bim_door_type": 20,
+    "bim_site": 17,
+    "bim_building": 18,
+    "bim_storey": 13,
+    "bim_grid": 18,
+    "bim_wall": 15,
+    "bim_curtain_wall": 11,
+    "bim_column": 26,
+    "bim_beam": 14,
+    "bim_slab": 17,
+    "bim_roof": 33,
+    "bim_opening": 33,
+    "bim_stair": 56,
+    "bim_railing": 27,
+    "bim_space": 20,
+    "bim_property_element": 4,
+    "bim_wall_layer": 8,
+    "bim_slab_layer": 8,
+    "bim_roof_layer": 8,
+    "bim_site_boundary": 9,
+    "bim_axis": 20,
+    "bim_top": 17,
+    "bim_baluster": 5,
+    "bim_profile": 26,
+    "bim_profile_outline": 12,
+    "bim_slab_boundary": 12,
+    "bim_slab_hole": 3,
+    "bim_slab_hole_vertex": 12,
+    "bim_roof_footprint": 12,
+    "bim_railing_path": 9,
+    "bim_space_outline": 12,
+    "bim_property_set": 4,
+    "bim_property_value": 11,
+    "bim_curtain_wall_type": 11,
+    "bim_curtain_panel_override": 11,
+    "bim_ramp": 30,
+    "bim_ceiling_type": 5,
+    "bim_ceiling": 16,
+    "bim_zone": 9,
+    "bim_area_scheme": 6,
+    "bim_view": 59,
+    "bim_sheet": 21,
+    "bim_viewport": 26,
+    "bim_sheet_revision": 9,
+    "bim_dimension": 16,
+    "bim_tag": 14,
+    "bim_text_note": 16,
+    "bim_leader": 13,
+    "bim_annotation_style": 20,
+    "bim_wall_sweep": 14,
+    "bim_schedule": 7,
+    "bim_family": 6,
+    "bim_family_parameter": 8,
+    "bim_family_solid": 21,
+    "bim_property_template": 5,
+    "bim_classification_system": 7,
+    "bim_classification_element": 4,
+    "bim_curtain_grid": 9,
+    "bim_curtain_grid_position": 6,
+    "bim_ceiling_layer": 8,
+    "bim_ceiling_boundary": 12,
+    "bim_ceiling_hole": 3,
+    "bim_ceiling_hole_vertex": 12,
+    "bim_ramp_path": 12,
+    "bim_area_usage": 4,
+    "bim_area_zone": 4,
+    "bim_view_hidden": 4,
+    "bim_annotation_anchor": 17,
+    "bim_parametric_profile": 8,
+    "bim_parametric_polygon_point": 5,
+    "bim_solid_sweep_point": 5,
+    "bim_schedule_column": 9,
+    "bim_schedule_sort": 8,
+    "bim_schedule_filter": 9,
+    "bim_schedule_group": 7,
+    "bim_schedule_storey": 4,
+    "bim_schedule_phase": 4,
+    "bim_template_target": 4,
+    "bim_property_def": 14,
+    "bim_property_default": 9,
+    "bim_property_allowed": 10,
+    "bim_classification_item": 6,
+    "bim_classification_assignment": 5
+  },
+  "tableWidthIssues": [],
+  "missingTables": [],
+  "entityPlanFieldCountIssues": [],
+  "entityPlans": {
+    "Material": [
+      "text",
+      "MaterialCategory",
+      "rgb",
+      "f64",
+      "f64",
+      "f64"
+    ],
+    "WallType": [
+      "text",
+      "@wall-layer"
+    ],
+    "SlabType": [
+      "text",
+      "@slab-layer"
+    ],
+    "RoofType": [
+      "text",
+      "@roof-layer"
+    ],
+    "CeilingType": [
+      "text",
+      "@ceiling-layer"
+    ],
+    "ColumnType": [
+      "text",
+      "@profile",
+      "text"
+    ],
+    "BeamType": [
+      "text",
+      "@profile",
+      "text"
+    ],
+    "WindowType": [
+      "text",
+      "f64",
+      "f64",
+      "f64",
+      "f64",
+      "f64",
+      "u32",
+      "text"
+    ],
+    "DoorType": [
+      "text",
+      "f64",
+      "f64",
+      "f64",
+      "f64",
+      "DoorLeaves",
+      "Swing",
+      "text"
+    ],
+    "CurtainWallType": [
+      "text",
+      "@grid",
+      "@grid",
+      "@profile",
+      "@profile",
+      "panel",
+      "text",
+      "text"
+    ],
+    "Site": [
+      "text",
+      "f64",
+      "f64",
+      "f64",
+      "f64",
+      "@site-boundary"
+    ],
+    "Building": [
+      "text",
+      "text",
+      "point",
+      "f64",
+      "f64"
+    ],
+    "Storey": [
+      "text",
+      "text",
+      "i32",
+      "f64",
+      "?f64"
+    ],
+    "GridLine": [
+      "text",
+      "text",
+      "point",
+      "point"
+    ],
+    "Wall": [
+      "text",
+      "text",
+      "@axis",
+      "LocationLine",
+      "f64",
+      "@top",
+      "Phase",
+      "?EndJoin",
+      "?EndJoin",
+      "text",
+      "?text"
+    ],
+    "CurtainWall": [
+      "text",
+      "text",
+      "@axis",
+      "f64",
+      "@top",
+      "@optional-grid",
+      "@optional-grid",
+      "Phase",
+      "text"
+    ],
+    "CurtainPanelOverride": [
+      "text",
+      "u32",
+      "u32",
+      "panel"
+    ],
+    "Column": [
+      "text",
+      "text",
+      "point",
+      "f64",
+      "?slope",
+      "f64",
+      "@top",
+      "Phase",
+      "text"
+    ],
+    "Beam": [
+      "text",
+      "text",
+      "@axis",
+      "f64",
+      "?f64",
+      "Phase",
+      "text"
+    ],
+    "Slab": [
+      "text",
+      "text",
+      "@slab-boundary",
+      "@slab-holes",
+      "f64",
+      "?slope",
+      "Phase",
+      "text"
+    ],
+    "Roof": [
+      "text",
+      "text",
+      "@roof-footprint",
+      "roof",
+      "f64",
+      "f64",
+      "Phase",
+      "text"
+    ],
+    "Opening": [
+      "text",
+      "opening",
+      "f64",
+      "?f64",
+      "?f64",
+      "?f64",
+      "bool",
+      "bool",
+      "text",
+      "?f64",
+      "?text"
+    ],
+    "Stair": [
+      "text",
+      "point",
+      "f64",
+      "f64",
+      "flight",
+      "@top",
+      "f64",
+      "f64",
+      "stringer",
+      "f64",
+      "f64",
+      "RiserKind",
+      "f64",
+      "Phase",
+      "text"
+    ],
+    "Railing": [
+      "text",
+      "@railing-path",
+      "f64",
+      "f64",
+      "@profile",
+      "@profile",
+      "@baluster",
+      "infill",
+      "text",
+      "f64",
+      "?host",
+      "Phase",
+      "text"
+    ],
+    "Ramp": [
+      "text",
+      "@ramp-path",
+      "f64",
+      "f64",
+      "f64",
+      "f64",
+      "f64",
+      "f64",
+      "text",
+      "f64",
+      "@top",
+      "bool",
+      "bool",
+      "text"
+    ],
+    "Ceiling": [
+      "text",
+      "text",
+      "@ceiling-boundary",
+      "@ceiling-holes",
+      "f64",
+      "?slope",
+      "text"
+    ],
+    "Space": [
+      "text",
+      "text",
+      "text",
+      "space",
+      "text",
+      "Phase",
+      "?text",
+      "?text",
+      "?text",
+      "?text"
+    ],
+    "Zone": [
+      "text",
+      "text",
+      "f64"
+    ],
+    "AreaScheme": [
+      "text",
+      "AreaMeasure",
+      "@area-usage",
+      "@area-zone"
+    ],
+    "View": [
+      "text",
+      "text",
+      "ViewKind",
+      "?text",
+      "?plane",
+      "?camera",
+      "?f64",
+      "f64",
+      "?crop",
+      "@view-hidden",
+      "?Phase",
+      "u32",
+      "DetailLevel"
+    ],
+    "Sheet": [
+      "text",
+      "text",
+      "paper",
+      "Orientation",
+      "text",
+      "text",
+      "text",
+      "text",
+      "text",
+      "text"
+    ],
+    "Viewport": [
+      "text",
+      "text",
+      "point",
+      "u32",
+      "?crop",
+      "?text"
+    ],
+    "SheetRevision": [
+      "text",
+      "text",
+      "text",
+      "text",
+      "text"
+    ],
+    "Dimension": [
+      "text",
+      "@anchors",
+      "f64",
+      "f64",
+      "text",
+      "?f64",
+      "text"
+    ],
+    "Tag": [
+      "text",
+      "text",
+      "TagCategory",
+      "point",
+      "text"
+    ],
+    "TextNote": [
+      "text",
+      "point",
+      "text",
+      "f64",
+      "text"
+    ],
+    "Leader": [
+      "text",
+      "@anchor",
+      "point",
+      "text",
+      "text"
+    ],
+    "AnnotationStyle": [
+      "text",
+      "f64",
+      "Terminator",
+      "DimensionUnit",
+      "u32",
+      "f64",
+      "f64",
+      "f64"
+    ],
+    "WallSweep": [
+      "text",
+      "WallSide",
+      "@profile",
+      "f64",
+      "f64",
+      "text",
+      "text"
+    ],
+    "Schedule": [
+      "text",
+      "ScheduleCategory",
+      "@schedule-columns",
+      "@schedule-sort",
+      "@schedule-filter",
+      "@schedule-group",
+      "bool",
+      "@schedule-storeys",
+      "@schedule-phases"
+    ],
+    "Family": [
+      "text",
+      "FamilyCategory"
+    ],
+    "FamilyParameter": [
+      "text",
+      "text",
+      "ParameterKind",
+      "text"
+    ],
+    "FamilySolid": [
+      "text",
+      "text",
+      "solid",
+      "text",
+      "text",
+      "expr3"
+    ],
+    "PropertyTemplate": [
+      "text",
+      "@template-target",
+      "@property-def"
+    ],
+    "ClassificationSystem": [
+      "text",
+      "text",
+      "?text",
+      "@classification-items"
+    ],
+    "ScheduleColumn": [
+      "key",
+      "?text",
+      "bool"
+    ],
+    "ScheduleSort": [
+      "key",
+      "bool"
+    ],
+    "ScheduleFilter": [
+      "key",
+      "ScheduleOp",
+      "text"
+    ],
+    "ScheduleGroup": [
+      "key"
+    ],
+    "PropertyDef": [
+      "text",
+      "PropertyKind",
+      "?text",
+      "?text",
+      "bool",
+      "@default",
+      "@allowed",
+      "?f64",
+      "?f64"
+    ],
+    "ClassificationItem": [
+      "text",
+      "text",
+      "?text"
+    ],
+    "Layer": [
+      "text",
+      "f64",
+      "LayerFunction"
+    ],
+    "Point2": [
+      "f64",
+      "f64"
+    ],
+    "Vertex": [
+      "point",
+      "f64"
+    ],
+    "ExprPoint": [
+      "text",
+      "text"
+    ]
+  },
+  "expectedRows": 3972,
+  "preAdmissionRoles": "49-field original record with47keyedmaps; record census before typed decode; all current nested row roles"
+}

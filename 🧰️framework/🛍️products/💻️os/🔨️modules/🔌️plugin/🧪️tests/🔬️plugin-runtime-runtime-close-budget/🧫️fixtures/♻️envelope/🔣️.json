@@ -1,0 +1,12 @@
+{
+  "schema": "framework.plugin.envelope-return-frontier",
+  "owners": ["field", "completed"],
+  "phases": ["original-child", "terminal-metadata", "parent-frontier"],
+  "currencies": ["items", "copy", "capacity", "release", "depth"],
+  "grant": [1, 4096, 65536, 262144, 64],
+  "childProgress": [1, 31, 64, 128],
+  "pureQuote": true,
+  "sameGrant": true,
+  "childCompleteIsParentProgress": true,
+  "pollDoesNotConsumeMaintenance": true
+}

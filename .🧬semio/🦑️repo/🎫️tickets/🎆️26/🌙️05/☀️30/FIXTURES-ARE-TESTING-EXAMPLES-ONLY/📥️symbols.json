@@ -1,0 +1,75 @@
+{
+  "ownership": false,
+  "executed": false,
+  "sourceObservation": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+    "sha256": "fcb58e212315c9f23a59a381d4bc021de578ff07dcb5f582171fc5fffa7f4033"
+  },
+  "cases": [
+    {
+      "id": "static-whole",
+      "expected": "whole-trial",
+      "checkerOracle": "import/default Ajv constructor symbol -> actual import declaration"
+    },
+    {
+      "id": "validator-alias",
+      "expected": "whole-trial",
+      "checkerOracle": "compiled validator alias -> compile initializer -> schema declaration"
+    },
+    {
+      "id": "file-url",
+      "expected": "whole-trial",
+      "checkerOracle": "helper actual argument substitutes parameter symbol; fs import identity and JSON.parse identity checked"
+    },
+    {
+      "id": "escaped-reader-alias",
+      "expected": "whole-trial",
+      "checkerOracle": "escaped identifier resolves same import symbol; token spelling not identity"
+    },
+    {
+      "id": "projected-scene",
+      "expected": "domain-projection",
+      "checkerOracle": "root origin with scene projection; whole=false"
+    },
+    {
+      "id": "loop-row",
+      "expected": "domain-projection",
+      "checkerOracle": "loop binding origin fixture.cases then value projection; whole=false"
+    },
+    {
+      "id": "domain-snapshot",
+      "expected": "genuine-domain-whole",
+      "checkerOracle": "whole read identical to static-whole; independent genuine domain metadata required"
+    },
+    {
+      "id": "runtime-request",
+      "expected": "genuine-domain-whole",
+      "checkerOracle": "exported validator whole read; production identity/runtime use independently proved"
+    },
+    {
+      "id": "shadowed-validator",
+      "expected": "unresolved",
+      "checkerOracle": "constructor symbol is function parameter, not imported Ajv; no proven Ajv edge"
+    },
+    {
+      "id": "reassigned",
+      "expected": "unresolved",
+      "checkerOracle": "reaching write replaces initializer; do not follow stale fixture origin"
+    },
+    {
+      "id": "computed-source",
+      "expected": "unresolved",
+      "checkerOracle": "computed imports/helpers opaque; origins unresolved"
+    },
+    {
+      "id": "fake-comments",
+      "expected": "no-validator-edge",
+      "checkerOracle": "AST contains no compile call; string/comment spans do not count"
+    },
+    {
+      "id": "inline-trial",
+      "expected": "inline-whole-trial",
+      "checkerOracle": "literal schema expression span/hash, fixture import origin, whole=true"
+    }
+  ]
+}

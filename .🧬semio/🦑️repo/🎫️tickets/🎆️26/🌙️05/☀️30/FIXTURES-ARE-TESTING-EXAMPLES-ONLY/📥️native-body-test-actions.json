@@ -1,0 +1,14 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🪆️receiving/🔣️.json",
+    "beforeSHA": "67d6754a1ee6aa8c17201a22d682a9a8033e73e51e217dfc65a49fe26009d988",
+    "afterSHA": "4334312f31766785a3a0b72304db33c2be718d6c7b3ba237c47fb1778a71269b",
+    "action": "append independent plain bodyCopy policy; all existing keys/values retained"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "beforeSHA": "dc06202a7bfa2111c3cf5f44bf042ebcd59456ab9a830a83540fe51834f69838",
+    "afterSHA": "c29b5a3c51db55f03483947667056c8911f0b6452390bb2488683d0d75649a2b",
+    "action": "append language-neutral canonical grant/Buffer/JSONPatch/source route law before helper implementation"
+  }
+]

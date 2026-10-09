@@ -1,0 +1,27 @@
+{
+  "session": 72251,
+  "exitCode": 0,
+  "durationMs": 648,
+  "laws": 6,
+  "assertions": 86,
+  "debugVerified": true,
+  "nativeAssertions": 0,
+  "qualification": "Original Source TS via existing private Nx adapter; actual five Kernel System/custody laws remain unrun",
+  "currentObservers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🟦️.ts",
+      "sha256": "deba2bb228e4b3ef018f2283d842966099103aa117f4793d0d33e79ccec110fd",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+      "sha256": "8e674cdd88836e85d32aff3ca7a52fb7534db49ccba866891331d7d40d0a6467",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧫️fixtures/🔣️.json",
+      "sha256": "6998e22584c6bcb7bcb6d7bf63f1cffb59b3818167b72b4518c0d0742516bdfe",
+      "authored": false
+    }
+  ]
+}

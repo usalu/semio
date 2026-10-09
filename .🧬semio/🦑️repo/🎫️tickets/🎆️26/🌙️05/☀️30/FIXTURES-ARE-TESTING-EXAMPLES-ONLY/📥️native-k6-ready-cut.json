@@ -1,0 +1,89 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+      "sha256": "6c38ceda8441c0240761c3b899cd732b52db7f3c0262f9810347cba1e15826a4",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs",
+      "sha256": "89780116ca3b6b2b310da3f1a91d777a4ae66c50724b6956a95cb40f0f6cd811",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "sha256": "fee826a1035a505305ecad1bd955fbe862930432633a34de79c1704e2d901516",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs",
+      "sha256": "2050228b0b369e7e78e48df608fc5d216b094f34a8a9248bfc6f9df34788151f",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs",
+      "sha256": "0082697c6fffd9724fa3d0820c481793f3341a45fa2832118cfee0bae27dd453",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "0f7dfe7e391d8bf0e16e788f5f50024577c1022d8f1447bf7dc30ac0d07b6d98",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "40fd83498f9f5812221a62bf8ac39ac9b2f0084796a0885ae823348e0fd7e406",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "fdbe21b823ab84e18e5f7a376f3c994626b756af8327c2567810046abaea94a7",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "bbc5fb994d7d020ca81ea5a162c1db6a25c7375f2dd9a5a4c7160f7a7563ad0a",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "a11c20ea6974810d08cc726017680d5e95d30e739c8cd468ed808627cb519ba3",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+      "sha256": "a52822446c959b124440d42b2f01d86309a7dd6521b53f5d6872a06c10806d82",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs",
+      "sha256": "55c7bbbca0c96613916a8afcdbc744d8d2a208669a9bff5dd9b10f5264ecdefd",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧫️fixtures/🔣️.json",
+      "sha256": "60e249121990a49811f56e04a777368b158646e11029b5c18d5b9fdbcb2909f1",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "285c115d0828777968a878ee8135510b628bf35289613704a0ee19344d9d5583",
+      "role": "observed original; only separately logged logical actions authored"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "737edb861ea5e321d9ed558b6497928211bd701ea3680699952d46232e7fdd1f",
+      "role": "observed original; only separately logged logical actions authored"
+    }
+  ],
+  "sourceReceipt": {
+    "session": 10865,
+    "exit": 0,
+    "duration": "3.2s",
+    "laws": 4,
+    "assertions": 53,
+    "additionalDepthLawAssertions": 612,
+    "log": "🗑️generated/native-k6-ready-source.log"
+  },
+  "nativeQualification": "No Kernel compile or assigned native assertions yet. Cold typed Pack/body receipt path excluded. Actual separate Pack selected law90516 passed."
+}

@@ -132,9 +132,9 @@ pub fn preflight_xml_document(schema: &str, doc: &XmlDocument, encoding: semio_f
 
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 impl ArtifactSqliteSnapshot for XmlSnapshot {
-    fn decode_sqlite_snapshot_native(payload: &semio_framework_os_kernel::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> { crate::standards::v1_0::subsets::base::io::sqlite::snapshot::native_decoding::decode(payload, control) }
+    fn decode_sqlite_snapshot_native(payload: &semio_framework_os_kernel::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self,ValueError> { crate::standards::v1_0::subsets::base::io::sqlite::snapshot::native_decoding::decode(payload, control,native_control) }
     fn retire_sqlite_snapshot(self) { drop(XmlDocumentOwner(Some(self.doc))); }
-    fn encode_sqlite_snapshot_native(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError> { crate::standards::v1_0::subsets::base::io::sqlite::snapshot::native_encoding::encode(self, encoding, control) }
+    fn encode_sqlite_snapshot_native(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError> { crate::standards::v1_0::subsets::base::io::sqlite::snapshot::native_encoding::encode(self, encoding, control,native_owner) }
     fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> { preflight_xml_document(&self.schema, &self.doc, encoding, control) }
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;

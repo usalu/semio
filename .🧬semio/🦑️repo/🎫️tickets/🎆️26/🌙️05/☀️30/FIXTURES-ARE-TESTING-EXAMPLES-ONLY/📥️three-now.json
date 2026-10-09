@@ -1,0 +1,27 @@
+{
+  "observedAt": "2026-10-09T10:35:59.914936+00:00",
+  "ownership": false,
+  "readers": [
+    {
+      "role": "value",
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts",
+      "sha256": "413ffadb9127a4cb8097ef0db625c85e78fd7c1155c64afec5d893ac09e9f09a",
+      "owned": false,
+      "schemaReadRemaining": false
+    },
+    {
+      "role": "fold",
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🎟️insertion/🟦️.ts",
+      "sha256": "03e819cdf9c3739547e7821694c0aa3da586087dfb66176e54a5d18c73b47c8c",
+      "owned": false,
+      "schemaReadRemaining": false
+    },
+    {
+      "role": "store",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🎟️preparation/🧪️tests/🟦️.ts",
+      "sha256": "0f60812634f4441217f35cb4917a552eaf758cedc31bca182931c35cbf62e5bd",
+      "owned": false,
+      "schemaReadRemaining": false
+    }
+  ]
+}

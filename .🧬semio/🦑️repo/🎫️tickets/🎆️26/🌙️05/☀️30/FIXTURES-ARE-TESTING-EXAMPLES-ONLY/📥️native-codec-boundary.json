@@ -1,0 +1,32 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🦀️.rs",
+    "sha256": "40ad92ad1534ff6721a421f4aa207099bc266bbce410bb5fc7aa96a3f72bf54b",
+    "role": "read-only original producer observation; not own action"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs",
+    "sha256": "c3a669b395ee0483f9a28c8931057c5d7ef5590c4ebc937ba6a4c837bb06d696",
+    "role": "read-only original producer observation; not own action"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs",
+    "sha256": "4c9972aeabf61f01140653b0af5601a594211d364fecdccdb09ec69c93d6bb26",
+    "role": "read-only original producer observation; not own action"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs",
+    "sha256": "0309cbd2be764345daad2089cfc31f9ef539c7f3dda37f6439a3e81843ce1b23",
+    "role": "read-only original producer observation; not own action"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+    "sha256": "0153fa4ee81333381cc8768afcfa12d813ff20812f057b6fc201e099f399e38e",
+    "role": "read-only original producer observation; not own action"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+    "sha256": "45b3f8391117757b7c196fd2d9ae05c0b2be9abee39f365da901d4c0aa1c5fa6",
+    "role": "read-only original producer observation; not own action"
+  }
+]

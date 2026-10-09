@@ -17,11 +17,11 @@ class ParentIndex {
  static async create(rows:readonly SqliteRow[],cells:readonly (readonly SqliteValue[])[],ordinal:number|null,parentColumn:number,operation:SqliteOperation):Promise<ParentIndex>{
   let capacity=rows.length===0?0:2;while(capacity<rows.length*2){capacity*=2;if(capacity>0x80000000)throw new ValueError("workLimit","Artifact SQLite parent index capacity");}
   const slots=words(operation,capacity),counts=words(operation,rows.length),offsets=words(operation,rows.length+1),positions=words(operation,rows.length),index=new ParentIndex(rows,cells,slots,offsets,positions,parentColumn,operation);
-  for(let at=0;at<rows.length;at++){const parent=index.parent(at);if(parent!==null){const representative=await index.find(parent,at);counts[representative]++;}if((at+1)%256===0)await artifactSqliteCheckpoint(operation,"reconstructSnapshot",at+1,rows.length);}
+  for(let at=0;at<rows.length;at++){const parent=index.parent(at);if(parent!==null){const representative=await index.find(parent,at);counts[representative]=counts[representative]!+1;}if((at+1)%256===0)await artifactSqliteCheckpoint(operation,"reconstructSnapshot",at+1,rows.length);}
   for(let at=0;at<rows.length;at++){offsets[at+1]=offsets[at]!+counts[at]!;if((at+1)%256===0)await artifactSqliteCheckpoint(operation,"reconstructSnapshot",at+1,rows.length);}
   counts.fill(0);
   for(let at=0;at<rows.length;at++){const parent=index.parent(at);if(parent!==null){const representative=await index.find(parent),count=offsets[representative+1]!-offsets[representative]!;
-   let within:number;if(ordinal===null)within=counts[representative]++;else{const value=cells[at]![ordinal];if(typeof value!=="bigint"||value<0n||value>=BigInt(count))invalid("ordinal range or gap");within=Number(value);}
+   let within:number;if(ordinal===null){within=counts[representative]!;counts[representative]=within+1;}else{const value=cells[at]![ordinal];if(typeof value!=="bigint"||value<0n||value>=BigInt(count))invalid("ordinal range or gap");within=Number(value);}
    const position=offsets[representative]!+within;if(positions[position]!==0)invalid("duplicate ordinal");positions[position]=at+1;}if((at+1)%256===0)await artifactSqliteCheckpoint(operation,"reconstructSnapshot",at+1,rows.length);
   }
   await artifactSqliteCheckpoint(operation,"reconstructSnapshot",rows.length,rows.length);return index;

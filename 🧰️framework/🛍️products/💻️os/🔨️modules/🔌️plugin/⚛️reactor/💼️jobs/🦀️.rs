@@ -251,17 +251,12 @@ fn insert_slot(job: u64, kind: &str, input: &[u8], body: JobBody) {
     JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body, last_budget_seen: None, stall_count: 0 }));
 }
 
-/// 🛑️ `jobs::cancel-job` — hands the admitted owner its cancellation, asserts it released every
-/// deep resource it held, and drops the bookkeeping slot so a later `step_job` on the same id
-/// reports `job.unknown`, matching the pre-rewrite behaviour exactly.
+/// 🛑️ Signals the original owner, retaining its same slot until granted close turns make it shallow.
 pub async fn cancel_job(job: u64) {
     JOBS.with(|jobs| {
-        let mut jobs = jobs.borrow_mut();
-        if let Some(JobSlot { body: JobBody::Bounded(owner), .. }) = jobs.get_mut(&job) {
-            owner.cancel();
-            assert!(owner.terminal_drop_is_shallow(), "bounded job cancellation must leave a shallow wrapper and retain deep cleanup authority externally");
-        }
-        jobs.remove(&job);
+        let mut jobs=jobs.borrow_mut();
+        let shallow=match jobs.get_mut(&job){Some(JobSlot{body:JobBody::Bounded(owner),..})=>{owner.cancel();owner.terminal_drop_is_shallow()},_=>true};
+        if shallow{jobs.remove(&job);}
     });
 }
 
@@ -300,16 +295,17 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
     };
     let (step, stalled, shallow) = outcome;
     if stalled {
-        let kind = JOBS.with(|jobs| jobs.borrow().get(&job).map(|slot| slot.kind.clone())).unwrap_or_default();
-        JOBS.with(|jobs| jobs.borrow_mut().remove(&job));
-        return JobStep::Failed(fault_bytes("job.stalled", format!("job {job} ({kind}) made no progress across {STALL_LIMIT} consecutive step-job calls with an unchanged budget")));
+        let kind=JOBS.with(|jobs|jobs.borrow().get(&job).map(|slot|slot.kind.clone())).unwrap_or_default();
+        cancel_job(job).await;
+        let bytes=fault_bytes("job.stalled",format!("job {job} ({kind}) made no progress across {STALL_LIMIT} consecutive step-job calls with an unchanged budget"));
+        return if JOBS.with(|jobs|jobs.borrow().contains_key(&job)){JobStep::Running(Some(bytes))}else{JobStep::Failed(bytes)};
     }
-    if matches!(step, JobStep::Done(_) | JobStep::Failed(_)) {
+    if matches!(step,JobStep::Done(_)|JobStep::Failed(_)) {
         if !shallow {
-            JOBS.with(|jobs| jobs.borrow_mut().remove(&job));
-            return JobStep::Failed(fault_bytes("job.bounded-false-terminal", format!("bounded job {job} returned a terminal outcome while retaining a deep wrapper owner")));
+            cancel_job(job).await;
+            return JobStep::Running(Some(fault_bytes("job.bounded-false-terminal",format!("bounded job {job} returned a terminal outcome while retaining its original deep owner"))));
         }
-        JOBS.with(|jobs| drop(jobs.borrow_mut().remove(&job)));
+        JOBS.with(|jobs|drop(jobs.borrow_mut().remove(&job)));
     }
     step
 }

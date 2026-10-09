@@ -1,0 +1,25 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🔣️.json",
+      "beforeSha256": "ac7db6c3a55588b52646980f95563e96c62ac3c930c015b1939e51f179f21241"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🟦️.ts",
+      "beforeSha256": "1d7b9feea66e989a065c8c6e227a63202dd88bd716bf87f71d42073b40422ff4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧫️fixtures/🔣️.json",
+      "beforeSha256": "560f8b50a8b0d06a5c254f901f2ce1c13e860008647ee7c798241e6a5f10f3cb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧪️tests/🟦️.ts",
+      "beforeSha256": "e763b2420f7906540b68d465f1264a173a62a617667bc44f01ea88983740c5d5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+      "beforeSha256": "b8505d4abc25451995f65717108622ca4223997807d0a2b1188387a4c8771b37"
+    }
+  ],
+  "sourceCopies": false
+}

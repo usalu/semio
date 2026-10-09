@@ -1,5 +1,5 @@
 //! 🧬️ Controlled envelope emission retains owned refusal kinds and exact framing.
-use semio_framework_os_kernel::os_semio::{declared_envelope_prefix_len,wrap_binary_controlled,wrap_text_controlled,Component};
+use super::super::{declared_envelope_prefix_len,wrap_binary_controlled,wrap_text_controlled,Component};
 use semio_framework_value::{NativeEncodeControl,ValueError};
 #[test]
 fn controlled_envelope_emission_retains_typed_refusal_and_exact_wire() {

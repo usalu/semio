@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "paths": [
+    { "id": "short", "prefix": "/", "segment": "a", "count": 12, "suffix": "", "utf16": 86, "admitted": true },
+    { "id": "ascii-boundary", "prefix": "/", "segment": "a", "count": 182, "suffix": "", "utf16": 256, "admitted": true },
+    { "id": "ascii-overflow", "prefix": "/", "segment": "a", "count": 183, "suffix": "", "utf16": 257, "admitted": false },
+    { "id": "supplementary-boundary", "prefix": "/", "segment": "🧰", "count": 89, "suffix": "abcd", "utf16": 256, "admitted": true },
+    { "id": "supplementary-overflow", "prefix": "/", "segment": "🧰", "count": 89, "suffix": "abcde", "utf16": 257, "admitted": false },
+    { "id": "windows-boundary", "prefix": "C:\\", "segment": "a", "count": 180, "suffix": "", "utf16": 256, "admitted": true },
+    { "id": "windows-overflow", "prefix": "C:\\", "segment": "a", "count": 181, "suffix": "", "utf16": 257, "admitted": false }
+  ]
+}

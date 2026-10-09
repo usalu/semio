@@ -14,7 +14,7 @@ pub struct WiresIntoJson;
 impl Serializer<WiresSnapshot> for WiresIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &WiresSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &WiresSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(from));
         let text = semio_framework_pack_json::to_string_pretty(&value);
         Ok(IoOutcome::clean(IoPayload::Text(text)))

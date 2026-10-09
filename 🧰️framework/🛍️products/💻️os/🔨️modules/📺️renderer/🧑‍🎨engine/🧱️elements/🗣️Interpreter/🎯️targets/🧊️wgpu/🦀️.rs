@@ -449,6 +449,7 @@ pub(crate) fn close_ui_document_one() -> bool {
     }
     let Some(owner) = UI_DOCUMENT_CLOSE_QUEUE.with(|cell| cell.borrow().owners.front().cloned()) else { return false };
     let window_id = owner.window_id.as_ref();
+    if UI_ENGINE.with(|cell| cell.borrow().layout_retirement_refusal(window_id).is_some()) { return false; }
     if close_window_focus_clipboard_one(window_id, owner.generation) {
         return true;
     }
@@ -479,6 +480,10 @@ pub(crate) fn close_ui_document_one() -> bool {
             return (true, None);
         }
         match engine.close_surface_one(owner.token) {
+            ui_wgpu::wgpu::engine::UiSurfaceCloseStep::Refused(refusal) => {
+                document_debug_log(&format!("[TRACE] ui-doc retained close refusal window={window_id} stage={} kind={}", refusal.stage, refusal.kind.as_str()));
+                (false, None)
+            }
             ui_wgpu::wgpu::engine::UiSurfaceCloseStep::Pending => (false, None),
             ui_wgpu::wgpu::engine::UiSurfaceCloseStep::RetiredScene(retirement) => (false, Some(retirement)),
             ui_wgpu::wgpu::engine::UiSurfaceCloseStep::Complete => (true, None),
@@ -703,7 +708,7 @@ impl ScenePointerTarget {
             window_id: &self.window_id,
             window_generation: self.window_generation,
             component_generation: self.component_generation,
-            key: &self.key,
+            key: self.key.borrowed(),
             kind: self.kind,
             surface_id: &self.surface_id,
         }
@@ -828,8 +833,8 @@ pub fn scene_pointer_target_is_live(target: &ScenePointerTarget) -> bool {
     retained && UI_DOCUMENT_CLOSE_QUEUE.with(|cell| !cell.borrow().owners.iter().any(|owner| owner.window_id.as_ref() == target.window_id && owner.generation == target.window_generation))
 }
 
-pub(crate) fn component_scene_is_presented(target: &ScenePointerTarget) -> bool {
-    UI_ENGINE.with(|cell| cell.borrow().presented_component_scene_matches(&target.component_witness()))
+pub(crate) fn component_scene_is_presented(witness: &ui_wgpu::wgpu::reconcile::UiComponentSceneWitness<'_>) -> bool {
+    UI_ENGINE.with(|cell| cell.borrow().presented_component_scene_matches(witness))
 }
 
 pub fn claim_scene_pointer_owner(target: ScenePointerTarget, pointer_id: ui_render::PointerId) -> bool {
@@ -3769,6 +3774,7 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
 fn layout_step_is_window_work(step: &ui_wgpu::wgpu::UiLayoutStep, window_id: &str) -> bool {
     match step {
         ui_wgpu::wgpu::UiLayoutStep::Awaiting { .. } => false,
+        ui_wgpu::wgpu::UiLayoutStep::Refused { .. } => false,
         ui_wgpu::wgpu::UiLayoutStep::Idle => true,
         ui_wgpu::wgpu::UiLayoutStep::Yielded { window_id: stepped, .. } | ui_wgpu::wgpu::UiLayoutStep::Ready { window_id: stepped, .. } | ui_wgpu::wgpu::UiLayoutStep::Cancelled { window_id: stepped, .. } => AsRef::<str>::as_ref(stepped) == window_id,
     }
@@ -4083,7 +4089,10 @@ pub(crate) fn render_ui_document_step(
             UiDocumentFramePhase::Layout => {
                 let step = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
                 cursor.own_work = layout_step_is_window_work(&step, window_id);
-                if engine.layout_is_dirty(window_id) {
+                if let ui_wgpu::wgpu::UiLayoutStep::Refused { refusal, .. } = step {
+                    document_debug_log(&format!("[TRACE] ui-doc retained layout refusal window={window_id} stage={} kind={}", refusal.stage, refusal.kind.as_str()));
+                    cursor.phase = UiDocumentFramePhase::Fault;
+                } else if engine.layout_is_dirty(window_id) {
                     engine.request_layout(window_id);
                 } else {
                     cursor.phase = UiDocumentFramePhase::Paint;

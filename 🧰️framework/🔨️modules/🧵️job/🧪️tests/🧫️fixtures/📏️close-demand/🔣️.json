@@ -2,16 +2,138 @@
   "schema": "job-close-demand.v1",
   "admissionBytes": 262144,
   "pageBytes": 16384,
-  "grant": { "maximumItems": 1, "maximumCopyBytes": 3, "maximumCapacityBytes": 128, "maximumReleaseBytes": 65536, "maximumDepth": 2 },
-  "progress": { "copiedItems": 1, "copiedBytes": 3, "retainedCapacityBytes": 128, "releasedBytes": 65536 },
-  "close": { "receipt": "same-progress-on-pending-and-complete", "terminal": "original-owner-empty", "blocked": "registered-wake", "refusal": "original-owner-retained", "demand": "result-for-copy-capacity-release-depth" },
-  "deniedCredits": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"],
+  "demandRole": "pure-original-owner-quote",
+  "callerRole": "independent-fixed-policy",
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 3,
+    "maximumCapacityBytes": 128,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 2
+  },
+  "progress": {
+    "copiedItems": 1,
+    "copiedBytes": 3,
+    "retainedCapacityBytes": 128,
+    "releasedBytes": 65536
+  },
+  "close": {
+    "receipt": "same-progress-on-pending-and-complete",
+    "terminal": "original-owner-empty",
+    "blocked": "registered-wake",
+    "refusal": "original-owner-retained",
+    "demand": "result-for-copy-capacity-release-depth"
+  },
+  "deniedCredits": [
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "maximumReleaseBytes",
+    "maximumDepth"
+  ],
   "cases": [
-    { "name": "One Byte", "physicalBytes": 1, "callerBytes": 0, "releasedBytes": 0 },
-    { "name": "One Page Refused", "physicalBytes": 16384, "callerBytes": 16383, "releasedBytes": 0 },
-    { "name": "One Page Released", "physicalBytes": 16384, "callerBytes": 16384, "releasedBytes": 16384 },
-    { "name": "Large Backing Refused", "physicalBytes": 65536, "callerBytes": 16384, "releasedBytes": 0 },
-    { "name": "Large Backing Released", "physicalBytes": 65536, "callerBytes": 65536, "releasedBytes": 65536 },
-    { "name": "Admission Boundary", "physicalBytes": 262144, "callerBytes": 262144, "releasedBytes": 262144 }
-  ]
+    {
+      "name": "One Byte",
+      "physicalBytes": 1,
+      "callerBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "name": "One Page Refused",
+      "physicalBytes": 16384,
+      "callerBytes": 16383,
+      "releasedBytes": 0
+    },
+    {
+      "name": "One Page Released",
+      "physicalBytes": 16384,
+      "callerBytes": 16384,
+      "releasedBytes": 16384
+    },
+    {
+      "name": "Large Backing Refused",
+      "physicalBytes": 65536,
+      "callerBytes": 16384,
+      "releasedBytes": 0
+    },
+    {
+      "name": "Large Backing Released",
+      "physicalBytes": 65536,
+      "callerBytes": 65536,
+      "releasedBytes": 65536
+    },
+    {
+      "name": "Admission Boundary",
+      "physicalBytes": 262144,
+      "callerBytes": 262144,
+      "releasedBytes": 262144
+    }
+  ],
+  "phasePolicy": {
+    "maximumAttempts": 65536,
+    "deadlineMs": 30000,
+    "page": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 32768,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 16384,
+      "maximumDepth": 64
+    },
+    "authority": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 65536,
+      "maximumCapacityBytes": 0,
+      "maximumReleaseBytes": 65536,
+      "maximumDepth": 64
+    },
+    "refusal": "original-owner-retained"
+  },
+  "hostileOwners": [
+    {
+      "owner": "box",
+      "copyBytes": 8,
+      "allocationBytes": 1,
+      "shared": false,
+      "callerRelease": 0,
+      "releasedBytes": 0,
+      "retained": true
+    },
+    {
+      "owner": "box",
+      "copyBytes": 8,
+      "allocationBytes": 1,
+      "shared": false,
+      "callerRelease": 1,
+      "releasedBytes": 1,
+      "retained": false
+    },
+    {
+      "owner": "arc",
+      "copyBytes": 8,
+      "allocationBytes": 24,
+      "shared": false,
+      "callerRelease": 23,
+      "releasedBytes": 0,
+      "retained": true
+    },
+    {
+      "owner": "arc",
+      "copyBytes": 8,
+      "allocationBytes": 24,
+      "shared": false,
+      "callerRelease": 24,
+      "releasedBytes": 24,
+      "retained": false
+    },
+    {
+      "owner": "arc",
+      "copyBytes": 8,
+      "allocationBytes": 24,
+      "shared": true,
+      "callerRelease": 24,
+      "releasedBytes": 0,
+      "retained": false
+    }
+  ],
+  "queueObservation": "exclusive-original-phase-without-grant"
 }

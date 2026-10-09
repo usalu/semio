@@ -1,0 +1,1018 @@
+{
+  "native": 57743,
+  "status": "compile-pre",
+  "diagnostics": [
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:11728:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:11729:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:11730:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:11731:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12316:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12317:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12318:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12319:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12350:35"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12352:32"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12353:32"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12356:32"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:12357:32"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18715:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18716:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18717:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18718:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18722:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18732:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18736:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18749:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18753:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:18911:35"
+    },
+    {
+      "error": "error[E0407]: method `next_close_byte_demand` is not a member of trait `semio_framework_job::InteractiveJob`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19240:9"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24223:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24224:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24225:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24226:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24230:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24299:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24300:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24301:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24302:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24306:28"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24871:31"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24872:31"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24873:31"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24882:31"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24886:31"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24887:31"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24888:31"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33739:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33740:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33741:24"
+    },
+    {
+      "error": "error[E0432]: unresolved import `crate::os_store::SnapshotRetirementStep`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️.rs:17:214"
+    },
+    {
+      "error": "error[E0433]: cannot find `SnapshotRetirementStep` in `os_store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️.rs:218:133"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:91:24"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:155:73"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:156:59"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:159:20"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:264:21"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:265:21"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:296:69"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:297:75"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:300:60"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:303:79"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:307:17"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:310:54"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:310:101"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:312:17"
+    },
+    {
+      "error": "error[E0433]: cannot find `ValueRetirementStep` in `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:315:24"
+    },
+    {
+      "error": "error[E0425]: cannot find type `ValueRetirementStep` in crate `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:154:131"
+    },
+    {
+      "error": "error[E0425]: cannot find type `ValueRetirementStep` in crate `neural`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:295:108"
+    },
+    {
+      "error": "error[E0407]: method `mounted_job_maintenance_demands` is not a member of trait `ArtifactApp`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:38876:9"
+    },
+    {
+      "error": "error[E0407]: method `mounted_job_close_demands` is not a member of trait `ArtifactApp`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:38883:9"
+    },
+    {
+      "error": "error[E0407]: method `mounted_job_maintenance_demands` is not a member of trait `ArtifactApp`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39303:9"
+    },
+    {
+      "error": "error[E0407]: method `mounted_job_close_demands` is not a member of trait `ArtifactApp`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39310:9"
+    },
+    {
+      "error": "error[E0050]: method `retire_step` has 4 parameters but the declaration in trait `retire_step` has 3",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:154:20"
+    },
+    {
+      "error": "error[E0046]: not all trait items implemented, missing: `step_plan`, `next_plan_copy_byte_demand`, `next_plan_capacity_byte_demand`, `next_plan_release_byte_demand`, `next_plan_depth_demand`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:146:1"
+    },
+    {
+      "error": "error[E0425]: cannot find function `io_run` in module `semio_framework_os_kernel::io::io_mechanism`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🦀️.rs:568:64"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:545:27"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:560:27"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:574:30"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:757:27"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:1663:182"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:1694:167"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:2116:172"
+    },
+    {
+      "error": "error[E0404]: expected trait, found derive macro `semio_framework_value::RetireOwned`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🪟️window/🎚️config/🦀️.rs:561:32"
+    },
+    {
+      "error": "error[E0433]: cannot find `mutation` in `protocol`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏯️tool-run/🎟️publication/🦀️.rs:16:50"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16041:123"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16058:164"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16062:155"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16068:113"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16075:109"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16084:151"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16096:114"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16126:103"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16135:84"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16138:84"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16173:143"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16191:94"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16218:116"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16224:87"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16232:97"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16246:65"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16041:123"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16058:164"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16062:155"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16068:113"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16075:109"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16084:151"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16096:114"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16126:103"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16135:84"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16138:84"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16173:143"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16191:94"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16218:116"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16224:87"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16232:97"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16246:65"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:17857:65"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:17862:39"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:17960:85"
+    },
+    {
+      "error": "error[E0433]: cannot find module or crate `kernel` in this scope",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19851:102"
+    },
+    {
+      "error": "error[E0433]: cannot find module or crate `kernel` in this scope",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19852:99"
+    },
+    {
+      "error": "error[E0433]: cannot find module or crate `kernel` in this scope",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19853:86"
+    },
+    {
+      "error": "error[E0433]: cannot find module or crate `kernel` in this scope",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19853:140"
+    },
+    {
+      "error": "error[E0425]: cannot find function `artifact_retirement_box_byte_demand` in crate `store`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24859:76"
+    },
+    {
+      "error": "error[E0425]: cannot find function `owned_retirement` in module `semio_framework_value::retirement`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:24920:73"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26295:127"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26308:166"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26313:212"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26624:73"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:26658:77"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27314:90"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27333:98"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27537:133"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27638:107"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27657:98"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27685:153"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27696:70"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27704:122"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27873:168"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:28010:165"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:28037:136"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:28077:98"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29093:162"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29182:168"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29467:192"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29484:107"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29582:82"
+    },
+    {
+      "error": "error[E0433]: cannot find `binary` in `io`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29669:85"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29797:130"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30003:186"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30045:112"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30061:124"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30107:177"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30128:180"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:30298:177"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31017:39"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31028:133"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31154:212"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31221:88"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31313:184"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31354:123"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31377:136"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31469:157"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31806:115"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32072:43"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32112:39"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32123:147"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32195:141"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32260:148"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32478:145"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33157:157"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33516:121"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:33551:122"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34604:123"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34623:164"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34656:155"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34662:113"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34671:109"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34685:114"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34695:151"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34807:103"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34846:84"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34858:84"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34990:143"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35082:94"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35156:116"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35162:87"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35176:97"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35210:65"
+    },
+    {
+      "error": "error[E0425]: cannot find function `owned_retirement` in module `semio_framework_value::retirement`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35550:76"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35743:137"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35946:141"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35970:137"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:38019:116"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:38108:84"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:38132:117"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39793:120"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39816:221"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39850:221"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:39937:119"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️.rs:392:222"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️.rs:459:160"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️.rs:529:272"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41272:205"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41304:142"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41309:159"
+    },
+    {
+      "error": "error[E0424]: expected value, found module `self`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41639:74"
+    },
+    {
+      "error": "error[E0424]: expected value, found module `self`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42013:74"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42654:162"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42684:164"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42723:145"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42733:155"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42861:170"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:42902:152"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:43038:144"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:44135:164"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:44211:165"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:44336:204"
+    },
+    {
+      "error": "error[E0433]: cannot find `os_vcs` in `crate`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:44591:164"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../🧵️retained/📑️copy/🦀️.rs:444:386"
+    },
+    {
+      "error": "error[E0061]: this method takes 1 argument but 2 arguments were supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️.rs:218:18"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/📸️checkpoint/🦀️.rs:110:125"
+    },
+    {
+      "error": "error[E0061]: this function takes 5 arguments but 4 arguments were supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/📸️checkpoint/🦀️.rs:110:18"
+    },
+    {
+      "error": "error[E0061]: this method takes 2 arguments but 1 argument was supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:157:16"
+    },
+    {
+      "error": "error[E0061]: this method takes 2 arguments but 1 argument was supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:158:16"
+    },
+    {
+      "error": "error[E0061]: this method takes 1 argument but 2 arguments were supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:262:96"
+    },
+    {
+      "error": "error[E0061]: this method takes 1 argument but 2 arguments were supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../📔️registry/🦀️.rs:304:84"
+    },
+    {
+      "error": "error[E0061]: this function takes 1 argument but 2 arguments were supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🔄️turn/🦀️.rs:1029:37"
+    },
+    {
+      "error": "error[E0061]: this method takes 2 arguments but 1 argument was supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏯️tool-run/🦀️.rs:2329:26"
+    },
+    {
+      "error": "error[E0061]: this method takes 4 arguments but 3 arguments were supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🛠️tool-machine/🦀️.rs:533:31"
+    },
+    {
+      "error": "error[E0277]: can't compare `std::string::String` with `SharedUtf8`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏪️time-travel/🦀️.rs:831:62"
+    },
+    {
+      "error": "error[E0061]: this method takes 3 arguments but 2 arguments were supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏪️time-travel/🦀️.rs:836:62"
+    },
+    {
+      "error": "error[E0061]: this method takes 1 argument but 0 arguments were supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏪️time-travel/🦀️.rs:2645:26"
+    },
+    {
+      "error": "error[E0061]: this method takes 2 arguments but 1 argument was supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏪️time-travel/🦀️.rs:2972:18"
+    },
+    {
+      "error": "error[E0061]: this method takes 3 arguments but 2 arguments were supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏪️time-travel/🦀️.rs:3065:26"
+    },
+    {
+      "error": "error[E0061]: this method takes 3 arguments but 2 arguments were supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././⏪️time-travel/🦀️.rs:3751:26"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs:120:360"
+    },
+    {
+      "error": "error[E0063]: missing fields `actor_capture`, `publication_ownership_progress` and `worker_resume_pending` in initializer of `component::app::MountedTypedCommandFullOperation<A>`",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs:116:21"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27698:44"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:28999:118"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29614:54"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29677:122"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:29722:37"
+    },
+    {
+      "error": "error[E0596]: cannot borrow `permit.identity` as mutable, as `permit` is not declared as mutable",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:31290:139"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34165:55"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34166:62"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34167:61"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34168:67"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:34169:69"
+    },
+    {
+      "error": "error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:22646:23"
+    },
+    {
+      "error": "error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:20012:23"
+    },
+    {
+      "error": "error[E0050]: method `close_step` has 3 parameters but the declaration in trait `semio_framework_job::InteractiveJob::close_step` has 2",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:19265:23"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35586:79"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:35601:67"
+    },
+    {
+      "error": "error[E0308]: mismatched types",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:41291:68"
+    },
+    {
+      "error": "error[E0061]: this method takes 3 arguments but 2 arguments were supplied",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:44720:83"
+    },
+    {
+      "error": "error[E0425]: cannot find function `mounted_private_child_grant` in this scope",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:27817:17"
+    },
+    {
+      "error": "error[E0425]: cannot find function `mounted_private_child_grant` in this scope",
+      "path": "--> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:32946:100"
+    }
+  ]
+}

@@ -96,7 +96,7 @@ fn stage(value: &Value) -> TimeTravelStage {
     TimeTravelStage::parse(text(value)).expect("stage")
 }
 
-fn session(value: &Value) -> TimeTravelSession {
+pub(super) fn session(value: &Value) -> TimeTravelSession {
     TimeTravelSession {
         id: value["id"].as_u64().expect("id"),
         generation: u32_of(&value["generation"]),
@@ -110,7 +110,7 @@ fn session(value: &Value) -> TimeTravelSession {
     }
 }
 
-fn event(value: &Value) -> TimeTravelEvent {
+pub(super) fn event(value: &Value) -> TimeTravelEvent {
     let generation = || u32_of(&value["generation"]);
     match text(&value["type"]) {
         "begin" => TimeTravelEvent::Begin { target: target(&value["target"]), original: replacement(&value["original"]) },

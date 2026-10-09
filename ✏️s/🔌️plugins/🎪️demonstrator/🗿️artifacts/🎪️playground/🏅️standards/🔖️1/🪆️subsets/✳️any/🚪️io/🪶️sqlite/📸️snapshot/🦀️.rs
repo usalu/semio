@@ -15,8 +15,8 @@ fn admit_record(record:&semio_framework_dsl_record::RecordValue,limits:SqliteDat
 impl ArtifactSqliteSnapshot for PlaygroundSnapshot {
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{admit(self,c)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let limits=c.limits();extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,n|{admit_record(record,limits,n)?;Self::__dsl_from_record_controlled(record,n)},c)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{admit(self,c)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|n|self.__dsl_to_record_controlled(n),c)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, n,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {admit_record(record,limits,n)?;Self::__dsl_from_record_controlled(record,n)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{admit(self,c)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|n|self.__dsl_to_record_controlled(n),c,native_owner)}
  fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{extent(c.limits())?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,c)?;visit(&self.schema,&mut p)?;p.finish()}
     fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         extent(control.limits())?;
@@ -50,4 +50,3 @@ impl ArtifactSqliteSnapshot for PlaygroundSnapshot {
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

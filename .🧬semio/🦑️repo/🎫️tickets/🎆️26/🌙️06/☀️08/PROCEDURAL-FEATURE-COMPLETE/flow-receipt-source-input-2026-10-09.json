@@ -1,0 +1,54 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️.rs",
+      "sha256": "99da108db0fca01e37b8e48c5ecd764d2a8fc38d41a0631e1457d683229a8f65"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol/🦀️.rs",
+      "sha256": "3f467b24f1af1d0edd4254e0a52394d2a4a63af60c98a416079ca6d23d99c2cf"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js",
+      "sha256": "96825b7b4464bc6b41d1bfb8967eb6fb5cb452175d03a07aa1a8c49ca08779a1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
+      "sha256": "358b286dc595074ed0b3112196de487b04e00c56524c66c9098ca1c481dd5ace"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts",
+      "sha256": "a5202056ae0296e13233a5d3626c0f8a499119a8ad33aa66ade7822b36c1f43f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🎟️retained-receipt/🔣️.json",
+      "sha256": "f481833ea4af382f37303b07ee9d0a4a469ce6632b94f7b000d8cfbe917df0a9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧫️fixtures/🎟️retained-receipt/🔣️.json",
+      "sha256": "343fe3c81059d037402332880e5d02619f87bb4b9e58fef09a29daf5f2624312"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🎟️retained-receipt/🟦️.ts",
+      "sha256": "66129fc632f4189df309f1dbcae3673035a0101ff7409a145814d8f67fcebf8b"
+    }
+  ],
+  "receiver": {
+    "handle": 72730,
+    "exit": 0,
+    "cases": 3,
+    "assertions": 32,
+    "strict": true
+  },
+  "declaration": {
+    "handle": 12090,
+    "exit": 0,
+    "scope": "source projection only"
+  },
+  "syntax": {
+    "handle": 87862,
+    "owners": 7,
+    "exit": 0
+  },
+  "wasmPublication": "unqualified"
+}

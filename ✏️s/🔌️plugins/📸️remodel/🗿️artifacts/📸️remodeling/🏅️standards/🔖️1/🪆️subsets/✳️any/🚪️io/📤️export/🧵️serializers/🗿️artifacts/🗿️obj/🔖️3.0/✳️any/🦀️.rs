@@ -18,7 +18,7 @@ pub struct RemodelingIntoObj;
 impl Serializer<RemodelingSnapshot> for RemodelingIntoObj {
     const INTO: Dialect = OBJ_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &RemodelingSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &RemodelingSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let semio = io_root::scene_mesh_semio(from).map_err(|reason| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→obj: nothing to export: {reason}"))))?;
         let obj = ::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(&semio)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("remodeling→obj: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Text(encode_obj(&obj))))

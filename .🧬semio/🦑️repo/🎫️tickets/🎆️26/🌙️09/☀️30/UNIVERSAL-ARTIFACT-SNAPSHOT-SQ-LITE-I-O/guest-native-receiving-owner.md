@@ -1,0 +1,11 @@
+# Guest Native Receiving Owner
+
+The original Value native receiving suite ran through Bun/Nx, the actual Value package script, and the repository Cargo policy in session 39947. It passed both native laws, with 245 tests skipped. Actual `[DEBUG]` receipts cover both original directional owners across full admission, original allocation-port refusal, cancellation before and after admitted capacity, zero remaining allowance, invalid relative offsets, and unwind. Independent Serde checks the authored UTF-8 result.
+
+The receiving bridge borrows the original allocation port, absolute ownership counter, ceiling, callback and work fields separately. A foreign reservation is validated against the exact remaining ceiling, translated to the original absolute-owned request, and accepted by the original port before either counter advances. The original observer remains threadbound. A sticky original refusal prevents subsequent admission; its actual error is moved back to the caller. The original retirement recipient remains installed. RAII stage custody preserves cumulative allocation while restoring the parent workload on unwind.
+
+Both original export and import owners now carry the exact independent five-axis grant. The decoder owner has a neutral fixture law mounted beside the existing encoder law. Kernel IO forwards this actual owner to the Store callback. The Guest MCP callbacks use the native receiving loan and forward the original grant to the selected runtime. SQLite metadata and file projection use the same original SQL control rather than restarting its cumulative allowance.
+
+The authentic identity authority supports a borrowed local observer through its generic observer parameter. Ordinary authoring retains its existing Send observer type. Host engine pumps borrow the first-party OriginalOperationReceiving interface, preserving the actual receiver rather than inventing an owner for absent unauthored operations.
+
+These receipts qualify the lower native receiving bridge only. The decoder-owner Kernel law, MCP callbacks, Guest component runtime, denied Guest return custody, Wasmtime return lifting, complete native/public provider census, catalog package/factory/surface captures, and universal SQLite snapshot claim remain unqualified. No goal completion is claimed.

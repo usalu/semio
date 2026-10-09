@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚡️production-cache-input-boundary/🔣️.json",
+    "action": "update",
+    "beforeSha256": "a49dfd74578ae823638f11c6aa40b28f6e7302f27fe57c6582a1202b2ce81b8b",
+    "afterSha256": "ea18354b8890f7184baaacd3a2d0e40c0cab4c9b3ebffcd851c3206b265a9971",
+    "qualification": "Extend plain portable testing examples across four canonical collections, genuine module-name exceptions, nested real collections and unrelated ASCII names; no example schema"
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+    "action": "update",
+    "beforeSha256": "a27d89099e73263de63d4a1b61cdd26d2b17c3b2b9f407b6035dd947d700611f",
+    "afterSha256": "5a6cc9f852ffd4f16f500be1a395ca5705b4507708f8d6db3293ba107136b345",
+    "qualification": "Original language-agnostic example plus actual Nx/minimatch oracle and real physical inference callback exposes missing collection admission/input policies"
+  }
+]

@@ -1,0 +1,1 @@
+{"grant":{"maximumItems":1,"maximumCopyBytes":4096,"maximumCapacityBytes":4096,"maximumReleaseBytes":262144,"maximumDepth":4096},"frontiers":["catalog-source","catalog-tickets","original-envelope-frame","original-child-close","original-frame-release","original-actor-close","authority-frame-release","original-cancel-arc-release"]}

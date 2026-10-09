@@ -1,0 +1,13 @@
+{
+  "sessionId": 63081,
+  "nxExitCode": 0,
+  "duration": "6.6s",
+  "actualDebug": "Independent genuine Grant/Ajv missing-negative axes; Buffer/Lodash original refusal conservation",
+  "nativeAssertions": 0,
+  "precedingRed": {
+    "sessionId": 1525,
+    "nxExitCode": 1,
+    "duration": "3.2s",
+    "failure": "Missing independently supplied plain cleanup policy"
+  }
+}

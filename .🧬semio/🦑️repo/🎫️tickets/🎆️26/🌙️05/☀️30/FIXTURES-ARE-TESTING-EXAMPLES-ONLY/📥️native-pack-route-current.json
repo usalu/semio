@@ -1,0 +1,40 @@
+{
+  "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json",
+  "sha256": "158cf9c0f997ec5f3c070834e7e518452e1410cc1d1315541e99a29f0f22d16e",
+  "bytes": 1019,
+  "targets": {
+    "test-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-ownership"
+      }
+    },
+    "test-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native"
+      }
+    }
+  },
+  "namedInputKeys": [
+    "default"
+  ],
+  "actualProductionNxSchema": {
+    "path": "/Users/ueli/Documents/semio/node_modules/nx/schemas/project-schema.json",
+    "sha256": "c3e5931dbe43eef0f77e56d417739604d2913eaa740d23f9113624e19b4d9b2f",
+    "targetType": "object"
+  },
+  "mutation": false,
+  "nativeExecution": false,
+  "thirdPartyAjvExecuted": false
+}

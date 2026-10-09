@@ -1,4 +1,10 @@
 {
   "mutation": "duplicateLayer",
-  "layerId": "shape-missing"
+  "layerId": "shape-missing",
+  "identities": [
+    {
+      "source": "shape-missing",
+      "target": "shape-copy"
+    }
+  ]
 }

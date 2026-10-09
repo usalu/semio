@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "nativeLaw": "field_close_failure_preserves_real_receipts_through_the_original_decode_job",
+  "cases": [
+    {
+      "name": "refused-before-owner",
+      "receipt": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      },
+      "expectedTotalCapacity": 0,
+      "expectedTotalRelease": 0
+    },
+    {
+      "name": "refused-after-frame-birth",
+      "receipt": {
+        "copiedItems": 1,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 1024,
+        "releasedBytes": 0
+      },
+      "expectedTotalCapacity": 1024,
+      "expectedTotalRelease": 0
+    },
+    {
+      "name": "refused-after-physical-release",
+      "receipt": {
+        "copiedItems": 1,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 512
+      },
+      "expectedTotalCapacity": 0,
+      "expectedTotalRelease": 512
+    }
+  ]
+}

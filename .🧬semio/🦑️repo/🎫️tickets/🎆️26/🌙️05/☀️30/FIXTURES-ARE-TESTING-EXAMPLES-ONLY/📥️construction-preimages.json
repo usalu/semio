@@ -1,0 +1,16 @@
+{
+  "observed": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
+      "sha256": "e77cb7fb3535e9280be185feac2a25840ea24096aba22bb293f588b39d77cec7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts",
+      "sha256": "6cb0a12885f8c892c0e5fbd6bfe65cce076b86ccc476690a7b479e428bdb5f52"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "sha256": "7a210115535e46e26ce593f68f2bd4ef84f7f276d304315ded2403999f266b8f"
+    }
+  ]
+}

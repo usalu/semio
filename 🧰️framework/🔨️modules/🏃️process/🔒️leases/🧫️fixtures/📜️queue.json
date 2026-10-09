@@ -1,0 +1,7 @@
+{
+  "arrivals":[0,1,1791542284955,281474976710655],
+  "pid":12345,
+  "ownerBytes":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+  "maximumAbsolutePathUtf16":256,
+  "cases":["exact-path-boundary","overlong-refuses-before-input","full-sha256-resource-key","native-owner-full-128-bit-nonce","live-owner-unchanged","arrival-order","canceled-ticket-removed"]
+}

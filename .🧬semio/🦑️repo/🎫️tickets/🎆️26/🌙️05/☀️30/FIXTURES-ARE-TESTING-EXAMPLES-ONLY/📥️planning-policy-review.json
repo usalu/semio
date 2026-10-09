@@ -1,0 +1,32 @@
+{
+  "executed": false,
+  "names": [
+    "history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffolds",
+    "history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories",
+    "history_completed_plan_retains_original_residue_and_transferred_results",
+    "history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody",
+    "history_preview_output_retains_original_inputs_until_granted_parent_and_projection_close"
+  ],
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+      "sha256": "550a1700541b8826faa5be09b43dc68f331191878fee72c8954b3f82a3177e97",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧫️fixtures/🔣️.json",
+      "sha256": "8dd157d9d5c63240e7df9b2bdeb59694f5e3e4358c8c4bd36d06bd546ffee67e",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧫️fixtures/🔣️.json",
+      "sha256": "c7edbcc161433a0dd7dfc7008d9effa44864734ab96a6930a98c007d72482091",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
+      "sha256": "ac6cb5dee42ccc3964fa0a2da967d99d794fa5eae76fb29f7117d3ccd08e7454",
+      "authored": false
+    }
+  ]
+}

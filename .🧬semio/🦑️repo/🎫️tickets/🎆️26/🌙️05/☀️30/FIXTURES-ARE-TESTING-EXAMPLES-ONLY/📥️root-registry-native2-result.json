@@ -1,0 +1,20 @@
+{
+  "sessionId": 91943,
+  "nxExitCode": 0,
+  "duration": "3m18s",
+  "cargoSucceeded": true,
+  "producedDump": true,
+  "generator": "semio-framework-schema schema-export-entries",
+  "entries": 30,
+  "registeredScopes": [
+    "framework.schema"
+  ],
+  "cataloguedScopes": 3755,
+  "findings": 0,
+  "nativeAssertions": 0,
+  "sourceObserverCount": 14,
+  "sourceDrifts": [],
+  "budgetChanges": false,
+  "sourceCopies": 0,
+  "actualDumpSha256": "17cebc354ef1cbd18ccb695a392c9d1b851f9d4c3d88a08eaa00f2ff28c184a8"
+}

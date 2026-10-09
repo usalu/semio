@@ -1,0 +1,7 @@
+# Existing Example-Ancestry Law
+
+Use original Library workspace-contract test7460, `catalogues declared scopes and reports every retired placement and unresolved binding`, and existing plain schema-scope-catalog case list. It creates original neutral input files, runs defining inventorySchemaScopes, independently validates genuine scope DTOs through strict Ajv, optionally checks schema grammar/compile and compares exact exports/scopes/diagnostic codes/placements. No separate case-list Schema is required.
+
+Append six portable rows: each of 🧫️examples and 🧪️examples containing a genuine contract facet must produce schema-fixture-defines-schema; each same collection segment directly under 🔨️modules must preserve genuine module scope; each genuine named module followed later by a true example collection must refuse the nested facet. Preserve valid canonical identity/format in positive rows to isolate ancestry; explicit inert parser-input examples remain separate. Existing fixture refusal row255 is the nearest template in semantics, not Source to copy into ticket.
+
+Actual normal route @semio-tech/repo-lib:test calls package permanent script test; script872 resolves test level and original workspace-contract file. Narrow literal test-name selection may run this existing law through that route. No tests executed in this lane. Canonical caching target18224 Nx0/5.7s is parent-supplied finite receipt, not independently parsed here and not global runtime proof.

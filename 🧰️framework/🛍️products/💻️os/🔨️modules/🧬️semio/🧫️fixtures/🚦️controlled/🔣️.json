@@ -9,6 +9,21 @@
     "retirementBytes": 3,
     "sourceReleases": 1,
     "maximumRetirementDepth": 64,
+    "nativeMaximum": 1000000,
+    "callerGrant": {
+      "maximumItems": 65536,
+      "maximumCopyBytes": 65536,
+      "maximumCapacityBytes": 16777216,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 64
+    },
+    "undergrantItems": 256,
+    "payloadBytes": 1152,
+    "minimumPayloadRetirementTurns": 384,
+    "structuralCopy": [
+      { "nativeWordBytes": 4, "optionalTextHeaderBytes": 12 },
+      { "nativeWordBytes": 8, "optionalTextHeaderBytes": 24 }
+    ],
     "ownership": {
       "copy": "bounded-original-payload",
       "capacity": "exact-natural-birth",

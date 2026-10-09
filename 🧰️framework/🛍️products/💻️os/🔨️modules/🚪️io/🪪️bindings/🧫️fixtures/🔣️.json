@@ -1,0 +1,22 @@
+{
+  "channels": [
+    "ownedDeclaration",
+    "hostedDeclaration",
+    "foreignApp",
+    "treeSubset",
+    "directNative",
+    "directDocumentNative",
+    "schemaOnlyDocument",
+    "guest"
+  ],
+  "appLess": [],
+  "treeApps": [
+    "viewer",
+    "editor"
+  ],
+  "duplicateProposal": "refuse",
+  "identicalInstalled": "idempotent",
+  "missingSql": "retain",
+  "aliasCoordinates": "distinct",
+  "unjoinedFactory": null
+}

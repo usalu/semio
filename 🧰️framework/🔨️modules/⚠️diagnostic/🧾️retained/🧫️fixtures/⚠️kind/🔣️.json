@@ -1,0 +1,24 @@
+{
+  "kinds": [
+    "invalidValue",
+    "canceled",
+    "ownershipLimit",
+    "allocationFailed",
+    "workLimit",
+    "depthLimit",
+    "unsupportedOwner",
+    "invariantViolated"
+  ],
+  "unknown": [
+    "",
+    "inventedKind"
+  ],
+  "missing": null,
+  "getterHeap": [
+    0,
+    0
+  ],
+  "sameReceipt": true,
+  "sameParam": true,
+  "parentTimeTravel": "same-original-kind-and-receipt"
+}

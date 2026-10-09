@@ -1,0 +1,6 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\udce1\ufe0freplication/\ud83d\udd17\ufe0fcausal/\ud83d\udd00\ufe0ftransition/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+  "before": "ed3905444ac2d944456bf4cb231206caff909b8dbe95ffa92084115459505f96",
+  "after": "3018c57f1dfd13b34d4db9ecc86e73784a64cdc8e75a24ddcbb5dbd86ad544ac",
+  "change": "actual System allocator terminal Ready/Rejected physical conservation law; not yet executed"
+}

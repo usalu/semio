@@ -310,7 +310,10 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let plugin_paths = resolve_plugin_paths(&repo_root, relevant_plugin_ids.into_iter())?;
     let descriptor_paths = resolve_descriptor_paths(&repo_root)?;
     let blob_store = Arc::new(bundle.blob_store());
-    let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store)).await;
+    let identity_policy=semio_framework_pack_json::from_json_str(include_str!("../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
+    let identity_cancel=semio_framework_async::CancelToken::root_now();
+    let identity=semio_framework_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=identity_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
+    let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store),identity).await;
     let mut runner = SpaceRunner::new(host, blob_store, args.policy).with_document_load_progress(document_load_reporter());
     let mut cache = FileMediaCache::new(bundle.media_cache_dir());
 

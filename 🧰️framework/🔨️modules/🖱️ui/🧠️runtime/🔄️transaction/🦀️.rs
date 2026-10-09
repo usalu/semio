@@ -649,7 +649,8 @@ impl FrameTransaction {
             return true;
         }
         let mut sequence = 0;
-        let mut context = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(active.generation), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut context = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(active.generation), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence,&mut actual_retained_progress);
         let before = job.transaction_usage();
         let outcome = job.drive_one(&mut context);
         let after = job.transaction_usage();
@@ -761,7 +762,8 @@ impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
         let operation = semio_framework_job::allocate_operation_id();
         let mut preview_sequence = 0;
         loop {
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::CancelToken::root_now(), clock, &mut preview_sequence);
+            let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(u64::MAX, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), semio_framework_job::CancelToken::root_now(), clock, &mut preview_sequence,&mut actual_retained_progress);
             match transaction.step(self, &mut cx) {
                 FrameTransactionStep::Yield { .. } => continue,
                 FrameTransactionStep::Published(output) => return output,

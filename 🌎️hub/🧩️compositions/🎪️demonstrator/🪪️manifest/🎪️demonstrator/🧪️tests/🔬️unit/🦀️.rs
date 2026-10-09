@@ -131,7 +131,7 @@ fn assert_tree_reconciles(tree: ComponentTree, generation: u64, label: &str) {
 
 #[semio_framework_async_macros::async_test]
 async fn aggregate_runtime_renders_every_demonstrator_window() {
-    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::<DemonstratorApps>::new();
+    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::<DemonstratorApps>::new({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, test_bundle());
     let apps: &[(&str, &[&str])] = &[
         ("s.procedural.generation3d@1/*#editor", &["procedural.play.main", "procedural.play.preview", "procedural.play.generations", "procedural.play.generate-form", "procedural.play.generate-preview"]),

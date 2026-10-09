@@ -1,0 +1,29 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♻️frame-close/🔣️.json",
+      "exists": true,
+      "sha256": "f8f03b87b1f0041b79dde67c7b3cd418e2ad2ef359062f5590caaee1ab288d57",
+      "owned": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-close/🔣️.json",
+      "exists": true,
+      "sha256": "0debd7cbff1975f050d4da43dd4e7a12dcd907dadcd42b0350258672f53440e3",
+      "owned": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️frame-close/🟦️.ts",
+      "exists": true,
+      "sha256": "553b5e4822f2c64e44fa95e6a2fb02cc745f26c267b6d5eaaf8aa2cd63e38791",
+      "owned": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/♻️raw-allocation-close/🟦️.ts",
+      "exists": true,
+      "sha256": "f608968a1557925933adaaafb393575a82c3ec7125b3ed380ff590e3012d34ad",
+      "owned": false
+    }
+  ]
+}

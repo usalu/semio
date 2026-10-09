@@ -1,5 +1,5 @@
 //! 🧪️ Actual window wrapper backing stays in custody until independently funded retirement.
-use semio_framework_value::{RetainedCloneGrant,RetireOwned,retirement::{controlled::ControlledRetirement,OwnedValueRetirementFactory}};
+use semio_framework_value::{RetainedCloneGrant,retirement::{RetireOwned,controlled::ControlledRetirement,OwnedValueRetirementFactory}};
 use std::sync::Arc;
 fn run<T:RetireOwned+Send+'static>(construct:impl FnOnce()->T,body:usize){
  let(original,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(construct);let held=heap.requested_bytes-heap.released_bytes;let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ControlledRetirement::new(original).map_err(|(error,_)|error).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(mut born,mut released)=(0,0);
@@ -13,7 +13,7 @@ fn run<T:RetireOwned+Send+'static>(construct:impl FnOnce()->T,body:usize){
 #[test]
 fn window_original_mutation_wrappers_have_exact_physical_custody(){
  let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();for body in law["copyGrants"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;for kind in ["canvas","layers"]{let text=law["payload"].as_str().unwrap();let capacity=law["capacity"].as_u64().unwrap()as usize;let window=law["windowId"].as_str().unwrap();
- run(||{let mut payload=String::with_capacity(capacity);payload.push_str(text);crate::window_config::WindowConfigMutation::from_issued(window,kind,payload,Arc::new(OwnedValueRetirementFactory::<String>::default()))},body);
- run(||{let mut payload=String::with_capacity(capacity);payload.push_str(text);crate::window_transient::WindowTransientMutation::from_issued(window,kind,payload,Arc::new(OwnedValueRetirementFactory::<String>::default()))},body);
+ run(||{let mut payload=String::with_capacity(capacity);payload.push_str(text);crate::WindowConfigMutation::from_issued(window,kind,payload,Arc::new(OwnedValueRetirementFactory::<String>::default()))},body);
+ run(||{let mut payload=String::with_capacity(capacity);payload.push_str(text);crate::WindowTransientMutation::from_issued(window,kind,payload,Arc::new(OwnedValueRetirementFactory::<String>::default()))},body);
  }}
 }

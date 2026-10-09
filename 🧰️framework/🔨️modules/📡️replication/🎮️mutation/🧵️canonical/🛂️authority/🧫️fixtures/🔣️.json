@@ -1,0 +1,219 @@
+{
+  "authority": {
+    "actor": "Ä\u0000🧩",
+    "line": "branch\u0000",
+    "group": "group",
+    "sequence": 7,
+    "clock": {
+      "actor": 11,
+      "physical_ms": 13,
+      "logical": 17
+    }
+  },
+  "actorSuffix": "abc",
+  "actorRepeats": [
+    0,
+    4097
+  ],
+  "copyCapacityLimit": 4096,
+  "turnLimit": 100000,
+  "pauses": [
+    0,
+    1,
+    3,
+    17,
+    129
+  ],
+  "cases": [
+    {
+      "id": "agree",
+      "edit": {
+        "id": "edit-7",
+        "actor": "Ä\u0000🧩",
+        "line": "branch\u0000",
+        "author": "Ä\u0000🧩",
+        "group": "group",
+        "sequence": 7,
+        "clock": {
+          "actor": 11,
+          "physical_ms": 13,
+          "logical": 17
+        },
+        "forwardCount": 1,
+        "metaCount": 1
+      },
+      "accepted": true
+    },
+    {
+      "id": "actor-final-byte",
+      "edit": {
+        "id": "edit-7",
+        "actor": "wrong",
+        "line": "branch\u0000",
+        "author": "Ä\u0000🧩",
+        "group": "group",
+        "sequence": 7,
+        "clock": {
+          "actor": 11,
+          "physical_ms": 13,
+          "logical": 17
+        },
+        "forwardCount": 1,
+        "metaCount": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "line-absent",
+      "edit": {
+        "id": "edit-7",
+        "actor": "Ä\u0000🧩",
+        "line": null,
+        "author": "Ä\u0000🧩",
+        "group": "group",
+        "sequence": 7,
+        "clock": {
+          "actor": 11,
+          "physical_ms": 13,
+          "logical": 17
+        },
+        "forwardCount": 1,
+        "metaCount": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "author-final-byte",
+      "edit": {
+        "id": "edit-7",
+        "actor": "Ä\u0000🧩",
+        "line": "branch\u0000",
+        "author": "wrong",
+        "group": "group",
+        "sequence": 7,
+        "clock": {
+          "actor": 11,
+          "physical_ms": 13,
+          "logical": 17
+        },
+        "forwardCount": 1,
+        "metaCount": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "group-absent",
+      "edit": {
+        "id": "edit-7",
+        "actor": "Ä\u0000🧩",
+        "line": "branch\u0000",
+        "author": "Ä\u0000🧩",
+        "group": null,
+        "sequence": 7,
+        "clock": {
+          "actor": 11,
+          "physical_ms": 13,
+          "logical": 17
+        },
+        "forwardCount": 1,
+        "metaCount": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "clock",
+      "edit": {
+        "id": "edit-7",
+        "actor": "Ä\u0000🧩",
+        "line": "branch\u0000",
+        "author": "Ä\u0000🧩",
+        "group": "group",
+        "sequence": 7,
+        "clock": {
+          "actor": 11,
+          "physical_ms": 13,
+          "logical": 18
+        },
+        "forwardCount": 1,
+        "metaCount": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "sequence",
+      "edit": {
+        "id": "edit-7",
+        "actor": "Ä\u0000🧩",
+        "line": "branch\u0000",
+        "author": "Ä\u0000🧩",
+        "group": "group",
+        "sequence": 8,
+        "clock": {
+          "actor": 11,
+          "physical_ms": 13,
+          "logical": 17
+        },
+        "forwardCount": 1,
+        "metaCount": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "forward-count",
+      "edit": {
+        "id": "edit-7",
+        "actor": "Ä\u0000🧩",
+        "line": "branch\u0000",
+        "author": "Ä\u0000🧩",
+        "group": "group",
+        "sequence": 7,
+        "clock": {
+          "actor": 11,
+          "physical_ms": 13,
+          "logical": 17
+        },
+        "forwardCount": 2,
+        "metaCount": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "meta-count",
+      "edit": {
+        "id": "edit-7",
+        "actor": "Ä\u0000🧩",
+        "line": "branch\u0000",
+        "author": "Ä\u0000🧩",
+        "group": "group",
+        "sequence": 7,
+        "clock": {
+          "actor": 11,
+          "physical_ms": 13,
+          "logical": 17
+        },
+        "forwardCount": 1,
+        "metaCount": 0
+      },
+      "accepted": false
+    },
+    {
+      "id": "id-empty",
+      "edit": {
+        "id": "",
+        "actor": "Ä\u0000🧩",
+        "line": "branch\u0000",
+        "author": "Ä\u0000🧩",
+        "group": "group",
+        "sequence": 7,
+        "clock": {
+          "actor": 11,
+          "physical_ms": 13,
+          "logical": 17
+        },
+        "forwardCount": 1,
+        "metaCount": 1
+      },
+      "accepted": false
+    }
+  ]
+}

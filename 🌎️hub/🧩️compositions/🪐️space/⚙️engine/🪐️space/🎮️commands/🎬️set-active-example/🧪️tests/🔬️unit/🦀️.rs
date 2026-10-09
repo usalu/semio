@@ -66,6 +66,8 @@ async fn open_studio_demo_explicit_loads_demo_fixture() {
 
 #[semio_framework_async_macros::async_test]
 async fn open_studio_loads_ephemeral_created_studio() {
+    let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     use semio_s_artifact_space_home::editor::home::commands::create_studio;
     use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
     let _home = semio_s_artifact_space_home::editor::home::HomeApp;
@@ -77,7 +79,7 @@ async fn open_studio_loads_ephemeral_created_studio() {
     // 🪪️ Minting a studio needs the host session identity that owns it — `create_studio::handle` is
     // the identity-less entry point and now always refuses (`s.home.session-identity-required`).
     let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
-    let create = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg, &identity).expect("handle");
+    let create = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg, &identity, &mut authoring).expect("handle");
     let space_id = create
         .effects
         .iter()
@@ -97,6 +99,8 @@ async fn open_studio_loads_ephemeral_created_studio() {
 /// 🌉️ Exercises BOTH apps together (Home's `createStudio` followed by Space's `openSpace`).
 #[semio_framework_async_macros::async_test]
 async fn create_space_navigates_without_download_and_opens_empty() {
+    let mut authoring_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+    let mut authoring = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut authoring_observer).expect("finite studio fixture admission");
     use semio_s_artifact_space_home::editor::home::commands::create_studio;
     use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
     let _home = semio_s_artifact_space_home::editor::home::HomeApp;
@@ -107,7 +111,7 @@ async fn create_space_navigates_without_download_and_opens_empty() {
     let home_cfg = ConfigView { snapshot: &home_config, window: None };
     // 🪪️ See `open_studio_loads_ephemeral_created_studio`: the identity-less entry point refuses.
     let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
-    let emit = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg, &identity).expect("handle");
+    let emit = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg, &identity, &mut authoring).expect("handle");
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "create must not download a file");
     let uri = emit
         .effects

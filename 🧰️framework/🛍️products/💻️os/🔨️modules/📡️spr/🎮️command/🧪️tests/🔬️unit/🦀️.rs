@@ -73,7 +73,7 @@ fn operation_defaults_are_stable() {
     assert_eq!(op.timestamp(), None);
     assert_eq!(op.undo_policy(), crate::os_spr::UndoPolicy::ExactBaseOnly);
     assert_eq!(op.state_class(), semio_framework_schema_state::StateClass::Artifact);
-    assert!(op.foreign_steps(&0).is_empty());
+    assert!(op.foreign_step_source(&0, 0).expect("original local source").is_none());
 }
 //#endregion 🧪️MutationLaws
 
@@ -848,10 +848,23 @@ fn foreign_steps_are_excluded_from_fold_plan_diff() {
     let diff = fold_plan_diff(&kind, &base);
     assert_eq!(crate::os_spr::apply_diff(diff.diff(), &base), Ok(9), "only the local AddCounter{{delta:4}} may contribute to the folded diff");
 
-    let foreign = plan_foreign_steps(&kind, &base);
+    let planned = plan_of(&kind, &base).expect("original independent cold plan");
+    let foreign: Vec<_> = planned.iter().filter_map(|step| if let PlanStep::Foreign(value) = step { Some(value) } else { None }).collect();
     assert_eq!(foreign.len(), 2);
-    assert_eq!(foreign[0].target.artifact_id, "artifact-0");
-    assert_eq!(foreign[1].target.artifact_id, "artifact-1");
+    for (index, expected) in foreign.iter().enumerate() {
+        let (source, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| CompositeMutationKind::<i64, CounterMutation>::foreign_step_source(&kind, &base, index).expect("original borrowed source").expect("original declared hop"));
+        assert_eq!(heap.allocated_bytes, 0);
+        assert_eq!(heap.released_bytes, 0);
+        assert_eq!(source.artifact_id, expected.target.artifact_id);
+        assert_eq!(source.artifact_kind, expected.target.artifact_kind);
+        assert_eq!(source.dialect, expected.target.dialect.as_deref());
+        assert_eq!(source.mutation_id, expected.mutation_id.0);
+        assert_eq!(source.payload, expected.payload);
+        assert_eq!(source.label, expected.label);
+    }
+    assert!(CompositeMutationKind::<i64, CounterMutation>::foreign_step_source(&kind, &base, 2).expect("original end").is_none());
+    let refused = AddCounterThenNotifyForeign { delta: 4, foreign_count: MAX_PLAN_DEPTH + 1 };
+    assert!(matches!(CompositeMutationKind::<i64, CounterMutation>::foreign_step_source(&refused, &base, 0), Err(error) if error.kind == semio_framework_value::ValueRefusalKind::WorkLimit));
 }
 
 #[test]

@@ -1,0 +1,20 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+    "beforeSha256": "aed20cd9301a168983b16dc7c8736780e689bc48eaf0c3ef66a8190672a54e49",
+    "afterSha256": "6adf9c82570ee78e4c7500cb395a64c4f93fc8de8ea7c80f8c844f0ddec2dd3a",
+    "block": "exact private copied-buffer cancellation literal preserves original checkpoints with no new owned prose"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧫️fixtures/🔣️.json",
+    "beforeSha256": "16b454cd403a1baa5439336dade9a1879253bf0261261e1d926a62edb4e3e20f",
+    "afterSha256": "46675b368b78056124706f76e8748df7237c47bf78a59869367a2878e3915df9",
+    "block": "add-plain-independent-retained-copy-policy preserve original trial values"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs",
+    "beforeSha256": "a5cc870d5a4ced8c6af41d4ad50eb6c47337d94bddc5152bf10af3081f977d30",
+    "afterSha256": "c4a9222e2953096a78a586d6d8030066ea063074450baa72de458160f2598dde",
+    "block": "actual-original-allocator-pointer-cancel law authored UNRUN"
+  }
+]

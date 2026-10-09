@@ -49,7 +49,7 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPrefli
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set transaction count without preflight to {}", self.value), &format!("Transaktionsanzahl ohne Vorprüfung auf {} setzen", self.value))
     }
-    fn foreign_steps(&self, _: &TxnSnapshot) -> Vec<protocol::ForeignStep> {
+    fn foreign_step_source<'a>(&'a self, _: &'a TxnSnapshot, _: usize) -> Result<Option<protocol::ForeignStepSource<'a>>, semio_framework_value::ValueError> {
         panic!("no-foreign mutations must bypass foreign-step preflight")
     }
 }

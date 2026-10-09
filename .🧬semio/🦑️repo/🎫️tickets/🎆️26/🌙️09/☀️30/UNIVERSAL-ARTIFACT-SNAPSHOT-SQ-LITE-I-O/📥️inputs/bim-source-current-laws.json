@@ -1,0 +1,35 @@
+{
+  "qualification": "Bounded read-only direct Source audit; not original owning target receipt",
+  "rows": 3972,
+  "cases": [
+    {
+      "name": "duplicate required axis",
+      "refused": true,
+      "reason": "BIM SQLite singleton cardinality bim_axis"
+    },
+    {
+      "name": "orphan property allowed",
+      "refused": true,
+      "reason": "BIM SQLite unowned entity"
+    },
+    {
+      "name": "position on Spacing grid",
+      "refused": true,
+      "reason": "BIM SQLite positions on spacing grid"
+    },
+    {
+      "name": "profile on Cuboid",
+      "refused": true,
+      "reason": "BIM SQLite children on cuboid"
+    }
+  ],
+  "sourceSha256": "73711be0ba015ad84a6e1622aa5d1040ffa431927ab10bc2ae9230a24078051c",
+  "witnessSha256": "b4cff8dfabaac3f0ff5c60f19afefd2a04baa78cd7afbcc5cba8ba15426bc680",
+  "tableCount": 93,
+  "independentExpectedRows": 3972,
+  "tableRowMismatches": [],
+  "physicalReverseAdmitted": true,
+  "originalOmittedDefaultArraysNormalized": 43,
+  "scalarVariantOptionalValueChanges": 0,
+  "canonicalDefaultChange": "43 schema-only empty array additions preserve all93 rowcounts; no provider-restored fixture data"
+}

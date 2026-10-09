@@ -1,0 +1,70 @@
+{
+  "executed": false,
+  "authored": false,
+  "observations": [
+    {
+      "path": "/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/vello-0.9.0/src/scene.rs",
+      "authored": false,
+      "sha256": "7c225e73f56629b1b85e8e5cd296428176ec6e59a0813975e2d4123aaddd1718"
+    },
+    {
+      "path": "/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/vello_encoding-0.9.0/src/encoding.rs",
+      "authored": false,
+      "sha256": "9eafc667d41ed7298c84ba97bd0cf766e0b86c8f06ba08bc3acd98d6e5a91528"
+    },
+    {
+      "path": "/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/vello_encoding-0.9.0/src/glyph.rs",
+      "authored": false,
+      "sha256": "b76534d2e11431fa9dc60a9b92eb40548f71f2c303c2b811322fa8a10b3b1271"
+    },
+    {
+      "path": "/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/vello_encoding-0.9.0/src/resolve.rs",
+      "authored": false,
+      "sha256": "b246758ed97ece009f2b5852c9632b387dc7950dfb84604ff0802974623bb03b"
+    },
+    {
+      "path": "/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/vello_encoding-0.9.0/src/estimate.rs",
+      "authored": false,
+      "sha256": "4d273f51dd921149d2910dead3760d065b68fae76914cc14abdfc9fbf7cb7ac1"
+    },
+    {
+      "path": "/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/peniko-0.6.1/src/image.rs",
+      "authored": false,
+      "sha256": "c7ec761dfbc823fb8d43203691254e8c31a6c1fb8974c93bd0c04e7b3b58bebf"
+    },
+    {
+      "path": "/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linebender_resource_handle-0.1.1/src/blob.rs",
+      "authored": false,
+      "sha256": "e41c5b77222d2e57a79308fbef8d7e814743b2e57bba0cb9b570b72a3205900f"
+    },
+    {
+      "path": "/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/linebender_resource_handle-0.1.1/src/font.rs",
+      "authored": false,
+      "sha256": "8cc131912d270aab2a4972857254904990a7facc8c3b747cbec37151da064098"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️canvas/🦀️.rs",
+      "authored": false,
+      "sha256": "b5e081fdcf0077058db4dbdac9580396df26b87a335b109d0aa45f9c7783d29a"
+    }
+  ],
+  "encodingOwningBuffers": {
+    "path_tags": "Vec<PathTag>",
+    "path_data": "Vec<u32>",
+    "draw_tags": "Vec<DrawTag>",
+    "draw_data": "Vec<u32>",
+    "transforms": "Vec<Transform>",
+    "styles": "Vec<Style>",
+    "resources.patches": "Vec<Patch>",
+    "resources.color_stops": "Vec<ColorStop>",
+    "resources.glyphs": "Vec<Glyph>",
+    "resources.glyph_runs": "Vec<GlyphRun>",
+    "resources.normalized_coords": "Vec<NormalizedCoord>"
+  },
+  "nestedOwners": [
+    "Patch::Image.image.data Blob<u8>",
+    "GlyphRun.font.data Blob<u8>"
+  ],
+  "opaqueBoundary": "Arc<dyn AsRef<[u8]>+Send+Sync> hides allocation/capacity",
+  "route": "semio-framework-canvas:test"
+}

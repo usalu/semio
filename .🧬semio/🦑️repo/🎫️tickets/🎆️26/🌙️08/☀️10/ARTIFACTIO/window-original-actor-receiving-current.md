@@ -1,0 +1,5 @@
+# Window Original Actor Receiving
+
+The actual Store typed ingress now requires an originally admitted SharedUtf8. Window emission previously cloned mounted.meta.actor String at publication, creating another byte allocation without its original authority. Window begin now requires the actual SharedUtf8 domain type throughout the concrete and erased owner paths. Its mounted caller borrows the existing paid actor capture and admits only a lease under the exact current preparation grant, records that lease receipt and passes its original backing to Store. The source capture and original mutation remain retained on authority/lease refusal; the mutation is taken only after all fallible admission checks. Existing publication retirement tests use the real original registry actor lease and the neutral test grant. No String.into constructor was inserted in production.
+
+Whole Kernel/Plugin runtime acceptance remains required. This receiving fix does not claim that every historical begin constructor or its arbitrary rejected sole-owner retirement is closed; complete Store allocation and retirement frontiers remain tracked by the fleet.

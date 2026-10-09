@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "constructor": "sourcePolicyLimits",
+  "cases": [
+    {"id":"null-exact","source":"null","limits":{"maximumBytes":4,"maximumAllocationBytes":0,"maximumDepth":1,"maximumItems":0},"expected":"admitted"},
+    {"id":"null-short","source":"null","limits":{"maximumBytes":3,"maximumAllocationBytes":0,"maximumDepth":1,"maximumItems":0},"expected":"workLimit"},
+    {"id":"object-exact","source":"{\"x\":1}","limits":{"maximumBytes":7,"maximumAllocationBytes":131072,"maximumDepth":8,"maximumItems":16},"expected":"admitted"},
+    {"id":"emoji-exact","source":"\"😀\"","limits":{"maximumBytes":6,"maximumAllocationBytes":4,"maximumDepth":1,"maximumItems":0},"expected":"admitted"},
+    {"id":"emoji-character-limit","source":"\"😀\"","limits":{"maximumBytes":4,"maximumAllocationBytes":4,"maximumDepth":1,"maximumItems":0},"expected":"workLimit"}
+  ]
+}

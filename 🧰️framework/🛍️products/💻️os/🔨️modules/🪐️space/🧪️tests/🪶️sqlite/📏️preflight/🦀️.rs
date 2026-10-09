@@ -4,18 +4,23 @@ use store::sqlite_snapshot::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::fmt::Debug;
 
-pub(crate) fn verify<S:store::ArtifactSqliteSnapshot+Clone+PartialEq+Debug>(
+pub(crate) fn verify<S:store::ArtifactSqliteSnapshot+semio_framework_value::retirement::RetireOwned+Clone+PartialEq+Debug>(
  short:&S,long:&S,sql:&str,rows:usize,field_bytes:usize,cancel_at:usize,
  observe:fn(&mut dyn FnMut()->Result<(),ValueError>)->(Result<(),ValueError>,usize),
+ native:&mut store::io::io_mechanism::IoRunControl<'_, '_>,
 ){
- let unchanged=long.clone();
+ let mut unchanged=semio_framework_value::retirement::controlled::ControlledRetirement::new(long.clone()).unwrap_or_else(|_|panic!("original preflight comparison specimen custody"));
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let mut output_callback=|_|true;
   let mut output_control=SqliteSnapshotControl::new(&mut output_callback,SqliteDatabaseLimits::default());
-  let encoded=long.encode_sqlite_snapshot_native(encoding,&mut output_control).expect("actual owner native producer prepares the independent file ceiling outside preflight observation");
+  let encoded=long.encode_sqlite_snapshot_native(encoding,&mut output_control,&mut native.snapshot_encode().unwrap()).expect("actual owner native producer prepares the independent file ceiling outside preflight observation");
   let mut input_callback=|_|true;
   let mut input_control=SqliteSnapshotControl::new(&mut input_callback,SqliteDatabaseLimits::default());
-  assert_eq!(S::decode_sqlite_snapshot_native(&encoded,&mut input_control).unwrap(),*long,"actual native specimen preserves every typed owner field before preflight observation");
+  let mut input_owner=native.snapshot_decode().unwrap();let decoded=S::decode_sqlite_snapshot_native(&encoded,&mut input_control,&mut input_owner).unwrap();
+  assert_eq!(decoded,*long,"actual native specimen preserves every typed owner field before preflight observation");
+  let mut decoded=semio_framework_value::retirement::controlled::ControlledRetirement::new(decoded).unwrap_or_else(|_|panic!("original preflight decoded specimen custody"));
+  close_specimen(&mut decoded,&mut input_owner);
+  drop(input_owner);
   let output_bytes=match encoded{store::io::IoPayload::Binary(bytes)=>bytes.len(),store::io::IoPayload::Text(text)=>text.len()};
   assert!(output_bytes>0);
   let defaults=SqliteDatabaseLimits::default();
@@ -78,6 +83,11 @@ pub(crate) fn verify<S:store::ArtifactSqliteSnapshot+Clone+PartialEq+Debug>(
   let error=long.preflight_sqlite_snapshot_encoding(encoding,&mut canceled).unwrap_err();
   assert_eq!(error.kind,ValueRefusalKind::Canceled);
   drop(canceled);assert!(interior,"borrowed long literal census must expose its actual bounded byte frontier");
-  assert_eq!(*long,unchanged,"every success, refusal and cancellation must leave the full actual owner unchanged");
+  assert_eq!(long,unchanged.original().unwrap(),"every success, refusal and cancellation must leave the full actual owner unchanged");
  }
+ close_specimen(&mut unchanged,&mut native.snapshot_decode().unwrap());
+}
+
+fn close_specimen<S:semio_framework_value::retirement::RetireOwned>(original:&mut semio_framework_value::retirement::controlled::ControlledRetirement<S>,owner:&mut store::NativeSnapshotDecodeOwner<'_, '_>){
+ while !original.terminal_is_empty(){let grant=owner.remaining_grant();let capacity=original.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap();owner.native().checkpoint().unwrap();owner.native().charge(capacity).unwrap();let result=original.step(grant);let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};owner.record_progress(progress).unwrap();let step=result.unwrap();assert!(step.progress().copied_items!=0||original.terminal_is_empty());}
 }

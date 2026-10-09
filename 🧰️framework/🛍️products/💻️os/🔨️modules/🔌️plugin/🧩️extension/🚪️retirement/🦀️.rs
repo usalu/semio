@@ -27,7 +27,7 @@ pub trait ExtensionResourceOwner: Send + 'static {
 
 /// 🎟️ Self-funds one turn from its own quote for cold callers that no scheduler grants.
 pub(super) fn cold_grant(demand: RetirementDemand) -> RetainedCloneGrant {
-    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: if demand.copy_bytes == 0 { 0 } else { demand.copy_bytes.max(65536) }, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
 }
 
 fn yields(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {

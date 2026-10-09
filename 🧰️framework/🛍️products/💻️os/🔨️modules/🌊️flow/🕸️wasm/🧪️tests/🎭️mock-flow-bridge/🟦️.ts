@@ -14,8 +14,9 @@ interface MockFlowExports {
   readonly memory: WebAssembly.Memory;
   flow_bridge_allocate(length: number): number;
   flow_bridge_release(pointer: number, length: number): void;
-  flow_bridge_send(pointer: number, length: number, credit: number, nowMs: bigint, deadlineMs: bigint): number;
-  flow_bridge_poll(pointer: number, capacity: number, credit: number, nowMs: bigint, deadlineMs: bigint): number;
+  flow_bridge_send(pointer: number, length: number, credit: number, maximumItems:number, maximumCopyBytes:number, maximumCapacityBytes:number, maximumReleaseBytes:number, maximumDepth:number, nowMs: bigint, deadlineMs: bigint): number;
+  flow_bridge_poll(pointer: number, capacity: number, credit: number, maximumItems:number, maximumCopyBytes:number, maximumCapacityBytes:number, maximumReleaseBytes:number, maximumDepth:number, nowMs: bigint, deadlineMs: bigint): number;
+  flow_bridge_step_progress(axis:number):bigint;
   flow_bridge_begin_close(): void;
   flow_bridge_terminal_is_empty(): number;
 }
@@ -69,7 +70,7 @@ export class MockFlowBridge {
       memory: targetMemory,
       flow_bridge_allocate: () => 8,
       flow_bridge_release: () => {},
-      flow_bridge_send: (pointer, length, _credit, nowMs, deadlineMs) => {
+      flow_bridge_send: (pointer, length, _credit, _items, _copy, _capacity, _release, _depth, nowMs, deadlineMs) => {
         assert.equal(typeof nowMs, "bigint", "send-now-u64");
         assert.equal(typeof deadlineMs, "bigint", "send-deadline-u64");
         const frame = new Uint8Array(targetMemory.buffer, pointer, length).slice();
@@ -91,7 +92,7 @@ export class MockFlowBridge {
         else if (tag === 5) this.acceptControl(frame);
         return 1;
       },
-      flow_bridge_poll: (pointer, capacity, _credit, nowMs, deadlineMs) => {
+      flow_bridge_poll: (pointer, capacity, _credit, _items, _copy, _capacity, _release, _depth, nowMs, deadlineMs) => {
         assert.equal(typeof nowMs, "bigint", "poll-now-u64");
         assert.equal(typeof deadlineMs, "bigint", "poll-deadline-u64");
         this.retained ??= this.queue.shift();
@@ -102,6 +103,7 @@ export class MockFlowBridge {
         this.retained = undefined;
         return length;
       },
+      flow_bridge_step_progress: () => 0n,
       flow_bridge_begin_close: () => {
         this.closing = true;
         this.globalCloseCalls += 1;

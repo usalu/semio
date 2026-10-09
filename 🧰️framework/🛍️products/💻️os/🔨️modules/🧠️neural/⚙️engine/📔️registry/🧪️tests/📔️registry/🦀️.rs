@@ -1,7 +1,7 @@
 //! 🧪️ Shared readers, exact final ownership, nested defaults, and domain-specific operator retirement.
 
 use super::*;
-use crate::{ColdOwner, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Schema, ValueRetirement,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+use crate::{OperatorPlanAdmission,ColdOwner, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Schema, ValueRetirement,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
 
 //#region 🧪️SharedRegistry
@@ -94,6 +94,12 @@ fn registry_execution_owner_identity_survives_the_original_source_reader() {
 }
 struct OwnedOperator {text:String,drops:Arc<AtomicUsize>}
 impl Operator for OwnedOperator {
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_copy:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(1)}
+
     fn evaluate(&self,input:&Dictionary)->Result<Dictionary,EvalError>{Ok(input.clone())}
     fn retirement_is_empty(&self)->bool{self.text.capacity()==0}
     fn next_retire_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
@@ -123,7 +129,13 @@ fn final_registry_reader_handoff_is_exact_across_workers() {
 #[test]
 fn raw_registry_cold_boundary_remains_explicit(){let mut registry=Registry::new();registry.register_schema(Schema {id:"cold".into(),..Default::default()});drop(ColdOwner::new(registry));}
 struct UnspecifiedOperator{_text:String}
-impl Operator for UnspecifiedOperator{fn evaluate(&self,input:&Dictionary)->Result<Dictionary,EvalError>{Ok(input.clone())}}
+impl Operator for UnspecifiedOperator{
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_copy:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(1)}
+fn evaluate(&self,input:&Dictionary)->Result<Dictionary,EvalError>{Ok(input.clone())}}
 #[test]
 fn dynamic_payload_without_retirement_authority_is_retained_and_rejected() {
     let text=String::from("owned");let pointer=text.as_ptr();let original=UnspecifiedOperator {_text:text};assert_eq!(original._text.as_ptr(),pointer);
@@ -133,6 +145,12 @@ fn dynamic_payload_without_retirement_authority_is_retained_and_rejected() {
 }
 struct FaultingOperator{text:String,drops:Arc<AtomicUsize>}
 impl Operator for FaultingOperator {
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_copy:usize)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(1)}
+
     fn evaluate(&self,input:&Dictionary)->Result<Dictionary,EvalError>{Ok(input.clone())}
     fn retirement_is_empty(&self)->bool{self.text.capacity()==0}
     fn next_retire_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}

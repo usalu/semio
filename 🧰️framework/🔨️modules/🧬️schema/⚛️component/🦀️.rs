@@ -309,49 +309,31 @@ pub fn structural_validator_for(scope: &str, export: &str) -> Result<crate::Owne
 /// 🪪️ Scope id of this module — the `framework.schema` resolution contract every scope speaks.
 pub const FRAMEWORK_SCHEMA_SCOPE: &str = "framework.schema";
 
-/// 🍃 Leaves of the seven exports whose Rust definitions live in the dependency-free registry crate.
-const FRAMEWORK_SCHEMA_REGISTRY_LEAVES: FacetLeaves = FacetLeaves {
-    rust: include_str!("../📇️registry/🦀️.rs"),
+/// 🍃 Canonical language facets of every framework.schema export.
+const FRAMEWORK_SCHEMA_LEAVES: FacetLeaves = FacetLeaves {
+    rust: include_str!("../🦀️.rs"),
     typescript: include_str!("../🟦️.ts"),
     graphql: "",
     json_schema: include_str!("../🔣️.json"),
     proto: "",
 };
 
-/// 🍃 Leaves of the one export whose Rust definition stays beside the draft-07 validator.
-const FRAMEWORK_SCHEMA_VALIDATION_LEAVES: FacetLeaves = FacetLeaves {
-    rust: include_str!("../✅️validator/⚠️error/🦀️.rs"),
-    typescript: include_str!("../🟦️.ts"),
-    graphql: "",
-    json_schema: include_str!("../🔣️.json"),
-    proto: "",
-};
-
-/// 🍃 Leaves of the two exports whose Rust definition is the generated entity-catalog projection.
-const FRAMEWORK_SCHEMA_ENTITY_CATALOG_LEAVES: FacetLeaves = FacetLeaves {
-    rust: include_str!("../🤖️generated/🏷️entity-kinds/🦀️.rs"),
-    typescript: include_str!("../🟦️.ts"),
-    graphql: "",
-    json_schema: include_str!("../🔣️.json"),
-    proto: "",
-};
-
-/// 📚️ The single instance document of [`FRAMEWORK_SCHEMA_ENTITY_CATALOG_LEAVES`]'s `EntityKindCatalog`
+/// 📚️ The single instance document of [`FRAMEWORK_SCHEMA_LEAVES`]'s `EntityKindCatalog`
 /// export — the source every projection in `🤖️generated/🏷️entity-kinds/🦀️.rs`, `🤖️generated/🏷️entity-kinds/🟦️.ts` is emitted from by the `schema-entity-catalog` generator.
 pub const ENTITY_KIND_CATALOG_JSON: &str = include_str!("../🏷️entity-kinds/🔣️.json");
 
 /// 🏷️ The named exports of `framework.schema`, one per `$defs` key of the module's `🔣️.json`.
 pub const FRAMEWORK_SCHEMA_EXPORTS: [SchemaExport; 10] = [
-    SchemaExport { id: "SchemaFormat", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
-    SchemaExport { id: "FacetLeaves", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
-    SchemaExport { id: "SchemaExport", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
-    SchemaExport { id: "ScopeSchemaExports", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
-    SchemaExport { id: "SchemaExportEntry", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
-    SchemaExport { id: "SchemaExportEntries", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
-    SchemaExport { id: "SchemaResolveError", leaves: FRAMEWORK_SCHEMA_REGISTRY_LEAVES },
-    SchemaExport { id: "ValidationDiagnostic", leaves: FRAMEWORK_SCHEMA_VALIDATION_LEAVES },
-    SchemaExport { id: "EntityKind", leaves: FRAMEWORK_SCHEMA_ENTITY_CATALOG_LEAVES },
-    SchemaExport { id: "EntityKindCatalog", leaves: FRAMEWORK_SCHEMA_ENTITY_CATALOG_LEAVES },
+    SchemaExport { id: "SchemaFormat", leaves: FRAMEWORK_SCHEMA_LEAVES },
+    SchemaExport { id: "FacetLeaves", leaves: FRAMEWORK_SCHEMA_LEAVES },
+    SchemaExport { id: "SchemaExport", leaves: FRAMEWORK_SCHEMA_LEAVES },
+    SchemaExport { id: "ScopeSchemaExports", leaves: FRAMEWORK_SCHEMA_LEAVES },
+    SchemaExport { id: "SchemaExportEntry", leaves: FRAMEWORK_SCHEMA_LEAVES },
+    SchemaExport { id: "SchemaExportEntries", leaves: FRAMEWORK_SCHEMA_LEAVES },
+    SchemaExport { id: "SchemaResolveError", leaves: FRAMEWORK_SCHEMA_LEAVES },
+    SchemaExport { id: "ValidationDiagnostic", leaves: FRAMEWORK_SCHEMA_LEAVES },
+    SchemaExport { id: "EntityKind", leaves: FRAMEWORK_SCHEMA_LEAVES },
+    SchemaExport { id: "EntityKindCatalog", leaves: FRAMEWORK_SCHEMA_LEAVES },
 ];
 
 /// 📥 Registers this module's own scope into the OS-wide catalog, the way every other scope owner

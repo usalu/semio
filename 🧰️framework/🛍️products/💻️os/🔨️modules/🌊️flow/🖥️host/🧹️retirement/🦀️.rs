@@ -1,0 +1,131 @@
+//! 🏠️ Exact original Host payload custody follows physical geometry and store closure.
+use super::*;
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,shared::SharedControlledRetirement};
+
+struct HostShared<T:RetireOwned+Sync>(Arc<T>);
+impl<T:RetireOwned+Sync> RetireOwned for HostShared<T>{
+ fn retirement(self)->Box<dyn RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.0))}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<SharedControlledRetirement<T>>())}
+ fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+pub(super) struct FlowHostPayload {
+ operator_registry:Option<neural::SharedRegistry>,
+ host_snapshot:FlowHostSnapshot,
+ dag:DagHost,
+ current_channels:Option<HostShared<EvalChannels>>,
+ export_payloads:HistoryFoldIndex<String, Dictionary>,
+ last_eval_json:String,
+ host_catalogue_json:String,
+ kind_infos:HostShared<HistoryFoldIndex<String, OperatorInfo>>,
+ neural_cache:HostShared<NeuralCache>,
+ previous_snapshot:Option<HostShared<TreeSnapshot>>,
+ previous_channels:Option<HostShared<EvalChannels>>,
+ pending_baseline_publication:Option<FlowBaselinePublication>,
+ baseline_retirement:Option<ControlledRetirement<FlowPublicationDisplaced>>,
+ baseline_publication_progress:RetainedCloneProgress,
+ pending_evaluation:Option<neural::BudgetedEvalState>,
+ baseline_registry_generation:u64,
+ next_widget_serial:u64,
+ next_synapse_serial:u64,
+ viewport_w:u32,
+ viewport_h:u32,
+ viewport_dpr:f64,
+ pan_anchor:Option<(f64, f64, f64, f64)>,
+ ghost_node:Option<DagNodeSpec>,
+ pending_history_baseline:Option<FlowHostSnapshot>,
+ pending_change:bool,
+ pending_leaves:Vec<FlowMutation>,
+ history_fault:Option<FlowCoreError>,
+ #[cfg(test)]
+ recorded:Vec<Vec<FlowMutation>>,
+ journal_mark:usize,
+ edited_note:Option<String>,
+ gesture_active:bool,
+ pending_extension_evals:Vec<neural::PendingExtensionEval>,
+ interaction_revision:u64,
+ interaction_projection:Option<dag::DagInteractionProjection>,
+ displaced:neural::ValueRetirement,
+}
+impl FlowHostPayload {
+ pub(super) fn from_host(source:FlowHost)->Self {
+  let FlowHost{
+   geometry_port,
+   operator_registry,
+   host_snapshot,
+   dag,
+   current_channels,
+   export_payloads,
+   last_eval_json,
+   host_catalogue_json,
+   kind_infos,
+   neural_cache,
+   previous_snapshot,
+   previous_channels,
+   pending_baseline_publication,
+   baseline_retirement,
+   baseline_publication_progress,
+   baseline_registry_generation,
+   next_widget_serial,
+   next_synapse_serial,
+   viewport_w,
+   viewport_h,
+   viewport_dpr,
+   pan_anchor,
+   ghost_node,
+   history_store,
+   pending_history_baseline,
+   pending_change,
+   pending_leaves,
+   history_fault,
+   #[cfg(test)]
+   recorded,
+   journal_mark,
+   edited_note,
+   gesture_active,
+   pending_extension_evals,
+   interaction_revision,
+   interaction_projection,
+   displaced,
+  }=source;
+  assert!(geometry_port.is_none()&&history_store.is_none(),"original Host geometry and store must be physically closed before payload handoff");
+  Self{
+   operator_registry:operator_registry,
+   host_snapshot:host_snapshot,
+   dag:dag,
+   current_channels:current_channels.map(HostShared),
+   export_payloads:export_payloads,
+   last_eval_json:last_eval_json,
+   host_catalogue_json:host_catalogue_json,
+   kind_infos:HostShared(kind_infos),
+   neural_cache:HostShared(neural_cache),
+   previous_snapshot:previous_snapshot.map(HostShared),
+   previous_channels:previous_channels.map(HostShared),
+   pending_baseline_publication:pending_baseline_publication,
+   baseline_retirement:baseline_retirement,
+   baseline_publication_progress:baseline_publication_progress,
+   baseline_registry_generation:baseline_registry_generation,
+   next_widget_serial:next_widget_serial,
+   next_synapse_serial:next_synapse_serial,
+   viewport_w:viewport_w,
+   viewport_h:viewport_h,
+   viewport_dpr:viewport_dpr,
+   pan_anchor:pan_anchor,
+   ghost_node:ghost_node,
+   pending_history_baseline:pending_history_baseline,
+   pending_change:pending_change,
+   pending_leaves:pending_leaves,
+   history_fault:history_fault,
+   #[cfg(test)]
+   recorded:recorded,
+   journal_mark:journal_mark,
+   edited_note:edited_note,
+   gesture_active:gesture_active,
+   pending_extension_evals:pending_extension_evals,
+   interaction_revision:interaction_revision,
+   interaction_projection:interaction_projection,
+   displaced:displaced,
+  }
+ }
+}

@@ -14,9 +14,11 @@ pub struct DuplicateLayer {
     pub layer_id: String,
 }
 
-pub fn handle(payload: &DuplicateLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
+pub fn handle(payload: &DuplicateLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     if payload.layer_id.is_empty() {
         return Ok(Emit::default());
     }
-    Ok(Emit::mutations(crate::editor::drawing::commands::edit_selection::plan(doc.snapshot, &[payload.layer_id.clone()], "duplicate")?))
+    let admission=doc.operation()?;
+    let mutations=session.with_identity_control(|control|crate::editor::drawing::commands::edit_selection::plan(doc.snapshot,&[payload.layer_id.clone()],"duplicate",admission,control))?;
+    Ok(Emit::mutations(mutations))
 }

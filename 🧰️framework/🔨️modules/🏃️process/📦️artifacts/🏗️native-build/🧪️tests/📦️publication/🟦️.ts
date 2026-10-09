@@ -6,7 +6,7 @@ import { buildCargoArtifacts } from "../../🟦️.ts";
 /** 🦀️ Compares a captured executable with Cargo while retaining shared intermediates and retiring private outputs. */
 export async function testCargoArtifactPublication(output: string): Promise<void> {
   const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url), "utf8")).cargo;
-  const root = mkdtempSync(join(output, "cargo-publication-"));
+  const root = mkdtempSync(join(output, "p-"));
   try {
     mkdirSync(join(root, ".cargo"));
     writeFileSync(join(root, ".cargo/config.toml"), '[build]\ntarget-dir="shared-output"\nbuild-dir="build-cache"\n');
@@ -19,7 +19,7 @@ export async function testCargoArtifactPublication(output: string): Promise<void
     const expected = Bun.spawnSync([join(root, "oracle/debug", executable)], { stdout: "pipe", stderr: "pipe" });
     assert.equal(expected.exitCode, 0, expected.stderr.toString());
     assert.equal(expected.stdout.toString(), fixture.stdout);
-    await buildCargoArtifacts(join(root,"Cargo.toml"), ["--bin", fixture.name], {version:1,cwd:root,buildDirectory:join(root,"build-cache"),leaseDirectory:join(root,"leases"),captureDirectory:join(root,"dist"),budgetMs:10000});
+    await buildCargoArtifacts(join(root,"Cargo.toml"), ["--bin", fixture.name], {version:1,cwd:root,buildDirectory:join(root,"build-cache"),leaseDirectory:output,captureDirectory:join(root,"dist"),budgetMs:10000});
     assert.equal(existsSync(join(root, "shared-output/debug", executable)), false, "Captured builds must not contend for the workspace's uplifted artifacts");
     assert.ok(existsSync(join(root, "build-cache")), "Compiler intermediates must remain shared");
     const delivered = Bun.spawnSync([join(root, "dist/build", executable)], { stdout: "pipe", stderr: "pipe" });

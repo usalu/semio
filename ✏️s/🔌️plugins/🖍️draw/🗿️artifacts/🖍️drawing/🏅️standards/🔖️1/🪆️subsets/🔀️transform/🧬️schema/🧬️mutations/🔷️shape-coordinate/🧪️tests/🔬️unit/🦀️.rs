@@ -3,7 +3,7 @@
 fn shape_coordinates_preserve_sparse_history() {
  use protocol::{Mutation,DiffAlgebra};
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
- let layer=crate::schema::create_drawing_shape_layer_rect("Rectangle");let id=crate::schema::layer_id(&layer).clone();
+ let layer=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Rectangle")).to_string().into()).expect("nonempty authored identity"), "Rectangle");let id=crate::schema::layer_id(&layer).clone();
  let before=crate::DrawingSnapshot{layers:vec![layer].into(),..Default::default()};
  let mut composed=crate::DrawingDiff::default();
  for edit in fixture["edits"].as_array().unwrap(){

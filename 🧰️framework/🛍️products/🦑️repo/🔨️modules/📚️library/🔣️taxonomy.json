@@ -4784,6 +4784,12 @@
       "slugPattern": "^repo$",
       "allowEmojiOnly": false
     },
+    "repo-schema-reads": {
+      "emoji": "🔗️",
+      "slugPattern": "^schema-reads$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["discovery"]
+    },
     "discovery": {
       "emoji": "🔍️",
       "slugPattern": "^discovery$",

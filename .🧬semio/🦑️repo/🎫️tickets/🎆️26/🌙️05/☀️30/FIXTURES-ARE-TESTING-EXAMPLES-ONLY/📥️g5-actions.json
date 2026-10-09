@@ -1,0 +1,124 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧬️schema/♻️retirement/🔣️.json",
+      "beforeSHA": "01bd916d4c6d47ecdf9542e532022f5a67a33d738b789352b6ece9998f4a5cf5",
+      "action": "remove exclusive whole-trial schema, preserve actual domain contract",
+      "recordedAfterSHA": null,
+      "currentObservedSHA": null,
+      "attribution": "Only exact removal/validator/guard logical action; whole-file observer does not adopt peer bytes."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🧬️schema/🔣️.json",
+      "beforeSHA": "4f034d4fa7c2969be26d32675b38c6b1d031e6ed5134ba04bb963c5569134026",
+      "action": "remove exclusive whole-trial schema, preserve actual domain contract",
+      "recordedAfterSHA": null,
+      "currentObservedSHA": null,
+      "attribution": "Only exact removal/validator/guard logical action; whole-file observer does not adopt peer bytes."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🧬️schema/🔣️.json",
+      "beforeSHA": "736f2d0f5c81aa08e09278a6d9b0b8d5983e78debf3bd1dc52be10b4824116c2",
+      "action": "remove exclusive whole-trial schema, preserve actual domain contract",
+      "recordedAfterSHA": null,
+      "currentObservedSHA": null,
+      "attribution": "Only exact removal/validator/guard logical action; whole-file observer does not adopt peer bytes."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧬️schema/🔣️.json",
+      "beforeSHA": "0dac50216c0fa6a721c95c0c08b0a387d190ad8ba1ce1b61a7086c9d73464e3f",
+      "action": "remove exclusive whole-trial schema, preserve actual domain contract",
+      "recordedAfterSHA": null,
+      "currentObservedSHA": null,
+      "attribution": "Only exact removal/validator/guard logical action; whole-file observer does not adopt peer bytes."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-allocation-close/🔣️.json",
+      "beforeSHA": "aaf86b303df9bcd1d81cf953891d6c9724f87f20c8f5d4def117d3faa7c7f900",
+      "action": "remove exclusive whole-trial schema, preserve actual domain contract",
+      "recordedAfterSHA": null,
+      "currentObservedSHA": null,
+      "attribution": "Only exact removal/validator/guard logical action; whole-file observer does not adopt peer bytes."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧪️tests/🟦️.ts",
+      "beforeSHA": "7fb9efba5c49722d0fd060d1067de1a9929775699600f6881db77726bd5b935e",
+      "action": "remove only whole-trial schema reader/validator/import and wrapper refusals",
+      "recordedAfterSHA": "f3ec3d5acee50aa92155155c609c084dd1bc330ef7532357856d86fcea228171",
+      "currentObservedSHA": "f3ec3d5acee50aa92155155c609c084dd1bc330ef7532357856d86fcea228171",
+      "attribution": "Only exact removal/validator/guard logical action; whole-file observer does not adopt peer bytes."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/♻️raw-allocation-close/🟦️.ts",
+      "beforeSHA": "442aac7e592fe8cb8d9477c2a42eb4366707aa413bccc6c3af38c83491ce5ef5",
+      "action": "remove only whole-trial schema reader/validator/import and wrapper refusals",
+      "recordedAfterSHA": "f608968a1557925933adaaafb393575a82c3ec7125b3ed380ff590e3012d34ad",
+      "currentObservedSHA": "f608968a1557925933adaaafb393575a82c3ec7125b3ed380ff590e3012d34ad",
+      "attribution": "Only exact removal/validator/guard logical action; whole-file observer does not adopt peer bytes."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts",
+      "beforeSHA": "8f8581b2fea7091b7d5c9643a242fc311b96876058227001769a3e8de07a6f01",
+      "action": "remove only whole-trial schema reader/validator/import and wrapper refusals",
+      "recordedAfterSHA": "2fcf124f6e1e41b4459bcfc868c1d4335a721cd47ea67ea7f90aed9c01d294e9",
+      "currentObservedSHA": "2fcf124f6e1e41b4459bcfc868c1d4335a721cd47ea67ea7f90aed9c01d294e9",
+      "attribution": "Only exact removal/validator/guard logical action; whole-file observer does not adopt peer bytes."
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+      "beforeSHA": "552eba1644f50d478a71c7a1045eb07f1e999c0de722bd0784f2aee1d12fe120",
+      "action": "remove only whole-trial schema reader/validator/import and wrapper refusals",
+      "recordedAfterSHA": "c1e0ffdeb19bdfdeb73c1a4392f576c5d934983c0e0ef1d50671efa56c7a92b4",
+      "currentObservedSHA": "e80889d745e41cb4726bec1f38442ff286f97b4003f47c106a7a28ad98c6727e",
+      "attribution": "Only exact removal/validator/guard logical action; whole-file observer does not adopt peer bytes."
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "beforeSHA": "7f7be404901fb0be26e72ba0e7223b860feffd4ec0d263c4909450a7d119a768",
+      "recordedAfterSHA": "df3df87fef36572362f5370139170509d83ec6817ee88eab2936783f89c7bf5c",
+      "action": "existing private current-corpus-only scoped physical absence guard; no new route/launch",
+      "currentObservedSHA": "e0aa91f29d144babbaf0da73fb0795c98e78f8e70c4f0bdb22b4fba74dd039d8",
+      "attribution": "Only exact removal/validator/guard logical action; whole-file observer does not adopt peer bytes."
+    }
+  ],
+  "plainFixtureObservations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🎟️admission/🧫️fixtures/🔣️.json",
+      "beforeSHA": "cc455b3208287c7dae98dd9aa29db7e5f31e0bf6eb00201816c2ad7fdf88a7cb",
+      "afterSHA": "cc455b3208287c7dae98dd9aa29db7e5f31e0bf6eb00201816c2ad7fdf88a7cb",
+      "currentObservedSHA": "cc455b3208287c7dae98dd9aa29db7e5f31e0bf6eb00201816c2ad7fdf88a7cb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧫️fixtures/🚪️raw-allocation-close.json",
+      "beforeSHA": "becf94183df375a7be7f793673e6566da0cf621be926159e044319e4ae632084",
+      "afterSHA": "becf94183df375a7be7f793673e6566da0cf621be926159e044319e4ae632084",
+      "currentObservedSHA": "becf94183df375a7be7f793673e6566da0cf621be926159e044319e4ae632084"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧫️fixtures/♻️retirement/🔣️.json",
+      "beforeSHA": "0795bb82cdf0206957fc1bf5edcd927b40c703cfd25bf7848f0be7a191b2aba9",
+      "afterSHA": "0795bb82cdf0206957fc1bf5edcd927b40c703cfd25bf7848f0be7a191b2aba9",
+      "currentObservedSHA": "0795bb82cdf0206957fc1bf5edcd927b40c703cfd25bf7848f0be7a191b2aba9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🔣️.json",
+      "beforeSHA": "c7207b4da3c0498ef5227f02f013e906d8591ceb0788a8ca4575d96369bc93fd",
+      "afterSHA": "c7207b4da3c0498ef5227f02f013e906d8591ceb0788a8ca4575d96369bc93fd",
+      "currentObservedSHA": "c7207b4da3c0498ef5227f02f013e906d8591ceb0788a8ca4575d96369bc93fd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🔣️.json",
+      "beforeSHA": "35b9c8b9cbbe4b6a5aedb316c5c5c69e08211bc752df8780772ac1e5245867b2",
+      "afterSHA": "35b9c8b9cbbe4b6a5aedb316c5c5c69e08211bc752df8780772ac1e5245867b2",
+      "currentObservedSHA": "35b9c8b9cbbe4b6a5aedb316c5c5c69e08211bc752df8780772ac1e5245867b2"
+    }
+  ],
+  "sourceCopiesAdded": false,
+  "normalProducerReleased": false,
+  "trueScopedRed": {
+    "session": 40104,
+    "result": "Nx1/98ms exact five physical whole-trial schema authorities",
+    "log": "🗑️generated/g5-red.log"
+  },
+  "heldRustSourceChanges": false
+}

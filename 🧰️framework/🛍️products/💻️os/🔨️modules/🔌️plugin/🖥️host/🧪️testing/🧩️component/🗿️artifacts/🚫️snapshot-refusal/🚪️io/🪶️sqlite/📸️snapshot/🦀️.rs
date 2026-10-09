@@ -52,43 +52,45 @@ impl store::ArtifactSqliteSnapshot for Snapshot{
   let value=i32::try_from(row.integer(1)?).map_err(|_|invalid("refusal snapshot value exceeds signed i32"))?;
   c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(Self{value})
  }
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{
+ let original=native_owner.native();
   c.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1)?;c.check_rows(1)?;c.check_value_bytes(8)?;
   let bytes=match payload{store::io_schema::IoPayload::Text(text)=>text.len(),store::io_schema::IoPayload::Binary(bytes)=>bytes.len()};
   if bytes>c.limits().max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"refusal snapshot native input exceeds file ceiling"))}
-  c.allocation_stage(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
+  c.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
    let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
-   let mut native=NativeDecodeControl::new(remaining,&mut progress);
-   let result=(||{
+   let before=original.owned_bytes();let maximum_owned=before.checked_add(remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture native cumulative allowance overflow"));
+   let result=maximum_owned.and_then(|maximum|original.scoped_maximum(maximum,|native|native.scoped_observer(&mut progress,|native|{
     match payload{
-     store::io_schema::IoPayload::Text(text)=>semio_framework_pack_json::from_json_str_controlled(text,semio_framework_pack_json::JsonMemberPolicy::Reject,&mut native),
+     store::io_schema::IoPayload::Text(text)=>semio_framework_pack_json::from_json_str_controlled(text,semio_framework_pack_json::JsonMemberPolicy::Reject,native),
      store::io_schema::IoPayload::Binary(bytes)=>{
-      let spec=Self::__dsl_spec_producer().decode(&mut native)?;
-      let(record,_)=pack::decode_document_controlled(bytes,&spec,&store::PackDecodeOptions::default(),&mut native).map_err(store::PackRefusal::into_value_error)?;
-      Self::__dsl_from_record_controlled(&record,&mut native)
+      let spec=Self::__dsl_spec_producer().decode(native)?;
+      let(record,_)=pack::decode_document_controlled(bytes,&spec,&store::PackDecodeOptions::default(),native).map_err(store::PackRefusal::into_value_error)?;
+      Self::__dsl_from_record_controlled(&record,native)
      }
     }
-   })();(result,native.owned_bytes())
+   })));(result,original.owned_bytes()-before)
   })?
  }
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   c.checkpoint(SqliteSnapshotPhase::EncodeNative,0,1)?;c.check_rows(1)?;c.check_value_bytes(8)?;let maximum=c.limits().max_file_bytes;
-  c.allocation_stage(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
+  let original=owner.native();
+  c.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
    let mut progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total);
-   let mut native=NativeEncodeControl::new(remaining,&mut progress);
-   let result=(||{
+   let before=original.owned_bytes();let maximum_owned=before.checked_add(remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture native cumulative allowance overflow"));
+   let result=maximum_owned.and_then(|maximum|original.scoped_maximum(maximum,|native|native.scoped_observer(&mut progress,|native|{
     let output=match encoding{
-     SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(semio_framework_pack_json::to_json_string_controlled(self,&mut native)?),
+     SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(semio_framework_pack_json::to_json_string_controlled(self,native)?),
      SnapshotEncoding::Binary=>{
-      let spec=Self::__dsl_spec_producer().encode(&mut native)?;
-      let record=semio_framework_dsl_record::native_encoding::EncodedRecord::from_record(self.__dsl_to_record_controlled(&mut native)?);
-      store::io_schema::IoPayload::Binary(pack::encode_document_controlled(&spec,record.as_record(),&store::PackEncodeOptions::default(),&mut native).map_err(store::PackRefusal::into_value_error)?)
+      let spec=Self::__dsl_spec_producer().encode(native)?;
+      let record=semio_framework_dsl_record::native_encoding::EncodedRecord::from_record(self.__dsl_to_record_controlled(native)?);
+      store::io_schema::IoPayload::Binary(pack::encode_document_controlled(&spec,record.as_record(),&store::PackEncodeOptions::default(),native).map_err(store::PackRefusal::into_value_error)?)
      }
     };
     let bytes=match &output{store::io_schema::IoPayload::Text(text)=>text.len(),store::io_schema::IoPayload::Binary(bytes)=>bytes.len()};
     if bytes>maximum{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"refusal snapshot native output exceeds file ceiling"))}
     Ok(output)
-   })();(result,native.owned_bytes())
+   })));(result,original.owned_bytes()-before)
   })?
  }
  fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{

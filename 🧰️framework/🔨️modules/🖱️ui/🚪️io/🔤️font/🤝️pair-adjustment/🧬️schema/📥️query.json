@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Font Pair Query",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "leftGlyph",
+    "rightGlyph"
+  ],
+  "properties": {
+    "leftGlyph": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "rightGlyph": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    }
+  }
+}

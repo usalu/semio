@@ -1,0 +1,7 @@
+# Current JPG Publication Law Audit
+
+Read-only mounted test review, no runtime receipt. The exact original selector now exists in the already-mounted JPG IO unit tests. It checks complete fixture/demo canonical Pack/DSL, actual live factory and independent bare codec concrete TypeId/hash, both direct provider carriers, compiled/current protocol bytes, independent Bun SHA, and third-party SQLite queries for all six semantic tables before emitting the publication receipt. It does not establish Kernel registry/typed metadata/io_run qualification.
+
+Concrete runtime blocker found in the raw Rust JavaScript string: the table enumeration uses db.query(\"SELECT ...\") with literal backslashes before quotes outside a JavaScript string. Rust r# strings do not remove these escapes; Bun receives invalid JavaScript syntax. Replace those with ordinary double quotes inside the raw string. Root was notified immediately; no production edit was made by this auditor.
+
+Other inspected identity comparisons and six-table semantic queries are meaningful. The test's direct provider expected database comes from the same provider and alone is a self-oracle, but the separate independent SQLite fixture queries supply concrete field authority. Physical edit/control/registry laws remain outside this publication selector. Exact received selector, successful original named test and exactly one publication receipt are still required before the guarded refresh can publish hashes.

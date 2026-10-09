@@ -92,11 +92,11 @@ fn an_ancestor_cancel_wakes_a_descendant_waiter_once_and_drop_retains_nothing() 
     assert_eq!(counter.0.load(Ordering::SeqCst) as u64, cancellation["expectedWakes"].as_u64().unwrap());
     assert!(std::future::Future::poll(waiting.as_mut(), &mut context).is_ready());
     drop(waiting);
-    let retained: usize = chain.iter().map(|token| token.0.waiters.lock().unwrap().len()).sum();
+    let retained: usize = chain.iter().map(|token| token.0.waiters.lock().len()).sum();
     assert_eq!(retained as u64, cancellation["retainedWaitersAfterDrop"].as_u64().unwrap());
     let live = crate::CancelToken::root_now();
     let mut abandoned = Box::pin(live.child_now().cancelled());
     assert!(std::future::Future::poll(abandoned.as_mut(), &mut context).is_pending());
     drop(abandoned);
-    assert_eq!(live.0.waiters.lock().unwrap().len(), 0, "an abandoned waiter leaves no registration behind");
+    assert_eq!(live.0.waiters.lock().len(), 0, "an abandoned waiter leaves no registration behind");
 }

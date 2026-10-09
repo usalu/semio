@@ -9,7 +9,7 @@ pub use set_n::SetN;
 mod assign_n;
 pub use assign_n::AssignN;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, semio_framework_value_derive::RetireOwned, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = DemoSnapshot, diff = DemoDiff, schema = "validated.doc")]

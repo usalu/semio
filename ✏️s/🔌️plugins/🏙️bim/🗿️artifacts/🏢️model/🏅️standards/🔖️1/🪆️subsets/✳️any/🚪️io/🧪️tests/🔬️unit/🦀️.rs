@@ -4,6 +4,9 @@ use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, testkit
 use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
 use semio_framework::io_schema::IoPayload;
 
+#[path = "../🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
 fn entry(direction: IoEntryDirection) -> &'static semio_framework_os_kernel::io::io_mechanism::IoEntry {
     io().entries.iter().find(|entry| entry.direction == direction && (entry.from == IFC_DIALECT || entry.into == IFC_DIALECT)).expect("the IFC entry")
 }

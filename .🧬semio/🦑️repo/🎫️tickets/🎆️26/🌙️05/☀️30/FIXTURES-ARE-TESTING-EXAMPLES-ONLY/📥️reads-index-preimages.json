@@ -1,0 +1,24 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🔣️.json",
+      "beforeSha256": "32405e7cb1bb9bb2db32f0a3cd9c15eeff2028a30be45f619064ec1e6f141c33"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🟦️.ts",
+      "beforeSha256": "0007f19dbee4099e655e247ff716d8764984a1a824a6b54d17219c6ddbf97cf3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
+      "beforeSha256": "063120ba47e33ac0246ec9cde929148da657ede8d974dc323e91a023a602fbf4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts",
+      "beforeSha256": "3b1f28a08888a09e5c89828a088eeb8439fd3f28b63e3220dabbe3dac49cf933"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "beforeSha256": "2b03016c576f0fab8c1b59dd3e68453435daf2f816922663946dd4872a929ff9"
+    }
+  ]
+}

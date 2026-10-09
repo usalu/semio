@@ -1,0 +1,8 @@
+/** 📦️ SQLite original publication custody requires six distinct authority-paid frontiers. */
+import{test,expect}from"bun:test";import Ajv2020 from"ajv/dist/2020";import{Database}from"bun:sqlite";import{readFileSync}from"node:fs";
+test("snapshot publication assembly retains original forward post and inverse across each admitted frontier",()=>{
+ const root=new URL("../../",import.meta.url),read=(p:string)=>JSON.parse(readFileSync(new URL(p,root),"utf8")),law=read("🧫️fixtures/📦️assembly/🔣️.json");expect(new Ajv2020({strict:true}).compile(read("🧬️schema/📦️assembly/🔣️.json"))(law)).toBe(true);
+ const db=new Database(":memory:");try{db.exec("CREATE TABLE custody(original TEXT PRIMARY KEY,frontier INTEGER)");for(const original of["forward α\u0000😀","post ä","inverse first","inverse last"])db.query("INSERT INTO custody VALUES(?,0)").run(original);for(let phase=0;phase<law.originalFrontiers.length;phase++){const before=db.query("SELECT original FROM custody ORDER BY original").all();for(const _currency of law.authorityRequired)expect(db.query("SELECT original FROM custody ORDER BY original").all()).toEqual(before);db.query("UPDATE custody SET frontier=?").run(phase);expect(db.query("SELECT COUNT(*) AS owners FROM custody").get()).toEqual({owners:4});}}finally{db.close();}
+ console.log("[DEBUG] SQLite six distinct original assembly frontiers retain alloriginals on every independent currency refusal");
+ const source=readFileSync(new URL("🦀️.rs",root),"utf8");for(const producer of["publication_post","OriginalVectorCursor","Arc::try_unwrap","shared_retirement_allocation_bytes"]){expect(source).toContain(producer);}expect(source).not.toContain("authority.next_edit(");
+});

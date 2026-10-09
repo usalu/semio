@@ -1,0 +1,18 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "beforeSHA": "9ee6b24d10abfaee2cc7db8b90128ae4be27fdd438e7993590e9f59a3b176991",
+  "recordedAfterSHA": "45951c6a96f305eec71d6fae069ab165359434d61e2a1dc40716db6416b74b4d",
+  "logicalActions": [
+    "wire factory captures actual typed issuer",
+    "granted child ingress restores original typed request on refusal",
+    "original wire Vec/String capacity paid separately",
+    "raw request base/authority custody and full-grant terminal child/frame closure",
+    "one genuine test source construction"
+  ],
+  "sourceCopiesAdded": false,
+  "currentTypeEdgeCorrection": {
+    "beforeSHA": "a7fcac48de13260537f740b504da6306988e49d2b9a3cf321f5e96aa97e096f6",
+    "afterSHA": "45951c6a96f305eec71d6fae069ab165359434d61e2a1dc40716db6416b74b4d",
+    "producerReference": "ArtifactStoreOneItemPreparationRequest.authority"
+  }
+}

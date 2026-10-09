@@ -1,0 +1,342 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:artifact-catalog-binding:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contributor",
+    "owner",
+    "artifact",
+    "target",
+    "capability"
+  ],
+  "properties": {
+    "contributor": {
+      "$ref": "#/$defs/package"
+    },
+    "owner": {
+      "$ref": "#/$defs/package"
+    },
+    "artifact": {
+      "$ref": "#/$defs/artifact"
+    },
+    "target": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/target"
+        }
+      ]
+    },
+    "capability": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unlinkedGuest"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "nativeIdentity",
+            "sqliteSchema",
+            "factory"
+          ],
+          "properties": {
+            "kind": {
+              "const": "linked"
+            },
+            "nativeIdentity": {
+              "$ref": "#/$defs/nativeIdentity"
+            },
+            "sqliteSchema": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "factory": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "hex": {
+      "type": "string",
+      "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "packageId",
+        "version",
+        "componentSha256",
+        "componentBlake3",
+        "descriptorByteSha256",
+        "executionProtocol"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "componentSha256": {
+          "$ref": "#/$defs/hex"
+        },
+        "componentBlake3": {
+          "$ref": "#/$defs/hex"
+        },
+        "descriptorByteSha256": {
+          "$ref": "#/$defs/hex"
+        },
+        "executionProtocol": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "appChannelVersion"
+          ],
+          "properties": {
+            "appChannelVersion": {
+              "type": "integer",
+              "const": 23
+            }
+          }
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schema",
+        "packSchemaHash"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packSchemaHash": {
+          "$ref": "#/$defs/hex"
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parentDialect",
+        "surface",
+        "grant",
+        "browserActor"
+      ],
+      "properties": {
+        "parentDialect": {
+          "type": "string",
+          "minLength": 1
+        },
+        "surface": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "surfaceId",
+            "appId",
+            "windowKindId",
+            "role",
+            "rendererTarget"
+          ],
+          "properties": {
+            "surfaceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "appId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "windowKindId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "role": {
+              "enum": [
+                "viewer",
+                "editor"
+              ]
+            },
+            "rendererTarget": {
+              "enum": [
+                "react",
+                "wgpu",
+                "wasm"
+              ]
+            }
+          }
+        },
+        "grant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "read",
+            "write",
+            "observe"
+          ],
+          "properties": {
+            "read": {
+              "type": "boolean"
+            },
+            "write": {
+              "type": "boolean"
+            },
+            "observe": {
+              "type": "boolean"
+            }
+          }
+        },
+        "browserActor": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "none"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "schema",
+                "codegenPolicy",
+                "sha256",
+                "sourceComponentSha256",
+                "sourceDescriptorByteSha256",
+                "policySha256",
+                "importInterfaces"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "closed-browser-actor"
+                },
+                "schema": {
+                  "const": "semio.os.closed-browser-actor.v1"
+                },
+                "codegenPolicy": {
+                  "const": "semio.os.browser-jco-1.34.0-jspi.v1"
+                },
+                "sha256": {
+                  "$ref": "#/$defs/hex"
+                },
+                "sourceComponentSha256": {
+                  "$ref": "#/$defs/hex"
+                },
+                "sourceDescriptorByteSha256": {
+                  "$ref": "#/$defs/hex"
+                },
+                "policySha256": {
+                  "$ref": "#/$defs/hex"
+                },
+                "importInterfaces": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "nativeIdentity": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "owner"
+          ],
+          "properties": {
+            "kind": {
+              "const": "typed"
+            },
+            "owner": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "pluginId",
+            "packageHash",
+            "schema"
+          ],
+          "properties": {
+            "kind": {
+              "const": "guest"
+            },
+            "pluginId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "packageHash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    }
+  }
+}

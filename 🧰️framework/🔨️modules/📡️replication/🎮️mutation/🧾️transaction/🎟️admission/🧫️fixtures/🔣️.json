@@ -1,0 +1,1 @@
+{"actors":["alice","🧩actor\u0000ü","unchanged-original"],"apps":["draw","app-ü"],"tools":["select","tool🧩\u0000"],"clock":{"actor":17,"physicalMs":1728000000123,"logical":129},"grant":{"items":1,"copy":4096,"capacity":4096,"release":262144,"depth":4096}}

@@ -9,18 +9,19 @@ fn retained_step_context_owner_turns_use_original_ledger_without_heap_birth() {
         let operation = OperationId(row["operation"].as_u64().unwrap());
         let generation = Generation(row["generation"].as_u64().unwrap());
         for (items, bytes) in [(0, extent), (1, 0), (1, extent - 1)] {
-            let (denied, heap) = observe(|| StepContextOwner::new(operation, generation, items, bytes));
-            assert!(denied.is_none());
+            let (denied, heap) = observe(|| StepContextOwner::new(operation,generation,RetainedCloneGrant{maximum_items:items,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()}));
+            assert!(denied.is_err());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
-        let (owner, heap) = observe(|| StepContextOwner::new(operation, generation, 1, extent));
+        let (denied,heap)=observe(||StepContextOwner::new(operation,generation,RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:extent,maximum_depth:0,..Default::default()}));assert!(denied.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        let (owner, heap) = observe(|| StepContextOwner::new(operation,generation,RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:extent,maximum_depth:1,..Default::default()}));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (extent, 0));
-        let mut owner = owner.unwrap();
+        let (mut owner,receipt)=owner.unwrap();assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(heap.requested_bytes,heap.released_bytes));
         let cancel = root_cancel_token();
         let mut sequence = 0;
         for _ in 0..row["turns"].as_u64().unwrap() {
             let (_, heap) = observe(|| {
-                let mut context = owner.context(StepBudget::new(1, u64::MAX), cancel.clone(), default_now_us, &mut sequence).unwrap();
+                let mut actual_retained_progress=RetainedCloneProgress::default();let mut context = owner.context(StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), cancel.clone(), default_now_us, &mut sequence,&mut actual_retained_progress).unwrap();
                 assert_eq!(context.operation(), operation);
                 assert_eq!(context.generation(), generation);
                 assert_eq!(context.fuel_remaining(), 1);
@@ -52,9 +53,9 @@ fn retained_step_context_owner_turns_use_original_ledger_without_heap_birth() {
 fn retained_step_context_owner_preserves_original_ledger_until_context_and_writer_return() {
     let extent = StepContextOwner::birth_bytes();
     for kind in [0, 1, 2] {
-        let mut owner = StepContextOwner::new(OperationId(91004 + kind), Generation(6), 1, extent).unwrap();
+        let mut owner = StepContextOwner::new(OperationId(91004+kind),Generation(6),RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:extent,maximum_depth:1,..Default::default()}).unwrap().0;
         let mut sequence = 0;
-        let context = owner.context(StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence).unwrap();
+        let mut actual_retained_progress=RetainedCloneProgress::default();let context = owner.context(StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, &mut sequence,&mut actual_retained_progress).unwrap();
         let identity = Arc::as_ptr(&context.payload_ledger);
         let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::Preview);
         let mut context = Some(context);
@@ -74,13 +75,13 @@ fn retained_step_context_owner_preserves_original_ledger_until_context_and_write
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(owner.next_close_release_byte_demand().unwrap(), extent);
         let mut refused_sequence = 0;
-        assert!(owner.context(StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut refused_sequence).is_none());
+        let mut actual_retained_progress=RetainedCloneProgress::default();assert!(owner.context(StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, &mut refused_sequence,&mut actual_retained_progress).is_none());
         if kind == 0 { drop(context.take()); }
         else if let Some(payload) = payload.as_mut() {
             assert_eq!(payload.page(0).unwrap(), "original 雪\0".as_bytes());
-            while !payload.terminal_is_empty() { payload.close_step(1, payload.next_close_byte_demand()); }
+            while !payload.terminal_is_empty() { payload.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: payload.next_close_byte_demand(), maximum_depth: 64 }).unwrap(); }
         }
-        while !writer.terminal_is_empty() { writer.close_step(1, writer.next_close_byte_demand()); }
+        while !writer.terminal_is_empty() { writer.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 0, maximum_release_bytes: writer.next_close_byte_demand(), maximum_depth: 64 }).unwrap(); }
         let (step, heap) = observe(|| owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:extent,maximum_depth:64,..RetainedCloneGrant::default()}));
         assert_eq!(step, InteractiveJobCloseStep::Complete {progress:RetainedCloneProgress{copied_items:1,released_bytes:extent,..RetainedCloneProgress::default()}});
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));

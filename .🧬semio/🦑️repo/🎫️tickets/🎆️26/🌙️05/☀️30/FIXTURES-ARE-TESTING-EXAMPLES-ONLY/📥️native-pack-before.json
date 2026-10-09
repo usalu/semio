@@ -1,0 +1,30 @@
+{
+  "time": "2026-10-09T12:53:54.619656+00:00",
+  "endpoints": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+      "sha256": "e4d4a9eba69ac564d8e90a0825f07b11ccf59c24187c9af41d8d5d1b609571ed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "f8c1623d3495616dadfe8b3cce9df9e94c5506534efff1f2fc188287ec8dfa07"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "4208a1fc7b9c6b442870ca9a24743b7da367f01dca7b0b796368d3c50b941824"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "3a768c3b7d788b39b518318a2324ec576b53a8251f3b764bbf2a2c1ee36622c5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "a4777a9335ed0f20d357cd4bf5367b099dadd4447c2c705432631fd0485b5e2e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+      "sha256": "0abc5e7e3f6e4b381f889ac6b3a7e1d9ae25439d0399b688e5c8fbcb6ecc7339"
+    }
+  ],
+  "sourceCopies": false
+}

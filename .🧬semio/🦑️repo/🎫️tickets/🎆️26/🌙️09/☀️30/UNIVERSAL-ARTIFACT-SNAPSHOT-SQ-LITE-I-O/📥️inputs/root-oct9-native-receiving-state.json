@@ -1,0 +1,15 @@
+{
+ "recordedAt":"2026-10-09T11:54:46Z",
+ "goalStatus":"active",
+ "universalComplete":false,
+ "rootUniversalComplete":false,
+ "rootOct9OriginalNativeReceiving":{"session":39947,"exitCode":0,"laws":2,"passed":2,"skipped":245,"debugCases":14,"independentOracle":"Serde","scope":"original Value directional receiving bridge","guestRuntimeQualified":false},
+ "rootOct9ViewportNative":{"session":37404,"exitCode":0,"laws":9,"passed":9,"skipped":0,"scope":"original planar object canonical-tree prerequisite"},
+ "rootOct9SurfaceNative":{"session":20987,"exitCode":0,"laws":7,"passed":7,"skipped":216,"scope":"original Surface scene wire"},
+ "rootOct9SocketSource":{"session":75440,"exitCode":0,"laws":6,"expects":169,"strict":true,"nativeIdentityQualified":false},
+ "rootOct9SocketNativeCurrent":{"session":32673,"pending":true,"prior":{"session":78906,"exitCode":1,"assertionsExecuted":0,"failure":"four intermediate Value receiving compiler errors, repaired before39947"}},
+ "rootOct9ClipboardNativeCurrent":{"session":42231,"pending":true,"prior":{"session":77796,"exitCode":1,"assertionsExecuted":0,"failure":"four intermediate Value receiving compiler errors, repaired before39947"}},
+ "rootOct9GuestOriginalGrant":{"decodeOwnerMounted":true,"encodeOwnerMounted":true,"mcpForwarded":true,"sameSqlControl":true,"genericOriginalObserver":true,"kernelDecodeOwnerLawExecuted":false,"guestComponentRuntimeExecuted":false,"guestDeniedRetirementQualified":false},
+ "rootRequestedFleetConfiguration":{"main":{"model":"gpt-6.1-sol","reasoningEffort":"xhigh","observable":false},"high":["native_owner_execution","window_owner_execution"],"low":["current_readonly_audit"],"maxConcurrent":4},
+ "rootNextRequired":["complete native/public SQLite census","verify actual Kernel and Guest runtime","retain denied Guest operation ownership and original return receipts","publish authentic catalog package/factory/surface captures before normalization"]
+}

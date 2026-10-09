@@ -1,0 +1,102 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "4150a1e675de9f18b70549653896ce8511697ff72261df797cd73ffc685b20d1",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs",
+    "sha256": "5e135add973b2cb0516bf2d1b38444b50fa96214caf6f72dd9e7f8a094a06887",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs",
+    "sha256": "e5cc24d3166ebde0d274cf07cb07bb00d90116f8b78455aa3cdb1cfa875b1c22",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+    "sha256": "2b404bd7d03907af1fcec7e5348ba9c67bd2d9fb02dd67eb8f7d2960cb6a195b",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️assign-n/🦀️.rs",
+    "sha256": "34f596432caf8bb961145d2ecdd049b8751d017d000de39dedd0be8f3cb1bf53",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/➕️add-n/🦀️.rs",
+    "sha256": "67bc03c875c783e31603d9633d1aa101887ab65abf726bc8666f4e93c99f7147",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔢️set-n/🦀️.rs",
+    "sha256": "9a2f6f32a14efece6b4c61b7c069752cdf6dccf4e911b1afc5e5d9ea3f1868f3",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🗑️delete-n/🦀️.rs",
+    "sha256": "b0d23ce698ba0e81139c3c882ef0fb72ce273a2a4e050e024610b4150c5906a2",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs",
+    "sha256": "46f1999b8f843ca5cf82f6ac74706e17d26c17f64dc2a78434478189d0aef917",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "500d2210ed1d07c7ef68342027d5f312be034bec962906943cd910a31a58eafb",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "6a24d5f28c116bd8702c28673ec039d853e3973b4c9d0e28b820094c1a310f7b",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs",
+    "sha256": "0ae4e27cde1bb26956d4fc5e7fa3aba6265f2ef87bf6b2d8835b569390cb0353",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/⌨️cli/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "2e0eb782661e7972175d9c4cef3ae658d4c43649322be02e4824f34da424533a",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/💎️materialize/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "ad39d022e678f1441d95f066b4066a418d140b4ebd25b782f7362a6345e3fac5",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "304e07c25ac9dbfd86ef85e2611e57bf71305f76a209a0eb6dae3f3b087caa05",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+    "sha256": "d52de12db514e5a81f960cac68ea92802068efecef3769c89d20e36f617caa7b",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs",
+    "sha256": "e063c86bf9ddc562db12de0cf2d289df9f90494c1fe36f09449226f43814eb48",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "c6423de0a48549f80ddef3254258c43229a9bfddb1da54b449b1134d42ec5ef9",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs",
+    "sha256": "8c2c969199f95ddff15a7979ca5ba65680d11fbac87f9043336dd96dd5804817",
+    "authorshipClaim": false
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs",
+    "sha256": "6df2de11445946e856e9f6c2eb963ead1275a90aa5d34d27f44f468e8a7dd886",
+    "authorshipClaim": false
+  }
+]

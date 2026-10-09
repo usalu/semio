@@ -77,5 +77,42 @@
     "maximumCapacityBytes": 1048576,
     "maximumReleaseBytes": 1048576,
     "maximumDepth": 64
+  },
+  "decodeCloseGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 16384,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  },
+  "grantCoverage": {
+    "demand": {
+      "copyBytes": 4,
+      "capacityBytes": 4096,
+      "releaseBytes": 4096,
+      "depth": 64
+    },
+    "denials": [
+      {
+        "axis": "maximumItems",
+        "value": 0
+      },
+      {
+        "axis": "maximumCopyBytes",
+        "value": 3
+      },
+      {
+        "axis": "maximumCapacityBytes",
+        "value": 4095
+      },
+      {
+        "axis": "maximumReleaseBytes",
+        "value": 4095
+      },
+      {
+        "axis": "maximumDepth",
+        "value": 63
+      }
+    ]
   }
 }

@@ -4483,6 +4483,7 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework-trace",
+ "semio-framework-value",
  "wasm-bindgen",
 ]
 
@@ -4832,6 +4833,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-tool-run",
+ "semio-framework-trace",
  "semio-framework-ui",
  "semio-framework-ui-locale",
  "semio-framework-ui-styling",
@@ -4999,6 +5001,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-renderer-camera"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-trace",
+ "semio-framework-ui",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-os-renderer-wgpu"
 version = "0.1.0"
 dependencies = [
@@ -5027,6 +5040,7 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-node-graph",
+ "semio-framework-os-renderer-camera",
  "semio-framework-os-services",
  "semio-framework-os-shell",
  "semio-framework-pack-json",
@@ -5184,6 +5198,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
+ "semio-framework-plugin-mounted-owner",
  "semio-framework-replication",
  "semio-framework-schema",
  "semio-framework-schema-composition",
@@ -5281,6 +5296,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-mounted-owner"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-print"
 version = "0.1.0"
 dependencies = [
@@ -5318,6 +5341,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack-error",
+ "semio-framework-pack-json",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-trace",
@@ -5719,6 +5743,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-machine",
  "semio-framework-replication",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -5746,6 +5771,7 @@ dependencies = [
  "js-sys",
  "libc",
  "parley",
+ "semio-framework-2d",
  "semio-framework-async",
  "semio-framework-geometry",
  "semio-framework-job",
@@ -5802,6 +5828,7 @@ version = "0.1.0"
 dependencies = [
  "bytemuck",
  "semio-framework-ui-render",
+ "semio-framework-value",
  "wgpu",
 ]
 
@@ -5831,6 +5858,7 @@ dependencies = [
  "semio-framework-ui-backend-webgpu",
  "semio-framework-ui-contract",
  "semio-framework-ui-render",
+ "semio-framework-value",
  "winit",
 ]
 
@@ -5874,6 +5902,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-ui-contract",
  "semio-framework-ui-viewport",
+ "semio-framework-value",
  "serde",
 ]
 
@@ -5886,6 +5915,7 @@ name = "semio-framework-ui-viewport"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-pack-json",
  "semio-framework-value",
  "serde",
 ]

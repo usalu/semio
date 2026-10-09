@@ -1,0 +1,67 @@
+{
+  "ownership": false,
+  "executed": false,
+  "originalPaths": [
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧬️schema/🔣️.json",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🚦️public/🧬️schema/🔣️.json",
+      "present": false
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️control/🧬️schema/🔣️.json",
+      "present": false
+    }
+  ],
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🌱️runtime-seed.json",
+      "present": true,
+      "sha256": "a07b885b5b47100f5b28db9ac9a66c77150b6942ef5c4b95fda1a1945af7843c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "present": true,
+      "sha256": "6dbaccae0b7a85252d43bfdb0b05ac5b716843b8d28e1cf2cd94716c87813d1a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "present": true,
+      "sha256": "409e7b71ac212e7bd0d5287c0ed3b891f63eec0d830a02896eeaa4b38c52d534"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+      "present": true,
+      "sha256": "3fa06e17a0ce3cba6b74131919260ff84fa4aeaf30e12f204f59912a53098497"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+      "present": true,
+      "sha256": "5314ed0ea9d58e88063fc50956aaf4b9fca70fef53a57e6836fea00bccdaa8d9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+      "present": true,
+      "sha256": "95e13e74b5d2eb4662530edbf4d3b32a6ab00e3481bbab504c4a6ddbf8062bfe"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+      "present": true,
+      "sha256": "f817619e42abbfb137d46bfad23dc7b412259c2552943255f7ae67a4aa6bdb9d"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🫀️core/🧬️generation/🧬️schema/📸️snapshot/🟦️.ts",
+      "present": true,
+      "sha256": "0c13f1cfb1eb343dee4cfa7f8677a969eabd25885104a0f347356b317e7e8a55"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts",
+      "present": true,
+      "sha256": "5f647912eb15875537be4fd4139b7da41715120a2466ccf2fb6c2306422e892c"
+    }
+  ],
+  "seedReaderLine": 5648,
+  "runtimeSeedSource": "actual envelope edits/transitions, not fixture"
+}

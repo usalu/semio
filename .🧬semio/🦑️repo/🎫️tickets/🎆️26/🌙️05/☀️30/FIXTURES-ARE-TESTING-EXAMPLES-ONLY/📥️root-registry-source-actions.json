@@ -1,0 +1,58 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧬️schema/📤️registry/🟦️.ts",
+    "beforeSha256": null,
+    "beforeQualification": "Fresh absence",
+    "afterSha256": "b9e10ecd867bf2fe21c4ac3b95f7bd8022cf297effb9b4a0b59ed1410e8d11aa",
+    "action": "Fresh production-only native schema registry split / canonical first-party Rust facade / uncached acquisition; preserve independent original test fixtures."
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/🦀️.rs",
+    "beforeSha256": null,
+    "beforeQualification": "Fresh absence",
+    "afterSha256": "dbcf49a135b17e8d01236402ba936266005c417d02198b3950b1007391720fe9",
+    "action": "Fresh production-only native schema registry split / canonical first-party Rust facade / uncached acquisition; preserve independent original test fixtures."
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/📤️exports/🦀️.rs",
+    "beforeSha256": null,
+    "beforeQualification": "Fresh absence",
+    "afterSha256": "487934f3a501ecf255089a2114074adfed1c6d608a2dcd8eb732c0688b12c41f",
+    "action": "Fresh production-only native schema registry split / canonical first-party Rust facade / uncached acquisition; preserve independent original test fixtures."
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs",
+    "beforeSha256": "a2ea738562c7941c9fbe74050567c2afaeecce0ed47112aecc0a7b23780ff2a1",
+    "beforeQualification": "Fresh exact current source",
+    "afterSha256": "3cc9d4edaa4e60dc28567de3cc44950dae73c581c8505ce84f9e8877695d7b2e",
+    "action": "Fresh production-only native schema registry split / canonical first-party Rust facade / uncached acquisition; preserve independent original test fixtures."
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+    "beforeSha256": "1f9e7ef4cd2010710825b7a937c94287769dd3f5bae33c58736f2cce3a97f41d",
+    "beforeQualification": "Fresh exact current source",
+    "afterSha256": "a036342d9fe6e53c05f5f33e0cd4f7b19a79ff064dc48691374bb2d224e3bb4a",
+    "action": "Fresh production-only native schema registry split / canonical first-party Rust facade / uncached acquisition; preserve independent original test fixtures."
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+    "beforeSha256": "d5e2bc599117cafbfa2a17499ab8449862292f184a1bb5cd9c6a2362aa98d8bc",
+    "beforeQualification": "Fresh exact current source",
+    "afterSha256": "79672947cae81627c79d87d13fb153659286c952d99b3e6e41c111c5b0b6546d",
+    "action": "Fresh production-only native schema registry split / canonical first-party Rust facade / uncached acquisition; preserve independent original test fixtures."
+  },
+  {
+    "path": "📜️script.ts",
+    "beforeSha256": "953194226790749673069f04a000449066091ed54bf5a1330dd7df006bfd481b",
+    "beforeQualification": "Fresh exact current source",
+    "afterSha256": "426ec9ab5d751ab9db1499098d8c6a93842fb1f601ab832cd7d940d2bc3ec092",
+    "action": "Fresh production-only native schema registry split / canonical first-party Rust facade / uncached acquisition; preserve independent original test fixtures."
+  },
+  {
+    "path": "📋️project.json",
+    "beforeSha256": "28dc133c4b9d356944ab22edc3a76651e429b4aae6918d6fed6679b57d806e25",
+    "beforeQualification": "Fresh exact current source",
+    "afterSha256": "271ae09fb93bda20a14d1b9bcd6df2978ebd36bc1f64d2458ffb9c0345490a3a",
+    "action": "Fresh production-only native schema registry split / canonical first-party Rust facade / uncached acquisition; preserve independent original test fixtures."
+  }
+]

@@ -100,7 +100,7 @@ impl ParityHarness {
         let (events_tx, events) = broadcast::channel(64);
         let actor = native_actor::ArtifactActor::new(
             parity_pool(),
-            ArtifactActorConfig {
+            ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
                 document_id: document_id.into(),
                 schema: "demo/v1".into(),
                 bindings: vec![PersistenceBinding::Hub { base_url: "http://127.0.0.1:9".into(), space_id: space_id.into(), surface: None }],
@@ -249,7 +249,7 @@ impl ParityHarness {
             "queueTransition" => {
                 let supersede = crate::os_spr::TransitionSupersede { scope: None, inputs: vec![crate::os_spr::SupersededInput { target: crate::os_spr::MutationId("ghost".into()), replacement: crate::os_spr::InputReplacement::Withdrawn }] };
                 let dependencies = supersede.targets();
-                let mut envelope = crate::os_spr::history_transition_envelope(&crate::os_spr::HistoryTransition::Supersede(supersede), &ArtifactId(self.document_id.clone()), &ActorId(self.author.clone()), dependencies, crate::os_spr::HybridLogicalTimestamp::new(1, 9));
+                let mut envelope = crate::os_spr::history_transition_envelope(&crate::os_spr::HistoryTransition::Supersede(supersede), &ArtifactId(self.document_id.clone()), &ActorId(self.author.clone().into()), dependencies, crate::os_spr::HybridLogicalTimestamp::new(1, 9));
                 envelope.mutation_id = crate::os_spr::MutationId(dispatch["mutationId"].as_str().expect("id").into());
                 self.actor.queue_test_outbox(vec![envelope]);
             }

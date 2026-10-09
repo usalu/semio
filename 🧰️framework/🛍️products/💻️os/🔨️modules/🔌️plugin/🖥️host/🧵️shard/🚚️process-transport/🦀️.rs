@@ -333,6 +333,9 @@ pub struct StdioTransport {
 }
 
 impl StdioTransport {
+    /// ❤️️ Borrows the original transport shutdown signal for retained actor identity observers.
+    pub fn identity_liveness(&self)->Arc<AtomicBool>{Arc::clone(&self.alive)}
+
     /// 🧵️ P1f: a periodic sleep+write, not a blocking pipe read — driven off the shared
     /// `WorkerPool`'s timer wheel ([`super::PeriodicPoolTimer`]) instead of a dedicated
     /// `"semio-shard-heartbeat"` OS thread, on the process-wide `super::plugin_host_worker_pool()`.

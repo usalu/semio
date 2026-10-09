@@ -7,10 +7,13 @@ fn receipts() -> Vec<NativeCodecFactoryReceipt> {
 
 #[test]
 fn native_openable_provider_consumes_exact_complete_stdio_factory_closure() {
+    let expected=receipts();
     let provider = NativeOpenableCatalogProviderV1::from_receipts(env!("CARGO_PKG_VERSION"), receipts()).expect("complete provider");
     let bindings = provider.into_bindings();
     assert_eq!(bindings.len(), semio_hub_stdio::catalog::live_native_codec_factory_receipts().unwrap().len());
     assert!(bindings.iter().all(|binding| binding.codec().pack_schema_hash != [0; 32]), "every headless Stdio codec carries its structural pack schema identity");
+    for(binding,receipt)in bindings.iter().zip(&expected){assert_eq!(binding.factory_id(),Some(receipt.factory_id.as_str()));assert_eq!(serde_json::to_value(binding.factory_id()).unwrap(),serde_json::to_value(Some(&receipt.factory_id)).unwrap());assert_eq!(binding.plugin_id(),receipt.plugin_id);assert_eq!(binding.package_id(),receipt.package_id);assert_eq!(binding.artifact_kind(),receipt.artifact_kind);assert_eq!(binding.codec().schema,receipt.schema);}
+    println!("[DEBUG] Original Stdio catalog binding factoryIds={} exactVerifiedReceipts=true independentSerde=true",bindings.len());
 }
 
 struct SelectionControl {
@@ -62,6 +65,7 @@ fn vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_wi
                 assert_eq!(binding.codec().schema, row["schema"]);
                 assert_eq!(binding.codec().extension, row["extension"]);
                 let receipt = semio_hub_vcs::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt| receipt.identity().schema == binding.codec().schema).unwrap();
+                assert_eq!(binding.factory_id(),Some(receipt.identity().factory_id));
                 assert_eq!(hexadecimal(&receipt.identity().protocol_sha256), row["protocolSha256"]);
                 assert_eq!(binding.codec().pack_schema_hash, receipt.into_codec().unwrap().pack_schema_hash);
                 assert_ne!(binding.codec().pack_schema_hash, [0; 32]);
@@ -99,12 +103,12 @@ mod quick {
         let providers = NativeCodecProviderSetV1::linked();
         for (plugin_id, package_id, schema, count) in [("gis", "semio:gis", "gis.map", 2), ("vcs", "semio:vcs", "vcs.vcs", 1)] {
             let emitted = if plugin_id == "gis" {
-                let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
+                let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
                 semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().unwrap());
                 let _foreign = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
                 semio_framework_plugin::describe::describe_plugin(&runtime).await
             } else {
-                let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
+                let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
                 semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_vcs::plugin().unwrap());
                 let _foreign = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
                 semio_framework_plugin::describe::describe_plugin(&runtime).await
@@ -250,6 +254,7 @@ mod quick {
                 assert_eq!(bindings.len(), count, "{}", profile["name"]);
                 assert!(bindings.iter().all(|binding| binding.package_id() == package_id));
                 assert!(bindings.iter().all(|binding| binding.plugin_id() == plugin_id));
+                for binding in &bindings{let expected=match plugin_id{"stdio"=>semio_hub_stdio::catalog::native_codec_factory_receipts().unwrap().into_iter().find(|receipt|receipt.schema==binding.codec().schema).unwrap().factory_id,"gis"=>semio_hub_gis::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt|receipt.identity().schema==binding.codec().schema).unwrap().identity().factory_id.to_owned(),"vcs"=>semio_hub_vcs::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt|receipt.identity().schema==binding.codec().schema).unwrap().identity().factory_id.to_owned(),_=>unreachable!()};assert_eq!(binding.factory_id(),Some(expected.as_str()));}
                 requested.push(package_id);
                 receipts += count;
             }

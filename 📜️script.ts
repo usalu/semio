@@ -86,7 +86,7 @@ import { abstractionOwnershipChecks } from "./🧰️framework/🛍️products/�
 import { policyAbstractionOwnershipBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/⚖️law/🟦️.ts";
 import { policyIndexedGeneratedOutputBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/indexed-generated-output/🟦️.ts";
 import { createHash, randomUUID } from "node:crypto";
-import { existsSync, linkSync, lstatSync, mkdirSync, chownSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, unlinkSync, writeFileSync, type Dirent } from "node:fs";
+import { existsSync, linkSync, lstatSync, mkdirSync, mkdtempSync, chownSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, unlinkSync, writeFileSync, type Dirent } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { builtinModules, createRequire } from "node:module";
 import { dirname, extname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
@@ -1480,8 +1480,10 @@ function toolJobMountedDispatchOneTurnExact(raw: string): boolean {
   const inner = start < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", start));
   const setup = toolJobRetainedDispatchSetup(source);
   if (!inner || !setup) return false;
+  const workerSignature = "fn drive_worker_step(&mut self, pool: &semio_framework_async::WorkerPool, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>";
+  if (count(source, workerSignature) !== 1) return false;
   const direct = "self.start_typed_command_operation(command, admission, meta, operation_id, None).await";
-  const stages = ["dispatch_wire_retained_with_spec", "MountedWorkerJobSession::try_new", "self.tool_operations.insert_admitted(", "active.drive_worker_step(&pool, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)"];
+  const stages = ["dispatch_wire_retained_with_spec", "MountedWorkerJobSession::try_new", "self.tool_operations.insert_admitted(", "active.drive_worker_step(&pool,"];
   const offsets = stages.map((token) => setup.indexOf(token));
   return count(inner.body, direct) === 1 && stages.every((token) => count(setup, token) === 1)
     && offsets.every((offset, index) => offset >= 0 && (index === 0 || offset > offsets[index - 1]!))
@@ -5327,6 +5329,7 @@ function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analy
 function toolJobFixedOperationRegistryExact(source: string): boolean {
   const required = [
     "pub trait FixedOperationOwner",
+    "fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep",
     "fn retained_bytes(&self) -> usize",
     "pub struct FixedOperationKey",
     "pub operation: OperationId",
@@ -5348,8 +5351,8 @@ function toolJobFixedOperationRegistryExact(source: string): boolean {
     "entry.owner.begin_close()",
     "pub fn cancel_stale_step",
     "entry.key.generation == live_generation",
-    "entry.owner.close_step(1, maximum_bytes)",
-    "if entry.owner.terminal_is_empty()",
+    "entry.owner.close_step(child_grant).admit(child_grant,entry.owner.terminal_is_empty())",
+    "entry.owner.terminal_is_empty()",
     "assert_eq!(self.occupied, 0, \"fixed operation registry reached Drop before every exact owner was terminal-empty\")",
     "maximum_plus_one_and_saturation_return_the_exact_owner",
     "stale_generation_interrupted_close_and_aba_preserve_exact_authority",
@@ -5359,18 +5362,26 @@ function toolJobFixedOperationRegistryExact(source: string): boolean {
     "assert!(!registry.is_empty(), \"interrupted close must retain the exact owner\")",
     "maximum_registry_backing_initializes_inside_one_interactive_ceiling_under_concurrent_load",
     "median < u128::from(semio_framework_trace::INTERACTIVE_STEP_CEILING_US)",
-    "assert!(matches!(registry.close_step(1, 1), InteractiveJobCloseStep::Complete))",
+    "assert!(matches!(registry.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:8,maximum_depth:64}), InteractiveJobCloseStep::Complete {..}))",
   ];
   return required.every((anchor) => source.includes(anchor));
 }
 
 
 
+type FixedOperationFixtureCloseGrant = {
+  maximumItems: number;
+  maximumCopyBytes: number;
+  maximumCapacityBytes: number;
+  maximumReleaseBytes: number;
+  maximumDepth: number;
+};
+
 type FixedOperationFixtureStep =
   | { action: "admit"; owner: string; operation: number; generation: number; bytes: number }
   | { action: "take" | "cancel"; operation: number; generation: number }
   | { action: "cancelStaleStep"; operation: number; liveGeneration: number }
-  | { action: "close"; maximumItems: number; maximumBytes: number }
+  | { action: "close"; grant: FixedOperationFixtureCloseGrant }
   | { action: "inspect" };
 
 type FixedOperationFixtureCase = {
@@ -5479,10 +5490,12 @@ function toolJobFixedOperationFixtureRun(root: string): FixedOperationFixtureOut
         }
         output.push(`stale:${stale ? "true" : "false"}`);
       } else if (step.action === "close") {
-        toolJobFixedOperationFixtureAssertKeys(step, ["action", "maximumItems", "maximumBytes"], `${testCase.id}.close`);
-        toolJobFixedOperationFixtureAssertInteger(step.maximumItems, 0, 1, `${testCase.id}.maximumItems`);
-        toolJobFixedOperationFixtureAssertInteger(step.maximumBytes, 0, 1, `${testCase.id}.closeMaximumBytes`);
-        if (step.maximumItems === 0) {
+        toolJobFixedOperationFixtureAssertKeys(step, ["action", "grant"], `${testCase.id}.close`);
+        const grant = step.grant;
+        if (!grant || typeof grant !== "object" || Array.isArray(grant)) throw new Error(`[verify interactivity tool-jobs fixed-operation-fixture] invalid ${testCase.id}.grant.`);
+        toolJobFixedOperationFixtureAssertKeys(grant, ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"], `${testCase.id}.grant`);
+        for (const [field, value] of Object.entries(grant)) toolJobFixedOperationFixtureAssertInteger(value, 0, 65_536, `${testCase.id}.grant.${field}`);
+        if (grant.maximumItems === 0) {
           output.push("close:blocked");
           continue;
         }
@@ -5490,7 +5503,9 @@ function toolJobFixedOperationFixtureRun(root: string): FixedOperationFixtureOut
         closeCursor = (closeCursor + 1) % testCase.capacity;
         const owner = slots[index];
         if (!owner) output.push(occupied === 0 ? "close:complete" : "close:pending");
-        else if (!owner.closing || step.maximumBytes === 0) output.push(owner.closing ? "close:blocked" : "close:pending");
+        else if (!owner.closing) output.push("close:pending");
+        else if (grant.maximumDepth === 0) output.push("close:blocked");
+        else if ((owner.remainingBytes > 0 && grant.maximumCopyBytes === 0) || (owner.remainingBytes <= 1 && grant.maximumReleaseBytes < owner.admittedBytes)) output.push("close:pending");
         else {
           if (owner.remainingBytes > 0) owner.remainingBytes -= 1;
           if (owner.remainingBytes === 0) {
@@ -5623,7 +5638,8 @@ function toolJobFixedOperationRustFixtureSource(root: string): string {
       } else if (step.action === "cancelStaleStep") {
         lines.push(`        fixture_cancel_stale(&mut registry, &mut output, OperationId(${step.operation}), Generation(${step.liveGeneration}));`);
       } else if (step.action === "close") {
-        lines.push(`        fixture_close(&mut registry, &mut output, ${step.maximumItems}, ${step.maximumBytes});`);
+        const grant = step.grant;
+        lines.push(`        fixture_close(&mut registry, &mut output, RetainedCloneGrant { maximum_items: ${grant.maximumItems}, maximum_copy_bytes: ${grant.maximumCopyBytes}, maximum_capacity_bytes: ${grant.maximumCapacityBytes}, maximum_release_bytes: ${grant.maximumReleaseBytes}, maximum_depth: ${grant.maximumDepth} });`);
       } else if (step.action === "inspect") {
         lines.push("        fixture_inspect(&registry, &mut output);");
       }
@@ -8190,6 +8206,12 @@ export class VerifyScript extends Script {
 
   /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
   private async runToolJobCoverage(args: string[]): Promise<void> {
+    if (args[0] === "mounted-dispatch") {
+      if (args.length !== 1) throw new Error("Expected verify interactivity tool-jobs mounted-dispatch");
+      const { toolJobLatestWinsSelfTests } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts");
+      console.log(`[verify interactivity tool-jobs mounted-dispatch] laws=${toolJobLatestWinsSelfTests()} clean.`);
+      return;
+    }
     if (args.includes("--shared-action-fixture-only")) {
       console.log(JSON.stringify(toolJobSharedFrameworkActionFixtureRun(this.root)));
       return;
@@ -8199,7 +8221,13 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--fixed-operation-fixture-only")) {
-      console.log(JSON.stringify(toolJobFixedOperationFixtureRun(this.root)));
+      const fixture = toolJobFixedOperationFixtureRun(this.root);
+      const rustFixture = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧪️fixed-operation-registry-cases/🦀️.rs");
+      if (rustFixture !== toolJobFixedOperationRustFixtureSource(this.root)) throw new Error("[verify interactivity tool-jobs fixed-operation-fixture] generated Rust fixture is stale.");
+      const source = `${policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs")}\n${policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️fixed-operation-registry/🦀️.rs")}`;
+      const mutations = toolJobFixedOperationRegistrySelfTests(source);
+      console.log(`[verify interactivity tool-jobs fixed-operation-fixture] laws=${fixture.results.length} mutations=${mutations} rustFixtureFresh=true.`);
+      console.log(JSON.stringify(fixture));
       return;
     }
     if (args.includes("--p2c-only")) {
@@ -13750,8 +13778,8 @@ export class TestScript extends Script {
       const { repositoryProcessOwnerContextV1, repositoryCargoTestPolicyV1, repositoryVitestPolicyV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts");
       const env = devToolingEnv({ SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)), SEMIO_TEST_LEVEL: level });
       if (native) {
-        const { prepareCargoWorkspaceInvocation } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts");
-        prepareCargoWorkspaceInvocation(this.root, ["test", "--manifest-path", join(cwd, "Cargo.toml")], cwd);
+        const {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts");
+        prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(this.root),this.root,["test", "--manifest-path", join(cwd, "Cargo.toml")],cwd,process.env);
         env.SEMIO_CARGO_TEST_POLICY = JSON.stringify(repositoryCargoTestPolicyV1(join(cwd, "Cargo.toml"), cwd));
       } else env.SEMIO_VITEST_POLICY = JSON.stringify(repositoryVitestPolicyV1(cwd, env));
       const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
@@ -14547,9 +14575,9 @@ export class BuildScript extends Script {
       const cwd = join(this.root, "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust");
       const { repositoryProcessOwnerContextV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts");
       const { repositoryCargoArtifactBuildPolicyV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts");
-      const { prepareCargoWorkspaceInvocation } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts");
+      const {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts");
       const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
-      prepareCargoWorkspaceInvocation(this.root, ["build", "--manifest-path", join(cwd, "Cargo.toml")], this.root);
+      prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(this.root),this.root,["build", "--manifest-path", join(cwd, "Cargo.toml")],this.root,process.env);
       const env = devToolingEnv({ SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)), SEMIO_CARGO_ARTIFACT_POLICY: JSON.stringify(repositoryCargoArtifactBuildPolicyV1(cwd, this.root)) });
       await runOwnedCommand(process.execPath, [join(cwd, "📜️script.ts"), "build"], cwd, "canvas-font-assets:build", buildBudgetMs(), { env });
       return;
@@ -14948,14 +14976,8 @@ const SCHEMA_ORACLE_VITEST_CONFIG = "🧰️framework/🔨️modules/🧬️sche
 /** 🦀️ The crate whose registered test binaries produce the Rust-side evidence the schema gate consumes. */
 const SCHEMA_RUST_CRATE = "semio-framework-schema";
 
-/** 📤️ The tracked `(scope, export, format)` registry dump `schema entries` writes and `schema verify` reads. */
-const SCHEMA_RUST_ENTRIES_REFERENCE = "🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/📤️schema-export-entries-dump.json";
-
 /** 🧩️ Compiles every schema module against the owned draft-07 validator; `--out` keeps the JSON report. */
 const SCHEMA_MODULE_COMPILE_TEST = { test: "schema-module-compile", variable: "SEMIO_SCHEMA_MODULE_COMPILE_OUT" } as const;
-
-/** 📤️ Dumps every `(scope, export, format)` triple the linked crates register, over the tracked reference dump. */
-const SCHEMA_EXPORT_ENTRIES_TEST = { test: "schema-export-entries", variable: "SEMIO_SCHEMA_EXPORT_ENTRIES_OUT", tracked: SCHEMA_RUST_ENTRIES_REFERENCE } as const;
 
 /** 🧬️ Scope-owned schema contracts: catalog generation, invariant checking and the generated index. */
 export class SchemaScript extends Script {
@@ -15091,15 +15113,10 @@ export class SchemaScript extends Script {
     return new Set(codes);
   }
 
-  /**
-   * 🔒️ Proves the tracked catalog and index are exactly what the current sources render, and that the
-   * `(scope, export, format)` triples of `semio_framework_schema::schema_export_catalog_entries()` agree
-   * with the catalog rows. The triples come from the committed reference dump unless `--rust-entries <file>`
-   * names a fresh one, so the Rust half of the gate runs by default instead of only when a caller remembers
-   * the flag; `bun ./📜️script.ts schema entries` regenerates that reference from the crate.
-   * `--rust-entries-complete` additionally demands that every catalogued scope registers its exports.
-   */
-  private verify(args: string[]): void {
+  /** 🔒️ Joins current catalog facets to a fresh production registry without test inputs. */
+  private async verify(args: string[], completed?: SchemaRustEntryDump): Promise<void> {
+    if (args.includes("--rust-entries")) throw Error("[schema verify] Registry inputs are produced fresh; --out names the produced output.");
+    const dump = completed ?? await this.productionEntries(args);
     const inventory = this.inventory();
     const stale: string[] = [];
     for (const [rel, rendered] of [[this.catalogPath(), renderSchemaCatalog(inventory.catalog)], [this.documentPath(), renderSchemaCatalogDocument(inventory.catalog)]] as const) {
@@ -15110,12 +15127,6 @@ export class SchemaScript extends Script {
     if (catalog && (catalog.generator !== inventory.catalog.generator || catalog.taxonomySchemaVersion !== inventory.catalog.taxonomySchemaVersion)) stale.push(`${this.catalogPath()} (provenance)`);
     if (stale.length > 0) console.error(`[schema verify] stale generated output: ${stale.join(", ")}. Run bun ./📜️script.ts schema generate && bun ./📜️script.ts schema docs.`);
     else console.log(`[schema verify] catalog and index are current (${Object.keys(inventory.catalog.scopes).length} scopes, generator ${inventory.catalog.generator}).`);
-    const entriesIndex = args.indexOf("--rust-entries");
-    if (entriesIndex >= 0 && !args[entriesIndex + 1]) throw new Error("[schema verify] --rust-entries requires a path to the registry dump.");
-    const target = entriesIndex >= 0 ? args[entriesIndex + 1]! : SCHEMA_RUST_ENTRIES_REFERENCE;
-    const dumpPath = isAbsolute(target) ? target : join(this.root, target);
-    if (!existsSync(dumpPath)) throw new Error(`[schema verify] ${target} does not exist; run bun ./📜️script.ts schema entries to emit it from semio_framework_schema::schema_export_catalog_entries().`);
-    const dump = JSON.parse(readFileSync(dumpPath, "utf8")) as SchemaRustEntryDump;
     const findings = schemaRustEntryDiagnostics(inventory.catalog, dump, loadCatalogTaxonomy(), args.includes("--rust-entries-complete"));
     const registered = new Set(dump.entries.map((entry) => entry.scope));
     for (const finding of findings) console.log(JSON.stringify(finding));
@@ -15124,6 +15135,39 @@ export class SchemaScript extends Script {
     console.log(`[schema verify] rust entries=${dump.entries.length} scopes=${registered.size} of ${Object.keys(inventory.catalog.scopes).length} catalogued, findings=${findings.length}`);
     for (const [code, count] of [...counts].sort(([left], [right]) => left.localeCompare(right))) console.log(`[schema verify] ${code}=${count}`);
     if (findings.length > 0 || stale.length > 0) process.exit(1);
+  }
+
+  /** 📤️ Runs the genuine native producer and removes only its unique intermediate output. */
+  private async productionEntries(args: string[]): Promise<SchemaRustEntryDump> {
+    const outIndex = args.indexOf("--out");
+    if (outIndex >= 0 && !args[outIndex + 1]) throw Error("[schema] --out requires a path.");
+    const destination = outIndex >= 0 ? resolve(this.root, args[outIndex + 1]!) : null;
+    if (destination && existsSync(destination)) throw Error("[schema] --out requires a new output file.");
+    const base = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(getMapCacheDir(this.root), "schema-registry");
+    mkdirSync(base, { recursive: true });
+    const module = join(this.root, "🧰️framework/🔨️modules/🧬️schema");
+    const { loadProductionSchemaEntriesV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🟦️.ts");
+    const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
+    const directory = mkdtempSync(join(base, "registry-")), output = join(directory, "entries.json");
+    let text = "";
+    try {
+      const dump = await loadProductionSchemaEntriesV1({ produce: async () => {
+        await runOwnedCommand(process.execPath, [
+          join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"), "relay",
+          "run", "--locked", "--manifest-path", join(module, "📦️packages/🦀️rust/Cargo.toml"),
+          "-p", SCHEMA_RUST_CRATE, "--bin", "schema-export-entries", "--", "--out", output
+        ], this.root, "schema:registry-production", buildBudgetMs(), { env: process.env });
+        text = readFileSync(output, "utf8");
+        return text;
+      } }, JSON.parse(readFileSync(join(module, "🔣️.json"), "utf8")));
+      if (destination) {
+        mkdirSync(dirname(destination), { recursive: true });
+        writeFileSync(destination, text, { flag: "wx" });
+      }
+      return dump;
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   }
 
   /**
@@ -15164,10 +15208,10 @@ export class SchemaScript extends Script {
     console.log(`[schema compile] cargo test -p ${SCHEMA_RUST_CRATE} --test ${SCHEMA_MODULE_COMPILE_TEST.test} passed; report at ${report}`);
   }
 
-  /** 📤️ Regenerates the tracked registry dump from the crate and cross-checks it against the catalog in one step. */
-  private entries(args: string[]): void {
-    const report = this.rustReport(SCHEMA_EXPORT_ENTRIES_TEST, args);
-    this.verify(["--rust-entries", report, ...(args.includes("--rust-entries-complete") ? ["--rust-entries-complete"] : [])]);
+  /** 📤️ Produces and verifies current registry entries once from the clean native binary. */
+  private async entries(args: string[]): Promise<void> {
+    if (args.includes("--rust-entries")) throw Error("[schema entries] Registry inputs are produced fresh; --out names the produced output.");
+    await this.verify(args, await this.productionEntries(args));
   }
 
   /**
@@ -21372,10 +21416,6 @@ const POLICY_DIFF_ONLY_RULES: Readonly<Record<PolicyDiffOnlyRuleId, PolicyDiffOn
 
 /** 🧰️`MutationDiff` methods that are the central applier's own machinery, never diff or inverse logic: the only fns of a diff type exempt from the diff-only rules. */
 const POLICY_DIFF_ONLY_DIFF_TYPE_MACHINERY: ReadonlySet<string> = new Set(["apply", "absorb", "retire_cold", "retire_projection", "is_empty"]);
-/** 🫧️Ephemeral lane directories (design ruling "Ephemeral roots"): presence and window transient travel by whole-root transfer, so they may keep ONE whole-root setter kind with a sparse diff and the same setter carrying the base root as its inverse; R13 and R14 exempt only files under these two directories, never persisted config or document lanes. */
-const POLICY_DIFF_ONLY_EPHEMERAL_LANES: ReadonlySet<string> = new Set(["👥️presence", "🫧️transient"]);
-/** 🫧️Ephemeral lane TYPES: a `*Transient`/`*Presence` root or its `*TransientMutation`/`*PresenceMutation` aggregate is ephemeral wherever it lives (e.g. a `🪟️window/🦀️.rs` file), never a `*Config`/document type. */
-const POLICY_DIFF_ONLY_EPHEMERAL_TYPE_RE = /(?:Transient|Presence)(?:Mutation)?$/;
 /** 🔎️Raw cue that a file may hold a hand-written `impl … MutationKind<` or `impl … Mutation<` block. */
 const POLICY_DIFF_ONLY_IMPL_PROBE_RE = /\bimpl\b[^{;]*\bMutation(?:Kind)?\s*</;
 /** 🔎️Raw cue that a file may hold an `impl … MutationDiff<` block. */
@@ -21652,10 +21692,8 @@ function policyDiffOnlyBreach(rule: PolicyDiffOnlyRuleId, relPath: string, line:
  * its rows: R11 flags only simulators (`negative`, `state_after`, …) there, and `diff(`/`*_inverse(…diff…)` only on the
  * mutation side. Every `DiffAlgebra::inverse` body IS scanned. R9 additionally covers the whole
  * file under any `🧬️schema`/`🧬️mutations`/`🧬️mutation-support` directory. R13's `impl MutationDiff<X> for X` is judged in
- * every non-test Rust file. R13 and R14 exempt files under a `👥️presence` or `🫧️transient` lane directory
- * (`POLICY_DIFF_ONLY_EPHEMERAL_LANES`) and impl blocks of an ephemeral lane type (`*Transient`/`*Presence` roots and their
- * `*TransientMutation`/`*PresenceMutation` aggregates, `POLICY_DIFF_ONLY_EPHEMERAL_TYPE_RE`) wherever they live: ephemeral roots may keep one whole-root setter with a sparse diff and the same
- * setter carrying the base root as inverse; persisted config and document lanes may not. R16 scans every Rust file.
+ * every non-test Rust file. R13 and R14 apply to every lane and mutation type, including presence and transient roots:
+ * diffs remain sparse and inverses restore touched values through concrete mutations. R16 scans every Rust file.
  * The planted-violation law (`🧪️tests/🧪️diff-only-law-gate`) drives exactly this function.
  */
 export function policyDiffOnlyFileBreaches(relPath: string, content: string): BreachRecord[] {
@@ -21665,7 +21703,6 @@ export function policyDiffOnlyFileBreaches(relPath: string, content: string): Br
   const underSchema = directories.includes("🧬️schema");
   const underSupport = directories.includes("🧬️mutation-support");
   const testPath = directories.some((segment) => segment === "🧪️tests" || segment === "🧫️fixtures");
-  const ephemeralLane = directories.some((segment) => POLICY_DIFF_ONLY_EPHEMERAL_LANES.has(segment));
   const infrastructure = directories.some((segment) => POLICY_DIFF_ONLY_INFRASTRUCTURE_DIRS.has(segment) || segment.endsWith("-internals"));
   const everyFn = !testPath && !infrastructure && (underMutations || underSupport || (underSchema && directories.some((segment) => segment === "🔺️diff" || segment === "↩️inverse")));
   const leafCandidate = !testPath && (everyFn || underSchema || POLICY_DIFF_ONLY_IMPL_PROBE_RE.test(content) || POLICY_DIFF_ONLY_DIFF_IMPL_PROBE_RE.test(content) || (relPath.startsWith("✏️s/") && relPath.includes("/🗿️artifacts/") && POLICY_DIFF_ONLY_DIFFISH_FN_PROBE_RE.test(content)));
@@ -21692,10 +21729,8 @@ export function policyDiffOnlyFileBreaches(relPath: string, content: string): Br
   if (!leafCandidate) return breaches;
   const code = policyRustBlankTestItems(all, close);
   const impls = policyRustImpls(code, close);
-  const ephemeralImpl = (impl: PolicyRustImpl | undefined) => impl !== undefined && [impl.self, ...impl.args].some((type) => POLICY_DIFF_ONLY_EPHEMERAL_TYPE_RE.test(policyRustTypeName(type)));
-  if (!ephemeralLane)
-    for (const impl of impls)
-      if (impl.kind === "diff" && !ephemeralImpl(impl) && impl.args.length === 1 && policyRustTypeName(impl.args[0]!) === policyRustTypeName(impl.self)) add("R13", impl.start, `impl MutationDiff<${policyRustTypeName(impl.self)}> for ${policyRustTypeName(impl.self)}`);
+  for (const impl of impls)
+    if (impl.kind === "diff" && impl.args.length === 1 && policyRustTypeName(impl.args[0]!) === policyRustTypeName(impl.self)) add("R13", impl.start, `impl MutationDiff<${policyRustTypeName(impl.self)}> for ${policyRustTypeName(impl.self)}`);
   const mutationImpls = impls.filter((impl) => impl.kind === "mutation");
   const hasDiffImpl = impls.some((impl) => impl.kind === "diff");
   const within = (spans: readonly { bodyStart: number; end: number }[], index: number) => spans.some((span) => span.bodyStart <= index && index <= span.end);
@@ -21736,7 +21771,7 @@ export function policyDiffOnlyFileBreaches(relPath: string, content: string): Br
         if (/diff/i.test(match[1]!) || POLICY_DIFF_ONLY_DIFF_ARGUMENT_RE.test(args)) add("R11", fn.bodyStart + match.index, `${match[1]}(`);
       }
     }
-    if (!ephemeralLane && !ephemeralImpl(innermost(fn.start))) for (const match of body.matchAll(POLICY_DIFF_ONLY_RESTORE_RE)) add("R14", fn.bodyStart + match.index, match[0]);
+    for (const match of body.matchAll(POLICY_DIFF_ONLY_RESTORE_RE)) add("R14", fn.bodyStart + match.index, match[0]);
   }
   for (const fn of scanned) {
     const roots = fn.refParams.filter((name) => !POLICY_DIFF_ONLY_PAYLOAD_PARAM_RE.test(name));
@@ -21746,7 +21781,7 @@ export function policyDiffOnlyFileBreaches(relPath: string, content: string): Br
     const copy = new RegExp(`\\blet\\s+mut\\s+\\w+\\s*(?::[^=;]*)?=\\s*(?:\\(\\s*\\*\\s*)?(?:${roots.join("|")})\\b[^;{}]*?(?:\\.(?:clone|to_owned|to_vec)\\s*\\(\\s*\\)|\\.iter\\s*\\(\\s*\\)\\s*\\.cloned\\s*\\(\\s*\\)\\s*\\.collect[^;]*)\\s*\\)?\\s*;`, "g");
     for (const match of body.matchAll(copy)) add("R12", fn.bodyStart + match.index, "let mut … = <ref param>….clone()");
   }
-  for (const impl of ephemeralLane ? [] : mutationImpls.filter((candidate) => !ephemeralImpl(candidate))) {
+  for (const impl of mutationImpls) {
     const declared = POLICY_DIFF_ONLY_TYPE_DIFF_RE.exec(code.slice(impl.bodyStart, impl.end));
     if (!declared) continue;
     const name = policyRustTypeName(declared[1]!);

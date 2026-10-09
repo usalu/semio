@@ -4,10 +4,18 @@ const testSourceUrl = new URL("../../🔗️backbone/✂️detach/📜️script.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import _ from "lodash";
+import Ajv from "ajv";
 
 //#region ✂️BackboneDetachOracle
 export function testBackboneDetachFixture(): void {
   const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8"));
+  assert.ok(fixture.cleanup, "Original detach examples declare independent full cleanup authority");
+  const contract = JSON.parse(readFileSync(new URL("../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const valid = new Ajv({strict:false,allErrors:true}).compile({...contract,$ref:"#/$defs/Grant"});
+  for (const grant of Object.values(fixture.cleanup) as Record<string,number>[]) {
+    assert.equal(valid(grant),true);
+    for (const axis of contract.$defs.Grant.required) { const missing={...grant};delete missing[axis];assert.equal(valid(missing),false);assert.equal(valid({...grant,[axis]:-1}),false); }
+  }
   const maximum = BigInt(fixture.generationMaximum);
   const exactMaximum = Buffer.alloc(8, 255).readBigUInt64LE();
   assert.equal(maximum, exactMaximum);
@@ -20,5 +28,6 @@ export function testBackboneDetachFixture(): void {
     const observed = { refused, panicked: false, descriptorPreserved: _.eq(next.descriptor, before.descriptor), generationPreserved: next.generation === before.generation, backbonePreserved: _.eq(next.backbone, before.backbone), payloadPreserved: _.eq(next.payload, before.payload) && next.payload.equals(before.payload) };
     assert.deepEqual(observed, row.expected);
   }
+  console.log("[DEBUG] original detach examples / independent genuine Grant Ajv omissions / Lodash identity / Buffer refusal conservation");
 }
 //#endregion ✂️BackboneDetachOracle

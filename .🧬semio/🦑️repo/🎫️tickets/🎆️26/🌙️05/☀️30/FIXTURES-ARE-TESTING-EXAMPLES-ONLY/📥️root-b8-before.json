@@ -1,0 +1,77 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧬️schema/🎟️work.json",
+    "beforeSha256": "3018b602232a57ac6f9abf7bb68921a3c2ef749815708f3a5a7d013b56fa0a05",
+    "role": "entire example corpus authority"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🟦️.ts",
+    "beforeSha256": "a482f980f79aa6dbd75891e4468382d258007591b9826fd59f730336efb1d00b",
+    "role": "whole corpus reader"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧫️fixtures/🎟️work.json",
+    "beforeSha256": "55216762f6497b3c71ec48c14137bff05bef96b143db73b50d9f553300670536",
+    "role": "plain input observer; no authorship"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+    "beforeSha256": "0f3d1c2cbe5f6f4ffd2cc7a8c9bd957979853cd68a1f51145d5afd81c6731a53",
+    "role": "entire example corpus authority"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts",
+    "beforeSha256": "c231e0778a10c25a5c5f2d5cf0ef1238e13a3bb6a20d1a16917ea23786592e15",
+    "role": "whole corpus reader"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️host-source/🔣️.json",
+    "beforeSha256": "20c96ce5ee311af4b426e0047c6c6d369c4626e5882fdda90eeeff7fb13d7f84",
+    "role": "plain input observer; no authorship"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+    "beforeSha256": "ac1aed78a42f9badba3c7dc6d1377e2d0f0edab11b9565dd0f755648e2fe8a89",
+    "role": "entire example corpus authority"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+    "beforeSha256": "f3cc1aef7de0859c63198d328f0a8407ac82c1a10ca0051c1f517985e2f362d0",
+    "role": "whole corpus reader"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+    "beforeSha256": "2c07ceb021131e71f46ebb8e0f0826a797ce7e24eb96a8f13d51c1a33136004a",
+    "role": "plain input observer; no authorship"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧬️schema/🎟️source/🔣️.json",
+    "beforeSha256": "a661f868f0626146d19260a6aa7ed0d28cd3a200991784b5792fc6c9be66da3c",
+    "role": "entire example corpus authority"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧪️tests/🎟️source/🟦️.ts",
+    "beforeSha256": "2b554986519afe8468e7456aaad8febe440717ba06359f6640f879ce01a30831",
+    "role": "whole corpus reader"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧫️fixtures/🎟️source/🔣️.json",
+    "beforeSha256": "bc58db06704a1a2e4441725959a54e0c9dcf654f7870e19ad532aabb8e223198",
+    "role": "plain input observer; no authorship"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧬️schema/🔣️.json",
+    "beforeSha256": "069bb23c15d73058f11233bf85a38123809faceeb487e7348fe6462ebceec870",
+    "role": "entire example corpus authority"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧪️tests/🟦️.ts",
+    "beforeSha256": "4b15caf1ab578f9da13718c9f70daf16539abe52463ee3dc04a1983246a6b1d1",
+    "role": "whole corpus reader"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/♻️retirement/🧫️fixtures/🔣️.json",
+    "beforeSha256": "ceea57bb7fba8a169fd93add6f413504a3b6622c4840521ba60615f36a8d9a43",
+    "role": "plain input observer; no authorship"
+  }
+]

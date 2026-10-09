@@ -590,6 +590,177 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+/goal The goal of the event sourced architecture is to allow for non-destructive editing of artifacts. In the history a mutation must be editable. As soon as the history is starting to be edited, the ui jumps into a time travel mode. 
+When a mutation is edited then the user sees the current mutation and the downstream mutation are not yet applied. The user can either finalize the input change for the mutation or discard the input change for the mutation. Every input of a mutation has information about ui element (such as slider, stepper, min, max, snapping points on a slider, etc). When the user presses accept then the changes for the input of a mutation are then all downstream mutations are applied again. In the best case no conflicts arise. The mutations can either succeed, emit warnings or errors. When new warnings arise, the user can see them in the history. When fatal errors occur, the problematic mutations must be first edited before. The process is repeated until all downstream mutation are error free. Once all mutation conflicts were resolved the user sees the final result and can finalize or keep on making changes to other mutations. When the user finalizes then the user is prompted if he/she likes to create a new alternative or overwrite the existing artifact.
+e.g. in puzzle 2d when a selection is dragged then a drag mutation is triggered. Both selection and drag offset remain editable afterwards.
+Tools must be state machines that yield mutations within a transaction. Tools are interactive and hence cant be altered by history but the mutations can be changed.
+Develop, extend, refactor to achieve this over clean mechanisms that are artifact-agonstic and generally work.
+Everything end to end.
+
+---
+
+Introduce different challenge for quizzes: easy, medium, hard, expert
+e.g. the sorting task behaves different
+easy: The keys to sort are visible and the user just needs to assign them. Receives hints when something is off by a factor more than 1000.
+medium: The keys to sort are visible and the user just needs to assign them.
+hard: The keys are not shown and the user needs to guess them
+expert: The questions need to be solved with a timer
+
+You receive more points for completing a quiz on harder challenge level
+etc
+Develop this into fullblown and indepth implemented mechanisms.
+This will affect every kind of question, so on.
+
+---
+
+remove explicit
+instead of
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✋️drag-layers/🦠️mutation/🦀️.rs
+
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✋️drag-layers/🦀️.rs
+
+---
+
+/goal All mutations must return a declarative concrete diff that achieves and not mutate state directly. All mutations must return a list of mutations that inverts the mutation. Those mutations each return diffs that in summation is the negative diff to the diff return of the mutation itself. It must be impossible by design that mutations directly mutate a snapshot. All mutations must be indirect over the diff which is applied centrally.
+For all artifacts, for all plugins.
+Everything end to end.
+
+violations e.g. with wrong generic implementation instead of concrete
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers/🦠️mutation/🦀️.rs
+
+impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for RotateLayers {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "layers", kind: "rotate-layers", record: "RotatedLayers" };
+
+    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<crate::diff::DrawingDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        let (degrees_en, degrees_de) = drawing_label_number(self.angle.to_degrees());
+        let (en, de) = drawing_label_layers(self.targets.len());
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
+    }
+    fn target(&self) -> Vec<String> {
+        self.targets.iter().map(|target| target.to_string_owner()).collect()
+    }
+}
+
+---
+
+🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧫️fixtures/📏️close/🧬️schema/🔣️.json
+
+---
+
+/goal dashboard must be the only control plane for devs. 
+The current implementation is incomplete and buggy
+Dissolve all launch.json from vscode, claude code, etc.
+It must be fullblown tui application with hover, selection, cursor, mouse, proper window rendering same as ui, have proper tab names based on tasks.
+The current legacy launch.json is very polluted.
+Canonicalize configs, mechanisms, etc for everything to be declarative, clean, etc
+Everything end to end and battle tested for the complete monorepo.
+
+---
+
+/goal 
+e.g. import/export/election/hover/examples/etc must be first class citizens
+e.g. violation ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-document/🦀️.rs
+
+---
+
+fixtures are 
+must be strictly under tests
+
+---
+tests must be strictly under
+🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🦀️.rs
+
+---
+
+Canoncicalize state management
+No op, no patch, etc
+
+---
+
+Full snapshot and diff algebra
+e.g. compute a diff from two snapshots a and b (with interpolation parameter 0 to 1 where 0 is full snapshot a, 0.5 is between snapshot a and b, and 1 is full snapshot b)
+e.g. apply diff from 0 (no effect) to 1 (full diff)
+
+---
+
+/goal Introduce a new plugin: bim
+bim is for building information modelling.
+It has a model artifact.
+A model has sites.
+A site has buildings
+A building has storeys.
+A storey has walls, columns, slabs, roofs, etc,
+A wall has windows, etc
+
+Everything adjustable (storey height, wall curve, etc) and parametric (changing a storey height is automatically changing wall heights, etc)
+Make it a fullblown and feature complete bim software.
+
+Make sure that it properly uses mutations that exclusively use declarative diffs and inverse mutations, etc
+
+---
+
+/goal All mutations must return a declarative concrete diff that achieves and not mutate state directly. All mutations must return a list of mutations that inverts the mutation. Those mutations each return diffs that in summation is the negative diff to the diff return of the mutation itself. It must be impossible by design that mutations directly mutate a snapshot. All mutations must be indirect over the diff which is applied centrally.
+For all artifacts, for all plugins.
+Everything end to end.
+
+violations e.g. with wrong generic implementation instead of concrete
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers/🦠️mutation/🦀️.rs
+
+impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for RotateLayers {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "layers", kind: "rotate-layers", record: "RotatedLayers" };
+
+    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<crate::diff::DrawingDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        let (degrees_en, degrees_de) = drawing_label_number(self.angle.to_degrees());
+        let (en, de) = drawing_label_layers(self.targets.len());
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
+    }
+    fn target(&self) -> Vec<String> {
+        self.targets.iter().map(|target| target.to_string_owner()).collect()
+    }
+}
+
+---
+
+procedural 3d is still extremly adhoc.
+Make it feature-complete and usable for the Enduser.
+A fullblown 3d brep and mesh widget set for a complete creating, editing and analysis experience for arbitrary shapes .
+Make sure to only use the mutation, inference system and not some separate modules, etc
+
+---
+
+Forms plugin  is still extremly adhoc.
+Make it feature-complete and usable for the Enduser.
+A complete forms creating and editing experience with extensions for integrating procedural 3d, flows, playbooks, etc
+Everything end to end.
+
+---
+
+All stdio artifact editors are still extremly adhoc.
+Make it feature-complete and usable for the Enduser.
+A complete editing experience for all common file formats.
+Every single detail for every artifact must be modifiable..
+
+---
+
 wfc is still largely incomplete.
 
 e.g.

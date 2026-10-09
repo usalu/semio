@@ -649,7 +649,7 @@ fn document_backbone_batch_fixture_is_exact_bounded_and_u64_safe() {
                 for (actual, expected) in envelopes.iter().zip(expected_envelopes) {
                     assert_eq!(actual.mutation_id.0, expected["mutationId"].as_str().expect("mutationId"));
                     assert_eq!(actual.document_id.0, expected["documentId"].as_str().expect("documentId"));
-                    assert_eq!(actual.actor.0, expected["actor"].as_str().expect("actor"));
+                    assert_eq!(actual.actor.0.as_str(), expected["actor"].as_str().expect("actor"));
                     assert_eq!(
                         actual.dependencies.iter().map(|dependency| dependency.0.as_str()).collect::<Vec<_>>(),
                         expected["dependencies"].as_array().expect("dependencies").iter().map(|dependency| dependency.as_str().expect("dependency")).collect::<Vec<_>>()

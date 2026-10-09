@@ -1,0 +1,17 @@
+{
+  "schema": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🚪️raw-close/🔣️.json",
+    "sha256": "0debd7cbff1975f050d4da43dd4e7a12dcd907dadcd42b0350258672f53440e3",
+    "classification": "whole test corpus authority, independent of its placement"
+  },
+  "reader": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "sha256": "68edeee6faa371d3f7b65164766525e826b6fc2e9d267bf4f6725df4bd499675",
+    "selector": "six exact raw schema admission and mirror-negative lines only"
+  },
+  "unchangedOriginalObservers": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧫️fixtures/🚪️raw-allocation-close.json": "becf94183df375a7be7f793673e6566da0cf621be926159e044319e4ae632084",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs": "b261fb66da62d367a5a1814d74101c739592284d7cef059b7185d0afeae4b50e"
+  },
+  "redReceipt": "fixture-boundary-current7.jsonl; original Nx 1"
+}

@@ -6,7 +6,8 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "layerId"
+    "layerId",
+    "identities"
   ],
   "properties": {
     "mutation": {
@@ -32,6 +33,28 @@
         },
         "group": "target",
         "order": 10
+      }
+    },
+    "identities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "source",
+          "target"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       }
     }
   }

@@ -1,0 +1,138 @@
+{
+  "policy": {
+    "maximum_items": 1,
+    "maximum_copy_bytes": 4096,
+    "maximum_capacity_bytes": 65536,
+    "maximum_release_bytes": 262144,
+    "maximum_depth": 64
+  },
+  "cases": [
+    {
+      "name": "empty",
+      "demand": {
+        "copy_bytes": 0,
+        "capacity_bytes": 0,
+        "release_bytes": 0,
+        "depth": 0
+      },
+      "admitted": true
+    },
+    {
+      "name": "all-boundaries",
+      "demand": {
+        "copy_bytes": 4096,
+        "capacity_bytes": 65536,
+        "release_bytes": 262144,
+        "depth": 64
+      },
+      "admitted": true
+    },
+    {
+      "name": "copy_bytes below",
+      "demand": {
+        "copy_bytes": 4095,
+        "capacity_bytes": 65536,
+        "release_bytes": 262144,
+        "depth": 64
+      },
+      "admitted": true
+    },
+    {
+      "name": "copy_bytes above",
+      "demand": {
+        "copy_bytes": 4097,
+        "capacity_bytes": 65536,
+        "release_bytes": 262144,
+        "depth": 64
+      },
+      "admitted": false
+    },
+    {
+      "name": "capacity_bytes below",
+      "demand": {
+        "copy_bytes": 4096,
+        "capacity_bytes": 65535,
+        "release_bytes": 262144,
+        "depth": 64
+      },
+      "admitted": true
+    },
+    {
+      "name": "capacity_bytes above",
+      "demand": {
+        "copy_bytes": 4096,
+        "capacity_bytes": 65537,
+        "release_bytes": 262144,
+        "depth": 64
+      },
+      "admitted": false
+    },
+    {
+      "name": "release_bytes below",
+      "demand": {
+        "copy_bytes": 4096,
+        "capacity_bytes": 65536,
+        "release_bytes": 262143,
+        "depth": 64
+      },
+      "admitted": true
+    },
+    {
+      "name": "release_bytes above",
+      "demand": {
+        "copy_bytes": 4096,
+        "capacity_bytes": 65536,
+        "release_bytes": 262145,
+        "depth": 64
+      },
+      "admitted": false
+    },
+    {
+      "name": "depth below",
+      "demand": {
+        "copy_bytes": 4096,
+        "capacity_bytes": 65536,
+        "release_bytes": 262144,
+        "depth": 63
+      },
+      "admitted": true
+    },
+    {
+      "name": "depth above",
+      "demand": {
+        "copy_bytes": 4096,
+        "capacity_bytes": 65536,
+        "release_bytes": 262144,
+        "depth": 65
+      },
+      "admitted": false
+    },
+    {
+      "name": "giant-original",
+      "demand": {
+        "copy_bytes": 4096,
+        "capacity_bytes": 65536,
+        "release_bytes": 3145728,
+        "depth": 64
+      },
+      "admitted": false
+    }
+  ],
+  "refusal": {
+    "contention": "retry",
+    "provider": "publishOriginalKind",
+    "depth": "depthLimit",
+    "capacity": "ownershipLimit",
+    "copy": "workLimit",
+    "release": "ownershipLimit",
+    "receipt": "invariantViolated",
+    "owner": "retain",
+    "automaticRetry": false
+  },
+  "physicalReceipt": {
+    "observation": "original-current-thread-heap",
+    "capacity": "same-admitted-turn",
+    "release": "same-admitted-turn",
+    "terminalDrop": 0
+  }
+}

@@ -24,11 +24,11 @@ impl SnapshotEncoding {
 }
 
 /// 🔢️ SQLite storage classes with owned, native scalar values.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum SqliteValue { Null, Integer(i64), Real(f64), Text(String), Blob(Vec<u8>) }
 
 /// 📑️ One row with its signed SQLite rowid and semantic column values.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct SqliteRow { pub rowid: i64, pub values: Vec<SqliteValue> }
 
 impl SqliteRow {
@@ -40,7 +40,7 @@ impl SqliteRow {
 }
 
 /// 🧱️ Handwritten domain table definition and its typed relational rows.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct SqliteTable { pub name: String, pub sql: String, pub rows: Vec<SqliteRow> }
 
 impl SqliteTable {
@@ -54,7 +54,7 @@ impl SqliteTable {
 }
 
 /// 🏗️ A relational database projected explicitly by one artifact provider.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct SqliteDatabase { pub tables: Vec<SqliteTable> }
 
 /// 🏛️ Validates one declared table without cloning its rows or requiring a single-table database.
@@ -131,28 +131,50 @@ pub enum SqliteSnapshotPhase { ReadPages, WritePages, ProjectSnapshot, Reconstru
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SqliteSnapshotProgress { pub phase: SqliteSnapshotPhase, pub completed: usize, pub total: usize }
 
+/// 🚚️ Receives physical stage reservations before allocation under original native authority.
+#[cfg(not(target_arch="wasm32"))]
+pub type SqliteSnapshotStageAllocation<'a>=dyn FnMut(usize)->std::result::Result<(),ValueError>+Send+'a;
+/// 🌐️ Receives physical stage reservations on the original guest executor.
+#[cfg(target_arch="wasm32")]
+pub type SqliteSnapshotStageAllocation<'a>=dyn FnMut(usize)->std::result::Result<(),ValueError>+'a;
 /// 🛑️ One progress and cancellation authority spanning typed projection and physical I/O.
-pub struct SqliteSnapshotControl<'a> { callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits, reconstruction_bytes: usize, reconstruction_units: usize, reconstruction_scalar_bytes: usize, allocation_bytes: usize, physical_read_progress: Option<SqliteSnapshotProgress> }
+pub struct SqliteSnapshotControl<'a> { forwarded_bytes:usize, allocation:Option<&'a mut semio_framework_value::native_encoding::NativeEncodeAllocationPort<'a>>, callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits, reconstruction_bytes: usize, reconstruction_units: usize, reconstruction_scalar_bytes: usize, allocation_bytes: usize, physical_read_progress: Option<SqliteSnapshotProgress> }
 
 impl<'a> SqliteSnapshotControl<'a> {
-    pub fn new(callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits) -> Self { Self { callback, limits, reconstruction_bytes: 0, reconstruction_units: 0, reconstruction_scalar_bytes: 0, allocation_bytes: 0, physical_read_progress: None } }
+    pub fn new(callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits) -> Self { Self { forwarded_bytes:0, allocation:None, callback, limits, reconstruction_bytes: 0, reconstruction_units: 0, reconstruction_scalar_bytes: 0, allocation_bytes: 0, physical_read_progress: None } }
+    /// 🛂️ Binds physical SQLite reservations to the original receiving allocation port.
+    pub fn new_forwarded(callback:&'a mut dyn FnMut(SqliteSnapshotProgress)->bool,limits:SqliteDatabaseLimits,allocation:&'a mut semio_framework_value::native_encoding::NativeEncodeAllocationPort<'a>)->Self{let mut control=Self::new(callback,limits);control.allocation=Some(allocation);control}
     pub fn limits(&self) -> SqliteDatabaseLimits { self.limits }
+    /// 📊️ Reports physical SQL admission independently of native bytes settled to the secondary domain ceiling.
+    pub fn forwarded_owned_bytes(&self)->usize{self.forwarded_bytes}
+    /// 🫴️ Settles native ownership already charged through its original allocation port.
+    pub fn admit_native_allocation_bytes(&mut self,count:usize)->std::result::Result<(),ValueError>{self.allocation_bytes=self.allocation_bytes.checked_add(count).filter(|next|*next<=self.limits.max_allocation_bytes).ok_or_else(||ownership_limit("allocation bytes"))?;Ok(())}
+    /// 📐️ Narrows declarative input ceilings without replacing original allocation or progress authority.
+    pub fn restrict_limits(&mut self,limits:SqliteDatabaseLimits)->std::result::Result<(),ValueError>{let next=SqliteDatabaseLimits{max_file_bytes:self.limits.max_file_bytes.min(limits.max_file_bytes),max_value_bytes:self.limits.max_value_bytes.min(limits.max_value_bytes),max_allocation_bytes:self.limits.max_allocation_bytes.min(limits.max_allocation_bytes),max_schema_bytes:self.limits.max_schema_bytes.min(limits.max_schema_bytes),max_rows:self.limits.max_rows.min(limits.max_rows),max_columns:self.limits.max_columns.min(limits.max_columns),max_tables:self.limits.max_tables.min(limits.max_tables),max_pages:self.limits.max_pages.min(limits.max_pages)};if self.allocation_bytes>next.max_allocation_bytes||self.reconstruction_bytes.checked_add(self.reconstruction_scalar_bytes).is_none_or(|owned|owned>next.max_value_bytes){return Err(ownership_limit("narrowed original snapshot allowance"))}self.limits=next;Ok(())}
+
     /// 📏️ Remaining cumulative backing admission, independent of semantic payload bytes.
     pub fn allocation_remaining_bytes(&self) -> usize { self.limits.max_allocation_bytes - self.allocation_bytes }
     /// 🏗️ Admits one concrete owned backing allocation before construction; retirement never refunds it.
     pub fn admit_allocation_bytes(&mut self, count: usize) -> std::result::Result<(), ValueError> {
         let next = self.allocation_bytes.checked_add(count).filter(|next| *next <= self.limits.max_allocation_bytes).ok_or_else(|| ownership_limit("allocation bytes"))?;
+        let forwarded_maximum=self.forwarded_bytes.checked_add(self.allocation_remaining_bytes()).ok_or_else(||ownership_limit("forwarded allocation ceiling"))?;
+        if let Some(port)=&mut self.allocation{port(semio_framework_value::native_encoding::NativeEncodeAllocation{bytes:count,owned_bytes:self.forwarded_bytes,next_owned_bytes:self.forwarded_bytes.checked_add(count).ok_or_else(||ownership_limit("forwarded allocation bytes"))?,maximum_bytes:forwarded_maximum})?;}
+        self.forwarded_bytes=self.forwarded_bytes.checked_add(count).ok_or_else(||ownership_limit("forwarded allocation bytes"))?;
         self.allocation_bytes = next;
         Ok(())
     }
     /// 🪆️ Settles a child producer's admitted backing even when its typed construction refuses or cancels.
-    pub fn allocation_stage<T,E>(&mut self, phase: SqliteSnapshotPhase, operation: impl FnOnce(usize,&mut dyn FnMut(usize,usize)->bool)->(std::result::Result<T,E>,usize)) -> std::result::Result<std::result::Result<T,E>,ValueError> {
+    pub fn allocation_stage<T,E>(&mut self,phase:SqliteSnapshotPhase,operation:impl FnOnce(usize,&mut dyn FnMut(usize,usize)->bool,&mut SqliteSnapshotStageAllocation<'_>)->(std::result::Result<T,E>,usize))->std::result::Result<std::result::Result<T,E>,ValueError>{
         self.checkpoint(phase,0,0)?;
-        let remaining = self.allocation_remaining_bytes();
-        let (result,owned) = { let mut progress = |completed,total| self.accept_progress(phase,completed,total); operation(remaining,&mut progress) };
-        self.admit_allocation_bytes(owned)?;
-        Ok(result)
+        let remaining=self.allocation_remaining_bytes();let before=self.allocation_bytes;let maximum=self.limits.max_allocation_bytes;let physical=self.physical_read_progress;
+        let callback=&mut self.callback;let owned=&mut self.allocation_bytes;let forwarded=&mut self.forwarded_bytes;let original=&mut self.allocation;
+        let mut progress=|completed,total|callback(if phase==SqliteSnapshotPhase::ReadPages{physical.unwrap_or(SqliteSnapshotProgress{phase,completed,total})}else{SqliteSnapshotProgress{phase,completed,total}});
+        let mut allocation=|bytes:usize|{let next=owned.checked_add(bytes).filter(|next|*next<=maximum).ok_or_else(||ownership_limit("allocation bytes"))?;if let Some(port)=original{port(semio_framework_value::native_encoding::NativeEncodeAllocation{bytes,owned_bytes:*forwarded,next_owned_bytes:forwarded.checked_add(bytes).ok_or_else(||ownership_limit("forwarded allocation bytes"))?,maximum_bytes:forwarded.checked_add(maximum-*owned).ok_or_else(||ownership_limit("forwarded allocation ceiling"))?})?;}*forwarded=forwarded.checked_add(bytes).ok_or_else(||ownership_limit("forwarded allocation bytes"))?;*owned=next;Ok(())};
+        let(result,declared)=operation(remaining,&mut progress,&mut allocation);
+        if self.allocation_bytes.checked_sub(before)!=Some(declared){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"SQLite stage reservation ledger differs from actual admitted allocations"));}Ok(result)
     }
+    /// 🫴️ Settles the secondary SQL ceiling after an original native controller admitted every allocation.
+    pub fn allocation_stage_native<T,E>(&mut self,phase:SqliteSnapshotPhase,operation:impl FnOnce(usize,&mut dyn FnMut(usize,usize)->bool)->(std::result::Result<T,E>,usize))->std::result::Result<std::result::Result<T,E>,ValueError>{self.checkpoint(phase,0,0)?;let remaining=self.allocation_remaining_bytes();let(result,owned)={let mut progress=|completed,total|self.accept_progress(phase,completed,total);operation(remaining,&mut progress)};let next=self.allocation_bytes.checked_add(owned).filter(|next|*next<=self.limits.max_allocation_bytes).ok_or_else(||ownership_limit("allocation bytes"))?;self.allocation_bytes=next;Ok(result)}
     pub fn check_rows(&self, count: usize) -> std::result::Result<(), ValueError> { limit(count, self.limits.max_rows, ValueRefusalKind::WorkLimit, "rows") }
     pub fn check_value_bytes(&self, count: usize) -> std::result::Result<(), ValueError> { limit(count, self.limits.max_value_bytes, ValueRefusalKind::OwnershipLimit, "value bytes") }
     /// 📏️ Exposes remaining reconstruction ownership before a native allocator starts.
@@ -173,6 +195,8 @@ impl<'a> SqliteSnapshotControl<'a> {
         self.checkpoint(phase, rows, total)
     }
     fn accept_progress(&mut self, phase: SqliteSnapshotPhase, completed: usize, total: usize) -> bool { let progress=if phase==SqliteSnapshotPhase::ReadPages{self.physical_read_progress.unwrap_or(SqliteSnapshotProgress { phase, completed, total })}else{SqliteSnapshotProgress { phase, completed, total }};(self.callback)(progress) }
+    /// 👁️ Observes an original native prefix without constructing a second cancellation diagnostic.
+    pub fn observe_progress(&mut self,phase:SqliteSnapshotPhase,completed:usize,total:usize)->bool{self.accept_progress(phase,completed,total)}
     pub fn checkpoint(&mut self, phase: SqliteSnapshotPhase, completed: usize, total: usize) -> std::result::Result<(), ValueError> { if self.accept_progress(phase,completed,total) { Ok(()) } else { Err(ValueError::new(ValueRefusalKind::Canceled, "relational SQLite transfer cancelled")) } }
 }
 
@@ -307,3 +331,7 @@ mod tests;
 #[cfg(test)]
 #[path = "⚠️refusal/🧪️tests/🦀️.rs"]
 mod typed_refusal_tests;
+
+#[cfg(test)]
+#[path="♻️retirement/🧪️tests/🦀️.rs"]
+mod original_field_retirement_tests;

@@ -24,3 +24,4 @@ semio-framework-pack = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }
+semio-framework-trace = { workspace = true }

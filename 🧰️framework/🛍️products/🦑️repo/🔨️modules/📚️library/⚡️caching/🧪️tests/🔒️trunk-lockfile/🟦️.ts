@@ -26,7 +26,7 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
     writeFileSync(join(temporary, "Cargo.lock"), `[[package]]\nname = "wasm-bindgen"\nversion = "${fixture.tooling.bindgenVersion}"\n`);
     for (const row of fixture.tooling.cases) {
       const commands: string[][] = [];
-      await prepareDependencies("trunk", temporary, new AbortController().signal, async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean) => {
+      await prepareDependencies("trunk", temporary, new AbortController().signal,{version:1,directory:workspace}, async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean) => {
         assert.equal(cwd, temporary); assert.equal(signal.aborted, false);
         if (capture) return command === "trunk" ? row.version : command === "wasm-bindgen" ? row.bindgen : row.targets;
         commands.push([command, ...args]); return "";
@@ -34,7 +34,7 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
       assert.deepEqual(commands, row.commands, "Preparation must be pinned and avoid reinstalling ready tooling");
     }
     const controller = new AbortController(), failure = new Error("Cancelled dependency probe"), calls: string[][] = [];
-    await assert.rejects(prepareDependencies("trunk", temporary, controller.signal, async (command: string, args: string[]) => {
+    await assert.rejects(prepareDependencies("trunk", temporary, controller.signal,{version:1,directory:workspace}, async (command: string, args: string[]) => {
       calls.push([command, ...args]); controller.abort(failure); throw failure;
     }), error => error === failure);
     assert.deepEqual(calls, [["trunk", "--version"]], "Cancelling a probe must never start an installation");

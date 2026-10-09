@@ -74,7 +74,7 @@ pub(crate) fn decode_span(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> 
     Ok(TextSpan { line: number(line, "missing TextSpan.line", c)?, column: number(column, "missing TextSpan.column", c)?, length: number(length, "missing TextSpan.length", c)? })
 }
 pub(super) fn refusal_kind(value: &DslValue) -> Result<ValueRefusalKind, ValueError> {
-    match value { DslValue::String(value) => match value.as_str() { "invalidValue" => Ok(ValueRefusalKind::InvalidValue), "canceled" => Ok(ValueRefusalKind::Canceled), "ownershipLimit" => Ok(ValueRefusalKind::OwnershipLimit), "allocationFailed" => Ok(ValueRefusalKind::AllocationFailed), "workLimit" => Ok(ValueRefusalKind::WorkLimit), "depthLimit" => Ok(ValueRefusalKind::DepthLimit), "unsupportedOwner" => Ok(ValueRefusalKind::UnsupportedOwner), "invariantViolated" => Ok(ValueRefusalKind::InvariantViolated), _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "unknown TextError.kind")) }, _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected a string for TextError.kind")) }
+    match value { DslValue::String(value)=>ValueRefusalKind::from_wire(value).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"unknown TextError.kind")),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected a string for TextError.kind")) }
 }
 pub(super) fn encode_text_error(value: &TextError, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
     record(c, 3 + usize::from(value.expected.is_some()), |fields, c| { push(fields, "kind", &value.kind.as_str(), c)?; push(fields, "message", &value.message, c)?; push(fields, "span", &value.span, c)?; if let Some(value) = &value.expected { push(fields, "expected", value, c)?; } Ok(()) })
@@ -157,10 +157,11 @@ pub(super) fn decode_params(value: &DslValue, c: &mut NativeDecodeControl<'_>) -
 }
 pub(super) fn encode_fault(value: &Fault, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
     let params = value.params.as_deref().filter(|params| !params.0.is_empty());
-    record(c, 6 + usize::from(value.span.is_some()) + usize::from(!value.causes.is_empty()) + usize::from(params.is_some()), |fields, c| { push(fields, "origin", &value.origin, c)?; push(fields, "code", &value.code, c)?; push(fields, "severity", &value.severity, c)?; push(fields, "message", &value.message, c)?; push(fields, "scope", &*value.scope, c)?; if let Some(value) = &value.span { push(fields, "span", value, c)?; } if !value.causes.is_empty() { push(fields, "causes", &value.causes, c)?; } if let Some(params) = params { push(fields, "params", params, c)?; } push(fields, "retryable", &value.retryable, c) })
+    record(c, 7 + usize::from(value.span.is_some()) + usize::from(!value.causes.is_empty()) + usize::from(params.is_some()), |fields, c| { push(fields, "origin", &value.origin, c)?; push(fields, "code", &value.code, c)?; push(fields, "severity", &value.severity, c)?; push(fields, "message", &value.message, c)?; push(fields, "scope", &*value.scope, c)?; push(fields,"retainedProgress",&value.retained_progress,c)?; if let Some(value) = &value.span { push(fields, "span", value, c)?; } if !value.causes.is_empty() { push(fields, "causes", &value.causes, c)?; } if let Some(params) = params { push(fields, "params", params, c)?; } push(fields, "retryable", &value.retryable, c) })
 }
 pub(super) fn decode_fault(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> Result<Fault, ValueError> {
-    let [origin, code, severity, message, scope, span, causes, params, retryable] = fields(value, ["origin", "code", "severity", "message", "scope", "span", "causes", "params", "retryable"], c)?;
+    let [origin, code, severity, message, scope, span, causes, params, retryable, retained_progress] = fields(value, ["origin", "code", "severity", "message", "scope", "span", "causes", "params", "retryable", "retainedProgress"], c)?;
+    let retained_progress=semio_framework_value::RetainedCloneProgress::from_value_controlled(required(retained_progress,"missing Fault.retainedProgress")?,c)?;
     let origin = FaultOrigin::from_value_controlled(required(origin, "missing Fault.origin")?, c)?;
     let code = FaultCode::from_value_controlled(required(code, "missing Fault.code")?, c)?.guard_decoded();
     let severity = Severity::from_value_controlled(required(severity, "missing Fault.severity")?, c)?;
@@ -173,5 +174,5 @@ pub(super) fn decode_fault(value: &DslValue, c: &mut NativeDecodeControl<'_>) ->
     if params.get().is_some() { c.charge(size_of::<FaultParams>())?; }
     let retryable = optional::<bool>(retryable, c)?.unwrap_or(false);
     c.checkpoint()?;
-    Ok(Fault { origin, code: code.take(), severity, message: message.take(), scope: Box::new(scope.take()), span, causes: causes.take(), params: params.take().map(Box::new), retryable })
+    Ok(Fault { retained_progress,origin, code: code.take(), severity, message: message.take(), scope: Box::new(scope.take()), span, causes: causes.take(), params: params.take().map(Box::new), retryable })
 }

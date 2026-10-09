@@ -26,5 +26,29 @@
     "release": "exact-native-page-and-final-directory",
     "depth": 1,
     "terminalReceipt": "full-final-page-release"
-  }
+  },
+  "birthPolicy": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 2
+  },
+  "birthExampleExtents": [
+    4096,
+    4096,
+    4096,
+    4096,
+    8192,
+    8192
+  ],
+  "birthCancelCuts": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ]
 }

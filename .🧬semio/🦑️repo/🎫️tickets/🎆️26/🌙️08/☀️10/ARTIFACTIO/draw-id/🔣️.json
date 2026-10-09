@@ -1,0 +1,1151 @@
+{
+  "cases": [
+    {
+      "name": "empty",
+      "kind": "layer",
+      "parts": [],
+      "preimage": [
+        68,
+        82,
+        65,
+        87,
+        73,
+        68,
+        48,
+        49,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "digest": [
+        136,
+        106,
+        142,
+        182,
+        238,
+        23,
+        206,
+        127,
+        52,
+        119,
+        166,
+        176,
+        67,
+        254,
+        223,
+        129,
+        166,
+        172,
+        254,
+        164,
+        115,
+        27,
+        57,
+        210,
+        18,
+        152,
+        142,
+        29,
+        106,
+        196,
+        17,
+        116
+      ],
+      "text": "layer-886a8eb6ee17ce7f3477a6b043fedf81a6acfea4731b39d212988e1d6ac41174"
+    },
+    {
+      "name": "empty-part",
+      "kind": "path",
+      "parts": [
+        []
+      ],
+      "preimage": [
+        68,
+        82,
+        65,
+        87,
+        73,
+        68,
+        48,
+        49,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "digest": [
+        106,
+        205,
+        96,
+        141,
+        61,
+        251,
+        88,
+        82,
+        136,
+        191,
+        255,
+        161,
+        84,
+        231,
+        174,
+        176,
+        111,
+        75,
+        128,
+        152,
+        52,
+        140,
+        41,
+        15,
+        4,
+        62,
+        180,
+        64,
+        10,
+        131,
+        70,
+        233
+      ],
+      "text": "path-6acd608d3dfb585288bfffa154e7aeb06f4b8098348c290f043eb4400a8346e9"
+    },
+    {
+      "name": "partition-a",
+      "kind": "layer",
+      "parts": [
+        [
+          97,
+          98
+        ],
+        [
+          99
+        ]
+      ],
+      "preimage": [
+        68,
+        82,
+        65,
+        87,
+        73,
+        68,
+        48,
+        49,
+        0,
+        2,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        97,
+        98,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        99
+      ],
+      "digest": [
+        212,
+        131,
+        240,
+        31,
+        40,
+        137,
+        67,
+        78,
+        212,
+        99,
+        60,
+        251,
+        247,
+        139,
+        62,
+        40,
+        95,
+        129,
+        15,
+        247,
+        28,
+        76,
+        174,
+        31,
+        86,
+        35,
+        22,
+        12,
+        138,
+        47,
+        77,
+        148
+      ],
+      "text": "layer-d483f01f2889434ed4633cfbf78b3e285f810ff71c4cae1f5623160c8a2f4d94"
+    },
+    {
+      "name": "partition-b",
+      "kind": "layer",
+      "parts": [
+        [
+          97
+        ],
+        [
+          98,
+          99
+        ]
+      ],
+      "preimage": [
+        68,
+        82,
+        65,
+        87,
+        73,
+        68,
+        48,
+        49,
+        0,
+        2,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        97,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        98,
+        99
+      ],
+      "digest": [
+        145,
+        105,
+        223,
+        18,
+        0,
+        89,
+        226,
+        176,
+        42,
+        232,
+        148,
+        52,
+        39,
+        166,
+        104,
+        183,
+        25,
+        56,
+        95,
+        50,
+        211,
+        144,
+        96,
+        38,
+        224,
+        21,
+        101,
+        23,
+        239,
+        129,
+        129,
+        113
+      ],
+      "text": "layer-9169df120059e2b02ae8943427a668b719385f32d3906026e0156517ef818171"
+    },
+    {
+      "name": "unicode",
+      "kind": "text",
+      "parts": [
+        [
+          195,
+          132,
+          0,
+          230,
+          157,
+          177,
+          228,
+          186,
+          172
+        ]
+      ],
+      "preimage": [
+        68,
+        82,
+        65,
+        87,
+        73,
+        68,
+        48,
+        49,
+        6,
+        1,
+        0,
+        0,
+        0,
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        195,
+        132,
+        0,
+        230,
+        157,
+        177,
+        228,
+        186,
+        172
+      ],
+      "digest": [
+        43,
+        89,
+        205,
+        122,
+        128,
+        171,
+        150,
+        93,
+        191,
+        20,
+        196,
+        10,
+        28,
+        48,
+        198,
+        94,
+        173,
+        7,
+        247,
+        116,
+        36,
+        221,
+        190,
+        153,
+        197,
+        247,
+        187,
+        140,
+        207,
+        251,
+        81,
+        31
+      ],
+      "text": "text-2b59cd7a80ab965dbf14c40a1c30c65ead07f77424ddbe99c5f7bb8ccffb511f"
+    },
+    {
+      "name": "kind-separation",
+      "kind": "group",
+      "parts": [
+        [
+          97,
+          98
+        ],
+        [
+          99
+        ]
+      ],
+      "preimage": [
+        68,
+        82,
+        65,
+        87,
+        73,
+        68,
+        48,
+        49,
+        2,
+        2,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        97,
+        98,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        99
+      ],
+      "digest": [
+        220,
+        203,
+        132,
+        56,
+        78,
+        47,
+        3,
+        163,
+        241,
+        235,
+        0,
+        130,
+        40,
+        212,
+        77,
+        151,
+        184,
+        53,
+        86,
+        25,
+        80,
+        18,
+        86,
+        184,
+        220,
+        178,
+        151,
+        225,
+        205,
+        49,
+        151,
+        122
+      ],
+      "text": "group-dccb84384e2f03a3f1eb008228d44d97b8355619501256b8dcb297e1cd31977a"
+    },
+    {
+      "name": "image-asset-kind",
+      "kind": "imageAsset",
+      "parts": [
+        [
+          97,
+          115,
+          115,
+          101,
+          116
+        ]
+      ],
+      "preimage": [
+        68,
+        82,
+        65,
+        87,
+        73,
+        68,
+        48,
+        49,
+        9,
+        1,
+        0,
+        0,
+        0,
+        5,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        97,
+        115,
+        115,
+        101,
+        116
+      ],
+      "digest": [
+        85,
+        9,
+        102,
+        29,
+        199,
+        134,
+        237,
+        50,
+        162,
+        189,
+        63,
+        70,
+        147,
+        144,
+        136,
+        226,
+        178,
+        232,
+        171,
+        218,
+        65,
+        71,
+        26,
+        156,
+        182,
+        1,
+        193,
+        95,
+        21,
+        153,
+        175,
+        150
+      ],
+      "text": "image-asset-5509661dc786ed32a2bd3f46939088e2b2e8abda41471a9cb601c15f1599af96"
+    }
+  ],
+  "refusals": [
+    "unknown-kind",
+    "too-many-parts",
+    "preimage-too-long",
+    "ownership-below-exact",
+    "canceled",
+    "digest-length",
+    "digest-byte-range"
+  ],
+  "clone": {
+    "source": {
+      "id": "group",
+      "name": "Group",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "shear": 0,
+        "rotation": 0
+      },
+      "attributes": {
+        "fillRule": "evenodd"
+      },
+      "kind": "group",
+      "isolation": false,
+      "children": [
+        {
+          "id": "child",
+          "name": "Child",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "evenodd"
+          },
+          "kind": "path",
+          "segments": []
+        },
+        {
+          "id": "boolean",
+          "name": "Boolean",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "evenodd"
+          },
+          "kind": "boolean",
+          "operation": "union",
+          "children": [
+            "child",
+            "external"
+          ]
+        }
+      ]
+    },
+    "suffix": " copy",
+    "identities": [
+      {
+        "source": "group",
+        "target": "copied-group"
+      },
+      {
+        "source": "child",
+        "target": "copied-child"
+      },
+      {
+        "source": "boolean",
+        "target": "copied-boolean"
+      }
+    ],
+    "expected": {
+      "id": "copied-group",
+      "name": "Group copy",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "shear": 0,
+        "rotation": 0
+      },
+      "attributes": {
+        "fillRule": "evenodd"
+      },
+      "kind": "group",
+      "isolation": false,
+      "children": [
+        {
+          "id": "copied-child",
+          "name": "Child",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "evenodd"
+          },
+          "kind": "path",
+          "segments": []
+        },
+        {
+          "id": "copied-boolean",
+          "name": "Boolean",
+          "visible": true,
+          "locked": false,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "attributes": {
+            "fillRule": "evenodd"
+          },
+          "kind": "boolean",
+          "operation": "union",
+          "children": [
+            "copied-child",
+            "external"
+          ]
+        }
+      ]
+    }
+  },
+  "cloneRefusals": [
+    {
+      "name": "missing",
+      "identities": [
+        {
+          "source": "group",
+          "target": "copied-group"
+        },
+        {
+          "source": "child",
+          "target": "copied-child"
+        }
+      ]
+    },
+    {
+      "name": "extra",
+      "identities": [
+        {
+          "source": "group",
+          "target": "copied-group"
+        },
+        {
+          "source": "child",
+          "target": "copied-child"
+        },
+        {
+          "source": "boolean",
+          "target": "copied-boolean"
+        },
+        {
+          "source": "ghost",
+          "target": "copied-ghost"
+        }
+      ]
+    },
+    {
+      "name": "repeated-source",
+      "identities": [
+        {
+          "source": "group",
+          "target": "copied-group"
+        },
+        {
+          "source": "child",
+          "target": "copied-child"
+        },
+        {
+          "source": "boolean",
+          "target": "copied-boolean"
+        },
+        {
+          "source": "group",
+          "target": "copied-group"
+        }
+      ]
+    },
+    {
+      "name": "repeated-target",
+      "identities": [
+        {
+          "source": "group",
+          "target": "copied-group"
+        },
+        {
+          "source": "child",
+          "target": "copied-child"
+        },
+        {
+          "source": "boolean",
+          "target": "copied-child"
+        }
+      ]
+    },
+    {
+      "name": "source-overlap",
+      "identities": [
+        {
+          "source": "group",
+          "target": "copied-group"
+        },
+        {
+          "source": "child",
+          "target": "copied-child"
+        },
+        {
+          "source": "boolean",
+          "target": "child"
+        }
+      ]
+    },
+    {
+      "name": "empty-target",
+      "identities": [
+        {
+          "source": "group",
+          "target": "copied-group"
+        },
+        {
+          "source": "child",
+          "target": "copied-child"
+        },
+        {
+          "source": "boolean",
+          "target": ""
+        }
+      ]
+    }
+  ],
+  "recordCases": [
+    {
+      "kind": "identity",
+      "value": {
+        "key": "authored-key"
+      },
+      "accepted": true
+    },
+    {
+      "kind": "identity",
+      "value": {
+        "key": ""
+      },
+      "accepted": false
+    },
+    {
+      "kind": "identity",
+      "value": {
+        "key": "authored-key",
+        "extra": 0
+      },
+      "accepted": false
+    },
+    {
+      "kind": "assignment",
+      "value": {
+        "source": "source",
+        "target": "target"
+      },
+      "accepted": true
+    },
+    {
+      "kind": "assignment",
+      "value": {
+        "source": "",
+        "target": "target"
+      },
+      "accepted": false
+    },
+    {
+      "kind": "assignment",
+      "value": {
+        "source": "source",
+        "target": ""
+      },
+      "accepted": false
+    },
+    {
+      "kind": "assignment",
+      "value": {
+        "source": "source",
+        "target": "target",
+        "extra": 0
+      },
+      "accepted": false
+    },
+    {
+      "kind": "commitment",
+      "value": {
+        "kind": "layer",
+        "digest": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "kind": "commitment",
+      "value": {
+        "kind": "unknown",
+        "digest": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "kind": "commitment",
+      "value": {
+        "kind": "layer",
+        "digest": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "kind": "commitment",
+      "value": {
+        "kind": "layer",
+        "digest": [
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "kind": "commitment",
+      "value": {
+        "kind": "layer",
+        "digest": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "extra": 0
+      },
+      "accepted": false
+    }
+  ],
+  "lifetimeCases": [
+    {
+      "name": "live-original",
+      "cancelBefore": false,
+      "cancelAt": null,
+      "accepted": true
+    },
+    {
+      "name": "cancelled-original",
+      "cancelBefore": true,
+      "cancelAt": null,
+      "accepted": false
+    },
+    {
+      "name": "interior-original-cancellation",
+      "cancelBefore": false,
+      "cancelAt": 269,
+      "accepted": false
+    }
+  ],
+  "ioControlCases": [
+    {
+      "name": "original ledgers preserve earlier ownership",
+      "decodeMaximum": 16,
+      "encodeMaximum": 16,
+      "decodeBefore": [
+        1,
+        2
+      ],
+      "encodeBefore": [
+        3,
+        4
+      ],
+      "body": [
+        5,
+        6,
+        7
+      ],
+      "cancelBefore": false,
+      "accepted": true,
+      "decodeOwned": 5,
+      "encodeOwned": 5
+    },
+    {
+      "name": "encode exhausted before publication",
+      "decodeMaximum": 16,
+      "encodeMaximum": 4,
+      "decodeBefore": [
+        1,
+        2
+      ],
+      "encodeBefore": [
+        3,
+        4
+      ],
+      "body": [
+        5,
+        6,
+        7
+      ],
+      "cancelBefore": false,
+      "accepted": false,
+      "refusal": "OwnershipLimit"
+    },
+    {
+      "name": "original lifetime cancelled before hop",
+      "decodeMaximum": 16,
+      "encodeMaximum": 16,
+      "decodeBefore": [],
+      "encodeBefore": [],
+      "body": [
+        5,
+        6,
+        7
+      ],
+      "cancelBefore": true,
+      "accepted": false,
+      "refusal": "Canceled"
+    }
+  ],
+  "snapshotGrant": {
+    "maximumItems": 256,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 4096
+  }
+}

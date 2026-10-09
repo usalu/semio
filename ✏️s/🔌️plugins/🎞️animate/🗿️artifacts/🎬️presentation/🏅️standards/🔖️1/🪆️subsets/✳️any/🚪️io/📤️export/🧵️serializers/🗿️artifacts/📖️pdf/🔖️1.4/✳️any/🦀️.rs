@@ -16,7 +16,7 @@ pub struct PresentationIntoPdf;
 impl Serializer<PresentationSnapshot> for PresentationIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &PresentationSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &PresentationSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let json = semio_framework_pack_json::to_json_string(from);
         let wire: PdfSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| { let mut cause=error;cause.message=format!("PresentationIntoPdf: {}",cause.message);IoError::from_value_error(cause) })?;
         Ok(IoOutcome::clean(IoPayload::Binary(<PdfSnapshot as store::ArtifactPack>::encode_pack(&wire))))

@@ -34,11 +34,17 @@ fn erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_
     let text = law["text"].as_str().unwrap();
     let unsupported = Unsupported(text.into());
     let pointer = unsupported.0.as_ptr();
+    let ((error, unsupported), effects) = observe_retirement_allocations(|| controlled::ControlledRetirement::new(unsupported).err().unwrap());
+    assert_eq!(error.kind.as_str(), law["unsupportedKind"].as_str().unwrap());
+    assert_eq!(unsupported.0.as_ptr(), pointer);
+    let (_, release) = observe_retirement_allocations(|| drop(error));
+    let constructor_effects = (effects.0, effects.1 + release.1);
     let ((error, unsupported), heap) = observe_retirement_allocations(|| controlled::admit_controlled_retirement(unsupported, RetainedCloneGrant::default()).err().unwrap());
     assert_eq!(error.kind.as_str(), law["unsupportedKind"].as_str().unwrap());
     assert_eq!(unsupported.0.as_ptr(), pointer);
     assert_eq!(heap, (0, 0));
     drop(unsupported);
+    assert_eq!(constructor_effects, (law["unsupportedEffects"]["bornBytes"].as_u64().unwrap()as usize,law["unsupportedEffects"]["releasedBytes"].as_u64().unwrap()as usize));
     let mut source = String::with_capacity(law["reservedCapacity"].as_u64().unwrap() as usize);
     source.push_str(text);
     assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&source).unwrap()).unwrap(), source);
@@ -905,4 +911,53 @@ fn erased_snapshot_full_grant_admission_preserves_original_owner_and_all_four_cu
             eprintln!("[DEBUG] erased full-grant original-pointer admitted work={work} copy={copied} births={born} physical={released}");
         }
     }
+}
+
+/// 🧺️ Original heap and Reverse use the same vector allocation through each independently granted physical turn.
+#[test]
+fn original_heap_and_reverse_preserve_backing_and_full_retirement_receipts(){
+    use crate::{value::observe_retirement_allocations as observe,retained_clone::RetainedCloneGrant};
+    use std::{collections::BinaryHeap,cmp::Reverse};
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧺️heap.json")).unwrap();
+    for copy in law["copyGrants"].as_array().unwrap(){
+        let (owner,(source_birth,source_release))=observe(||{let mut heap=BinaryHeap::new();for key in law["keys"].as_array().unwrap(){let mut value=String::with_capacity(law["capacityBytes"].as_u64().unwrap() as usize);value.push_str(key.as_str().unwrap());heap.push(Reverse(value));}heap});
+        let backing=owner.as_slice().as_ptr();let pointers:Vec<_>=owner.iter().map(|key|key.0.as_ptr()).collect();let mut oracle=owner.clone();let expected:Vec<_>=std::iter::from_fn(||oracle.pop().map(|key|key.0)).collect();assert_eq!(serde_json::to_value(expected).unwrap(),law["expected"]);
+        let ((mut retirement),(birth,release))=observe(||controlled::ControlledRetirement::new(owner));assert_eq!((birth,release),(law["handoffCapacityBytes"].as_u64().unwrap() as usize,law["handoffReleaseBytes"].as_u64().unwrap() as usize));let mut retirement=retirement.unwrap_or_else(|_|panic!("original heap/Reverse must declare its actual retained vector authority"));assert_eq!(retirement.original().unwrap().as_slice().as_ptr(),backing);assert_eq!(retirement.original().unwrap().iter().map(|key|key.0.as_ptr()).collect::<Vec<_>>(),pointers);
+        let(mut born,mut freed,mut refused,mut turns)=(0,0,0,0);
+        while !retirement.terminal_is_empty(){let copy=copy.as_u64().unwrap() as usize;let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:retirement.next_release_byte_demand().unwrap(),maximum_depth:retirement.next_depth_demand().unwrap()};
+            if grant.maximum_release_bytes>law["maximumDeniedReleaseBytes"].as_u64().unwrap() as usize{for _ in 0..2{let (step,heap)=observe(||retirement.step(RetainedCloneGrant {maximum_release_bytes:law["maximumDeniedReleaseBytes"].as_u64().unwrap() as usize,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(retirement.next_release_byte_demand().unwrap(),grant.maximum_release_bytes);refused+=1;}}
+            let (zero,heap)=observe(||retirement.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(zero.progress(),Default::default());assert_eq!(heap,(0,0));
+            let (step,(birth,release))=observe(||retirement.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((birth,release),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=birth;freed+=release;turns+=1;assert!(turns<100000);
+        }
+        assert!(refused>0);assert_eq!(source_birth-source_release+born,freed);let (_,heap)=observe(||drop(retirement));assert_eq!(heap,(0,law["terminalDropBytes"].as_u64().unwrap() as usize));eprintln!("[DEBUG] Original heap/Reverse sameBacking=true sameKeys=true handoffBirth=0 handoffFree=0 copy={copy} source={} admitted={born} physical={freed} eightByteRefusals={refused} turns={turns} terminalDrop=0",source_birth-source_release);
+    }
+}
+
+#[test]
+fn original_five_field_tuple_retirement_conserves_every_native_owner_and_receipt() {
+    use crate::{retained_clone::RetainedCloneGrant,value::observe_retirement_allocations as observe};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️five-fields/🔣️.json")).unwrap();
+    type Mesh=(String,Vec<f32>,Vec<f32>,Vec<u32>,Vec<f32>);
+    let (source,original_heap)=observe(||serde_json::from_value::<Mesh>(fixture["fields"].clone()).unwrap());
+    assert_eq!(serde_json::to_value(&source).unwrap(),fixture["fields"]);
+    let pointers=(source.0.as_ptr(),source.1.as_ptr(),source.2.as_ptr(),source.3.as_ptr(),source.4.as_ptr());
+    let (result,heap)=observe(||controlled::ControlledRetirement::new(source));
+    assert_eq!(heap,(0,0));
+    let mut owner=result.map_err(|(error,_)|error).unwrap();
+    let original=owner.original().unwrap();
+    assert_eq!((original.0.as_ptr(),original.1.as_ptr(),original.2.as_ptr(),original.3.as_ptr(),original.4.as_ptr()),pointers);
+    let law=&fixture["grant"];
+    let grant=RetainedCloneGrant{maximum_items:law["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:law["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:law["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:law["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:law["maximumDepth"].as_u64().unwrap()as usize};
+    let(mut births,mut releases)=(0,0);
+    for _ in 0..fixture["maximumTurns"].as_u64().unwrap() {
+        if owner.terminal_is_empty(){break;}
+        let (denied,heap)=observe(||owner.step(RetainedCloneGrant::default()).unwrap());
+        assert_eq!(denied.progress(),Default::default());assert_eq!(heap,(0,0));
+        let (step,heap)=observe(||owner.step(grant).unwrap());let receipt=step.progress();
+        assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));
+        births+=heap.0;releases+=heap.1;
+    }
+    assert!(owner.terminal_is_empty());assert_eq!(observe(||drop(owner)).1,(0,0));
+    assert_eq!(original_heap.0+births,original_heap.1+releases);
+    eprintln!("[DEBUG] original tuple5 native ownership physicalConservation=true originalPointers=true independentSerde=true everyActualReceipt=true terminalDrop0=true");
 }

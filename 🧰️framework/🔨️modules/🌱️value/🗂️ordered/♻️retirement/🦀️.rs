@@ -1,7 +1,7 @@
 //! ♻️ Defining ordered and shared owners compose their actual payload retirement under independent authorities.
 
 use super::{OrderedMap, Retirement, RetirementStep, SharedOwner,UpdateCursor,LookupCursor};
-use crate::{ValueError, retained_clone::{RetainedCloneGrant,RetainedCloneStep}, retirement::{RetireOwned,RetirementCursor,RetirementStep as TypedStep,controlled::ControlledRetirement}};
+use crate::{ValueError, retained_clone::{RetainedCloneGrant,RetainedCloneProgress,admit_retained_clone_close}, retirement::{RetireOwned,RetirementCursor,RetirementStep as TypedStep,controlled::ControlledRetirement}};
 use std::mem::ManuallyDrop;
 
 trait RootOwner<V>:Send {
@@ -79,20 +79,16 @@ impl<V:RetireOwned+Sync,R:RootOwner<V>> RetirementCursor for TypedOwner<V,R> {
         let retained_depth=self.root.retained_depth();
         if let Some(payload)=self.payload.as_mut(){
             if payload.terminal_is_empty(){self.payload.take();return TypedStep::Advanced;}
-            return match payload.step(RetainedCloneGrant {maximum_depth:grant.maximum_depth-retained_depth,..grant}){
+            let child_grant=RetainedCloneGrant {maximum_depth:grant.maximum_depth-retained_depth,..grant};
+            return match payload.step(child_grant).and_then(|step|admit_retained_clone_close(child_grant,step,payload.terminal_is_empty(),"ordered typed payload retirement")){
                 Err(error)=>TypedStep::Failure(error),
-                Ok(RetainedCloneStep::Complete(_))=>TypedStep::Advanced,
-                Ok(RetainedCloneStep::Progress(progress)) if progress.copied_items==0=>TypedStep::BudgetExhausted,
-                Ok(RetainedCloneStep::Progress(progress)) if progress.copied_bytes!=0=>TypedStep::ProcessedBytes(progress.copied_bytes),
-                Ok(RetainedCloneStep::Progress(progress)) if progress.released_bytes!=0=>TypedStep::Bytes(progress.released_bytes),
-                Ok(RetainedCloneStep::Progress(_))=>TypedStep::Advanced,
+                Ok(step)=>TypedStep::Progress(step.progress()),
             };
         }
         match self.root.step(grant){
             RetirementStep::Blocked=>TypedStep::BudgetExhausted,
             RetirementStep::Failure(error)=>TypedStep::Failure(error),
-            RetirementStep::Progress {released_bytes,..} if released_bytes!=0=>TypedStep::Bytes(released_bytes),
-            RetirementStep::Progress {..}=>TypedStep::Advanced,
+            RetirementStep::Progress {released_items,released_bytes}=>TypedStep::Progress(RetainedCloneProgress {copied_items:released_items,released_bytes,..RetainedCloneProgress::default()}),
             RetirementStep::ProcessedBytes(bytes)=>TypedStep::ProcessedBytes(bytes),
             RetirementStep::OwnedValue(value)=>match ControlledRetirement::new(value){Ok(owner)=>{*self.payload=Some(owner);TypedStep::Advanced},Err((error,value))=>{self.root.restore_value(value);TypedStep::Failure(error)}},
             RetirementStep::Complete=>TypedStep::Complete,

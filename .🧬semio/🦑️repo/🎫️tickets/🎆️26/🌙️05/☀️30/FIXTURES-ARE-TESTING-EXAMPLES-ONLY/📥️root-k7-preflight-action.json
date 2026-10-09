@@ -1,0 +1,9 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs",
+    "action": "update",
+    "beforeSha256": "6df2de11445946e856e9f6c2eb963ead1275a90aa5d34d27f44f468e8a7dd886",
+    "afterSha256": "3edfbd2b6c3acddecc66b4b82054e3de2c1ddd49a7a6536809163b094b4c0e35",
+    "qualification": "Original preflight specimen caller preserves existing fixed encode authority and actual native recipient; returned typed owner closes with genuine RetireOwned, no quoted budget construction"
+  }
+]

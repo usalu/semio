@@ -17,6 +17,10 @@ async fn cancel_to_completion(runtime: &OwnedRuntime, instance: &mut GuestInstan
 
 #[semio_framework_async_macros::async_test]
 async fn configured_component_executes_owned_describe_reactor_jobs_cancel_and_checkpoint_restore() {
+    let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
+    let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+
     let Some(path) = std::env::var_os("SEMIO_OWNED_COMPONENT_FIXTURE") else { return };
     let bytes = std::fs::read(path).expect("read owned component fixture");
     let runtime = OwnedRuntime::new();
@@ -33,28 +37,29 @@ async fn configured_component_executes_owned_describe_reactor_jobs_cancel_and_ch
 
     let mut resumed = runtime.instantiate(&compiled, RuntimeActorId(40), &[], &budget()).await.expect("instantiate resumable owned fixture");
     let one_instruction = Budget { fuel: 1, ..budget() };
-    assert!(matches!(runtime.execute_turn(&mut resumed, &[], one_instruction).await, Err(TurnFault::FuelExhausted)));
-    let mid_call = runtime.checkpoint(&mut resumed).await.expect("checkpoint fuel-yielded owned turn");
-    runtime.restore(&mut resumed, &mid_call).await.expect("restore fuel-yielded owned turn");
-    assert!(runtime.execute_turn(&mut resumed, &[], budget()).await.expect("resume fuel-yielded owned turn").fuel_used > 1);
+    assert!(matches!(runtime.execute_turn(&mut resumed, &[], one_instruction, &mut identity).await, Err(TurnFault::FuelExhausted)));
+    let mid_call = runtime.checkpoint(&mut resumed, &mut identity).await.expect("checkpoint fuel-yielded owned turn");
+    runtime.restore(&mut resumed, &mid_call, &mut identity).await.expect("restore fuel-yielded owned turn");
+    assert!(runtime.execute_turn(&mut resumed, &[], budget(), &mut identity).await.expect("resume fuel-yielded owned turn").fuel_used > 1);
 
     let mut cancelled = runtime.instantiate(&compiled, RuntimeActorId(42), &[], &budget()).await.expect("instantiate cancellable owned fixture");
-    assert!(matches!(runtime.execute_turn(&mut cancelled, &[], one_instruction).await, Err(TurnFault::FuelExhausted)));
+    assert!(matches!(runtime.execute_turn(&mut cancelled, &[], one_instruction, &mut identity).await, Err(TurnFault::FuelExhausted)));
     cancel_to_completion(&runtime, &mut cancelled, 69).await;
 
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(41), &[], &budget()).await.expect("instantiate owned fixture");
-    let turn = runtime.execute_turn(&mut instance, &[], budget()).await.expect("execute owned empty turn");
+    let turn = runtime.execute_turn(&mut instance, &[], budget(), &mut identity).await.expect("execute owned empty turn");
     assert!(turn.fuel_used > 0, "owned turn did not report interpreter fuel");
 
     runtime.start_job(&mut instance, 70, "semio.test-owned-checkpoint", Vec::new()).await.expect("start checkpointed owned job");
-    let checkpoint = runtime.checkpoint(&mut instance).await.expect("checkpoint owned instance");
+    let checkpoint = runtime.checkpoint(&mut instance, &mut identity).await.expect("checkpoint owned instance");
     cancel_to_completion(&runtime, &mut instance, 70).await;
-    runtime.restore(&mut instance, &checkpoint).await.expect("restore owned checkpoint");
+    runtime.restore(&mut instance, &checkpoint, &mut identity).await.expect("restore owned checkpoint");
     assert!(matches!(runtime.step_job(&mut instance, 70, JobBudget { fuel: 10_000_000, deadline_ms: 10_000 }).await.expect("step restored owned job"), JobStep::Failed { .. }));
 
     runtime.start_job(&mut instance, 71, "semio.test-owned-cancel", Vec::new()).await.expect("start cancellable owned job");
     cancel_to_completion(&runtime, &mut instance, 71).await;
     assert!(matches!(runtime.step_job(&mut instance, 71, JobBudget { fuel: 10_000_000, deadline_ms: 10_000 }).await.expect("step cancelled owned job"), JobStep::Failed { .. }));
+    crate::test_native_authority::close(&mut identity);
 }
 
 /// 🧩️ A real owned-ABI guest of channel `channel`, built byte by byte in the interpreter's own component framing: its

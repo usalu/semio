@@ -1,0 +1,30 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧬️schema/🔣️.json",
+    "beforeSha256": null,
+    "beforeQualification": "Before hash computed but lost in the failed multi-owner cell before ledger flush; actual fresh schema authority and removal observed. No preimage/hash fabricated.",
+    "afterSha256": null,
+    "action": "Remove freshly recreated whole corpus schema."
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/⚔️conflict/♻️retirement/🧪️tests/🟦️.ts",
+    "beforeSha256": null,
+    "beforeQualification": "Before hash computed but not persisted in failed cell; current action observed after exact reader extraction.",
+    "afterSha256": "8ab203bd38583bfd935b85508a95d579b4878a798c8cb1d79f4532b35a9d4ce3",
+    "action": "Remove recreated whole collection admission and mirrored omissions; preserve original independent controls."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️host-source/🔣️.json",
+    "beforeSha256": null,
+    "beforeQualification": "Before hash computed but lost in the failed multi-owner cell before ledger flush; actual fresh schema authority and removal observed. No preimage/hash fabricated.",
+    "afterSha256": null,
+    "action": "Remove freshly recreated whole corpus schema."
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️host-source/🟦️.ts",
+    "beforeSha256": null,
+    "beforeQualification": "Before hash computed but not persisted in failed cell; current action observed after exact reader extraction.",
+    "afterSha256": "d2519c877f7009afbe1537d7801eb58c350f46301888df00179f4ca2497a9268",
+    "action": "Remove recreated whole collection admission and mirrored omissions; preserve original independent controls."
+  }
+]

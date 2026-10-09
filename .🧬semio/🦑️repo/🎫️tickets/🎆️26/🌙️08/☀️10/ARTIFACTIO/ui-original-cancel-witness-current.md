@@ -1,0 +1,10 @@
+# UI Original Cancellation Witness
+
+The original complete UI3 law `closed_open_and_rapidly_reclosed_sections_publish_only_reachable_descendants` genuinely failed after 262,144 turns. Actual fixture inspection shows the checked-out operation and later close driver use distinct original cancellation roots. The UI always attempted the strict matching-root alias-return route, although ordinary controlled retirement owns the unmatched old root.
+
+Added an allocation-free borrowed original-identity query on cancellation retirement, guarded by the same original exclusive Worker session phase, and forwarded through its mounted owner. The UI uses strict alias return only when its live borrowed root actually witnesses the original alias; unmatched roots continue through the existing original funded close cursor. The strict foreign-root refusal API remains unchanged. Added actual Arc-pointer/strong-count and zero-heap assertions to its original native law and DEBUG settlement/refusal receipts to the existing rapid-close fixture. No grant ceiling changed.
+
+Native receiving validation is pending. This is a source-based cause hypothesis until the unchanged full UI roster confirms the rapid-close runtime and all original retirement receipts.
+
+
+2026-10-09 full original UI4 command terminated 1. Actual console DEBUG shows rapid-close original disclosure settles with the unchanged policy in 5,079 / 1,188 / 2,643 / 1,599 turns, where UI3 previously exhausted 262,144 turns. Slot constructor exact baseline also no longer fails. Remaining actual failures are introduction default parser, NodeGraph scene lane receiving, and a newly observed raster-lease full close reaching its existing 32,768-turn bound. The worker-panic message is an intentionally caught hostile-worker law which passed. Exact raw log `🗑️generated/u/ui-scalar-red1.log`. Despite that historical filename, this UI crate command does not mount separate UI Scene crate scalar tests: the scalar TDD now has a dedicated registered full Scene command. No scalar acceptance is claimed from UI4.

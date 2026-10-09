@@ -1,0 +1,200 @@
+{
+  "copyCapacityLimit": 4096,
+  "turnLimit": 100000,
+  "pauses": [
+    0,
+    1,
+    3,
+    17,
+    129
+  ],
+  "cases": [
+    {
+      "kind": "⚓change-node-anchor",
+      "path": "🧫️fixtures/🧬️mutations/⚓change-node-anchor/⚓️derives/🦠️mutation/🔣️.json",
+      "tag": "changeNodeAnchor"
+    },
+    {
+      "kind": "✂️disconnect-handles",
+      "path": "🧫️fixtures/🧬️mutations/✂️disconnect-handles/✂️severs/🦠️mutation/🔣️.json",
+      "tag": "disconnectHandles"
+    },
+    {
+      "kind": "✋️drag-selection",
+      "path": "🧫️fixtures/🧬️mutations/✋️drag-selection/⚠️skips-locked-ghost/🦠️mutation/🔣️.json",
+      "tag": "dragSelection"
+    },
+    {
+      "kind": "✏️edit-node-text",
+      "path": "🧫️fixtures/🧬️mutations/✏️edit-node-text/✏️recodes/🦠️mutation/🔣️.json",
+      "tag": "editNodeText"
+    },
+    {
+      "kind": "➕add-node-handle",
+      "path": "🧫️fixtures/🧬️mutations/➕add-node-handle/➕️adds/🦠️mutation/🔣️.json",
+      "tag": "addNodeHandle"
+    },
+    {
+      "kind": "➖remove-node-handle",
+      "path": "🧫️fixtures/🧬️mutations/➖remove-node-handle/➖removes-middle-handle/🦠️mutation/🔣️.json",
+      "tag": "removeNodeHandle"
+    },
+    {
+      "kind": "🆔change-manifest-id",
+      "path": "🧫️fixtures/🧬️mutations/🆔change-manifest-id/📦️repoints/🦠️mutation/🔣️.json",
+      "tag": "changeManifestId"
+    },
+    {
+      "kind": "🌍create-target-region",
+      "path": "🧫️fixtures/🧬️mutations/🌍create-target-region/🌍️appends-region-2/🦠️mutation/🔣️.json",
+      "tag": "createTargetRegion"
+    },
+    {
+      "kind": "🌟change-node-root",
+      "path": "🧫️fixtures/🧬️mutations/🌟change-node-root/🌳️promotes/🦠️mutation/🔣️.json",
+      "tag": "changeNodeRoot"
+    },
+    {
+      "kind": "🌱create-node",
+      "path": "🧫️fixtures/🧬️mutations/🌱create-node/🌱️appends/🦠️mutation/🔣️.json",
+      "tag": "createNode"
+    },
+    {
+      "kind": "🎨change-node-icon",
+      "path": "🧫️fixtures/🧬️mutations/🎨change-node-icon/🎨️swaps-a-capsule-icon/🦠️mutation/🔣️.json",
+      "tag": "changeNodeIcon"
+    },
+    {
+      "kind": "🏗️change-node-kind",
+      "path": "🧫️fixtures/🧬️mutations/🏗️change-node-kind/🏗️rekinds/🦠️mutation/🔣️.json",
+      "tag": "changeNodeKind"
+    },
+    {
+      "kind": "🏷️change-edge-kind",
+      "path": "🧫️fixtures/🧬️mutations/🏷️change-edge-kind/🏷️kinds/🦠️mutation/🔣️.json",
+      "tag": "changeEdgeKind"
+    },
+    {
+      "kind": "👀change-edge-visible",
+      "path": "🧫️fixtures/🧬️mutations/👀change-edge-visible/🙈️hides/🦠️mutation/🔣️.json",
+      "tag": "changeEdgeVisible"
+    },
+    {
+      "kind": "👁️change-node-visible",
+      "path": "🧫️fixtures/🧬️mutations/👁️change-node-visible/🙈️hides-a-capsule/🦠️mutation/🔣️.json",
+      "tag": "changeNodeVisible"
+    },
+    {
+      "kind": "💔disconnect-kind-compatibility",
+      "path": "🧫️fixtures/🧬️mutations/💔disconnect-kind-compatibility/💔️withdraws/🦠️mutation/🔣️.json",
+      "tag": "disconnectKindCompatibility"
+    },
+    {
+      "kind": "📍move-node",
+      "path": "🧫️fixtures/🧬️mutations/📍move-node/📍️moves/🦠️mutation/🔣️.json",
+      "tag": "moveNode"
+    },
+    {
+      "kind": "📏scale-node",
+      "path": "🧫️fixtures/🧬️mutations/📏scale-node/📏️doubles-node-a/🦠️mutation/🔣️.json",
+      "tag": "scaleNode"
+    },
+    {
+      "kind": "📐resize-target-region",
+      "path": "🧫️fixtures/🧬️mutations/📐resize-target-region/📐️widens-region-1/🦠️mutation/🔣️.json",
+      "tag": "resizeTargetRegion"
+    },
+    {
+      "kind": "📚replace-kind-catalogs",
+      "path": "🧫️fixtures/🧬️mutations/📚replace-kind-catalogs/📇️installs/🦠️mutation/🔣️.json",
+      "tag": "replaceKindCatalogs"
+    },
+    {
+      "kind": "🔄️rotate-selection",
+      "path": "🧫️fixtures/🧬️mutations/🔄️rotate-selection/⚠️skips-locked-ghost/🦠️mutation/🔣️.json",
+      "tag": "rotateSelection"
+    },
+    {
+      "kind": "🔌replace-node-handle",
+      "path": "🧫️fixtures/🧬️mutations/🔌replace-node-handle/🔌️rekinds/🦠️mutation/🔣️.json",
+      "tag": "replaceNodeHandle"
+    },
+    {
+      "kind": "🔍️scale-selection",
+      "path": "🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️keeps-a-unit-factor/🦠️mutation/🔣️.json",
+      "tag": "scaleSelection"
+    },
+    {
+      "kind": "🔏change-target-region-locked",
+      "path": "🧫️fixtures/🧬️mutations/🔏change-target-region-locked/🔏️locks/🦠️mutation/🔣️.json",
+      "tag": "changeTargetRegionLocked"
+    },
+    {
+      "kind": "🔐change-edge-locked",
+      "path": "🧫️fixtures/🧬️mutations/🔐change-edge-locked/🔒️locks/🦠️mutation/🔣️.json",
+      "tag": "changeEdgeLocked"
+    },
+    {
+      "kind": "🔒change-node-locked",
+      "path": "🧫️fixtures/🧬️mutations/🔒change-node-locked/🔒️locks/🦠️mutation/🔣️.json",
+      "tag": "changeNodeLocked"
+    },
+    {
+      "kind": "🖇️change-edge-tips",
+      "path": "🧫️fixtures/🧬️mutations/🖇️change-edge-tips/🔀️swaps-edge-1-tips/🦠️mutation/🔣️.json",
+      "tag": "changeEdgeTips"
+    },
+    {
+      "kind": "🖋️edit-target-region-label",
+      "path": "🧫️fixtures/🧬️mutations/🖋️edit-target-region-label/🖋️renames/🦠️mutation/🔣️.json",
+      "tag": "editTargetRegionLabel"
+    },
+    {
+      "kind": "🗑️delete-node",
+      "path": "🧫️fixtures/🧬️mutations/🗑️delete-node/🗑️removes-middle-node/🦠️mutation/🔣️.json",
+      "tag": "deleteNode"
+    },
+    {
+      "kind": "🙈change-target-region-hidden",
+      "path": "🧫️fixtures/🧬️mutations/🙈change-target-region-hidden/🙈️hides/🦠️mutation/🔣️.json",
+      "tag": "changeTargetRegionHidden"
+    },
+    {
+      "kind": "🚀move-target-region",
+      "path": "🧫️fixtures/🧬️mutations/🚀move-target-region/🚀️slides-region-1/🦠️mutation/🔣️.json",
+      "tag": "moveTargetRegion"
+    },
+    {
+      "kind": "🤝connect-kind-compatibility",
+      "path": "🧫️fixtures/🧬️mutations/🤝connect-kind-compatibility/🤝️adds/🦠️mutation/🔣️.json",
+      "tag": "connectKindCompatibility"
+    },
+    {
+      "kind": "🧊replace-node-geometry",
+      "path": "🧫️fixtures/🧬️mutations/🧊replace-node-geometry/🔳️circle/🦠️mutation/🔣️.json",
+      "tag": "replaceNodeGeometry"
+    },
+    {
+      "kind": "🧮replace-edge-geometry",
+      "path": "🧫️fixtures/🧬️mutations/🧮replace-edge-geometry/📍️repositions-edge-1/🦠️mutation/🔣️.json",
+      "tag": "replaceEdgeGeometry"
+    },
+    {
+      "kind": "🪢️connect-handles",
+      "path": "🧫️fixtures/🧬️mutations/🪢️connect-handles/⏸️keeps/🦠️mutation/🔣️.json",
+      "tag": "connectHandles"
+    },
+    {
+      "kind": "🪦delete-target-region",
+      "path": "🧫️fixtures/🧬️mutations/🪦delete-target-region/🪦️removes-middle-region/🦠️mutation/🔣️.json",
+      "tag": "deleteTargetRegion"
+    }
+  ],
+  "scalar": {
+    "mutation": "moveNode",
+    "id": "Ä\u0000🧩",
+    "newX": 1.5,
+    "newY": -2.25
+  },
+  "scalarExpected": "{\"mutation\":\"moveNode\",\"id\":\"Ä\\u0000🧩\",\"newX\":1.5,\"newY\":-2.25}"
+}

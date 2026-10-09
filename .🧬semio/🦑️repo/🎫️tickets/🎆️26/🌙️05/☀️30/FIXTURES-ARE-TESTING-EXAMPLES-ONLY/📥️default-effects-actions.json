@@ -1,0 +1,16 @@
+{
+  "actions": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "beforeSha256": "21c65435b0c8faf8ad2425e17dd416361c2bddfbc9ef433ca04fa446860de0f7",
+      "afterSha256": "c0c60020d37999a75d4d49fbb969a4716d993ab43e5036b031679ceb9b374698",
+      "action": "Defaults with unrepresented effects invalidate reachable bindings/authorities and emit explicit uncertainty; two original VM/Ajv specimens preserve actual default mutation. Destructuring default remains unsupported complete syntax, no expanded parser."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧫️fixtures/🔣️.json",
+      "beforeSha256": "c551e14c8e91c745eed6af234ab629b106442c088810f037a17e0539d1ab7e37",
+      "afterSha256": "228fdbc72c2c5c64aede9c29c68b19fea88231203c9721d65aacd983ff5f838d",
+      "action": "Defaults with unrepresented effects invalidate reachable bindings/authorities and emit explicit uncertainty; two original VM/Ajv specimens preserve actual default mutation. Destructuring default remains unsupported complete syntax, no expanded parser."
+    }
+  ]
+}

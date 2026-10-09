@@ -1,1 +1,109 @@
-{"schema":"framework.store.history-plan-custody","target":"🐚","drafts":[{"id":"β","schema":"schema/ä","payload":[0,23,255]},{"id":"","schema":"","payload":[]},{"id":"β","schema":"replacement/🐚","payload":[17]}],"positions":[{"id":"🐚","edit":7,"operation":2},{"id":"β","edit":0,"operation":1},{"id":"","edit":4,"operation":0},{"id":"β","edit":6,"operation":3}],"expectedPositions":[{"id":"","edit":4,"operation":0},{"id":"β","edit":6,"operation":3},{"id":"🐚","edit":7,"operation":2}],"order":["","α","edit/🐚"],"counts":[0,7,11,17],"textCapacity":337,"payloadCapacity":271,"copyGrants":[1,3,64],"cancelAt":[0,2,9],"previewSnapshot":{"n":23},"completionRoutes":["preview","replay"],"replayRetirementRoutes":["loaded","derived","finished"]}
+{
+  "schema": "framework.store.history-plan-custody",
+  "target": "🐚",
+  "drafts": [
+    {
+      "id": "β",
+      "schema": "schema/ä",
+      "payload": [
+        0,
+        23,
+        255
+      ]
+    },
+    {
+      "id": "",
+      "schema": "",
+      "payload": []
+    },
+    {
+      "id": "β",
+      "schema": "replacement/🐚",
+      "payload": [
+        17
+      ]
+    }
+  ],
+  "positions": [
+    {
+      "id": "🐚",
+      "edit": 7,
+      "operation": 2
+    },
+    {
+      "id": "β",
+      "edit": 0,
+      "operation": 1
+    },
+    {
+      "id": "",
+      "edit": 4,
+      "operation": 0
+    },
+    {
+      "id": "β",
+      "edit": 6,
+      "operation": 3
+    }
+  ],
+  "expectedPositions": [
+    {
+      "id": "",
+      "edit": 4,
+      "operation": 0
+    },
+    {
+      "id": "β",
+      "edit": 6,
+      "operation": 3
+    },
+    {
+      "id": "🐚",
+      "edit": 7,
+      "operation": 2
+    }
+  ],
+  "order": [
+    "",
+    "α",
+    "edit/🐚"
+  ],
+  "counts": [
+    0,
+    7,
+    11,
+    17
+  ],
+  "textCapacity": 337,
+  "payloadCapacity": 271,
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "cancelAt": [
+    0,
+    2,
+    9
+  ],
+  "previewSnapshot": {
+    "n": 23
+  },
+  "completionRoutes": [
+    "preview",
+    "replay"
+  ],
+  "replayRetirementRoutes": [
+    "loaded",
+    "derived",
+    "finished"
+  ],
+  "cleanup": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  },
+  "bodyRefusalCapacityBytes": 0
+}

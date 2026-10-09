@@ -20,27 +20,11 @@
       "package.json",
       "nx/core/package-json"
     ],
-    "metadata.description": [
-      "package.json",
-      "nx/core/package-json"
-    ],
     "metadata.js": [
       "package.json",
       "nx/core/package-json"
     ],
     "metadata.js.packageName": [
-      "package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.js.packageVersion": [
-      "package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.js.packageExports": [
-      "package.json",
-      "nx/core/package-json"
-    ],
-    "metadata.js.packageMain": [
       "package.json",
       "nx/core/package-json"
     ],

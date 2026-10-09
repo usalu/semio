@@ -14,7 +14,7 @@ pub struct EquationIntoJson;
 impl Serializer<EquationSnapshot> for EquationIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &EquationSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &EquationSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
         Ok(IoOutcome::clean(IoPayload::Binary(semio_framework_pack_json::to_json_string(&equation_carrier_snapshot(from)).into_bytes())))
     }

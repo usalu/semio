@@ -1,0 +1,1561 @@
+{
+  "qualification": "Exact listed source sets; no global completeness or runtime qualification asserted",
+  "catalogRows": [
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.avi",
+      "schema": "stdio.avi",
+      "factory": "stdio.native.avi.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.bcf",
+      "schema": "stdio.bcf",
+      "factory": "stdio.native.bcf.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.csv",
+      "schema": "stdio.csv",
+      "factory": "stdio.native.csv.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.deflate",
+      "schema": "stdio.deflate",
+      "factory": "stdio.native.deflate.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.docx",
+      "schema": "stdio.docx",
+      "factory": "stdio.native.docx.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.dwg",
+      "schema": "stdio.dwg",
+      "factory": "stdio.native.dwg.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.dxf",
+      "schema": "stdio.dxf",
+      "factory": "stdio.native.dxf.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.gltf",
+      "schema": "stdio.gltf",
+      "factory": "stdio.native.gltf.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.html",
+      "schema": "stdio.html",
+      "factory": "stdio.native.html.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.jpg",
+      "schema": "stdio.jpg",
+      "factory": "stdio.native.jpg.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.json",
+      "schema": "stdio.json",
+      "factory": "stdio.native.json.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.las",
+      "schema": "stdio.las",
+      "factory": "stdio.native.las.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.md",
+      "schema": "stdio.md",
+      "factory": "stdio.native.md.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.mp3",
+      "schema": "stdio.mp3",
+      "factory": "stdio.native.mp3.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.mp4",
+      "schema": "stdio.mp4",
+      "factory": "stdio.native.mp4.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.obj",
+      "schema": "stdio.obj",
+      "factory": "stdio.native.obj.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.pdf",
+      "schema": "stdio.pdf",
+      "factory": "stdio.native.pdf.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.pdf",
+      "schema": "stdio.pdf.1.7",
+      "factory": "stdio.native.pdf17.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.ply",
+      "schema": "stdio.ply",
+      "factory": "stdio.native.ply.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.png",
+      "schema": "stdio.png",
+      "factory": "stdio.native.png.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.pptx",
+      "schema": "stdio.pptx",
+      "factory": "stdio.native.pptx.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.step",
+      "schema": "stdio.step",
+      "factory": "stdio.native.step.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.stl",
+      "schema": "stdio.stl",
+      "factory": "stdio.native.stl.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.svg",
+      "schema": "stdio.svg",
+      "factory": "stdio.native.svg.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.tiff",
+      "schema": "stdio.tiff",
+      "factory": "stdio.native.tiff.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.tsv",
+      "schema": "stdio.tsv",
+      "factory": "stdio.native.tsv.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.txt",
+      "schema": "stdio.txt",
+      "factory": "stdio.native.txt.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.xlsx",
+      "schema": "stdio.xlsx",
+      "factory": "stdio.native.xlsx.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.xml",
+      "schema": "stdio.xml",
+      "factory": "stdio.native.xml.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json",
+      "kind": "s.stdio.zip",
+      "schema": "stdio.zip",
+      "factory": "stdio.native.zip.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json",
+      "kind": "s.gis.gismap",
+      "schema": "gis.map",
+      "factory": "gis.gismap.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json",
+      "kind": "s.gis.gisterrain",
+      "schema": "gis.terrain",
+      "factory": "gis.gisterrain.v1"
+    },
+    {
+      "channel": "published-catalog",
+      "authority": "🌎️hub/🧩️compositions/🌿️vcs/📇️native-codecs/🔣️.json",
+      "kind": "s.vcs.vcs",
+      "schema": "vcs.vcs",
+      "factory": "vcs.vcs.v1"
+    }
+  ],
+  "stdioDeclarationRows": [
+    {
+      "kind": "s.stdio.avi",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.avi",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.avi.v1"
+    },
+    {
+      "kind": "s.stdio.bcf",
+      "standard": "2.1",
+      "subset": "*",
+      "schema": "stdio.bcf",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.bcf.v1"
+    },
+    {
+      "kind": "s.stdio.binary",
+      "standard": "raw",
+      "subset": "*",
+      "schema": "stdio.binary",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.bmp",
+      "standard": "v3",
+      "subset": "*",
+      "schema": "stdio.bmp",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.csv",
+      "standard": "rfc4180",
+      "subset": "*",
+      "schema": "stdio.csv",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.csv.v1"
+    },
+    {
+      "kind": "s.stdio.deflate",
+      "standard": "rfc1950",
+      "subset": "*",
+      "schema": "stdio.deflate",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.deflate.v1"
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.docx",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.docx.v1"
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.docx",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.docx.v1"
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.docx",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.docx.v1"
+    },
+    {
+      "kind": "s.stdio.dwg",
+      "standard": "ac1018",
+      "subset": "*",
+      "schema": "stdio.dwg",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.dwg.v1"
+    },
+    {
+      "kind": "s.stdio.dwg",
+      "standard": "ac1024",
+      "subset": "*",
+      "schema": "stdio.dwg",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.dwg.v1"
+    },
+    {
+      "kind": "s.stdio.dxf",
+      "standard": "r12",
+      "subset": "*",
+      "schema": "stdio.dxf",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.dxf.v1"
+    },
+    {
+      "kind": "s.stdio.epw",
+      "standard": "energyplus",
+      "subset": "*",
+      "schema": "stdio.epw",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.gif",
+      "standard": "87a",
+      "subset": "*",
+      "schema": "stdio.gif",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.gif",
+      "standard": "89a",
+      "subset": "*",
+      "schema": "stdio.gif.89a",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.gltf",
+      "standard": "2.0",
+      "subset": "*",
+      "schema": "stdio.gltf",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.gltf.v1"
+    },
+    {
+      "kind": "s.stdio.html",
+      "standard": "5",
+      "subset": "*",
+      "schema": "stdio.html",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.html.v1"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "*",
+      "schema": "stdio.ifc.2x3",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "cobie",
+      "schema": "stdio.ifc.2x3",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "cv20",
+      "schema": "stdio.ifc.2x3",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "sav",
+      "schema": "stdio.ifc.2x3",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "4",
+      "subset": "*",
+      "schema": "stdio.ifc",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.jpg",
+      "standard": "jfif-1.01",
+      "subset": "*",
+      "schema": "stdio.jpg",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.jpg.v1"
+    },
+    {
+      "kind": "s.stdio.jpg",
+      "standard": "jfif-1.01",
+      "subset": "baseline",
+      "schema": "stdio.jpg",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.jpg.v1"
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "*",
+      "schema": "stdio.json",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.json.v1"
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "geojson",
+      "schema": "stdio.json",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.json.v1"
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "i-json",
+      "schema": "stdio.json",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.json.v1"
+    },
+    {
+      "kind": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.las",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.las.v1"
+    },
+    {
+      "kind": "s.stdio.md",
+      "standard": "commonmark",
+      "subset": "*",
+      "schema": "stdio.md",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.md.v1"
+    },
+    {
+      "kind": "s.stdio.mp3",
+      "standard": "mpeg1-layer3",
+      "subset": "*",
+      "schema": "stdio.mp3",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.mp3.v1"
+    },
+    {
+      "kind": "s.stdio.mp4",
+      "standard": "isobmff",
+      "subset": "*",
+      "schema": "stdio.mp4",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.mp4.v1"
+    },
+    {
+      "kind": "s.stdio.obj",
+      "standard": "3.0",
+      "subset": "*",
+      "schema": "stdio.obj",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.obj.v1"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "*",
+      "schema": "stdio.pdf",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pdf.v1"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "a",
+      "schema": "stdio.pdf",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pdf.v1"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "x",
+      "schema": "stdio.pdf",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pdf.v1"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "*",
+      "schema": "stdio.pdf.1.7",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pdf17.v1"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "a",
+      "schema": "stdio.pdf.1.7",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pdf17.v1"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "e",
+      "schema": "stdio.pdf.1.7",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pdf17.v1"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "h",
+      "schema": "stdio.pdf.1.7",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pdf17.v1"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "ua",
+      "schema": "stdio.pdf.1.7",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pdf17.v1"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "vt",
+      "schema": "stdio.pdf.1.7",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pdf17.v1"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "x",
+      "schema": "stdio.pdf.1.7",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pdf17.v1"
+    },
+    {
+      "kind": "s.stdio.ply",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.ply",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.ply.v1"
+    },
+    {
+      "kind": "s.stdio.png",
+      "standard": "1.2",
+      "subset": "*",
+      "schema": "stdio.png",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.png.v1"
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.pptx",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pptx.v1"
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.pptx",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pptx.v1"
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.pptx",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.pptx.v1"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "*",
+      "schema": "stdio.semio",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "animation",
+      "schema": "s.stdio.semio.animation",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "audio",
+      "schema": "stdio.semio.audio",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "brep",
+      "schema": "stdio.semio.brep",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "cad",
+      "schema": "stdio.semio.cad",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "document",
+      "schema": "s.stdio.semio.document",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "drawing",
+      "schema": "stdio.semio.drawing",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "flow",
+      "schema": "stdio.semio.flow",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "graph",
+      "schema": "s.stdio.semio.graph",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "image",
+      "schema": "s.stdio.semio.image",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "kit",
+      "schema": "stdio.semio.kit",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "mesh",
+      "schema": "stdio.semio.mesh",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "model",
+      "schema": "stdio.semio.model",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "object",
+      "schema": "stdio.semio.object",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "presentation",
+      "schema": "s.stdio.semio.presentation",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "table",
+      "schema": "s.stdio.semio.table",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "text",
+      "schema": "s.stdio.semio.text",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "value",
+      "schema": "stdio.semio.value",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "video",
+      "schema": "stdio.semio.video",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "*",
+      "schema": "stdio.step",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.step.v1"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc1",
+      "schema": "stdio.step",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.step.v1"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc2",
+      "schema": "stdio.step",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.step.v1"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc3",
+      "schema": "stdio.step",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.step.v1"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc4",
+      "schema": "stdio.step",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.step.v1"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc5",
+      "schema": "stdio.step",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.step.v1"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6",
+      "schema": "stdio.step",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.step.v1"
+    },
+    {
+      "kind": "s.stdio.stl",
+      "standard": "ascii",
+      "subset": "*",
+      "schema": "stdio.stl",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.stl.v1"
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "*",
+      "schema": "stdio.svg",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.svg.v1"
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "basic",
+      "schema": "stdio.svg",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.svg.v1"
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "tiny",
+      "schema": "stdio.svg",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.svg.v1"
+    },
+    {
+      "kind": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "*",
+      "schema": "stdio.tiff",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.tiff.v1"
+    },
+    {
+      "kind": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "baseline",
+      "schema": "stdio.tiff",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.tiff.v1"
+    },
+    {
+      "kind": "s.stdio.tsv",
+      "standard": "iana",
+      "subset": "*",
+      "schema": "stdio.tsv",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.tsv.v1"
+    },
+    {
+      "kind": "s.stdio.txt",
+      "standard": "utf-8",
+      "subset": "*",
+      "schema": "stdio.txt",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.txt.v1"
+    },
+    {
+      "kind": "s.stdio.wav",
+      "standard": "riff-pcm",
+      "subset": "*",
+      "schema": "stdio.wav",
+      "channel": "stdio-declaration",
+      "factory": null
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.xlsx",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.xlsx.v1"
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.xlsx",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.xlsx.v1"
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.xlsx",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.xlsx.v1"
+    },
+    {
+      "kind": "s.stdio.xml",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.xml",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.xml.v1"
+    },
+    {
+      "kind": "s.stdio.xml",
+      "standard": "1.0",
+      "subset": "valid",
+      "schema": "stdio.xml",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.xml.v1"
+    },
+    {
+      "kind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "*",
+      "schema": "stdio.zip",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.zip.v1"
+    },
+    {
+      "kind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "iso21320",
+      "schema": "stdio.zip",
+      "channel": "stdio-declaration",
+      "factory": "stdio.native.zip.v1"
+    }
+  ],
+  "selectedPrimaryRows": [
+    {
+      "owner": "WriterSnapshot",
+      "kind": "s.writer.writer",
+      "standard": "1",
+      "subset": "*",
+      "schema": "writer.document",
+      "editorAuthority": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "EquationSnapshot",
+      "kind": "s.mathematical.equation",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.equation/v1",
+      "editorAuthority": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Wfc2dSnapshot",
+      "kind": "s.wfc.wfc2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.wfc.wfc2d",
+      "editorAuthority": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "kind": "s.wfc.grid2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.wfc.grid2d",
+      "editorAuthority": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "kind": "s.wfc.bitmap",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.wfc.bitmap",
+      "editorAuthority": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "kind": "s.wfc.wfc3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.wfc.wfc3d",
+      "editorAuthority": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "kind": "s.wfc.grid3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.wfc.grid3d",
+      "editorAuthority": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "kind": "s.procedural.generation2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "generation.2d",
+      "editorAuthority": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "kind": "s.procedural.generation3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "generation.3d",
+      "editorAuthority": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "FlowSnapshot",
+      "kind": "s.flow.flow",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.flow.flow",
+      "editorAuthority": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "kind": "s.gis.gisterrain",
+      "standard": "1",
+      "subset": "*",
+      "schema": "gis.terrain",
+      "editorAuthority": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "kind": "s.gis.gismap",
+      "standard": "1",
+      "subset": "*",
+      "schema": "gis.map",
+      "editorAuthority": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "VcsSnapshot",
+      "kind": "s.vcs.vcs",
+      "standard": "1",
+      "subset": "*",
+      "schema": "vcs.vcs",
+      "editorAuthority": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "kind": "s.animate.presentation",
+      "standard": "1",
+      "subset": "*",
+      "schema": "animate.presentation",
+      "editorAuthority": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "kind": "s.shooting.shooting",
+      "standard": "1",
+      "subset": "*",
+      "schema": "shooting.shooting",
+      "editorAuthority": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "kind": "s.demonstrator.playground",
+      "standard": "1",
+      "subset": "*",
+      "schema": "playground.playground",
+      "editorAuthority": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "kind": "s.sequence.sequence",
+      "standard": "1",
+      "subset": "*",
+      "schema": "sequence.sequence",
+      "editorAuthority": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "kind": "s.fem.fem2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "fem.2d",
+      "editorAuthority": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "kind": "s.fem.fem3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "fem.3d",
+      "editorAuthority": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "kind": "s.architect.program",
+      "standard": "1",
+      "subset": "*",
+      "schema": "architect.program",
+      "editorAuthority": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "kind": "s.process.process3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "process.3d",
+      "editorAuthority": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "kind": "s.lowpoly.lowpoly",
+      "standard": "1",
+      "subset": "*",
+      "schema": "lowpoly.document",
+      "editorAuthority": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "WiresSnapshot",
+      "kind": "s.reasoning.wires",
+      "standard": "1",
+      "subset": "*",
+      "schema": "reasoning.wires.identity.snapshot",
+      "editorAuthority": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "FormsSnapshot",
+      "kind": "s.forms.forms",
+      "standard": "1",
+      "subset": "*",
+      "schema": "forms.form",
+      "editorAuthority": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "kind": "s.layout.layout",
+      "standard": "1",
+      "subset": "*",
+      "schema": "layout.layout",
+      "editorAuthority": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "CadSnapshot",
+      "kind": "s.cad.cad",
+      "standard": "1",
+      "subset": "*",
+      "schema": "cad.scene",
+      "editorAuthority": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "En1990Snapshot",
+      "kind": "s.norm.en1990",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1990/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "kind": "s.norm.din18599",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.din18599/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "En1997Snapshot",
+      "kind": "s.norm.en1997",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1997/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "kind": "s.norm.din16798",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.din16798/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "En1991Snapshot",
+      "kind": "s.norm.en1991",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1991/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "En1992Snapshot",
+      "kind": "s.norm.en1992",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1992/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "kind": "s.norm.vdi3805",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.vdi3805/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "kind": "s.norm.iso16757",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.iso16757/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "En1993Snapshot",
+      "kind": "s.norm.en1993",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1993/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "En1994Snapshot",
+      "kind": "s.norm.en1994",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1994/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "kind": "s.norm.din4108",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.din4108/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "En1996Snapshot",
+      "kind": "s.norm.en1996",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1996/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "En1995Snapshot",
+      "kind": "s.norm.en1995",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1995/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "En1999Snapshot",
+      "kind": "s.norm.en1999",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1999/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "En1998Snapshot",
+      "kind": "s.norm.en1998",
+      "standard": "1",
+      "subset": "*",
+      "schema": "semio.norm.en1998/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "kind": "s.playbook.playbook",
+      "standard": "1",
+      "subset": "*",
+      "schema": "playbook.program",
+      "editorAuthority": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "kind": "s.imperative.procedure",
+      "standard": "1",
+      "subset": "*",
+      "schema": "procedure.document/v1",
+      "editorAuthority": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "kind": "s.remodel.remodeling",
+      "standard": "1",
+      "subset": "*",
+      "schema": "remodeling.scene",
+      "editorAuthority": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "kind": "s.energy.model",
+      "standard": "1",
+      "subset": "*",
+      "schema": "energy.model",
+      "editorAuthority": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "kind": "s.trinity.rewriting",
+      "standard": "1",
+      "subset": "*",
+      "schema": "trinity.rewrite.rule",
+      "editorAuthority": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "JackSnapshot",
+      "kind": "s.trinity.jack",
+      "standard": "1",
+      "subset": "*",
+      "schema": "trinity.jackgraphwindowcfg",
+      "editorAuthority": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "DagSnapshot",
+      "kind": "s.dag.dag",
+      "standard": "1",
+      "subset": "*",
+      "schema": "dag.dag",
+      "editorAuthority": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "kind": "s.draw.drawing",
+      "standard": "1",
+      "subset": "*",
+      "schema": "drawing.document",
+      "editorAuthority": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "RasterSnapshot",
+      "kind": "s.raster.raster",
+      "standard": "1",
+      "subset": "*",
+      "schema": "raster.document",
+      "editorAuthority": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "NoteSnapshot",
+      "kind": "s.note.note",
+      "standard": "1",
+      "subset": "*",
+      "schema": "note.document",
+      "editorAuthority": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "kind": "s.puzzle.puzzle2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "board.ports.directed.v1",
+      "editorAuthority": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "kind": "s.puzzle.puzzle5d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "puzzle.5d",
+      "editorAuthority": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "kind": "s.puzzle.puzzle3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "puzzle.3d",
+      "editorAuthority": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "kind": "s.block.block2d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "block.2d",
+      "editorAuthority": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "kind": "s.block.block5d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "block.5d",
+      "editorAuthority": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "kind": "s.block.block3d",
+      "standard": "1",
+      "subset": "*",
+      "schema": "block.3d",
+      "editorAuthority": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "kind": "s.space.home",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.home",
+      "editorAuthority": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "kind": "s.space.space",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.space",
+      "editorAuthority": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    },
+    {
+      "owner": "CurationSnapshot",
+      "kind": "s.sourcing.curation",
+      "standard": "1",
+      "subset": "*",
+      "schema": "sourcing.curation/v1",
+      "editorAuthority": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "dialectAuthority": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🦀️.rs",
+      "resolution": "literal defining dialect + actual root editor DOCUMENT_SCHEMA; NOT assertion of complete additional binding roster"
+    }
+  ],
+  "counts": {
+    "catalogRows": 33,
+    "catalogKinds": 32,
+    "catalogFactories": 33,
+    "stdioCoordinates": 89,
+    "stdioKinds": 36,
+    "selectedPrimaryRows": 60
+  },
+  "unresolved": "Additional primary declaration subtree routes, framework public channels, Print, probes and per-row current runtime proof join"
+}

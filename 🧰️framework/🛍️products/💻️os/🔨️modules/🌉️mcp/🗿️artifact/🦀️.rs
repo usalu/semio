@@ -286,7 +286,7 @@ fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: 
     }
     match workspace.authenticated_probe_document_is_known(&artifact_id) {
         Ok(true) => {
-            if let Err(error) = ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, serde_json::Value::Null)) {
+            if let Err(error) = ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, semio_framework_value::DslValue::Null)) {
                 return CallToolResult::tool_error(&error);
             }
         }
@@ -382,7 +382,7 @@ fn artifact_create_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
     let initial = arguments.get("initial").cloned().unwrap_or_else(|| serde_json::json!({}));
     let jobs = crate::ui::job_registry();
     let job_id = jobs.begin("artifact.create");
-    match ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, initial)) {
+    match ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, initial.into())) {
         Ok(revision) => {
             let structured = serde_json::json!({ "jobId": job_id, "status": "SUCCEEDED", "artifactId": artifact_id, "kind": kind, "revision": revision });
             jobs.succeed(&job_id, structured.clone());

@@ -67,3 +67,10 @@ pub fn derive_retire_owned(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     retained_clone::expand_retire_owned(&derive_input).unwrap_or_else(|error| error.to_compile_error()).into()
 }
+
+/// 🧵️ Derives immutable native canonical field roles through an explicit first-party owner.
+#[proc_macro_derive(CanonicalJsonTree, attributes(value,canonical_json))]
+pub fn derive_canonical_json_tree(input:TokenStream)->TokenStream {
+ let input=parse_macro_input!(input as DeriveInput);
+ component::expand_canonical_tree(&input).unwrap_or_else(|error|error.to_compile_error()).into()
+}

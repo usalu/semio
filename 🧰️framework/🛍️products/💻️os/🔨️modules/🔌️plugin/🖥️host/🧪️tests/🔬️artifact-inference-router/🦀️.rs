@@ -17,6 +17,7 @@ async fn only_exactly_echoed_guest_results_are_publishable() {
         source_dialect: "s.test.standard.v1.dialect.canonical".into(),
         policy: vec![1],
         budgets: InferenceRouteBudget { allocation_bytes: 128, work_units: 1, recursion_depth: 1 },
+        retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 },
         cancellation_id: "cancel-1".into(),
         previous_state: None,
         requested_cache_mode: InferenceRouteCacheMode::Cold,
@@ -38,6 +39,7 @@ async fn only_exactly_echoed_guest_results_are_publishable() {
         source_dialect: request.source_dialect.clone(),
         policy: request.policy.clone(),
         budgets: request.budgets.clone(),
+        retained: request.retained,
         cancellation_id: request.cancellation_id.clone(),
         previous_state: request.previous_state.clone(),
         requested_cache_mode: request.requested_cache_mode.clone(),
@@ -47,6 +49,7 @@ async fn only_exactly_echoed_guest_results_are_publishable() {
         actual_cache_mode: request.requested_cache_mode.clone(),
     };
     assert!(validate_inference_echo(&request, &valid).await.is_ok());
+    let mut changed_wallet=valid.clone();changed_wallet.retained.maximum_release_bytes-=1;assert!(validate_inference_echo(&request,&changed_wallet).await.is_err());
     let stale = InferenceRouteResult { generation: 8, ..valid };
     assert!(matches!(validate_inference_echo(&request, &stale).await, Err(PluginHostError::Plugin(_))));
 }
@@ -85,6 +88,7 @@ async fn a_composed_documents_children_reach_every_routed_inference_request() {
         source_dialect: "s.test.standard.v1.dialect.canonical".into(),
         policy: Vec::new(),
         budgets: InferenceRouteBudget { allocation_bytes: 128, work_units: 4, recursion_depth: 2 },
+        retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 },
         cancellation_id: "cancel-1".into(),
         previous_state: None,
         requested_cache_mode: InferenceRouteCacheMode::Cold,
@@ -106,6 +110,7 @@ async fn a_composed_documents_children_reach_every_routed_inference_request() {
     };
     let dependency_request = build_dependency_inference_request(&base, &dependency).await;
     assert_eq!(dependency_request.dependencies, requested, "a dependency inference reads the same owned children");
+    assert_eq!(dependency_request.retained,base.retained);
     let routed = routed_inference_dependencies(base.dependencies.clone(), vec![("s.test.outline".into(), vec![7])]);
     assert_eq!(routed, vec![child("content", "c1", 1), child("content", "c2", 2), ("s.test.outline".into(), vec![7])]);
     assert_eq!(routed_inference_dependencies(Vec::new(), vec![("s.test.outline".into(), vec![7])]), vec![("s.test.outline".to_string(), vec![7])], "a non-composed request is unchanged");

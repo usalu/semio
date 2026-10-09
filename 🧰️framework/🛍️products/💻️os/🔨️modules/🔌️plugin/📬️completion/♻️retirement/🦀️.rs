@@ -2,12 +2,13 @@
 use crate::app::{ArtifactApp,ArtifactToolCompletion,ArtifactToolCompletionValue};
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{mem::ManuallyDrop,sync::{Arc,Mutex,MutexGuard,TryLockResult}};
-type Cell<A>=Mutex<Option<ArtifactToolCompletionValue<A>>>;
+struct Cell<A:ArtifactApp>{value:Mutex<Option<ArtifactToolCompletionValue<A>>>,authoring:Mutex<Option<crate::app::OriginalAuthoringEffect>>}
 pub(crate) struct CompletionCell<A:ArtifactApp>{inner:ManuallyDrop<Arc<Cell<A>>>,returned:bool}
 impl<A:ArtifactApp> CompletionCell<A>{
-    pub(crate) fn new()->Self{Self{inner:ManuallyDrop::new(Arc::new(Mutex::new(None))),returned:false}}
-    pub(crate) fn try_lock(&self)->TryLockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.try_lock()}
-    pub(crate) fn lock(&self)->std::sync::LockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.lock()}
+    pub(crate) fn new()->Self{Self{inner:ManuallyDrop::new(Arc::new(Cell{value:Mutex::new(None),authoring:Mutex::new(None)})),returned:false}}
+    pub(crate) fn try_lock(&self)->TryLockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.try_lock()}
+    pub(crate) fn lock(&self)->std::sync::LockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.lock()}
+    pub(crate) fn try_lock_authoring(&self)->TryLockResult<MutexGuard<'_,Option<crate::app::OriginalAuthoringEffect>>>{self.inner.authoring.try_lock()}
     pub(crate) fn strong_count(&self)->usize{Arc::strong_count(&self.inner)}
     pub(crate) fn same_cell(&self,other:&Self)->bool{Arc::ptr_eq(&self.inner,&other.inner)}
     fn return_alias(mut self)->Option<Cell<A>>{let inner=unsafe{ManuallyDrop::take(&mut self.inner)};self.returned=true;Arc::into_inner(inner)}
@@ -24,7 +25,7 @@ impl<A:ArtifactApp> RetirementCursor for CompletionRetirement<A>{
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
         if self.terminal_is_empty(){return RetirementStep::Complete;}if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
         if self.source.is_some(){let bytes=semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<Cell<A>>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}
-            let original=self.source.take().unwrap().return_alias();let released=if let Some(original)=original{*self.original=original.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);bytes}else{0};return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()});
+            let original=self.source.take().unwrap().return_alias();let released=if let Some(original)=original{*self.original=original.value.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);drop(original.authoring.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner));bytes}else{0};return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()});
         }
         if self.child.is_some(){return self.child_step(grant);}
         if self.original.is_some(){match A::admit_completion_retirement(&mut self.original,grant){Ok(Some((child,progress)))=>{*self.child=Some(child);return RetirementStep::Progress(progress);},Ok(None)=>return RetirementStep::BudgetExhausted,Err(error)=>return RetirementStep::Failure(error)}}
@@ -44,4 +45,3 @@ impl<A:ArtifactApp> RetireOwned for ArtifactToolCompletion<A>{
     fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<CompletionRetirement<A>>())}
     fn controlled_retirement_supported()->bool{true}
 }
-

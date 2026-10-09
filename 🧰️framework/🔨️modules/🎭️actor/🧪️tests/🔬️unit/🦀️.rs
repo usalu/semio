@@ -110,28 +110,65 @@ mod quick {
             self.closing = true;
         }
 
-        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> job::InteractiveJobCloseStep {
+        fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> job::InteractiveJobCloseStep {
+            use job::InteractiveJobCloseStep;
             self.begin_close();
+            if self.terminal_is_empty() { return InteractiveJobCloseStep::Complete { progress: Default::default() }; }
+            if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
+            let release = self.next_close_release_byte_demand().expect("original script backing");
+            let depth = self.next_close_depth_demand().expect("original script depth");
+            if grant.maximum_release_bytes < release { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
+            if grant.maximum_depth < depth { return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit); }
             if let Some(state) = self.pending_state.as_mut() {
-                return match state.close_step(maximum_items, maximum_bytes) {
-                    job::JobPayloadCloseStep::Pending { released_items, released_bytes } => job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                    job::JobPayloadCloseStep::Complete => {
-                        self.pending_state = None;
-                        job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                    }
-                };
+                let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+                let step = match state.close_step(child) { Ok(step) => step, Err(error) => return InteractiveJobCloseStep::Refused(error.kind) };
+                if state.terminal_is_empty() { self.pending_state = None; }
+                return if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { InteractiveJobCloseStep::Pending { progress: step.progress() } };
             }
-            if maximum_items == 0 && (!self.outcomes.is_empty() || self.pending_complete.is_some()) {
-                return job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            if self.pending_complete.take().is_some() || self.outcomes.pop_front().is_some() {
-                return job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-            }
-            job::InteractiveJobCloseStep::Complete
+            if let Some(candidate) = self.pending_complete.as_mut() {
+                if candidate.state.capacity() != 0 { drop(std::mem::take(&mut candidate.state)); }
+                else if candidate.output.capacity() != 0 { drop(std::mem::take(&mut candidate.output)); }
+                else { self.pending_complete = None; }
+            } else if let Some(outcome) = self.outcomes.front_mut() {
+                if let Some(bytes) = script_original_bytes(outcome) { drop(std::mem::take(bytes)); }
+                else { self.outcomes.pop_front(); }
+            } else { drop(std::mem::take(&mut self.outcomes)); }
+            let progress = semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: release, ..Default::default() };
+            if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } }
         }
 
+        fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.pending_state.as_ref().map(|owner| owner.retirement_demands()).transpose()?.map_or(0, |demand| demand.copy_bytes)) }
+        fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.pending_state.as_ref().map(|owner| owner.retirement_demands()).transpose()?.map_or(0, |demand| demand.capacity_bytes)) }
+        fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+            if let Some(state) = self.pending_state.as_ref() { return Ok(state.retirement_demands()?.release_bytes); }
+            if let Some(candidate) = self.pending_complete.as_ref() { return Ok(if candidate.state.capacity() != 0 { candidate.state.capacity() } else { candidate.output.capacity() }); }
+            if let Some(outcome) = self.outcomes.front() { return Ok(script_original_capacity(outcome)); }
+            self.outcomes.capacity().checked_mul(std::mem::size_of::<JobStepOutcome>()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original script queue extent overflow"))
+        }
+        fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(if let Some(state) = self.pending_state.as_ref() { state.retirement_demands()?.depth + 1 } else { usize::from(!self.terminal_is_empty()) }) }
+
         fn terminal_is_empty(&self) -> bool {
-            self.closing && self.outcomes.is_empty() && self.pending_state.is_none() && self.pending_complete.is_none()
+            self.closing && self.outcomes.capacity() == 0 && self.pending_state.is_none() && self.pending_complete.is_none()
+        }
+    }
+
+    fn script_original_bytes(outcome: &mut JobStepOutcome) -> Option<&mut Vec<u8>> {
+        match outcome {
+            JobStepOutcome::PreviewReady { preview } if preview.capacity() != 0 => Some(preview),
+            JobStepOutcome::CheckpointReady { checkpoint } if checkpoint.state.capacity() != 0 => Some(&mut checkpoint.state),
+            JobStepOutcome::Complete { candidate } => if candidate.state.capacity() != 0 { Some(&mut candidate.state) } else if candidate.output.capacity() != 0 { Some(&mut candidate.output) } else { None },
+            JobStepOutcome::Fault { detail } if detail.capacity() != 0 => Some(detail),
+            _ => None,
+        }
+    }
+
+    fn script_original_capacity(outcome: &JobStepOutcome) -> usize {
+        match outcome {
+            JobStepOutcome::PreviewReady { preview } => preview.capacity(),
+            JobStepOutcome::CheckpointReady { checkpoint } => checkpoint.state.capacity(),
+            JobStepOutcome::Complete { candidate } => if candidate.state.capacity() != 0 { candidate.state.capacity() } else { candidate.output.capacity() },
+            JobStepOutcome::Fault { detail } => detail.capacity(),
+            _ => 0,
         }
     }
 
@@ -144,8 +181,8 @@ mod quick {
 
         fn begin_close(&mut self) {}
 
-        fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> job::InteractiveJobCloseStep {
-            job::InteractiveJobCloseStep::Complete
+        fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> job::InteractiveJobCloseStep {
+            job::InteractiveJobCloseStep::Complete { progress: Default::default() }
         }
 
         fn terminal_is_empty(&self) -> bool {
@@ -169,30 +206,20 @@ mod quick {
 
     #[test]
     fn job_bridge_preserves_checkpoint_state_and_applied_progress() {
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../📄️checkpoint/🔣️.json")).unwrap();
         let operation = bridge_operation();
         let mut bridge = JobTurnBridge::new(operation);
-        let checkpoint = JobCheckpoint { state: vec![4, 5, 6], applied_progress: 73 };
+        let checkpoint = JobCheckpoint { state: serde_json::from_value(fixture["state"].clone()).unwrap(), applied_progress: fixture["appliedProgress"].as_u64().unwrap() };
         let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::CheckpointReady { checkpoint: checkpoint.clone() }]), calls: 0, ..Default::default() };
-        let pending = bridge
-            .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.checkpoint", job::InteractiveStage::BackgroundStep, job::StepBudget::new(100, 20), job::root_cancel_token(), BRIDGE_NOW_US)
-            .expect("checkpoint projection admission");
-        assert!(matches!(pending.outcome, JobStepOutcome::Yield));
-        let publication = bridge
-            .step(
-                &mut job,
-                JobTurn { step_sequence: 1, ..pending.turn },
-                operation.operation,
-                operation.base_revision,
-                operation.generation,
-                "actor.job.checkpoint",
-                job::InteractiveStage::BackgroundStep,
-                job::StepBudget::new(100, 20),
-                job::root_cancel_token(),
-                BRIDGE_NOW_US,
-            )
-            .expect("checkpoint publication");
-        assert_eq!(publication.outcome, JobStepOutcome::CheckpointReady { checkpoint: checkpoint.clone() });
-        assert_eq!(publication.turn_status(), TurnStatus::CheckpointReady { checkpoint });
+        let mut publication=None;
+        for (sequence,expected) in fixture["publications"].as_array().unwrap().iter().enumerate(){
+            let current=bridge.step(&mut job,bridge_turn(sequence as u64,0),operation.operation,operation.base_revision,operation.generation,"actor.job.checkpoint",job::InteractiveStage::BackgroundStep,job::StepBudget::new(100,20),job::root_cancel_token(),BRIDGE_NOW_US).expect("checkpoint projection publication");
+            assert_eq!(job.calls,fixture["jobCalls"].as_u64().unwrap()as usize);
+            if expected=="yield"{assert_eq!(current.outcome,JobStepOutcome::Yield);}else{assert_eq!(current.outcome,JobStepOutcome::CheckpointReady{checkpoint:checkpoint.clone()});}
+            publication=Some(current);
+        }
+        assert_eq!(publication.unwrap().turn_status(),TurnStatus::CheckpointReady{checkpoint});
+        println!("[DEBUG] actor checkpoint projection preserves original state040506/progress73 over job/page/ledger turns without another job call");
     }
 
     #[semio_framework_async_macros::async_test]

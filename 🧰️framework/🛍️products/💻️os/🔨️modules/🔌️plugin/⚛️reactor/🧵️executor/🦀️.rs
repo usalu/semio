@@ -9,6 +9,7 @@ use std::collections::VecDeque;
 use std::future::Future;
 use std::pin::Pin;
 use std::rc::Rc;
+use std::sync::{Arc,atomic::{AtomicBool,Ordering}};
 use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
 
 /// 🪪️ Stable slot index — reused across `poll` calls for as long as the task stays parked, so a
@@ -344,6 +345,7 @@ type BoxedTask = Pin<Box<dyn Future<Output = ()>>>;
 const LOCAL_EXECUTOR_TASK_SLOTS: usize = 1_024;
 
 struct TaskSlot {
+    wake: Option<Arc<ExecutorWakeSignal>>,
     generation: u32,
     future: Option<BoxedTask>,
     queued: bool,
@@ -368,7 +370,7 @@ impl Inner {
         let mut slots = Vec::new();
         let slots_admitted = slots.try_reserve_exact(LOCAL_EXECUTOR_TASK_SLOTS).is_ok();
         if slots_admitted {
-            slots.resize_with(LOCAL_EXECUTOR_TASK_SLOTS, || TaskSlot { generation: 0, future: None, queued: false, active: false, reserved: false, ready_previous: None, ready_next: None });
+            slots.resize_with(LOCAL_EXECUTOR_TASK_SLOTS, || TaskSlot { wake: None, generation: 0, future: None, queued: false, active: false, reserved: false, ready_previous: None, ready_next: None });
         }
         let mut free = VecDeque::new();
         let free_admitted = free.try_reserve_exact(LOCAL_EXECUTOR_TASK_SLOTS).is_ok();
@@ -433,7 +435,14 @@ impl Inner {
         true
     }
 
+    fn collect_wakes(&mut self) {
+        for index in 0..self.slots.len(){
+            if self.slots[index].active&&self.slots[index].wake.as_ref().is_some_and(|wake|wake.ready.swap(false,Ordering::AcqRel)){self.enqueue_ready(index);}
+        }
+    }
+
     fn pop_ready(&mut self) -> Option<TaskId> {
+        self.collect_wakes();
         let index = self.ready_head?;
         let generation = self.slots[index].generation;
         self.remove_ready(index);
@@ -485,6 +494,7 @@ impl Drop for TaskReservation {
         let mut inner = self.inner.borrow_mut();
         if inner.slots[index].generation == generation && inner.slots[index].reserved && !inner.slots[index].active {
             inner.slots[index].reserved = false;
+            inner.slots[index].wake = None;
             inner.free.push_back(index);
         }
     }
@@ -515,7 +525,7 @@ impl ColdFutureExecutor {
         let index = inner.free.pop_front().ok_or("executor fixed task capacity is saturated")?;
         let generation = inner.slots[index].generation.wrapping_add(1).max(1);
         let id = Inner::task_id(index, generation);
-        inner.slots[index] = TaskSlot { generation, future: Some(future), queued: false, active: true, reserved: false, ready_previous: None, ready_next: None };
+        inner.slots[index] = TaskSlot { wake: Some(Arc::new(ExecutorWakeSignal::new())), generation, future: Some(future), queued: false, active: true, reserved: false, ready_previous: None, ready_next: None };
         assert!(inner.enqueue_ready(index), "executor fixed ready authority rejected a new task");
         inner.live += 1;
         Ok(id)
@@ -536,13 +546,14 @@ impl ColdFutureExecutor {
             let index = inner.free.pop_front().ok_or("executor fixed task capacity is saturated")?;
             let generation = inner.slots[index].generation.wrapping_add(1).max(1);
             let id = Inner::task_id(index, generation);
-            inner.slots[index] = TaskSlot { generation, future: None, queued: false, active: false, reserved: true, ready_previous: None, ready_next: None };
+            inner.slots[index] = TaskSlot { wake: Some(Arc::new(ExecutorWakeSignal::new())), generation, future: None, queued: false, active: false, reserved: true, ready_previous: None, ready_next: None };
             (index, generation, id)
         };
         let future = make_future(id);
         let mut inner = self.inner.borrow_mut();
         if inner.slots[index].generation != generation || inner.slots[index].future.is_some() {
             inner.slots[index].reserved = false;
+            inner.slots[index].wake = None;
             inner.free.push_back(index);
             return Err("executor reservation authority changed before install");
         }
@@ -562,7 +573,7 @@ impl ColdFutureExecutor {
         let index = inner.free.pop_front().ok_or("executor fixed task capacity is saturated")?;
         let generation = inner.slots[index].generation.wrapping_add(1).max(1);
         let id = Inner::task_id(index, generation);
-        inner.slots[index] = TaskSlot { generation, future: None, queued: false, active: false, reserved: true, ready_previous: None, ready_next: None };
+        inner.slots[index] = TaskSlot { wake: Some(Arc::new(ExecutorWakeSignal::new())), generation, future: None, queued: false, active: false, reserved: true, ready_previous: None, ready_next: None };
         Ok(TaskReservation { inner: self.inner.clone(), id, installed: false })
     }
 
@@ -581,6 +592,7 @@ impl ColdFutureExecutor {
         inner.remove_ready(index);
         let future = inner.slots[index].future.take();
         inner.slots[index].active = false;
+        inner.slots[index].wake = None;
         inner.live = inner.live.saturating_sub(1);
         inner.free.push_back(index);
         future
@@ -621,6 +633,7 @@ impl ColdFutureExecutor {
                     if inner.slots[index].generation == generation && inner.slots[index].active {
                         inner.remove_ready(index);
                         inner.slots[index].active = false;
+        inner.slots[index].wake = None;
                         inner.live = inner.live.saturating_sub(1);
                         inner.free.push_back(index);
                     }
@@ -660,6 +673,7 @@ impl ColdFutureExecutor {
                 if inner.slots[index].generation == generation && inner.slots[index].active {
                     inner.remove_ready(index);
                     inner.slots[index].active = false;
+        inner.slots[index].wake = None;
                     inner.live = inner.live.saturating_sub(1);
                     inner.free.push_back(index);
                 }
@@ -678,7 +692,7 @@ impl ColdFutureExecutor {
     }
 
     pub fn has_ready(&self) -> bool {
-        self.inner.borrow().ready_head.is_some()
+        {let mut inner=self.inner.borrow_mut();inner.collect_wakes();inner.ready_head.is_some()}
     }
 
     pub fn has_pending(&self) -> bool {
@@ -686,52 +700,31 @@ impl ColdFutureExecutor {
     }
 
     fn waker_for(&self, id: TaskId) -> Waker {
-        let data = Rc::new(WakerData { inner: self.inner.clone(), id });
+        let inner=self.inner.borrow();let index=inner.matches(id).expect("original active executor task owns its signal");
+        let data = Arc::new(WakerData { signal: Arc::clone(inner.slots[index].wake.as_ref().expect("original active signal")), id });
         unsafe { Waker::from_raw(raw_waker(data)) }
     }
 }
 
-struct WakerData {
-    inner: Rc<RefCell<Inner>>,
-    id: TaskId,
+#[path="♻️wake/🦀️.rs"]
+mod retained_wake;
+pub use retained_wake::admit_original_executor_wake;
+struct ExecutorWakeSignal{ready:AtomicBool}
+impl ExecutorWakeSignal{fn new()->Self{Self{ready:AtomicBool::new(false)}}}
+struct WakerData {signal:Arc<ExecutorWakeSignal>,id:TaskId}
+impl std::task::Wake for WakerData{
+ fn wake(self:Arc<Self>){self.signal.ready.store(true,Ordering::Release);}
+ fn wake_by_ref(self:&Arc<Self>){self.signal.ready.store(true,Ordering::Release);}
 }
-
-// 🚫️async: E4 fn-pointer slot — RawWakerVTable::new requires bare `unsafe fn(*const ()) -> T`
-// pointers; core::task calls these through a raw vtable and can never `.await` them.
-fn raw_waker(data: Rc<WakerData>) -> RawWaker {
-    RawWaker::new(Rc::into_raw(data) as *const (), &VTABLE)
-}
-
+fn raw_waker(data: Arc<WakerData>) -> RawWaker {RawWaker::new(Arc::into_raw(data) as *const (), &VTABLE)}
 static VTABLE: RawWakerVTable = RawWakerVTable::new(waker_clone, waker_wake, waker_wake_by_ref, waker_drop);
-
-// 🚫️async: E4 fn-pointer slot
 unsafe fn waker_clone(ptr: *const ()) -> RawWaker {
-    let data = unsafe { Rc::from_raw(ptr as *const WakerData) };
-    let cloned = data.clone();
-    std::mem::forget(data);
-    raw_waker(cloned)
+ unsafe{Arc::increment_strong_count(ptr.cast::<WakerData>());}
+ RawWaker::new(ptr,&VTABLE)
 }
-
-// 🚫️async: E4 fn-pointer slot
-unsafe fn waker_wake(ptr: *const ()) {
-    let data = unsafe { Rc::from_raw(ptr as *const WakerData) };
-    let mut inner = data.inner.borrow_mut();
-    let Some(index) = inner.matches(data.id) else { return };
-    inner.enqueue_ready(index);
-}
-
-// 🚫️async: E4 fn-pointer slot
-unsafe fn waker_wake_by_ref(ptr: *const ()) {
-    let data = unsafe { &*(ptr as *const WakerData) };
-    let mut inner = data.inner.borrow_mut();
-    let Some(index) = inner.matches(data.id) else { return };
-    inner.enqueue_ready(index);
-}
-
-// 🚫️async: E4 fn-pointer slot
-unsafe fn waker_drop(ptr: *const ()) {
-    drop(unsafe { Rc::from_raw(ptr as *const WakerData) });
-}
+unsafe fn waker_wake(ptr: *const ()) {std::task::Wake::wake(unsafe{Arc::from_raw(ptr.cast::<WakerData>())});}
+unsafe fn waker_wake_by_ref(ptr: *const ()) {unsafe{&*ptr.cast::<WakerData>()}.signal.ready.store(true,Ordering::Release);}
+unsafe fn waker_drop(ptr: *const ()) {drop(unsafe { Arc::from_raw(ptr.cast::<WakerData>()) });}
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

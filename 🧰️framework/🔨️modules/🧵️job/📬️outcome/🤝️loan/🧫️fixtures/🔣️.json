@@ -1,0 +1,1 @@
+{"policy":{"items":1,"copy":4096,"capacity":65536,"release":262144,"depth":64},"variants":["yield","preview","checkpoint","complete","cancelled","fault"],"pages":[0,1,3],"stages":["original-retained","borrow-admitted","borrow-ended","original-retired"]}

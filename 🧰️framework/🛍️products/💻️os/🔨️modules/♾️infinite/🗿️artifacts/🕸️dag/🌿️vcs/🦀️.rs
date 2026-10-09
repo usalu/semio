@@ -28,7 +28,7 @@ fn dag_artifact_schema() -> String {
 
 /// 🧾️ The persistent DAG projection — nodes and edges only. Camera/viewport and selection are
 /// ephemeral view state kept in the plugin runtime, never recorded in the document's undo history.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout="lines")]
 #[artifact(id="dag.dag")]
@@ -592,9 +592,8 @@ pub type DagStore = ArtifactStore<DagSnapshot, DagMutation>;
 
 /// 🏭️ Creates a DAG store with the exact snapshot, mutation, and cursor retirement owners installed.
 pub async fn create_dag_store(id: &str, snapshot: DagSnapshot, actor: ActorId) -> Result<DagStore, crate::os_store::VcsError> {
-    use crate::os_store::MemberStoreOwner as _;
     let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, id, snapshot, None), actor).await?;
-    store.install_document_store_owners_exact(DagSnapshot::member_store_owners());
+    crate::os_store::install_funded_member_store_owners(&mut store)?;
     Ok(store)
 }
 
@@ -606,23 +605,13 @@ fn opened_dag_test_actor() -> ActorId {
 
 #[cfg(test)]
 fn close_dag_test_store(mut store: DagStore) {
-    let mut steps = 0usize;
-    let mut maximum_demand = 0usize;
-    loop {
-        let bytes = store.next_close_byte_demand().max(1);
-        maximum_demand = maximum_demand.max(bytes);
-        steps += 1;
-        assert!(steps <= 65_536, "DAG close did not finish: demand={bytes}/phase={}", store.close_owned_phase_witness());
-        match store.close_owned_store_step(1, bytes).expect("bounded DAG test-store close") {
-            crate::os_store::SnapshotRetirementStep::Complete => break,
-            crate::os_store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1 && released_bytes <= bytes);
-            }
-            crate::os_store::SnapshotRetirementStep::Blocked => panic!("nonzero DAG test-store close grant blocked"),
-        }
+    for turn in 0..65_536 {
+        let demand=store.close_owned_demands(4096).expect("original store close demands");
+        let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+        let step=store.close_owned_store_step(grant).expect("original store admitted close");assert!(step.progress().fits(grant));
+        if store.close_owned_store_terminal_is_empty(){println!("[DEBUG] Exact original DAG store close turns={turn}");return;}
     }
-    assert!(store.close_owned_store_terminal_is_empty());
-    println!("[DEBUG] Exact DAG store close completed steps={steps}/maximumDemand={maximum_demand}");
+    panic!("DAG store did not reach original terminal emptiness");
 }
 
 //#region 🔖️Dsl

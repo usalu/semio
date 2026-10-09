@@ -1,0 +1,43 @@
+{
+  "executed": false,
+  "targets": {
+    "activate-s-react-dev": null,
+    "serve-s-react-dev": null,
+    "activate-s-react-release": null,
+    "serve-s-react-release": null,
+    "activate-s-wgpu-dev": null,
+    "serve-s-wgpu-dev": null,
+    "activate-s-wgpu-release": null,
+    "serve-s-wgpu-release": null,
+    "activate-cad-wgpu-dev": null,
+    "serve-cad-wgpu-dev": null,
+    "activate-cad-wgpu-release": null,
+    "serve-cad-wgpu-release": null,
+    "activate-puzzle3d-wgpu-dev": null,
+    "serve-puzzle3d-wgpu-dev": null,
+    "activate-puzzle3d-wgpu-release": null,
+    "serve-puzzle3d-wgpu-release": null
+  },
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "f0c34a0f1029afbee6185c7726e13752ce8f65217b7e6328e1031dd0b2b58f0f",
+      "authored": false
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "sha256": "92ca2feb788ebcb6353ae292d705ff7a24ebe8c32359556d8b7bcd17b5d39303",
+      "authored": false
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
+      "sha256": "740705bbf4b137991e29551d558730db260ad6e8d8e1eec6cf2d51833e951ea4",
+      "authored": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
+      "sha256": "61b876cf69214dc4e32d8eeb5a011c3efb11b083a68d5ce6ebdf34d93274da3e",
+      "authored": false
+    }
+  ]
+}

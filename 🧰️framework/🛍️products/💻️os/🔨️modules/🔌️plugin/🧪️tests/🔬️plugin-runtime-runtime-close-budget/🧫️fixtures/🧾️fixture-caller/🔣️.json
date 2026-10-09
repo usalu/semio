@@ -1,0 +1,61 @@
+{
+  "contract": "framework.plugin.fixture-original-caller",
+  "constructors": [
+    "paired_apps",
+    "paired_registered_apps",
+    "paired_registered_apps_with_members",
+    "assert_two_instances_converge",
+    "assert_two_registered_instances_converge",
+    "assert_two_registered_instances_converge_with_members",
+    "assert_ingest_idempotent",
+    "assert_registered_ingest_idempotent",
+    "assert_registered_ingest_idempotent_with_members"
+  ],
+  "drivers": [
+    "settle_extension_invocations",
+    "settle_history_verb",
+    "assert_undo_redo_round_trip",
+    "exchange_and_assert_convergence",
+    "assert_proposes_transaction"
+  ],
+  "currencies": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "grant": [
+    2,
+    8,
+    16,
+    32,
+    3
+  ],
+  "first": [
+    1,
+    4,
+    8,
+    16
+  ],
+  "remaining": [
+    1,
+    4,
+    8,
+    16,
+    3
+  ],
+  "callerIdentity": "original-entity-identity-authority",
+  "grantSource": "explicit-embedding-policy",
+  "receiptSource": "actual-publication-and-maintenance",
+  "native": {
+    "grant": [
+      1,
+      4096,
+      65536,
+      262144,
+      64
+    ],
+    "maximumIdentityBytes": 67108864
+  }
+}

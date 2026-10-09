@@ -1,0 +1,24 @@
+{
+  "session": 82677,
+  "status": "preassert",
+  "errors": [
+    {
+      "error": "error[E0593]: closure is expected to take 3 arguments, but it takes 2 arguments",
+      "context": [
+        "  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧵️channel/📦️archive/🛬️decode/🦀️.rs:16:142",
+        "   |",
+        "16 | ...ck,ValueError>{owner.receive::<DocumentArchivePack,DocumentArchivePack>(|partial,control|control.scoped_stage(|control|{",
+        "   |                         ^^^^^^^ expected closure that takes 3 arguments    ----------------- takes 2 arguments"
+      ]
+    },
+    {
+      "error": "error[E0061]: this function takes 3 arguments but 4 arguments were supplied",
+      "context": [
+        "   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs:271:116",
+        "    |",
+        "271 | ...limits)?;construct(value,output,native,body)})",
+        "    |             ^^^^^^^^^                     ---- unexpected argument #4 of type `&mut io::control::NativeSnapshotBodyWallet`"
+      ]
+    }
+  ]
+}

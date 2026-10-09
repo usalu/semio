@@ -3,9 +3,10 @@
 const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
+import Parser from "web-tree-sitter";
 import findIndex from "lodash-es/findIndex.js";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { orchestratorBudgetOpts, runCargo, runCmd, runProbe, runRepositoryExactCargoLaws } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -363,6 +364,64 @@ class UiPatchMarshallingCheckScript extends BundleScript {
   }
 }
 
+class RouterEffectSourceCustodyScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    assert(segments.every((segment) => segment === "--native"), "router-effect-source-custody accepts only --native");
+    const owner = join(import.meta.dir, "..", "..", "⚡️effects");
+    const law = JSON.parse(readFileSync(join(owner, "🧫️fixtures", "🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(owner, "🧬️schema", "🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+    assert(validate(law), JSON.stringify(validate.errors));
+    for (const axis of Object.keys(law.grant)) {
+      const denied = structuredClone(law);
+      delete denied.grant[axis];
+      assert(!validate(denied), `missing original ${axis} authority`);
+    }
+    assert(law.driveGrant.maximumCapacityBytes > law.grant.maximumCapacityBytes);
+    assert(law.identityPolicy.maximumBytes > law.identityPolicy.grant.maximumCapacityBytes);
+    const identityOwner = join(owner, "..", "🧵️shard", "🪪️identity");
+    const identityPolicy = JSON.parse(readFileSync(join(identityOwner, "⚙️configuration", "🔣️.json"), "utf8"));
+    const identitySchema = JSON.parse(readFileSync(join(identityOwner, "🧬️schema", "🔣️.json"), "utf8"));
+    const identityValidate = new Ajv({ strict: true, allErrors: true }).compile(identitySchema);
+    assert(identityValidate(identityPolicy), JSON.stringify(identityValidate.errors));
+    assert.deepEqual(identityPolicy, law.identityPolicy);
+    for (const axis of Object.keys(identityPolicy.grant)) {
+      const denied = structuredClone(identityPolicy);
+      delete denied.grant[axis];
+      assert(!identityValidate(denied), `missing original actor ${axis} authority`);
+    }
+    for (const row of law.sources) {
+      const bytes = new TextEncoder().encode(row.text);
+      const oracle = Buffer.from(row.text, "utf8");
+      assert.deepEqual([...bytes], [...oracle]);
+      assert(row.capacity > bytes.length);
+      assert.equal(new TextDecoder("utf8", { fatal: true }).decode(bytes), row.text);
+      assert.equal(JSON.parse(JSON.stringify(row.text)), row.text);
+      assert(row.capacity <= law.grant.maximumReleaseBytes);
+    }
+    await Parser.init();
+    const parser = new Parser();
+    parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json", this.repoRoot)), "out/tree-sitter-rust.wasm")));
+    try {
+      for (const relative of ["🦀️.rs", "🧪️tests/🔬️unit/🦀️.rs", "../🦀️.rs", "../🧵️shard/🦀️.rs", "../🧵️shard/🪪️identity/🦀️.rs", "../🧵️shard/🪪️identity/🧪️tests/🦀️.rs", "../🧵️shard/🔁️lifecycle/🦀️.rs", "../🧵️shard/🧵️executor/🦀️.rs"]) {
+        const tree = parser.parse(readFileSync(join(owner, relative), "utf8"));
+        if (tree?.rootNode.hasError()) console.log("[DEBUG] original router Rust parse refusal", relative, tree.rootNode.descendantsOfType("ERROR").slice(0, 8).map((node) => ({ line: node.startPosition.row + 1, text: node.text.slice(0, 200) })));
+        assert(tree && !tree.rootNode.hasError(), `original router Rust syntax: ${relative}`);
+        tree.delete();
+      }
+    } finally { parser.delete(); }
+    console.log(`[DEBUG] router effect source custody: strict schema, five independent grants, UTF8 Buffer oracle, ${law.sources.length} original capacities, Rust syntax8, independent actor policy, native pending`);
+    if (!segments.includes("--native")) return;
+    await runRepositoryExactCargoLaws({
+      cwd: this.repoRoot,
+      groups: [{ package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: ["component::effects::tests::router_effect_original_sources_keep_capacity_until_funded_close", "component::effects::tests::router_effect_original_box_frame_has_a_separate_funded_terminal_turn", "component::effects::tests::router_effect_recording_leases_keep_unique_shared_and_weak_backing_custody", "component::shard::identity::tests::shard_original_identity_loans_preserve_partial_children_and_actor_ledgers", "component::shard::identity::tests::shard_original_identity_slot_requires_each_original_positive_axis"] }],
+      buildBudgetMs: 86_400_000,
+      lawBudgetMs: 60_000,
+      progress: (event) => console.log(`router-effect-source-custody ${event.stage} ${event.law ?? ""}`),
+    });
+  }
+}
+
 class SqliteObservationCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("sqlite-observation-check has a fixed native observation contract");
@@ -399,6 +458,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("owned-instance-check", OwnedInstanceCheckScript)
   .register("count-component-check", CountComponentCheckScript)
   .register("sqlite-observation-check", SqliteObservationCheckScript)
+  .register("router-effect-source-custody", RouterEffectSourceCustodyScript)
   .register("service-operation-conversion-check", ServiceOperationConversionCheckScript)
   .register("lifecycle-check", LifecycleCheckScript)
   .register("guest-fault-check", GuestFaultCheckScript)

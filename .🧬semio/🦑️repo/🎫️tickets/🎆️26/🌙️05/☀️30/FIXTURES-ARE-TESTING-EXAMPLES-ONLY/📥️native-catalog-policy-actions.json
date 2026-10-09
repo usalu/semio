@@ -1,0 +1,26 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "beforeSha256": "48317a6cb4830ce6c14f1a2bd710f83a10be27ef0192013880fbe064b7067726",
+  "afterSha256": "238471aa3e31bc37da67eaf3dec477a1cffbef92e7eaaa800934a75d78a243b8",
+  "sourceRed": {
+    "session": 29754,
+    "exit": 1,
+    "duration": "999ms",
+    "log": "🗑️generated/native-catalog-policy-red.log"
+  },
+  "actions": [
+    {
+      "name": "current_catalog_sources_admit_original_allocations_then_fund_each_ticket",
+      "beforeBlockSha256": "188221ba283169290c701c2570f03a4413e5fc474e34059cd844369c1cd20bcc",
+      "afterBlockSha256": "ca2ea7e0de91e6258a0c78d9ca603c702413cdfcec08084da031b9ec45cb7b6d",
+      "action": "Replace positive source/ticket/cleanup grants by immutable existing plain physical policy; remove now-unused quotes, preserve source/callback identity, negative capacity-1 and real System equality"
+    },
+    {
+      "name": "current_member_source_constructor_is_not_invoked_under_denied_axes",
+      "beforeBlockSha256": "7149714402029ac160650bb755f8fa8f95a1125f26ac7cc3cc120b644b4ad824",
+      "afterBlockSha256": "01bcc9b9c8376c4ace1e86943950d2831a2ce4f9bed384d652f1e1ab307e5911",
+      "action": "Replace positive source/ticket/cleanup grants by immutable existing plain physical policy; remove now-unused quotes, preserve source/callback identity, negative capacity-1 and real System equality"
+    }
+  ],
+  "nativeQualification": "Original native assertions unrun on this policy epoch"
+}

@@ -12,12 +12,17 @@ impl GeometryInferenceContext {
     pub fn new(session:SessionCapture)->Self {let evaluation=flow_extension_sdk::ExtensionEvaluationResources::new(module_registry(&session));Self {session,evaluation}}
     pub fn registry(&self)->&neural_engine::SharedRegistry {self.evaluation.registry()}
     pub fn session(&self)->&SessionCapture {&self.session}
-    pub fn next_close_byte_demand(&self)->usize {use semio_framework_plugin::ExtensionResourceOwner;self.evaluation.next_close_byte_demand().max(self.session.shell_byte_requirement()).max(self.session.next_close_byte_demand()).max(1)}
+    pub fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
+        use semio_framework_plugin::ExtensionResourceOwner;
+        if !self.evaluation.terminal_is_empty(){return self.evaluation.retirement_demands(copy);}
+        Ok(semio_framework_value::RetirementDemand {copy_bytes:self.session.next_close_copy_byte_demand()?,capacity_bytes:self.session.next_close_capacity_byte_demand(copy)?,release_bytes:self.session.next_close_release_byte_demand()?,depth:self.session.next_close_depth_demand()?})
+    }
     pub fn begin_close(&mut self) {semio_framework_plugin::ExtensionResourceOwner::begin_close(&mut self.evaluation);}
-    pub fn close_step(&mut self,items:usize,bytes:usize)->Result<semio_framework_plugin::PluginCloseStep,semio_framework::Fault> {
-        use semio_framework_plugin::{ExtensionResourceOwner,PluginCloseStep as Step};
-        if !self.evaluation.terminal_is_empty(){return self.evaluation.close_step(items,bytes);}
-        self.session.close_step(items,bytes).map(|step|match step {neural_engine::ValueRetirementStep::Pending {released_items,released_bytes}=>Step::Pending {released_items,released_bytes},neural_engine::ValueRetirementStep::Blocked=>Step::Blocked {reason:"BREP resource family is paused"},neural_engine::ValueRetirementStep::Complete=>Step::Complete}).map_err(|message|semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin,semio_framework::FaultCode::new("extension.brep-close"),message))
+    pub fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,semio_framework::Fault> {
+        use semio_framework_plugin::{ExtensionResourceOwner,PluginLifecycleStep};
+        if !self.evaluation.terminal_is_empty(){return self.evaluation.close_step(grant).map(|step|match step {PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step});}
+        let step=self.session.close_step(grant).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.session.terminal_is_empty(),"original geometry inference session"));
+        step.map(|step|PluginLifecycleStep::retained(step,self.terminal_is_empty())).map_err(|error|semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin,semio_framework::FaultCode::new("extension.brep-close"),error.into_message()))
     }
     pub fn terminal_is_empty(&self)->bool {semio_framework_plugin::ExtensionResourceOwner::terminal_is_empty(&self.evaluation)&&self.session.terminal_is_empty()}
 }
@@ -107,14 +112,15 @@ fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn
     payload.budget = request.budgets.work_units;
     payload.round_units = request.budgets.work_units;
     payload.cancellation_id = request.cancellation_id.into();
+    payload.retained = request.retained;
     if request.requested_cache_mode == WireArtifactInferenceCacheMode::Cold { flow_extension_sdk::cancel_evaluation(registry,&payload.operator_id, payload.node_hash); }
-    if request.requested_cache_mode == WireArtifactInferenceCacheMode::Bypass { payload.node_hash = 0; }
     #[cfg(test)]
     GEOMETRY_INFERENCE_CALLS.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     let quality = geometry_operator_quality(registry, &payload.operator_id);
     let reply = flow_extension_sdk::evaluate_step_envelope(registry, payload);
     Ok(ArtifactInferenceExecution {
         canonical_payload: reply.wire.into_bytes(),
+        retirement_progress: reply.retirement_progress,
         diagnostics: Vec::new(),
         validity: if reply.faulted { "invalid" } else { "valid" }.into(),
         quality,

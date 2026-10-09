@@ -1,0 +1,5 @@
+# Current Ticket Path Limits
+
+The physical ticket folder is ARTIFACTIO, reducing every absolute path by37 UTF16 units. Both canonical launch files parse and have current references. The original bridge compiler tree w is scoped separately; the whole historical generated-output census contains 78088 files, maximum 310 UTF16 units, 53123 over256. These are generated caches, not source inputs. Their grouped counts are {"pdf-stream-roles": 4758, "nx-boundary-recovery-pdf-ts": 1466, "nx-boundary-recovery-png": 1495, "nx-boundary-recovery-pdf": 1462, "owned-closure": 102, "nx-boundary-recovery": 30565, "nx-boundary-recovery-bmp": 1492, "presentation-value-native": 8826, "nx-boundary-recovery-bmp-ts": 1478, "nx-boundary-recovery-png-ts": 1479}. Source inputs and Markdown audits remain preserved. No claim of whole-ticket path acceptance is made by the directory move alone.
+
+Retired 53123 stale over-limit generated cache/compiler outputs after all old-path launches stopped. Source inputs, Markdown reports, canonical fixtures and short terminal logs remain retained. Current compiler trees use the compact ticket location.

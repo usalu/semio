@@ -1,0 +1,23 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+  "observedAfterSha256": "cb3c18cb4d697494366d56f0d11dbcb1d3563511e8da69843375e3c40f85e31f",
+  "actions": [
+    {
+      "before": "let actor = format!(\"map-owner-{role}\");",
+      "after": "let actor = semio_framework_value::SharedUtf8::admit(format!(\"map-owner-{role}\"), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!(\"funded original actor: {error}\")).0;"
+    },
+    {
+      "before": "let actor = format!(\"map-owner-{ordinal}\");",
+      "after": "let actor = semio_framework_value::SharedUtf8::admit(format!(\"map-owner-{ordinal}\"), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!(\"funded original actor: {error}\")).0;"
+    },
+    {
+      "before": "        format!(\"map-owner-{ordinal}\"),",
+      "after": "        semio_framework_value::SharedUtf8::admit(format!(\"map-owner-{ordinal}\"), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!(\"funded original actor: {error}\")).0,"
+    },
+    {
+      "before": "assert_eq!(parent.local_actor_id().0, fixture()[\"openedActor\"].as_str().expect(\"declared opened group actor\"));",
+      "after": "assert_eq!(parent.local_actor_id().0.as_str(), fixture()[\"openedActor\"].as_str().expect(\"declared opened group actor\"));"
+    }
+  ],
+  "qualification": "Four guarded changes actually completed before following Hydration guard refused due concurrent current correction. Whole before SHA not retained from that failed batch; no fabricated preimage/hash or attribution to peer corrected Hydration/SQLite."
+}

@@ -1,11 +1,11 @@
 use crate::{DslValue, NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
 
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
-fn intrinsic(value: &serde_json::Value) -> DslValue {
-    match value { serde_json::Value::Null => DslValue::Null, serde_json::Value::Bool(value) => DslValue::Bool(*value), serde_json::Value::String(value) => DslValue::String(value.clone()), _ => panic!("closed fixture leaf") }
-}
+fn intrinsic(value: &serde_json::Value) -> DslValue { serde_json::from_value(value.clone()).unwrap() }
 fn wire(row: &serde_json::Value) -> DslValue {
-    DslValue::Object(vec![("kind".into(), intrinsic(&row["kind"])), ("message".into(), intrinsic(&row["message"]))])
+    let schema:serde_json::Value=serde_json::from_str(include_str!("../🧬️schema/🔣️.json")).unwrap();
+    let progress=DslValue::Object(schema["$defs"]["retainedProgress"]["required"].as_array().unwrap().iter().map(|key|{let key=key.as_str().unwrap();(key.into(),intrinsic(&row["retainedProgress"][key]))}).collect());
+    DslValue::Object(vec![("kind".into(), intrinsic(&row["kind"])), ("message".into(), intrinsic(&row["message"])), ("retainedProgress".into(), progress)])
 }
 #[test]
 fn controlled_value_refusal_codec_closed_wire_matches_original_kind_message_and_serde() {
@@ -16,6 +16,8 @@ fn controlled_value_refusal_codec_closed_wire_matches_original_kind_message_and_
         let error = ValueError::from_value_controlled(&source, &mut decode).unwrap();
         assert_eq!(error.kind.as_str(), row["wire"]["kind"].as_str().unwrap());
         assert_eq!(error.message, row["wire"]["message"].as_str().unwrap());
+        assert_eq!(serde_json::to_value(error.retained_progress()).unwrap(), row["wire"]["retainedProgress"]);
+        assert_eq!(error.clone().under("parent").retained_progress(), error.retained_progress());
         let mut encoding = |_| true;
         let output = error.to_value_controlled(&mut NativeEncodeControl::new(1_000_000, &mut encoding)).unwrap();
         assert_eq!(output, source);

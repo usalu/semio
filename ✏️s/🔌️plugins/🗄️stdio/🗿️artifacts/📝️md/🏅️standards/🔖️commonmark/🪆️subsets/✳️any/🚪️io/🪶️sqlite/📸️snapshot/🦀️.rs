@@ -166,8 +166,8 @@ impl ArtifactSqliteSnapshot for MdSnapshot{
  }
 
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{validate_owned(self,dialect,database,control)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{decode_hook(payload,control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{encode_hook(self,encoding,control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{decode_hook(payload,control,native_control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{encode_hook(self,encoding,control,native_owner)}
  fn retire_sqlite_snapshot(self){retire_hook(self)}
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;let mut snapshot=OwnedSnapshot(Some(reconstruct(database,control)?));control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;snapshot.0.take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"CommonMark completed snapshot is missing"))}
@@ -187,8 +187,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
  })();result.map(|()|store::io_schema::IoOutcome::clean(())).map_err(store::io_schema::IoError::from_value_error)
 }
 
-fn decode_hook(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<MdSnapshot,ValueError>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::decode_owned(payload,control)}
-fn encode_hook(value:&MdSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::encode_owned(value,encoding,control)}
+fn decode_hook(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<MdSnapshot,ValueError>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::decode_owned(payload,control,native_control)}
+fn encode_hook(value:&MdSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::encode_owned(value,encoding,control,native_owner)}
 fn retire_hook(value:MdSnapshot){crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::retire_owned(value)}
 
 #[cfg(test)]

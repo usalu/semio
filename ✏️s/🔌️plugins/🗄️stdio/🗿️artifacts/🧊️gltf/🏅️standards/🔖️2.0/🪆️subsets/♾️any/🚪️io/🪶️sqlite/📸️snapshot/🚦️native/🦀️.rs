@@ -5,14 +5,18 @@ use semio_framework_value::NativeDecodeControl;
 use semio_framework_dsl_record::RecordSpecProducer;
 
 /// 📥️ Decodes through a supplied actual schema and typed owner constructor with cumulative settlement.
-pub(super) fn decode(payload:&store::io::IoPayload,spec:RecordSpecProducer,reconstruct:impl FnOnce(&semio_framework_dsl_record::RecordValue,&mut NativeDecodeControl<'_>)->Result<GltfSnapshot,ValueError>,control:&mut SqliteSnapshotControl<'_>)->Result<GltfSnapshot,ValueError>{
+pub(super) fn decode(payload:&store::io::IoPayload,spec:RecordSpecProducer,reconstruct:impl FnOnce(&semio_framework_dsl_record::RecordValue,&mut NativeDecodeControl<'_>)->Result<GltfSnapshot,ValueError>,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<GltfSnapshot,ValueError>{
  let limits=control.limits();control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;let length=match payload{store::io::IoPayload::Binary(bytes)=>bytes.len(),store::io::IoPayload::Text(text)=>text.len()};if length>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"GLTF native input exceeds file byte limit"))}
- let snapshot=control.allocation_stage(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-  let mut progress=|state:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(state.completed,state.total);let mut native=semio_framework_value::NativeDecodeControl::new(remaining,&mut progress);
-  let result=(||->Result<GltfSnapshot,ValueError>{let spec=spec.decode(&mut native)?;let record=match payload{
-   store::io::IoPayload::Binary(bytes)=>{let body=store::semio_format::unwrap_binary_controlled(bytes,"stdio.gltf",store::semio_format::Component::Pack,1,&mut native).map_err(store::semio_format::SemioError::into_value_error)?;store::pack_rt::decode_document_controlled(body,&spec,&store::PackDecodeOptions::default(),&mut native).map_err(|error|pack_refusal(error,&mut native))?.0},
-   store::io::IoPayload::Text(text)=>{let body=store::semio_format::split_text_preamble_controlled(text,"stdio.gltf",store::semio_format::Component::Dsl,1,&mut native).map_err(store::semio_format::SemioError::into_value_error)?;semio_framework_dsl_record::parse_exact_controlled(body,&spec,&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document},&mut native).map_err(|error|text_refusal(error,&mut native))?}
-  };let record=semio_framework_dsl_record::native_encoding::EncodedRecord::from_record(record);reconstruct(record.as_record(),&mut native)})();(result,native.owned_bytes())
+ let snapshot=control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
+  let native_before=native_control.owned_bytes();
+    let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
+
+  let result=(||->Result<GltfSnapshot,ValueError>{let spec=spec.decode(native)?;let record=match payload{
+   store::io::IoPayload::Binary(bytes)=>{let body=store::semio_format::unwrap_binary_controlled(bytes,"stdio.gltf",store::semio_format::Component::Pack,1,native).map_err(store::semio_format::SemioError::into_value_error)?;store::pack_rt::decode_document_controlled(body,&spec,&store::PackDecodeOptions::default(),native).map_err(|error|pack_refusal(error,native))?.0},
+   store::io::IoPayload::Text(text)=>{let body=store::semio_format::split_text_preamble_controlled(text,"stdio.gltf",store::semio_format::Component::Dsl,1,native).map_err(store::semio_format::SemioError::into_value_error)?;semio_framework_dsl_record::parse_exact_controlled(body,&spec,&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document},native).map_err(|error|text_refusal(error,native))?}
+  };let record=semio_framework_dsl_record::native_encoding::EncodedRecord::from_record(record);reconstruct(record.as_record(),native)})();result
+    })});
+    (result,native_control.owned_bytes().saturating_sub(native_before))
  })??;
  let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(snapshot,GltfSnapshot::retire_sqlite_snapshot);owner.as_mut().to_sqlite_database(control)?;Ok(owner.take())
 }

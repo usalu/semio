@@ -97,5 +97,23 @@
       "nxDuration": "5m9s",
       "cause": "Law unwrapped legitimate DepthLimit refusal on insufficient depth; source entry semantic and zero-heap assertions reached before refusal. No production repair attribution."
     }
-  ]
+  ],
+  "nativeQualificationCollected20261009": {
+    "handle": 16495,
+    "handleState": "missing",
+    "log": "🗑️generated/sol-2026-10-08/fold-index-entry-native-2.log",
+    "passed": 1,
+    "skipped": 309,
+    "nextestSeconds": 0.024,
+    "nxSeconds": 414,
+    "copies": [
+      1,
+      3,
+      64
+    ],
+    "sourceBytes": 512,
+    "admittedBytes": 6488,
+    "physicalReleasedBytes": 7000,
+    "terminalDropReleasedBytes": 0
+  }
 }

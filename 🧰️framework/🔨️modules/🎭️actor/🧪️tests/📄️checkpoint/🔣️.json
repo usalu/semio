@@ -1,0 +1,19 @@
+{
+  "state": [
+    4,
+    5,
+    6
+  ],
+  "appliedProgress": 73,
+  "phases": [
+    "job",
+    "page",
+    "ledger"
+  ],
+  "publications": [
+    "yield",
+    "yield",
+    "checkpoint"
+  ],
+  "jobCalls": 1
+}

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "actors",
+    "repeats",
+    "sequence",
+    "clock",
+    "grant",
+    "cancelAt",
+    "baseAppliedEditCount",
+    "line",
+    "group",
+    "forward",
+    "inverse",
+    "inverseCapacity",
+    "maximumTurns",
+    "terminalDropBytes"
+  ],
+  "properties": {
+    "actors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "repeats": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "sequence": {
+      "type": "integer"
+    },
+    "clock": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "const": 1
+        },
+        "copy": {
+          "const": 4096
+        },
+        "capacity": {
+          "const": 4096
+        },
+        "release": {
+          "const": 262144
+        },
+        "depth": {
+          "const": 4096
+        }
+      }
+    },
+    "cancelAt": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "baseAppliedEditCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "line": {
+      "type": "string"
+    },
+    "group": {
+      "type": "string"
+    },
+    "forward": {
+      "type": "boolean"
+    },
+    "inverse": {
+      "type": "array",
+      "items": {
+        "type": "boolean"
+      }
+    },
+    "inverseCapacity": {
+      "type": "integer",
+      "minimum": 3
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  }
+}

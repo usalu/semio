@@ -5,7 +5,7 @@ pub(crate) mod history;
 #[path = "🏭️operation/🦀️.rs"]
 mod operation;
 pub use history::factory::MemberOpenDeclaration;
-pub use operation::{InitialMemberStoreOpen, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, PackMemberSnapshotOpen, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen};
+pub use operation::{admit_member_input_buffer, MemberSnapshotOpenProgress, InitialMemberStoreOpen, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, PackMemberSnapshotOpen, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen};
 
 use super::{ErasedSnapshotRetirement, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef, SpaceMember};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
@@ -18,6 +18,20 @@ mod genesis;
 pub use genesis::{MemberGenesisEnvelopeEncoder, MemberGenesisEnvelopeProgress, MemberGenesisEnvelopeSource};
 
 pub const MEMBER_OPEN_IDENTITY_BYTES: usize = 256;
+
+/// 🎟️ Intersects a nested policy with the remaining original five-axis context authority.
+pub(crate) fn member_step_grant(cx: &StepContext<'_>, grant: RetainedCloneGrant) -> RetainedCloneGrant {
+    let caller = cx.retained_grant();
+    RetainedCloneGrant { maximum_items: grant.maximum_items.min(caller.maximum_items), maximum_copy_bytes: grant.maximum_copy_bytes.min(caller.maximum_copy_bytes), maximum_capacity_bytes: grant.maximum_capacity_bytes.min(caller.maximum_capacity_bytes), maximum_release_bytes: grant.maximum_release_bytes.min(caller.maximum_release_bytes), maximum_depth: grant.maximum_depth.min(caller.maximum_depth) }
+}
+
+/// 🧾️ Records the genuine completed receipt once in the original caller's turn.
+pub(crate) fn record_member_step(cx: &mut StepContext<'_>, progress: RetainedCloneProgress) -> Result<(), MemberOpenDiagnostic> {
+    let fuel = progress.copied_items.checked_add(progress.copied_bytes).and_then(|fuel| u64::try_from(fuel).ok()).ok_or(MemberOpenDiagnostic::Capacity)?;
+    cx.consume_retained(progress).map_err(|_| MemberOpenDiagnostic::Capacity)?;
+    cx.consume_fuel(fuel);
+    Ok(())
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MemberOpenDiagnostic {
@@ -106,6 +120,7 @@ pub struct MemberOpenRequest {
     owner: ManuallyDrop<Option<OwnerRef>>,
     pages: ManuallyDrop<Option<OwnedSchemaDecodePages>>,
     closing_identity_field: u8,
+    closing_actor: Option<String>,
     input_offset: usize,
     snapshot_bytes: u64,
     framed: Option<MemberOpenFrame>,
@@ -126,6 +141,7 @@ impl MemberOpenRequest {
             owner: ManuallyDrop::new(owner),
             pages: ManuallyDrop::new(Some(pages)),
             closing_identity_field: 0,
+            closing_actor: None,
             input_offset: 0,
             snapshot_bytes: 0,
             framed: None,
@@ -293,11 +309,25 @@ impl MemberOpenRequest {
                 let _ = page;
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
             }
-            assert!(pages.terminal_is_empty(), "input page registry must be terminal before release");
-            let released_bytes = pages.allocation_byte_demand();
-            if released_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+            if !pages.terminal_is_empty() {
+                let step = pages.close_backing_step(grant)?;
+                return Ok(RetainedCloneStep::Progress(step.progress()));
+            }
             drop(self.pages.take());
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..empty }));
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
+        }
+        if self.closing_identity_field == 0 {
+            if self.actor.0.has_owner() {
+                let original=std::mem::take(&mut self.actor.0);
+                match original.close_original_lease(grant) {
+                    Ok((value,progress))=>{self.closing_actor=value;return Ok(RetainedCloneStep::Progress(progress));},
+                    Err((error,original))=>{self.actor.0=original;return Err(error);}
+                }
+            }
+            let released_bytes=self.closing_actor.as_ref().map_or(0,String::capacity);
+            if released_bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
+            drop(self.closing_actor.take());self.closing_identity_field=1;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..empty}));
         }
         if self.closing_identity_field < 11 {
             let field = self.identity_string_mut();
@@ -314,12 +344,12 @@ impl MemberOpenRequest {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.detached && self.actor.0.capacity() == 0 && self.expected.is_none() && self.owner.is_none() && self.pages.is_none()
+        self.detached && !self.actor.0.has_owner() && self.closing_actor.is_none() && self.expected.is_none() && self.owner.is_none() && self.pages.is_none()
     }
 
     fn identity_string_mut(&mut self) -> Option<&mut String> {
         match self.closing_identity_field {
-            0 => Some(&mut self.actor.0),
+            0 => None,
             1 => self.expected.as_mut().map(|value| &mut value.artifact_id),
             2 => self.expected.as_mut().map(|value| &mut value.dialect.artifact_kind),
             3 => self.expected.as_mut().map(|value| &mut value.dialect.standard),
@@ -337,11 +367,12 @@ impl MemberOpenRequest {
     /// 📏️ Queries the next original whole allocation without creating a retirement owner.
     pub fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         if self.detached { return Ok(0); }
-        if let Some(pages) = self.pages.as_ref() { return Ok(if pages.terminal_is_empty() { pages.allocation_byte_demand() } else { 0 }); }
+        if let Some(pages) = self.pages.as_ref() { return Ok(if pages.page_count() == 0 { pages.allocation_byte_demand() } else { 0 }); }
+        if self.closing_identity_field==0{return Ok(if self.actor.0.has_owner(){semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<String>()}else{self.closing_actor.as_ref().map_or(0,String::capacity)});}
         let expected = self.expected.as_ref();
         let owner = self.owner.as_ref();
         let field = match self.closing_identity_field {
-            0 => Some(&self.actor.0),
+            0 => None,
             1 => expected.map(|value| &value.artifact_id),
             2 => expected.map(|value| &value.dialect.artifact_kind),
             3 => expected.map(|value| &value.dialect.standard),
@@ -356,7 +387,7 @@ impl MemberOpenRequest {
         };
         Ok(field.map_or(0, String::capacity))
     }
-    pub fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    pub fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(if !self.detached&&self.pages.is_none()&&self.closing_identity_field==0&&self.actor.0.has_owner(){std::mem::size_of::<Option<String>>()}else{0}) }
     pub fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
     pub fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(usize::from(!self.detached)) }
 

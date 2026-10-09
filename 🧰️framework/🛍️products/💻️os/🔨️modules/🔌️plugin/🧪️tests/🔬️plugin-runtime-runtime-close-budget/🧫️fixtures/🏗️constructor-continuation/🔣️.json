@@ -1,0 +1,34 @@
+{
+  "contract": "framework.plugin.constructor-original-continuation",
+  "kind": [
+    "Recipient",
+    "Document",
+    "Config",
+    "Draft",
+    "Interaction"
+  ],
+  "currencies": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "originalGrant": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "constructorReceiptIsSemanticFence": true,
+  "phase": ["Preparation", "Close"],
+  "phaseUsesOriginalPolicy": true,
+  "denialRetains": [
+    "catalog",
+    "error",
+    "command"
+  ],
+  "receiptHasOriginalKind": true,
+  "receiptHasNoInventedOperation": true
+}

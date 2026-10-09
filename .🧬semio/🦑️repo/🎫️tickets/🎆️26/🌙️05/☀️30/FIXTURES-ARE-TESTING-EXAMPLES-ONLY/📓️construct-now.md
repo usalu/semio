@@ -1,0 +1,9 @@
+# Current construction and bounded authority refresh
+
+Read-only Source observations; no tests/builds or broad scan. Hash-only current observations are in `📥️construct-now.json`.
+
+Current object construction preserves later property effects after an unresolved property; template interpolation similarly visits every expression. Spread now visits its operand and emits explicit unresolved construction. Unknown constructors taint original document/authority arguments and defer helper arguments. Conditional/logical branches visit candidate effects and merge. These are Source observations, not test credit.
+
+A remaining represented-pattern gap exists for defaulted helper parameters: `function touch(x=(input.changed=true)){} touch(); ajv.validate(schema,input);`. The pattern records defaults=true but invoke binds an unresolved value without modeling initializer effects or issuing uncertainty. The default can mutate captured original input while later validation retains a false pristine origin. Defaulted destructuring declarations similarly omit embedded default effects. Conservatively issue unsupported-default uncertainty and invalidate potentially affected original captures; do not expand parser grammar or claim completeSyntax proves default effects absent. TypeScript AST independently identifies initializer assignment and its imported-input symbol; actual VM mutation establishes the oracle.
+
+The exact twelve previously reviewed trial schema paths were refreshed using the prior bounded observations, not a global inventory. Their present/absent results and actual reader hashes are recorded in the input. Affine/Flow plain input hashes and defining sources are included for explicit comparison; Plugin retains actual SQLite/source/native lifecycle oracle reads. Any peer hash delta stays an observation rather than authorship or behavioral success.

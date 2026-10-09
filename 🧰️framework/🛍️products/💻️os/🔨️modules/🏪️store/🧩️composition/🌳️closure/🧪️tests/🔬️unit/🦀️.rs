@@ -91,7 +91,8 @@ fn validates(source: &FixtureSource, fuel: u64) -> bool {
     let mut cursor = OwnedDocumentClosure::new(OperationId(11), Generation(13), 7, 100);
     let mut sequence = 0;
     let cancel = root_cancel_token();
-    let mut zero = StepContext::new(OperationId(11), Generation(13), StepBudget::new(0, 99), cancel.clone(), || Some(1), &mut sequence);
+    let mut original_retained_progress_1 = semio_framework_value::RetainedCloneProgress::default();
+    let mut zero = StepContext::new(OperationId(11), Generation(13), StepBudget::new(0, 99, crate::os_store::component::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_1);
     let zero_step = cursor.step(source, &mut zero);
     assert_eq!(cursor.progress().steps, 0);
     assert_eq!(source.projections.get(), 0);
@@ -102,7 +103,8 @@ fn validates(source: &FixtureSource, fuel: u64) -> bool {
     assert!(matches!(zero_step, OwnedDocumentClosureStep::Pending(_)));
     for _ in 0..20_000 {
         let before = cursor.progress().steps;
-        let mut cx = StepContext::new(OperationId(11), Generation(13), StepBudget::new(fuel, 99), cancel.clone(), || Some(1), &mut sequence);
+        let mut original_retained_progress_2 = semio_framework_value::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(OperationId(11), Generation(13), StepBudget::new(fuel, 99, crate::os_store::component::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_2);
         let step = cursor.step(source, &mut cx);
         assert!(cursor.progress().steps - before <= fuel);
         match step {
@@ -125,11 +127,13 @@ fn owned_document_closure_matches_neutral_graphs_and_independent_limits() {
         let mut cursor = OwnedDocumentClosure::new(OperationId(11), Generation(13), 7, 100);
         let mut sequence = 0;
         let cancel = root_cancel_token();
-        let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99), cancel.clone(), || Some(1), &mut sequence);
+        let mut original_retained_progress_3 = semio_framework_value::RetainedCloneProgress::default();
+        let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99, crate::os_store::component::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_3);
         assert!(matches!(cursor.step(&source, &mut first), OwnedDocumentClosureStep::Pending(_)));
         let progress = cursor.progress();
         source.members = chain(row["afterMembers"].as_u64().unwrap() as usize).members;
-        let mut next = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99), cancel, || Some(1), &mut sequence);
+        let mut original_retained_progress_4 = semio_framework_value::RetainedCloneProgress::default();
+        let mut next = StepContext::new(OperationId(11), Generation(13), StepBudget::new(1, 99, crate::os_store::component::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_4);
         assert_eq!(cursor.step(&source, &mut next), OwnedDocumentClosureStep::Rejected(OwnedDocumentClosureDiagnostic::Stale));
         assert_eq!(cursor.progress(), progress);
     }
@@ -175,7 +179,8 @@ fn owned_document_closure_cancellation_generation_and_deadline_retain_source() {
         let mut cursor = OwnedDocumentClosure::new(OperationId(11), Generation(13), 7, 100);
         let mut sequence = 0;
         let cancel = root_cancel_token();
-        let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(2, 99), cancel.clone(), || Some(1), &mut sequence);
+        let mut original_retained_progress_5 = semio_framework_value::RetainedCloneProgress::default();
+        let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(2, 99, crate::os_store::component::tests::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_5);
         assert!(matches!(cursor.step(&source, &mut first), OwnedDocumentClosureStep::Pending(_)));
         let progress = cursor.progress();
         source.generation.set(source_generation);
@@ -183,7 +188,8 @@ fn owned_document_closure_cancellation_generation_and_deadline_retain_source() {
             cancel.cancel_now();
         }
         let clock: fn() -> Option<u64> = if now == 100 { || Some(100) } else { || Some(1) };
-        let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(64, 999), cancel, clock, &mut sequence);
+        let mut original_retained_progress_6 = semio_framework_value::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(64, 999, crate::os_store::component::tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_6);
         assert_eq!(cursor.step(&source, &mut cx), OwnedDocumentClosureStep::Rejected(reason));
         assert_eq!(cursor.progress(), progress);
         assert_eq!(source.members.as_ptr(), original);

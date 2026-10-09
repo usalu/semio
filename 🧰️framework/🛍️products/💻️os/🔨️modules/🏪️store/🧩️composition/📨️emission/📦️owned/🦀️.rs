@@ -160,7 +160,7 @@ pub struct MemberStoreOwnedBatchRequest {
     pub operation: semio_framework_job::OperationId,
     pub expected_generation: u64,
     pub expected_revision: [u8; 32],
-    pub actor: String,
+    pub actor: semio_framework_value::SharedUtf8,
     pub group_id: Option<String>,
     pub transaction: Option<crate::os_spr::TransactionRef>,
     pub mutations: MemberStoreOwnedBatch,

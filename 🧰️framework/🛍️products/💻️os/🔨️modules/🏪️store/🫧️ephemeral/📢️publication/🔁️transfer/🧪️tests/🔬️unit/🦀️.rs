@@ -1,4 +1,4 @@
-//! 🧪️ Transfer ownership is independent of payload size and closes with small grants.
+//! 🧪️ Transfer retains payload identity under independently funded physical grants.
 
 use super::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -14,16 +14,23 @@ fn footprint(value: &String) -> Result<ArtifactStoreOneItemFootprint, String> {
     Ok(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: value.capacity() })
 }
 
+fn physical_grant() -> ArtifactStoreOneItemGrant {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let policy = &fixture["retirementGrant"];
+    let n = |axis: &str| policy[axis].as_u64().unwrap() as usize;
+    ArtifactStoreOneItemGrant { maximum_items: n("maximumItems"), maximum_copy_bytes: n("maximumCopyBytes"), maximum_capacity_bytes: n("maximumCapacityBytes"), maximum_release_bytes: n("maximumReleaseBytes"), maximum_depth: n("maximumDepth") }
+}
+
 fn close(preparation: &mut dyn ArtifactEphemeralOneItemPreparation<String, String>) {
     preparation.begin_close();
+    let grant = physical_grant();
     for _ in 0..32_768 {
-        match preparation.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 }).unwrap() {
-            SnapshotRetirementStep::Complete => break,
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 7),
-            SnapshotRetirementStep::Blocked => panic!("isolated transfer must close"),
-        }
+        let (step, allocated, released) = crate::test_allocation::observe_backing(|| preparation.close_step(grant).unwrap());
+        assert!(step.progress().fits(grant.retained_grant()));
+        assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+        if preparation.terminal_is_empty() { return; }
     }
-    assert!(preparation.terminal_is_empty());
+    panic!("isolated transfer must close under its fixed physical grant");
 }
 
 #[test]
@@ -40,8 +47,8 @@ fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
             mutation: payload.clone(),
         };
         let mut preparation = factory.begin(request).unwrap_or_else(|_| panic!("admitted string transfer"));
-        let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 0 };
-        assert!(matches!(preparation.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Prepared(_)));
+        let grant = ArtifactStoreOneItemGrant { maximum_copy_bytes: 64, maximum_capacity_bytes: 256, ..physical_grant() };
+        assert!(matches!(preparation.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Prepared(..)));
         let retained = if hand_off { preparation.take_prepared().unwrap().next_root } else { preparation.prepared().unwrap().next_root.clone() };
         if hand_off {
             assert!(matches!(preparation.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
@@ -51,11 +58,11 @@ fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
         assert_eq!(Arc::strong_count(&retained), 1);
         let mut cleanup = ReturnedSnapshotReadRetirement::new(retained, retirement.clone());
         for _ in 0..32_768 {
-            match cleanup.close_step(1, 7).unwrap() {
-                SnapshotRetirementStep::Complete => break,
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 7),
-                SnapshotRetirementStep::Blocked => panic!("isolated unique root must close"),
-            }
+            let grant = physical_grant().retained_grant();
+            let (step, allocated, released) = crate::test_allocation::observe_backing(|| cleanup.close_step(grant).unwrap());
+            assert!(step.progress().fits(grant));
+            assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+            if cleanup.terminal_is_empty() { break; }
         }
         assert!(cleanup.terminal_is_empty());
     }
@@ -103,29 +110,29 @@ fn ephemeral_transfer_preparation_obeys_neutral_grants_and_bounded_retirement() 
         if row["cancelBefore"].as_bool().unwrap() {
             preparation.cancel();
         }
-        let grant = ArtifactStoreOneItemGrant { maximum_items: row["items"].as_u64().unwrap() as usize, maximum_bytes: row["bytes"].as_u64().unwrap() as usize };
-        let step = preparation.advance(grant).unwrap();
-        assert_eq!(matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(_)), row["prepared"].as_bool().unwrap(), "{}", row["id"]);
+        let grant = ArtifactStoreOneItemGrant { maximum_items: row["items"].as_u64().unwrap() as usize, maximum_copy_bytes: row["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: row["capacityBytes"].as_u64().unwrap() as usize, ..physical_grant() };
+        let (step, allocated, released) = crate::test_allocation::observe_backing(|| preparation.advance(grant).unwrap());
+        let progress = step.ownership_progress();
+        assert!(progress.fits(grant.retained_grant()));
+        assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));
+        assert_eq!(matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(..)), row["prepared"].as_bool().unwrap(), "{}", row["id"]);
         assert_eq!(TRANSFERS.load(Ordering::Relaxed), row["transferCalls"].as_u64().unwrap() as usize);
         if let Some(prepared) = preparation.prepared() {
             assert_eq!(prepared.next_root.as_str().as_ptr(), pointer);
             assert_eq!(serde_json::to_value(prepared.next_root.as_ref()).unwrap(), expected);
-            assert_eq!(preparation.checkpoint().completed_bytes, 0);
+            assert_eq!(preparation.checkpoint().completed_bytes as usize, size_of::<String>() * 2);
+            let metadata = &fixture["transferMetadata"][usize::BITS.to_string()];
+            assert_eq!(progress.copied_bytes, metadata["copyBytes"].as_u64().unwrap() as usize);
+            assert_eq!(progress.retained_capacity_bytes, metadata["arcBytes"].as_u64().unwrap() as usize);
             preparation.advance(grant).unwrap();
             assert_eq!(TRANSFERS.load(Ordering::Relaxed), 1);
         }
         preparation.cancel();
         preparation.begin_close();
-        assert_eq!(preparation.close_step(ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 }).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        let denied = preparation.close_step(ArtifactStoreOneItemGrant { maximum_items: 0, ..physical_grant() }).unwrap();
+        assert_eq!(denied.progress(), semio_framework_value::RetainedCloneProgress::default());
         assert!(!preparation.terminal_is_empty());
-        let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["retirementGrant"]["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["retirementGrant"]["maximumBytes"].as_u64().unwrap() as usize };
-        for _ in 0..32_768 {
-            match preparation.close_step(grant).unwrap() {
-                SnapshotRetirementStep::Complete => break,
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 7),
-                SnapshotRetirementStep::Blocked => panic!("isolated replacement has no blocked external owner"),
-            }
-        }
+        close(preparation.as_mut());
         assert!(preparation.terminal_is_empty());
     }
 }

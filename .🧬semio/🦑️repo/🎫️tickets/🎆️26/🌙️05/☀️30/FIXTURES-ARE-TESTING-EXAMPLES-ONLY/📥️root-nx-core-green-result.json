@@ -1,0 +1,9 @@
+{
+  "exitCode": 0,
+  "tests": 4,
+  "assertions": 339,
+  "durationMs": 1100,
+  "nativeAssertions": 0,
+  "qualification": "Actual original Nx/minimatch and Nx-installed ignore/production-policy Ajv; core graph and canonical launcher execution are pending",
+  "logSha256": "e5d67a8fc3ba22f6a4ee66bc465fbbb8a241a4b81f5526e7227c2e9ffba25216"
+}

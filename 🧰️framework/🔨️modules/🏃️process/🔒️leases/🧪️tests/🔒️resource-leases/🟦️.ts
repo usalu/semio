@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { copyFileSync, linkSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 
 import { dirname, join } from "node:path";
@@ -22,6 +22,11 @@ export async function testResourceLeases(generated: string): Promise<void> {
   const moduleRoot = join(dirname(fileURLToPath(import.meta.url)), "../.."), implementation = join(moduleRoot, "🟦️.ts");
   const fixture: ResourceLeaseFixture = JSON.parse(readFileSync(join(moduleRoot, "🧫️fixtures/🔣️.json"), "utf8"));
   const api = await import(pathToFileURL(implementation).href);
+  const queueLaw = JSON.parse(readFileSync(join(moduleRoot,"🧫️fixtures/📜️queue.json"),"utf8"));
+  const queueSchema = JSON.parse(readFileSync(join(moduleRoot,"🧬️schema/📜️ticket.json"),"utf8"));
+  const {default:Ajv}=await import("ajv");const validateQueue=new Ajv({strict:true}).compile(queueSchema);
+  const owner=Buffer.from(queueLaw.ownerBytes).toString("base64url");
+  const arrivals=queueLaw.arrivals.map((arrivedAtMs:number)=>{const request={arrivedAtMs,pid:queueLaw.pid,owner};assert(validateQueue(request));const actual=api.resourceQueueTicketV1(request);const oracle=[BigInt(arrivedAtMs).toString(16).padStart(12,"0"),String(queueLaw.pid).padStart(10,"0"),owner].join("-");assert.equal(actual,oracle);return actual;});assert.deepEqual([...arrivals].sort(),arrivals);assert.deepEqual(Buffer.from(owner,"base64url"),Buffer.from(queueLaw.ownerBytes));
   const root = mkdtempSync(join(generated, "resource-leases-")), directory = join(root, "store");
   const worker = join(root, "📜️script.ts");
   const readLaw = JSON.parse(readFileSync(join(moduleRoot, "🧫️fixtures/🔁️interrupted-read.json"), "utf8"));
@@ -139,13 +144,13 @@ print("released", flush=True)
     finally { rmSync(databasePath("hardlink")); }
     symlinkSync(directory, join(root, "linked-store"), process.platform === "win32" ? "junction" : "dir");
     await assert.rejects(() => api.acquireResourceLease({ directory: join(root, "linked-store"), resource: "linked", mode: "exclusive", signal: new AbortController().signal }), /invalid.*directory/i);
-    const queueStore = join(root, "queue-store"), order: string[] = [], quiet = () => {};
-    const holder = await api.acquireQueuedResourceLease({ directory: queueStore, resource: "fifo", mode: "exclusive", owner: "holder", signal: new AbortController().signal, onWait: quiet });
-    const queue = join(queueStore, createHash("sha256").update("fifo").digest("hex") + ".queue");
+    const queueStore = join(generated, "q"), queueResource="fifo-"+randomBytes(16).toString("base64url"), order: string[] = [], quiet = () => {};
+    const holder = await api.acquireQueuedResourceLease({ directory: queueStore, resource: queueResource, mode: "exclusive", owner: "holder", signal: new AbortController().signal, onWait: quiet });
+    const queue = join(queueStore, createHash("sha256").update(queueResource).digest("hex") + ".queue");
     writeFileSync(join(queue, "000000000000001-0000999999-crashed"), "999999\n");
-    const first = api.acquireQueuedResourceLease({ directory: queueStore, resource: "fifo", mode: "exclusive", owner: "first", signal: new AbortController().signal, onWait: quiet }).then((lease: { release(): void }) => (order.push("first"), lease));
+    const first = api.acquireQueuedResourceLease({ directory: queueStore, resource: queueResource, mode: "exclusive", owner: "first", signal: new AbortController().signal, onWait: quiet }).then((lease: { release(): void }) => (order.push("first"), lease));
     await Bun.sleep(50);
-    const second = api.acquireQueuedResourceLease({ directory: queueStore, resource: "fifo", mode: "exclusive", owner: "second", signal: new AbortController().signal, onWait: quiet }).then((lease: { release(): void }) => (order.push("second"), lease));
+    const second = api.acquireQueuedResourceLease({ directory: queueStore, resource: queueResource, mode: "exclusive", owner: "second", signal: new AbortController().signal, onWait: quiet }).then((lease: { release(): void }) => (order.push("second"), lease));
     await Bun.sleep(600);
     assert.deepEqual(order, []);
     holder.release();
@@ -156,13 +161,28 @@ print("released", flush=True)
     (await second).release();
     assert.deepEqual(order, ["first", "second"]);
     assert.deepEqual(readdirSync(queue), []);
-    const cancelled = new AbortController(), blocker = await api.acquireQueuedResourceLease({ directory: queueStore, resource: "fifo", mode: "exclusive", owner: "blocker", signal: new AbortController().signal, onWait: quiet });
-    const abandoned = api.acquireQueuedResourceLease({ directory: queueStore, resource: "fifo", mode: "exclusive", owner: "abandoned", signal: cancelled.signal, onWait: quiet });
+    const cancelled = new AbortController(), blocker = await api.acquireQueuedResourceLease({ directory: queueStore, resource: queueResource, mode: "exclusive", owner: "blocker", signal: new AbortController().signal, onWait: quiet });
+    const abandoned = api.acquireQueuedResourceLease({ directory: queueStore, resource: queueResource, mode: "exclusive", owner: "abandoned", signal: cancelled.signal, onWait: quiet });
     await Bun.sleep(50);
     cancelled.abort();
     await assert.rejects(() => abandoned, /abort/i);
     blocker.release();
     assert.deepEqual(readdirSync(queue), []);
+    const boundaryResource="path-"+randomBytes(16).toString("base64url"),boundaryQueue=join(queueStore,createHash("sha256").update(boundaryResource).digest("hex")+".queue"),ownerLength=queueLaw.maximumAbsolutePathUtf16-boundaryQueue.length-25;
+    assert(ownerLength>0&&ownerLength<=64);
+    const boundary=await api.acquireQueuedResourceLease({directory:queueStore,resource:boundaryResource,mode:"exclusive",owner:"x".repeat(ownerLength),signal:new AbortController().signal,onWait:quiet});
+    try{const names=readdirSync(boundaryQueue);assert.equal(names.length,1);assert.equal(join(boundaryQueue,names[0]).length,queueLaw.maximumAbsolutePathUtf16);assert.equal(Number(names[0].split("-")[1]),process.pid);}finally{boundary.release();}
+    const overResource="over-"+randomBytes(16).toString("base64url"),overQueue=join(queueStore,createHash("sha256").update(overResource).digest("hex")+".queue");
+    await assert.rejects(()=>api.acquireQueuedResourceLease({directory:queueStore,resource:overResource,mode:"exclusive",owner:"x".repeat(ownerLength+1),signal:new AbortController().signal,onWait:quiet}),/path/i);assert.equal(readdirSync(queueStore).includes(overQueue.split(/[\\/]/).at(-1)!),false);
+    const cargo=await import("../../../📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts"),buildDirectory=join(root,"native"),identity=cargo.cargoBuildLeaseIdentityV1(buildDirectory,[]),nativeSchema=JSON.parse(readFileSync(join(moduleRoot,"../📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json"),"utf8")),nativeResource=JSON.stringify([nativeSchema.definitions.Protocol.const.namespace,identity.buildDirectory,identity.profile]),nativeQueue=join(queueStore,createHash("sha256").update(nativeResource).digest("hex")+".queue");
+    const nativeLease=await cargo.acquireCargoBuildLeaseV1({directory:queueStore,buildDirectory,args:[],signal:new AbortController().signal,onWait:quiet});
+    let firstNativeOwner="";try{const names=readdirSync(nativeQueue);assert.equal(names.length,1);firstNativeOwner=names[0].split("-").slice(2).join("-");assert.equal(firstNativeOwner.length,22);assert.equal(Buffer.from(firstNativeOwner,"base64url").length,16);assert(join(nativeQueue,names[0]).length<=queueLaw.maximumAbsolutePathUtf16);}finally{nativeLease.release();}
+    const secondNativeLease=await cargo.acquireCargoBuildLeaseV1({directory:queueStore,buildDirectory,args:[],signal:new AbortController().signal,onWait:quiet});try{const secondNativeOwner=readdirSync(nativeQueue)[0].split("-").slice(2).join("-");assert.notEqual(secondNativeOwner,firstNativeOwner);assert.equal(Buffer.from(secondNativeOwner,"base64url").length,16);}finally{secondNativeLease.release();}
+    const retainedResource="retained-"+randomBytes(16).toString("base64url"),retainedQueue=join(queueStore,createHash("sha256").update(retainedResource).digest("hex")+".queue");mkdirSync(retainedQueue,{recursive:true});
+    const retainedName=String(Date.now()-1000).padStart(15,"0")+"-"+String(process.pid).padStart(10,"0")+"-original",retainedPath=join(retainedQueue,retainedName),retainedBytes=String(process.pid)+"\n";writeFileSync(retainedPath,retainedBytes,{flag:"wx"});
+    const retainedCancel=new AbortController();let overtook=false;const behindOriginal=api.acquireQueuedResourceLease({directory:queueStore,resource:retainedResource,mode:"exclusive",owner:"new",signal:retainedCancel.signal,onWait:quiet}).then((lease:{release():void})=>{overtook=true;lease.release();});
+    try{await Bun.sleep(300);assert.equal(overtook,false);assert.equal(readFileSync(retainedPath,"utf8"),retainedBytes);retainedCancel.abort();await assert.rejects(()=>behindOriginal,/abort/i);assert.deepEqual(readdirSync(retainedQueue),[retainedName]);}finally{retainedCancel.abort();await behindOriginal.catch(()=>{});rmSync(retainedPath);}
+    console.log("[DEBUG] Actual queue: fullSHA256=true exactPath256=true overlongBeforeInput=true nativeNonce128bits=true independentBigIntBase64=true arrivalOrder=true cancellation=true");
     console.log("Resource lease queue: arrival order served, a crashed waiter's ticket swept, a cancelled waiter leaves no ticket PASS");
   } finally {
     for (const child of children) if (child.process.exitCode === null) child.process.kill("SIGKILL");

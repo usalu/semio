@@ -1,0 +1,35 @@
+{
+  "rootCatalogDeclarationsUpdatedUtc": "2026-10-09T12:53:35Z",
+  "rootCatalogDeclarationsNative": {
+    "socketSession": 62797,
+    "socketExit": 1,
+    "kernelErrors": 57,
+    "frameworkErrors": 1,
+    "hostedSession": 11628,
+    "hostedExit": 1,
+    "hostedPreparationCustodyChange": "coreprocess/native-build source changed concurrently",
+    "assertionsExecuted": 0
+  },
+  "rootLatestNativeSocket": {
+    "priorSession": 32673,
+    "priorExit": 1,
+    "priorOriginalReplicationErrors": 2,
+    "currentSession": 62797,
+    "currentExit": 1,
+    "nativeAssertions": 0
+  },
+  "rootHistoryCallerGrantSource": {
+    "session": 25801,
+    "exit": 0,
+    "passed": 20,
+    "failed": 0,
+    "expects": 575,
+    "strict": true,
+    "actualDebug": true,
+    "independentAjv": true,
+    "independentSqlite": true,
+    "nativeExecuted": false
+  },
+  "rootUniversalComplete": false,
+  "universalComplete": false
+}

@@ -17,7 +17,7 @@
     },
     {
       "kind": "entity",
-      "prefix": "🧬️",
+      "prefix": "\ud83e\uddec\ufe0f",
       "input": {
         "payload": []
       },
@@ -27,7 +27,7 @@
       "kind": "scoped",
       "prefix": "scoped",
       "input": {
-        "editId": "edit:🧬️",
+        "editId": "edit:\ud83e\uddec\ufe0f",
         "ordinal": 0
       },
       "preimageHex": "656469743af09fa7acefb88f3a30"
@@ -36,7 +36,7 @@
       "kind": "scoped",
       "prefix": "scoped",
       "input": {
-        "editId": "edit:🧬️",
+        "editId": "edit:\ud83e\uddec\ufe0f",
         "ordinal": 4294967295
       },
       "preimageHex": "656469743af09fa7acefb88f3a34323934393637323935"
@@ -97,7 +97,7 @@
           "edit-2",
           "edit-1"
         ],
-        "description": "🧬️\nquoted\""
+        "description": "\ud83e\uddec\ufe0f\nquoted\""
       },
       "preimageHex": "6368616e676500656469742d3200656469742d3100f09fa7acefb88f0a71756f74656422"
     },
@@ -114,7 +114,7 @@
       "kind": "alternative",
       "prefix": "alternative",
       "input": {
-        "name": "main🧬️",
+        "name": "main\ud83e\uddec\ufe0f",
         "checkpointIds": [
           "ck-2",
           "ck-1"
@@ -150,6 +150,275 @@
     "priorOwnedBytes": 7,
     "priorCeilingBytes": 64,
     "priorIdentityPrefix": "x",
-    "continuation": "preserve-on-refusal"
+    "continuation": "preserve-on-refusal",
+    "stageRefusal": {
+      "declared": 1,
+      "attempted": 2,
+      "charge": 18
+    }
+  },
+  "stream": {
+    "payloadBytes": 4097,
+    "children": [
+      [
+        "z",
+        [
+          9
+        ]
+      ],
+      [
+        "a",
+        [
+          1,
+          2
+        ]
+      ],
+      [
+        "a",
+        [
+          3
+        ]
+      ],
+      [
+        "\u03b1",
+        [
+          4,
+          5
+        ]
+      ]
+    ],
+    "operationLengths": [
+      0,
+      1,
+      127,
+      128,
+      4097
+    ],
+    "stamp": [
+      "18446744073709551615",
+      "17",
+      "23"
+    ],
+    "ordinal": 4294967295,
+    "parent": "parent\ud83e\uddec\ufe0f",
+    "slot": "slot\ud83e\uddec\ufe0f",
+    "message": "checkpoint\ud83e\uddec\ufe0f",
+    "emptyChildCount": 513,
+    "draft": {
+      "kind": "s.space",
+      "schema": "s.space.snapshot.v1",
+      "name": "draft\ud83e\uddec\ufe0f",
+      "now": "18446744073709551615",
+      "sequence": "18446744073709551615"
+    }
+  },
+  "foreign": {
+    "priorOwnedBytes": 7,
+    "maximumBytes": 64,
+    "guestMaximumBytes": 57,
+    "firstIdentityBytes": 22,
+    "failedStageCharge": 3,
+    "failedStageDeclared": 1,
+    "failedStageAttempted": 2,
+    "nextIdentityBytes": 18,
+    "finalGuestOwnedBytes": 43,
+    "finalHostOwnedBytes": 50
+  },
+  "inputAdmission": {
+    "value": {
+      "text": "\u00c4 studio\n\"\\",
+      "bytes": [
+        0,
+        1,
+        127,
+        255
+      ],
+      "nested": {
+        "empty": [],
+        "flag": true
+      }
+    },
+    "laws": [
+      "borrowed-input",
+      "measure-before-allocation",
+      "exact-reservation",
+      "zero-ceiling-before-reservation",
+      "original-cancel-each-boundary",
+      "serde-oracle"
+    ]
+  },
+  "returnReservation": {
+    "guestOwnedBytes": 3,
+    "hostReturnBytes": 11,
+    "wrongHostReturnBytes": 12,
+    "finalHostOwnedBytes": 21,
+    "laws": [
+      "original-host-retained",
+      "guest-ledger-preserved-across-resume",
+      "unfinished-publication-refused",
+      "no-begun-phase-permitted",
+      "reserve-before-canonical-lift",
+      "reserved-copy-no-double-charge",
+      "wrong-return-shape-refused"
+    ]
+  },
+  "scalarReceipts": {
+    "accepted": [
+      {
+        "maximum": null,
+        "owned": 0,
+        "finished": false,
+        "reserved_return": 0,
+        "phase_start_owned": 0,
+        "phase_start_reserved_return": 0,
+        "received_output": 0,
+        "received_input": 0,
+        "received_retirement": 0
+      },
+      {
+        "maximum": 57,
+        "owned": 3,
+        "finished": false,
+        "reserved_return": 0,
+        "phase_start_owned": 7,
+        "phase_start_reserved_return": 0,
+        "received_output": 0,
+        "received_input": 0,
+        "received_retirement": 0
+      },
+      {
+        "maximum": 57,
+        "owned": 3,
+        "finished": true,
+        "reserved_return": 11,
+        "phase_start_owned": 7,
+        "phase_start_reserved_return": 0,
+        "received_output": 0,
+        "received_input": 0,
+        "received_retirement": 0
+      },
+      {
+        "maximum": 57,
+        "owned": 3,
+        "finished": true,
+        "reserved_return": 11,
+        "phase_start_owned": 7,
+        "phase_start_reserved_return": 0,
+        "received_output": 5,
+        "received_input": 0,
+        "received_retirement": 0
+      },
+      {
+        "maximum": 43,
+        "owned": 1,
+        "finished": false,
+        "reserved_return": 11,
+        "phase_start_owned": 21,
+        "phase_start_reserved_return": 11,
+        "received_output": 0,
+        "received_input": 0,
+        "received_retirement": 0
+      },
+      {
+        "maximum": 57,
+        "owned": 3,
+        "finished": false,
+        "reserved_return": 11,
+        "phase_start_owned": 7,
+        "phase_start_reserved_return": 0,
+        "received_output": 5,
+        "received_input": 4,
+        "received_retirement": 0
+      }
+    ],
+    "schemaRefused": [
+      {
+        "maximum": 57,
+        "owned": -1,
+        "finished": false,
+        "reserved_return": 0,
+        "phase_start_owned": 7,
+        "phase_start_reserved_return": 0,
+        "received_output": 0,
+        "received_input": 0,
+        "received_retirement": 0
+      },
+      {
+        "maximum": 57,
+        "owned": 3,
+        "finished": false,
+        "reserved_return": 0,
+        "phase_start_owned": 7,
+        "phase_start_reserved_return": 0,
+        "received_output": 0,
+        "foreignAuthority": true,
+        "received_input": 0,
+        "received_retirement": 0
+      }
+    ],
+    "semanticRefused": [
+      {
+        "maximum": null,
+        "owned": 1,
+        "finished": false,
+        "reserved_return": 0,
+        "phase_start_owned": 0,
+        "phase_start_reserved_return": 0,
+        "received_output": 0,
+        "received_input": 0,
+        "received_retirement": 0
+      },
+      {
+        "maximum": 2,
+        "owned": 3,
+        "finished": false,
+        "reserved_return": 0,
+        "phase_start_owned": 7,
+        "phase_start_reserved_return": 0,
+        "received_output": 0,
+        "received_input": 0,
+        "received_retirement": 0
+      },
+      {
+        "maximum": 57,
+        "owned": 3,
+        "finished": false,
+        "reserved_return": 0,
+        "phase_start_owned": 7,
+        "phase_start_reserved_return": 1,
+        "received_output": 0,
+        "received_input": 0,
+        "received_retirement": 0
+      }
+    ],
+    "laws": [
+      "closed-production-receipt-schema",
+      "independent-serde-roundtrip",
+      "firstparty-typed-restoration",
+      "no-clone-receipt",
+      "semantic-source-conservation"
+    ],
+    "missingMaximum": {
+      "owned": 0,
+      "finished": false,
+      "reserved_return": 0,
+      "phase_start_owned": 0,
+      "phase_start_reserved_return": 0,
+      "received_output": 0,
+      "received_input": 0,
+      "received_retirement": 0
+    }
+  },
+  "retainedIdentity": {
+    "maximumBytes": 8192,
+    "initialBytes": 7,
+    "text": "original-checkpoint-owner",
+    "grant": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 4096,
+      "maximumReleaseBytes": 8192,
+      "maximumDepth": 8
+    }
   }
 }

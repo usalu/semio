@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.cargo.command-scope.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "manifest"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "manifest": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).*Cargo\\.toml$"}
+  }
+}

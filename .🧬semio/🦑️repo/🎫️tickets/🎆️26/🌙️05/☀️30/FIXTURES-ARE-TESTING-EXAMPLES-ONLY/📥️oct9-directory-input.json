@@ -1,0 +1,8 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\udde9\ufe0fcomposition/\ud83d\udce8\ufe0femission/\ud83d\udce6\ufe0fowned/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+  "beforeSHA": "3dea4dcea83e620ebf1139367a7c92065b16c99740e7be0cc741852a224c9cef",
+  "afterSHA": "eca81f4fd530b1d83a4dc8d9ffe26877aca40d66bdc886a6904be33493e446ea",
+  "action": "append independent plain decodeCloseGrant, preserve every original field/value/order",
+  "originalProjectionEqual": true,
+  "formatAction": "handcrafted comma placement only after own appended field, semantic JSON unchanged"
+}

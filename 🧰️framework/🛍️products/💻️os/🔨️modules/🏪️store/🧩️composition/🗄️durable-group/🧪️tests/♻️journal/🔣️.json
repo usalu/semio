@@ -1,0 +1,27 @@
+{
+  "cases": [
+    {
+      "id": "empty-spare",
+      "decision": "",
+      "anchor": "",
+      "decisionCapacity": 32,
+      "anchorCapacity": 64
+    },
+    {
+      "id": "unicode",
+      "decision": "Gr\u00fc\u00dfe-\ud83d\ude00",
+      "anchor": "#0",
+      "decisionCapacity": 64,
+      "anchorCapacity": 32
+    },
+    {
+      "id": "large",
+      "decision": "decision",
+      "anchor": "anchor",
+      "decisionCapacity": 8192,
+      "anchorCapacity": 4096
+    }
+  ],
+  "maximumBodyBytes": 4096,
+  "maximumTurns": 16
+}

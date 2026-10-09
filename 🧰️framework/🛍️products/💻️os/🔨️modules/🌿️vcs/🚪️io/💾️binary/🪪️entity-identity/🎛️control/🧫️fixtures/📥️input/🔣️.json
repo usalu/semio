@@ -1,0 +1,29 @@
+{
+  "kind": "original-same-phase-host-input",
+  "maximum": 64,
+  "firstCapacityBytes": 4,
+  "firstCopiedBytes": 2,
+  "resumedCapacityBytes": 3,
+  "sourceOwned": 7,
+  "receivedInput": 7,
+  "guestOwned": 0,
+  "receivedOutput": 0,
+  "reservedReturn": 0,
+  "deniedReleaseBytes": 0,
+  "terminalDropReleaseBytes": 0,
+  "grant": {
+    "items": 1,
+    "copy": 64,
+    "capacity": 4096,
+    "release": 4096,
+    "depth": 32
+  },
+  "checkpointProjection": {
+    "originalMaximumBytes": 4096,
+    "hostCharge": 3,
+    "proposedCharge": 7,
+    "projectedRetirement": 10,
+    "actualRetirement": 3,
+    "refusal": "InvalidValue"
+  }
+}

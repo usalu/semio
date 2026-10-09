@@ -188,7 +188,8 @@ fn drive_scene_lifetime_reconcile(ui: &mut Ui, window_id: &str, generation: u64)
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut sequence = 0;
     for _ in 0..4096 {
-        let mut cx = StepContext::new(operation, semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), test_clock, &mut sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(operation, semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(64, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut sequence,&mut actual_retained_progress);
         match ui.step_document_reconcile(window_id, "scene-lifetime", &mut cx) {
             UiDocumentReconcileStep::Pending => {}
             UiDocumentReconcileStep::Complete => return,
@@ -645,7 +646,8 @@ fn drive_layout(ui: &mut Ui, window_id: &str, width: f32, height: f32, atlas: &m
         if ui.layout_is_dirty(window_id) {
             ui.request_layout(window_id);
         }
-        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
         if matches!(ui.step_layouts(&pool, atlas, &mut cx), UiLayoutStep::Idle) && !ui.layout_is_dirty(window_id) {
             return;
         }
@@ -678,7 +680,8 @@ fn publish_accessibility_document(ui: &mut Ui, window_id: &str) {
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
     for _ in 0..4096 {
-        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(64, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
         match ui.step_document_reconcile(window_id, "procedural", &mut cx) {
             UiDocumentReconcileStep::Pending => {}
             UiDocumentReconcileStep::Complete => return,
@@ -717,7 +720,8 @@ fn publish_blur_commit_input_document(ui: &mut Ui, window_id: &str) {
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
     for _ in 0..4096 {
-        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(64, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
         match ui.step_document_reconcile(window_id, "framework", &mut cx) {
             UiDocumentReconcileStep::Pending => {}
             UiDocumentReconcileStep::Complete => return,
@@ -769,7 +773,8 @@ fn publish_select_accessibility_document(ui: &mut Ui, law: &serde_json::Value) {
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
     for _ in 0..4096 {
-        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(64, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
         match ui.step_document_reconcile(window_id, "settings", &mut cx) {
             UiDocumentReconcileStep::Pending => {}
             UiDocumentReconcileStep::Complete => return,
@@ -807,7 +812,8 @@ fn reconcile_puzzle3d_settings(ui: &mut Ui, window_id: &str, law: &serde_json::V
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
     for _ in 0..4096 {
-        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(64, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
         match ui.step_document_reconcile(window_id, "puzzle3d-play", &mut cx) {
             UiDocumentReconcileStep::Pending => {}
             UiDocumentReconcileStep::Complete => return,
@@ -1005,6 +1011,7 @@ fn close_surface_to_terminal(ui: &mut Ui, token: UiSurfaceToken) {
     for _ in 0..262_144 {
         match ui.close_surface_one(token) {
             UiSurfaceCloseStep::Pending => {}
+            UiSurfaceCloseStep::Refused(refusal) => panic!("original surface close refused: {refusal:?}"),
             UiSurfaceCloseStep::RetiredScene(retired) => {
                 assert_eq!(retired.window_id, id.as_ref());
                 assert_eq!(retired.window_generation, generation);
@@ -1298,7 +1305,8 @@ fn interactive_storm_does_not_starve_background_surface_lane() {
     let mut background_progress_at = None;
     for slice in 0..12 {
         ui.set_viewport("interactive", 401.0 + slice as f32, 400.0);
-        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
         let step = ui.step_layouts(&pool, &mut atlas, &mut cx);
         if matches!(step, UiLayoutStep::Yielded { ref window_id, .. } | UiLayoutStep::Ready { ref window_id, .. } if window_id.as_ref() == "background") {
             background_progress_at = Some(slice);
@@ -1345,7 +1353,8 @@ fn large_layout_and_shaping_job_admits_one_work_unit_per_slice() {
     let mut widest_slice = (0usize, 0usize);
     let mut admitted = (0usize, 0usize);
     loop {
-        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
         let step = ui.step_layouts(&pool, &mut atlas, &mut cx);
         slices += 1;
         if let UiLayoutStep::Yielded { stage, nodes, glyphs, .. } = step {
@@ -1436,7 +1445,8 @@ fn mounted_layout_atomic_snapshot_keeps_last_valid_geometry_until_fresh_swap() {
     let mut swaps = 0;
     for _ in 0..100_000 {
         let before = ui.tree("atomic").map(UiTree::accepted_layout_generation).unwrap_or_default();
-        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), test_clock, &mut preview_sequence,&mut actual_retained_progress);
         let step = ui.step_layouts(&pool, &mut atlas, &mut cx);
         let tree = ui.tree("atomic").unwrap_or_else(|| panic!("atomic retained tree"));
         let after = tree.accepted_layout_generation();

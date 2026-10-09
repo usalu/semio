@@ -6,6 +6,29 @@
 **/pkg/package.json
 **/.lake/**
 
-# 🧫️ fixture workspaces are standalone workspace roots copied into temporary workspaces by tests; they must never become projects of this repository.
+# 🧫️ Canonical Example Collection Admission
 **/🧫️fixtures/**/📋️project.json
 **/🧫️fixtures/**/project.json
+**/🧫️fixtures/**/package.json
+**/🧫️fixtures/**/Cargo.toml
+**/🧫️fixtures/**/bun.lock
+**/🧫️fixtures/**/*.patch
+**/🧫️examples/**/📋️project.json
+**/🧫️examples/**/project.json
+**/🧫️examples/**/package.json
+**/🧫️examples/**/Cargo.toml
+**/🧫️examples/**/bun.lock
+**/🧫️examples/**/*.patch
+**/🧪️fixtures/**/📋️project.json
+**/🧪️fixtures/**/project.json
+**/🧪️fixtures/**/package.json
+**/🧪️fixtures/**/Cargo.toml
+**/🧪️fixtures/**/bun.lock
+**/🧪️fixtures/**/*.patch
+**/🧪️examples/**/📋️project.json
+**/🧪️examples/**/project.json
+**/🧪️examples/**/package.json
+**/🧪️examples/**/Cargo.toml
+**/🧪️examples/**/bun.lock
+**/🧪️examples/**/*.patch
+# 🧫️ End Example Collection Admission

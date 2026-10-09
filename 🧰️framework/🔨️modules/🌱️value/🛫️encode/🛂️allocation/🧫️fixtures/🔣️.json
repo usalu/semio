@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "ownership": {
+    "ceiling": 17,
+    "prior": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "text": "snow雪",
+    "tail": "x",
+    "expected": 13
+  },
+  "refusedBytes": 3,
+  "cancelKinds": [
+    "ownershipLimit",
+    "canceled"
+  ],
+  "hops": {
+    "ceiling": 8,
+    "firstCharge": 3,
+    "nextBytes": [
+      1,
+      2
+    ],
+    "declaredWork": 1,
+    "refusedWork": 2,
+    "expected": 5
+  },
+  "observer": {
+    "ceiling": 16,
+    "text": "snow雪"
+  },
+  "allocations": {
+    "accepted": [
+      {
+        "bytes": 5,
+        "owned_bytes": 0,
+        "next_owned_bytes": 5,
+        "maximum_bytes": 17
+      },
+      {
+        "bytes": 7,
+        "owned_bytes": 5,
+        "next_owned_bytes": 12,
+        "maximum_bytes": 17
+      },
+      {
+        "bytes": 1,
+        "owned_bytes": 12,
+        "next_owned_bytes": 13,
+        "maximum_bytes": 17
+      },
+      {
+        "bytes": 0,
+        "owned_bytes": 0,
+        "next_owned_bytes": 0,
+        "maximum_bytes": 0
+      }
+    ],
+    "refused": [
+      {
+        "bytes": -1,
+        "owned_bytes": 0,
+        "next_owned_bytes": 0,
+        "maximum_bytes": 17
+      },
+      {
+        "bytes": 1,
+        "owned_bytes": 0,
+        "next_owned_bytes": 1
+      },
+      {
+        "bytes": 1,
+        "owned_bytes": 0,
+        "next_owned_bytes": 1,
+        "maximum_bytes": 17,
+        "unknown": 0
+      },
+      {
+        "bytes": 0.5,
+        "owned_bytes": 0,
+        "next_owned_bytes": 1,
+        "maximum_bytes": 17
+      }
+    ]
+  },
+  "wrapperBytes": 8,
+  "retainedPayload": [
+    4,
+    5,
+    6
+  ],
+  "retainedNative": {
+    "maximumBytes": 1073741824,
+    "initialBytes": 7,
+    "copy": "雪",
+    "grant": {
+      "maximumItems": 256,
+      "maximumCopyBytes": 65536,
+      "maximumCapacityBytes": 16777216,
+      "maximumReleaseBytes": 16777216,
+      "maximumDepth": 4096
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "keys",
+    "expected",
+    "taken",
+    "handoffCapacityBytes",
+    "handoffReleaseBytes",
+    "maximumReleaseBytes",
+    "copyBytes",
+    "clearedKeys",
+    "clearCapacityBytes",
+    "clearReleaseBytes",
+    "reusedKey",
+    "detachedSlotPreservesLiveGeneration"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "keys": {
+      "const": [
+        "β",
+        "mesh",
+        "texture",
+        "mesh"
+      ]
+    },
+    "expected": {
+      "const": [
+        "mesh",
+        "texture",
+        "β"
+      ]
+    },
+    "taken": {
+      "const": [
+        "mesh",
+        "texture",
+        "β"
+      ]
+    },
+    "handoffCapacityBytes": {
+      "const": 0
+    },
+    "handoffReleaseBytes": {
+      "const": 0
+    },
+    "maximumReleaseBytes": {
+      "const": 8
+    },
+    "copyBytes": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "clearedKeys": {
+      "const": [
+        "mesh",
+        "old-b"
+      ]
+    },
+    "clearCapacityBytes": {
+      "const": 0
+    },
+    "clearReleaseBytes": {
+      "const": 0
+    },
+    "reusedKey": {
+      "const": "mesh"
+    },
+    "detachedSlotPreservesLiveGeneration": {
+      "const": true
+    }
+  }
+}

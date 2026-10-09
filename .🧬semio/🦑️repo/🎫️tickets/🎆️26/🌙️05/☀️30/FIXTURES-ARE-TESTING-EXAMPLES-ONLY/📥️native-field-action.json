@@ -1,0 +1,11 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+  "beforeSHA": "a6174a54a1555bb2f7c4b36333780666a9af1c806d5d762a10c89c99cd86728d",
+  "afterSHA": "37a8d9880c42b9012f4a3a5e209bba1b87cd16b3b0d065d96f8670194a0c9edd",
+  "beforeBlockSHA": "88e3181d63d1f5d92be78c82c09e9d9f58c867fcbe90d38ca49bade69d707ca9",
+  "afterBlockSHA": "d372f1f5fa719ac92acb8b4aac07ca4255d95bd655459d044aa83dc412045152",
+  "old": "fn maximum_retained_close_bytes(&self)->usize { 16_777_216 }",
+  "new": "fn maximum_retained_close_bytes(&self)->usize { ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES }",
+  "reason": "declared retained bound16MiB exceeded genuine decoder1.5MiB ceiling before owner admission; preserve allocator/refusal receipt assertions",
+  "actualRED": "Root k8b native failure +71489 SourceRED after genuine per-progress schema oracle; prior35380/43796 wrong schema references qualified"
+}

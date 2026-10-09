@@ -39,18 +39,19 @@ fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeMut
 }
 
 pub fn handle(_payload: &CreateStudio, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    Err(Fault::from("s.home.session-identity-required"))
+    Err(Fault::from("s.home.create-studio.effect-authority-required"))
 }
 
 pub fn handle_with_identity(
     payload: &CreateStudio,
     doc: &ArtifactView<'_, SHomeSnapshot>,
     _cfg: &ConfigView<'_, HomeConfig>,
-    identity: &semio_framework_plugin::ViewSessionIdentity,
+    session: &semio_framework_plugin::ViewSessionIdentity,
+    identity: &mut store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
 ) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let generation = doc.snapshot.catalog_generation;
-    let owner_id = identity.user_id.as_str();
-    let owner_name = identity.display_name.as_str();
+    let owner_id = session.user_id.as_str();
+    let owner_name = session.display_name.as_str();
     match payload.kind.as_str() {
         "folder" => {
             let folder_path = payload.folder_path.as_deref().map(str::trim).filter(|path| !path.is_empty()).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.create-studio.folder-path-required", "a folder studio names the folder it is kept in"))?;
@@ -66,11 +67,7 @@ pub fn handle_with_identity(
             }
         }
         _ => {
-            // 🌉️ `semio_s_space_core::create_and_register_ephemeral_studio` is a plugin-root async fn (outside
-            // this lease); `handle` must stay sync (the `app_commands!` dispatch contract), so the
-            // call is bridged via `resolve_ready` — the same poll-once bridge the framework's own
-            // `composer_entry_of`/`deserializer_entry_of` use for an identical sync/async seam.
-            let space_id = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::create_and_register_ephemeral_studio(&payload.name, owner_id, owner_name));
+            let space_id = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::create_and_register_ephemeral_studio(&payload.name, owner_id, owner_name, identity)).map_err(|error| Fault::new(FaultOrigin::App, "s.home.create-studio.io-failed", format!("creating a temporary studio failed: {error}")))?;
             Ok(created_studio_emit(generation, &space_id))
         }
     }

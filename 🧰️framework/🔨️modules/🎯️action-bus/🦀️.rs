@@ -183,9 +183,9 @@ impl RetainedToolWireInput {
         use semio_framework_job::{InteractiveJobCloseStep,RetainedCloneProgress};
         self.begin_close();
         if self.terminal_is_empty(){return InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}}
-        let bytes=match self.next_close_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return InteractiveJobCloseStep::Refused(error.kind)};
+        let bytes=match self.next_close_release_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
         if grant.maximum_items==0||bytes>grant.maximum_release_bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()}}
-        if self.pages.capacity()!=0&&grant.maximum_depth==0{return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)}
+        if self.pages.capacity()!=0&&grant.maximum_depth==0{return InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:RetainedCloneProgress::default()}}
         drop(std::mem::take(&mut self.pages));self.admitted_bytes=0;
         InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes}}
     }

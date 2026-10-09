@@ -17,9 +17,9 @@ impl MvdDiagnostics{
         let mut measure=Measure(0);std::fmt::write(&mut measure,message).map_err(|_|ValueError::new(ValueRefusalKind::OwnershipLimit,"IFC2x3 diagnostic byte count overflow"))?;
         let count=self.values.len().checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"IFC2x3 diagnostic count overflow"))?;control.check_rows(count)?;
         let bytes=self.bytes.checked_add(measure.0).and_then(|bytes|bytes.checked_add(code.len())).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"IFC2x3 diagnostic semantic bytes overflow"))?;control.check_value_bytes(bytes)?;
-        control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot,|remaining,progress|{
+        control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot,|remaining,progress,allocation|{
             let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|progress(event.completed,event.total);
-            let mut native=NativeEncodeControl::new(remaining,&mut callback);
+            let mut native_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
             let result=(||{
                 native.begin_stage(0)?;
                 if self.values.len()==self.values.capacity(){

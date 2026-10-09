@@ -1,0 +1,372 @@
+{
+  "ownership": false,
+  "sourceCopied": false,
+  "proposals": [
+    {
+      "name": "plugin lifecycle",
+      "ownership": false,
+      "observations": [
+        {
+          "role": "schema",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
+          "exists": true,
+          "sha256": "578f903b7acf0f91de17623a1e3235e354117e7fbc7eea36a4086f95ac05e25f",
+          "priorObservationSha256": "578f903b7acf0f91de17623a1e3235e354117e7fbc7eea36a4086f95ac05e25f",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 137,
+          "utf8Bytes": 182
+        },
+        {
+          "role": "reader",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+          "exists": true,
+          "sha256": "896deb482c96e50efe7822d8ff249f2a383abdfb4357c88e25512db94e70427d",
+          "priorObservationSha256": "627f7540d5389555b7a90af110478ba178b4c89acaa3997794987b77e078f4c5",
+          "changedSinceObservation": true,
+          "absoluteCharacters": 126,
+          "utf8Bytes": 166
+        },
+        {
+          "role": "example",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🎟️lifecycle-grant/🔣️.json",
+          "exists": true,
+          "sha256": "657999c71d634ff088d3711b0be86cb80c6405bf49c71a420fae037e624523ec",
+          "priorObservationSha256": "657999c71d634ff088d3711b0be86cb80c6405bf49c71a420fae037e624523ec",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 157,
+          "utf8Bytes": 207
+        }
+      ],
+      "proposedRemoval": {
+        "lines": [
+          3,
+          7
+        ],
+        "notes": "Ajv import only if remaining uses absent; remove only schema load+whole admission portion of combined line7, retain law load."
+      },
+      "normalRoute": "No exact normal registered source-test target resolved in bounded package/test registration search; retain this as a wiring gap, not producer credit."
+    },
+    {
+      "name": "scene bounds",
+      "ownership": false,
+      "observations": [
+        {
+          "role": "schema",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
+          "exists": true,
+          "sha256": "ee984d6e0bb78b2c7a8ad4dc8b35ba1bda2d68c39fd644ecb0a47b12aa967049",
+          "priorObservationSha256": "ee984d6e0bb78b2c7a8ad4dc8b35ba1bda2d68c39fd644ecb0a47b12aa967049",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 152,
+          "utf8Bytes": 225
+        },
+        {
+          "role": "reader",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+          "exists": true,
+          "sha256": "dd07bcf1fda588e0857d38954cdd5bf5385667eb99d9f33c605dd55a31099a51",
+          "priorObservationSha256": "dd07bcf1fda588e0857d38954cdd5bf5385667eb99d9f33c605dd55a31099a51",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 147,
+          "utf8Bytes": 220
+        },
+        {
+          "role": "example",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧫️fixtures/📐️bounds/🔣️.json",
+          "exists": true,
+          "sha256": "e061d288eb47a3aa4c40486488d52c23e092db5f194bd5645059b74d130f9321",
+          "priorObservationSha256": "e061d288eb47a3aa4c40486488d52c23e092db5f194bd5645059b74d130f9321",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 154,
+          "utf8Bytes": 227
+        }
+      ],
+      "proposedRemoval": {
+        "lines": [
+          21,
+          24
+        ],
+        "notes": "Remove boundSchema import and first whole-array assertion only; keep Ajv local and production schema validate on same line24."
+      },
+      "normalRoute": "@semio-tech/draw-js:test (default full suite includes sceneView unit); no scene-view selector in current selection roster."
+    },
+    {
+      "name": "path handoff",
+      "ownership": false,
+      "observations": [
+        {
+          "role": "schema",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
+          "exists": true,
+          "sha256": "df600f4952c95d2a2f871a3ce76c004650d4c81481a41f2ebe04c6c7a3e7c8f3",
+          "priorObservationSha256": "df600f4952c95d2a2f871a3ce76c004650d4c81481a41f2ebe04c6c7a3e7c8f3",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 152,
+          "utf8Bytes": 225
+        },
+        {
+          "role": "reader",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "exists": true,
+          "sha256": "f21a1e18ad490614b347980f8b5091d045162345700ff1c94c7d4c76184d04c5",
+          "priorObservationSha256": "6115b44bebd7635253c530ab5263451de16bcdee1693f969834e793e4e534d8b",
+          "changedSinceObservation": true,
+          "absoluteCharacters": 149,
+          "utf8Bytes": 222
+        },
+        {
+          "role": "example",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧫️fixtures/🧹️path/🔣️.json",
+          "exists": true,
+          "sha256": "3b3220b8deb90cf08ef74566a8d52ddf958b3eeea40c391256653c0ebed1c49e",
+          "priorObservationSha256": "3b3220b8deb90cf08ef74566a8d52ddf958b3eeea40c391256653c0ebed1c49e",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 154,
+          "utf8Bytes": 227
+        }
+      ],
+      "proposedRemoval": {
+        "lines": [
+          8,
+          19
+        ],
+        "notes": "Remove path schema import+whole assertion only."
+      },
+      "normalRoute": "@semio-tech/draw-js:test; existing script test scene-raster selection includes this original file."
+    },
+    {
+      "name": "image handoff",
+      "ownership": false,
+      "observations": [
+        {
+          "role": "schema",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
+          "exists": true,
+          "sha256": "f42acab51d798bc7696eca83b0c935aded1e0a623333cb482d5043256d3606fa",
+          "priorObservationSha256": "f42acab51d798bc7696eca83b0c935aded1e0a623333cb482d5043256d3606fa",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 153,
+          "utf8Bytes": 226
+        },
+        {
+          "role": "reader",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+          "exists": true,
+          "sha256": "f21a1e18ad490614b347980f8b5091d045162345700ff1c94c7d4c76184d04c5",
+          "priorObservationSha256": "6115b44bebd7635253c530ab5263451de16bcdee1693f969834e793e4e534d8b",
+          "changedSinceObservation": true,
+          "absoluteCharacters": 149,
+          "utf8Bytes": 222
+        },
+        {
+          "role": "example",
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧫️fixtures/🧹️image/🔣️.json",
+          "exists": true,
+          "sha256": "12fc1c37a39f24f2f72d53004003c404118c5a0c28df354630a65ea46df42303",
+          "priorObservationSha256": "12fc1c37a39f24f2f72d53004003c404118c5a0c28df354630a65ea46df42303",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 155,
+          "utf8Bytes": 228
+        }
+      ],
+      "proposedRemoval": {
+        "lines": [
+          10,
+          27
+        ],
+        "notes": "Remove image schema import+whole assertion only; preserve original AffineImageJob binding on same line27."
+      },
+      "normalRoute": "@semio-tech/draw-js:test; same original scene-raster selection."
+    },
+    {
+      "name": "pack ordering",
+      "ownership": false,
+      "observations": [
+        {
+          "role": "schema",
+          "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
+          "exists": true,
+          "sha256": "6a2aa01eb1befa6f75e6767663df97b642d337c3b71aa0a85f1b85c4010aeac1",
+          "priorObservationSha256": "6a2aa01eb1befa6f75e6767663df97b642d337c3b71aa0a85f1b85c4010aeac1",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 92,
+          "utf8Bytes": 127
+        },
+        {
+          "role": "reader",
+          "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
+          "exists": true,
+          "sha256": "bca7da500defe5c662a50ca0d5a58cc486f21a41f2c3be333296a3a65b4c589a",
+          "priorObservationSha256": "bca7da500defe5c662a50ca0d5a58cc486f21a41f2c3be333296a3a65b4c589a",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 89,
+          "utf8Bytes": 124
+        },
+        {
+          "role": "example",
+          "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🔃️ordering/🔣️.json",
+          "exists": true,
+          "sha256": "71b412d7d09498fec1153693c8d4323ea2bb20955a47853b529a4c4a383fdb8a",
+          "priorObservationSha256": "71b412d7d09498fec1153693c8d4323ea2bb20955a47853b529a4c4a383fdb8a",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 94,
+          "utf8Bytes": 129
+        }
+      ],
+      "proposedRemoval": {
+        "lines": [
+          3,
+          6,
+          9
+        ],
+        "notes": "Remove unused Ajv/schema imports and whole-schema admissions only; preserve all SQLite logic."
+      },
+      "normalRoute": "@semio-tech/framework-pack-record-rs:test-refusals -> refusals TS9 imports ordering TS."
+    },
+    {
+      "name": "IO ownership",
+      "ownership": false,
+      "observations": [
+        {
+          "role": "schema",
+          "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
+          "exists": true,
+          "sha256": "7064816b538d7af3dab3e31a48d06c1e0c6f35c496e6c6f960c0ea08422534cf",
+          "priorObservationSha256": "7064816b538d7af3dab3e31a48d06c1e0c6f35c496e6c6f960c0ea08422534cf",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 92,
+          "utf8Bytes": 127
+        },
+        {
+          "role": "reader",
+          "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
+          "exists": true,
+          "sha256": "2fd1115b822b9cd4df945e9148073cdd55e7e491ec61377097144fa0b2545fd8",
+          "priorObservationSha256": "2fd1115b822b9cd4df945e9148073cdd55e7e491ec61377097144fa0b2545fd8",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 89,
+          "utf8Bytes": 124
+        },
+        {
+          "role": "example",
+          "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧫️fixtures/🔣️.json",
+          "exists": true,
+          "sha256": "1029bcda3dfe4586c68d9d6c017b05c94c1ab50c5e7c737099eb25749eefaea0",
+          "priorObservationSha256": "1029bcda3dfe4586c68d9d6c017b05c94c1ab50c5e7c737099eb25749eefaea0",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 94,
+          "utf8Bytes": 129
+        }
+      ],
+      "proposedRemoval": {
+        "lines": [
+          11,
+          30,
+          31
+        ],
+        "notes": "Remove separate wrapper import+whole corpus admission/schema-only mutations; preserve actual reference-domain/vocabulary usage and SQLite/package source laws."
+      },
+      "normalRoute": "@semio-tech/framework-io-schema-rs:test-ownership -> package script14 original ownership TS."
+    },
+    {
+      "name": "terrain ownership",
+      "ownership": false,
+      "observations": [
+        {
+          "role": "schema",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
+          "exists": true,
+          "sha256": "5958112bcfc25d87dff7fd0ba2da96ef96255b4139fc55d25878890f8476786c",
+          "priorObservationSha256": "65e04721c10db591f18349bca908d6e61b357fb945cecf44ca050db7fe276197",
+          "changedSinceObservation": true,
+          "absoluteCharacters": 123,
+          "utf8Bytes": 172
+        },
+        {
+          "role": "reader",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧪️tests/🟦️.test.ts",
+          "exists": true,
+          "sha256": "619750748714917c4de2368a2c5641091aa3e6d39e9625e5f87f00b5260cc436",
+          "priorObservationSha256": "d24d0dd12c19180cb5cda31da4acd69a43c25a331a9aafc6d4adaf9c4183b8ac",
+          "changedSinceObservation": true,
+          "absoluteCharacters": 125,
+          "utf8Bytes": 174
+        },
+        {
+          "role": "example",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧫️fixtures/🔣️.json",
+          "exists": true,
+          "sha256": "c8c5bb4cf55ecddfe4f9e249d0b49fcea0d633da6809d03f6bb2da864d8d5d5a",
+          "priorObservationSha256": "51fae4f0bb2cba73d48456f1fc495964784ef4126fc5de539f51f82b3a900d90",
+          "changedSinceObservation": true,
+          "absoluteCharacters": 125,
+          "utf8Bytes": 174
+        }
+      ],
+      "proposedRemoval": {
+        "lines": [
+          2,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12,
+          14,
+          15,
+          30,
+          35
+        ],
+        "notes": "Remove mirror validator and schema-only hostile mutants; preserve independent grant ordering/refusal/RFC6902 original-owner assertions; fresh AST guard required for mixed lines."
+      },
+      "normalRoute": "Live launch World terrain ownership portable1/2/3 use nx exec --projects=ticket-fixed-slots -> genuine terrain/ownership/script.ts test -> original test; no named production project target proved."
+    },
+    {
+      "name": "draft wire",
+      "ownership": false,
+      "observations": [
+        {
+          "role": "schema",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+          "exists": true,
+          "sha256": "10810a4899994a391fc24e27293de68fd3e8138f63d74c403b7a70aafcfff91c",
+          "priorObservationSha256": "10810a4899994a391fc24e27293de68fd3e8138f63d74c403b7a70aafcfff91c",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 106,
+          "utf8Bytes": 145
+        },
+        {
+          "role": "reader",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
+          "exists": true,
+          "sha256": "664b3a9e90a7881da32bf96c17924a326977c49ebc7139868998a91727e3933e",
+          "priorObservationSha256": "664b3a9e90a7881da32bf96c17924a326977c49ebc7139868998a91727e3933e",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 95,
+          "utf8Bytes": 129
+        },
+        {
+          "role": "example",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json",
+          "exists": true,
+          "sha256": "8196dacc3142b353f7e2dc2bc9bf8db9d23700d6b9d59f0355ab212e0767b148",
+          "priorObservationSha256": "8196dacc3142b353f7e2dc2bc9bf8db9d23700d6b9d59f0355ab212e0767b148",
+          "changedSinceObservation": false,
+          "absoluteCharacters": 108,
+          "utf8Bytes": 147
+        }
+      ],
+      "proposedRemoval": {
+        "lines": [
+          494,
+          499,
+          500,
+          501,
+          502
+        ],
+        "notes": "Remove mirror schema import and whole-fixture admission/mirror mutants; preserve plaintext schedule if genuinely read by behavior and exact draftJson loop503+; shared Ajv used other tests remains."
+      },
+      "normalRoute": "@semio-tech/ui-scene-js:test -> scene package script16 original text-splice test file."
+    }
+  ]
+}

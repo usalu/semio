@@ -32,7 +32,7 @@ pub struct FormsIntoCsv;
 impl Serializer<FormsSnapshot> for FormsIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &FormsSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &FormsSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let records = question_grid(from).into_iter().map(|row| CsvRecord { fields: row.into_iter().map(field).collect() }).collect();
         let csv = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records };
         Ok(IoOutcome::clean(IoPayload::Binary(store::ArtifactPack::encode_pack(&csv))))

@@ -425,25 +425,25 @@ impl store::ArtifactSqliteSnapshot for JackSnapshot {
     fn from_sqlite_database(database: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         reconstruct(database, c)
     }
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         c.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 0)?;
         let max_rows = c.limits().max_rows;
         let value = store::decode_sqlite_snapshot_record_native(
             payload,
             <Self as store::ArtifactDsl>::envelope_id(),
             crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
-            |record, native| {
+            |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
                 let flat = crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_from_record_controlled(record, native)?;
                 flat.admit_rows(max_rows, native)?;
                 flat.into_snapshot_controlled(native)
-            },
+            })(); *snapshot_output = Some(constructed?); Ok(()) },
             c,
-        )?;
+        native_control)?;
         let value = semio_framework_value::DecodedValue::new(value, retire_snapshot);
         forecast(value.get(), c, SqliteSnapshotPhase::DecodeNative)?;
         Ok(value.take())
     }
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>) -> Result<store::io_schema::IoPayload, ValueError> {
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         validate(self)?;
         forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
         store::encode_sqlite_snapshot_record_native(
@@ -455,7 +455,7 @@ impl store::ArtifactSqliteSnapshot for JackSnapshot {
                 flat.__dsl_to_record_controlled(native)
             },
             c,
-        )
+        native_owner)
     }
     fn retire_sqlite_snapshot(self) {
         retire_snapshot(self)
@@ -475,4 +475,3 @@ impl store::ArtifactSqliteSnapshot for JackSnapshot {
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
-

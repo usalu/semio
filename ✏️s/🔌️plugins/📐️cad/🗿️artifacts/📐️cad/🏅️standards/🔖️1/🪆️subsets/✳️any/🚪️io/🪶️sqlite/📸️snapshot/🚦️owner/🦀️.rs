@@ -162,9 +162,9 @@ fn reconstruct(database: &SqliteDatabase, control: &mut NativeDecodeControl<'_>)
 fn restore(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<CadSnapshot, ValueError> {
     validate_sqlite_database_schema_controlled(database, <CadSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA, control)?;
     control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
-    control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, callback| {
+    control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, callback,allocation|{
         let mut progress = |event: semio_framework_value::native_decoding::NativeDecodeProgress| callback(event.completed, event.total);
-        let mut native = NativeDecodeControl::new(remaining, &mut progress);
+        let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut progress,&mut native_allocation);
         let result = reconstruct(database, &mut native);
         (result, native.owned_bytes())
     })?
@@ -230,24 +230,23 @@ impl ArtifactSqliteSnapshot for CadSnapshot {
 
     fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> { project(self, control) }
     fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> { restore(database, control) }
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         control.check_rows(1)?;
         let maximum = control.limits().max_rows;
-        store::decode_sqlite_snapshot_record_native(payload, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |record, native| {
+        store::decode_sqlite_snapshot_record_native(payload, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
             native_rows(record, native, maximum)?;
             let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Self::__dsl_from_record_controlled(record, native)?, close::<Self>);
             validate_owned(value.as_mut(), || native.scoped_stage(|native| { native.begin_stage(0)?; native.step() }))?;
             Ok(value.take())
-        }, control)
+        })(); *snapshot_output = Some(constructed?); Ok(()) }, control,native_control)
     }
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<store::io_schema::IoPayload, ValueError> {
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 0)?;
         forecast(self, |count| control.check_rows(count))?;
         validate_owned(self, || control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 0))?;
-        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), control)
+        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), control,native_owner)
     }
 }
 semio_framework_value::artifact_retire_struct!(crate::CadNode { id, label, kind });
 semio_framework_value::artifact_retire_struct!(crate::CadSnapshot { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, references_by_model_definition_id, nodes });
 semio_framework_value::artifact_retire_struct!(crate::CadArtifact { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, references_by_model_definition_id, nodes });
-

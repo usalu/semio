@@ -16,7 +16,7 @@ impl From<crate::list::PagedListError> for ValueError {
             crate::list::PagedListRefusalKind::AllocationFailed => crate::ValueRefusalKind::AllocationFailed,
             crate::list::PagedListRefusalKind::InvariantViolated => crate::ValueRefusalKind::InvariantViolated,
         };
-        ValueError::new(kind, error.reason)
+        ValueError::literal(kind, error.reason)
     }
 }
 

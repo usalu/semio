@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import Ajv from "ajv/dist/2020.js";
 import { Database } from "bun:sqlite";
 import { test } from "bun:test";
-import { ValueError, type ValueRefusalKind } from "../../🟦️.ts";
+import { ValueError, type ValueRefusalKind, type ValueErrorRetainedProgress } from "../../🟦️.ts";
 import { NativeDecodeControl } from "../../../🛬️decode/🟦️.ts";
 import type { IntrinsicValue } from "../../../🧬️schema/🌳️intrinsic/🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
@@ -16,7 +16,7 @@ interface Codec {
   decodeValueRefusalKindControlled(value: IntrinsicValue, control: Control): Promise<ValueRefusalKind>;
 }
 const leaf = (value: string | boolean | null): IntrinsicValue => typeof value === "string" ? { kind: "text", value } : typeof value === "boolean" ? { kind: "boolean", value } : { kind: "null" };
-const wire = (kind: string, message: string): IntrinsicValue => ({ kind: "object", members: [{ name: "kind", value: leaf(kind) }, { name: "message", value: leaf(message) }] });
+const wire = (kind: string, message: string, receipt: ValueErrorRetainedProgress): IntrinsicValue => ({ kind: "object", members: [{ name: "kind", value: leaf(kind) }, { name: "message", value: leaf(message) }, { name: "retainedProgress", value: { kind: "object", members: Object.entries(receipt).map(([name,value]) => ({ name, value: { kind: "unsigned", value: BigInt(value) } })) } }] });
 const control = (): NativeDecodeControl => new NativeDecodeControl(1_000_000, () => true);
 const load = async (): Promise<Codec> => {
   const path = new URL("../🟦️.ts", import.meta.url);
@@ -31,7 +31,7 @@ test("closed refusal wire schema and language-neutral cases match independent Aj
   try {
     for (const row of fixture.valid) {
       assert(valid(row.wire));
-      const output = db.query("SELECT json_object('kind',?, 'message',?) AS wire").get(row.wire.kind, row.wire.message) as { wire: string };
+      const output = db.query("SELECT json_object('kind',?, 'message',?, 'retainedProgress',json(?)) AS wire").get(row.wire.kind, row.wire.message, JSON.stringify(row.wire.retainedProgress)) as { wire: string };
       assert.deepEqual(JSON.parse(output.wire), row.wire);
     }
     for (const row of fixture.invalid) {
@@ -45,9 +45,9 @@ test("closed refusal wire schema and language-neutral cases match independent Aj
 test("actual controlled refusal codecs preserve all eight causes and reject closed-record violations", async () => {
   const codec = await load();
   for (const row of fixture.valid) {
-    const source = wire(row.wire.kind, row.wire.message);
+    const source = wire(row.wire.kind, row.wire.message, row.wire.retainedProgress);
     const error = await codec.decodeValueErrorControlled(source, control());
-    assert(error instanceof ValueError); assert.equal(error.kind, row.wire.kind); assert.equal(error.message, row.wire.message);
+    assert(error instanceof ValueError); assert.equal(error.kind, row.wire.kind); assert.equal(error.message, row.wire.message); assert.deepEqual(error.retainedProgress,row.wire.retainedProgress); assert.deepEqual(error.under("parent").retainedProgress,error.retainedProgress);
     assert.deepEqual(await codec.encodeValueErrorControlled(error, control()), source);
     const kind = await codec.encodeValueRefusalKindControlled(error.kind, control());
     assert.equal(await codec.decodeValueRefusalKindControlled(kind, control()), error.kind);
@@ -68,12 +68,12 @@ test("explicit portable controls retain the original refusal object and own long
     const cause = new ValueError(row.wire.kind as ValueRefusalKind, row.wire.message);
     const failed: Control = { checkpoint: async () => { throw cause; }, beginStage: async () => { throw cause; }, charge: async () => {}, step: async () => {}, advance: async () => {}, scopedStage: async operation => operation() };
     await assert.rejects(codec.encodeValueErrorControlled(source, failed), error => error === cause);
-    await assert.rejects(codec.decodeValueErrorControlled(wire(source.kind, source.message), failed), error => error === cause);
+    await assert.rejects(codec.decodeValueErrorControlled(wire(source.kind, source.message, source.retainedProgress), failed), error => error === cause);
   }
   for (const row of fixture.controls) {
     let callbacks = 0;
     const admission = new NativeDecodeControl(row.maximumBytes, () => ++callbacks < row.cancelAt || row.cancelAt === 0);
-    const operation = row.operation === "encode" ? codec.encodeValueErrorControlled(source, admission) : codec.decodeValueErrorControlled(wire(source.kind, source.message), admission);
+    const operation = row.operation === "encode" ? codec.encodeValueErrorControlled(source, admission) : codec.decodeValueErrorControlled(wire(source.kind, source.message, source.retainedProgress), admission);
     await assert.rejects(operation, (error: unknown) => error instanceof ValueError && error.kind === row.expectedKind);
     if (row.cancelAt !== 0) assert.equal(callbacks, row.cancelAt);
   }

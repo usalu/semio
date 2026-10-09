@@ -1,0 +1,143 @@
+{
+  "ownership": false,
+  "executed": false,
+  "schemasChecked": 12,
+  "schemasPresent": [],
+  "observations": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "present": true,
+      "sha256": "fe31347e120abf3286e7c27bd6e76bac9b73d5aa8d9cbc53aad469ecaf462c78"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+      "present": true,
+      "sha256": "fc63560cccdc2f28e1333f6c5738f4558b3091557f9599e86a34b42b9a64d161"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "present": true,
+      "sha256": "3df1dd7f78f5a61d45767bc263bf799ea95228f7bd2a61f24dcec4299033a1fc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔃️ordering/🟦️.ts",
+      "present": true,
+      "sha256": "dbd529088a9e16745ac88ed8ea61ac5032d439edb7c19d2da45024fde4df6672"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts",
+      "present": true,
+      "sha256": "599bf7b3a2d0f7c64a22efa37a2b81cdbe354b8e9a01867d58823bec2e2a73d6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧪️tests/🟦️.test.ts",
+      "present": true,
+      "sha256": "83fb8dfbcc5ad46b173bd64cec35a3936ed644a4e1b186e1b2045bfc6dd5b317"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts",
+      "present": true,
+      "sha256": "3a64f151cb60efad9f65ff46a74c913d0eb26ec9a059101da2c1e7de0e1c8739"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️bounds/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️path/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧬️schema/🧹️image/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🔃️ordering/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/📡️draft-wire/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/📏️live-physical-demand/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🚦️ownership/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧪️tests/🔬️unit/🟦️.ts",
+      "present": true,
+      "sha256": "61ec2e7957d432cfa013321ee1aaf0b47ea02ef8398da641d37b5976b44024ff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🧫️fixtures/🔣️.json",
+      "present": true,
+      "sha256": "be5fd4ba0f2b6421317a4b3ec8426c67d8921497b7e73122dd3eb8b437a77666"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/🟦️.ts",
+      "present": true,
+      "sha256": "91c22808102ec4ed1870e23da05d7e06e355890ae06f17d16b78ea9280447a7b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🎟️session-source/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🎟️session-source/🟦️.ts",
+      "present": true,
+      "sha256": "08e0637e58ce90ffc02e7393a718eeac80054886a5a37147875d9f0c5ee6c29e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧫️fixtures/🎟️session-source/🔣️.json",
+      "present": true,
+      "sha256": "032fb7c1ee75e599681b4dbb1f673977c4613774d1b779e83eab93b24ef3e238"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧹️retirement/🦀️.rs",
+      "present": true,
+      "sha256": "0ac8056f30830861d0e1ab346704b92d79d490b33523af0d56896c5effaad466"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+      "present": true,
+      "sha256": "87b6108fa11b1aba634a9b4461147114db5dfd52ab1fdbc85bac96f62b14927f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+      "present": true,
+      "sha256": "21c65435b0c8faf8ad2425e17dd416361c2bddfbc9ef433ca04fa446860de0f7"
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "at": "2026-10-09T14:54:54.380317+00:00",
+  "session": 46258,
+  "exitCode": 1,
+  "nxElapsed": "3m49s",
+  "selected": 17,
+  "passed": 14,
+  "failed": 3,
+  "skipped": 1484,
+  "ownRootPid": 16429,
+  "ownRootRows": [],
+  "observers": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+      "sha256": "0d9ef8669aba75a59c3a7cc6625032e5c804a10125deadaf7ded2ad7e6fe93bd",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "a85ad1f21cecece92315016d7257509964006a34420e869b499dee618217f6fd",
+      "matches": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🪆️receiving/🔣️.json",
+      "sha256": "4334312f31766785a3a0b72304db33c2be718d6c7b3ba237c47fb1778a71269b",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "4334312f31766785a3a0b72304db33c2be718d6c7b3ba237c47fb1778a71269b",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+      "sha256": "e01deb1911e0debe1515bc56920bf3e172731ac90e0fed953fbc59ff25dad44f",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "e01deb1911e0debe1515bc56920bf3e172731ac90e0fed953fbc59ff25dad44f",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs",
+      "sha256": "3ee99e16f43b5c6af0aa04e94241784bf1f9f6c3492cd7c483e258d28f915ba9",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "88d5760e06fbe63cfa0dad485a3c4cd9649b33a94339bfe507bd95a007fb9f9f",
+      "matches": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "713285c5e6d3580e6e923926a4f306e10e45df26d3a8e0077e1e492548a9bf60",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "713285c5e6d3580e6e923926a4f306e10e45df26d3a8e0077e1e492548a9bf60",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "8e529bda73ec6fdb0f67edb7b5375ee375742c5527ff125c3b419bac58f8e48e",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "8e529bda73ec6fdb0f67edb7b5375ee375742c5527ff125c3b419bac58f8e48e",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🔎️measurement/🦀️.rs",
+      "sha256": "3183af97b195220cfc73fc40d86bbda87d9a3c7751ff90771c9fd87679980190",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "3183af97b195220cfc73fc40d86bbda87d9a3c7751ff90771c9fd87679980190",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🔎️measurement/🧬️schema/🔣️.json",
+      "sha256": "e0970d6a6a711c43b9533b0b790191ddaa95b3e5b3f478425f378bc8092a8465",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "e0970d6a6a711c43b9533b0b790191ddaa95b3e5b3f478425f378bc8092a8465",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🦀️.rs",
+      "sha256": "450f206e011b8798b4dba0d9d81b546746b9c37cbe46d1878b968d529c5ef3c4",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "450f206e011b8798b4dba0d9d81b546746b9c37cbe46d1878b968d529c5ef3c4",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧪️tests/🦀️.rs",
+      "sha256": "16088f511e92030fe8dae554ce337fa49aa4cd8754fc134268558a60a54a2a3d",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "16088f511e92030fe8dae554ce337fa49aa4cd8754fc134268558a60a54a2a3d",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧫️fixtures/📥️input/🔣️.json",
+      "sha256": "dfcb05724ebe80a25b0e9a9df768e19867c4b08023a8ef984e0e11c238b72761",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "dfcb05724ebe80a25b0e9a9df768e19867c4b08023a8ef984e0e11c238b72761",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧬️schema/🧾️receipt/🔣️.json",
+      "sha256": "2a318494d1bad4673ca42e9a90fcc1cd6a65e131760f53edde08868283562467",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "2a318494d1bad4673ca42e9a90fcc1cd6a65e131760f53edde08868283562467",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "68d8e3336f3575e860d8f20fb97c56dc596ce412a1ebf812cc9b16f39429a798",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "68d8e3336f3575e860d8f20fb97c56dc596ce412a1ebf812cc9b16f39429a798",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+      "sha256": "ca0e18ddd77f14d5c2bd7c103e7410e9ad0a64fc269d3ffc6f0ef662acd7590e",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "ca0e18ddd77f14d5c2bd7c103e7410e9ad0a64fc269d3ffc6f0ef662acd7590e",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🟦️.ts",
+      "sha256": "f08ed1a22c415594f778f1bd610cb4d145aa57804b764707371c6e4a98ead3b0",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "f08ed1a22c415594f778f1bd610cb4d145aa57804b764707371c6e4a98ead3b0",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧪️tests/🦀️.rs",
+      "sha256": "0dfc8684305c711194b963b97246e7d698253a4801b91e5cfd83351cff6a65ae",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "0dfc8684305c711194b963b97246e7d698253a4801b91e5cfd83351cff6a65ae",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/📐️planning/🧫️fixtures/🔣️.json",
+      "sha256": "5ab8908edafee6c1198d49ae3da73bdaac91926febc16fd5991093f03133b279",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "5ab8908edafee6c1198d49ae3da73bdaac91926febc16fd5991093f03133b279",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "0f57a8592fcd7101d2fe5f300ed360da20fc6b975efeea3174545fe83fcae1bd",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "263b7090607550554d6da929e0d33a38148d524e99909ab6af288bebbed97aae",
+      "matches": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "sha256": "543208a33ade0997aebbbe5c786544fd16577383ca37b6c0ab6c8514d2bb85c8",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "543208a33ade0997aebbbe5c786544fd16577383ca37b6c0ab6c8514d2bb85c8",
+      "matches": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "37a8d9880c42b9012f4a3a5e209bba1b87cd16b3b0d065d96f8670194a0c9edd",
+      "role": "direct observer only; logical authorship remains respective narrow ledgers",
+      "currentSha256": "37a8d9880c42b9012f4a3a5e209bba1b87cd16b3b0d065d96f8670194a0c9edd",
+      "matches": true
+    }
+  ],
+  "qualification": "Direct finite source observers only; Root Nx/MJS changed after launch. No transitive/runtime/WGPU credit."
+}

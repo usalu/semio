@@ -1,0 +1,17 @@
+[
+  {
+    "name": "🧰️Framework 🛍️OS 🔌️Plugin 🧩️Child Owners 🦀️Whole Original Test",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/framework-plugin:test --excludeTaskDependencies --skip-nx-cache --output-style=static -- long --all-targets --offline --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+    "cwd": "${workspaceFolder}",
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.04227
+    },
+    "env": {
+      "SEMIO_TEST_LEVEL": "long",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mp/a"
+    }
+  }
+]

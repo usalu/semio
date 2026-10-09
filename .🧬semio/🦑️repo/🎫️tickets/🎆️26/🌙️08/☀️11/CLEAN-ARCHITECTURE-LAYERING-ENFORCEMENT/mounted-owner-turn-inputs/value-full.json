@@ -1,0 +1,20 @@
+[
+  {
+    "name": "🧰️Framework 🌱️Value 🔭️Borrowed Observer 🦀️Whole Original Test",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/value-rs:test --skip-nx-cache --excludeTaskDependencies -- long --offline --success-output immediate",
+    "cwd": "/Users/ueli/Documents/semio",
+    "env": {
+      "NX_CACHE_PROJECT_GRAPH": "false",
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "CARGO_BUILD_JOBS": "2",
+      "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mo3/a"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.0586072
+    }
+  }
+]

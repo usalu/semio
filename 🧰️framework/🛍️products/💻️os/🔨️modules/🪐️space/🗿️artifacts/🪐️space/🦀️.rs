@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 /// 🏛️ A space's collaboration shape: `Atelier` (single-writer personal, reconcile-enforced exactly
 /// one `Author`), `Studio` (multi-writer group, any number of `Author`s), `Archive` (frozen, nobody
 /// writes).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned)]
 pub enum SpaceKind {
     Atelier,
     Studio,
@@ -32,7 +32,7 @@ pub enum SpaceKind {
 
 /// 👁️ Whether a space is discoverable/readable by an anonymous visitor (`Public`, implicit anonymous
 /// spectator — wired at the hub layer in W4) or membership-gated (`Private`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned)]
 pub enum SpaceVisibility {
     Private,
     Public,
@@ -42,7 +42,7 @@ pub enum SpaceVisibility {
 /// hub directory (`🌎️hub/🔨️modules/📇️directory`) re-declares this enum string-identically
 /// (`"author"`/`"spectator"`, see `as_str`/`parse`) since it cannot depend on this wasm-facing crate —
 /// keep the two in lockstep by hand.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned)]
 pub enum SpaceRole {
     Author,
     Spectator,
@@ -66,7 +66,7 @@ impl SpaceRole {
 }
 
 /// 🧑️ One space member: identity, display name, optional avatar, and their `SpaceRole`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 pub struct SpaceUser {
     pub id: String,
     pub name: String,
@@ -91,7 +91,7 @@ pub const S_SPACE_SCHEMA: &str = "os.space";
 /// `os.collection` document id it addresses (see `🔖️Addressing` in the plan: `CollectionEntry.id ==
 /// artifact id == ArtifactEnvelope.id` for document artifacts; a `CollectionRef` follows the same
 /// convention one level up).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 pub struct CollectionRef {
     pub id: String,
     pub name: String,
@@ -103,7 +103,7 @@ pub struct CollectionRef {
 /// `OsSnapshot` in W3 — see `## The inversion` in the plan), and the durable extension ledger
 /// (`extensions`). Session-only `active_plugin_id`/`active_alternative_id` stay OUT of this document
 /// by design (transient UI state, not manifest data) — see os-core's space app glue.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[artifact(id = "os.space")]
 pub struct SpaceSnapshot {
     pub schema: String,
@@ -122,7 +122,7 @@ pub struct SpaceSnapshot {
 
 /// 🧩️ One installed extension recorded in the space ledger — identity, package provenance, and
 /// enablement. Distinct from session-only `loadedPlugins` handles; this is what survives reload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct InstalledExtension {

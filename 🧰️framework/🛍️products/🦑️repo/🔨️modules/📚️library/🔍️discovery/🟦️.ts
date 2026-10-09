@@ -1,3 +1,5 @@
+import { inspectSchemaValidationReadIndex, type SchemaReadObserver, type SchemaValidationReadIndex } from "./🔗️schema-reads/🟦️.ts";
+export { inspectSchemaValidationReads, inspectSchemaValidationReadIndex, type SchemaReadObserver, type SchemaReadProgress, type SchemaValidationReadIndex, type SchemaValidationReadReport } from "./🔗️schema-reads/🟦️.ts";
 import { ecmaProgram, ecmaTokens, type EcmaToken, type EcmaPattern, type EcmaExpression, type EcmaStatement } from "../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts";
 import { parseGeneratorPreviewProgressPolicyV1, type GeneratorPreviewProgressPolicyV1 } from "../🏭️generator/👁️preview/📈️progress/🟦️.ts";
 import { parseGeneratorPreviewArgumentsV1, parseGeneratorPreviewLiteralCommandV1 } from "../🏭️generator/👁️preview/🔤️arguments/🟦️.ts";
@@ -1048,7 +1050,7 @@ export interface Taxonomy {
     readonly exportIdPattern: string;
     /** 🔤️ Taxonomy format key to the ascii format id the Rust `SchemaFormat::id()` spelling uses; the only declared bridge between the two spellings. */
     readonly formatIds: Readonly<Record<string, string>>;
-    /** 🦀️ Contract id every `schema verify --rust-entries` dump of `schema_export_catalog_entries()` declares. */
+    /** 🦀️ Contract id every `schema verify` dump of `schema_export_catalog_entries()` declares. */
     readonly rustEntriesContractId: string;
     /** 🧬️ The `$id` segment that turns a mutation leaf into its own scope `<root>.mutation.<semanticKind>`. */
     readonly mutationScopeSegment: string;
@@ -3186,6 +3188,32 @@ function walkRepositoryTree(repoRoot: string, taxonomy: Taxonomy): SchemaWalkRes
   return { directories, files };
 }
 
+/** 🔗️ Inspects the original taxonomy walk with explicit unavailable evidence, progress and cancellation. */
+export async function inventorySchemaValidationReads(repoRoot: string, taxonomy: Taxonomy = loadCatalogTaxonomy(), observer: SchemaReadObserver = {}): Promise<SchemaValidationReadIndex> {
+  const root = resolve(repoRoot), files: string[] = [], unavailablePaths: string[] = [], opaque = [...Object.values(taxonomy.pathExclusions).map(exclusion => exclusion.path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/+$/u, "")), ...gitSubmodulePaths(root)].map(prefix => prefix.normalize("NFC"));
+  let completed = 0;
+  observer.onProgress?.({ phase: "walk", completed, total: null, path: null });
+  const visit = async (directory: string): Promise<void> => {
+    observer.checkCancellation?.();
+    let entries: import("node:fs").Dirent<string>[];
+    try { entries = await readdirAsync(join(root, directory), { withFileTypes: true }); } catch { unavailablePaths.push(directory); return; }
+    for (const entry of entries.sort((left, right) => byteSort(left.name, right.name))) {
+      observer.checkCancellation?.();
+      const path = directory ? `${directory}/${entry.name}` : entry.name, key = path.normalize("NFC");
+      if (entry.isSymbolicLink() || opaque.some(prefix => key === prefix || key.startsWith(`${prefix}/`))) continue;
+      if (entry.isDirectory() && (isDiscoverySkipDirectory(entry.name) || entry.name.startsWith("."))) continue;
+      observer.onProgress?.({ phase: "walk", completed: ++completed, total: null, path });
+      if (entry.isDirectory()) await visit(path); else if (entry.isFile()) files.push(path);
+    }
+  };
+  await visit("");
+  const fileSet = new Set(files), index = await inspectSchemaValidationReadIndex(files, path => {
+    if (!fileSet.has(path)) return undefined;
+    try { return readFileSync(join(root, path), "utf8"); } catch { return undefined; }
+  }, observer);
+  return { reports: index.reports, unavailablePaths: [...new Set([...unavailablePaths, ...index.unavailablePaths])].sort(byteSort) };
+}
+
 /** 🔎️ First index of `sorted` whose byte order is not below `value` (prefix ranges without a linear scan). */
 function lowerBound(sorted: readonly string[], value: string): number {
   let low = 0;
@@ -3761,7 +3789,7 @@ export interface SchemaRustEntry {
   readonly format: string;
 }
 
-/** 🦀️ The dump `schema verify --rust-entries <file>` consumes; `contractId` is `schemaExportResolution.rustEntriesContractId`. */
+/** 🦀️ The dump `schema verify` consumes; `contractId` is `schemaExportResolution.rustEntriesContractId`. */
 export interface SchemaRustEntryDump {
   readonly contractId: string;
   readonly generator: string;

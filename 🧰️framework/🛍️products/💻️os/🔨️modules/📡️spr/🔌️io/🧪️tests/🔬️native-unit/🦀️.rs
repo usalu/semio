@@ -20,7 +20,7 @@ mod tests {
     async fn sample_edit(id: &str) -> HistoryEdit {
         HistoryEdit { line: None,
             id: id.to_string(),
-            actor: Some("actor-1".to_string()),
+            actor: Some("actor-1".into()),
             started_at: "2026-07-27T00:00:00Z".to_string(),
             finished_at: Some("2026-07-27T00:00:01Z".to_string()), verb: None,
             ops: vec![crate::os_spr::history::OpPayload { text: Some("set x 1".to_string()), binary: None }],
@@ -234,7 +234,7 @@ mod tests {
         });
         let branch = crate::os_spr::HistoryTransition::Branch { alternative_id: "alt-1".to_string(), name: "main".to_string(), checkpoint_id: "ck-1".to_string() };
         for (logical, transition) in [commit, branch].iter().enumerate() {
-            let envelope = crate::os_spr::history_transition_envelope(transition, &crate::os_spr::ArtifactId("doc-1".to_string()), &crate::os_spr::ActorId("alice".to_string()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: logical as u64 });
+            let envelope = crate::os_spr::history_transition_envelope(transition, &crate::os_spr::ArtifactId("doc-1".to_string()), &crate::os_spr::ActorId("alice".into()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: logical as u64 });
             file.appender().await.append_transition(&HistoryTransitionRecord::from_envelope(&envelope)).await.unwrap();
         }
         file.appender().await.append_composition(&crate::os_spr::HistoryComposition { owner: None, dialect: Some(("kind".to_string(), "1".to_string(), "any".to_string())) }).await.unwrap();
@@ -242,7 +242,7 @@ mod tests {
             id: "conflict-1".to_string(),
             kind: 1,
             status: 0,
-            actors: vec!["alice".to_string()],
+            actors: vec!["alice".into()],
             hlt: (1, 1, 5),
             edit_ids: vec!["edit-1".to_string()],
             envelopes: Vec::new(),

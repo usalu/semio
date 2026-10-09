@@ -19,12 +19,14 @@ pub enum ShardRegistrationReason {
     Occupied,
     Exhausted,
     Stopped,
+    IdentityRefused,
 }
 
 pub struct ShardRegistrationRejected {
     pub actor: ActorId,
     pub instance: GuestInstance,
     pub reason: ShardRegistrationReason,
+    pub identity_refusal:Option<identity::ShardIdentityIssueRefused>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -80,16 +82,18 @@ impl ShardLoop {
     #[expect(clippy::result_large_err, reason = "Registration refusal returns the exact live guest instance so the caller can retire its admitted runtime resources.")]
     pub fn register(&mut self, actor: ActorId, instance: GuestInstance) -> Result<ShardActorAllocation, ShardRegistrationRejected> {
         if instance.actor != actor {
-            return Err(ShardRegistrationRejected { actor, instance, reason: ShardRegistrationReason::WrongActor });
+            return Err(ShardRegistrationRejected { actor, instance, reason: ShardRegistrationReason::WrongActor,identity_refusal:None });
         }
         if self.instances.contains_key(&actor.0) {
-            return Err(ShardRegistrationRejected { actor, instance, reason: ShardRegistrationReason::Occupied });
+            return Err(ShardRegistrationRejected { actor, instance, reason: ShardRegistrationReason::Occupied,identity_refusal:None });
         }
         let Some(registration) = NonZeroU64::new(self.next_registration) else {
-            return Err(ShardRegistrationRejected { actor, instance, reason: ShardRegistrationReason::Exhausted });
+            return Err(ShardRegistrationRejected { actor, instance, reason: ShardRegistrationReason::Exhausted,identity_refusal:None });
         };
+        let identity=match (self.identity_issuer)(actor){Ok(identity)=>identity,Err(error)=>return Err(ShardRegistrationRejected{actor,instance,reason:ShardRegistrationReason::IdentityRefused,identity_refusal:Some(error)})};
         self.next_registration = self.next_registration.checked_add(1).unwrap_or(0);
         let allocation = ShardActorAllocation { actor, registration };
+        self.identities.insert(allocation,identity);
         self.instances.insert(actor.0, instance);
         self.allocations.insert(actor.0, allocation);
         Ok(allocation)

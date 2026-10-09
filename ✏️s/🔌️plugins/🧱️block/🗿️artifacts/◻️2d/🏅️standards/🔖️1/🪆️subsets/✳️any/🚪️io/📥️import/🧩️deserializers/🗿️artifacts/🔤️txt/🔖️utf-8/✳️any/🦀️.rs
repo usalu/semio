@@ -18,7 +18,7 @@ pub fn from_dsl_text(text: &str) -> Result<Block2dSnapshot, IoError> {
 impl Deserializer<Block2dSnapshot> for TxtIntoBlock2d {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn deserialize(payload: &IoPayload) -> IoResult<Block2dSnapshot> {
+    async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<Block2dSnapshot> {
         deserialize_dsl_txt(payload)
     }
 }

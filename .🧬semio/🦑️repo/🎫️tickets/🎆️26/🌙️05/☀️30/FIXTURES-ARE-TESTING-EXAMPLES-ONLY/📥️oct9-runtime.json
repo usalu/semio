@@ -1,0 +1,10 @@
+{
+  "source": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodules/\ud83c\udfea\ufe0fstore/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+  "scope": "initialization_runtime_preserves_physical_backing_and_terminal_cursor_box",
+  "beforeSHA": "f9d6e212ed075db67f12dc6431954c4705647012f793344163ee8716053bc1a0",
+  "beforeBlockSHA": "9dfe861d4776c2daad43b7432baf6748c7c287fa5602ed8137c75dde3ed346df",
+  "afterBlockSHA": "7c7ba55a0eaf2fa3080d7729e50a8f5034159ca5e9a318a10ed5270e05f5dd48",
+  "action": "full declared grant and actual allocator receipts; fixed policy admission and separate terminal shell; original plain rows unchanged",
+  "nativeExecuted": false,
+  "afterSHA": "83d705860bcebc638e4ca504d3dcbe138cb96b7cb7de5a6cbe47ab61dcf801fc"
+}

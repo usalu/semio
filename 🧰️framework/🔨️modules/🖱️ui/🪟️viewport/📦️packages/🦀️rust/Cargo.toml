@@ -17,6 +17,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

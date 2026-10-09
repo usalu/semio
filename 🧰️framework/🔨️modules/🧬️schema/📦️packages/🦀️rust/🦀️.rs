@@ -7,4 +7,8 @@ extern crate self as semio_framework_schema;
 mod component;
 
 pub use component::*;
+
+#[path = "../../🦀️.rs"]
+mod schema_facet;
+pub use schema_facet::*;
 pub use semio_framework_schema_validator::*;

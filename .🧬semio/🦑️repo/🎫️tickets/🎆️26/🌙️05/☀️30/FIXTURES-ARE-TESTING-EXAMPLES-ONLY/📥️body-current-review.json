@@ -1,0 +1,18 @@
+{
+  "owned": false,
+  "nativeExecuted": false,
+  "observations": [
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🦀️.rs",
+      "sha256": "e01deb1911e0debe1515bc56920bf3e172731ac90e0fed953fbc59ff25dad44f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+      "sha256": "0d9ef8669aba75a59c3a7cc6625032e5c804a10125deadaf7ded2ad7e6fe93bd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs",
+      "sha256": "ca0e18ddd77f14d5c2bd7c103e7410e9ad0a64fc269d3ffc6f0ef662acd7590e"
+    }
+  ]
+}

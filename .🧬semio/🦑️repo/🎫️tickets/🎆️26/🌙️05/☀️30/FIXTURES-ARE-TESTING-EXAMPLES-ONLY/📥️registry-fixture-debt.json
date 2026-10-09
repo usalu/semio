@@ -1,0 +1,17 @@
+{
+  "owned": false,
+  "observations": [
+    {
+      "path": "📜️script.ts",
+      "sha256": "953194226790749673069f04a000449066091ed54bf5a1330dd7df006bfd481b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+      "sha256": "456b22d1b54d756d3c3947c1119a9eef9426df010966dc4f8bc4642042c0b8fd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/📜️script.ts",
+      "sha256": "833c95749c691cc59f314b0390a4da13f06778462726d1a85bf42242d9fb4a8b"
+    }
+  ]
+}

@@ -94,6 +94,12 @@ impl JsonError {
     pub fn into_value_error(self) -> ValueError { match self { Self::Native(error)=>error, error=>ValueError::new(error.kind(),error.to_string()) } }
 }
 
+impl semio_framework_value::retirement::RetireOwned for JsonError {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;match self{Self::Native(error)=>error.retirement(),Self::DuplicateMember{name,..}=>name.retirement(),Self::UnexpectedByte{found,offset}|Self::ControlCharacterInString{byte:found,offset}=>leaf((found,offset)),Self::InvalidNumber(offset)|Self::InvalidEscape(offset)|Self::InvalidUnicodeEscape(offset)|Self::UnpairedSurrogate(offset)|Self::TrailingData(offset)=>leaf(offset),Self::MaxDepthExceeded(depth)=>leaf(depth),Self::UnexpectedEof|Self::InvalidUtf8=>leaf(())}}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;match self{Self::Native(error)=>error.retirement_birth_bytes(),Self::DuplicateMember{name,..}=>name.retirement_birth_bytes(),Self::UnexpectedByte{..}|Self::ControlCharacterInString{..}=>Some(leaf_birth_bytes::<(u8,usize)>()),Self::InvalidNumber(_)|Self::InvalidEscape(_)|Self::InvalidUnicodeEscape(_)|Self::UnpairedSurrogate(_)|Self::TrailingData(_)=>Some(leaf_birth_bytes::<usize>()),Self::MaxDepthExceeded(_)=>Some(leaf_birth_bytes::<u32>()),Self::UnexpectedEof|Self::InvalidUtf8=>Some(leaf_birth_bytes::<()>())}}
+    fn controlled_retirement_supported()->bool{true}
+}
+
 /// 🛡️ Recursion ceiling for nested arrays/objects — matches `serde_json`'s own default
 /// (128), the value this repo's fixtures were authored against.
 pub const MAX_DEPTH: u32 = 128;
@@ -647,6 +653,9 @@ impl ToValue for Object {
 #[path = "📥️decode/🫳️borrowed/🦀️.rs"]
 mod borrowed_read_source;
 pub use borrowed_read_source::{JsonReadSource,JsonBorrowedParseCursor,JsonBorrowedDslCursor,JsonParsedValue,JsonReadLimits,JsonSourceCursor};
+#[path="📥️decode/🧵️operation/🦀️.rs"]
+mod original_read_operation;
+pub use original_read_operation::{JsonReadOperation,JsonReadPolicy};
 
 //#region 🔖️Lexer
 /// 🪙️ One structural token — the streaming layer everything else is built on. A future
@@ -733,6 +742,20 @@ impl NumberScan {
         self.finish(input).map(Some)
     }
 }
+
+/// 🔣️ Retains the original allocation-free RFC8259 numeric scanner under caller-authored turns.
+#[derive(Clone,Copy)]
+pub struct JsonNumberCursor(NumberScan);
+impl JsonNumberCursor{
+    /// 🌱️ Begins one exact numeric TEXT field without scanning, copying, or allocating.
+    pub fn new()->Self{Self(NumberScan::new(0))}
+    /// 📍️ Reports the actual original numeric source position.
+    pub fn position(&self)->usize{self.0.position}
+    /// 🧮️ Performs one original numeric grammar transition into the retained scalar owner.
+    pub fn step<S:JsonReadSource+?Sized>(&mut self,input:&S)->Result<Option<Number>,JsonError>{self.0.step(input)}
+}
+impl Default for JsonNumberCursor{fn default()->Self{Self::new()}}
+semio_framework_value::artifact_retire_leaf!(JsonNumberCursor);
 
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {
@@ -847,13 +870,24 @@ impl<'a> Lexer<'a> {
 pub fn parse(input: &str, policy: JsonMemberPolicy) -> Result<Value, JsonError> {
     let mut cursor = JsonParseCursor::new(policy);
     let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut accepted);
-    loop { if let Some(value) = cursor.step(input, 4096,&mut control)? { return Ok(value); } }
+    loop { if let Some(value) = cursor.step(input, 4096,&mut control,RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:isize::MAX as usize,maximum_capacity_bytes:isize::MAX as usize,maximum_release_bytes:isize::MAX as usize,maximum_depth:MAX_DEPTH as usize+4})? { return Ok(value); } }
 }
 
 /// 🌳️ [`parse`] over raw bytes — errors with [`JsonError::InvalidUtf8`] if `input` is not UTF-8.
 pub fn parse_bytes(input: &[u8], policy: JsonMemberPolicy) -> Result<Value, JsonError> {
     let text = std::str::from_utf8(input).map_err(|_| JsonError::InvalidUtf8)?;
     parse(text, policy)
+}
+
+use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+fn normal_permit(demand:RetirementDemand,grant:RetainedCloneGrant)->Result<bool,ValueError>{
+    if grant.maximum_items==0{return Ok(false);}
+    if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"JSON normal frontier exceeds original admitted depth"));}
+    Ok(demand.copy_bytes<=grant.maximum_copy_bytes&&demand.capacity_bytes<=grant.maximum_capacity_bytes&&demand.release_bytes<=grant.maximum_release_bytes)
+}
+fn normal_remaining(grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<RetainedCloneGrant,ValueError>{
+    if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON original normal receipt exceeded its caller grant"));}
+    Ok(RetainedCloneGrant{maximum_items:grant.maximum_items-progress.copied_items,maximum_copy_bytes:grant.maximum_copy_bytes-progress.copied_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes-progress.retained_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes-progress.released_bytes,..grant})
 }
 
 type JsonCandidates<T> = semio_framework_value::list::PagedList<T,{usize::MAX}>;
@@ -865,10 +899,16 @@ struct JsonFrame<V:JsonParsedValue> {
 struct JsonStringScan {start:usize,position:usize,bytes:usize,output:String,writing:bool,admitted:bool}
 enum JsonLexeme { String(JsonStringScan), Number(NumberScan) }
 
-fn json_candidate_slot<T>(owner:&mut JsonCandidates<T>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<bool,JsonError> {
+fn json_candidate_slot<T>(owner:&mut JsonCandidates<T>,control:&mut semio_framework_value::NativeDecodeControl<'_>,receipt:&mut RetainedCloneProgress)->Result<bool,JsonError> {
     if owner.has_reserved_slot() {return Ok(true);}
     let bytes=owner.next_allocation_bytes().map_err(ValueError::from)?;control.charge(bytes)?;
-    owner.reserve_one(bytes).map_err(|error|ValueError::from(error.refusal()))?;Ok(false)
+    match owner.reserve_one(bytes){Ok(progress)=>receipt.retained_capacity_bytes=progress.allocated_bytes,Err(error)=>{receipt.retained_capacity_bytes=error.allocated_bytes;return Err(ValueError::from(error.refusal()).into());}}Ok(false)
+}
+
+fn json_candidate_demand<T>(owner:&JsonCandidates<T>,demand:&mut RetirementDemand)->Result<(),JsonError>{
+    if owner.has_reserved_slot(){demand.depth=demand.depth.max(owner.next_push_depth_demand().map_err(ValueError::from)?);}
+    else{demand.capacity_bytes=owner.next_allocation_bytes().map_err(ValueError::from)?;demand.depth=demand.depth.max(owner.next_reserve_depth_demand().map_err(ValueError::from)?);}
+    Ok(())
 }
 
 /// 🧵️ Retains the canonical JSON grammar and admitted candidates while borrowing unchanged source.
@@ -877,54 +917,91 @@ pub type JsonParseCursor=JsonGrammarCursor<Value>;
 /// 🌳️ One retained grammar moves admitted semantic cells directly into its declared first-party output.
 pub struct JsonGrammarCursor<V:JsonParsedValue> {
     position: usize, validated_position:usize, limits:JsonReadLimits, policy: JsonMemberPolicy, frames: Vec<JsonFrame<V>>, lexeme: Option<JsonLexeme>,
-    pending: Option<V>, result: Option<V>, retired: JsonCandidates<V>, obsolete:Option<V>, complete: bool,
+    pending: Option<V>, result: Option<V>, retired: JsonCandidates<V>, obsolete:Option<V>, complete: bool, normal_step_progress:RetainedCloneProgress,
 }
 impl<V:JsonParsedValue> JsonGrammarCursor<V> {
     /// 🌱️ Starts parsing without copying, scanning, or allocating for the source.
-    pub fn new(policy: JsonMemberPolicy) -> Self { Self { position:0, validated_position:0, limits:JsonReadLimits{maximum_bytes:u64::MAX,maximum_allocation_bytes:usize::MAX,maximum_depth:MAX_DEPTH as usize,maximum_items:u64::MAX}, policy, frames:Vec::new(), lexeme:None, pending:None, result:None, retired:Default::default(),obsolete:None,complete:false } }
+    pub fn new(policy: JsonMemberPolicy) -> Self { Self { position:0, validated_position:0, limits:JsonReadLimits{maximum_bytes:u64::MAX,maximum_allocation_bytes:usize::MAX,maximum_depth:MAX_DEPTH as usize,maximum_items:u64::MAX}, policy, frames:Vec::new(), lexeme:None, pending:None, result:None, retired:Default::default(),obsolete:None,complete:false,normal_step_progress:Default::default() } }
     /// 📍️ Returns the measured source byte offset.
     pub fn position(&self) -> usize { self.position }
     /// 🧭️ Identifies the existing grammar or physical candidate frontier.
     pub fn phase(&self)->&'static str {match &self.lexeme {Some(JsonLexeme::String(scan))=>if scan.writing {"materialize-string"}else {"measure-string"},Some(JsonLexeme::Number(_))=>"number",None=>match self.frames.last(){Some(frame) if frame.state==8=>if frame.object {"materialize-object"}else {"materialize-array"},Some(frame)=>if frame.object {"collect-object"}else {"collect-array"},None=>"grammar"}}}
     /// ⏱️ Advances admitted grammar transitions under this operation's cumulative decode authority.
-    pub fn step(&mut self,input:&str,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<V>,JsonError>{
-        self.validated_position=input.len();
-        self.step_source(input,maximum_units,control)
-    }
-    fn step_source<S:JsonReadSource+?Sized>(&mut self,input:&S,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<V>,JsonError>{
-        control.scoped_maximum(self.limits.maximum_allocation_bytes,|control|{
-        for _ in 0..maximum_units{
-            control.checkpoint()?;
-            if self.validated_position<input.byte_len(){
-                let character=borrowed_read_source::character(input,self.validated_position)?;
-                self.validated_position+=character.len_utf8();control.step()?;continue;
+    pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
+    /// 📏️ Quotes the actual next original semantic or physical frontier before any effect.
+    pub fn normal_step_demands<S:JsonReadSource+?Sized>(&self,input:&S)->Result<RetirementDemand,JsonError>{
+        if self.validated_position<input.byte_len(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        let mut demand=RetirementDemand{depth:self.frames.len()+1,..Default::default()};
+        if self.obsolete.is_some(){json_candidate_demand(&self.retired,&mut demand)?;return Ok(demand);}
+        if let Some(frame)=self.frames.last().filter(|frame|frame.state==8){
+            if !frame.admitted{demand.capacity_bytes=if frame.object{frame.entries.len()*std::mem::size_of::<(String,V)>()}else{frame.values.len()*std::mem::size_of::<V>()};}
+            else if frame.object&&!frame.entries.is_empty(){demand.depth=demand.depth.max(frame.entries.next_pop_depth_demand().map_err(ValueError::from)?);}
+            else if !frame.object&&!frame.values.is_empty(){demand.depth=demand.depth.max(frame.values.next_pop_depth_demand().map_err(ValueError::from)?);}
+            else if frame.entries.is_empty()&&frame.values.is_empty(){
+                if !frame.entries.terminal_is_empty(){demand.release_bytes=frame.entries.next_release_allocation_bytes().map_err(ValueError::from)?;demand.depth=demand.depth.max(frame.entries.next_release_depth_demand().map_err(ValueError::from)?);}
+                else if !frame.values.terminal_is_empty(){demand.release_bytes=frame.values.next_release_allocation_bytes().map_err(ValueError::from)?;demand.depth=demand.depth.max(frame.values.next_release_depth_demand().map_err(ValueError::from)?);}
             }
+            return Ok(demand);
+        }
+        if self.pending.is_some(){if let Some(frame)=self.frames.last(){if let Some(index)=frame.duplicate{json_candidate_demand(&self.retired,&mut demand)?;if self.retired.has_reserved_slot(){demand.depth=demand.depth.max(frame.entries.next_get_depth_demand(index).map_err(ValueError::from)?);}}else if frame.object{json_candidate_demand(&frame.entries,&mut demand)?;}else{json_candidate_demand(&frame.values,&mut demand)?;}}return Ok(demand);}
+        if let Some(frame)=self.frames.last().filter(|frame|frame.state==6){demand.depth=demand.depth.max(frame.entries.next_get_depth_demand(frame.probe).map_err(ValueError::from)?);}
+        if let Some(JsonLexeme::String(scan))=&self.lexeme{
+            if scan.writing&&!scan.admitted{demand.capacity_bytes=scan.bytes;}
+            else if scan.writing{let mut position=scan.position;demand.copy_bytes=borrowed_read_source::json_character(input,&mut position)?.map_or(0,char::len_utf8);}
+        }else if self.lexeme.is_none()&&self.frames.capacity()==0&&matches!(input.byte_at(self.position),Some(b'{'|b'[')){demand.capacity_bytes=(self.limits.maximum_depth.min(MAX_DEPTH as usize)+2)*std::mem::size_of::<JsonFrame<V>>();}
+        Ok(demand)
+    }
+    pub fn step(&mut self,input:&str,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<V>,JsonError>{
+        self.step_source(input,maximum_units,control,grant,true)
+    }
+    fn step_source<S:JsonReadSource+?Sized>(&mut self,input:&S,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,known_utf8:bool)->Result<Option<V>,JsonError>{
+        self.normal_step_progress=Default::default();
+        let result=(||{
+        for _ in 0..maximum_units{
+            let remaining=normal_remaining(grant,self.normal_step_progress)?;let demand=self.normal_step_demands(input)?;
+            if !normal_permit(demand,remaining)?{break;}
+            control.checkpoint()?;
             if self.complete{return Ok(self.result.take());}
-            self.advance(input,control)?;control.step()?;
+            control.admit_turn_capacity(remaining.maximum_capacity_bytes)?;
+            let mut receipt=RetainedCloneProgress{copied_items:1,..Default::default()};
+            let operation_result=(||{
+                if self.validated_position<input.byte_len(){if known_utf8{self.validated_position=input.byte_len();}else{let character=borrowed_read_source::character(input,self.validated_position)?;self.validated_position+=character.len_utf8();}Ok(())}
+                else{control.scoped_maximum(self.limits.maximum_allocation_bytes,|control|self.advance(input,control,remaining,&mut receipt))}
+            })();
+            self.normal_step_progress=self.normal_step_progress.checked_add(receipt)?;
+            operation_result?;
+            normal_remaining(grant,self.normal_step_progress)?;
+            control.step()?;
             if self.complete{return Ok(self.result.take());}
         }
         Ok(None)
-        })
+        })();
+        match result{
+            Err(JsonError::Native(error))=>{
+                Err(JsonError::Native(error.with_retained_progress(self.normal_step_progress)))
+            },
+            result=>result,
+        }
     }
-    fn advance<S:JsonReadSource+?Sized>(&mut self,input:&S,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),JsonError> {
+    fn advance<S:JsonReadSource+?Sized>(&mut self,input:&S,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<(),JsonError> {
         if self.obsolete.is_some() {
-            if !json_candidate_slot(&mut self.retired,control)? {return Ok(());}
+            if !json_candidate_slot(&mut self.retired,control,receipt)? {return Ok(());}
             self.retired.push_reserved(self.obsolete.take().unwrap()).unwrap_or_else(|_|unreachable!());return Ok(());
         }
-        if self.frames.last().is_some_and(|frame|frame.state==8) {return self.materialize_frame(control);}
+        if self.frames.last().is_some_and(|frame|frame.state==8) {return self.materialize_frame(control,grant,receipt);}
         if self.pending.is_some() {
             if let Some(frame)=self.frames.last_mut() {
                 if frame.object {
                     if let Some(index)=frame.duplicate {
-                        if !json_candidate_slot(&mut self.retired,control)? {return Ok(());}
+                        if !json_candidate_slot(&mut self.retired,control,receipt)? {return Ok(());}
                         let old=std::mem::replace(&mut frame.entries.get_mut(index).unwrap().1,self.pending.take().unwrap());self.retired.push_reserved(old).unwrap_or_else(|_|unreachable!());self.obsolete=frame.key.take().map(V::json_string);frame.duplicate=None;
                     } else {
-                        if !json_candidate_slot(&mut frame.entries,control)? {return Ok(());}
+                        if !json_candidate_slot(&mut frame.entries,control,receipt)? {return Ok(());}
                         frame.entries.push_reserved((frame.key.take().unwrap(),self.pending.take().unwrap())).unwrap_or_else(|_|unreachable!());
                     }
                     frame.state=5;
                 } else {
-                    if !json_candidate_slot(&mut frame.values,control)? {return Ok(());}
+                    if !json_candidate_slot(&mut frame.values,control,receipt)? {return Ok(());}
                     frame.values.push_reserved(self.pending.take().unwrap()).unwrap_or_else(|_|unreachable!());frame.state=1;
                 }
             } else {self.result=self.pending.take();}
@@ -933,12 +1010,12 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
         if let Some(lexeme)=&mut self.lexeme {
             match lexeme {
                 JsonLexeme::String(scan)=>{
-                    if scan.writing && !scan.admitted {control.charge(scan.bytes)?;scan.output.try_reserve_exact(scan.bytes).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"JSON string allocation failed"))?;scan.admitted=true;return Ok(());}
+                    if scan.writing && !scan.admitted {control.charge(scan.bytes)?;scan.output.try_reserve_exact(scan.bytes).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"JSON string allocation failed"))?;receipt.retained_capacity_bytes=scan.output.capacity();scan.admitted=true;return Ok(());}
                     let mut position=if scan.writing{scan.position}else{self.position};
                     let character=borrowed_read_source::json_character(input,&mut position)?;
                     if scan.writing{scan.position=position;}else{self.position=position;}
                     if let Some(character)=character {
-                        if scan.writing {if scan.output.len()+character.len_utf8()>scan.bytes{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"JSON string changed after admission").into());}scan.output.push(character);}else {scan.bytes=scan.bytes.checked_add(character.len_utf8()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"JSON string size overflow"))?;}
+                        if scan.writing {if scan.output.len()+character.len_utf8()>scan.bytes{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"JSON string changed after admission").into());}scan.output.push(character);receipt.copied_bytes=character.len_utf8();}else {scan.bytes=scan.bytes.checked_add(character.len_utf8()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"JSON string size overflow"))?;}
                         return Ok(());
                     }
                     if !scan.writing {scan.writing=true;scan.position=scan.start;return Ok(());}
@@ -990,7 +1067,7 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
             b'"'=>{self.position+=1;self.lexeme=Some(JsonLexeme::String(JsonStringScan {start:self.position,position:self.position,bytes:0,output:String::new(),writing:false,admitted:false}));},
             b'-'|b'0'..=b'9'=>self.lexeme=Some(JsonLexeme::Number(NumberScan::new(self.position))),
             b'{'|b'['=>{
-                if self.frames.capacity()==0 {self.frames=control.allocate_vec(self.limits.maximum_depth.min(MAX_DEPTH as usize)+2)?;return Ok(());}
+                if self.frames.capacity()==0 {self.frames=control.allocate_vec(self.limits.maximum_depth.min(MAX_DEPTH as usize)+2)?;receipt.retained_capacity_bytes=self.frames.capacity()*std::mem::size_of::<JsonFrame<V>>();return Ok(());}
                 self.frames.push(JsonFrame {object:byte==b'{',state:0,item_count:0,values:Default::default(),entries:Default::default(),key:None,key_offset:0,probe:0,compare:0,duplicate:None,array:Vec::new(),members:Vec::new(),admitted:false,reverse:0});self.position+=1;
             },
             b't'|b'f'|b'n'=>{let (text,value)=match byte {b't'=>("true",V::json_bool(true)),b'f'=>("false",V::json_bool(false)),_=>("null",V::json_null())};if !borrowed_read_source::starts_with(input,self.position,text) {return Err(error());}self.position+=text.len();self.pending=Some(value);},
@@ -1000,12 +1077,12 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
         Ok(())
     }
     fn close_frame(&mut self) {self.frames.last_mut().unwrap().state=8;self.position+=1;}
-    fn materialize_frame(&mut self,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),JsonError> {
+    fn materialize_frame(&mut self,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<(),JsonError> {
         let frame=self.frames.last_mut().unwrap();
-        if !frame.admitted {if frame.object {frame.members=control.allocate_vec(frame.entries.len())?;}else {frame.array=control.allocate_vec(frame.values.len())?;}frame.admitted=true;return Ok(());}
+        if !frame.admitted {if frame.object {frame.members=control.allocate_vec(frame.entries.len())?;receipt.retained_capacity_bytes=frame.members.capacity()*std::mem::size_of::<(String,V)>();}else {frame.array=control.allocate_vec(frame.values.len())?;receipt.retained_capacity_bytes=frame.array.capacity()*std::mem::size_of::<V>();}frame.admitted=true;return Ok(());}
         if frame.object {if let Some(entry)=frame.entries.pop(){frame.members.push(entry);return Ok(());}}else if let Some(value)=frame.values.pop(){frame.array.push(value);return Ok(());}
-        if !frame.entries.terminal_is_empty() {frame.entries.release_empty_page(usize::MAX).map_err(ValueError::from)?;return Ok(());}
-        if !frame.values.terminal_is_empty() {frame.values.release_empty_page(usize::MAX).map_err(ValueError::from)?;return Ok(());}
+        if !frame.entries.terminal_is_empty() {let progress=frame.entries.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;receipt.released_bytes=progress.released_allocation_bytes;return Ok(());}
+        if !frame.values.terminal_is_empty() {let progress=frame.values.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;receipt.released_bytes=progress.released_allocation_bytes;return Ok(());}
         let length=if frame.object {frame.members.len()}else {frame.array.len()};
         if frame.reverse<length/2 {let opposite=length-1-frame.reverse;if frame.object {frame.members.swap(frame.reverse,opposite);}else {frame.array.swap(frame.reverse,opposite);}frame.reverse+=1;return Ok(());}
         let frame=self.frames.pop().unwrap();self.pending=Some(if frame.object {V::json_object(frame.members)}else {V::json_array(frame.array)});Ok(())
@@ -1101,20 +1178,45 @@ impl semio_framework_value::retirement::RetireOwned for JsonCompletedFrameRetire
     fn controlled_retirement_supported()->bool{true}
 }
 /// 🎒️ Moves a parsed JSON candidate into admitted canonical values without payload clones.
-pub struct JsonValueProjection {pending:Option<Value>,output:Option<DslValue>,frames:Vec<JsonProjectionFrame>,ordered:bool,retirement:Option<JsonCompletedFrameRetirement>}
+pub struct JsonValueProjection {pending:Option<Value>,output:Option<DslValue>,frames:Vec<JsonProjectionFrame>,ordered:bool,retirement:Option<JsonCompletedFrameRetirement>,normal_step_progress:RetainedCloneProgress}
 impl JsonValueProjection {
     /// 🌱️ Takes ownership of the existing parsed candidate.
-    pub fn new(value:Value)->Self {Self {pending:Some(value),output:None,frames:Vec::new(),ordered:false,retirement:None}}
+    pub fn new(value:Value)->Self {Self {pending:Some(value),output:None,frames:Vec::new(),ordered:false,retirement:None,normal_step_progress:Default::default()}}
     /// 🧬️ Projects the same candidate with canonical member order for dependency identity.
     pub fn new_ordered(value:Value)->Self {let mut cursor=Self::new(value);cursor.ordered=true;cursor}
     /// 🧭️ Exposes the current admitted value or consumed input frontier.
     pub fn phase(&self)->&'static str {if self.retirement.is_some(){"project-retire"}else if self.frames.last().is_some_and(|frame|!frame.admitted)||self.pending.as_ref().is_some_and(|value|matches!(value,Value::Array(_)|Value::Object(_))){"project-admit"}else{"project"}}
     /// ⏱️ Moves admitted values and drains consumed input under the same work and decode controls.
-    pub fn step(&mut self,maximum_units:usize,maximum_bytes:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<DslValue>,ValueError> {
+    pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
+    /// 📏️ Reads actual admitted output birth and original input backing release independently.
+    pub fn normal_step_demands(&self)->Result<RetirementDemand,ValueError>{
+        use semio_framework_value::retirement::RetirementCursor;
+        if let Some(retirement)=&self.retirement{return Ok(RetirementDemand{copy_bytes:if semio_framework_value::retirement::RetirementCursor::terminal_is_empty(retirement){std::mem::size_of::<u8>()}else{0},release_bytes:retirement.release_demand(),depth:1,..Default::default()});}
+        let mut demand=RetirementDemand{depth:self.frames.len()+1,..Default::default()};
+        if let Some(frame)=self.frames.last().filter(|frame|!frame.admitted){demand.capacity_bytes=if frame.is_object{frame.entries.len()*std::mem::size_of::<(String,DslValue)>()}else{frame.values.len()*std::mem::size_of::<DslValue>()};}
+        else if self.frames.capacity()==0&&self.pending.as_ref().is_some_and(|value|matches!(value,Value::Array(_)|Value::Object(_))){demand.capacity_bytes=(MAX_DEPTH as usize+2)*std::mem::size_of::<JsonProjectionFrame>();}
+        Ok(demand)
+    }
+    pub fn step(&mut self,maximum_units:usize,maximum_bytes:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<DslValue>,ValueError>{
+        self.normal_step_progress=Default::default();if maximum_bytes==0{return Ok(None);}
+        for _ in 0..maximum_units{
+            let remaining=normal_remaining(grant,self.normal_step_progress)?;let demand=self.normal_step_demands()?;if !normal_permit(demand,remaining)?{break;}
+            control.checkpoint()?;let before=control.owned_bytes();control.admit_turn_capacity(remaining.maximum_capacity_bytes)?;
+            let mut released_bytes=0;let value=if let Some(retirement)=self.retirement.as_mut(){
+                use semio_framework_value::retirement::{RetirementCursor,RetirementStep};
+                if retirement.terminal_is_empty(){self.retirement=None;}
+                else{match retirement.close_step(remaining){RetirementStep::Failure(error)=>return Err(error),RetirementStep::Bytes(bytes)=>released_bytes=bytes,RetirementStep::Progress(progress)=>released_bytes=progress.released_bytes,RetirementStep::BudgetExhausted=>break,_=>{}}}
+                None
+            }else{self.advance(1,maximum_bytes,control)?};
+            self.normal_step_progress=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:control.owned_bytes()-before,released_bytes})?;normal_remaining(grant,self.normal_step_progress)?;
+            if value.is_some(){return Ok(value);}
+        }
+        Ok(None)
+    }
+    fn advance(&mut self,maximum_units:usize,maximum_bytes:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<DslValue>,ValueError> {
         if maximum_bytes==0{return Ok(None);}
         for _ in 0..maximum_units {
             control.checkpoint()?;control.step()?;
-            if let Some(retirement)=&mut self.retirement {use semio_framework_value::retirement::RetirementCursor;let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:0,maximum_release_bytes:retirement.release_demand(),maximum_depth:retirement.next_depth_demand()?};if let semio_framework_value::retirement::RetirementStep::Failure(error)=retirement.close_step(grant){return Err(error);}if retirement.terminal_is_empty(){self.retirement=None;}continue;}
             if let Some(frame)=self.frames.last_mut().filter(|frame|!frame.admitted){if frame.is_object{frame.object=control.allocate_vec(frame.entries.len())?;}else{frame.array=control.allocate_vec(frame.values.len())?;}frame.admitted=true;continue;}
             if self.pending.as_ref().is_some_and(|value|matches!(value,Value::Array(_)|Value::Object(_)))&&self.frames.capacity()==0{self.frames=control.allocate_vec(MAX_DEPTH as usize+2)?;continue;}
             if let Some(value)=self.output.take() {if let Some(frame)=self.frames.last_mut() {if frame.is_object {frame.object.push((frame.key.take().unwrap(),value));}else {frame.array.push(value);}}else {return Ok(Some(value));}}
@@ -1758,42 +1860,75 @@ impl JsonWriteSource for DslValue{
 mod borrowed_source_sink;
 pub use borrowed_source_sink::write_json_source_into;
 
-/// 🧵️ Measures and writes the same owned source through bounded canonical writer transitions.
-pub struct JsonWriteCursor<S:JsonWriteSource> {
-    source: Option<S>, frames: Vec<JsonWriteFrame>, path: Vec<usize>, writer: ControlledWriter, phase: u8,
+/// 🧵️ Retains physical writer state while borrowing the unchanged semantic owner per grant.
+pub struct JsonBorrowedWriteCursor {
+    frames: Vec<JsonWriteFrame>, path: Vec<usize>, writer: ControlledWriter, phase: u8, normal_step_progress:RetainedCloneProgress,
 }
 
-impl<S:JsonWriteSource> JsonWriteCursor<S> {
-    /// 🌱️ Takes the existing projected owner without copying or scanning its payload.
-    pub fn new(value: S) -> Self { Self { source: Some(value), frames: Vec::new(), path: Vec::new(), writer: ControlledWriter { bytes: 0, output: None }, phase: 0 } }
+impl JsonBorrowedWriteCursor {
+    /// 🌱️ Starts without copying or scanning a source owner.
+    pub fn new() -> Self { Self { frames: Vec::new(), path: Vec::new(), writer: ControlledWriter { bytes: 0, output: None }, phase: 0, normal_step_progress:Default::default() } }
     /// 📍️ Returns the current canonical output byte count and measure/write phase.
     pub fn progress(&self) -> (usize, bool) { (self.writer.bytes, self.phase == 2) }
-    /// 📤️ Moves the original source to its next typed owner only after physical output completes.
-    pub fn take_source(&mut self)->Option<S> {if self.phase==3 {self.source.take()}else{None}}
     /// ⏱️ Advances at most the supplied structural or scalar-character transitions.
-    pub fn step(&mut self, maximum_units: usize, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Option<String>, ValueError> {
+    pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
+    /// 📏️ Quotes one actual scalar write, natural frame birth or final output allocation.
+    pub fn normal_step_demands<S:JsonWriteSource+?Sized>(&self,source:&S)->Result<RetirementDemand,ValueError>{
+        let mut demand=RetirementDemand{depth:self.path.len()+1,..Default::default()};
+        if self.phase==0{demand.capacity_bytes=(MAX_DEPTH as usize+1)*std::mem::size_of::<JsonWriteFrame>()+MAX_DEPTH as usize*std::mem::size_of::<usize>();return Ok(demand);}
+        if self.frames.is_empty(){if self.phase==1{demand.capacity_bytes=self.writer.bytes;}return Ok(demand);}
+        if self.phase!=2{return Ok(demand);}
+        let frame=*self.frames.last().unwrap();let node=source.node_at_path(&self.path)?;
+        let mut measured=ControlledWriter{bytes:0,output:None};let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(isize::MAX as usize,&mut accepted);
+        match frame.state{
+            0=>match node{JsonWriteNode::Null=>measured.raw("null",&mut control)?,JsonWriteNode::Bool(value)=>measured.raw(if value{"true"}else{"false"},&mut control)?,JsonWriteNode::Number(value)=>measured.number(value,&mut control)?,_=>measured.bytes=1},
+            1=>{let JsonWriteNode::Array(length)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next array source changed"));};measured.bytes=usize::from(frame.index==length||frame.index!=0);},
+            2=>{let JsonWriteNode::Object(length)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next object source changed"));};measured.bytes=if frame.index==length{1}else{1+usize::from(frame.index!=0)};},
+            3|5=>{let text=if frame.state==3{source.object_key_at_path(&self.path,frame.index)?}else{let JsonWriteNode::String(text)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next string source changed"));};text};if let Some(character)=text.get(frame.position..).and_then(|text|text.chars().next()){measured.character(character,&mut control)?;}else{measured.bytes=if frame.state==3{2}else{1};}},
+            6=>{let JsonWriteNode::NativeString(text)=node else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON next native string source changed"));};if frame.index==text.text_chunk_count(){measured.bytes=1;}else if let Some(character)=text.text_chunk(frame.index).and_then(|text|text.get(frame.position..)).and_then(|text|text.chars().next()){measured.character(character,&mut control)?;}},
+            _=>{},
+        }
+        demand.copy_bytes=measured.bytes;Ok(demand)
+    }
+    fn retained_capacity_bytes(&self)->Result<usize,ValueError>{
+        self.frames.capacity().checked_mul(std::mem::size_of::<JsonWriteFrame>()).and_then(|frames|self.path.capacity().checked_mul(std::mem::size_of::<usize>()).and_then(|path|frames.checked_add(path))).and_then(|bytes|bytes.checked_add(self.writer.output.as_ref().map_or(0,|output|output.capacity()))).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"JSON writer physical backing extent overflow"))
+    }
+    pub fn step<S:JsonWriteSource+?Sized>(&mut self,source:&S,maximum_units:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<String>,ValueError>{
+        self.normal_step_progress=Default::default();
+        self.step_original(source,maximum_units,control,grant).map_err(|error|error.with_retained_progress(self.normal_step_progress))
+    }
+    fn step_original<S:JsonWriteSource+?Sized>(&mut self,source:&S,maximum_units:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<String>,ValueError>{
         for _ in 0..maximum_units {
-            control.checkpoint()?;
-            if self.phase == 3 { return Ok(None); }
-            if self.phase == 0 {
-                self.frames = control.allocate_vec(MAX_DEPTH as usize + 1)?;
-                self.path = control.allocate_vec(MAX_DEPTH as usize)?;
-                self.frames.push(JsonWriteFrame { state: 0, index: 0, position: 0 });
-                self.phase = 1;
-            } else if self.frames.is_empty() {
-                if self.phase == 1 {
-                    control.charge(self.writer.bytes)?;
-                    let mut output = String::new();
-                    output.try_reserve_exact(self.writer.bytes).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "controlled JSON output allocation failed"))?;
-                    self.writer = ControlledWriter { bytes: 0, output: Some(output) };
-                    self.frames.push(JsonWriteFrame { state: 0, index: 0, position: 0 });
-                    self.phase = 2;
-                } else {
-                    self.phase = 3;
-                    return Ok(self.writer.output.take());
-                }
-            } else { self.advance(control)?; }
-            control.step()?;
+            let remaining=normal_remaining(grant,self.normal_step_progress)?;let demand=self.normal_step_demands(source)?;
+            if !normal_permit(demand,remaining)?{break;}
+            control.admit_turn_capacity(remaining.maximum_capacity_bytes)?;control.checkpoint()?;
+            if self.phase==3{return Ok(None);}
+            if self.frames.is_empty()&&self.phase==2{
+                self.normal_step_progress=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:1,..Default::default()})?;
+                self.phase=3;return Ok(self.writer.output.take());
+            }
+            let retained_before=self.retained_capacity_bytes()?;
+            let copied_before=self.writer.output.as_ref().map_or(0,|output|output.len());
+            let frontier_before=(self.phase,self.frames.len(),self.path.len(),self.writer.bytes);
+            let result=(||->Result<(),ValueError>{
+                if self.phase==0{
+                    self.frames=control.allocate_vec(MAX_DEPTH as usize+1)?;
+                    self.path=control.allocate_vec(MAX_DEPTH as usize)?;
+                    self.frames.push(JsonWriteFrame{state:0,index:0,position:0});self.phase=1;
+                }else if self.frames.is_empty(){
+                    control.charge(self.writer.bytes)?;let mut output=String::new();
+                    output.try_reserve_exact(self.writer.bytes).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"controlled JSON output allocation failed"))?;
+                    self.writer=ControlledWriter{bytes:0,output:Some(output)};self.frames.push(JsonWriteFrame{state:0,index:0,position:0});self.phase=2;
+                }else{self.advance(source,control)?;}
+                Ok(())
+            })();
+            let retained_after=self.retained_capacity_bytes()?;
+            let copied_after=self.writer.output.as_ref().map_or(0,|output|output.len());
+            if retained_after<retained_before||copied_after<copied_before{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON writer released an ungranted normal backing"))}
+            let changed=result.is_ok()||retained_after!=retained_before||copied_after!=copied_before||frontier_before!=(self.phase,self.frames.len(),self.path.len(),self.writer.bytes);
+            self.normal_step_progress=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:usize::from(changed),copied_bytes:copied_after-copied_before,retained_capacity_bytes:retained_after-retained_before,released_bytes:0})?;
+            normal_remaining(grant,self.normal_step_progress)?;
+            result?;control.step()?;
         }
         Ok(None)
     }
@@ -1802,9 +1937,8 @@ impl<S:JsonWriteSource> JsonWriteCursor<S> {
         if self.path.len() >= MAX_DEPTH as usize { return Err(ValueError::new(ValueRefusalKind::DepthLimit, "retained JSON writer exceeds depth limit")); }
         self.path.push(index); self.frames.push(JsonWriteFrame { state: 0, index: 0, position: 0 }); Ok(())
     }
-    fn advance(&mut self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {
+    fn advance<S:JsonWriteSource+?Sized>(&mut self, source:&S, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {
         let frame = *self.frames.last().expect("writer frontier is inhabited");
-        let source=self.source.as_ref().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"JSON writer source is absent"))?;
         let node = source.node_at_path(&self.path)?;
         match frame.state {
             0 => {
@@ -1852,14 +1986,33 @@ impl<S:JsonWriteSource> JsonWriteCursor<S> {
     }
 }
 
+/// 🌳️ Owns its semantic source and the canonical borrowed writer state.
+pub struct JsonWriteCursor<S:JsonWriteSource>{source:Option<S>,state:JsonBorrowedWriteCursor}
+impl<S:JsonWriteSource> JsonWriteCursor<S>{
+    pub fn new(value:S)->Self{Self{source:Some(value),state:JsonBorrowedWriteCursor::new()}}
+    pub fn progress(&self)->(usize,bool){self.state.progress()}
+    pub fn take_source(&mut self)->Option<S>{if self.state.phase==3{self.source.take()}else{None}}
+    pub fn normal_step_progress(&self)->RetainedCloneProgress{self.state.normal_step_progress()}
+    pub fn normal_step_demands(&self)->Result<RetirementDemand,ValueError>{self.state.normal_step_demands(self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON writer source is absent"))?)}
+    pub fn step(&mut self,maximum_units:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<String>,ValueError>{
+        let source=self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON writer source is absent"))?;
+        self.state.step(source,maximum_units,control,grant)
+    }
+}
+
 impl semio_framework_value::retirement::RetireOwned for JsonWriteFrame {
     fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { semio_framework_value::retirement::leaf(self) }
     fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
     fn controlled_retirement_supported()->bool{true}
 }
+impl semio_framework_value::retirement::RetireOwned for JsonBorrowedWriteCursor {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;sequence(vec![deferred(self.frames),deferred(JsonProjectionIterator::new(self.path)),deferred(self.writer.output)])}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.frames),deferred_birth_bytes::<JsonProjectionIterator<usize>>(),deferred_birth_bytes_for(&self.writer.output)])}
+    fn controlled_retirement_supported()->bool{true}
+}
 impl<S:JsonWriteSource+semio_framework_value::retirement::RetireOwned+'static> semio_framework_value::retirement::RetireOwned for JsonWriteCursor<S> {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { use semio_framework_value::retirement::*;sequence(vec![deferred(self.source),deferred(self.frames),deferred(JsonProjectionIterator::new(self.path)),deferred(self.writer.output)]) }
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.source),deferred_birth_bytes_for(&self.frames),deferred_birth_bytes::<JsonProjectionIterator<usize>>(),deferred_birth_bytes_for(&self.writer.output)])}
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { use semio_framework_value::retirement::*;sequence(vec![deferred(self.source),deferred(self.state.frames),deferred(JsonProjectionIterator::new(self.state.path)),deferred(self.state.writer.output)]) }
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.source),deferred_birth_bytes_for(&self.state.frames),deferred_birth_bytes::<JsonProjectionIterator<usize>>(),deferred_birth_bytes_for(&self.state.writer.output)])}
     fn controlled_retirement_supported()->bool{S::controlled_retirement_supported()}
 }
 
@@ -1873,7 +2026,7 @@ impl ControlledWriter {
         }
     }
     fn raw(&mut self, text: &str, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {
-        self.bytes = self.bytes.checked_add(text.len()).filter(|bytes| *bytes <= control.maximum_bytes()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "controlled JSON output exceeds caller limit"))?;
+        self.bytes = self.bytes.checked_add(text.len()).filter(|bytes| *bytes<=isize::MAX as usize&&(self.output.is_none()||*bytes<=control.maximum_bytes())).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "controlled JSON output exceeds caller limit"))?;
         if self.output.as_ref().is_some_and(|output| self.bytes > output.capacity()) { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "controlled JSON output exceeds admitted allocation")); }
         if text.len() <= 65536 { if let Some(output) = self.output.as_mut() { output.push_str(text); } return Ok(()); }
         control.scoped_stage(|control| -> Result<(), ValueError> { control.begin_stage(text.len())?; let mut position = 0; while position < text.len() { let mut end = position.saturating_add(65536).min(text.len()); while !text.is_char_boundary(end) { end -= 1; } if let Some(output) = self.output.as_mut() { output.push_str(&text[position..end]); } control.advance(end - position)?; position = end; } Ok(()) })
@@ -2048,6 +2201,14 @@ mod member_tests;
 #[cfg(test)]
 #[path = "🧪️tests/⚠️refusal/🦀️.rs"]
 mod refusal_tests;
+
+#[cfg(test)]
+#[path = "📥️decode/🛂️policy/🧪️tests/🦀️.rs"]
+mod read_policy_tests;
+
+#[cfg(test)]
+#[path="📥️decode/🧾️receipt/🧪️tests/🦀️.rs"]
+mod normal_refusal_receipt_tests;
 
 #[cfg(test)]
 #[test]

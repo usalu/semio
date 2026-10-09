@@ -1,12 +1,38 @@
 mod runtime_close_budget_tests {
     use super::*;
 
+    #[test]
+    fn every_original_ownership_receipt_stops_the_typed_continuation_before_another_unit() {
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 65_536, maximum_release_bytes: 262_144, maximum_depth: 64 };
+        for receipt in [RetainedCloneProgress::default(), RetainedCloneProgress { copied_items: 1, copied_bytes: 31, retained_capacity_bytes: 64, released_bytes: 128 }] {
+            assert!(receipt.fits(grant));
+            for owner in ["preparation", "history", "tool-run"] {
+                let mut output = PluginExchangeOutput::default();
+                assert!(!TypedOperationGrant::UNIT.spent(&output));
+                match owner {
+                    "history" => output.history_command_receipt = Some((grant, receipt)),
+                    "tool-run" => output.tool_run_receipt = Some((grant, receipt)),
+                    _ => output.preparation_receipt = Some((semio_framework_job::OperationId(77), grant, receipt)),
+                }
+                let (stopped, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| TypedOperationGrant::UNIT.spent(&output));
+                assert!(stopped);
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                match owner {
+                    "history" => assert_eq!(output.history_command_receipt, Some((grant, receipt))),
+                    "tool-run" => assert_eq!(output.tool_run_receipt, Some((grant, receipt))),
+                    _ => assert_eq!(output.preparation_receipt, Some((semio_framework_job::OperationId(77), grant, receipt))),
+                }
+                eprintln!("[DEBUG] actual typed continuation owner={owner} originalGrant={grant:?} receipt={receipt:?} stopped={stopped} pureHeap={heap:?}");
+            }
+        }
+    }
+
     fn stall_state() -> (AtomicU8, AtomicU64) {
         (AtomicU8::new(0), AtomicU64::new(0))
     }
 
-    fn zero_progress() -> Option<crate::app::PluginCloseStep> {
-        Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
+    fn zero_progress() -> Option<crate::app::PluginLifecycleStep> {
+        Some(crate::app::PluginLifecycleStep::Progress(RetainedCloneProgress::default()))
     }
 
     #[test]
@@ -64,7 +90,7 @@ mod runtime_close_budget_tests {
     /// unable to ever reach `Retired`.
     #[test]
     fn pending_close_authority_waits_without_consuming_structural_close_credit() {
-        for progress in [crate::app::PluginCloseStep::Blocked { reason: "injected permanent external wait" }, crate::app::PluginCloseStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" }] {
+        for progress in [crate::app::PluginLifecycleStep::Blocked { reason: "injected permanent external wait" }, crate::app::PluginLifecycleStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" }] {
             let stalled = AtomicU8::new(RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT - 1);
             let since = AtomicU64::new(1);
             for tick in 0..1_024 {
@@ -83,7 +109,7 @@ mod runtime_close_budget_tests {
         for step in 0..u64::from(RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT) {
             let _ = runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, Some(1 + step));
         }
-        assert_eq!(runtime_close_stall_verdict(false, Some(crate::app::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }), &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
+        assert_eq!(runtime_close_stall_verdict(false, Some(crate::app::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
         assert_eq!(stalled.load(Ordering::SeqCst), 0);
         assert_eq!(runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, Some(1_000_000 + RUNTIME_CLOSE_STALL_CREDIT_US)).0, RuntimeCloseStatus::Ready);
     }
@@ -105,7 +131,7 @@ mod runtime_close_budget_tests {
     #[test]
     fn permanently_blocked_live_cleanup_faults_without_claiming_released_ownership() {
         let stalled = AtomicU32::new(0);
-        let blocked = Some(crate::app::PluginCloseStep::Blocked { reason: "injected permanent external wait" });
+        let blocked = Some(crate::app::PluginLifecycleStep::Blocked { reason: "injected permanent external wait" });
         for _ in 1..RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
             assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RuntimeMaintenanceStatus::Ready);
         }
@@ -116,7 +142,7 @@ mod runtime_close_budget_tests {
     #[test]
     fn exact_host_input_wait_resets_structural_live_cleanup_stall_credit() {
         let stalled = AtomicU32::new(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT - 1);
-        let awaiting_input = Some(crate::app::PluginCloseStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" });
+        let awaiting_input = Some(crate::app::PluginLifecycleStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" });
         for _ in 0..1_024 {
             assert_eq!(runtime_live_cleanup_nonterminal_status(false, awaiting_input, &stalled), RuntimeMaintenanceStatus::Ready);
         }
@@ -134,40 +160,78 @@ mod runtime_close_budget_tests {
 
     #[test]
     fn live_maintenance_caller_funds_exact_retained_physical_extent_without_more_work() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/📏️live-physical-demand/🔣️.json")).expect("closed live physical authority");
-        assert_eq!(fixture["ordinaryGrantBytes"].as_u64().unwrap() as usize, RUNTIME_CLOSE_BYTES_PER_STEP);
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/📏️live-physical-demand/🔣️.json")).unwrap();
+        let original = RetainedCloneGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: fixture["ordinaryGrantBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: fixture["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: fixture["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: fixture["maximumDepth"].as_u64().unwrap() as usize };
+        let policy = crate::MountedOwnerPolicyV1 { preparation: original, maintenance: original, close: original }.validate().unwrap().maintenance;
+        assert_eq!(fixture["ordinaryGrantBytes"].as_u64().unwrap() as usize, policy.maximum_copy_bytes);
+        assert_eq!(fixture["maximumCapacityBytes"].as_u64().unwrap() as usize, policy.maximum_capacity_bytes);
+        assert_eq!(fixture["maximumReleaseBytes"].as_u64().unwrap() as usize, policy.maximum_release_bytes);
+        assert_eq!(fixture["maximumDepth"].as_u64().unwrap() as usize, policy.maximum_depth);
+        let grant = RetainedCloneGrant { maximum_release_bytes: fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize, ..policy };
         for extent in fixture["allocationBytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
-            let mut owner = Some(vec![42u8; extent]);
-            let mut work = 0;
-            let mut grant = 0;
-            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| runtime_live_maintenance_step(extent, |items, bytes| {
-                work = items;
-                grant = bytes;
-                if bytes < extent { return Ok(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+            let mut owner = Some(Vec::<u8>::with_capacity(extent));
+            assert_eq!(owner.as_ref().unwrap().capacity(), extent);
+            let pointer = owner.as_ref().unwrap().as_ptr();
+            let demand = RetirementDemand { release_bytes: extent, depth: 1, ..Default::default() };
+            for under in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_release_bytes: extent - 1, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }] {
+                let mut called = 0;
+                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| runtime_lifecycle_step(demand, under, |_| {
+                    called += 1;
+                    unreachable!("undergrant called the original lifecycle owner")
+                }));
+                assert_eq!(called, 0);
+                assert!(matches!(result, Ok(crate::app::PluginLifecycleStep::Progress(progress)) if progress == RetainedCloneProgress::default()));
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                assert_eq!(owner.as_ref().unwrap().as_ptr(), pointer);
+            }
+            let mut called = 0;
+            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| runtime_lifecycle_step(demand, grant, |actual| {
+                called += 1;
+                assert_eq!(actual, grant);
                 drop(owner.take());
-                Ok(crate::app::PluginCloseStep::Pending { released_items: 1, released_bytes: extent })
+                Ok((crate::app::PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..Default::default() }), owner.is_none()))
             }));
-            let retained = owner.is_some();
-            drop(owner.take());
-            eprintln!("[DEBUG] live maintenance demand={} grant={} work={} retained={} heap={:?} result={:?}", extent, grant, work, retained, heap, result);
-            assert_eq!(work, fixture["maximumItems"].as_u64().unwrap() as usize);
-            assert_eq!(grant, extent);
-            assert!(!retained);
+            assert_eq!(called, fixture["maximumItems"].as_u64().unwrap() as usize);
+            assert!(owner.is_none());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
-            assert!(matches!(result, Ok((crate::app::PluginCloseStep::Pending { released_items: 1, released_bytes }, bytes)) if released_bytes == extent && bytes == extent));
+            assert!(matches!(result, Ok(crate::app::PluginLifecycleStep::Complete(progress)) if progress.released_bytes == extent && progress.copied_bytes == 0 && progress.fits(grant)));
+            eprintln!("[DEBUG] actual runtime lifecycle originalExtent={extent} copyGrant={} capacityGrant={} releaseGrant={} called={called} heap={:?} terminalDrop=0", grant.maximum_copy_bytes, grant.maximum_capacity_bytes, grant.maximum_release_bytes, heap);
         }
         let extent = fixture["refusedAllocationBytes"].as_u64().unwrap() as usize;
-        let mut owner = Some(vec![42u8; extent]);
+        let mut owner = Some(Vec::<u8>::with_capacity(extent));
+        let pointer = owner.as_ref().unwrap().as_ptr();
         let mut work = 0;
-        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| runtime_live_maintenance_step(extent, |items, _| {
-            work += items;
-            Ok(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| runtime_lifecycle_step(RetirementDemand { release_bytes: extent, depth: 1, ..Default::default() }, grant, |_| {
+            work += 1;
+            unreachable!("fixed original release grant was enlarged")
         }));
-        let retained = owner.is_some();
-        drop(owner.take());
-        assert!(retained);
-        assert!(result.is_err());
+        assert!(matches!(result, Ok(crate::app::PluginLifecycleStep::Progress(progress)) if progress == RetainedCloneProgress::default()));
+        assert_eq!(owner.as_ref().unwrap().as_ptr(), pointer);
         assert_eq!(work, fixture["refusedWorkItems"].as_u64().unwrap() as usize);
-        assert_eq!(heap.released_bytes, 0);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        let actual = RetainedCloneGrant { maximum_release_bytes: extent, ..grant };
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| runtime_lifecycle_step(RetirementDemand { release_bytes: extent, depth: 1, ..Default::default() }, actual, |received| {
+            assert_eq!(received, actual);
+            drop(owner.take());
+            Ok((crate::app::PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..Default::default() }), owner.is_none()))
+        }));
+        assert!(matches!(result, Ok(crate::app::PluginLifecycleStep::Complete(progress)) if progress.released_bytes == extent));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
+        eprintln!("[DEBUG] actual runtime lifecycle one-below release originalPointer retained0heap; independently admitted exact release={extent} physical={}", heap.released_bytes);
+    }
+
+    #[test]
+    fn every_actual_progress_currency_resets_close_and_live_stall_credit() {
+        for receipt in [RetainedCloneProgress { copied_items: 1, ..Default::default() }, RetainedCloneProgress { copied_bytes: 1, ..Default::default() }, RetainedCloneProgress { retained_capacity_bytes: 1, ..Default::default() }, RetainedCloneProgress { released_bytes: 1, ..Default::default() }] {
+            let (stalled, since) = (AtomicU8::new(RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT), AtomicU64::new(1));
+            let progress = Some(crate::app::PluginLifecycleStep::Progress(receipt));
+            assert_eq!(runtime_close_stall_verdict(false, progress, &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
+            assert_eq!(stalled.load(Ordering::SeqCst), 0);
+            assert_eq!(since.load(Ordering::SeqCst), 0);
+            let live = AtomicU32::new(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT);
+            assert_eq!(runtime_live_cleanup_nonterminal_status(false, progress, &live), RuntimeMaintenanceStatus::Ready);
+            assert_eq!(live.load(Ordering::SeqCst), 0);
+        }
+        eprintln!("[DEBUG] actual runtime all4 receipt currencies independently reset structural close/live stall credit");
     }
 }

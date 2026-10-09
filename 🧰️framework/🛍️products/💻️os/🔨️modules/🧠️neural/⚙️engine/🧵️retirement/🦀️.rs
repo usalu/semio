@@ -314,7 +314,7 @@ impl RetainedDictionaryInput {
                 DslValue::Object(_)=>{
                     if self.frames.len()>=128 {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"typed input nesting limit exceeded"));}
                     if !self.frames.has_reserved_slot() {
-                        let receipt=self.frames.reserve_one(grant.maximum_capacity_bytes).map_err(|error|ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason))?;
+                        let receipt=self.frames.reserve_one(grant.maximum_capacity_bytes).map_err(|error|ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()}))?;
                         progress=RetainedCloneProgress {copied_items:usize::from(receipt.progressed),retained_capacity_bytes:receipt.allocated_bytes,..Default::default()};
                     } else {
                         let Some(DslValue::Object(entries))=self.pending.take() else {unreachable!()};

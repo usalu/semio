@@ -1133,6 +1133,10 @@ pub struct ArtifactInferenceBudgetV1 {
     pub recursion_depth: u32,
 }
 
+fn retained_clone_grant_schema(_: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    serde_json::from_str(semio_framework_value::retained_clone::RETAINED_CLONE_GRANT_SCHEMA).expect("canonical retained grant schema")
+}
+
 /// 🗃️ Requested or actual inference cache behaviour — the guest's own closed vocabulary.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -1165,6 +1169,8 @@ pub struct ArtifactInferenceRequestV1 {
     pub source_dialect: String,
     pub policy: Vec<u8>,
     pub budgets: ArtifactInferenceBudgetV1,
+    #[schemars(schema_with = "retained_clone_grant_schema")]
+    pub retained: semio_framework_value::retained_clone::RetainedCloneGrant,
     pub cancellation_id: String,
     pub previous_state: Option<Vec<u8>>,
     pub requested_cache_mode: ArtifactInferenceCacheModeV1,

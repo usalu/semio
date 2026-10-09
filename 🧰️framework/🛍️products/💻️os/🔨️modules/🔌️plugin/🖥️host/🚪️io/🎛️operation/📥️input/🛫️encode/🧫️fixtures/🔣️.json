@@ -1,0 +1,1 @@
+{"maximumBytes":65536,"values":[null,true,false,0,-42,9007199254740991,1.25,-0.0,1e-6,1e20,"é🧩\"\\\n\t\u0001",[null,true,17,"nested"],{"a":[1,2],"b":{"é":"🧩"}}],"float32":[0.0,-0.0,1.2,0.000001,1e20],"grant":{"maximumItems":1,"maximumCopyBytes":4096,"maximumCapacityBytes":65536,"maximumReleaseBytes":65536,"maximumDepth":64}}

@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["actor","id","repeat","copyCapacityLimit","turnLimit"],"properties":{"actor":{"type":"string"},"id":{"type":"string","minLength":1,"maxLength":128},"repeat":{"type":"integer","minimum":1},"copyCapacityLimit":{"const":4096},"turnLimit":{"const":100000}}}

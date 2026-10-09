@@ -139,3 +139,47 @@ fn bounded_history_multiple_waiting_originals_refuse_independent_item_undergrant
     for items in 0..expected{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(RetainedCloneGrant{maximum_items:items,..grant}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(job.next_local_admission_item_demand(),expected);}
     let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant).unwrap());let progress=step.progress();assert_eq!(progress.copied_items,expected);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(job.next_local_admission_item_demand(),0);close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] two waiting fold originals require exactly two real frame items; zero/subexact item grants preserve original custody and heap; funded atomic future release reports both actual births");
 }
+
+
+#[test]
+fn bounded_history_shared_actor_admission_retains_preborn_shell_and_actual_receipt(){
+    fn fund(control:&HistoryFoldControl,grant:RetainedCloneGrant){
+        control.0.retirement_items.store(grant.maximum_items,Ordering::Relaxed);
+        control.0.retirement_capacity.store(grant.maximum_capacity_bytes,Ordering::Relaxed);
+        control.0.original_copy.store(grant.maximum_copy_bytes,Ordering::Relaxed);
+        control.0.original_release.store(grant.maximum_release_bytes,Ordering::Relaxed);
+        control.0.original_depth.store(grant.maximum_depth,Ordering::Relaxed);
+        control.0.admitted_retirement_items.store(0,Ordering::Relaxed);
+        control.0.admitted_retirement_capacity.store(0,Ordering::Relaxed);
+        control.0.admitted_original_copy.store(0,Ordering::Relaxed);
+    }
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️actor.json")).unwrap();
+    let mut job=HistoryFoldJob::<()>::new(|_|std::future::pending());
+    let original=law["original"].as_str().unwrap().to_owned();let pointer=original.as_ptr();
+    let mut source=job.control.track(original).unwrap_or_else(|_|unreachable!());
+    let frame=owned_retirement_birth_bytes::<String>();
+    fund(&job.control,RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:frame,maximum_depth:1,..Default::default()});
+    let(original,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||Pin::new(&mut source).poll(&mut Context::from_waker(job.waker.as_ref().unwrap())));
+    let Poll::Ready(original)=original else{panic!("funded original actor frame must be ready")};assert_eq!((heap.requested_bytes,heap.released_bytes),(frame,0));
+    let frame_pointer=original.owner.as_ref().unwrap().as_ref() as *const _ as usize;
+    let mut admission=job.control.adopt_actor(original);
+    let capacity=semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<String>();
+    let copied=size_of::<String>()+size_of::<semio_framework_value::SharedUtf8>();
+    let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copied,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:1};
+    for axis in law["deniedAxes"].as_array().unwrap(){
+        let mut denied=grant;match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"copy"=>denied.maximum_copy_bytes=copied-1,"capacity"=>denied.maximum_capacity_bytes=capacity-1,"depth"=>denied.maximum_depth=0,_=>unreachable!()};fund(&job.control,denied);
+        let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||Pin::new(&mut admission).poll(&mut Context::from_waker(job.waker.as_ref().unwrap())));
+        assert!(result.is_pending());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(admission.original.as_ref().unwrap().as_ptr(),pointer);assert!(job.control.empty());
+    }
+    fund(&job.control,grant);
+    let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||Pin::new(&mut admission).poll(&mut Context::from_waker(job.waker.as_ref().unwrap())));
+    let Poll::Ready(actor)=result else{panic!("funded original actor admission must be ready")};assert_eq!(actor.as_ptr(),pointer);
+    let progress=RetainedCloneProgress{copied_items:job.control.0.admitted_retirement_items.load(Ordering::Relaxed),copied_bytes:job.control.0.admitted_original_copy.load(Ordering::Relaxed),retained_capacity_bytes:job.control.0.admitted_retirement_capacity.load(Ordering::Relaxed),released_bytes:0};
+    assert_eq!(progress,RetainedCloneProgress{copied_items:1,copied_bytes:copied,retained_capacity_bytes:capacity,released_bytes:0});assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+    {let queue=job.control.0.retirements.lock();assert_eq!(queue.len(),1);assert_eq!(queue.front().unwrap().as_ref() as *const dyn ErasedSnapshotRetirement as *const () as usize,frame_pointer);}
+    drop((source,admission));
+    let mut actor=job.control.track(actor).unwrap_or_else(|_|unreachable!());fund(&job.control,RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:owned_retirement_birth_bytes::<semio_framework_value::SharedUtf8>(),maximum_depth:1,..Default::default()});
+    let Poll::Ready(actor)=Pin::new(&mut actor).poll(&mut Context::from_waker(job.waker.as_ref().unwrap())) else{panic!("original shared actor retirement frame must be ready")};drop(actor);
+    close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    println!("[DEBUG] original shared actor source pointer retained; each undergrant0/0; exact Arc birth={capacity} copy={copied}; same preborn frame queued with zero poll free; original shell/backing physical close receipts and terminal0/0");
+}

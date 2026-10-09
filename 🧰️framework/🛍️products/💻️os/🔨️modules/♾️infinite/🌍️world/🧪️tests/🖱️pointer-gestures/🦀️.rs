@@ -140,7 +140,7 @@ fn the_instance_interaction_carrier_is_schema_bounded_and_retires_one_entry_per_
     let initial = state.instance_interaction_ids.len() + state.instance_interaction_granularity_ids.len();
     let mut retirement = World3dDynamicRetirement { phase: 6, blocked: None };
     let mut steps = 0;
-    while !retirement.step(&mut state) {
+    while !with_world_step_context(1,|context|retirement.step(&mut state,context)) {
         steps += 1;
         assert!(steps <= initial + 3, "interaction carrier retirement remains one entry or phase transition per step");
     }

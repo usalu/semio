@@ -3,9 +3,9 @@ use super::{SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKin
 use semio_framework_value::{NativeEncodeControl,native_encoding::NativeEncodeProgress,paged::Utf8Text};
 
 pub(super) fn copy_text(text:&dyn Utf8Text,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<String,ValueError>{
- control.allocation_stage(phase,|remaining,progress|{
+ control.allocation_stage(phase,|remaining,progress,allocation|{
   let mut callback=|event:NativeEncodeProgress|progress(event.completed,event.total);
-  let mut native=NativeEncodeControl::new(remaining,&mut callback);
+  let mut native_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
   let result=native.scoped_stage(|native|{
    let length=text.text_bytes();native.begin_stage(length)?;native.charge(length)?;
    let mut output=String::new();output.try_reserve_exact(length).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"paged SQLite text allocation failed"))?;

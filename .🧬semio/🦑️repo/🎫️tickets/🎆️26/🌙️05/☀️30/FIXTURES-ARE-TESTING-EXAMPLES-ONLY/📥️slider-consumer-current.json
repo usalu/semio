@@ -1,0 +1,13 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+  "sha256": "8e28104a4013c90d492e0d06662b7e819d632a46ad278d9dba31a0d96bcd50a6",
+  "ownership": false,
+  "sourceEditsByRoot": 0,
+  "observations": [
+    "Old whole slider Schema import absent in fresh Source",
+    "Genuine dagVcsSchema imported",
+    "SliderOverlayRow projected actual API admission for each item.row",
+    "Actual malformed JSON/typed parser and UI keyboard/style tests preserved"
+  ],
+  "execution": false
+}

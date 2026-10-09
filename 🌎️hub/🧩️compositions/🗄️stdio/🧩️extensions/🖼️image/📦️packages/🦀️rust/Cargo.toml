@@ -26,77 +26,66 @@ depends-on = ["stdio"]
 # 🧩️ Composition Playgrounds
 [[package.metadata.semio.playground]]
 variant = "stdio-svg"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.svg@1.1/*#editor"
 aliases = ["stdio svg"]
 ports = { react = 6228, wgpu = 6328 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-svg-basic"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.svg@1.1/basic#editor"
 aliases = ["stdio svg basic"]
 ports = { react = 6229, wgpu = 6329 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-svg-tiny"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.svg@1.1/tiny#editor"
 aliases = ["stdio svg tiny"]
 ports = { react = 6230, wgpu = 6330 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-png"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.png@1.2/*#editor"
 aliases = ["stdio png"]
 ports = { react = 6219, wgpu = 6319 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-jpg"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.jpg@jfif-1.01/*#editor"
 aliases = ["stdio jpeg"]
 ports = { react = 6220, wgpu = 6320 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-jpg-baseline"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.jpg@jfif-1.01/baseline#editor"
 aliases = ["stdio baseline jpeg"]
 ports = { react = 6221, wgpu = 6321 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-gif-87a"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.gif@87a/*#editor"
 aliases = ["stdio gif 87a"]
 ports = { react = 6226, wgpu = 6326 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-gif-89a"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.gif@89a/*#editor"
 aliases = ["stdio gif 89a"]
 ports = { react = 6227, wgpu = 6327 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-bmp"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.bmp@v3/*#editor"
 aliases = ["stdio bitmap"]
 ports = { react = 6223, wgpu = 6323 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-tiff"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.tiff@6.0/*#editor"
 aliases = ["stdio tiff"]
 ports = { react = 6224, wgpu = 6324 }
 
 [[package.metadata.semio.playground]]
 variant = "stdio-tiff-baseline"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.stdio.tiff@6.0/baseline#editor"
 aliases = ["stdio baseline tiff"]
 ports = { react = 6225, wgpu = 6325 }

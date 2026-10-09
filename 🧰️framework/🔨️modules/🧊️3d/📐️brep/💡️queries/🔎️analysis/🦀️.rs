@@ -108,7 +108,7 @@ impl ShapeScope {
             }
         }
         let reach = body.reachable_from(&self.roots);
-        fn sorted<T: ArenaId + Copy>(set: &std::collections::HashSet<T>) -> Vec<T> {
+        fn sorted<T: ArenaId + Copy + Ord>(set: &crate::brep::representation::topology::HistoryFoldSet<T>) -> Vec<T> {
             let mut ids: Vec<T> = set.iter().copied().collect();
             ids.sort_unstable_by_key(|id| id.raw_index());
             ids

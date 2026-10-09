@@ -233,7 +233,7 @@ pub struct TimeTravelSession {
     pub generation: u32,
     pub base: TimeTravelBase,
     pub stage: TimeTravelStage,
-    pub accepted: Vec<TimeTravelDraft>,
+    pub accepted: semio_framework_value::list::PagedList<TimeTravelDraft, {usize::MAX}>,
     pub pending: Option<TimeTravelPending>,
     pub report: Option<ReplayReport>,
     pub progress: Option<TimeTravelProgress>,
@@ -763,10 +763,10 @@ impl TimeTravelSession {
         if matches!(self.stage, S::Choosing | S::Finalizing) && self.report.as_ref().is_none_or(ReplayReport::blocks_finalize) {
             return Some("finalize-needs-a-clean-report");
         }
-        if self.accepted.windows(2).any(|pair| pair[0].target.history_order(&pair[1].target) != Ordering::Less) {
+        if (1..self.accepted.len()).any(|index| self.accepted[index-1].target.history_order(&self.accepted[index].target) != Ordering::Less) {
             return Some("accepted-in-history-order");
         }
-        if self.accepted.iter().enumerate().any(|(index, draft)| self.accepted[..index].iter().any(|earlier| earlier.target.mutation == draft.target.mutation)) {
+        if self.accepted.iter().enumerate().any(|(index, draft)| self.accepted.iter().take(index).any(|earlier| earlier.target.mutation == draft.target.mutation)) {
             return Some("accepted-targets-unique");
         }
         if self.fault.is_some() && self.accepted.is_empty() {
@@ -804,7 +804,7 @@ impl TimeTravelSession {
         self.accepted.retain(|draft| draft.target.mutation != pending.target.mutation);
         if pending.replacement != pending.original {
             let draft = TimeTravelDraft { target: pending.target, replacement: pending.replacement };
-            let index = self.accepted.partition_point(|existing| existing.target.history_order(&draft.target) == Ordering::Less);
+            let index = self.accepted.iter().take_while(|existing| existing.target.history_order(&draft.target) == Ordering::Less).count();
             self.accepted.insert(index, draft);
         }
         self.settle()
@@ -856,7 +856,18 @@ impl TimeTravelSession {
                 }
             }
         }
-        self.accepted.sort_by(|left, right| left.target.history_order(&right.target));
+        let length=self.accepted.len();
+        for root in (0..length/2).rev(){self.sift_accepted(root,length)}
+        for end in (1..length).rev(){self.accepted.swap(0,end);self.sift_accepted(0,end)}
+    }
+
+    fn sift_accepted(&mut self,mut root:usize,length:usize){
+        while root<length/2{
+            let mut child=root*2+1;
+            if child+1<length&&self.accepted[child].target.history_order(&self.accepted[child+1].target)==Ordering::Less{child+=1}
+            if self.accepted[root].target.history_order(&self.accepted[child].target)!=Ordering::Less{return}
+            self.accepted.swap(root,child);root=child;
+        }
     }
 }
 //#endregion 🔖️Reducer
@@ -1067,3 +1078,13 @@ impl TimeTravelLabel {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path="♻️retirement/🦀️.rs"]
+mod original_retirement;
+
+#[path="🎮️decision/🗑️discard/🦀️.rs"]
+mod discard_decision;
+pub use discard_decision::TimeTravelDiscardCursor;
+#[path="🎮️decision/📨️command/🦀️.rs"]
+mod pending_command;
+pub use pending_command::TimeTravelCommandCustody;

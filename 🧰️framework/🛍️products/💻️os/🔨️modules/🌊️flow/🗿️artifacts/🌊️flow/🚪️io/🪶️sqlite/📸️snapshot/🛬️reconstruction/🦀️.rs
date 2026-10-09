@@ -200,9 +200,9 @@ impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
                         let key = self.text(row, 3)?;
                         let value = ColdOwner::new(values.0.remove(&row.integer(4)?).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Flow value frontier missing"))?);
 
-                        self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint|{
+                        self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{
                             let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
-                            let mut native=NativeDecodeControl::new(remaining,&mut callback);
+                            let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
                             let prior=builder.dictionary().len();
                             let result=builder.insert_controlled(key,value.into_inner(),&mut native).and_then(|_|if builder.dictionary().len()==prior{Err(ValueError::new(ValueRefusalKind::InvalidValue,"Flow dictionary key repeated"))}else{Ok(())});
                             (result,native.owned_bytes())
@@ -343,9 +343,9 @@ impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
     fn insert_ordered<V>(&mut self,map:&mut OrderedMap<V>,key:String,value:V,retire:fn(V))->Result<(),ValueError>{
         use semio_framework_value::{retained_clone::RetainedCloneGrant,ordered::RetirementStep};
         let value=Owned::new(value,retire);
-        self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint|{
+        self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{
             let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
-            let mut native=NativeDecodeControl::new(remaining,&mut callback);
+            let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
             let result=(||->Result<(),ValueError>{
                 native.charge(std::mem::size_of::<String>()+std::mem::size_of::<V>()+4*std::mem::size_of::<usize>())?;
                 let mut cursor=map.begin_set(key,value.take());

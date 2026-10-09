@@ -78,25 +78,25 @@
         "id": "child-text-interior",
         "parent": 0,
         "child": 1,
-        "requestedBytes": 24
+        "requestedBytes": 0
       },
       {
         "id": "child-blob-interior",
         "parent": 0,
         "child": 1,
-        "requestedBytes": 24
+        "requestedBytes": 0
       },
       {
         "id": "child-ieee-text-interior",
         "parent": 0,
         "child": 1,
-        "requestedBytes": 24
+        "requestedBytes": 0
       },
       {
         "id": "child-ieee-blob-interior",
         "parent": 0,
         "child": 1,
-        "requestedBytes": 24
+        "requestedBytes": 0
       }
     ]
   }

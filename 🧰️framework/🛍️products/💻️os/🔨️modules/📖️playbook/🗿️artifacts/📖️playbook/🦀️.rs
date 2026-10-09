@@ -351,7 +351,7 @@ pub mod generation_forms {
     use ui_wgpu::wgpu::UiTreeSectionNode;
 
     //#region 🔖️Types
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+    #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct FormGeneration {
         pub id: String,
@@ -359,7 +359,7 @@ pub mod generation_forms {
         pub values: PlaybookValues,
     }
 
-    #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+    #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, ToValue, FromValue)]
     #[value(rename_all = "camelCase")]
     pub struct GenerationPlayState {
         #[value(default)]

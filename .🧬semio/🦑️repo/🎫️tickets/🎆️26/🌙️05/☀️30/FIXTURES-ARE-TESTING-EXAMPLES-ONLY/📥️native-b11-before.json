@@ -1,0 +1,103 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+    "sha256": "810c25329cb6fc9d366598ab606af4d4d45eddb32a47f8f410f6d7824ead44ef",
+    "bytes": 1959,
+    "classification": {
+      "required": [
+        "version",
+        "text",
+        "repeat",
+        "utf8Bytes",
+        "copyGrants",
+        "maximumTurns",
+        "actionVariants",
+        "expected"
+      ],
+      "definitions": [],
+      "trialRoot": true
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧫️fixtures/🔣️.json",
+    "sha256": "96495ed2856610e1b3f4cde270fc740003a0d82394b02920514c79d33803f741",
+    "bytes": 754
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️tests/🟦️.ts",
+    "sha256": "aadc244125a645fa1cd72869f60eb39f073a6646291d16835e4cc0a588f39f70",
+    "bytes": 919
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🦀️.rs",
+    "sha256": "ea8be126ee59e1ffac62f7c3e5a998ebfc27b4248d7151aa60131cbca9b8e6fe",
+    "bytes": 3618
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧬️schema/🔣️.json",
+    "sha256": "3477cf95a4f01284ab84a64971ba459433cb1989ee26ec174415e1a53d4ac562",
+    "bytes": 872,
+    "classification": {
+      "required": [
+        "copyBytes",
+        "cases",
+        "plans"
+      ],
+      "definitions": [],
+      "trialRoot": true
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧫️fixtures/🔣️.json",
+    "sha256": "877bd2b607e90ebd27ef0787b5ded0e2af02d033476886bc0136db89f2d28a2f",
+    "bytes": 1279
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧪️tests/🟦️.ts",
+    "sha256": "e0f2e766f15afe815b02e67f5ee8c90ba67f19488b6642b976ea54ce48791a61",
+    "bytes": 1471
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧪️tests/🦀️.rs",
+    "sha256": "af5f1e006d1ad72460b34431d6a4306d7bf344ba3b641abd941f90b61abb5d41",
+    "bytes": 8651
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🦀️.rs",
+    "sha256": "aea951056479742dbe07ffb5a1ceba6981cde5bb82cbc0f496dd3e1ff868e5b6",
+    "bytes": 10048
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧬️schema/🔣️.json",
+    "sha256": "778c259d912ffa9ab24b80c235fd98460da30d9ee4d4ed91426ddd5c83e31040",
+    "bytes": 799,
+    "classification": {
+      "required": [
+        "copyBytes",
+        "cases"
+      ],
+      "definitions": [],
+      "trialRoot": true
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧫️fixtures/🔣️.json",
+    "sha256": "757b4f4bf4dbcbafd5e5c8ae0b11f6f2bcf33153b25c71a8c53b27216192d1f6",
+    "bytes": 1108
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧪️tests/🟦️.ts",
+    "sha256": "21f721e98abe536235cb53d66d30c755cb4440632d757e7945911e867921c4ea",
+    "bytes": 1548
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧪️tests/🦀️.rs",
+    "sha256": "afc766f30b6b54443767846700dc59dc7a76d611127580db67b916b60b0e9e7a",
+    "bytes": 4267
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🦀️.rs",
+    "sha256": "f0c3f9cd4c02aad2014c3caf03ed15570a15e621c96d4524b1803db577cf9df7",
+    "bytes": 20746
+  }
+]

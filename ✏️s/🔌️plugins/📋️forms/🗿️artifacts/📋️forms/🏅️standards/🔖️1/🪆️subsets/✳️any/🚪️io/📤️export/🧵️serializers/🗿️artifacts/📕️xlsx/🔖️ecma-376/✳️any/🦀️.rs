@@ -18,7 +18,7 @@ pub struct FormsIntoXlsx;
 impl Serializer<FormsSnapshot> for FormsIntoXlsx {
     const INTO: Dialect = XLSX_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &FormsSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &FormsSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let cells = question_grid(from)
             .into_iter()
             .enumerate()

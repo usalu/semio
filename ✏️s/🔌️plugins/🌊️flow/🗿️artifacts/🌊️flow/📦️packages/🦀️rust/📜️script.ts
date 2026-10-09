@@ -11,6 +11,8 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if(segments[0]==="contributions-syntax"){if(segments.length!==1)throw Error("contributions-syntax accepts no arguments");await runRepositoryTestCommand(process.execPath,[resolve(this.repoRoot,".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts"),"rust-syntax",resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"),resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎟️contributions/🦀️.rs"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs")],{cwd:this.repoRoot});return;}
+    if(segments[0]==="contributions-receiver"){if(segments.length!==1)throw Error("contributions-receiver accepts no arguments");const{testFlowContributionsReceiver}=await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎟️contributions/🟦️.ts");testFlowContributionsReceiver();return;}
 if (segments[0] === "flow-window-ownership") {
       const { testFlowWindowOwnershipOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window/🟦️.ts");
       testFlowWindowOwnershipOracle();

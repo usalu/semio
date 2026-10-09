@@ -1,0 +1,32 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧬️schema/🔣️.json",
+    "action": "remove exact current whole-trial schema",
+    "before": "810c25329cb6fc9d366598ab606af4d4d45eddb32a47f8f410f6d7824ead44ef",
+    "after": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧪️tests/🟦️.ts",
+    "action": "retire whole-corpus admission; actual per-value canonical Value plus existing independent oracles",
+    "before": "e0f2e766f15afe815b02e67f5ee8c90ba67f19488b6642b976ea54ce48791a61",
+    "after": "38ef7565a1307a819f5991609c537b7582b494371851a6cf7677619de4a82aee"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🧬️schema/🔣️.json",
+    "action": "remove exact current whole-trial schema",
+    "before": "3477cf95a4f01284ab84a64971ba459433cb1989ee26ec174415e1a53d4ac562",
+    "after": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧪️tests/🟦️.ts",
+    "action": "retire whole-corpus admission; actual per-value canonical Value plus existing independent oracles",
+    "before": "21f721e98abe536235cb53d66d30c755cb4440632d757e7945911e867921c4ea",
+    "after": "caf1b70a3acd1654ca3549450a9e11b38f4d1805123957af1eefc0b4a93f1797"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🧬️schema/🔣️.json",
+    "action": "remove exact current whole-trial schema",
+    "before": "778c259d912ffa9ab24b80c235fd98460da30d9ee4d4ed91426ddd5c83e31040",
+    "after": null
+  }
+]
