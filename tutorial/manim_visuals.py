@@ -950,10 +950,11 @@ _MATH_SYMBOLS = {
     "pm": "±", "le": "≤", "ge": "≥",
     "Delta": "Δ", "Sigma": "Σ", "eta": "η", "varphi": "φ", "phi": "φ", "rho": "ρ",
     "lambda": "λ", "theta": "θ", "vartheta": "ϑ", "mu": "μ", "infty": "∞", "%": "%",
-    "Phi": "Φ", "Psi": "Ψ", "psi": "ψ", "chi": "χ", "ldots": "…",
+    "Phi": "Φ", "Psi": "Ψ", "psi": "ψ", "chi": "χ", "ldots": "…", "oint": "∮",
+    "pi": "π",
 }
 _MATH_SPACES = {",": 0.17, ";": 0.28, "quad": 1.0, "!": -0.08}
-_MATH_RELATIONS = frozenset("=≈+−·×→⇒≤≥±")
+_MATH_RELATIONS = frozenset("=≈+−·×→⇒≤≥±<>")
 _MATH_METRICS: dict[float, dict[str, float]] = {}
 
 
@@ -1038,6 +1039,8 @@ def _math_parse(src: str):
                     items.append(("frac", num, den, color))
                 elif cmd == "dot":
                     items.append(("dot", sub(read_group_src(), upright=upright, color=color, keep_spaces=keep_spaces), color))
+                elif cmd == "sqrt":
+                    items.append(("sqrt", sub(read_group_src(), upright=upright, color=color, keep_spaces=keep_spaces), color))
                 elif cmd == "mathrm":
                     items.append(("group", sub(read_group_src(), upright=True, color=color, keep_spaces=False)))
                 elif cmd == "text":
@@ -1167,6 +1170,26 @@ def _math_render(items: list, size: float, color: str):
             accent = Dot(radius=max(0.018, 0.09 * cap), color=dot_color)
             accent.move_to(np.array([inner.get_center()[0] + 0.06 * cap, inner.get_top()[1] + 0.22 * cap, 0.0]))
             box = _math_box([inner, accent], [inner.get_left()[0], _math_baseline(inner), 0.0])
+        elif kind == "sqrt":
+            s_color = item[2] or color
+            inner = _math_render(item[1], size, color)
+            probe = body_text("H√", font_size=size, color=s_color)
+            probe.remove(probe[0])
+            probe.text = "√"
+            rad = probe
+            pad = 0.8 * cap
+            top_y = inner.get_top()[1] + pad
+            bot_y = min(float(inner.get_bottom()[1]), 0.0) - 0.02 * cap
+            rad.stretch_to_fit_height(top_y - bot_y)
+            rad.shift(np.array([-rad.get_left()[0], (top_y + bot_y) / 2 - rad.get_center()[1], 0.0]))
+            inner.shift(RIGHT * (rad.get_right()[0] + 0.8 * cap - inner.get_left()[0]))
+            thick = max(1.2, size / 14.0)
+            bar = Line(
+                np.array([rad.get_right()[0] - 0.015, top_y, 0.0]),
+                np.array([inner.get_right()[0] + 0.05 * cap, top_y, 0.0]),
+                color=s_color, stroke_width=thick,
+            )
+            box = _math_box([rad, inner, bar], [0.0, _math_baseline(inner), 0.0])
         elif kind == "scripts":
             base = _math_render([item[1]], size, color)
             bl = _math_baseline(base)
@@ -1585,9 +1608,8 @@ __import__("atexit").register(_dump_vo_trace)
 # leaving them to be spotted by eye in a finished video.
 FRAME_X_LIMIT: float = 7.05
 FRAME_Y_LIMIT: float = 3.95
-# Half the ``BODY_LINE_BUFF`` gap between wrapped caption lines — the inset
-# keeps legitimately stacked lines from reading as a collision.
-_OVERLAP_INSET: float = 0.06
+# Caption lines are exempt by zone, so two labels must keep a visible gap.
+_OVERLAP_INSET: float = -0.02
 _LAYOUT_CHECK_ENABLED: bool = bool(__import__("os").environ.get("LAYOUT_CHECK"))
 
 
@@ -1627,10 +1649,94 @@ def _in_band(box, band) -> bool:
     return top > band[0] and bottom < band[1]
 
 
+_SAMPLE_STEP: float = 0.04
+# A fixed-zone frame may hold its own text, but cuts through any other label.
+_OWN_FRAME: dict[str, str] = {"formula_box": "formula", "caption_box": "caption"}
+_FIXED_ZONES = frozenset({"formula", "formula_box", "caption", "caption_box"})
+_TEXT_HIT_INSET: float = 0.0
+_FILL_HIT_OPACITY: float = 0.25
+_STROKE_HIT_OPACITY: float = 0.15
+
+
+def _label_roots(scene):
+    """🌳 Map every family member to its label root (outermost math box or ``Text``) and flag glyphs.
+
+    Returns ``(roots, glyph_ids)``: parts of one typeset label never collide with
+    each other, and the glyph outlines inside a ``Text`` are text, not graphics.
+    """
+    from manim import Text
+
+    roots: dict[int, int] = {}
+    glyph_ids: set[int] = set()
+
+    def walk(mob, root, in_text):
+        if root is None and (hasattr(mob, "base") or isinstance(mob, Text)):
+            root = id(mob)
+        if root is not None:
+            roots.setdefault(id(mob), root)
+        if in_text:
+            glyph_ids.add(id(mob))
+        for sub in mob.submobjects:
+            walk(sub, root, in_text or isinstance(mob, Text))
+
+    for mob in scene.mobjects:
+        walk(mob, None, False)
+    return roots, glyph_ids
+
+
+def _stroke_samples(mob) -> np.ndarray:
+    """〰️ Points every ``_SAMPLE_STEP`` along a mobject's own bezier path."""
+    pts = mob.points
+    if len(pts) < 4:
+        return np.zeros((0, 3))
+    curves = pts[: len(pts) // 4 * 4].reshape(-1, 4, 3)
+    t = np.linspace(0.0, 1.0, 9)[:, None]
+    basis = np.stack([(1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t ** 2, t ** 3], axis=1)[..., 0]
+    poly = np.einsum("tk,ckd->ctd", basis, curves).reshape(-1, 3)
+    seg = np.linalg.norm(np.diff(poly, axis=0), axis=1)
+    total = float(seg.sum())
+    if total <= 1e-6:
+        return poly[:1]
+    cum = np.concatenate([[0.0], np.cumsum(seg)])
+    s = np.linspace(0.0, total, max(2, int(total / _SAMPLE_STEP) + 1))
+    return np.stack([np.interp(s, cum, poly[:, k]) for k in range(3)], axis=1)
+
+
+def _visible_graphics(scene, roots, glyph_ids):
+    """🎨 Drawn shapes with a visible stroke or fill — never glyphs."""
+    from manim import VMobject
+
+    found = []
+    for mob in scene.mobjects:
+        for sub in mob.get_family():
+            if id(sub) in glyph_ids or not isinstance(sub, VMobject) or len(sub.points) < 4:
+                continue
+            stroke = sub.get_stroke_opacity() if sub.get_stroke_width() > 0.3 else 0.0
+            fill = sub.get_fill_opacity()
+            if stroke < _STROKE_HIT_OPACITY and fill < _FILL_HIT_OPACITY:
+                continue
+            found.append((sub, stroke, fill, roots.get(id(sub))))
+    return found
+
+
+def _describe(mob) -> str:
+    return f"{type(mob).__name__}@({mob.get_center()[0]:.2f},{mob.get_center()[1]:.2f})"
+
+
 def layout_conflicts(scene) -> list[str]:
-    """🚧 Overlapping, off-frame, or reserved-zone text in the current frame."""
+    """🚧 Overlapping, off-frame, or reserved-zone text in the current frame.
+
+    Besides text-on-text it flags a line or outline running *through* a label
+    and a filled object (bulb, dot, block) sitting partly under a label — a
+    backdrop that fully contains the label is fine.
+    """
     texts = _visible_texts(scene)
+    roots, glyph_ids = _label_roots(scene)
     issues: list[str] = []
+    caption_lines = [m for m in texts if _zone(m) == "caption"]
+    if len(caption_lines) > CAPTION_MAX_LINES:
+        issues.append(f"caption has {len(caption_lines)} lines (max {CAPTION_MAX_LINES}) "
+                      f"{getattr(caption_lines[0], 'text', '?')!r}")
     panel_on_screen = any(_zone(m) == "formula" for m in texts)
     for mob in texts:
         zone = _zone(mob)
@@ -1654,6 +1760,10 @@ def layout_conflicts(scene) -> list[str]:
     for i, first in enumerate(texts):
         a_l, a_r, a_b, a_t = _box(first)
         for second in texts[i + 1:]:
+            if roots.get(id(first)) == roots.get(id(second)) and roots.get(id(first)) is not None:
+                continue
+            if _zone(first) == "caption" and _zone(second) == "caption":
+                continue
             b_l, b_r, b_b, b_t = _box(second)
             dx = min(a_r, b_r) - max(a_l, b_l) - 2 * _OVERLAP_INSET
             dy = min(a_t, b_t) - max(a_b, b_b) - 2 * _OVERLAP_INSET
@@ -1663,15 +1773,84 @@ def layout_conflicts(scene) -> list[str]:
                     f"{getattr(second, 'text', '?')!r} @({second.get_center()[0]:.2f},{second.get_center()[1]:.2f}) "
                     f"by {dx:.2f}×{dy:.2f} units"
                 )
+    graphics = _visible_graphics(scene, roots, glyph_ids)
+    if not graphics:
+        return issues
+    g_boxes = np.array([_box(g) for g, *_ in graphics])
+    frames = [(g, b) for (g, *_), b in zip(graphics, g_boxes) if _zone(g) in _OWN_FRAME]
+    for frame, (f_l, f_r, f_b, f_t) in frames:
+        for (g, *_), (g_l, g_r, g_b, g_t) in zip(graphics, g_boxes):
+            if _zone(g) in _FIXED_ZONES:
+                continue
+            if g_r > f_l and g_l < f_r and g_t > f_b and g_b < f_t:
+                issues.append(f"object touches {_zone(frame)} × {_describe(g)}")
+    if not texts:
+        return issues
+    samples: dict[int, np.ndarray] = {}
+    for text in texts:
+        t_root = roots.get(id(text))
+        l, r, b, t = _box(text)
+        l, r, b, t = l + _TEXT_HIT_INSET, r - _TEXT_HIT_INSET, b + _TEXT_HIT_INSET, t - _TEXT_HIT_INSET
+        if r <= l or t <= b:
+            continue
+        near = np.nonzero(
+            (g_boxes[:, 1] >= l) & (g_boxes[:, 0] <= r) & (g_boxes[:, 3] >= b) & (g_boxes[:, 2] <= t)
+        )[0]
+        name = getattr(text, "text", "?")
+        where = f"@({text.get_center()[0]:.2f},{text.get_center()[1]:.2f})"
+        for k in near:
+            g, stroke, fill, g_root = graphics[k]
+            if g_root is not None and g_root == t_root:
+                continue
+            if _OWN_FRAME.get(_zone(g)) == _zone(text):
+                continue
+            g_l, g_r, g_b, g_t = g_boxes[k]
+            contains = g_l <= l and g_r >= r and g_b <= b and g_t >= t
+            if fill >= _FILL_HIT_OPACITY and not contains:
+                issues.append(f"object under {name!r} {where} × {_describe(g)}")
+                continue
+            if stroke < _STROKE_HIT_OPACITY:
+                continue
+            if k not in samples:
+                samples[k] = _stroke_samples(g)
+            pts = samples[k]
+            if len(pts) and ((pts[:, 0] > l) & (pts[:, 0] < r) & (pts[:, 1] > b) & (pts[:, 1] < t)).any():
+                issues.append(f"line through {name!r} {where} × {_describe(g)}")
     return issues
 
 
 def check_layout(scene, label: str = "") -> list[str]:
-    """🚨 Print this frame's text collisions — only when ``LAYOUT_CHECK=1`` is set."""
+    """🚨 Print this frame's collisions once each, stamped with the scene time — only when ``LAYOUT_CHECK=1``."""
     if not _LAYOUT_CHECK_ENABLED:
         return []
     issues = layout_conflicts(scene)
+    seen = scene.__dict__.setdefault("_layout_seen", set())
     for issue in issues:
-        print(f"[LAYOUT] {vo_beat_id(scene)}·{label}: {issue}")
+        key = (vo_beat_id(scene), issue.split(" × ")[0].split(" @")[0], issue.split(" × ")[-1].split("@")[0])
+        if key in seen:
+            continue
+        seen.add(key)
+        print(f"[LAYOUT] {vo_beat_id(scene)} t={_scene_time(scene):.1f}s {label}: {issue}")
     return issues
+
+
+def _install_play_probe() -> None:
+    """🔬 With ``LAYOUT_CHECK=1`` every ``Scene.play`` ends with a layout check, not only clause holds."""
+    from manim import Scene
+
+    if getattr(Scene.play, "_layout_probe", False):
+        return
+    original = Scene.play
+
+    def play(self, *args, **kwargs):
+        result = original(self, *args, **kwargs)
+        check_layout(self, "play")
+        return result
+
+    play._layout_probe = True
+    Scene.play = play
+
+
+if _LAYOUT_CHECK_ENABLED:
+    _install_play_probe()
 #endregion

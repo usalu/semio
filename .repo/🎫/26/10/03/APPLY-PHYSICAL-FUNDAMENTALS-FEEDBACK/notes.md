@@ -78,3 +78,21 @@ Created (ticket)
 - `checks/math_probe.py`, `checks/caption_check.py`, `checks/render_beat.sh`, `checks/final_render.log`, `checks/final_render_beat1.log`
 
 Status: closed 2026-10-03 (manually — repo MCP unavailable).
+
+## Reopened 2026-10-09 — formula on the p-V graph (Beat9_Kraft)
+
+Dev report (screenshot at 14:33 of the full video): the `1 W = 1 J / 1 s` box sat on the p-V diagram's V axis (`130`, `V [ml]`).
+
+- Cause: `w_panel` used the shared bottom formula slot, but the p-V axis origin sits at y = −1.25 and reaches into that slot.
+- Fix: the panel is stacked under the `P = n·W/t ≈ 1 W` line in the right result column (`next_to(p_read, DOWN, aligned_edge=LEFT)`), clear of the graph.
+- Same beat, flagged by the layout guard: the weight arrow `F_G` started at the block centre and ran through `102 g`, and the `F_G` label sat on the floor line → arrow now starts at the block underside (0,55 units), label beside the arrow below the block.
+- Verified: `LAYOUT_CHECK=1` render of Beat9 reports nothing; contact sheets `checks/overlap/pf_b9v2_*.png` reviewed.
+- `full_physical_fundamentals_video.py` had the same stale-clip bug as the Cooling compose script (skipped any beat whose mp4 existed): beats are now reused only when newer than `scene_1.py`, `vo_timing.json`, the script and the shared `manim_visuals.py` / `manim_fonts.py`; the freshly rendered clip is returned from the script's own output folder.
+
+- Guard pass over beats 1–8 before the full HQ render (`checks/overlap/pf_guard_b1_8.log`), all fixed and screenshot-verified (`pf_b1v2`, `pf_b5v2`, `pf_b8v2`, `pf_b8v3_zuluft`):
+  - Beat1: the flying `h` paused on the thought-cloud outline → now pauses above the cloud; `kW`→`h` gap widened.
+  - Beat5: `DIN EN 410` ran into `A = …` → tucked under `g = 0,50`; `kurzwellig` sat on the sun rays → moved below the ray fan.
+  - Beat8: `Sog −` sat on the lowest wind streamline → leeward of the eave below it; `Zuluft` sat on the inflow particles → left of where the stream starts (stream now starts at x = −5,6).
+- Full video re-rendered at 1080p60 (`full_physical_fundamentals_video.py -q h`, log `checks/full_render_qh.log`); all other Physical Fundamentals video files deleted on the dev's request — only `rendered/Full_Physical_Fundamentals_1080p60.mp4` kept.
+
+Status: closed 2026-10-09 (manually — repo MCP unavailable).

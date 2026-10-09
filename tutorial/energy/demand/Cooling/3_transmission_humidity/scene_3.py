@@ -20,6 +20,7 @@ from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     solar_wave_ray, symbol_token,
     equation_row, formula_panel, highlight_param,
+    math_label, math_panel,
     caption_bar, swap_caption, hold_for, subtitle_text,
     set_vo_language, load_vo_timing,
 )
@@ -36,7 +37,7 @@ TITLE_VENT_DE = "Lüftungswärme & Feuchtigkeit"
 TITLE_SPLIT_DE = "Sensible vs. Latente Kühlung"
 
 # Mid-screen anchor for house/diagram content (clear of title + formula/caption).
-CONTENT_CENTER = UP * 0.25
+CONTENT_CENTER = DOWN * 0.1
 
 
 #region DIN citation
@@ -196,12 +197,12 @@ class Beat1_TransmissionOpaque(Scene):
         opaque_borders = VGroup(opaque_left, opaque_right, opaque_roof_l, opaque_roof_r)
         self.play(Create(opaque_borders), run_time=1.0)
 
+        # Only the sun-facing surfaces: right roof slope and right wall.
         targets = [
-            h["roof_peak"] + DOWN * 0.3,
-            (h["tl"] + h["roof_peak"]) / 2,
-            (h["tr"] + h["roof_peak"]) / 2,
-            (h["tl"] + h["bl"]) / 2 + RIGHT * 0.1,
-            (h["tr"] + h["br"]) / 2 + LEFT * 0.1,
+            h["roof_peak"] + (h["tr"] - h["roof_peak"]) * 0.3,
+            h["roof_peak"] + (h["tr"] - h["roof_peak"]) * 0.7,
+            h["tr"] + (h["br"] - h["tr"]) * 0.3,
+            h["tr"] + (h["br"] - h["tr"]) * 0.65,
         ]
         rays = VGroup(*[
             solar_wave_ray(sun_pos + (t - sun_pos) * 0.12, t, color=P_YELLOW, stroke_width=2.5)
@@ -217,18 +218,19 @@ class Beat1_TransmissionOpaque(Scene):
         )
         hold_for(self, self.NARRATION, "sun", used=1.2 + 1.0 + 1.5 + 2.0 + 0.35)
 
-        row, items = equation_row([
-            ("qt", "Q̇_T", P_WHITE), (None, "=", P_WHITE),
-            ("u", "U", P_ORANGE), (None, "·", P_WHITE),
-            ("a", "A", P_CYAN), (None, "·", P_WHITE),
-            ("dt", "Δθ_eq", P_BLUE),
-            (None, "  [W]", P_WHITE),
+        row, box, items = math_panel([
+            ("qt", r"\dot{Q}_{T}", P_WHITE), (None, "=", P_WHITE),
+            ("u", "U", P_ORANGE), (None, r"\cdot", P_WHITE),
+            ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE),
+            ("dt", r"\Delta\theta_{eq}", P_BLUE),
+            (None, r"\;[\mathrm{W}]", P_WHITE),
         ])
-        row, box = formula_panel(row)
 
-        u_token = symbol_token("U", color=P_ORANGE, font_size=FORMULA_FONT_SIZE)
-        u_token.move_to(opaque_borders.get_center())
-        a_token = symbol_token("A", color=P_CYAN, font_size=FORMULA_FONT_SIZE)
+        # U belongs to the sunlit right wall, A to the envelope band on the left —
+        # two separate spots so the tokens never sit on each other.
+        u_token = math_label("U", size=FORMULA_FONT_SIZE, color=P_ORANGE)
+        u_token.move_to((h["tr"] + h["br"]) / 2 + LEFT * 0.42 + UP * 0.3)
+        a_token = math_label("A", size=FORMULA_FONT_SIZE, color=P_CYAN)
 
         # A is the opaque envelope itself — shade the two walls and both roof
         # slopes as bands, not a floating box in the room.
@@ -251,7 +253,8 @@ class Beat1_TransmissionOpaque(Scene):
                 fill_color=P_CYAN, fill_opacity=0.3, stroke_width=0,
             ),
         )
-        a_token.move_to(area_fill.get_center())
+        a_token.move_to((h["tl"] + h["bl"]) / 2 + RIGHT * 0.45 + DOWN * 0.55)
+        rest = VGroup(*[m for m in row.submobjects if m is not items["u"] and m is not items["a"]])
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
         self.play(LaggedStart(*[FadeIn(p) for p in area_fill], lag_ratio=0.12), run_time=0.8)
@@ -260,14 +263,13 @@ class Beat1_TransmissionOpaque(Scene):
             ReplacementTransform(area_fill, a_token),
             run_time=1.4,
         )
+        self.play(Create(box), FadeIn(rest), run_time=0.6)
         self.play(
-            u_token.animate.move_to(items["u"].get_center()),
-            a_token.animate.move_to(items["a"].get_center()),
-            Create(box), FadeIn(row),
-            run_time=1.4,
+            ReplacementTransform(u_token, items["u"]),
+            ReplacementTransform(a_token, items["a"]),
+            run_time=1.2,
         )
-        self.play(FadeOut(u_token), FadeOut(a_token), run_time=0.4)
-        hold_for(self, self.NARRATION, "formula", used=0.8 + 1.4 + 1.4 + 0.4 + 0.35)
+        hold_for(self, self.NARRATION, "formula", used=0.8 + 1.4 + 0.6 + 1.2 + 0.35)
 
         for key, color in (("u", P_ORANGE), ("a", P_CYAN), ("dt", P_BLUE)):
             ring = highlight_param(items, key, color=color)
@@ -293,8 +295,8 @@ class Beat2_TimeLag(Scene):
          "They soak it up during the day and slowly release it into the room hours later.",
          "Tagsüber nehmen sie Wärme auf und geben sie erst Stunden später an den Raum ab."),
         ("peak",
-         "So the equivalent temperature difference and the peak cooling load may hit in the late evening, long after sunset.",
-         "Deshalb kann die Spitzenkühllast erst am späten Abend auftreten — lange nach Sonnenuntergang."),
+         "So the thermal mass shifts the peak cooling load later — typically into the late afternoon, rarely as late as the evening.",
+         "Deshalb verschiebt die Speichermasse die Spitzenkühllast nach hinten — typisch in den späten Nachmittag, selten erst in den Abend."),
     ]
 
     def construct(self):
@@ -315,14 +317,13 @@ class Beat2_TimeLag(Scene):
         h["walls"][1].set_color(P_RED)
         h["roof"].set_color(P_RED)
 
-        row, items = equation_row([
-            ("qt", "Q̇_T", P_WHITE), (None, "=", P_WHITE),
-            ("u", "U", P_ORANGE), (None, "·", P_WHITE),
-            ("a", "A", P_CYAN), (None, "·", P_WHITE),
-            ("dt", "Δθ_eq", P_BLUE),
-            (None, "  [W]", P_WHITE),
+        row, box, items = math_panel([
+            ("qt", r"\dot{Q}_{T}", P_WHITE), (None, "=", P_WHITE),
+            ("u", "U", P_ORANGE), (None, r"\cdot", P_WHITE),
+            ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE),
+            ("dt", r"\Delta\theta_{eq}", P_BLUE),
+            (None, r"\;[\mathrm{W}]", P_WHITE),
         ])
-        row, box = formula_panel(row)
 
         sun_pos = RIGHT * 4.0 + UP * 1.4
         sun_group = _build_sun(sun_pos)
@@ -363,9 +364,9 @@ class Beat2_TimeLag(Scene):
         hour_hand.add_updater(update_hour)
         minute_hand.add_updater(update_minute)
         self.play(
-            hour_tracker.animate.set_value(TAU * 2),
-            minute_tracker.animate.set_value(TAU * 12),
-            sun_group.animate.shift(DOWN * 4 + RIGHT * 1.5).set_opacity(0),
+            hour_tracker.animate.set_value(TAU * 5 / 12),
+            minute_tracker.animate.set_value(TAU * 5),
+            sun_group.animate.shift(DOWN * 2.2 + RIGHT * 1.2).set_opacity(0.35),
             run_time=3.0,
             rate_func=linear,
         )
@@ -454,10 +455,10 @@ class Beat3_VentilationHeat(Scene):
 
         air_start_x = h["win_top"][0] - 2.5
         air_end_x = hc[0] + 0.5
-        air_y_base_in = h["win_top"][1] - 0.2
+        air_y_base_in = h["win_top"][1] - 0.18
         heat_waves_in = VGroup()
         for i in range(3):
-            y_off = (i - 1) * 0.15
+            y_off = (i - 1) * 0.09
             points = []
             for x in np.linspace(air_start_x, air_end_x, 35):
                 y = air_y_base_in + y_off + 0.05 * np.sin(6 * (x - air_start_x))
@@ -468,10 +469,10 @@ class Beat3_VentilationHeat(Scene):
 
         air_start_x_out = hc[0] + 0.5
         air_end_x_out = h["win_bottom"][0] - 2.5
-        air_y_base_out = h["win_bottom"][1] + 0.2
+        air_y_base_out = h["win_bottom"][1] + 0.18
         cold_waves_out = VGroup()
         for i in range(3):
-            y_off = (i - 1) * 0.15
+            y_off = (i - 1) * 0.09
             points = []
             for x in np.linspace(air_start_x_out, air_end_x_out, 35):
                 y = air_y_base_out + y_off + 0.05 * np.sin(6 * (x - air_start_x_out))
@@ -480,63 +481,56 @@ class Beat3_VentilationHeat(Scene):
             wave.set_points_smoothly(points)
             cold_waves_out.add(wave)
 
-        droplets = VGroup()
-        rng = np.random.default_rng(42)
-        for _ in range(15):
-            x = rng.uniform(air_start_x + 0.2, air_end_x - 0.2)
-            y = air_y_base_in + rng.uniform(-0.25, 0.25)
-            drop = Circle(radius=0.065, color=P_BLUE, fill_color=P_BLUE, fill_opacity=0.85, stroke_width=1)
-            drop.move_to(np.array([x, y, 0]))
-            droplets.add(drop)
+        droplets = VGroup(*[
+            Circle(radius=0.055, color=P_BLUE, fill_color=P_BLUE, fill_opacity=0.85, stroke_width=1)
+            .move_to(np.array([x, air_y_base_in + 0.24, 0]))
+            for x in np.linspace(air_start_x + 0.3, air_end_x - 0.3, 9)
+        ])
 
-        flow_arrow_in = Arrow(
-            start=LEFT * 2.0 + UP * 0.1, end=RIGHT * 0.2 + UP * 0.1,
-            color=P_RED, stroke_width=3, max_tip_length_to_length_ratio=0.2,
-        ).move_to(win_center + UP * 0.2)
-        flow_arrow_out = Arrow(
-            start=RIGHT * 0.2 + DOWN * 0.1, end=LEFT * 2.0 + DOWN * 0.1,
-            color=P_BLUE, stroke_width=3, max_tip_length_to_length_ratio=0.2,
-        ).move_to(win_center + DOWN * 0.2)
+        # Direction heads sit at the leading end of each band, never on top of it.
+        flow_arrow_in = Triangle(color=P_RED, fill_color=P_RED, fill_opacity=1.0, stroke_width=0)
+        flow_arrow_in.scale(0.12).rotate(-PI / 2).next_to(heat_waves_in, RIGHT, buff=0.06)
+        flow_arrow_out = Triangle(color=P_BLUE, fill_color=P_BLUE, fill_opacity=1.0, stroke_width=0)
+        flow_arrow_out.scale(0.12).rotate(PI / 2).next_to(cold_waves_out, LEFT, buff=0.06)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "flow"))
         self.play(
             LaggedStart(*[Create(w) for w in heat_waves_in], lag_ratio=0.1),
             LaggedStart(*[Create(w) for w in cold_waves_out], lag_ratio=0.1),
             LaggedStart(*[FadeIn(d, scale=0.5) for d in droplets], lag_ratio=0.05),
-            GrowArrow(flow_arrow_in), GrowArrow(flow_arrow_out),
+            FadeIn(flow_arrow_in), FadeIn(flow_arrow_out),
             run_time=2.4,
         )
         # Directional drift: humid air pushes inward while conditioned air slips out.
         self.play(
-            heat_waves_in.animate.shift(RIGHT * 0.6),
-            droplets.animate.shift(RIGHT * 0.6 + DOWN * 0.08),
-            cold_waves_out.animate.shift(LEFT * 0.6),
+            VGroup(heat_waves_in, droplets, flow_arrow_in).animate.shift(RIGHT * 0.6),
+            VGroup(cold_waves_out, flow_arrow_out).animate.shift(LEFT * 0.6),
             run_time=1.7,
         )
         self.play(
-            heat_waves_in.animate.shift(RIGHT * 0.25),
-            droplets.animate.shift(RIGHT * 0.25),
-            cold_waves_out.animate.shift(LEFT * 0.25),
+            VGroup(heat_waves_in, droplets, flow_arrow_in).animate.shift(RIGHT * 0.25),
+            VGroup(cold_waves_out, flow_arrow_out).animate.shift(LEFT * 0.25),
             run_time=0.9,
         )
         hold_for(self, self.NARRATION, "flow", used=2.4 + 1.7 + 0.9 + 0.35)
 
-        row, items = equation_row([
-            ("ql", "Q̇_L", P_WHITE), (None, "=", P_WHITE),
-            ("sens", "Q̇_sens", P_RED), (None, "+", P_WHITE),
-            ("lat", "Q̇_lat", P_BLUE),
-            (None, "  [W]", P_WHITE),
-        ], font_size=BODY_FONT_SIZE)
-        row, box = formula_panel(row)
+        row, box, items = math_panel([
+            ("ql", r"\dot{Q}_{L}", P_WHITE), (None, "=", P_WHITE),
+            ("sens", r"\dot{Q}_{sens}", P_RED), (None, "+", P_WHITE),
+            ("lat", r"\dot{Q}_{lat}", P_BLUE),
+            (None, r"\;[\mathrm{W}]", P_WHITE),
+        ], size=BODY_FONT_SIZE)
         rest = VGroup(*[
             m for m in row.submobjects
             if m is not items["sens"] and m is not items["lat"]
         ])
 
-        sens_tok = symbol_token("Q̇_sens", color=P_RED, font_size=BODY_FONT_SIZE)
-        sens_tok.move_to(heat_waves_in.get_center())
-        lat_tok = symbol_token("Q̇_lat", color=P_BLUE, font_size=BODY_FONT_SIZE)
-        lat_tok.move_to(droplets.get_center())
+        # Tokens rise into the free sky left of the house, apart from each other
+        # and from the bands, then morph straight into their formula slots.
+        sens_tok = math_label(r"\dot{Q}_{sens}", size=BODY_FONT_SIZE, color=P_RED)
+        sens_tok.move_to(np.array([air_start_x + 0.35, air_y_base_in + 0.85, 0.0]))
+        lat_tok = math_label(r"\dot{Q}_{lat}", size=BODY_FONT_SIZE, color=P_BLUE)
+        lat_tok.move_to(np.array([air_start_x + 1.55, air_y_base_in + 0.85, 0.0]))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
         self.play(
@@ -546,16 +540,11 @@ class Beat3_VentilationHeat(Scene):
             run_time=1.2,
         )
         self.play(
-            sens_tok.animate.move_to(items["sens"]),
-            lat_tok.animate.move_to(items["lat"]),
-            run_time=1.0,
-        )
-        self.play(
             ReplacementTransform(sens_tok, items["sens"]),
             ReplacementTransform(lat_tok, items["lat"]),
-            run_time=0.3,
+            run_time=1.3,
         )
-        hold_for(self, self.NARRATION, "formula", used=1.2 + 1.0 + 0.3 + 0.35)
+        hold_for(self, self.NARRATION, "formula", used=1.2 + 1.3 + 0.35)
 
         for key, color, group in (
             ("sens", P_RED, heat_waves_in),
@@ -590,13 +579,13 @@ class Beat4_SensibleVsLatent(Scene):
          "Wir trennen die Formeln: links fühlbar, rechts latent."),
         ("sens_eq",
          "Sensible cooling Q-dot sens equals air density times specific heat times Delta-Theta times volume flow.",
-         "Q-Punkt-sens = ρ_a · c_p,a · ΔΘ · q_v,R — Energie zum Absenken der Temperatur."),
+         "Q-Punkt-sens ist Dichte mal Wärmekapazität mal Delta-Theta mal Volumenstrom — Energie zum Absenken der Temperatur."),
         ("delta_theta",
          "Delta-Theta is the temperature drop in kelvin — here from 30 to 20 degrees Celsius. Watch the thermometer fall.",
          "Delta-Theta ist die Temperaturdifferenz — hier von 30 auf 20 °C. Das Thermometer sinkt."),
         ("lat_eq",
          "Latent cooling Q-dot lat equals density times latent heat of vaporization r times Delta-x times volume flow.",
-         "Q-Punkt-lat = ρ_a · r · Δx · q_v,R — Energie zum Entfernen von Feuchte."),
+         "Q-Punkt-lat ist Dichte mal Verdampfungswärme mal Delta-x mal Volumenstrom — Energie zum Entfernen von Feuchte."),
         ("delta_x",
          "Delta-x is the absolute humidity difference. Moisture accumulates in the gauge — removing it needs massive phase-change energy.",
          "Delta-x ist die Feuchtedifferenz. Der Feuchtezeiger steigt — Feuchte entfernen kostet viel Energie."),
@@ -619,12 +608,12 @@ class Beat4_SensibleVsLatent(Scene):
         divider = Line(UP * (mid_y + 1.15), DOWN * (1.15 - mid_y), color=P_TEAL, stroke_width=2)
 
         left_header = Text("Sensible Last", font_size=SUBTITLE_FONT_SIZE, color=P_RED)
-        left_header.move_to(np.array([lx, mid_y + 1.75, 0]))
+        left_header.move_to(np.array([lx, mid_y + 1.92, 0]))
         left_sub = Text("Temperaturabsenkung", font_size=BODY_FONT_SIZE, color=P_WHITE)
         left_sub.next_to(left_header, DOWN, buff=0.1)
 
         right_header = Text("Latente Feuchtigkeit", font_size=SUBTITLE_FONT_SIZE, color=P_CYAN)
-        right_header.move_to(np.array([rx, mid_y + 1.75, 0]))
+        right_header.move_to(np.array([rx, mid_y + 1.92, 0]))
         right_sub = Text("Feuchte entfernen", font_size=BODY_FONT_SIZE, color=P_WHITE)
         right_sub.next_to(right_header, DOWN, buff=0.1)
 
@@ -675,18 +664,18 @@ class Beat4_SensibleVsLatent(Scene):
             color=P_ORANGE,
         ).move_to(np.array([lx + 1.05, mid_y - 0.7 + temp_tracker.get_value(), 0])))
 
-        sens_row, sens_items = equation_row([
-            ("qs", "Q̇_sens", P_RED), (None, "=", P_WHITE),
-            ("rho", "ρ_a", P_WHITE), (None, "·", P_WHITE),
-            ("cp", "c_p,a", P_WHITE), (None, "·", P_WHITE),
-            ("dth", "ΔΘ", P_RED), (None, "·", P_WHITE),
-            ("qv", "q_v,R", P_WHITE),
-            (None, "  [W]", P_WHITE),
-        ], font_size=BODY_FONT_SIZE)
-        sens_row, sens_box = formula_panel(sens_row)
-        unit_sens = Text(
-            "ρ_a [kg/m³] · c_p,a [kJ/(kg·K)] · ΔΘ [K] · q_v,R [m³/s]",
-            font_size=LABEL_FONT_SIZE - 4, color=P_TEAL,
+        sens_row, sens_box, sens_items = math_panel([
+            ("qs", r"\dot{Q}_{sens}", P_RED), (None, "=", P_WHITE),
+            ("rho", r"\rho_{a}", P_WHITE), (None, r"\cdot", P_WHITE),
+            ("cp", r"c_{p,a}", P_WHITE), (None, r"\cdot", P_WHITE),
+            ("dth", "ΔΘ", P_RED), (None, r"\cdot", P_WHITE),
+            ("qv", r"q_{v,R}", P_WHITE),
+            (None, r"\;[\mathrm{W}]", P_WHITE),
+        ], size=BODY_FONT_SIZE)
+        unit_sens = math_label(
+            r"\rho_{a}\,[\mathrm{kg/m^{3}}] \cdot c_{p,a}\,[\mathrm{kJ/(kg\,K)}]"
+            r" \cdot ΔΘ\,[\mathrm{K}] \cdot q_{v,R}\,[\mathrm{m^{3}/s}]",
+            size=LABEL_FONT_SIZE - 4, color=P_TEAL,
         )
         unit_sens.next_to(sens_box, UP, buff=0.05)
         unit_sens.set_x(0)
@@ -744,18 +733,18 @@ class Beat4_SensibleVsLatent(Scene):
             color=P_CYAN,
         ).move_to(np.array([rx + 1.25, mid_y - 0.95 + moist_tracker.get_value() * 1.7, 0])))
 
-        lat_row, lat_items = equation_row([
-            ("ql", "Q̇_lat", P_BLUE), (None, "=", P_WHITE),
-            ("rho", "ρ_a", P_WHITE), (None, "·", P_WHITE),
-            ("r", "r", P_WHITE), (None, "·", P_WHITE),
-            ("dx", "Δx", P_BLUE), (None, "·", P_WHITE),
-            ("qv", "q_v,R", P_WHITE),
-            (None, "  [W]", P_WHITE),
-        ], font_size=BODY_FONT_SIZE)
-        lat_row, lat_box = formula_panel(lat_row)
-        unit_lat = Text(
-            "ρ_a [kg/m³] · r [kJ/kg] · Δx [kg/kg] · q_v,R [m³/s]",
-            font_size=LABEL_FONT_SIZE - 4, color=P_TEAL,
+        lat_row, lat_box, lat_items = math_panel([
+            ("ql", r"\dot{Q}_{lat}", P_BLUE), (None, "=", P_WHITE),
+            ("rho", r"\rho_{a}", P_WHITE), (None, r"\cdot", P_WHITE),
+            ("r", "r", P_WHITE), (None, r"\cdot", P_WHITE),
+            ("dx", r"\Delta x", P_BLUE), (None, r"\cdot", P_WHITE),
+            ("qv", r"q_{v,R}", P_WHITE),
+            (None, r"\;[\mathrm{W}]", P_WHITE),
+        ], size=BODY_FONT_SIZE)
+        unit_lat = math_label(
+            r"\rho_{a}\,[\mathrm{kg/m^{3}}] \cdot r\,[\mathrm{kJ/kg}]"
+            r" \cdot \Delta x\,[\mathrm{kg/kg}] \cdot q_{v,R}\,[\mathrm{m^{3}/s}]",
+            size=LABEL_FONT_SIZE - 4, color=P_TEAL,
         )
         unit_lat.next_to(lat_box, UP, buff=0.05)
         unit_lat.set_x(0)
@@ -773,8 +762,8 @@ class Beat4_SensibleVsLatent(Scene):
         )
         hold_for(self, self.NARRATION, "lat_eq", used=1.2 + 1.4 + 0.35)
 
-        delta_x = Text("Δx", font_size=FORMULA_FONT_SIZE, color=P_BLUE)
-        delta_x.next_to(container, RIGHT, buff=0.55)
+        delta_x = math_label(r"\Delta x", size=FORMULA_FONT_SIZE, color=P_BLUE)
+        delta_x.next_to(moist_ticks, LEFT, buff=0.3)
         ring_dx = highlight_param(lat_items, "dx", color=P_BLUE)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "delta_x"))

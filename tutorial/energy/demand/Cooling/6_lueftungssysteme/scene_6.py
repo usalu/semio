@@ -20,9 +20,10 @@ from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     SAFE_TOP, SAFE_BOTTOM, SAFE_BOTTOM_FORMULA, fit_band,
     radiation_waves, symbol_token,
-    smooth_path, flow_guides, animate_flow,
+    smooth_path, flow_guides, animate_flow, animate_flows,
     meter, bind_meter, chip, cross_mark, dim_chip, dim_arrow,
     equation_row, formula_panel, highlight_param,
+    math_label, math_panel,
     caption_bar, swap_caption, hold_for, subtitle_text,
     set_vo_language, load_vo_timing,
 )
@@ -310,11 +311,15 @@ class Beat2_Fensterregeln(Scene):
         _shape_window()
         sash.add_updater(_shape_window)
 
-        open_pct = Text("Öffnung 0 %", font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        open_pct.next_to(frame, DOWN, buff=0.22).shift(LEFT * 0.82)
-        open_mid = Text("Öffnung 35 %", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(open_pct)
-        open_wide = Text("Öffnung 85 %", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(open_pct)
-        open_thin = Text("Öffnung 15 %", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(open_pct)
+        # Right edges share one x left of the window, so the wider readings never reach the frame.
+        def _open_lbl(text, color):
+            return Text(text, font_size=LABEL_FONT_SIZE, color=color).next_to(
+                frame, LEFT, buff=0.22, aligned_edge=DOWN)
+
+        open_pct = _open_lbl("Öffnung 0 %", P_CYAN)
+        open_mid = _open_lbl("Öffnung 35 %", P_CYAN)
+        open_wide = _open_lbl("Öffnung 85 %", P_CYAN)
+        open_thin = _open_lbl("Öffnung 15 %", P_ORANGE)
 
         outdoor_cool = _badge("Außenluft", "18 °C", P_BLUE)
         outdoor_cool.move_to(np.array([-5.75, 1.30, 0.0]))
@@ -451,16 +456,16 @@ class Beat3_Querlueftung(Scene):
          "Wie viel Luft durchkommt, bestimmt eine wirksame Fläche aus beiden Öffnungen."),
         ("a1",
          "A one is the inlet on the windward facade.",
-         "A_1 ist die Zuluftöffnung auf der Luvseite."),
+         "A eins ist die Zuluftöffnung auf der Luvseite."),
         ("a2",
          "A two is the outlet on the leeward facade.",
-         "A_2 ist die Abluftöffnung auf der Leeseite."),
+         "A zwei ist die Abluftöffnung auf der Leeseite."),
         ("limit",
          "Because the two act in series, the smaller one dominates. Shrink the outlet and the whole cross flow collapses, no matter how wide the inlet stays.",
          "Weil beide in Reihe wirken, bestimmt die kleinere Öffnung:\nverkleinert man den Auslass, bricht der Durchzug ein."),
         ("passive",
          "So size both sides together. In summer this flush can dump a lot of heat on windy days — it does not replace a design cooling plant by itself.",
-         "Also beide Seiten gemeinsam dimensionieren — im Sommer kann diese Spülung an windigen Tagen viel Last abführen, ersetzt aber keine Auslegungskälteanlage."),
+         "Also beide Seiten gemeinsam dimensionieren — die Spülung führt an\nwindigen Tagen viel Last ab, ersetzt aber keine Kälteanlage."),
     ]
 
     def construct(self):
@@ -482,8 +487,8 @@ class Beat3_Querlueftung(Scene):
         left_win = _window(np.array([room.get_left()[0], 0.55, 0.0]), height=1.15)
         right_win = _window(np.array([room.get_right()[0], 0.55, 0.0]), height=1.15)
 
-        a1_lbl = Text("A_1", font_size=BODY_FONT_SIZE, color=P_GREEN).next_to(left_win, LEFT, buff=0.18)
-        a2_lbl = Text("A_2", font_size=BODY_FONT_SIZE, color=P_ORANGE).next_to(right_win, RIGHT, buff=0.18)
+        a1_lbl = math_label(r"A_{1}", size=BODY_FONT_SIZE, color=P_GREEN).next_to(left_win, LEFT, buff=0.18)
+        a2_lbl = math_label(r"A_{2}", size=BODY_FONT_SIZE, color=P_ORANGE).next_to(right_win, RIGHT, buff=0.18)
 
         gusts = VGroup(*[
             Arrow(
@@ -500,9 +505,9 @@ class Beat3_Querlueftung(Scene):
         lee = _badge("Lee", "− Unterdruck", P_ORANGE)
         lee.move_to(np.array([5.05, -0.05, 0.0]))
 
-        aeff_wide = Text("A_eff ≈ 0,35 m²", font_size=BODY_FONT_SIZE, color=P_CYAN)
+        aeff_wide = math_label(r"A_{eff} \approx 0{,}35\,\mathrm{m^{2}}", size=BODY_FONT_SIZE, color=P_CYAN)
         aeff_wide.move_to(np.array([0.0, 2.12, 0.0]))
-        aeff_thin = Text("A_eff ≈ 0,10 m²", font_size=BODY_FONT_SIZE, color=P_RED).move_to(aeff_wide)
+        aeff_thin = math_label(r"A_{eff} \approx 0{,}10\,\mathrm{m^{2}}", size=BODY_FONT_SIZE, color=P_RED).move_to(aeff_wide)
         tip = Text("natürliche Spülung vor der Kältemaschine", font_size=BODY_FONT_SIZE, color=P_TEAL)
         tip.move_to(aeff_wide)
 
@@ -531,15 +536,18 @@ class Beat3_Querlueftung(Scene):
             for dy, sy in ((-0.30, -0.09), (0.15, 0.0), (0.60, 0.09))
         ])
 
-        eq, items = equation_row([
-            ("aeff", "A_eff", P_CYAN), (None, "=", P_WHITE),
-            (None, "1 / √(", P_WHITE),
-            ("a1", "1/A_1²", P_GREEN), (None, "+", P_WHITE),
-            ("a2", "1/A_2²", P_ORANGE),
-            (None, ")", P_WHITE),
-            (None, "  [m²]", P_TEAL),
-        ])
-        eq, eq_box = formula_panel(eq, color=P_CYAN)
+        eq, eq_box, items = math_panel([
+            ("aeff", r"A_{eff}", P_CYAN), (None, "=", P_WHITE),
+            ("root",
+             rf"\frac{{1}}{{\sqrt{{\textcolor{{{P_GREEN}}}{{\frac{{1}}{{A_{{1}}^{{2}}}}}} + "
+             rf"\textcolor{{{P_ORANGE}}}{{\frac{{1}}{{A_{{2}}^{{2}}}}}}}}}}",
+             P_WHITE),
+            (None, r"\;[\mathrm{m^{2}}]", P_TEAL),
+        ], color=P_CYAN)
+        # root → outer frac [num, bar, den, marker]; den wraps the sqrt box
+        # [radical, inner, bar, marker]; inner row = [1/A₁², +, 1/A₂², marker].
+        _inner = items["root"][0][2][0][1]
+        items["a1"], items["a2"] = _inner[0], _inner[2]
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -692,15 +700,17 @@ class Beat4_Auftrieb(Scene):
             ),
         )
         outlet_lbl = Text("Abluft", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        outlet_lbl.next_to(outlet[0], UP, buff=0.30)
+        # Beside the outlet, not above it: the shaft later rises 1.3 units and a
+        # label riding on top would run into the beat subtitle.
+        outlet_lbl.next_to(outlet[0], LEFT, buff=0.25)
 
         legend_rows = VGroup(
             VGroup(
-                Text("ρ_a", font_size=BODY_FONT_SIZE, color=P_BLUE),
+                math_label(r"\rho_{a}", size=BODY_FONT_SIZE, color=P_BLUE),
                 Text("außen · kühl · schwer", font_size=LABEL_FONT_SIZE, color=P_WHITE),
             ).arrange(RIGHT, buff=0.18),
             VGroup(
-                Text("ρ_i", font_size=BODY_FONT_SIZE, color=P_ORANGE),
+                math_label(r"\rho_{i}", size=BODY_FONT_SIZE, color=P_ORANGE),
                 Text("innen · warm · leicht", font_size=LABEL_FONT_SIZE, color=P_WHITE),
             ).arrange(RIGHT, buff=0.18),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.16)
@@ -726,14 +736,13 @@ class Beat4_Auftrieb(Scene):
         dp_lo.next_to(dp["track"], DOWN, buff=0.26)
         dp_hi = Text("≈ 2,1 Pa", font_size=BODY_FONT_SIZE, color=P_YELLOW).move_to(dp_lo)
 
-        eq, items = equation_row([
-            ("dp", "Δp", P_YELLOW), (None, "=", P_WHITE),
-            ("h", "h", P_CYAN), (None, "·", P_WHITE),
-            (None, "g", P_WHITE), (None, "·", P_WHITE),
-            ("rho", "(ρ_a − ρ_i)", P_BLUE),
-            (None, "  [Pa]", P_TEAL),
-        ])
-        eq, eq_box = formula_panel(eq, color=P_YELLOW)
+        eq, eq_box, items = math_panel([
+            ("dp", r"Δp", P_YELLOW), (None, "=", P_WHITE),
+            ("h", "h", P_CYAN), (None, r"\cdot", P_WHITE),
+            (None, "g", P_WHITE), (None, r"\cdot", P_WHITE),
+            ("rho", r"(\rho_{a} - \rho_{i})", P_BLUE),
+            (None, r"\;[\mathrm{Pa}]", P_TEAL),
+        ], color=P_YELLOW)
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -1014,8 +1023,8 @@ class Beat5_Nachtlueftung(Scene):
             color=P_YELLOW,
         )
         gain_lbl = Text("≈ 4 K", font_size=BODY_FONT_SIZE, color=P_YELLOW)
-        # Left of the bracket: to the right it runs into the second night band.
-        gain_lbl.next_to(gain, LEFT, buff=0.12)
+        # Below the bracket: every curve runs above 25 °C there at hours 40–44.
+        gain_lbl.next_to(gain, DOWN, buff=0.32).shift(LEFT * 0.38)
         self.play(Create(gain), FadeIn(gain_lbl), run_time=1.0)
         hold_for(self, self.NARRATION, "result", used=2.2 + 1.0 + 0.35)
 
@@ -1126,7 +1135,7 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
         fit_band(scaffold)
 
         vol = meter("Volumenstrom", length=2.1, thickness=0.52, color=P_CYAN)
-        vol["group"].move_to(np.array([0.55, 0.45, 0.0]))
+        vol["group"].move_to(np.array([0.3, 0.45, 0.0]))
         rate = ValueTracker(0.50)
         bind_meter(vol, rate)
 
@@ -1280,18 +1289,18 @@ class Beat7_MechanischeGrundtypen(Scene):
         # each panel converge through that centerline, so a sign placed there
         # sits directly on top of the animated stream.
         signs = VGroup(*[
-            Text(t, font_size=BODY_FONT_SIZE, color=c).move_to(np.array([cx[0], -0.75, 0.0]))
+            Text(t, font_size=BODY_FONT_SIZE, color=c).move_to(np.array([cx[0], -0.86, 0.0]))
             for (t, c), cx in zip((("−", P_ORANGE), ("+", P_CYAN), ("=", P_GREEN)), self.CENTERS)
         ])
         sign_tags = VGroup(*[
-            Text(t, font_size=LABEL_FONT_SIZE, color=c).move_to(np.array([cx[0], -0.98, 0.0]))
+            Text(t, font_size=LABEL_FONT_SIZE, color=c).move_to(np.array([cx[0], -1.18, 0.0]))
             for (t, c), cx in zip(
                 (("Unterdruck", P_ORANGE), ("Überdruck", P_CYAN), ("ausgeglichen", P_GREEN)),
                 self.CENTERS,
             )
         ])
         port_tags = VGroup(*[
-            Text(t, font_size=LABEL_FONT_SIZE, color=c).move_to(np.array([cx[0], -1.40, 0.0]))
+            Text(t, font_size=LABEL_FONT_SIZE, color=c).move_to(np.array([cx[0], -1.54, 0.0]))
             for (t, c), cx in zip(
                 (("Außenluft ungefiltert", P_WHITE),
                  ("Abluft über Fugen", P_WHITE),
@@ -1340,8 +1349,10 @@ class Beat7_MechanischeGrundtypen(Scene):
         hold_for(self, self.NARRATION, "balanced", used=1.4 + 2.4 + 0.8 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "verdict"))
-        pick = SurroundingRectangle(VGroup(rooms[2], headers[2]), color=P_GREEN,
-                                    buff=0.18, corner_radius=0.1, stroke_width=2.5)
+        pick = SurroundingRectangle(
+            VGroup(rooms[2], headers[2], signs[2], sign_tags[2], port_tags[2], bal_in, bal_out),
+            color=P_GREEN, buff=0.14, corner_radius=0.1, stroke_width=2.5,
+        )
         self.play(Create(pick), FadeIn(verdict, shift=UP * 0.12), run_time=1.3)
         hold_for(self, self.NARRATION, "verdict", used=1.3 + 0.35)
         self.play(FadeOut(caption), run_time=0.3)
@@ -1370,6 +1381,9 @@ class Beat8_Waermerueckgewinnung(Scene):
         ("value",
          "Five kelvin gained out of six available: about eighty percent of the free cooling, taken before the chiller is asked for anything.",
          "Fünf von sechs möglichen Kelvin — rund achtzig Prozent,\nbevor die Kältemaschine überhaupt gefragt wird."),
+        ("passivhaus",
+         "This is why natural ventilation and the Passivhaus concept contradict each other: recovery needs both streams inside the unit — an open window recovers nothing, so window ventilation must be given up as the main air path.",
+         "Darum widersprechen sich natürliche Lüftung und Passivhaus: ein offenes\nFenster gewinnt nichts zurück — die Fensterlüftung entfällt als Hauptweg."),
     ]
 
     def construct(self):
@@ -1419,7 +1433,7 @@ class Beat8_Waermerueckgewinnung(Scene):
             for x in (-1.05, 0.0, 1.05)
         ])
         transfer_tag = Text("Wärmestrom", font_size=LABEL_FONT_SIZE, color=P_YELLOW)
-        transfer_tag.move_to(np.array([2.62, 0.60, 0.0]))
+        transfer_tag.move_to(np.array([2.85, 0.60, 0.0]))
 
         aul = _badge("Außenluft", "32 °C", P_RED).move_to(np.array([-6.00, y_sup + 0.05, 0.0]))
         zul = _badge("Zuluft", "27 °C", P_CYAN).move_to(np.array([6.00, y_sup + 0.05, 0.0]))
@@ -1430,13 +1444,16 @@ class Beat8_Waermerueckgewinnung(Scene):
                           aul, zul, abl, fol)
         fit_band(scaffold, bottom=SAFE_BOTTOM_FORMULA)
 
-        eq, items = equation_row([
-            ("phi", "η", P_YELLOW), (None, "=", P_WHITE),
-            ("num", "(θ_ZUL − θ_AUL)", P_CYAN), (None, "/", P_WHITE),
-            ("den", "(θ_ABL − θ_AUL)", P_TEAL), (None, "=", P_WHITE),
-            ("val", "5 K / 6 K ≈ 0,8", P_YELLOW),
-        ])
-        eq, eq_box = formula_panel(eq, color=P_YELLOW)
+        eq, eq_box, items = math_panel([
+            ("phi", r"\eta", P_YELLOW), (None, "=", P_WHITE),
+            ("frac",
+             rf"\frac{{\textcolor{{{P_CYAN}}}{{θ_{{ZUL}} - θ_{{AUL}}}}}}"
+             rf"{{\textcolor{{{P_TEAL}}}{{θ_{{ABL}} - θ_{{AUL}}}}}}",
+             P_WHITE),
+            (None, "=", P_WHITE),
+            ("val", r"\frac{5\,\mathrm{K}}{6\,\mathrm{K}} \approx 0{,}8", P_YELLOW),
+        ], color=P_YELLOW)
+        items["num"] = items["frac"][0]
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -1468,7 +1485,7 @@ class Beat8_Waermerueckgewinnung(Scene):
         hold_for(self, self.NARRATION, "transfer", used=1.2 + 2.2 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
-        self.play(FadeIn(eq), Create(eq_box), run_time=1.2)
+        self.play(FadeOut(core_note), FadeIn(eq), Create(eq_box), run_time=1.2)
         ring_num = highlight_param(items, "num", color=P_CYAN)
         self.play(Create(ring_num), Indicate(zul, color=P_CYAN), run_time=0.8)
         hold_for(self, self.NARRATION, "formula", used=1.2 + 0.8 + 0.35)
@@ -1478,13 +1495,274 @@ class Beat8_Waermerueckgewinnung(Scene):
         ring_val = highlight_param(items, "val", color=P_YELLOW)
         self.play(Create(ring_val), Indicate(items["val"], color=P_YELLOW, scale_factor=1.15), run_time=1.0)
         hold_for(self, self.NARRATION, "value", used=1.0 + 0.35)
+
+        # 🪟 Der Widerspruch: ein offenes Fenster hat η = 0 — wer WRG braucht,
+        # kann die freie Lüftung nicht als Hauptluftweg behalten.
+        self.play(FadeOut(ring_val), FadeOut(eq), FadeOut(eq_box), run_time=0.5)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "passivhaus"))
+        open_win = _window(np.array([-3.3, -1.52, 0.0]), height=0.52, width=0.82)
+        win_cross = cross_mark(size=0.2).move_to(open_win.get_center())
+        win_eta = math_label(r"\text{offenes Fenster:}\;\eta = 0", size=BODY_FONT_SIZE, color=P_RED)
+        win_eta.next_to(open_win, RIGHT, buff=0.3)
+        ph_line = Text(
+            "Passivhaus ⇒ Zu-/Abluft mit WRG — Fensterlüftung entfällt als Hauptweg",
+            font_size=BODY_FONT_SIZE, color=P_ORANGE,
+        ).move_to(np.array([0.3, -2.12, 0.0]))
+        self.play(FadeIn(open_win), Create(win_cross), FadeIn(win_eta), run_time=0.9)
+        self.play(FadeIn(ph_line, shift=UP * 0.1), run_time=0.8)
+        hold_for(self, self.NARRATION, "passivhaus", used=0.4 + 0.9 + 0.8 + 0.35)
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
 #endregion
 
 
-#region Beat9 – The operating rule: natural first, machines last
-class Beat9_KomfortStrategie(Scene):
+#region Beat9 – Sorption-assisted cooling: engineering with material physics
+class Beat9_SorptionsKuehlung(Scene):
+    """🌞 Sorptionsgestützte Kühlung (DEC): Entfeuchten → Wärmetausch →
+    Verdunsten, solar regeneriert — und ihr mikrobieller Preis.
+
+    https://de.wikipedia.org/wiki/Sorptionsgestützte_Klimatisierung
+    """
+
+    NARRATION = [
+        ("intro",
+         "Material physics itself can cool without a chiller: sorption-assisted cooling chains drying, heat exchange and evaporation into one engine.",
+         "Mit Stoffeigenschaften lässt sich ohne Kältemaschine kühlen: die sorptions-\ngestützte Kühlung verkettet Trocknen, Wärmetausch und Verdunstung."),
+        ("entfeuchten",
+         "A desiccant wheel first dries the humid outdoor air — adsorption releases heat, so the dry air leaves warmer than it came.",
+         "Das Sorptionsrad entfeuchtet zuerst die schwüle Außenluft —\ndie Sorptionswärme macht die trockene Luft zunächst wärmer."),
+        ("tauscher",
+         "The plate exchanger hands that heat to the exhaust stream and precools the dry air.",
+         "Der Plattentauscher gibt diese Wärme an die Abluft ab\nund kühlt die trockene Luft vor."),
+        ("verdunsten",
+         "Because the air is now dry, water may evaporate into it: evaporative cooling takes it down to supply temperature.",
+         "Weil die Luft jetzt trocken ist, darf Wasser verdunsten:\nVerdunstungskühlung senkt sie auf Zulufttemperatur."),
+        ("regeneration",
+         "Solar heat regenerates the wheel: it drives the stored moisture out into the exhaust air, so the sun itself powers the cycle.",
+         "Solarwärme regeneriert das Rad: sie treibt die gespeicherte\nFeuchte in die Fortluft aus — die Sonne treibt den Kreislauf."),
+        ("nachteil",
+         "The drawback is microbial: harsh temperature and humidity swings stress the germs inside the unit, and that selection pressure favours the resistant ones.",
+         "Der Nachteil ist mikrobiell: krasse Temperatur- und Feuchte-\nwechsel setzen Keime unter Druck — es überleben bevorzugt die resistenten."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Sorptionsgestützte Kühlung (DEC)", title)
+        din = _din_ref("VDI 2078")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        y_sup, y_exh = 1.05, -0.25
+
+        wheel_c = np.array([-2.9, 0.4, 0.0])
+        wheel = Circle(radius=0.95, color=P_ORANGE, stroke_width=3).move_to(wheel_c)
+        wheel_spokes = VGroup(*[
+            Line(wheel_c, wheel_c + 0.95 * np.array([np.cos(a), np.sin(a), 0.0]),
+                 color=P_ORANGE, stroke_width=1.4).set_stroke(opacity=0.5)
+            for a in np.linspace(0, TAU, 8, endpoint=False)
+        ])
+        wheel_tag = Text("Sorptionsrad", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        wheel_tag.move_to(np.array([-2.9, -1.05, 0.0]))
+
+        hx = Rectangle(width=1.5, height=1.9, color=P_WHITE, stroke_width=3).move_to(np.array([-0.3, 0.4, 0.0]))
+        hx_diag = VGroup(
+            Line(hx.get_corner(DL), hx.get_corner(UR), color=P_TEAL, stroke_width=1.6, stroke_opacity=0.7),
+            Line(hx.get_corner(UL), hx.get_corner(DR), color=P_TEAL, stroke_width=1.6, stroke_opacity=0.7),
+        )
+        hx_tag = Text("Plattentauscher", font_size=LABEL_FONT_SIZE, color=P_TEAL)
+        hx_tag.move_to(np.array([-0.45, -1.05, 0.0]))
+
+        def _humidifier(pos, color=P_BLUE):
+            box = Rectangle(width=0.72, height=0.72, color=color, stroke_width=2.4).move_to(pos)
+            drops = VGroup(*[
+                Circle(radius=0.05, color=color, fill_color=color, fill_opacity=0.85, stroke_width=0)
+                .move_to(pos + np.array([dx, dy, 0.0]))
+                for dx, dy in ((-0.16, 0.14), (0.05, -0.05), (0.18, 0.16), (-0.04, -0.2))
+            ])
+            return VGroup(box, drops)
+
+        hum_sup = _humidifier(np.array([2.0, y_sup, 0.0]))
+        hum_exh = _humidifier(np.array([2.0, y_exh, 0.0]))
+        hum_tag = Text("Verdunstungskühlung", font_size=LABEL_FONT_SIZE, color=P_BLUE)
+        hum_tag.move_to(np.array([2.25, -1.05, 0.0]))
+
+        heater_c = np.array([-1.5, y_exh, 0.0])
+        heater = Rectangle(width=0.72, height=0.6, color=P_RED, stroke_width=2.4).move_to(heater_c)
+        coil_pts = [heater_c + np.array([-0.26 + i * 0.087, 0.12 if i % 2 else -0.12, 0.0]) for i in range(7)]
+        coil = VMobject(color=P_RED, stroke_width=2.2).set_points_as_corners(coil_pts)
+
+        # Below the regeneration heater: the solar duct stays on the exhaust
+        # side and never crosses the supply-air state readouts above.
+        sun_c = np.array([-1.5, -1.5, 0.0])
+        sun = VGroup(
+            Dot(sun_c, radius=0.15, color=P_YELLOW),
+            Circle(radius=0.23, color=P_YELLOW, stroke_width=1.6, stroke_opacity=0.6).move_to(sun_c),
+            *[Line(sun_c + 0.28 * d, sun_c + 0.38 * d, color=P_YELLOW, stroke_width=1.8)
+              for a in np.linspace(0, TAU, 8, endpoint=False)
+              for d in [np.array([np.cos(a), np.sin(a), 0.0])]],
+        )
+        solar_duct = DashedLine(
+            sun_c + UP * 0.42, heater.get_bottom() + DOWN * 0.04,
+            color=P_YELLOW, stroke_width=2.4, dash_length=0.08,
+        )
+        solar_tag = Text("Solarwärme", font_size=LABEL_FONT_SIZE, color=P_YELLOW)
+        solar_tag.next_to(sun, RIGHT, buff=0.18).shift(DOWN * 0.12)
+
+        # Zustände entlang der Zuluft — jeder Wert ist das Ergebnis des Bauteils davor.
+        t_reads = VGroup(
+            math_label(r"32\,\mathrm{°C}\;\text{feucht}", at=np.array([-4.1, y_sup + 0.55, 0.0]),
+                       size=LABEL_FONT_SIZE, color=P_ORANGE),
+            math_label(r"48\,\mathrm{°C}\;\text{trocken}", at=np.array([-1.5, y_sup + 0.55, 0.0]),
+                       size=LABEL_FONT_SIZE, color=P_RED),
+            math_label(r"24\,\mathrm{°C}", at=np.array([0.95, y_sup + 0.55, 0.0]),
+                       size=LABEL_FONT_SIZE, color=P_YELLOW),
+            math_label(r"19\,\mathrm{°C}", at=np.array([3.6, y_sup + 0.55, 0.0]),
+                       size=LABEL_FONT_SIZE, color=P_CYAN),
+        )
+        end_tags = VGroup(
+            Text("Außenluft", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to([-5.9, y_sup + 0.55, 0.0]),
+            Text("Zuluft", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to([5.0, y_sup + 0.55, 0.0]),
+            Text("Abluft 26 °C", font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to([5.0, y_exh - 0.62, 0.0]),
+            Text("Fortluft\nfeucht · warm", font_size=LABEL_FONT_SIZE, color=P_ORANGE, line_spacing=0.8).move_to([-5.55, y_exh - 0.62, 0.0]),
+        )
+
+        def _lane(x0, x1, y):
+            return VGroup(smooth_path([np.array([x0, y, 0.0]), np.array([(x0 + x1) / 2, y, 0.0]),
+                                       np.array([x1, y, 0.0])]))
+
+        sup_seg1 = _lane(-5.3, -2.0, y_sup)
+        sup_seg2 = _lane(-2.0, 1.45, y_sup)
+        sup_seg3 = _lane(1.45, 4.9, y_sup)
+        exh_seg1 = _lane(4.9, 0.5, y_exh)
+        exh_seg2 = _lane(0.5, -2.1, y_exh)
+        exh_seg3 = _lane(-2.1, -5.3, y_exh)
+
+        components = VGroup(
+            wheel, wheel_spokes, wheel_tag, hx, hx_diag, hx_tag,
+            hum_sup, hum_exh, hum_tag, heater, coil,
+        )
+
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
+        self.play(
+            Create(wheel), Create(wheel_spokes), FadeIn(wheel_tag),
+            Create(hx), Create(hx_diag), FadeIn(hx_tag),
+            FadeIn(hum_sup), FadeIn(hum_exh), FadeIn(hum_tag),
+            FadeIn(heater), Create(coil),
+            Create(flow_guides(VGroup(*sup_seg1, *sup_seg2, *sup_seg3), P_CYAN, opacity=0.2)),
+            Create(flow_guides(VGroup(*exh_seg1, *exh_seg2, *exh_seg3), P_TEAL, opacity=0.2)),
+            FadeIn(end_tags[0]), FadeIn(end_tags[2]),
+            run_time=2.6,
+        )
+
+        def _spin(run_time):
+            return Rotate(wheel_spokes, angle=-TAU / 2, about_point=wheel_c,
+                          run_time=run_time, rate_func=linear)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "entfeuchten"))
+        self.play(FadeIn(t_reads[0]), run_time=0.4)
+        animate_flows(
+            self, [([*sup_seg1], P_ORANGE, P_RED)],
+            run_time=2.6, waves=5, extra=[_spin(2.6)],
+        )
+        self.play(FadeIn(t_reads[1]), run_time=0.5)
+        hold_for(self, self.NARRATION, "entfeuchten", used=0.4 + 2.6 + 0.5 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "tauscher"))
+        heat_down = VGroup(*[
+            Arrow(np.array([x, y_sup - 0.25, 0.0]), np.array([x, y_exh + 0.25, 0.0]),
+                  buff=0, color=P_YELLOW, stroke_width=3, max_tip_length_to_length_ratio=0.3)
+            for x in (-0.8, -0.3, 0.2)
+        ])
+        animate_flows(
+            self, [([*sup_seg2], P_RED, P_YELLOW)],
+            run_time=2.4, waves=5,
+            extra=[LaggedStart(*[GrowArrow(a) for a in heat_down], lag_ratio=0.3, run_time=2.0)],
+        )
+        self.play(FadeIn(t_reads[2]), run_time=0.5)
+        hold_for(self, self.NARRATION, "tauscher", used=2.4 + 0.5 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "verdunsten"))
+        animate_flows(
+            self, [([*sup_seg3], P_YELLOW, P_CYAN)],
+            run_time=2.4, waves=5,
+            extra=[Indicate(hum_sup, color=P_BLUE, scale_factor=1.12)],
+        )
+        self.play(FadeIn(t_reads[3]), FadeIn(end_tags[1]), run_time=0.5)
+        hold_for(self, self.NARRATION, "verdunsten", used=2.4 + 0.5 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "regeneration"))
+        self.play(FadeIn(sun, scale=0.7), FadeIn(solar_tag), Create(solar_duct), run_time=1.0)
+        animate_flows(
+            self,
+            [
+                ([*exh_seg1], P_TEAL, P_BLUE),
+                ([*exh_seg2], P_BLUE, P_ORANGE),
+                ([*exh_seg3], P_ORANGE, P_RED),
+            ],
+            run_time=3.0, waves=4,
+            extra=[
+                _spin(3.0),
+                heater.animate.set_fill(P_RED, opacity=0.25),
+                Indicate(sun, color=P_YELLOW, scale_factor=1.1),
+            ],
+        )
+        self.play(FadeIn(end_tags[3]), run_time=0.5)
+        hold_for(self, self.NARRATION, "regeneration", used=1.0 + 3.0 + 0.5 + 0.35)
+
+        # 🦠 Mikrobieller Preis: Hitze-/Feuchtezyklen selektieren resistente Keime.
+        def _microbe(pos, color):
+            c = np.array([pos[0], pos[1], 0.0], dtype=float)
+            body = Circle(radius=0.11, color=color, stroke_width=2,
+                          fill_color=color, fill_opacity=0.25).move_to(c)
+            spikes = VGroup(*[
+                Line(c + 0.11 * d, c + 0.18 * d, color=color, stroke_width=1.8)
+                for a in np.linspace(0, TAU, 6, endpoint=False)
+                for d in [np.array([np.cos(a), np.sin(a), 0.0])]
+            ])
+            return VGroup(body, spikes)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "nachteil"))
+        # Compact strip between the component labels (bottom ≈ −1.2) and the
+        # caption box (top ≈ −2.6): every microbe and the verdict stay inside it.
+        strip_y = -1.86
+        panel = RoundedRectangle(
+            width=10.0, height=1.0, corner_radius=0.12,
+            color=P_RED, stroke_width=2.2, fill_color="#12151C", fill_opacity=0.94,
+        ).move_to(np.array([0.0, strip_y, 0.0]))
+        normal = VGroup(*[
+            _microbe([-3.3 + i * 0.55, strip_y - 0.08], P_TEAL) for i in range(4)
+        ])
+        tough = VGroup(_microbe([-1.0, strip_y - 0.08], P_RED), _microbe([-0.45, strip_y - 0.08], P_RED))
+        cycle_tag = math_label(r"ΔT\!\uparrow\;\;Δx\!\uparrow", at=np.array([-4.75, strip_y - 0.08, 0.0]),
+                               size=LABEL_FONT_SIZE, color=P_ORANGE, edge="left")
+        verdict = Text("Selektionsdruck:\nresistente Keime überleben",
+                       font_size=LABEL_FONT_SIZE, color=P_RED, line_spacing=0.8)
+        verdict.move_to(np.array([2.9, strip_y, 0.0]))
+        self.play(FadeOut(VGroup(sun, solar_tag, solar_duct)), run_time=0.4)
+        self.play(FadeIn(panel), FadeIn(normal), FadeIn(tough), FadeIn(cycle_tag), run_time=0.9)
+        for flash in (P_RED, P_CYAN):
+            self.play(panel.animate.set_stroke(color=flash), run_time=0.35)
+        self.play(
+            LaggedStart(*[FadeOut(m, scale=0.4) for m in normal], lag_ratio=0.15),
+            *[m[0].animate.set_fill(opacity=0.6) for m in tough],
+            run_time=1.3,
+        )
+        clones = VGroup(_microbe([0.1, strip_y - 0.08], P_RED), _microbe([0.65, strip_y - 0.08], P_RED))
+        self.play(FadeIn(clones, scale=0.5), FadeIn(verdict), run_time=1.0)
+        hold_for(self, self.NARRATION, "nachteil", used=0.4 + 0.9 + 0.7 + 1.3 + 1.0 + 0.35)
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+#endregion
+
+
+#region Beat10 – The operating rule: natural first, machines last
+class Beat10_KomfortStrategie(Scene):
     NARRATION = [
         ("intro",
          "Put the levers together and they become one operating rule you can follow every day.",
@@ -1523,8 +1801,8 @@ class Beat9_KomfortStrategie(Scene):
         q_text = Text("Außenluft kühler\nals der Raum?", font_size=LABEL_FONT_SIZE,
                       color=P_YELLOW, line_spacing=0.7)
         diamond = Polygon(
-            np.array([0.0, 0.52, 0.0]), np.array([2.05, 0.0, 0.0]),
-            np.array([0.0, -0.52, 0.0]), np.array([-2.05, 0.0, 0.0]),
+            np.array([0.0, 0.66, 0.0]), np.array([2.6, 0.0, 0.0]),
+            np.array([0.0, -0.66, 0.0]), np.array([-2.6, 0.0, 0.0]),
             color=P_YELLOW, stroke_width=2.2,
         )
         q_text.move_to(diamond.get_center())
@@ -1554,12 +1832,14 @@ class Beat9_KomfortStrategie(Scene):
             _link(no_sub.get_bottom(), mech.get_right(), P_TEAL),
             _link(mech.get_bottom(), goal.get_top(), P_GREEN),
         )
-        yes_lbl = Text("ja", font_size=LABEL_FONT_SIZE, color=P_CYAN).next_to(links[1], UP, buff=0.06)
-        no_lbl = Text("nein", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(links[2], UP, buff=0.06)
+        # Inside the elbow of each link, away from the diamond corner where the token parks.
+        yes_lbl = Text("ja", font_size=LABEL_FONT_SIZE, color=P_CYAN).next_to(links[1].get_center(), RIGHT, buff=0.14)
+        no_lbl = Text("nein", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(links[2].get_center(), LEFT, buff=0.14)
 
         chart = VGroup(start, question, yes_box, yes_sub, no_box, no_sub,
                        mech, goal, links, yes_lbl, no_lbl)
-        fit_band(chart)
+        # Inner band: clear of the beat subtitle above and the two-line caption box below.
+        fit_band(chart, top=2.35, bottom=-2.42)
 
         token = Dot(radius=0.11, color=P_YELLOW, fill_opacity=1.0).move_to(_park(start))
 

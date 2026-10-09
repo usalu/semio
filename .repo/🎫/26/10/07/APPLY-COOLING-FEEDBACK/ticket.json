@@ -1,0 +1,40 @@
+{
+  "id": "2026/10/07/APPLY-COOLING-FEEDBACK",
+  "title": "Apply Cooling Review Feedback",
+  "slug": "APPLY-COOLING-FEEDBACK",
+  "emoji": "❄️",
+  "status": "closed",
+  "description": "Apply the supervisor review of the Cooling video scene by scene: richer mechanical-ventilation animation, body-heat activity scale, f_n per usage, peak load in the late afternoon, sorption-assisted cooling with microbial drawback, 3D sun-path orientation power curves, natural ventilation vs Passivhaus contradiction, factors counted 0→1, equation values derived from the drawings, typeset formulas, plainer text. Everything not named in the feedback stays unchanged. Reopened: overlap audit of all Cooling scenes — no text on text or on objects, verified by screenshots.",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
+  "dates": {
+    "due": "2026-10-07",
+    "started": "2026-10-07",
+    "completed": "2026-10-08"
+  },
+  "client": "claude-code",
+  "llm": "opus-4-7",
+  "summary": "Applied the supervisor's Cooling feedback Teil by Teil (air-handling unit in Teil 1, activity watt scale and f_N/f_g per usage in Teil 2, late-afternoon peak in Teil 3, 3D sun-path-driven orientation curves in Teil 4, real fractions and roots in Teil 5, new sorption-cooling beat and Passivhaus contradiction in Teil 6, typeset formulas throughout). Then audited every beat for overlaps: extended the layout guard to flag text on objects, lines through labels, objects touching formula/caption frames and three-line captions, fixed every hit, and verified each Teil by contact-sheet screenshots. Fixed full_cooling_video.py so the merged render no longer reuses outdated section clips, and re-rendered the merged 480p video from current code.",
+  "files": {
+    "created": [
+      ".repo/🎫/26/10/07/APPLY-COOLING-FEEDBACK/spec.md",
+      ".repo/🎫/26/10/07/APPLY-COOLING-FEEDBACK/notes.md",
+      ".repo/🎫/26/10/07/APPLY-COOLING-FEEDBACK/checks/"
+    ],
+    "updated": [
+      "tutorial/manim_visuals.py",
+      "tutorial/energy/demand/Cooling/1_heating_vs_cooling/scene_1.py",
+      "tutorial/energy/demand/Cooling/2_internal_gains/scene_2.py",
+      "tutorial/energy/demand/Cooling/3_transmission_humidity/scene_3.py",
+      "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py",
+      "tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py",
+      "tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py",
+      "tutorial/energy/demand/Cooling/6_lueftungssysteme/generate_audio.py",
+      "tutorial/energy/demand/Cooling/6_lueftungssysteme/build_full_video.py",
+      "tutorial/energy/demand/Cooling/6_lueftungssysteme/vo_timing.json",
+      "tutorial/energy/demand/Cooling/full_cooling_video.py",
+      "tutorial/energy/demand/Cooling/rendered/Full_Cooling_Demand_480p15.mp4",
+      "tutorial/energy/demand/Cooling/rendered/Full_Cooling_Demand_NoAudio_480p15.mp4",
+      "tutorial/energy/demand/KONZEPTE_UND_FORMELN.md"
+    ]
+  }
+}

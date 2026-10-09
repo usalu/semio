@@ -20,6 +20,7 @@ from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     convection_stream, symbol_token, watt_anchor,
     equation_row, formula_panel, highlight_param,
+    math_label, math_row, math_panel,
     caption_bar, swap_caption, hold_for, subtitle_text,
     set_vo_language, load_vo_timing,
 )
@@ -328,12 +329,12 @@ class Beat2_VolumeFlowEquation(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        built = _build_room(center=LEFT * 2.6 + UP * 0.45, width=4.8, height=2.1)
+        built = _build_room(center=LEFT * 2.6 + UP * 0.72, width=4.8, height=1.7)
         room, floor, room_c = built["room"], built["floor"], built["center"]
         supply = _vent_unit(room.get_top() + DOWN * 0.22 + LEFT * 1.25, color=P_CYAN, width=1.25)
 
         t_supply = VGroup(
-            Text("θ_Zu", font_size=LABEL_FONT_SIZE, color=P_CYAN),
+            math_label(r"θ_{Zu}", size=LABEL_FONT_SIZE, color=P_CYAN),
             Text("18 °C", font_size=BODY_FONT_SIZE, color=P_CYAN),
         ).arrange(DOWN, buff=0.06)
         t_supply = VGroup(
@@ -342,7 +343,7 @@ class Beat2_VolumeFlowEquation(Scene):
         ).next_to(room, DOWN, buff=0.15).shift(LEFT * 1.0)
 
         t_room = VGroup(
-            Text("θ_Raum", font_size=LABEL_FONT_SIZE, color=P_ORANGE),
+            math_label(r"θ_{Raum}", size=LABEL_FONT_SIZE, color=P_ORANGE),
             Text("25 °C", font_size=BODY_FONT_SIZE, color=P_ORANGE),
         ).arrange(DOWN, buff=0.06)
         t_room = VGroup(
@@ -352,7 +353,7 @@ class Beat2_VolumeFlowEquation(Scene):
 
         delta_card = VGroup(
             Text("Temperaturhub", font_size=LABEL_FONT_SIZE, color=P_TEAL),
-            Text("Δθ = 7 K", font_size=BODY_FONT_SIZE, color=P_BLUE),
+            math_label(r"Δθ = 7\,\mathrm{K}", size=BODY_FONT_SIZE, color=P_BLUE),
         ).arrange(DOWN, buff=0.06)
         delta_card = VGroup(
             SurroundingRectangle(delta_card, color=P_BLUE, corner_radius=0.1, buff=0.12, stroke_width=1.8),
@@ -375,32 +376,31 @@ class Beat2_VolumeFlowEquation(Scene):
         )
         cool_dots = _air_particles(cool_paths, P_CYAN, seed=21, radius_range=(0.045, 0.07))
 
-        eq, items = equation_row([
-            ("qv", "Q̇_V", P_CYAN), (None, "=", P_WHITE),
-            ("rho", "ρ_a", P_GREEN), (None, "·", P_WHITE),
-            ("cp", "c_p,a", P_GREEN), (None, "·", P_WHITE),
-            ("dth", "Δθ", P_BLUE), (None, "·", P_WHITE),
-            ("qvr", "q_v,R", P_YELLOW),
-            (None, "  [W]", P_TEAL),
+        eq, eq_box, items = math_panel([
+            ("qv", r"\dot{Q}_{V}", P_CYAN), (None, "=", P_WHITE),
+            ("rho", r"\rho_{a}", P_GREEN), (None, r"\cdot", P_WHITE),
+            ("cp", r"c_{p,a}", P_GREEN), (None, r"\cdot", P_WHITE),
+            ("dth", r"Δθ", P_BLUE), (None, r"\cdot", P_WHITE),
+            ("qvr", r"q_{v,R}", P_YELLOW),
+            (None, r"\;[\mathrm{W}]", P_TEAL),
         ])
-        eq, eq_box = formula_panel(eq)
 
         card_bodies = [
             VGroup(
                 Text("Luftdichte", font_size=LABEL_FONT_SIZE, color=P_TEAL),
-                Text("ρ_a = 1,2 kg/m³", font_size=BODY_FONT_SIZE, color=P_GREEN),
+                math_label(r"\rho_{a} = 1{,}2\,\mathrm{kg/m^{3}}", size=BODY_FONT_SIZE, color=P_GREEN),
             ).arrange(DOWN, buff=0.06),
             VGroup(
                 Text("spez. Wärmekapazität", font_size=LABEL_FONT_SIZE, color=P_TEAL),
-                Text("c_p,a = 1,0 kJ/(kg·K)", font_size=BODY_FONT_SIZE, color=P_GREEN),
+                math_label(r"c_{p,a} = 1{,}0\,\mathrm{kJ/(kg\,K)}", size=BODY_FONT_SIZE, color=P_GREEN),
             ).arrange(DOWN, buff=0.06),
             VGroup(
                 Text("Temperaturdifferenz", font_size=LABEL_FONT_SIZE, color=P_TEAL),
-                Text("Δθ = 7 K", font_size=BODY_FONT_SIZE, color=P_BLUE),
+                math_label(r"Δθ = 7\,\mathrm{K}", size=BODY_FONT_SIZE, color=P_BLUE),
             ).arrange(DOWN, buff=0.06),
             VGroup(
                 Text("Volumenstrom", font_size=LABEL_FONT_SIZE, color=P_TEAL),
-                Text("q_v,R  [m³/s]", font_size=BODY_FONT_SIZE, color=P_YELLOW),
+                math_label(r"q_{v,R}\;[\mathrm{m^{3}/s}]", size=BODY_FONT_SIZE, color=P_YELLOW),
             ).arrange(DOWN, buff=0.06),
         ]
         # Same-size frames so the 2×2 grid lines up. Tight padding keeps the grid
@@ -451,12 +451,11 @@ class Beat2_VolumeFlowEquation(Scene):
             width=1.4, height=0.9, corner_radius=0.2,
             color=P_CYAN, stroke_width=2.5, fill_color=P_CYAN, fill_opacity=0.18,
         ).move_to(room_c)
-        qvr_tok = symbol_token("q_v,R", color=P_YELLOW, font_size=FORMULA_FONT_SIZE)
-        qvr_tok.move_to(air_blob.get_center())
         self.play(FadeIn(air_blob), run_time=0.5)
-        self.play(ReplacementTransform(air_blob, qvr_tok), run_time=1.0)
-        self.play(qvr_tok.animate.move_to(items["qvr"].get_center()), run_time=1.0)
-        self.play(FadeOut(qvr_tok), FadeOut(caption), run_time=0.4)
+        self.play(FadeOut(items["qvr"]), run_time=0.3)
+        self.remove(items["qvr"])
+        self.play(ReplacementTransform(air_blob, items["qvr"].set_opacity(1.0)), run_time=1.7)
+        self.play(FadeOut(caption), run_time=0.4)
         self.wait(0.5)
 #endregion
 
@@ -509,32 +508,35 @@ class Beat3_IsolateAirflow(Scene):
             width=2.2, height=0.9, corner_radius=0.1,
             color=P_YELLOW, stroke_width=2.5, fill_color=P_YELLOW, fill_opacity=0.12,
         ).next_to(beam.get_right(), DOWN, buff=0.35).shift(LEFT * 0.9)
-        left_txt = Text("Q̇_V\nKühlleistung", font_size=BODY_FONT_SIZE, color=P_CYAN).move_to(left_pan)
-        right_txt = Text("Q̇_S,tr\nKühllast", font_size=BODY_FONT_SIZE, color=P_YELLOW).move_to(right_pan)
+        left_txt = VGroup(
+            math_label(r"\dot{Q}_{V}", size=BODY_FONT_SIZE, color=P_CYAN),
+            Text("Kühlleistung", font_size=LABEL_FONT_SIZE, color=P_CYAN),
+        ).arrange(DOWN, buff=0.08).move_to(left_pan)
+        right_txt = VGroup(
+            math_label(r"\dot{Q}_{S,tr}", size=BODY_FONT_SIZE, color=P_YELLOW),
+            Text("Kühllast", font_size=LABEL_FONT_SIZE, color=P_YELLOW),
+        ).arrange(DOWN, buff=0.08).move_to(right_pan)
         eq_mark = Text("=", font_size=FORMULA_FONT_SIZE, color=P_WHITE).move_to(beam.get_center() + DOWN * 0.55)
         balance = VGroup(beam, pivot, left_pan, right_pan, left_txt, right_txt, eq_mark)
 
-        start_eq, start_items = equation_row([
-            ("qv", "Q̇_V", P_CYAN), (None, "=", P_WHITE),
-            ("rho", "ρ_a", P_GREEN), (None, "·", P_WHITE),
-            ("cp", "c_p,a", P_GREEN), (None, "·", P_WHITE),
-            ("dth", "Δθ", P_BLUE), (None, "·", P_WHITE),
-            ("qvr", "q_v,R", P_YELLOW),
-            (None, "  [W]", P_TEAL),
-        ])
-        start_eq, start_box = formula_panel(start_eq, color=P_CYAN)
+        start_eq, start_box, start_items = math_panel([
+            ("qv", r"\dot{Q}_{V}", P_CYAN), (None, "=", P_WHITE),
+            ("rho", r"\rho_{a}", P_GREEN), (None, r"\cdot", P_WHITE),
+            ("cp", r"c_{p,a}", P_GREEN), (None, r"\cdot", P_WHITE),
+            ("dth", r"Δθ", P_BLUE), (None, r"\cdot", P_WHITE),
+            ("qvr", r"q_{v,R}", P_YELLOW),
+            (None, r"\;[\mathrm{W}]", P_TEAL),
+        ], color=P_CYAN)
         start_panel = VGroup(start_box, start_eq)
 
-        final_eq, final_items = equation_row([
-            ("qvr", "q_v,R", P_CYAN), (None, "=", P_WHITE),
-            ("qstr", "Q̇_S,tr", P_YELLOW), (None, "/", P_WHITE),
-            (None, "(", P_WHITE),
-            ("rho", "ρ_a", P_GREEN), (None, "·", P_WHITE),
-            ("cp", "c_p,a", P_GREEN), (None, "·", P_WHITE),
-            ("dth", "Δθ", P_BLUE),
-            (None, ")", P_WHITE),
-            (None, "  [m³/s]", P_TEAL),
-        ])
+        final_parts = [
+            ("qvr", r"q_{v,R}", P_CYAN), (None, "=", P_WHITE),
+            ("frac",
+             rf"\frac{{\textcolor{{{P_YELLOW}}}{{\dot{{Q}}_{{S,tr}}}}}}"
+             rf"{{\textcolor{{{P_GREEN}}}{{\rho_{{a}} \cdot c_{{p,a}}}} \cdot \textcolor{{{P_BLUE}}}{{Δθ}}}}",
+             P_WHITE),
+            (None, r"\;[\mathrm{m^{3}/s}]", P_TEAL),
+        ]
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -553,12 +555,17 @@ class Beat3_IsolateAirflow(Scene):
         self.play(start_panel.animate.move_to(UP * 1.05), run_time=0.8)
 
         bridge = VGroup(
-            Text("Q̇_V = Q̇_S,tr", font_size=BODY_FONT_SIZE, color=P_YELLOW),
-            Text("↓  umstellen nach q_v,R", font_size=LABEL_FONT_SIZE, color=P_TEAL),
+            math_label(r"\dot{Q}_{V} = \dot{Q}_{S,tr}", size=BODY_FONT_SIZE, color=P_YELLOW),
+            math_label(r"↓\;\text{umstellen nach}\;q_{v,R}", size=LABEL_FONT_SIZE, color=P_TEAL),
         ).arrange(DOWN, buff=0.12)
         bridge.next_to(start_panel, DOWN, buff=0.28)
 
-        final_eq, final_box = formula_panel(final_eq, color=P_CYAN)
+        final_eq, final_box, final_items = math_panel(final_parts, color=P_CYAN)
+        # The one typeset fraction box: [numerator, bar, denominator, marker].
+        final_frac = final_items["frac"][0]
+        final_items["qstr"] = final_frac[0]
+        final_items["rho"] = final_frac[2]
+        final_items["dth"] = final_frac[2]
         self.play(FadeIn(bridge), run_time=0.7)
         self.play(FadeIn(final_eq), Create(final_box), run_time=1.2)
         hold_for(self, self.NARRATION, "substitute", used=0.8 + 0.8 + 0.7 + 1.2 + 0.35)
@@ -652,26 +659,30 @@ class Beat4_DuctCrossSection(Scene):
             flow_paths.add(_smooth_path([start, mid, end]))
         flow_dots = _air_particles(flow_paths, P_CYAN, radius_range=(0.05, 0.08), seed=42)
 
-        vm_tag = Text("v_m ≈ 2,5 m/s  (lärmarm)", font_size=BODY_FONT_SIZE, color=P_CYAN)
+        vm_tag = math_label(
+            r"v_{m} \approx 2{,}5\,\mathrm{m/s}\;\text{(lärmarm)}",
+            size=BODY_FONT_SIZE, color=P_CYAN,
+        )
         vm_tag.next_to(duct_c, DOWN, buff=1.35)
 
-        cont, cont_items = equation_row([
-            ("qvr", "q_v,R", P_YELLOW), (None, "=", P_WHITE),
-            ("vm", "v_m", P_CYAN), (None, "·", P_WHITE),
+        cont, cont_items = math_row([
+            ("qvr", r"q_{v,R}", P_YELLOW), (None, "=", P_WHITE),
+            ("vm", r"v_{m}", P_CYAN), (None, r"\cdot", P_WHITE),
             ("A", "A", P_BLUE),
-            (None, "  [m³/s]", P_TEAL),
+            (None, r"\;[\mathrm{m^{3}/s}]", P_TEAL),
         ])
         cont.move_to(RIGHT * 3.2 + UP * 1.35)
 
-        area_eq, area_items = equation_row([
+        area_parts = [
             ("A", "A", P_BLUE), (None, "=", P_WHITE),
-            ("qvr", "q_v,R", P_YELLOW), (None, "/", P_WHITE),
-            ("vm", "v_m", P_CYAN),
-            (None, "  [m²]", P_TEAL),
-        ])
+            ("frac",
+             rf"\frac{{\textcolor{{{P_YELLOW}}}{{q_{{v,R}}}}}}{{\textcolor{{{P_CYAN}}}{{v_{{m}}}}}}",
+             P_WHITE),
+            (None, r"\;[\mathrm{m^{2}}]", P_TEAL),
+        ]
 
-        tip_fast = Text("kleiner A → höhere v_m", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        tip_slow = Text("größerer A → niedrigere v_m", font_size=LABEL_FONT_SIZE, color=P_CYAN)
+        tip_fast = math_label(r"\text{kleines}\;A \;\to\; \text{hohes}\;v_{m}", size=LABEL_FONT_SIZE, color=P_ORANGE)
+        tip_slow = math_label(r"\text{großes}\;A \;\to\; \text{niedriges}\;v_{m}", size=LABEL_FONT_SIZE, color=P_CYAN)
         tip_fast.move_to(RIGHT * 3.2 + DOWN * 0.15)
         tip_slow.move_to(RIGHT * 3.2 + DOWN * 0.15)
 
@@ -705,7 +716,10 @@ class Beat4_DuctCrossSection(Scene):
             self.play(FadeOut(ring), run_time=0.25)
 
         self.play(FadeOut(cont), run_time=0.4)
-        area_eq, area_box = formula_panel(area_eq)
+        area_eq, area_box, area_items = math_panel(area_parts)
+        area_frac = area_items["frac"][0]
+        area_items["qvr"] = area_frac[0]
+        area_items["vm"] = area_frac[2]
         self.play(FadeIn(area_eq), Create(area_box), run_time=1.2)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "area"))
         hold_for(self, self.NARRATION, "area", used=1.2 + 0.35)
@@ -797,38 +811,37 @@ class Beat5_CalculateRadius(Scene):
         r_lbl.next_to(radius_line, UP, buff=0.08)
 
         tokens = VGroup(
-            Text("Q̇_S,tr", font_size=BODY_FONT_SIZE, color=P_YELLOW),
+            math_label(r"\dot{Q}_{S,tr}", size=BODY_FONT_SIZE, color=P_YELLOW),
             Text("→", font_size=BODY_FONT_SIZE, color=P_WHITE),
-            Text("q_v,R", font_size=BODY_FONT_SIZE, color=P_CYAN),
+            math_label(r"q_{v,R}", size=BODY_FONT_SIZE, color=P_CYAN),
             Text("→", font_size=BODY_FONT_SIZE, color=P_WHITE),
-            Text("A", font_size=BODY_FONT_SIZE, color=P_BLUE),
+            math_label("A", size=BODY_FONT_SIZE, color=P_BLUE),
             Text("→", font_size=BODY_FONT_SIZE, color=P_WHITE),
-            Text("r", font_size=BODY_FONT_SIZE, color=P_YELLOW),
+            math_label("r", size=BODY_FONT_SIZE, color=P_YELLOW),
         ).arrange(RIGHT, buff=0.18)
         tokens.move_to(RIGHT * 2.2 + UP * 1.85)
 
-        flow_eq, flow_items = equation_row([
-            ("qvr", "q_v,R", P_CYAN), (None, "=", P_WHITE),
-            ("qstr", "Q̇_S,tr", P_YELLOW), (None, "/", P_WHITE),
-            (None, "(", P_WHITE),
-            ("rho", "ρ_a", P_GREEN), (None, "·", P_WHITE),
-            ("cp", "c_p,a", P_GREEN), (None, "·", P_WHITE),
-            ("dth", "Δθ", P_BLUE),
-            (None, ")", P_WHITE),
-        ], font_size=FORMULA_FONT_SIZE, buff=0.12)
+        flow_parts = [
+            ("qvr", r"q_{v,R}", P_CYAN), (None, "=", P_WHITE),
+            ("frac",
+             rf"\frac{{\textcolor{{{P_YELLOW}}}{{\dot{{Q}}_{{S,tr}}}}}}"
+             rf"{{\textcolor{{{P_GREEN}}}{{\rho_{{a}} \cdot c_{{p,a}}}} \cdot \textcolor{{{P_BLUE}}}{{Δθ}}}}",
+             P_WHITE),
+        ]
 
-        area_eq, area_items = equation_row([
+        area_parts = [
             ("A", "A", P_BLUE), (None, "=", P_WHITE),
-            ("qvr", "q_v,R", P_CYAN), (None, "/", P_WHITE),
-            ("vm", "v_m", P_TEAL),
-        ], font_size=FORMULA_FONT_SIZE, buff=0.12)
+            ("frac",
+             rf"\frac{{\textcolor{{{P_CYAN}}}{{q_{{v,R}}}}}}{{\textcolor{{{P_TEAL}}}{{v_{{m}}}}}}",
+             P_WHITE),
+        ]
 
-        rad_eq, rad_items = equation_row([
+        rad_parts = [
             ("r", "r", P_YELLOW), (None, "=", P_WHITE),
-            (None, "√", P_WHITE), (None, "(", P_WHITE),
-            ("A", "A", P_BLUE), (None, "/", P_WHITE),
-            ("pi", "π", P_TEAL), (None, ")", P_WHITE),
-        ], font_size=FORMULA_FONT_SIZE, buff=0.12)
+            ("root",
+             rf"\sqrt{{\frac{{\textcolor{{{P_BLUE}}}{{A}}}}{{\textcolor{{{P_TEAL}}}{{\pi}}}}}}",
+             P_WHITE),
+        ]
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -836,7 +849,9 @@ class Beat5_CalculateRadius(Scene):
         self.play(FadeIn(center_dot), Create(radius_line), FadeIn(r_lbl), run_time=0.9)
         self.play(FadeIn(tokens), run_time=0.9)
 
-        flow_eq, flow_box = formula_panel(flow_eq, color=P_CYAN)
+        flow_eq, flow_box, flow_items = math_panel(flow_parts, color=P_CYAN, size=FORMULA_FONT_SIZE)
+        flow_frac = flow_items["frac"][0]
+        flow_items["qstr"] = flow_frac[0]
         flow_panel = VGroup(flow_box, flow_eq)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "flow"))
         self.play(FadeIn(flow_eq), Create(flow_box), run_time=1.2)
@@ -852,13 +867,16 @@ class Beat5_CalculateRadius(Scene):
             hold_for(self, self.NARRATION, key, used=0.55 + 0.35)
             self.play(FadeOut(ring), run_time=0.25)
 
-        self.play(flow_panel.animate.scale(0.88).move_to(RIGHT * 2.0 + UP * 1.20), run_time=0.7)
+        self.play(flow_panel.animate.scale(0.66).move_to(RIGHT * 2.0 + UP * 1.02), run_time=0.7)
 
-        area_eq, area_box = formula_panel(area_eq, color=P_BLUE)
+        area_eq, area_box, area_items = math_panel(area_parts, color=P_BLUE, size=FORMULA_FONT_SIZE)
+        area_frac = area_items["frac"][0]
+        area_items["qvr"] = area_frac[0]
+        area_items["vm"] = area_frac[2]
         area_panel = VGroup(area_box, area_eq)
         vm_note = VGroup(
             Text("Entwurfslimit (Lärmschutz)", font_size=LABEL_FONT_SIZE, color=P_TEAL),
-            Text("v_m ≈ 2,5 m/s", font_size=BODY_FONT_SIZE, color=P_CYAN),
+            math_label(r"v_{m} \approx 2{,}5\,\mathrm{m/s}", size=BODY_FONT_SIZE, color=P_CYAN),
         ).arrange(DOWN, buff=0.06)
         vm_note = VGroup(
             SurroundingRectangle(vm_note, color=P_TEAL, corner_radius=0.1, buff=0.12, stroke_width=1.8),
@@ -888,9 +906,10 @@ class Beat5_CalculateRadius(Scene):
             hold_for(self, self.NARRATION, key, used=0.55 + 0.35)
             self.play(FadeOut(ring), run_time=0.25)
 
-        self.play(area_panel.animate.scale(0.88).move_to(RIGHT * 2.0 + UP * 0.40), run_time=0.7)
+        self.play(area_panel.animate.scale(0.66).move_to(RIGHT * 2.0 + DOWN * 0.18), run_time=0.7)
 
-        rad_eq, rad_box = formula_panel(rad_eq, color=P_YELLOW)
+        rad_eq, rad_box, rad_items = math_panel(rad_parts, color=P_YELLOW, size=FORMULA_FONT_SIZE)
+        rad_items["A"] = rad_items["root"]
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "radius"))
         self.play(FadeIn(rad_eq), Create(rad_box), run_time=1.2)
         hold_for(self, self.NARRATION, "radius", used=0.7 + 1.2 + 0.35)

@@ -16,7 +16,6 @@ import sys as _sys
 import numpy as np
 from manim import *
 from manim.utils.rate_functions import ease_in_out_sine, ease_out_cubic, smootherstep
-from PIL import Image
 
 _TUTORIAL_ROOT = next(
     p for p in Path(__file__).resolve().parents
@@ -46,48 +45,90 @@ FRAME_W = 13.30
 FRAME_H = 7.10
 # endregion
 
-ASSETS_DIR = Path(__file__).resolve().parent / "assets"
-WELFENSCHLOSS_PNG = ASSETS_DIR / "welfenschloss (1) (1).png"
-LEIBNIZ_MARK_PNG = ASSETS_DIR / "csm_leibniz-binaerzahlen_13f738b2c9 (1).png"
+WELFENSCHLOSS_PDF = Path(__file__).resolve().parent / "welfenschloss (1).pdf"
 
 
-# region Image Stencils
-def _stencil(path: Path, color: str, opacity: float = 1.0) -> np.ndarray:
-    """🖌️ Recolor a transparent line-art PNG into a single-tone RGBA stencil.
+# region Vector Art
+def _pdf_subpaths(path: Path) -> list[np.ndarray]:
+    """🏛️ Read a line-art PDF's stroked and filled paths as cubic Bézier anchor/handle arrays in PDF points.
 
-    https://docs.manim.community/en/stable/reference/manim.mobject.types.image_mobject.ImageMobject.html
+    Every content stream that draws paths is tokenised; ``cm`` transforms are composed on a ``q``/``Q`` stack,
+    lines become straight cubics and ``h`` closes a subpath.
+    https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf (§8.5 Path Construction)
     """
-    arr = np.array(Image.open(str(path)).convert("RGBA"), dtype=np.uint8)
-    arr[..., 0:3] = np.array(ManimColor(color).to_int_rgb(), dtype=np.uint8)
-    arr[..., 3] = (arr[..., 3].astype(np.float64) * opacity).round().astype(np.uint8)
-    return arr
+    import re
+    import zlib
 
-
-def _stencil_image(path: Path, color: str, opacity: float = 1.0, width: float = 1.0) -> ImageMobject:
-    """🪪 Single tinted stencil sized to ``width``."""
-    image = ImageMobject(_stencil(path, color, opacity))
-    image.width = width
-    return image
-
-
-def _sliced_stencil(path: Path, color: str, opacity: float, width: float, slices: int = 30) -> Group:
-    """🧩 Vertical stencil slices laid back edge-to-edge for a wipe-in reveal."""
-    arr = _stencil(path, color, opacity)
-    pixel_h, pixel_w = arr.shape[:2]
-    height = width * pixel_h / pixel_w
-    cuts = np.linspace(0, pixel_w, slices + 1).round().astype(int)
-
-    group = Group()
-    for left, right in zip(cuts[:-1], cuts[1:]):
-        if right <= left:
+    data = path.read_bytes()
+    subpaths: list[np.ndarray] = []
+    for raw in re.findall(rb"stream\r?\n(.*?)\r?\nendstream", data, re.S):
+        try:
+            content = zlib.decompress(raw).decode("latin-1")
+        except (zlib.error, UnicodeDecodeError):
             continue
-        # 1px bleed removes hairline seams between neighbouring slices.
-        stop = min(right + 1, pixel_w)
-        piece = ImageMobject(arr[:, left:stop])
-        piece.height = height
-        piece.move_to(RIGHT * width * ((left + stop) / 2 / pixel_w - 0.5))
-        group.add(piece)
-    return group
+        if " Do" in content or " m" not in content:
+            continue
+        ctm, stack, args = np.eye(3), [], []
+        current: list[np.ndarray] = []
+
+        def to_page(x: float, y: float) -> np.ndarray:
+            return (np.array([x, y, 1.0]) @ ctm)[:2]
+
+        def flush():
+            if len(current) >= 5:
+                subpaths.append(np.array(current))
+            current.clear()
+
+        for token in content.split():
+            if re.fullmatch(r"[-+]?(\d+\.?\d*|\.\d+)", token):
+                args.append(float(token))
+                continue
+            if token == "q":
+                stack.append(ctm.copy())
+            elif token == "Q":
+                ctm = stack.pop() if stack else np.eye(3)
+            elif token == "cm" and len(args) >= 6:
+                a, b, c, d, e, f = args[-6:]
+                ctm = np.array([[a, b, 0.0], [c, d, 0.0], [e, f, 1.0]]) @ ctm
+            elif token == "m" and len(args) >= 2:
+                flush()
+                pen = to_page(*args[-2:])
+                current.append(pen)
+            elif token == "l" and len(args) >= 2 and current:
+                a, b = current[-1], to_page(*args[-2:])
+                current.extend([a, a + (b - a) / 3, a + 2 * (b - a) / 3, b])
+            elif token == "c" and len(args) >= 6 and current:
+                current.extend([current[-1], to_page(*args[-6:-4]), to_page(*args[-4:-2]), to_page(*args[-2:])])
+            elif token == "h" and current:
+                a, b = current[-1], current[0]
+                current.extend([a, a + (b - a) / 3, a + 2 * (b - a) / 3, b])
+            elif token in ("S", "s", "f", "F", "f*", "B", "b", "n"):
+                flush()
+            args = []
+        flush()
+    return subpaths
+
+
+def _vector_art(path: Path, color: str, *, width: float, opacity: float = 1.0, stroke: float = 1.2,
+                bands: int = 36) -> VGroup:
+    """🖋️ PDF line art as ``bands`` vertical VMobject strips, scaled to ``width`` and centred on the origin.
+
+    Strips sorted left to right let ``Create`` draw the drawing across the frame like a pen sweep.
+    """
+    subpaths = _pdf_subpaths(path)
+    pts = np.concatenate(subpaths)
+    lo, hi = pts.min(axis=0), pts.max(axis=0)
+    k = width / (hi[0] - lo[0])
+    mid = (lo + hi) / 2
+    edges = np.linspace(lo[0], hi[0], bands + 1)
+    strips = [VMobject(stroke_color=color, stroke_width=stroke, stroke_opacity=opacity, fill_opacity=0.0)
+              for _ in range(bands)]
+    for sub in subpaths:
+        quads = sub[1:].reshape(-1, 4, 2)
+        band = min(bands - 1, int(np.searchsorted(edges, quads[:, :, 0].mean(), side="right")) - 1)
+        scene_pts = np.column_stack([(quads.reshape(-1, 2) - mid) * k, np.zeros(len(quads) * 4)])
+        strips[max(0, band)].append_points(scene_pts)
+    return VGroup(*[s for s in strips if s.has_points()])
 # endregion
 
 
@@ -156,15 +197,10 @@ class NGSIntro(Scene):
         # endregion
 
         # region Watermark
-        building = _sliced_stencil(WELFENSCHLOSS_PNG, P_WHITE, opacity=0.13, width=12.6)
+        building = _vector_art(WELFENSCHLOSS_PDF, P_WHITE, width=12.6, opacity=0.22, stroke=1.1)
         building.align_to(frame[0], DOWN).shift(UP * 0.3)
         sweep = Line(UP * (FRAME_H / 2 - 0.2), DOWN * (FRAME_H / 2 - 0.2), color=P_CYAN, stroke_width=2.6)
         sweep.move_to(LEFT * (FRAME_W / 2 - 0.35))
-        # endregion
-
-        # region Corner Mark
-        mark = _stencil_image(LEIBNIZ_MARK_PNG, P_CYAN, opacity=0.95, width=0.98)
-        mark.move_to(frame[0].get_corner(UL) + RIGHT * (0.8 + mark.width / 2) + DOWN * (0.7 + mark.height / 2))
         # endregion
 
         # region Identity Block
@@ -229,21 +265,15 @@ class NGSIntro(Scene):
         self.add(sweep)
         self.play(
             LaggedStart(
-                *[FadeIn(piece, rate_func=smootherstep) for piece in building],
-                lag_ratio=0.028,
+                *[Create(strip, rate_func=smootherstep) for strip in building],
+                lag_ratio=0.12,
                 run_time=2.6,
             ),
             sweep.animate(rate_func=ease_in_out_sine).shift(RIGHT * (FRAME_W - 0.7)),
             run_time=2.6,
         )
 
-        self.play(
-            AnimationGroup(
-                FadeOut(sweep, shift=RIGHT * 0.5, run_time=0.7, rate_func=ease_out_cubic),
-                FadeIn(mark, shift=DOWN * 0.22, run_time=1.1, rate_func=ease_out_cubic),
-                lag_ratio=0.35,
-            )
-        )
+        self.play(FadeOut(sweep, shift=RIGHT * 0.5, rate_func=ease_out_cubic), run_time=0.7)
 
         self.play(Write(university, run_time=1.8))
         self.play(

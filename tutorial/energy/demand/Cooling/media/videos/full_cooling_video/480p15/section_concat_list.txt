@@ -1,0 +1,7 @@
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/Cooling/media/videos/intro_scene/480p15/Demo_Intro_Kuehllast.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/Cooling/media/videos/full_cooling_video/480p15/Cooling_01_HeatingVsCooling.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/Cooling/media/videos/full_cooling_video/480p15/Cooling_02_InternalGains.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/Cooling/media/videos/full_cooling_video/480p15/Cooling_03_TransmissionHumidity.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/Cooling/media/videos/full_cooling_video/480p15/Cooling_04_SolarRadiation.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/Cooling/media/videos/full_cooling_video/480p15/Cooling_05_Systemauslegung.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/Cooling/media/videos/full_cooling_video/480p15/Cooling_06_Lueftungssysteme.mp4'

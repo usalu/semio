@@ -17,8 +17,10 @@ from manim_fonts import (
     SUBTITLE_FONT_SIZE, BODY_FONT_SIZE, LABEL_FONT_SIZE,
 )
 from manim_visuals import (
-    P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_GREEN,
-    convection_stream, solar_wave_ray, watt_anchor,
+    P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_GREEN, P_BLUE,
+    solar_wave_ray, watt_anchor,
+    smooth_path, flow_guides, animate_flows,
+    math_label,
     caption_bar, swap_caption, hold_for, subtitle_text,
     set_vo_language, load_vo_timing,
 )
@@ -189,6 +191,84 @@ def _build_internal_gains(house: dict, color_device=P_CYAN, color_person=P_ORANG
     }
 
 
+def _build_ahu(house: dict):
+    """🌀 Lüftungsgerät an der linken Fassade — Ventilator, Kühlregister und vier Luftwege.
+
+    Schematic air-handling unit after the duct diagrams in VDI 2078 /
+    DIN EN 16798-3 terminology: Außenluft → Kühlregister → Zuluft into the
+    room, Abluft out of the room → Fortluft above the roof. Paths are built
+    for ``flow_guides`` + ``animate_flows`` so air visibly moves and changes
+    temperature colour at the register.
+    """
+    unit = RoundedRectangle(
+        corner_radius=0.08, width=0.78, height=1.5,
+        color=P_WHITE, stroke_width=2.5, fill_color=P_DEEP_DARK, fill_opacity=1.0,
+    ).move_to(np.array([-2.75, -0.3, 0.0]))
+
+    fan_center = np.array([-2.75, 0.05, 0.0])
+    fan_ring = Circle(radius=0.2, color=P_CYAN, stroke_width=2.2).move_to(fan_center)
+    fan_blades = VGroup(*[
+        Line(fan_center, fan_center + 0.17 * np.array([np.cos(a), np.sin(a), 0.0]),
+             color=P_CYAN, stroke_width=2.6)
+        for a in np.linspace(0, TAU, 3, endpoint=False)
+    ])
+
+    coil_pts = [
+        np.array([-3.02 + i * 0.09, -0.75 + (0.09 if i % 2 else -0.09), 0.0])
+        for i in range(7)
+    ]
+    coil = VMobject(color=P_BLUE, stroke_width=2.4).set_points_as_corners(coil_pts)
+
+    supply_pts = [
+        [-3.6, -2.0], [-3.15, -1.55], [-2.8, -1.0], [-2.72, -0.72],
+        [-2.45, -1.0], [-1.8, -1.25], [-1.0, -1.38], [-0.25, -1.45],
+    ]
+    extract_pts = [
+        [-0.6, 0.05], [-1.3, 0.25], [-1.95, 0.3], [-2.55, 0.18],
+        [-2.8, 0.45], [-2.9, 1.1], [-2.55, 1.95],
+    ]
+    supply_paths = VGroup(
+        smooth_path([np.array([x, y, 0.0]) for x, y in supply_pts]),
+        smooth_path([np.array([x, y - 0.12, 0.0]) for x, y in supply_pts]),
+    )
+    extract_paths = VGroup(
+        smooth_path([np.array([x, y, 0.0]) for x, y in extract_pts]),
+        smooth_path([np.array([x + 0.1, y - 0.12, 0.0]) for x, y in extract_pts]),
+    )
+
+    def _grille(at, angle):
+        ticks = VGroup(*[
+            Line(ORIGIN, UP * 0.16, color=P_WHITE, stroke_width=2)
+            for _ in range(3)
+        ]).arrange(RIGHT, buff=0.08)
+        return ticks.rotate(angle).move_to(np.array(at, dtype=float))
+    grille_in = _grille([-0.25, -1.5, 0.0], 0.0)
+    grille_out = _grille([-0.6, 0.1, 0.0], 0.0)
+
+    labels = VGroup(
+        Text("Außenluft", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to([-4.5, -1.85, 0.0]),
+        Text("Zuluft", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to([-0.9, -1.75, 0.0]),
+        Text("Abluft", font_size=LABEL_FONT_SIZE, color=P_RED).move_to([-2.3, 0.62, 0.0]),
+        Text("Fortluft", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to([-1.95, 1.72, 0.0]),
+    )
+    unit_label = Text(
+        "Lüftungsgerät\nmit Kühlregister", font_size=LABEL_FONT_SIZE, color=P_TEAL,
+        line_spacing=0.8,
+    ).move_to([-4.85, 0.35, 0.0])
+    unit_leader = Line(
+        unit_label.get_right() + RIGHT * 0.12, unit.get_corner(UL) + DOWN * 0.1,
+        color=P_TEAL, stroke_width=1.6, stroke_opacity=0.7,
+    )
+
+    return {
+        "unit": VGroup(unit, fan_ring, fan_blades, coil),
+        "fan_blades": fan_blades, "fan_center": fan_center,
+        "supply_paths": supply_paths, "extract_paths": extract_paths,
+        "grilles": VGroup(grille_in, grille_out),
+        "labels": labels, "unit_label": VGroup(unit_label, unit_leader),
+    }
+
+
 def _create_thermometer(pos):
     """🌡️ Thermometer frame + fluid stem for room-temperature tracking."""
     bulb_outer = Circle(radius=0.18, color=P_WHITE, stroke_width=2).move_to(pos + DOWN * 0.3)
@@ -256,8 +336,8 @@ class Beat1_WinterGains(Scene):
         hold_for(self, self.NARRATION, "solar", used=1.6 + 0.35)
 
         gains = _build_internal_gains(house)
-        internal_label = Text("Interne Gewinne", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        internal_label.next_to(gains["device"], UP, buff=0.35)
+        internal_label = Text("Interne Gewinne", font_size=BODY_FONT_SIZE, color=P_ORANGE)
+        internal_label.next_to(house["floor"], DOWN, buff=0.2)
         laptop_anchor = watt_anchor(60, compare="laptop", title="Gerät").scale(0.55)
         person_anchor = watt_anchor(100, compare="bulb", title="Person").scale(0.55)
         anchor_row = VGroup(person_anchor, laptop_anchor).arrange(DOWN, buff=0.4)
@@ -295,8 +375,8 @@ class Beat2_SummerOverheat(Scene):
          "Heat is trapped in the insulated envelope — watch the room temperature climb toward thirty-five degrees.",
          "Wärme staut sich in der gedämmten Hülle — die Raumtemperatur steigt Richtung fünfunddreißig Grad."),
         ("outro",
-         "Without active cooling, comfort collapses on a hot summer afternoon.",
-         "Ohne aktive Kühlung bricht der Komfort an einem heißen Sommernachmittag zusammen."),
+         "Without active cooling the room stays too warm on a hot summer afternoon.",
+         "Ohne aktive Kühlung bleibt der Raum am heißen Sommernachmittag zu warm."),
     ]
 
     def construct(self):
@@ -317,13 +397,13 @@ class Beat2_SummerOverheat(Scene):
 
         sun_pos = house["center"] + LEFT * 3.6 + UP * 1.35
         sun_group = _build_sun(sun_pos, color=P_RED, glow_opacity=0.45, burst_width=3)
-        solar_label = Text("Solare Gewinne (Exzessiv)", font_size=LABEL_FONT_SIZE, color=P_RED)
-        solar_label.next_to(sun_group, DOWN, buff=0.7)
+        solar_label = Text("Übermäßige\nsolare Gewinne", font_size=LABEL_FONT_SIZE, color=P_RED, line_spacing=0.8)
+        solar_label.next_to(sun_group, DOWN, buff=0.45)
         gains = _build_internal_gains(house, color_device=P_RED, color_person=P_RED)
         gains["sources"].set_color(P_RED)
         gains["waves"].set_color(P_RED)
-        internal_label = Text("Interne Gewinne", font_size=LABEL_FONT_SIZE, color=P_RED)
-        internal_label.next_to(gains["device"], UP, buff=0.45)
+        internal_label = Text("Interne Gewinne", font_size=BODY_FONT_SIZE, color=P_RED)
+        internal_label.next_to(house["floor"], DOWN, buff=0.2)
 
         heat_block = Polygon(
             house["bottom_left"] + RIGHT * 0.05 + UP * 0.05,
@@ -394,8 +474,8 @@ class Beat3_CoolingSystem(Scene):
          "The cooling load is the heat-removal rate we must provide so the room returns to comfort.",
          "Die Kühllast ist die Wärmeleistung, die wir aktiv abführen müssen, damit der Raum wieder komfortabel wird."),
         ("vent",
-         "Mechanical ventilation and cooling exhaust the trapped heat through supply and extract streams.",
-         "Mechanische Lüftung und Kühlung führen die gestaute Wärme über Zu- und Abluft ab."),
+         "An air-handling unit extracts the warm room air, cools outdoor air at its cooling coil and supplies it back to the room.",
+         "Ein Lüftungsgerät saugt die warme Raumluft als Abluft ab, kühlt Außenluft am Kühlregister und bläst sie als Zuluft ein."),
         ("cool_down",
          "As heat leaves, the interior cools and the thermometer settles near twenty-one degrees again.",
          "Wenn Wärme abfließt, kühlt der Innenraum — das Thermometer sinkt wieder Richtung einundzwanzig Grad."),
@@ -461,33 +541,59 @@ class Beat3_CoolingSystem(Scene):
         therm_group.add_updater(update_therm)
         self.add(therm_group, temp_title)
 
-        exhaust_streams = VGroup(
-            convection_stream(house["roof_peak"] + LEFT * 0.3, house["roof_peak"] + LEFT * 1.0 + UP * 0.85, color=P_CYAN, bend=0.25, n_ribbons=2),
-            convection_stream(house["roof_peak"] + RIGHT * 0.3, house["roof_peak"] + RIGHT * 1.0 + UP * 0.85, color=P_CYAN, bend=0.25, n_ribbons=2),
-            convection_stream(house["top_left"] + DOWN * 0.8, house["top_left"] + LEFT * 1.2 + DOWN * 0.8, color=P_CYAN, bend=0.15, n_ribbons=2),
-            convection_stream(house["top_right"] + DOWN * 0.8, house["top_right"] + RIGHT * 1.05 + DOWN * 0.8, color=P_CYAN, bend=-0.15, n_ribbons=2),
-        )
-        exhaust_label = Text("Mechanische Lüftung / Kühlung", font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        exhaust_label.next_to(house["roof_peak"], LEFT, buff=1.1)
+        ahu = _build_ahu(house)
+        supply_guides = flow_guides(ahu["supply_paths"], P_CYAN, opacity=0.22)
+        extract_guides = flow_guides(ahu["extract_paths"], P_RED, opacity=0.22)
+
+        def _fan_spin(turns: float, run_time: float):
+            return Rotate(
+                ahu["fan_blades"], angle=turns * TAU,
+                about_point=ahu["fan_center"], run_time=run_time, rate_func=linear,
+            )
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "vent"))
         self.play(
-            LaggedStart(*[Create(s) for s in exhaust_streams], lag_ratio=0.12),
-            FadeIn(exhaust_label),
+            FadeIn(ahu["unit"]), FadeIn(ahu["grilles"]),
+            Create(supply_guides), Create(extract_guides),
+            FadeIn(ahu["labels"]), FadeIn(ahu["unit_label"]),
             run_time=2.0,
         )
-        hold_for(self, self.NARRATION, "vent", used=2.0 + 0.35)
+        animate_flows(
+            self,
+            [
+                (ahu["extract_paths"], P_RED, P_ORANGE),
+                (ahu["supply_paths"], P_ORANGE, P_CYAN),
+            ],
+            run_time=3.2, waves=5,
+            extra=[_fan_spin(2.5, 3.2)],
+        )
+        hold_for(self, self.NARRATION, "vent", used=5.2 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "cool_down"))
-        self.play(
-            heat_block.animate.set_fill(opacity=0.0),
-            temp_val.animate.set_value(21),
-            run_time=3.2,
+        animate_flows(
+            self,
+            [
+                (ahu["extract_paths"], P_RED, P_ORANGE),
+                (ahu["supply_paths"], P_ORANGE, P_CYAN),
+            ],
+            run_time=4.0, waves=5,
+            extra=[
+                _fan_spin(3.0, 4.0),
+                heat_block.animate.set_fill(opacity=0.0),
+                temp_val.animate.set_value(21),
+            ],
         )
-        hold_for(self, self.NARRATION, "cool_down", used=3.2 + 0.35)
+        hold_for(self, self.NARRATION, "cool_down", used=4.0 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
-        hold_for(self, self.NARRATION, "outro", used=0.35)
+        qk_symbol = math_label(
+            r"\dot{Q}_{K}", at=np.array([-3.35, 1.78, 0.0]),
+            size=SUBTITLE_FONT_SIZE, color=P_CYAN, edge="right",
+        )
+        qk_word = Text("Kühllast", font_size=LABEL_FONT_SIZE, color=P_CYAN)
+        qk_word.next_to(qk_symbol, DOWN, buff=0.14, aligned_edge=RIGHT)
+        self.play(FadeIn(qk_symbol), FadeIn(qk_word), run_time=0.8)
+        hold_for(self, self.NARRATION, "outro", used=0.8 + 0.35)
 
         therm_group.clear_updaters()
         self.play(FadeOut(caption), run_time=0.3)

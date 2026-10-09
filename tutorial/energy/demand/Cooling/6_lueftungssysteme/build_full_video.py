@@ -26,7 +26,8 @@ def main():
         ("Beat6_GrenzenDerFreienLueftung", base_dir / "beat_6_audio.mp3"),
         ("Beat7_MechanischeGrundtypen",    base_dir / "beat_7_audio.mp3"),
         ("Beat8_Waermerueckgewinnung",     base_dir / "beat_8_audio.mp3"),
-        ("Beat9_KomfortStrategie",         base_dir / "beat_9_audio.mp3"),
+        ("Beat9_SorptionsKuehlung",        base_dir / "beat_9_audio.mp3"),
+        ("Beat10_KomfortStrategie",        base_dir / "beat_10_audio.mp3"),
     ]
 
     def resolve_audio(path: Path) -> Path:

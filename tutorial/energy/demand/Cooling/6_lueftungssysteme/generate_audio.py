@@ -28,7 +28,8 @@ from scene_6 import (  # noqa: E402
     Beat6_GrenzenDerFreienLueftung,
     Beat7_MechanischeGrundtypen,
     Beat8_Waermerueckgewinnung,
-    Beat9_KomfortStrategie,
+    Beat9_SorptionsKuehlung,
+    Beat10_KomfortStrategie,
 )
 from tts_pipeline import (  # noqa: E402
     assemble_aligned_track,
@@ -49,7 +50,8 @@ BEATS = [
     Beat6_GrenzenDerFreienLueftung,
     Beat7_MechanischeGrundtypen,
     Beat8_Waermerueckgewinnung,
-    Beat9_KomfortStrategie,
+    Beat9_SorptionsKuehlung,
+    Beat10_KomfortStrategie,
 ]
 
 SCENE_FILE = BASE_DIR / "scene_6.py"

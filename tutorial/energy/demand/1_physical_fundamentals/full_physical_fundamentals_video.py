@@ -105,6 +105,19 @@ def _find_section_mp4(media_dir: Path, scene_name: str, quality_flag: str) -> Pa
     raise FileNotFoundError(f"Rendered mp4 not found for {scene_name} under {media_dir}")
 
 
+_SHARED_SOURCES: tuple[Path, ...] = (
+    Path(__file__).resolve(),
+    _SEMIO_ROOT / "tutorial" / "manim_visuals.py",
+    _SEMIO_ROOT / "tutorial" / "manim_fonts.py",
+)
+
+
+def _is_current(clip: Path, sources: list[Path]) -> bool:
+    """⏱️ A clip is reusable only when it is newer than every source it was rendered from."""
+    built = clip.stat().st_mtime
+    return all(src.stat().st_mtime <= built for src in sources if src.is_file())
+
+
 def _ffmpeg_concat_silent(clips: list[Path], output: Path, list_path: Path) -> None:
     """🎞️ Concatenate clips and drop any audio stream."""
     lines = []
@@ -140,18 +153,19 @@ def compose_full_physical_fundamentals_video(
     folder = _quality_folder(quality_flag)
     beat_script = _PF_ROOT / "scene_1.py"
 
-    def _maybe_existing(scene_name: str) -> Path | None:
+    def _maybe_existing(scene_name: str, sources: list[Path]) -> Path | None:
         if force:
             return None
         try:
-            return _find_section_mp4(media_dir, scene_name, quality_flag)
+            clip = _find_section_mp4(media_dir, scene_name, quality_flag)
         except FileNotFoundError:
             return None
+        return clip if _is_current(clip, sources) else None
 
-    def _render(script: Path, scene_name: str) -> Path:
-        existing = _maybe_existing(scene_name)
+    def _render(script: Path, scene_name: str, sources: list[Path]) -> Path:
+        existing = _maybe_existing(scene_name, [*sources, *_SHARED_SOURCES])
         if existing is not None:
-            print(f"\n=== Skipping {scene_name} (already rendered) ===")
+            print(f"\n=== Skipping {scene_name} (up to date) ===")
             return existing
         print(f"\n=== Rendering {scene_name} ===")
         subprocess.run(
@@ -165,11 +179,11 @@ def compose_full_physical_fundamentals_video(
             check=True,
             cwd=str(_SEMIO_ROOT),
         )
-        return _find_section_mp4(media_dir, scene_name, quality_flag)
+        return media_dir / "videos" / script.stem / folder / f"{scene_name}.mp4"
 
-    clips.append(_render(_INTRO_SCENE, INTRO_CLASS_NAME))
+    clips.append(_render(_INTRO_SCENE, INTRO_CLASS_NAME, [_INTRO_SCENE]))
     for beat_cls in PHYSICAL_FUNDAMENTALS_PLAYLIST[0][1]:
-        clips.append(_render(beat_script, beat_cls.__name__))
+        clips.append(_render(beat_script, beat_cls.__name__, [beat_script, _PF_ROOT / "vo_timing.json"]))
 
     out_dir = media_dir / "videos" / "full_physical_fundamentals_video" / folder
     output = out_dir / "FullPhysicalFundamentalsVideo.mp4"
@@ -202,7 +216,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Re-render intro and every beat even if mp4s already exist",
+        help="Re-render intro and every beat even if their mp4s are up to date",
     )
     args = parser.parse_args(argv)
     quality_flag = {"l": "-ql", "m": "-qm", "h": "-qh"}[args.q]

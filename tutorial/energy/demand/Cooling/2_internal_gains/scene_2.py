@@ -20,6 +20,7 @@ from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE,
     convection_stream, radiation_waves, respiration_parts, symbol_token, watt_anchor,
     equation_row, formula_panel, highlight_param,
+    math_label, math_readout, math_panel, de_num,
     caption_bar, swap_caption, hold_for, subtitle_text,
     SAFE_BOTTOM, set_vo_language, load_vo_timing,
 )
@@ -91,6 +92,54 @@ def _occupant_icon(color=P_CYAN, scale=1.0):
     shoulders.next_to(head, DOWN, buff=0.02 * scale)
     return VGroup(head, shoulders)
 
+
+def _activity_figure(kind: str, color=P_CYAN, s: float = 1.0):
+    """🏃 Stick figure in one activity pose — ``sleep``, ``sit``, ``walk`` or ``sprint``.
+
+    Feet sit on ``y = 0`` so a row of poses shares one ground line; metabolic
+    rates per pose follow ISO 7730 / VDI 2078 orders of magnitude.
+    """
+    def L(a, b, w=2.6):
+        return Line(np.array([*a, 0.0]) * s, np.array([*b, 0.0]) * s, color=color, stroke_width=w)
+
+    def H(cx, cy, r=0.1):
+        return Circle(radius=r * s, color=color, stroke_width=2.4).move_to(np.array([cx, cy, 0.0]) * s)
+
+    if kind == "sleep":
+        bed = Line(np.array([-0.6, 0.0, 0.0]) * s, np.array([0.6, 0.0, 0.0]) * s, color=P_TEAL, stroke_width=2.2)
+        return VGroup(bed, H(-0.38, 0.12, 0.09), L([-0.27, 0.1], [0.3, 0.1]), L([0.3, 0.1], [0.52, 0.06]))
+    if kind == "sit":
+        seat = VGroup(L([-0.2, 0.45], [0.2, 0.45], 2.2), L([-0.2, 0.45], [-0.2, 0.0], 2.2))
+        seat.set_color(P_TEAL)
+        return VGroup(
+            seat, H(0.03, 1.02), L([0.03, 0.92], [0.03, 0.5]),
+            L([0.03, 0.5], [0.33, 0.5]), L([0.33, 0.5], [0.33, 0.02]),
+            L([0.03, 0.78], [0.3, 0.62]),
+        )
+    if kind == "walk":
+        return VGroup(
+            H(0.0, 1.12), L([0.0, 1.02], [0.0, 0.45]),
+            L([0.0, 0.45], [-0.24, 0.02]), L([0.0, 0.45], [0.24, 0.02]),
+            L([0.0, 0.85], [-0.22, 0.6]), L([0.0, 0.85], [0.22, 0.6]),
+        )
+    if kind == "sprint":
+        back_leg = VMobject(color=color, stroke_width=2.6).set_points_as_corners(
+            [np.array([0.0, 0.5, 0.0]) * s, np.array([-0.26, 0.3, 0.0]) * s, np.array([-0.46, 0.1, 0.0]) * s]
+        )
+        front_leg = VMobject(color=color, stroke_width=2.6).set_points_as_corners(
+            [np.array([0.0, 0.5, 0.0]) * s, np.array([0.22, 0.26, 0.0]) * s, np.array([0.14, 0.02, 0.0]) * s]
+        )
+        dashes = VGroup(
+            Line(np.array([-0.75, 0.75, 0.0]) * s, np.array([-0.5, 0.75, 0.0]) * s, color=color, stroke_width=1.6, stroke_opacity=0.5),
+            Line(np.array([-0.8, 0.5, 0.0]) * s, np.array([-0.55, 0.5, 0.0]) * s, color=color, stroke_width=1.6, stroke_opacity=0.5),
+        )
+        return VGroup(
+            dashes, H(0.4, 1.12), L([0.0, 0.5], [0.3, 1.0]),
+            back_leg, front_leg,
+            L([0.3, 1.0], [0.06, 0.78]), L([0.3, 1.0], [0.54, 0.8]),
+        )
+    raise ValueError(f"unknown activity pose {kind!r}")
+
 #endregion
 
 
@@ -99,8 +148,8 @@ def _occupant_icon(color=P_CYAN, scale=1.0):
 class Beat1_OfficeRoom(Scene):
     NARRATION = [
         ("intro",
-         "Before the sun even touches our building, we already have a heat problem brewing inside.",
-         "Noch bevor die Sonne das Gebäude berührt, brodelt innen bereits ein Wärmeproblem."),
+         "Before the sun even touches the building, heat is already produced inside — by the internal sources.",
+         "Schon bevor die Sonne das Gebäude trifft, entsteht innen Wärme — aus den internen Quellen."),
         ("facade",
          "Start from the commercial facade, then zoom into the insulated office envelope.",
          "Beginnen wir bei der Gewerbefassade und zoomen in die gedämmte Bürohülle."),
@@ -197,6 +246,12 @@ class Beat2_HumanFactor(Scene):
         ("anchor",
          "A single seated adult emits about one hundred watts — like a bright light bulb.",
          "Eine sitzende Person gibt etwa einhundert Watt ab — wie eine helle Glühbirne."),
+        ("activities",
+         "How much heat the body emits depends on activity — it rises from sleeping to desk work, walking and high-performance sport.",
+         "Wie viel Wärme der Körper abgibt, hängt von der Aktivität ab — sie steigt vom Schlafen über Büroarbeit und Gehen bis zum Hochleistungssport."),
+        ("activity_scale",
+         "On one watt scale: about eighty watts asleep, one hundred at the desk, two hundred walking, up to eight hundred in sport.",
+         "Auf einer Watt-Skala: rund achtzig Watt im Schlaf, hundert am Schreibtisch, zweihundert beim Gehen, bis achthundert beim Sport."),
         ("formula",
          "We calculate Q-dot Personen as n times the specific emission q-dot p, in watts.",
          "Wir berechnen Q-Punkt Personen als n mal die spezifische Abgabe q-Punkt p, in Watt."),
@@ -304,31 +359,141 @@ class Beat2_HumanFactor(Scene):
         self.play(FadeIn(badge, shift=LEFT * 0.25), run_time=1.0)
         hold_for(self, self.NARRATION, "anchor", used=1.0 + 0.35)
 
-        # Clear desk scene for formula + hall scale
         desk_group = VGroup(
             ceiling_line, floor_line, office_setup, rad_waves, lbl_rad, conv_stream, lbl_conv,
             breath["sensible"], breath["sensible_label"], breath["latent"], breath["latent_label"], lbl_resp, badge,
         )
-        self.play(desk_group.animate.scale(0.72).shift(UP * 0.85 + LEFT * 0.4), run_time=0.9)
+        self.play(FadeOut(desk_group), run_time=0.7)
 
-        row, items = equation_row([
-            ("qp_tot", "Q̇_Pers", P_ORANGE), (None, "=", P_WHITE),
-            ("n", "n", P_CYAN), (None, "·", P_WHITE),
-            ("qp", "q̇_p", P_ORANGE), (None, "  [W]", P_TEAL),
+        # 🏃 Activity ladder — every pose animated, its watt output counted from
+        # zero, then all four morph onto one watt scale (Schlafen → Sport).
+        acts = [
+            ("Schlafen", 80, "sleep", P_TEAL),
+            ("Büroarbeit", 100, "sit", P_CYAN),
+            ("Gehen", 200, "walk", P_YELLOW),
+            ("Hochleistungssport", 800, "sprint", P_RED),
+        ]
+        base_y = -0.75
+        xs = [-4.8, -1.7, 1.3, 4.3]
+        figures, trackers, readouts, names, wave_sets = [], [], [], [], []
+        for (name, watts, pose, color), x in zip(acts, xs):
+            fig = _activity_figure(pose, color=color, s=1.0).shift(RIGHT * x + UP * base_y)
+            head_y = base_y + (0.25 if pose == "sleep" else 1.25)
+            waves = _rising_heat_waves(
+                np.array([x, head_y, 0.0]),
+                n=2 + int(watts / 250), color=color,
+                height=0.45 + watts / 1600, x_spread=0.2, stroke_width=1.8,
+            )
+            tr = ValueTracker(0.0)
+            read = math_readout(
+                lambda tr=tr: rf"{de_num(tr.get_value())}\,\mathrm{{W}}",
+                np.array([x, head_y + 0.75 + watts / 1600, 0.0]),
+                size=BODY_FONT_SIZE, color=color, edge="center",
+            )
+            label = Text(name, font_size=LABEL_FONT_SIZE, color=color)
+            label.move_to([x, base_y - 0.42, 0.0])
+            figures.append(fig); trackers.append(tr); readouts.append(read)
+            names.append(label); wave_sets.append(waves)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "activities"))
+        for fig, tr, read, label, waves, (name, watts, pose, color) in zip(
+            figures, trackers, readouts, names, wave_sets, acts,
+        ):
+            self.add(read)
+            self.play(
+                FadeIn(fig), FadeIn(label),
+                LaggedStart(*[Create(w) for w in waves], lag_ratio=0.1),
+                tr.animate.set_value(watts),
+                run_time=1.1,
+            )
+        hold_for(self, self.NARRATION, "activities", used=4 * 1.1 + 0.35)
+
+        # Freeze the live counters so the morph below transforms plain labels.
+        static_reads = VGroup(*[
+            math_label(rf"{de_num(watts)}\,\mathrm{{W}}",
+                       at=np.array([x, base_y + (0.25 if pose == "sleep" else 1.25) + 0.75 + watts / 1600, 0.0]),
+                       size=BODY_FONT_SIZE, color=color, edge="center")
+            for (name, watts, pose, color), x in zip(acts, xs)
         ])
-        row, box = formula_panel(row)
+        self.add(static_reads)
+        for read in readouts:
+            self.remove(read)
+
+        scale_y = -0.85
+        def w_to_x(w):
+            return -5.2 + (w / 800.0) * 10.4
+        scale_line = Line([w_to_x(0), scale_y, 0], [w_to_x(800), scale_y, 0], color=P_WHITE, stroke_width=2.5)
+        ticks = VGroup()
+        tick_labels = VGroup()
+        for w in (0, 200, 400, 600, 800):
+            x = w_to_x(w)
+            ticks.add(Line([x, scale_y - 0.09, 0], [x, scale_y + 0.09, 0], color=P_WHITE, stroke_width=2))
+            tick_labels.add(math_label(de_num(w), at=np.array([x, scale_y - 0.42, 0.0]),
+                                       size=LABEL_FONT_SIZE, color=P_TEAL, edge="center"))
+        unit_label = math_label(r"\mathrm{W}", at=np.array([w_to_x(800) + 0.45, scale_y - 0.42, 0.0]),
+                                size=LABEL_FONT_SIZE, color=P_TEAL, edge="center")
+        dots = VGroup(*[
+            Dot([w_to_x(watts), scale_y, 0], radius=0.09, color=color)
+            for (name, watts, pose, color) in acts
+        ])
+        # Schlafen (80 W) hangs below the axis under the tick row, the others sit
+        # above it — 80 W and 100 W are too close on the scale to share a side.
+        name_targets = []
+        read_targets = []
+        for i, ((name, watts, pose, color), label) in enumerate(zip(acts, names)):
+            x = w_to_x(watts)
+            if i == 0:
+                read_targets.append(np.array([x, scale_y - 0.85, 0.0]))
+                name_targets.append(np.array([x, scale_y - 1.18, 0.0]))
+            else:
+                read_targets.append(np.array([x, scale_y + 0.82, 0.0]))
+                name_targets.append(np.array([x, scale_y + 0.46, 0.0]))
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "activity_scale"))
+        self.play(
+            Create(scale_line), Create(ticks), FadeIn(tick_labels), FadeIn(unit_label),
+            *[ReplacementTransform(fig, dot) for fig, dot in zip(figures, dots)],
+            *[FadeOut(waves) for waves in wave_sets],
+            *[label.animate.move_to(t) for label, t in zip(names, name_targets)],
+            *[read.animate.move_to(t) for read, t in zip(static_reads, read_targets)],
+            run_time=2.2,
+        )
+        buero_ring = Circle(radius=0.17, color=P_ORANGE, stroke_width=3).move_to(dots[1].get_center())
+        self.play(Create(buero_ring), run_time=0.5)
+        hold_for(self, self.NARRATION, "activity_scale", used=2.7 + 0.35)
+
+        scale_assembly = VGroup(
+            scale_line, ticks, tick_labels, unit_label, dots, buero_ring,
+            *names, *static_reads,
+        )
+        self.play(scale_assembly.animate.scale(0.82).shift(UP * 1.75), run_time=0.8)
+
+        row, box, items = math_panel([
+            ("qp_tot", r"\dot{Q}_{\text{Pers}}", P_ORANGE), (None, "=", P_WHITE),
+            ("n", "n", P_CYAN), (None, r"\cdot", P_WHITE),
+            ("qp", r"\dot{q}_{p}", P_ORANGE), (None, r"\;[\mathrm{W}]", P_TEAL),
+        ])
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
-        self.play(Create(row), Create(box), run_time=1.2)
+        self.play(FadeIn(row), Create(box), run_time=1.2)
         hold_for(self, self.NARRATION, "formula", used=1.2 + 0.35)
 
         for key, color in (("n", P_CYAN), ("qp", P_ORANGE)):
             ring = highlight_param(items, key, color=color)
-            self.play(Create(ring), run_time=0.45)
+            anims = [Create(ring)]
+            if key == "qp":
+                # 💡 q̇_p is the ringed Büroarbeit point on the scale — fly its
+                # 100 W value into the formula slot.
+                qp_fly = static_reads[1].copy()
+                anims.append(qp_fly.animate.next_to(box, UP, buff=0.14).set_x(items["qp"].get_center()[0]))
+            self.play(*anims, run_time=0.6)
             caption = swap_caption(self, caption, subtitle_text(self.NARRATION, key))
-            hold_for(self, self.NARRATION, key, used=0.45 + 0.35)
-            self.play(FadeOut(ring), run_time=0.25)
+            hold_for(self, self.NARRATION, key, used=0.6 + 0.35)
+            fades = [FadeOut(ring)]
+            if key == "qp":
+                fades.append(FadeOut(qp_fly))
+            self.play(*fades, run_time=0.25)
 
-        self.play(FadeOut(desk_group), FadeOut(row), FadeOut(box), run_time=0.7)
+        self.play(FadeOut(scale_assembly), FadeOut(row), FadeOut(box), run_time=0.7)
 
         single = _occupant_icon(color=P_CYAN, scale=1.8).move_to(DOWN * 0.05)
         single_label = Text("Einzelperson (100 W)", font_size=BODY_FONT_SIZE, color=P_CYAN)
@@ -404,6 +569,9 @@ class Beat3_DevicesLighting(Scene):
         ("fn",
          "f N accounts for the fact that not every device runs at once.",
          "f N berücksichtigt, dass nicht jedes Gerät gleichzeitig läuft."),
+        ("fn_usage",
+         "The usage sets f N: in an office about seven of ten devices run, in a server room all of them, in a meeting room only three.",
+         "Die Nutzung bestimmt f N: im Büro laufen etwa sieben von zehn Geräten, im Serverraum alle, im Besprechungsraum nur drei."),
         ("lights",
          "Ceiling lighting adds Q-dot Licht equals the sum of P Licht times the coincidence factor f g, in watts.",
          "Deckenlicht: Q-Punkt Licht gleich Summe aus P Licht mal Gleichzeitigkeit f g, in Watt."),
@@ -442,7 +610,7 @@ class Beat3_DevicesLighting(Scene):
         laptop_screen.next_to(laptop_base, UP, buff=0)
         laptop = VGroup(laptop_base, laptop_screen)
         target_laptop = LEFT * 2.3 + DOWN * 0.1
-        laptop.move_to(LEFT * 2.3 + UP * 2.2)
+        laptop.move_to(target_laptop + UP * 0.9).set_opacity(0.0)
 
         rack_frame = Rectangle(width=1.6, height=2.6, color=P_CYAN, fill_color="#1F2833", fill_opacity=0.9, stroke_width=2)
         slots = VGroup()
@@ -453,11 +621,19 @@ class Beat3_DevicesLighting(Scene):
             slots.add(VGroup(slot_rect, Dot(slot_rect.get_left() + RIGHT * 0.18, radius=0.035, color=P_CYAN)))
         server_rack = VGroup(rack_frame, slots)
         target_rack = RIGHT * 2.8 + DOWN * 0.45
-        server_rack.move_to(RIGHT * 2.8 + UP * 2.8)
+        server_rack.move_to(target_rack + UP * 0.6).set_opacity(0.0)
+        laptop_full = laptop.copy().move_to(target_laptop)
+        laptop_full[0].set_fill(opacity=0.9).set_stroke(opacity=1.0)
+        laptop_full[1].set_fill(opacity=0.9).set_stroke(opacity=1.0)
+        rack_full = server_rack.copy().move_to(target_rack)
+        rack_full[0].set_fill(opacity=0.9).set_stroke(opacity=1.0)
+        for slot in rack_full[1]:
+            slot[0].set_fill(opacity=0.8).set_stroke(opacity=1.0)
+            slot[1].set_fill(opacity=1.0).set_stroke(opacity=1.0)
 
         self.play(Create(floor), Create(desk), run_time=1.0)
-        self.play(laptop.animate.move_to(target_laptop), rate_func=rate_functions.ease_out_bounce, run_time=1.1)
-        self.play(server_rack.animate.move_to(target_rack), rate_func=rate_functions.ease_out_bounce, run_time=1.1)
+        self.play(Transform(laptop, laptop_full), rate_func=rate_functions.ease_out_bounce, run_time=1.1)
+        self.play(Transform(server_rack, rack_full), rate_func=rate_functions.ease_out_bounce, run_time=1.1)
 
         laptop_origin = target_laptop + UP * 0.15
         laptop_glow = _device_glow(laptop_origin)
@@ -480,14 +656,13 @@ class Beat3_DevicesLighting(Scene):
         devices_group = VGroup(floor, desk, laptop, server_rack, laptop_glow, laptop_waves, server_glow, server_waves)
         self.play(devices_group.animate.scale(0.78).shift(UP * 0.95), run_time=0.8)
 
-        row_d, items_d = equation_row([
-            ("qg", "Q̇_Geräte", P_CYAN), (None, "=", P_WHITE),
-            (None, "Σ", P_WHITE),
-            ("pel", "P_el", P_CYAN), (None, "·", P_WHITE),
-            ("fn", "f_N", P_YELLOW), (None, "  [W]", P_TEAL),
+        row_d, box_d, items_d = math_panel([
+            ("qg", r"\dot{Q}_{\text{Geräte}}", P_CYAN), (None, "=", P_WHITE),
+            (None, r"\Sigma", P_WHITE),
+            ("pel", r"P_{el}", P_CYAN), (None, r"\cdot", P_WHITE),
+            ("fn", r"f_{N}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_TEAL),
         ])
-        row_d, box_d = formula_panel(row_d)
-        self.play(Create(row_d), Create(box_d), run_time=1.1)
+        self.play(FadeIn(row_d), Create(box_d), run_time=1.1)
         hold_for(self, self.NARRATION, "devices", used=4.3 + 0.35)
 
         for key, color in (("pel", P_CYAN), ("fn", P_YELLOW)):
@@ -497,7 +672,56 @@ class Beat3_DevicesLighting(Scene):
             hold_for(self, self.NARRATION, key, used=0.45 + 0.35)
             self.play(FadeOut(ring), run_time=0.25)
 
-        self.play(FadeOut(devices_group), FadeOut(row_d), FadeOut(box_d), run_time=0.7)
+        # 📊 f_N aus der Nutzung — in each usage a share of ten devices lights
+        # up, and f_N is read live off that lit share (jeweils animiert).
+        self.play(FadeOut(devices_group), run_time=0.5)
+        fn_ring = highlight_param(items_d, "fn", color=P_YELLOW)
+        usages = [("Büro", 7, P_CYAN, -3.9), ("Serverraum", 10, P_ORANGE, 0.0), ("Besprechung", 3, P_TEAL, 3.9)]
+        usage_groups = VGroup()
+        usage_anim_specs = []
+        for name, lit, color, cx in usages:
+            frame = RoundedRectangle(
+                width=3.4, height=2.4, corner_radius=0.12,
+                color=color, stroke_width=2.2, fill_color="#12151C", fill_opacity=0.92,
+            ).move_to([cx, 0.5, 0])
+            label = Text(name, font_size=BODY_FONT_SIZE, color=color)
+            label.next_to(frame.get_top(), DOWN, buff=0.12)
+            icons = VGroup()
+            for i in range(10):
+                r, c = divmod(i, 5)
+                icon = VGroup(
+                    Rectangle(width=0.34, height=0.22, color="#2C3545", stroke_width=1.8, fill_opacity=0.0),
+                    Line(ORIGIN, RIGHT * 0.2, color="#2C3545", stroke_width=1.8).move_to([0, -0.16, 0]),
+                ).move_to([cx - 1.1 + c * 0.55, 0.7 - r * 0.55, 0])
+                icons.add(icon)
+            tr = ValueTracker(0.0)
+            read = math_readout(
+                lambda tr=tr: rf"f_{{N}} = {de_num(tr.get_value(), 1)}",
+                np.array([cx, -0.30, 0.0]), size=BODY_FONT_SIZE, color=color, edge="center",
+            )
+            usage_groups.add(VGroup(frame, label, icons))
+            usage_anim_specs.append((icons, lit, color, tr, read))
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "fn_usage"))
+        self.play(Create(fn_ring), FadeIn(usage_groups), run_time=0.9)
+        for icons, lit, color, tr, read in usage_anim_specs:
+            self.add(read)
+            self.play(
+                LaggedStart(*[
+                    icons[i].animate.set_color(color).set_fill(color, opacity=0.45)
+                    for i in range(lit)
+                ], lag_ratio=0.12),
+                tr.animate.set_value(lit / 10),
+                run_time=1.1,
+            )
+        hold_for(self, self.NARRATION, "fn_usage", used=0.9 + 3 * 1.1 + 0.35)
+
+        usage_reads = [read for *_rest, read in usage_anim_specs]
+        self.play(
+            FadeOut(usage_groups), *[FadeOut(r) for r in usage_reads],
+            FadeOut(fn_ring), FadeOut(row_d), FadeOut(box_d),
+            run_time=0.7,
+        )
 
         # Lighting section — keep clear of formula/caption zones
         room_w, room_h = 7.6, 3.4
@@ -555,22 +779,41 @@ class Beat3_DevicesLighting(Scene):
         lighting_group = VGroup(room, drop_ceiling, fixtures, heat_up, heat_dn)
         self.play(lighting_group.animate.scale(0.82).shift(UP * 0.55), run_time=0.7)
 
-        row_l, items_l = equation_row([
-            ("ql", "Q̇_Licht", P_YELLOW), (None, "=", P_WHITE),
-            (None, "Σ", P_WHITE),
-            ("pl", "P_Licht", P_CYAN), (None, "·", P_WHITE),
-            ("fg", "f_g", P_YELLOW), (None, "  [W]", P_TEAL),
+        row_l, box_l, items_l = math_panel([
+            ("ql", r"\dot{Q}_{\text{Licht}}", P_YELLOW), (None, "=", P_WHITE),
+            (None, r"\Sigma", P_WHITE),
+            ("pl", r"P_{\text{Licht}}", P_CYAN), (None, r"\cdot", P_WHITE),
+            ("fg", r"f_{g}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_TEAL),
         ])
-        row_l, box_l = formula_panel(row_l)
-        self.play(Create(row_l), Create(box_l), run_time=1.1)
+        self.play(FadeIn(row_l), Create(box_l), run_time=1.1)
         hold_for(self, self.NARRATION, "lights", used=5.0 + 1.1 + 0.35)
 
         for key, color in (("pl", P_CYAN), ("fg", P_YELLOW)):
             ring = highlight_param(items_l, key, color=color)
             self.play(Create(ring), run_time=0.45)
             caption = swap_caption(self, caption, subtitle_text(self.NARRATION, key))
-            hold_for(self, self.NARRATION, key, used=0.45 + 0.35)
-            self.play(FadeOut(ring), run_time=0.25)
+            if key == "fg":
+                # 💡 f_g live aus der Zeichnung: eine der zwei Leuchten schaltet
+                # ab, der Anteil der laufenden Leuchten fällt von 1,0 auf 0,5.
+                fg_tr = ValueTracker(1.0)
+                fg_read = math_readout(
+                    lambda: rf"f_{{g}} = {de_num(fg_tr.get_value(), 1)}",
+                    lambda: fixtures.get_center() + DOWN * 0.85,
+                    size=BODY_FONT_SIZE, color=P_YELLOW, edge="center",
+                )
+                self.add(fg_read)
+                self.play(
+                    fixture_r.animate.set_fill(P_YELLOW, opacity=0.05).set_stroke(opacity=0.35),
+                    *[w.animate.set_opacity(0.08) for w in (*heat_up[2:], *heat_dn[2:])],
+                    fg_tr.animate.set_value(0.5),
+                    run_time=1.4,
+                )
+                hold_for(self, self.NARRATION, key, used=0.45 + 1.4 + 0.35)
+                self.remove(fg_read)
+                self.play(FadeOut(ring), run_time=0.25)
+            else:
+                hold_for(self, self.NARRATION, key, used=0.45 + 0.35)
+                self.play(FadeOut(ring), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
         hold_for(self, self.NARRATION, "outro", used=0.35)
@@ -598,8 +841,8 @@ class Beat4_CumulativeLoad(Scene):
          "Q-dot i is the total internal cooling load the system must remove.",
          "Q-Punkt i ist die gesamte interne Kühllast, die das System abführen muss."),
         ("outro",
-         "On a hot summer day this internal heat trap forces cooling overtime — even with blinds drawn.",
-         "An einem heißen Sommertag zwingt diese interne Wärmefalle die Kühlung zu Überstunden — selbst bei geschlossenen Jalousien."),
+         "On a hot summer day the cooling system must remove this internal heat on top — even with blinds drawn.",
+         "An einem heißen Sommertag muss die Kühlung diese interne Wärme zusätzlich abführen — selbst bei geschlossenen Jalousien."),
     ]
 
     def construct(self):
@@ -633,22 +876,22 @@ class Beat4_CumulativeLoad(Scene):
 
         def source_card(icon, title_de, term, color, center):
             frame = RoundedRectangle(
-                width=2.05, height=1.7, corner_radius=0.12,
+                width=2.15, height=2.1, corner_radius=0.12,
                 color=color, stroke_width=2.2, fill_color="#12151C", fill_opacity=0.92,
             ).move_to(center)
             label = Text(title_de, font_size=BODY_FONT_SIZE, color=color)
-            label.next_to(frame.get_top(), DOWN, buff=0.1)
-            icon.move_to(center + DOWN * 0.02)
-            term_t = Text(term, font_size=BODY_FONT_SIZE, color=P_WHITE)
-            term_t.next_to(frame.get_bottom(), UP, buff=0.12)
+            label.next_to(frame.get_top(), DOWN, buff=0.12)
+            term_t = math_label(term, size=BODY_FONT_SIZE, color=P_WHITE)
+            term_t.next_to(frame.get_bottom(), UP, buff=0.14)
+            icon.move_to((label.get_bottom() + term_t.get_top()) / 2)
             return VGroup(frame, label, icon, term_t)
 
         c_p = LEFT * 3.8 + UP * 0.85
         c_e = ORIGIN + UP * 0.85
         c_l = RIGHT * 3.8 + UP * 0.85
-        card_p = source_card(mini_person(), "Personen", "Q̇_Pers", P_ORANGE, c_p)
-        card_e = source_card(mini_laptop(), "Geräte", "Q̇_Geräte", P_CYAN, c_e)
-        card_l = source_card(mini_lamp(), "Beleuchtung", "Q̇_Licht", P_YELLOW, c_l)
+        card_p = source_card(mini_person(), "Personen", r"\dot{Q}_{\text{Pers}}", P_ORANGE, c_p)
+        card_e = source_card(mini_laptop(), "Geräte", r"\dot{Q}_{\text{Geräte}}", P_CYAN, c_e)
+        card_l = source_card(mini_lamp(), "Beleuchtung", r"\dot{Q}_{\text{Licht}}", P_YELLOW, c_l)
         plus_1 = Text("+", font_size=FORMULA_FONT_SIZE, color=P_WHITE).move_to((c_p + c_e) / 2)
         plus_2 = Text("+", font_size=FORMULA_FONT_SIZE, color=P_WHITE).move_to((c_e + c_l) / 2)
 
@@ -665,15 +908,14 @@ class Beat4_CumulativeLoad(Scene):
             run_time=0.7,
         )
 
-        row, items = equation_row([
-            ("qi", "Q̇_i", P_CYAN), (None, "=", P_WHITE),
-            ("pers", "Q̇_Pers", P_ORANGE), (None, "+", P_WHITE),
-            ("ger", "Q̇_Geräte", P_CYAN), (None, "+", P_WHITE),
-            ("licht", "Q̇_Licht", P_YELLOW), (None, "  [W]", P_TEAL),
+        row, box, items = math_panel([
+            ("qi", r"\dot{Q}_{i}", P_CYAN), (None, "=", P_WHITE),
+            ("pers", r"\dot{Q}_{\text{Pers}}", P_ORANGE), (None, "+", P_WHITE),
+            ("ger", r"\dot{Q}_{\text{Geräte}}", P_CYAN), (None, "+", P_WHITE),
+            ("licht", r"\dot{Q}_{\text{Licht}}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_TEAL),
         ])
-        row, box = formula_panel(row)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
-        self.play(Create(row), Create(box), run_time=1.2)
+        self.play(FadeIn(row), Create(box), run_time=1.2)
         hold_for(self, self.NARRATION, "formula", used=1.2 + 0.35)
 
         for key, color in (("pers", P_ORANGE), ("ger", P_CYAN), ("licht", P_YELLOW), ("qi", P_CYAN)):
@@ -1395,8 +1637,8 @@ if False:
 class Beat8_Mitigation(Scene):
     NARRATION = [
         ("intro",
-         "Smart design cuts the load before the chiller has to fight it.",
-         "Intelligentes Design senkt die Last, bevor die Kälteanlage kämpfen muss."),
+         "Smart design cuts the load before the chiller must remove it.",
+         "Intelligentes Design senkt die Last, bevor die Kälteanlage sie abführen muss."),
         ("high",
          "High plug and lighting loads first heat the office interior.",
          "Hohe Stecker- und Lichtlasten heizen zuerst den Büroraum."),
@@ -1506,7 +1748,7 @@ class Beat8_Mitigation(Scene):
         ).move_to(laptop_screen.get_center())
         laptop = VGroup(laptop_base, laptop_screen, screen_glow)
         laptop_lbl = Text("Gerät", font_size=LABEL_FONT_SIZE, color=C_HEAT_HOT)
-        laptop_lbl.next_to(laptop_screen, RIGHT, buff=0.15)
+        laptop_lbl.next_to(laptop_screen, LEFT, buff=0.18)
 
         lamp_c = room.get_top() + DOWN * 0.42 + RIGHT * 1.2
         cord = Line(
@@ -1556,17 +1798,17 @@ class Beat8_Mitigation(Scene):
         ctrl_title = Text("Smarte Laststeuerung", font_size=LABEL_FONT_SIZE, color=C_COOL)
         ctrl_title.move_to(ctrl_panel.get_top() + DOWN * 0.18)
 
-        light_track.move_to(ctrl_panel.get_center() + LEFT * 1.55 + DOWN * 0.12)
+        light_track.move_to(ctrl_panel.get_center() + LEFT * 2.0 + DOWN * 0.12)
         light_fill.put_start_and_end_on(light_track.get_start(), light_track.get_end())
         light_knob.move_to(light_track.get_end())
-        light_label.next_to(light_track, LEFT, buff=0.16)
-        light_pct.next_to(light_track, RIGHT, buff=0.14)
+        light_label.next_to(light_track, LEFT, buff=0.2)
+        light_pct.next_to(light_track, RIGHT, buff=0.26)
 
-        plug_track.move_to(ctrl_panel.get_center() + RIGHT * 1.55 + DOWN * 0.12)
+        plug_track.move_to(ctrl_panel.get_center() + RIGHT * 1.9 + DOWN * 0.12)
         plug_fill.put_start_and_end_on(plug_track.get_start(), plug_track.get_end())
         plug_knob.move_to(plug_track.get_end())
-        plug_label.next_to(plug_track, LEFT, buff=0.16)
-        plug_pct.next_to(plug_track, RIGHT, buff=0.14)
+        plug_label.next_to(plug_track, LEFT, buff=0.2)
+        plug_pct.next_to(plug_track, RIGHT, buff=0.26)
 
         self.add(room_fill, warm_fill)
         self.play(
@@ -1611,10 +1853,20 @@ class Beat8_Mitigation(Scene):
         light_t, plug_t = 0.30, 0.40
         light_target = light_track.point_from_proportion(light_t)
         plug_target = plug_track.point_from_proportion(plug_t)
-        new_light_pct = Text("30%", font_size=LABEL_FONT_SIZE, color=C_YELLOW).move_to(light_pct)
-        new_plug_pct = Text("40%", font_size=LABEL_FONT_SIZE, color=C_HEAT_HOT).move_to(plug_pct)
+        light_share = ValueTracker(100.0)
+        plug_share = ValueTracker(100.0)
+        light_pct_anchor = light_pct.get_left()
+        plug_pct_anchor = plug_pct.get_left()
+        light_pct_live = always_redraw(lambda: Text(
+            f"{light_share.get_value():.0f}%", font_size=LABEL_FONT_SIZE, color=C_YELLOW,
+        ).move_to(light_pct_anchor, aligned_edge=LEFT))
+        plug_pct_live = always_redraw(lambda: Text(
+            f"{plug_share.get_value():.0f}%", font_size=LABEL_FONT_SIZE, color=C_HEAT_HOT,
+        ).move_to(plug_pct_anchor, aligned_edge=LEFT))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "dim"))
+        self.remove(light_pct, plug_pct)
+        self.add(light_pct_live, plug_pct_live)
         self.play(
             light_knob.animate.move_to(light_target),
             plug_knob.animate.move_to(plug_target),
@@ -1632,8 +1884,8 @@ class Beat8_Mitigation(Scene):
                     plug_track.point_from_proportion(1.0 - a * (1.0 - plug_t)),
                 ),
             ),
-            Transform(light_pct, new_light_pct),
-            Transform(plug_pct, new_plug_pct),
+            light_share.animate.set_value(light_t * 100),
+            plug_share.animate.set_value(plug_t * 100),
             beam.animate.set_fill(opacity=0.05),
             fixture.animate.set_fill(opacity=0.18),
             laptop_screen.animate.set_fill(C_COOL_DIM, opacity=0.35),

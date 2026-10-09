@@ -407,10 +407,28 @@ Interne Lasten detailliert aufschlüsseln; sensible vs. latente Anteile bei Pers
 | **Q̇_i = Q̇_Pers + Q̇_Geräte + Q̇_Licht** | Gesamte interne Last |
 | **Q̇_ges = Q̇_sens + Q̇_lat** | Sensible + latente Kühlung |
 
+### Körperwärme nach Aktivität (q̇_p-Skala)
+
+| Aktivität | Abgabe |
+|-----------|--------|
+| Schlafen | ≈ 80 W |
+| Büroarbeit (sitzend) | ≈ 100 W |
+| Gehen | ≈ 200 W |
+| Hochleistungssport | ≈ 800 W |
+
+### f_N nach Nutzung (Anteil gleichzeitig laufender Geräte)
+
+| Nutzung | f_N |
+|---------|-----|
+| Büro | ≈ 0,7 |
+| Serverraum | 1,0 |
+| Besprechungsraum | ≈ 0,3 |
+
 ### Merksätze
 
 - Hörsaal mit 100 Personen: **~10 kW** interne Wärme — massive Sommerlast.
 - Latente Last = Feuchte (Schwitzen, Atmung) — braucht **Entfeuchtung**, nicht nur Kühlung.
+- f_g (Beleuchtung) analog zu f_N: Anteil der **gleichzeitig betriebenen** Leuchten (2 Leuchten, 1 aus → f_g = 0,5).
 
 ---
 
@@ -526,6 +544,21 @@ Strategie: Last senken → frei lüften, solange die Außenluft kühler ist → 
 1. **Hülle + Sonnenschutz** — Last senken (~45 %)
 2. **Natürliche Lüftung** — kostenlos nutzen (~35 %)
 3. **RLT als Reserve** — nur für den Rest der Kühllast (~20 %)
+
+### Sorptionsgestützte Kühlung (DEC)
+
+Kühlen allein mit Stoffeigenschaften — ohne Kältemaschine:
+
+1. **Sorptionsrad** entfeuchtet die schwüle Außenluft (Sorptionswärme: Luft wird zunächst wärmer, z. B. 32 °C feucht → 48 °C trocken).
+2. **Plattentauscher** gibt diese Wärme an die Abluft ab (→ ≈ 24 °C).
+3. **Verdunstungskühlung** senkt die trockene Luft auf Zulufttemperatur (→ ≈ 19 °C) — nur möglich, *weil* sie vorher entfeuchtet wurde.
+4. **Regeneration durch die Sonne:** Solarwärme treibt die gespeicherte Feuchte aus dem Rad in die Fortluft.
+
+**Nachteil (mikrobiell):** krasse Temperatur- und Feuchtewechsel setzen Keime im Gerät unter Selektionsdruck — resistente Stämme überleben bevorzugt. Hygiene/Wartung einplanen.
+
+### Passivhaus-Widerspruch
+
+Natürliche Fensterlüftung und Passivhaus widersprechen sich: Wärmerückgewinnung braucht **beide Ströme in der Anlage** — ein offenes Fenster hat η = 0 (Lüftungswärmeverluste gehen vollständig verloren). Wer WRG braucht, gibt die freie Lüftung als Hauptluftweg auf; sommerliche Nachtlüftung bleibt als Ergänzung.
 
 ---
 
